@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerak Peluru — JAZMI Sains</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12262a; --ink-soft:#3c5a5a;
+    --paper:#f4f7f5; --panel:#e7efe9; --panel-deep:#d7e3dc;
+    --teal:#2f7d6b; --teal-deep:#1e5b4d;
+    --amber:#b9793a; --brick:#a34a3c;
+    --line:#c9d6cd; --radius:3px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--ink);color:var(--ink);font-family:'Karla',sans-serif;line-height:1.55;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:760px;margin:0 auto;}
+  header{background:var(--ink);color:#dce8e3;padding:40px 22px 36px;position:relative;overflow:hidden;}
+  header::before{content:"⤴";position:absolute;right:14px;top:-24px;font-size:9rem;color:rgba(220,232,227,0.06);}
+  header .eyebrow{color:#7fc2ac;font-family:'JetBrains Mono',monospace;font-size:0.8rem;letter-spacing:0.06em;margin-bottom:10px;text-transform:uppercase;}
+  header h1{font-family:'Fraunces',serif;font-weight:600;font-size:1.95rem;line-height:1.18;margin:0 0 12px;max-width:16ch;}
+  header p{color:#a9bfb8;max-width:46ch;margin:0;font-size:0.96rem;}
+  main{background:var(--paper);}
+  section{padding:28px 20px;border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  h2{font-family:'Fraunces',serif;font-weight:600;font-size:1.28rem;margin:0 0 6px;}
+  .lede{color:var(--ink-soft);font-size:0.9rem;margin:0 0 18px;max-width:56ch;}
+
+  /* Belajar accordion */
+  .term{border-top:1px solid var(--line);}
+  .term:last-child{border-bottom:1px solid var(--line);}
+  .term button{width:100%;text-align:left;background:none;border:none;padding:12px 4px;font-family:'Fraunces',serif;font-size:0.98rem;font-weight:500;color:var(--ink);display:flex;justify-content:space-between;cursor:pointer;}
+  .term .plus{color:var(--teal-deep);transition:transform .2s;}
+  .term.open .plus{transform:rotate(45deg);}
+  .term .body{max-height:0;overflow:hidden;transition:max-height .25s ease;}
+  .term.open .body{max-height:220px;}
+  .term .body p{padding:0 4px 14px;margin:0;color:var(--ink-soft);font-size:0.88rem;}
+
+  /* Sliders */
+  .ctrl{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px;}
+  .ctrl .lbl{display:flex;justify-content:space-between;font-size:0.85rem;color:var(--ink-soft);margin-bottom:6px;}
+  .ctrl .lbl b{font-family:'JetBrains Mono',monospace;color:var(--teal-deep);font-size:0.95rem;}
+  input[type=range]{width:100%;accent-color:var(--teal-deep);height:22px;}
+  .pill-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .pill{font-family:'Karla',sans-serif;font-weight:600;font-size:0.82rem;padding:7px 13px;border-radius:20px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);cursor:pointer;}
+  .pill.active{background:var(--teal-deep);color:#fff;border-color:var(--teal-deep);}
+  .toggle-row{display:flex;align-items:center;gap:10px;font-size:0.88rem;color:var(--ink-soft);margin-bottom:4px;}
+  .toggle-row input{width:auto;accent-color:var(--teal-deep);height:auto;}
+
+  /* Canvas */
+  .canvas-box{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:10px;margin:18px 0;}
+  canvas{width:100%;display:block;background:linear-gradient(#eef5f1,#ffffff);border-radius:2px;}
+  .canvas-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+  .btn{font-family:'Karla',sans-serif;font-weight:600;font-size:0.82rem;padding:8px 14px;border-radius:20px;border:1px solid var(--teal-deep);background:#fff;color:var(--teal-deep);cursor:pointer;}
+  .btn.primary{background:var(--teal-deep);color:#fff;}
+
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:12px;}
+  .stat .k{font-size:0.74rem;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.03em;}
+  .stat .v{font-family:'JetBrains Mono',monospace;font-size:1.15rem;color:var(--teal-deep);font-weight:700;margin-top:2px;}
+
+  .plain-list{margin:0;padding-left:1.1em;color:var(--ink-soft);font-size:0.9rem;}
+  .plain-list li{margin-bottom:8px;}
+  .disclaimer{background:var(--panel-deep);border-left:3px solid var(--brick);padding:14px 16px;font-size:0.86rem;color:var(--ink-soft);border-radius:0 var(--radius) var(--radius) 0;margin-top:12px;}
+
+  footer{background:var(--ink);color:#5d7570;padding:22px 22px 36px;font-size:0.78rem;text-align:center;}
+
+  @media(min-width:600px){
+    header{padding:56px 40px 48px;} header h1{font-size:2.3rem;}
+    section{padding:40px;}
+    .stats{grid-template-columns:repeat(4,1fr);}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="eyebrow">jazmi · sains · mekanika</div>
+    <h1>Gerak Peluru</h1>
+    <p>Lemparkan sesuatu dengan kecepatan dan sudut tertentu — lihat langsung bagaimana lintasannya berubah saat gravitasi diganti atau hambatan udara dinyalakan.</p>
+  </div>
+</header>
+
+<main>
+<div class="wrap">
+
+  <section>
+    <h2>Belajar dulu</h2>
+    <p class="lede">Gerak peluru sebenarnya dua gerak sekaligus yang dijalankan bersamaan, saling tidak memengaruhi.</p>
+    <div id="accordion"></div>
+  </section>
+
+  <section>
+    <h2>Eksplorasi &amp; Perhitungan</h2>
+    <p class="lede">Geser parameter di bawah — lintasan dan angka hasil di bawahnya ikut berubah langsung.</p>
+
+    <div class="ctrl">
+      <div class="lbl"><span>Kecepatan awal</span><b id="v0Val">20 m/s</b></div>
+      <input type="range" id="v0Range" min="1" max="80" step="1" value="20">
+    </div>
+    <div class="ctrl">
+      <div class="lbl"><span>Sudut lontar</span><b id="angleVal">45°</b></div>
+      <input type="range" id="angleRange" min="1" max="89" step="1" value="45">
+    </div>
+    <div class="ctrl">
+      <div class="lbl" style="margin-bottom:10px;"><span>Percepatan gravitasi</span></div>
+      <div class="pill-row" id="gravityPills"></div>
+    </div>
+    <div class="ctrl">
+      <div class="toggle-row"><input type="checkbox" id="dragToggle"> <span>Aktifkan hambatan udara</span></div>
+      <div id="dragSliderWrap" style="display:none;margin-top:10px;">
+        <div class="lbl"><span>Koefisien hambatan (k)</span><b id="dragVal">0.010</b></div>
+        <input type="range" id="dragRange" min="0" max="0.05" step="0.002" value="0.01">
+      </div>
+    </div>
+
+    <div class="canvas-box">
+      <canvas id="traj" width="1000" height="560"></canvas>
+      <div class="canvas-actions">
+        <button class="btn primary" id="playBtn">▶ Tayangkan gerak</button>
+        <button class="btn" id="resetBtn">Ulangi</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="k">Jarak tempuh</div><div class="v" id="statRange">–</div></div>
+      <div class="stat"><div class="k">Tinggi maksimum</div><div class="v" id="statHeight">–</div></div>
+      <div class="stat"><div class="k">Waktu di udara</div><div class="v" id="statTime">–</div></div>
+      <div class="stat"><div class="k">Kecepatan mendarat</div><div class="v" id="statVland">–</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Metode</h2>
+    <ul class="plain-list">
+      <li><b>Tanpa hambatan udara</b> — dipecah jadi dua komponen bebas: horizontal (kecepatan tetap v₀cosθ) dan vertikal (percepatan tetap −g). Jarak, tinggi maksimum, dan waktu di udara dihitung langsung dari rumus tertutup: R = v₀²sin(2θ)/g, H = (v₀sinθ)²/2g, T = 2v₀sinθ/g.</li>
+      <li><b>Dengan hambatan udara</b> — rumus tertutup di atas tidak lagi berlaku, karena gaya hambat bergantung pada kecepatan sesaat (berubah tiap saat). Simulator menghitungnya langkah demi langkah (integrasi numerik Euler, Δt = 10 md) dengan percepatan hambat sebanding kuadrat kecepatan dan berlawanan arah gerak.</li>
+      <li>Grafik lintasan digambar dari titik-titik hasil kedua metode di atas, diskalakan otomatis mengikuti jarak dan tinggi maksimum saat itu.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Batasan</h2>
+    <div class="disclaimer">Model ini menganggap peluru sebagai titik massa (bentuk dan rotasinya diabaikan), permukaan tanah datar dan sejajar titik lontar, gravitasi konstan, tanpa angin, dan koefisien hambatan udara di sini adalah angka gabungan yang disederhanakan — bukan hasil perhitungan dari massa, luas penampang, dan koefisien drag sesungguhnya. Untuk kebutuhan presisi (balistik, olahraga, dsb.) diperlukan model yang jauh lebih lengkap.</div>
+  </section>
+
+  <section>
+    <h2>Referensi &amp; Artikel Terkait</h2>
+    <ul class="plain-list">
+      <li>Mekanika klasik Newton — hukum gerak kedua (F = ma) sebagai dasar seluruh model ini.</li>
+      <li>Lanjutan yang relevan: Osilator Harmonik/Bandul Sederhana, Hukum Kepler &amp; Orbit Elips — sama-sama dari cabang mekanika klasik.</li>
+    </ul>
+  </section>
+
+</div>
+</main>
+
+<footer>JAZMI — Laboratorium Pengetahuan Digital · Modul Sains · Tier 1 №1 dari Peta Prioritas Fisika</footer>
+
+<script>
+/* ---------- BELAJAR ---------- */
+const TERMS = [
+  ["Komponen kecepatan","Kecepatan awal v₀ pada sudut θ dipecah jadi dua: vₓ = v₀cosθ (mendatar) dan vᵧ = v₀sinθ (tegak). Keduanya berjalan sendiri-sendiri — itulah sebab lintasannya melengkung, bukan garis lurus."],
+  ["Percepatan gravitasi (g)","Komponen mendatar tidak punya percepatan (konstan), tapi komponen tegak terus diperlambat lalu dipercepat ke bawah oleh g. Ganti g dan bentuk lintasan tetap parabola — hanya lebih tinggi/rendah dan lebih lama/singkat di udara."],
+  ["Hambatan udara","Gaya yang melawan arah gerak, makin besar saat kecepatan makin tinggi (sebanding kuadrat kecepatan). Efeknya: lintasan tidak lagi simetris — sisi turun lebih curam dari sisi naik, dan jarak tempuh jadi lebih pendek dari perhitungan tanpa hambatan."],
+  ["Kenapa rumus tertutup gagal saat ada hambatan udara","Karena gaya hambat berubah setiap saat mengikuti kecepatan sesaat, persamaannya tidak lagi bisa diselesaikan dengan aljabar biasa — perlu dihitung langkah demi langkah (metode numerik)."],
+];
+function renderAccordion(){
+  const el = document.getElementById('accordion');
+  el.innerHTML = TERMS.map((t,i)=>`<div class="term" data-i="${i}"><button type="button">${t[0]}<span class="plus">+</span></button><div class="body"><p>${t[1]}</p></div></div>`).join('');
+  el.querySelectorAll('.term button').forEach(btn=>btn.addEventListener('click',()=>btn.closest('.term').classList.toggle('open')));
+}
+
+/* ---------- STATE ---------- */
+const GRAVITIES = [
+  {k:'bumi', label:'Bumi', g:9.8},
+  {k:'bulan', label:'Bulan', g:1.62},
+  {k:'mars', label:'Mars', g:3.71},
+];
+let gravityKey = 'bumi';
+let v0 = 20, angle = 45, dragOn = false, k = 0.01;
+
+function renderGravityPills(){
+  const el = document.getElementById('gravityPills');
+  el.innerHTML = GRAVITIES.map(g=>`<button class="pill ${g.k===gravityKey?'active':''}" data-k="${g.k}">${g.label} (${g.g} m/s²)</button>`).join('');
+  el.querySelectorAll('.pill').forEach(b=>b.addEventListener('click',()=>{ gravityKey=b.dataset.k; renderGravityPills(); compute(); }));
+}
+function currentG(){ return GRAVITIES.find(g=>g.k===gravityKey).g; }
+
+/* ---------- PHYSICS ---------- */
+function computeNoDrag(){
+  const g = currentG();
+  const rad = angle*Math.PI/180;
+  const vx0 = v0*Math.cos(rad), vy0 = v0*Math.sin(rad);
+  const T = 2*vy0/g;
+  const R = (v0*v0*Math.sin(2*rad))/g;
+  const H = (vy0*vy0)/(2*g);
+  const points = [];
+  const N = 120;
+  for(let i=0;i<=N;i++){
+    const t = T*i/N;
+    const x = vx0*t;
+    const y = vy0*t - 0.5*g*t*t;
+    points.push({x, y: Math.max(y,0)});
+  }
+  const vLand = v0; // energy conservation, flat ground, no drag
+  return {points, range:R, height:H, time:T, vLand};
+}
+function computeDrag(){
+  const g = currentG();
+  const rad = angle*Math.PI/180;
+  let vx = v0*Math.cos(rad), vy = v0*Math.sin(rad);
+  let x=0, y=0, t=0;
+  const dt = 0.01;
+  const points = [{x:0,y:0}];
+  let maxH = 0;
+  while(y>=0 && t<200){
+    const speed = Math.sqrt(vx*vx+vy*vy);
+    const ax = -k*speed*vx;
+    const ay = -g - k*speed*vy;
+    vx += ax*dt; vy += ay*dt;
+    x += vx*dt; y += vy*dt;
+    t += dt;
+    if(y>maxH) maxH = y;
+    if(y<0){ y=0; points.push({x,y}); break; }
+    points.push({x,y});
+  }
+  const vLand = Math.sqrt(vx*vx+vy*vy);
+  return {points, range:x, height:maxH, time:t, vLand};
+}
+
+/* ---------- CANVAS ---------- */
+const canvas = document.getElementById('traj');
+const ctx = canvas.getContext('2d');
+let lastResult = null;
+let animId = null;
+
+function draw(result, animT){
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const pad = 50;
+  const maxX = Math.max(result.range, 1) * 1.08;
+  const maxY = Math.max(result.height, 1) * 1.35;
+  const sx = (W-2*pad)/maxX;
+  const sy = (H-2*pad)/maxY;
+  const scale = Math.min(sx,sy);
+  const originX = pad, originY = H-pad;
+
+  // ground
+  ctx.strokeStyle = '#c9d6cd'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0,originY); ctx.lineTo(W,originY); ctx.stroke();
+
+  // axes ticks (range label)
+  ctx.fillStyle = '#3c5a5a'; ctx.font='12px Karla, sans-serif';
+  ctx.fillText('0 m', originX-4, originY+18);
+  ctx.fillText(Math.round(result.range)+' m', originX+result.range*scale-10, originY+18);
+
+  // path
+  ctx.strokeStyle = '#1e5b4d'; ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  result.points.forEach((p,i)=>{
+    const px = originX + p.x*scale;
+    const py = originY - p.y*scale;
+    if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+  });
+  ctx.stroke();
+
+  // apex marker
+  let apex = result.points[0];
+  result.points.forEach(p=>{ if(p.y>apex.y) apex=p; });
+  const apx = originX+apex.x*scale, apy = originY-apex.y*scale;
+  ctx.fillStyle = '#b9793a';
+  ctx.beginPath(); ctx.arc(apx,apy,4,0,7); ctx.fill();
+
+  // moving dot
+  if(animT!==undefined){
+    const idx = Math.min(Math.floor(animT*(result.points.length-1)), result.points.length-1);
+    const p = result.points[idx];
+    const px = originX+p.x*scale, py = originY-p.y*scale;
+    ctx.fillStyle = '#a34a3c';
+    ctx.beginPath(); ctx.arc(px,py,7,0,7); ctx.fill();
+  }
+}
+
+function compute(){
+  v0 = parseFloat(document.getElementById('v0Range').value);
+  angle = parseFloat(document.getElementById('angleRange').value);
+  dragOn = document.getElementById('dragToggle').checked;
+  k = parseFloat(document.getElementById('dragRange').value);
+  lastResult = dragOn ? computeDrag() : computeNoDrag();
+  draw(lastResult);
+  document.getElementById('statRange').textContent = lastResult.range.toFixed(1)+' m';
+  document.getElementById('statHeight').textContent = lastResult.height.toFixed(1)+' m';
+  document.getElementById('statTime').textContent = lastResult.time.toFixed(2)+' s';
+  document.getElementById('statVland').textContent = lastResult.vLand.toFixed(1)+' m/s';
+}
+
+function playAnimation(){
+  if(animId) cancelAnimationFrame(animId);
+  const start = performance.now();
+  const dur = 1800;
+  function frame(now){
+    const t = Math.min((now-start)/dur, 1);
+    draw(lastResult, t);
+    if(t<1) animId = requestAnimationFrame(frame);
+  }
+  animId = requestAnimationFrame(frame);
+}
+
+/* ---------- WIRING ---------- */
+document.getElementById('v0Range').addEventListener('input', e=>{
+  document.getElementById('v0Val').textContent = e.target.value+' m/s';
+  compute();
+});
+document.getElementById('angleRange').addEventListener('input', e=>{
+  document.getElementById('angleVal').textContent = e.target.value+'°';
+  compute();
+});
+document.getElementById('dragToggle').addEventListener('change', e=>{
+  document.getElementById('dragSliderWrap').style.display = e.target.checked ? 'block':'none';
+  compute();
+});
+document.getElementById('dragRange').addEventListener('input', e=>{
+  document.getElementById('dragVal').textContent = parseFloat(e.target.value).toFixed(3);
+  compute();
+});
+document.getElementById('playBtn').addEventListener('click', playAnimation);
+document.getElementById('resetBtn').addEventListener('click', ()=>{ if(animId) cancelAnimationFrame(animId); draw(lastResult); });
+
+renderAccordion();
+renderGravityPills();
+compute();
+</script>
+</body>
+</html>

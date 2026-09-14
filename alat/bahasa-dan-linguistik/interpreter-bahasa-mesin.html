@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interpreter Mini — Bahasa Menjadi Mesin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#10141A; --panel:#171D25; --panel-2:#1D2530;
+    --border:rgba(232,236,244,0.09); --border-strong:rgba(232,236,244,0.17);
+    --text:#ECEFF3; --muted:#8C97A6;
+    --gold:#E0A94D;
+    --true:#4FBF8A; --true-dim: 79,191,138;
+    --false:#7C8798;
+    --warn:#E0A94D; --warn-dim: 224,169,77;
+    --lose:#D9677A; --lose-dim: 217,103,122;
+    --num:#5FA8D3; --num-dim: 95,168,211;
+    --ident:#C792EA; --ident-dim: 199,146,234;
+    --radius:4px;
+  }
+  *{box-sizing:border-box;}
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'Karla',sans-serif; font-size:16px; line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{ font-family:'Fraunces',serif; font-weight:500; letter-spacing:-0.01em; margin:0; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+  .wrap{ max-width:960px; margin:0 auto; padding:0 22px 80px; }
+  .rule{ height:1px; background:var(--border); margin:48px 0; }
+
+  header.top{ padding:56px 0 8px; }
+  header.top .kicker{ font-size:13px; color:var(--muted); margin:0 0 14px; }
+  header.top h1{ font-size:clamp(30px,5vw,42px); margin-bottom:10px; }
+  header.top p.lede{ color:var(--muted); max-width:62ch; font-size:16px; margin:0; }
+
+  section .section-head{ margin-bottom:6px; }
+  section h2{ font-size:clamp(22px,3.4vw,28px); }
+  section > p.desc{ color:var(--muted); max-width:66ch; margin:8px 0 20px; font-size:15px; }
+  .eyebrow-num{ font-family:'Fraunces',serif; font-style:italic; color:var(--gold); font-size:15px; margin:0 0 10px; }
+
+  .card{ background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:22px 24px; }
+
+  /* ---- contrast table ---- */
+  .contrast{ display:grid; grid-template-columns:1fr 1fr; gap:0; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin:22px 0; }
+  @media (max-width:620px){ .contrast{ grid-template-columns:1fr; } }
+  .contrast > div{ padding:20px 22px; }
+  .contrast .calc{ background:rgba(124,135,152,0.06); border-right:1px solid var(--border); }
+  @media (max-width:620px){ .contrast .calc{ border-right:none; border-bottom:1px solid var(--border); } }
+  .contrast .rules{ background:rgba(79,191,138,0.06); }
+  .contrast h4{ font-family:'Karla',sans-serif; font-size:12.5px; font-weight:700; margin:0 0 10px; color:var(--muted); }
+  .contrast .calc h4{ color:#AAB3C0; }
+  .contrast .rules h4{ color:var(--true); }
+  .contrast .flowline{ font-family:'JetBrains Mono',monospace; font-size:14px; color:var(--text); margin:0 0 12px; }
+  .contrast p{ font-size:14.5px; color:var(--text); margin:0; }
+
+  .pseudo{
+    font-family:'JetBrains Mono',monospace; font-size:14px; line-height:1.9;
+    background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
+    padding:18px 20px; margin:18px 0; color:#D7DEE8;
+  }
+  .pseudo .kw{ color: var(--gold); }
+  .pseudo .neg{ color: var(--lose); }
+
+  .flow{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:20px 0; }
+  .flow .step{ font-size:13px; font-weight:600; padding:8px 13px; background:var(--panel-2); border:1px solid var(--border); border-radius:3px; }
+  .flow .arrow{ color:var(--muted); font-size:14px; }
+
+  dl.term{ margin:0; }
+  dl.term > div{ margin:18px 0; padding-left:16px; border-left:2px solid var(--border-strong); }
+  dl.term dt{ font-family:'Fraunces',serif; font-size:16.5px; color:var(--text); margin-bottom:4px; }
+  dl.term dd{ margin:0; color:var(--muted); font-size:14.5px; }
+  .concept-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 32px; }
+  @media (max-width:680px){ .concept-grid{ grid-template-columns:1fr; } }
+
+  /* ---- lab layout ---- */
+  .lab{ display:flex; flex-direction:column; gap:18px; }
+  .stage{ background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  .stage-head{ padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .stage-head .stage-num{ font-family:'Fraunces',serif; font-style:italic; color:var(--gold); font-size:14px; margin-right:8px; }
+  .stage-head h3{ font-size:16px; display:inline; }
+  .stage-body{ padding:20px 22px; }
+  .stage-note{ font-size:13px; color:var(--muted); margin:0 0 8px; }
+  .stage-skipped{ font-size:13.5px; color:var(--muted); font-style:italic; padding:6px 0; }
+
+  /* source input */
+  .source-input{
+    width:100%; min-height:130px; background:var(--panel-2); border:1px solid var(--border-strong);
+    border-radius:3px; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:14px;
+    line-height:1.7; padding:14px 16px; resize:vertical;
+  }
+  .source-input:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  .source-actions{ display:flex; align-items:center; gap:14px; margin:12px 0 18px; flex-wrap:wrap; }
+  .run-btn{
+    font-family:'Karla',sans-serif; font-size:14px; font-weight:700; color:#10141A;
+    background:var(--gold); border:none; border-radius:3px; padding:10px 20px; cursor:pointer;
+  }
+  .run-btn:hover{ filter:brightness(1.08); }
+  .run-btn:focus-visible{ outline:2px solid var(--text); outline-offset:2px; }
+  .source-hint{ font-size:12.5px; color:var(--muted); }
+
+  button.reset{
+    font-family:'Karla',sans-serif; font-size:13.5px; font-weight:600; color:var(--text);
+    background:transparent; border:1px solid var(--border-strong); border-radius:3px;
+    padding:8px 14px; cursor:pointer;
+  }
+  button.reset:hover{ border-color:var(--gold); }
+
+  /* presets */
+  .preset-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:6px; }
+  @media (max-width:600px){ .preset-grid{ grid-template-columns:1fr; } }
+  .preset-btn{ text-align:left; padding:11px 14px; background:var(--panel-2); border:1px solid var(--border); border-radius:3px; cursor:pointer; font-size:13.5px; color:var(--text); }
+  .preset-btn:hover{ border-color:var(--gold); }
+  .preset-btn.active{ border-color:var(--gold); }
+  .preset-btn span{ display:block; font-size:12px; color:var(--muted); margin-top:2px; }
+
+  /* legend + code block (LEXER) */
+  .legend{ display:flex; flex-wrap:wrap; gap:14px; margin:0 0 14px; }
+  .legend-item{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--muted); }
+  .legend .dot{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+  .legend .dot.tok-keyword{ background:var(--gold); }
+  .legend .dot.tok-string{ background:var(--true); }
+  .legend .dot.tok-number{ background:var(--num); }
+  .legend .dot.tok-ident{ background:var(--ident); }
+  .legend .dot.tok-op{ background:var(--lose); }
+  .legend .dot.tok-comment{ background:var(--muted); }
+
+  .codeblock{
+    font-family:'JetBrains Mono',monospace; font-size:13.5px; line-height:1.85; white-space:pre-wrap;
+    word-break:break-word; background:var(--panel-2); border:1px solid var(--border); border-radius:var(--radius);
+    padding:16px 18px; margin:0 0 10px; color:#D7DEE8;
+  }
+  .codeblock span.tok-keyword{ color:var(--gold); font-weight:600; }
+  .codeblock span.tok-string{ color:var(--true); }
+  .codeblock span.tok-number{ color:var(--num); }
+  .codeblock span.tok-ident{ color:var(--ident); }
+  .codeblock span.tok-op{ color:var(--lose); }
+  .codeblock span.tok-lparen, .codeblock span.tok-rparen{ color:var(--muted); }
+  .codeblock span.tok-comment{ color:var(--muted); font-style:italic; }
+
+  .token-stream{ display:flex; flex-wrap:wrap; gap:2px; }
+  .token{ display:inline-block; font-family:'JetBrains Mono',monospace; font-size:12px; padding:4px 9px; margin:3px 4px 3px 0; border-radius:3px; }
+  .token.tok-keyword{ background:rgba(var(--warn-dim),0.16); color:var(--gold); }
+  .token.tok-string{ background:rgba(var(--true-dim),0.14); color:var(--true); }
+  .token.tok-number{ background:rgba(var(--num-dim),0.16); color:var(--num); }
+  .token.tok-ident{ background:rgba(var(--ident-dim),0.16); color:var(--ident); }
+  .token.tok-op{ background:rgba(var(--lose-dim),0.14); color:var(--lose); }
+  .token.tok-lparen, .token.tok-rparen{ background:rgba(124,135,152,0.14); color:var(--muted); }
+  .token.tok-newline{ background:transparent; color:var(--muted); opacity:.55; }
+
+  /* AST (PARSER) */
+  .ast-block{ margin:0 0 22px; }
+  .ast-block:last-child{ margin-bottom:0; }
+  .ast-caption{
+    font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text); background:var(--panel-2);
+    border:1px solid var(--border); border-radius:3px; padding:8px 12px; margin-bottom:10px;
+  }
+  .ast-caption .n{ color:var(--gold); font-weight:600; margin-right:10px; font-family:'Fraunces',serif; font-style:italic; }
+  .ast-node{ margin-left:16px; padding-left:14px; border-left:1px solid var(--border-strong); margin-top:2px; }
+  .ast-line{ font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text); padding:4px 0; }
+  .ast-type{ color:var(--text); }
+  .ast-detail{ color:var(--muted); font-size:12px; margin-left:8px; }
+
+  /* EVALUATOR trace */
+  .exec-row{ padding:12px 0; border-top:1px solid var(--border); }
+  .exec-row:first-child{ border-top:none; }
+  .exec-head{ display:flex; flex-wrap:wrap; align-items:baseline; gap:10px; margin-bottom:6px; }
+  .exec-num{ font-family:'Fraunces',serif; font-style:italic; color:var(--gold); font-size:13px; }
+  .exec-desc{ font-family:'JetBrains Mono',monospace; font-size:13.5px; color:var(--text); }
+  .exec-desc b{ color:var(--gold); font-weight:600; }
+  .scope-row{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-left:2px; }
+  .scope-label{ font-size:12px; color:var(--muted); }
+  .scope-chip{ font-family:'JetBrains Mono',monospace; font-size:12px; padding:3px 9px; border-radius:100px; background:rgba(var(--true-dim),0.12); color:var(--true); }
+
+  /* OUTPUT console */
+  .console{
+    background:#05070A; border:1px solid var(--border); border-radius:var(--radius);
+    padding:16px 18px; font-family:'JetBrains Mono',monospace; font-size:14px; color:#8FE3B0; line-height:1.75;
+  }
+  .console-line{ white-space:pre-wrap; }
+  .console-line::before{ content:'> '; color:var(--muted); }
+
+  /* error banner */
+  .error-box{ border:1px solid rgba(var(--lose-dim),0.5); background:rgba(var(--lose-dim),0.08); border-radius:var(--radius); padding:14px 16px; margin:0 0 6px; }
+  .error-stage{ font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:600; color:var(--lose); margin-bottom:6px; }
+  .error-msg{ font-size:14px; color:var(--text); }
+
+  ol.steps{ padding-left:20px; }
+  ol.steps li{ margin-bottom:10px; max-width:64ch; }
+  ol.steps li::marker{ color:var(--gold); font-family:'Fraunces',serif; }
+
+  .misconception{ display:grid; grid-template-columns:1fr 1fr; gap:0; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin:20px 0; }
+  @media (max-width:620px){ .misconception{ grid-template-columns:1fr; } }
+  .misconception > div{ padding:18px 20px; }
+  .misconception .lim{ background:rgba(var(--lose-dim),0.07); border-right:1px solid var(--border); }
+  @media (max-width:620px){ .misconception .lim{ border-right:none; border-bottom:1px solid var(--border); } }
+  .misconception h4{ font-size:12.5px; font-weight:700; color:var(--muted); margin:0 0 8px; }
+  .misconception p{ font-size:14.5px; margin:0; color:var(--text); }
+
+  .ref-list{ list-style:none; padding:0; margin:16px 0; }
+  .ref-list li{ padding:14px 0; border-top:1px solid var(--border); font-size:15px; color:var(--muted); }
+  .ref-list li:last-child{ border-bottom:1px solid var(--border); }
+  .ref-list .who{ color:var(--text); }
+
+  footer{ padding-top:46px; font-size:13px; color:var(--muted); max-width:66ch; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <p class="kicker">Laboratorium Qiladat / JAZMI — Bahasa &amp; Mesin Eksekusi</p>
+    <h1>Interpreter Mini (Bahasa → Mesin)</h1>
+    <p class="lede">Belajar mengubah bahasa menjadi mesin. Bukan kondisi menjadi keputusan seperti mesin aturan — tetapi teks menjadi eksekusi, baris demi baris.</p>
+  </header>
+
+  <div class="rule"></div>
+
+  <!-- ============ 1. KONSEP ============ -->
+  <section id="konsep">
+    <p class="eyebrow-num">1 — Konsep</p>
+    <h2>Kompiler vs. interpreter</h2>
+    <p class="desc">Keduanya menerjemahkan bahasa manusia-tulis menjadi tindakan mesin, tetapi berbeda soal kapan penerjemahan itu selesai — dan itu menentukan cara membangun keduanya.</p>
+
+    <div class="contrast">
+      <div class="calc">
+        <h4>KOMPILER</h4>
+        <p class="flowline">seluruh kode → diterjemahkan sekali → siap dijalankan</p>
+        <p>Seluruh kode sumber diterjemahkan lebih dulu menjadi kode mesin (atau kode antara), baru dijalankan belakangan — sering di perangkat lain, di waktu lain. Kesalahan susunan kode tertangkap sebelum program sempat berjalan sama sekali.</p>
+      </div>
+      <div class="rules">
+        <h4>INTERPRETER</h4>
+        <p class="flowline">kode → dibaca &amp; dijalankan → baris demi baris</p>
+        <p>Kode sumber dibaca dan langsung dieksekusi tanpa tahap terjemahan terpisah ke kode mesin. Browser yang menjalankan JavaScript, dan alat mini di bagian eksplorasi berikutnya, keduanya bekerja dengan cara ini.</p>
+      </div>
+    </div>
+
+    <p>Bahasa kecil yang akan kita bangun mesinnya hanya mengenal dua bentuk pernyataan:</p>
+    <div class="pseudo">
+      <span class="kw">PRINT</span> "HELLO"<br>
+      <span class="kw">LET</span> A = 10<br>
+      <span class="kw">LET</span> B = 20<br>
+      <span class="kw">PRINT</span> A + B
+    </div>
+
+    <p>Dan setiap baris kode di atas sesungguhnya melewati tujuh tahap yang sama, yang dibangun langsung di bagian eksplorasi berikutnya:</p>
+    <div class="flow">
+      <span class="step">SOURCE CODE</span><span class="arrow">→</span>
+      <span class="step">LEXER</span><span class="arrow">→</span>
+      <span class="step">TOKENS</span><span class="arrow">→</span>
+      <span class="step">PARSER</span><span class="arrow">→</span>
+      <span class="step">AST</span><span class="arrow">→</span>
+      <span class="step">EVALUATOR</span><span class="arrow">→</span>
+      <span class="step">OUTPUT</span>
+    </div>
+
+    <p style="margin-top:26px;">Sembilan hal yang dipelajari lewat membangun satu interpreter kecil:</p>
+    <div class="concept-grid">
+      <dl class="term">
+        <div><dt>Lexer</dt><dd>Tahap yang memecah teks kode sumber mentah menjadi potongan-potongan bermakna terkecil (token) — kata kunci, angka, teks, nama variabel, operator.</dd></div>
+        <div><dt>Parser</dt><dd>Tahap yang menyusun aliran token menjadi struktur pohon (AST) sesuai tata bahasa — mengenali mana yang pernyataan, mana yang ekspresi di dalamnya.</dd></div>
+        <div><dt>Grammar (tata bahasa)</dt><dd>Aturan formal yang menentukan susunan token mana yang sah membentuk sebuah program — di alat ini, aturan itu tertulis langsung sebagai fungsi parseExpr, parseTerm, parseFactor.</dd></div>
+        <div><dt>AST</dt><dd>Struktur pohon hasil parsing — representasi makna kode yang sudah lepas dari detail tata tulis asli (spasi, tanda kurung berlebih) tapi tetap menyimpan struktur dan urutan operasinya.</dd></div>
+        <div><dt>Interpreter</dt><dd>Program yang membaca AST dan langsung menjalankannya — berbeda dari kompiler yang menerjemahkan lebih dulu ke kode mesin sebelum dijalankan belakangan.</dd></div>
+      </dl>
+      <dl class="term">
+        <div><dt>Scope</dt><dd>Ruang penyimpanan nilai variabel yang sedang aktif — di alat mini ini hanya ada satu scope global, tapi bahasa sungguhan biasa punya banyak scope bersarang (di dalam fungsi, blok, dsb).</dd></div>
+        <div><dt>Variables (variabel)</dt><dd>Nama yang mengikat sebuah nilai di dalam scope, dan bisa dipakai ulang oleh pernyataan-pernyataan sesudahnya.</dd></div>
+        <div><dt>Expressions (ekspresi)</dt><dd>Bagian kode yang menghasilkan sebuah nilai ketika dievaluasi — angka, teks, nama variabel, atau gabungan keduanya lewat operator.</dd></div>
+        <div><dt>Execution (eksekusi)</dt><dd>Proses menjalankan pernyataan satu demi satu secara berurutan, di mana setiap langkah bisa mengubah keadaan (variabel) yang dibaca langkah berikutnya.</dd></div>
+      </dl>
+    </div>
+    <p class="desc" style="margin-top:6px;">Prinsip yang sama — memecah teks jadi satuan terkecil, lalu menyusunnya kembali sesuai aturan gramatikal — adalah pintu masuk yang sama untuk memodelkan tantangan yang jauh lebih rumit, semacam analisis akar kata dan i'rab dalam bahasa Arab, yang juga tercatat dalam peta ide laboratorium ini.</p>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ 2. EKSPLORASI ============ -->
+  <section id="eksplorasi">
+    <p class="eyebrow-num">2 — Eksplorasi Interaktif</p>
+    <h2>Interpreter yang sungguh berjalan</h2>
+    <p class="desc">Bahasa mini di bawah ini hanya mengenal dua jenis pernyataan: PRINT untuk mencetak nilai, dan LET untuk menyimpan nilai ke variabel. Tulis atau pilih salah satu contoh, lalu jalankan — dan ikuti bagaimana teks berubah jadi token, token tersusun jadi pohon (AST), lalu pohon itu dieksekusi baris demi baris sampai menghasilkan output.</p>
+
+    <div class="lab">
+
+      <!-- STAGE 1: SOURCE -->
+      <div class="stage">
+        <div class="stage-head">
+          <div><span class="stage-num">01</span><h3>SOURCE — kode sumber bahasa mini</h3></div>
+          <button class="reset" id="btnReset">Atur ulang</button>
+        </div>
+        <div class="stage-body">
+          <textarea id="sourceInput" class="source-input" spellcheck="false" aria-label="Kode sumber bahasa mini">PRINT "HELLO"
+LET A = 10
+LET B = 20
+PRINT A + B</textarea>
+          <div class="source-actions">
+            <button class="run-btn" id="btnRun">Jalankan ▸</button>
+            <span class="source-hint">atau tekan Ctrl+Enter di dalam kotak kode</span>
+          </div>
+          <div class="preset-grid">
+            <button class="preset-btn active" data-p="dasar">Halo dunia<span>Contoh dasar PRINT dan LET</span></button>
+            <button class="preset-btn" data-p="presedensi">2 + 3 × 4<span>Presedensi operator &amp; tanda kurung</span></button>
+            <button class="preset-btn" data-p="rantai">A → B → C<span>Variabel dipakai oleh variabel lain</span></button>
+            <button class="preset-btn" data-p="komentar">Baris berkomentar<span>Lexer mengabaikan komentar #</span></button>
+            <button class="preset-btn" data-p="galat_lexer">Karakter aneh<span>Bug ditangkap di tahap LEXER</span></button>
+            <button class="preset-btn" data-p="galat_parser">LET tanpa nama<span>Bug ditangkap di tahap PARSER</span></button>
+            <button class="preset-btn" data-p="galat_variabel">Variabel tak dikenal<span>Bug ditangkap saat EVALUATOR</span></button>
+            <button class="preset-btn" data-p="galat_tipe">Teks + angka<span>Bug tipe data saat EVALUATOR</span></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAGE 2: LEXER -->
+      <div class="stage">
+        <div class="stage-head"><div><span class="stage-num">02</span><h3>LEXER — kode sumber dipecah jadi token</h3></div></div>
+        <div class="stage-body" id="lexerBody"></div>
+      </div>
+
+      <!-- STAGE 3: PARSER -->
+      <div class="stage">
+        <div class="stage-head"><div><span class="stage-num">03</span><h3>PARSER — token disusun jadi pohon (AST)</h3></div></div>
+        <div class="stage-body" id="parserBody"></div>
+      </div>
+
+      <!-- STAGE 4: EVALUATOR -->
+      <div class="stage">
+        <div class="stage-head"><div><span class="stage-num">04</span><h3>EVALUATOR — pohon dijalankan langkah demi langkah</h3></div></div>
+        <div class="stage-body" id="evaluatorBody"></div>
+      </div>
+
+      <!-- STAGE 5: OUTPUT -->
+      <div class="stage">
+        <div class="stage-head"><div><span class="stage-num">05</span><h3>OUTPUT</h3></div></div>
+        <div class="stage-body" id="outputBody"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ 3. METODE ============ -->
+  <section id="metode">
+    <p class="eyebrow-num">3 — Metode</p>
+    <h2>Bagaimana pipeline ini sungguh-sungguh berjalan</h2>
+    <p>Tiga fungsi murni menyusun seluruh mesin ini: <span class="mono">tokenize()</span> memecah teks, <span class="mono">parse()</span> menyusun token jadi pohon lewat tata bahasa berlapis, dan <span class="mono">evaluateProgram()</span> menjalankan pohon itu sambil menjaga satu tabel variabel (scope).</p>
+    <ol class="steps">
+      <li><b>Tahap LEXER — pemindaian karakter.</b> Kode sumber dibaca karakter demi karakter: huruf berturut-turut jadi nama atau kata kunci, digit berturut-turut jadi angka, tanda kutip mengapit teks. Karakter yang sama sekali tidak dikenali dihentikan di sini juga — inilah gerbang pertama yang bisa menolak kode.</li>
+      <li><b>Tahap PARSER — tata bahasa berlapis.</b> Presedensi operator (perkalian sebelum penjumlahan) tidak ditulis sebagai tabel prioritas terpisah, tapi tertanam langsung di struktur fungsi: parseExpr memanggil parseTerm, parseTerm memanggil parseFactor — sehingga * dan / selalu "terikat" lebih erat ke operand-nya sebelum + dan - sempat diproses. Pola berlapis ini disebut recursive descent.</li>
+      <li><b>Tahap EVALUATOR — pohon dijalankan, bukan dibaca ulang jadi teks.</b> AST dijelajahi node demi node, anak lebih dulu baru node itu sendiri — setiap ekspresi menghasilkan nilai, setiap pernyataan LET menyimpan nilai itu ke satu tabel variabel bersama (scope), dan setiap pernyataan PRINT mengambil nilai lalu menambahkannya ke daftar output.</li>
+      <li><b>Satu pernyataan per baris.</b> Bahasa ini tidak mengenal pemisah pernyataan seperti titik koma — baris baru itulah yang memisahkan satu pernyataan dari pernyataan berikutnya.</li>
+      <li><b>Tiga gerbang kesalahan yang terpisah.</b> Karakter aneh berhenti di LEXER, susunan kata yang tidak sah (mis. LET tanpa nama variabel) berhenti di PARSER, dan kesalahan yang baru ketahuan saat dijalankan (variabel belum diisi, tipe data tidak cocok) berhenti di EVALUATOR — masing-masing dicatat dengan tahap dan baris yang jelas, bukan sekadar "terjadi kesalahan".</li>
+    </ol>
+    <div class="pseudo">
+fungsi <span class="kw">jalankan</span>(kodeSumber):<br>
+&nbsp;&nbsp;token = lexer(kodeSumber) &nbsp;&nbsp;<span class="neg">// bisa gagal: karakter tak dikenal</span><br>
+&nbsp;&nbsp;pohon = parser(token) &nbsp;&nbsp;&nbsp;&nbsp;<span class="neg">// bisa gagal: susunan token tak sah</span><br>
+&nbsp;&nbsp;hasil = evaluator(pohon) &nbsp;<span class="neg">// bisa gagal: variabel/tipe saat runtime</span><br>
+&nbsp;&nbsp;<span class="kw">kembalikan</span> hasil.output
+    </div>
+    <p class="desc" style="margin-top:14px;">Interpreter produksi sungguhan (mis. mesin V8 di balik Chrome) tidak menjelajahi AST secara langsung seperti ini — AST biasanya diterjemahkan dulu ke bytecode, lalu bytecode itu yang dijalankan atau bahkan dikompilasi ulang saat berjalan (JIT) demi kecepatan. Pola yang dipakai di alat ini disebut <b style="color:var(--text)">tree-walking interpreter</b> — paling lambat, tapi paling mudah dipahami, sehingga jadi titik awal yang tepat sebelum mempelajari bytecode atau JIT.</p>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ 4. BATASAN ============ -->
+  <section id="batasan">
+    <p class="eyebrow-num">4 — Batasan</p>
+    <h2>Apa yang belum dilakukan interpreter ini</h2>
+    <div class="misconception">
+      <div class="lim">
+        <h4>BELUM ADA DI SINI</h4>
+        <p>Percabangan (IF), pengulangan (WHILE/FOR), fungsi/prosedur buatan sendiri, tipe data selain angka dan teks, penggabungan teks dengan +, dan pemulihan dari galat (berhenti total begitu satu galat ditemukan, bukan melaporkan semua galat sekaligus).</p>
+      </div>
+      <div>
+        <h4>KENAPA ITU PENTING DIKETAHUI</h4>
+        <p>Bahasa pemrograman sungguhan menambahkan lapisan-lapisan ini karena program nyata butuh mengulang, bercabang, dan menyusun ulang logika jadi satuan yang bisa dipakai lagi — tapi setiap lapisan menambah kerumitan tata bahasa dan cara kesalahan dilaporkan.</p>
+      </div>
+    </div>
+    <p>Pipeline lexer → parser → evaluator yang sama akan dipakai lagi untuk kebutuhan yang jauh lebih serius di laboratorium ini — misalnya menganalisis pola akar kata dan i'rab dalam bahasa Arab, yang pada dasarnya juga soal memecah teks jadi satuan terkecil lalu menyusunnya kembali sesuai aturan gramatikal, hanya saja tata bahasanya adalah tata bahasa Arab, bukan tata bahasa PRINT/LET buatan sendiri. Mesin di atas adalah kerangka umum yang polanya sudah teruji; tata bahasa Arab sesungguhnya jauh lebih kaya dan tetap harus disusun bersama pakar bahasa serta diverifikasi lewat kasus manual, mengikuti tahap "Level 1 — Studi Ilmiah" dan "Level 3 — Verifikasi" yang sudah disepakati untuk proyek ini, bukan ditebak sendiri dari pola di halaman ini.</p>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ 5. REFERENSI ============ -->
+  <section id="referensi">
+    <p class="eyebrow-num">5 — Referensi</p>
+    <h2>Sumber &amp; bacaan lanjutan</h2>
+    <ul class="ref-list">
+      <li><span class="who">Nystrom, R. (2021).</span> <i>Crafting Interpreters.</i> — buku pegangan paling banyak dirujuk untuk membangun tree-walking interpreter dan bytecode virtual machine dari nol, memakai bahasa contoh yang sengaja sederhana seperti pada alat ini.</li>
+      <li><span class="who">Aho, A. V., Lam, M. S., Sethi, R., &amp; Ullman, J. D.</span> <i>Compilers: Principles, Techniques, and Tools.</i> — rujukan akademik klasik ("Dragon Book") untuk teori lexer, parser, dan tata bahasa formal secara menyeluruh.</li>
+      <li><span class="who">Abelson, H. &amp; Sussman, G. J.</span> <i>Structure and Interpretation of Computer Programs.</i> — bab tentang "metacircular evaluator" di buku ini adalah salah satu penjelasan paling berpengaruh tentang bagaimana sebuah bahasa bisa mengevaluasi dirinya sendiri.</li>
+    </ul>
+    <p class="desc" style="margin-top:6px;">Halaman ini mengikuti struktur "Belajar → Eksplorasi → Metode → Batasan → Referensi" yang sama dengan alat mesin aturan sebelumnya di laboratorium Qiladat/JAZMI — keduanya sama-sama contoh bagaimana pengetahuan formal (tata bahasa, logika kondisional) bisa dimodelkan jadi kode yang bisa diuji dan dijelaskan, bukan sekadar dijalankan.</p>
+  </section>
+
+  <footer>
+    Alat edukasi — dibangun untuk memperlihatkan cara kerja interpreter sederhana, bukan bahasa pemrograman produksi.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- error types ----------
+  function LexError(message, line){ this.message = message; this.line = line; this.stage = 'LEXER'; }
+  LexError.prototype = Object.create(Error.prototype);
+
+  function ParseError(message, line){ this.message = message; this.line = line; this.stage = 'PARSER'; }
+  ParseError.prototype = Object.create(Error.prototype);
+
+  function RuntimeError(message){ this.message = message; this.stage = 'EVALUATOR'; }
+  RuntimeError.prototype = Object.create(Error.prototype);
+
+  // ---------- LEXER ----------
+  var KEYWORDS = ['PRINT','LET'];
+
+  function tokenize(source){
+    var tokens = [];
+    var comments = [];
+    var i = 0, n = source.length, line = 1;
+
+    function push(type, value, start, end, extra){
+      var tok = { type:type, value:value, start:start, end:end, line:line };
+      if(extra){ for(var k in extra){ tok[k] = extra[k]; } }
+      tokens.push(tok);
+    }
+
+    while(i < n){
+      var ch = source[i];
+
+      if(ch === '\n'){ push('NEWLINE','\n', i, i+1); line++; i++; continue; }
+      if(ch === ' ' || ch === '\t' || ch === '\r'){ i++; continue; }
+
+      if(ch === '#'){
+        var cstart = i;
+        while(i < n && source[i] !== '\n'){ i++; }
+        comments.push({ start:cstart, end:i });
+        continue;
+      }
+
+      if(/[0-9]/.test(ch)){
+        var nstart = i;
+        while(i < n && /[0-9.]/.test(source[i])){ i++; }
+        var raw = source.slice(nstart, i);
+        if(!/^[0-9]+(\.[0-9]+)?$/.test(raw)){
+          throw new LexError('Angka tidak sah: "' + raw + '" (titik desimal ganda, atau titik tanpa digit sesudahnya)', line);
+        }
+        push('NUMBER', parseFloat(raw), nstart, i, { raw: raw });
+        continue;
+      }
+
+      if(/[A-Za-z_]/.test(ch)){
+        var wstart = i;
+        while(i < n && /[A-Za-z0-9_]/.test(source[i])){ i++; }
+        var word = source.slice(wstart, i);
+        var upper = word.toUpperCase();
+        if(KEYWORDS.indexOf(upper) !== -1){ push('KEYWORD', upper, wstart, i); }
+        else{ push('IDENT', word, wstart, i); }
+        continue;
+      }
+
+      if(ch === '"'){
+        var qstart = i;
+        i++;
+        var strStart = i;
+        while(i < n && source[i] !== '"'){
+          if(source[i] === '\n'){ throw new LexError('String tidak ditutup sebelum baris berakhir (kutip penutup " hilang)', line); }
+          i++;
+        }
+        if(i >= n){ throw new LexError('String tidak ditutup — kutip penutup " tidak ditemukan sampai akhir kode', line); }
+        var str = source.slice(strStart, i);
+        i++;
+        push('STRING', str, qstart, i);
+        continue;
+      }
+
+      if(ch === '+' || ch === '-' || ch === '*' || ch === '/' || ch === '='){ push('OP', ch, i, i+1); i++; continue; }
+      if(ch === '('){ push('LPAREN', '(', i, i+1); i++; continue; }
+      if(ch === ')'){ push('RPAREN', ')', i, i+1); i++; continue; }
+
+      throw new LexError('Karakter tidak dikenal: "' + ch + '"', line);
+    }
+
+    push('NEWLINE', '\n', n, n);
+    push('EOF', null, n, n);
+    return { tokens: tokens, comments: comments };
+  }
+
+  // ---------- PARSER ----------
+  function describeToken(t){
+    if(t.type === 'EOF') return 'akhir program';
+    if(t.type === 'NEWLINE') return 'akhir baris';
+    if(t.type === 'STRING') return '"' + t.value + '"';
+    if(t.type === 'NUMBER') return String(t.raw !== undefined ? t.raw : t.value);
+    return '"' + t.value + '"';
+  }
+
+  function parse(tokens){
+    var pos = 0;
+    function peek(){ return tokens[pos]; }
+    function next(){ return tokens[pos++]; }
+    function check(type, value){
+      var t = peek();
+      if(t.type !== type) return false;
+      if(value !== undefined && t.value !== value) return false;
+      return true;
+    }
+    function expect(type, value, message){
+      if(!check(type, value)){
+        var t = peek();
+        throw new ParseError(message, t.line);
+      }
+      return next();
+    }
+    function skipNewlines(){ while(check('NEWLINE')){ next(); } }
+
+    function parseProgram(){
+      var body = [];
+      skipNewlines();
+      while(!check('EOF')){
+        body.push(parseStatement());
+        skipNewlines();
+      }
+      return { type:'Program', body: body };
+    }
+
+    function parseStatement(){
+      if(check('KEYWORD','PRINT')) return parsePrint();
+      if(check('KEYWORD','LET')) return parseLet();
+      var t = peek();
+      throw new ParseError('Pernyataan harus dimulai dengan PRINT atau LET, tapi menemukan ' + describeToken(t), t.line);
+    }
+
+    function parsePrint(){
+      var kw = next();
+      var arg = parseExpr();
+      return { type:'PrintStatement', argument: arg, line: kw.line };
+    }
+
+    function parseLet(){
+      var kw = next();
+      var nameTok = expect('IDENT', undefined, 'Setelah LET harus ada nama variabel, tapi menemukan ' + describeToken(peek()));
+      expect('OP', '=', 'Setelah nama variabel pada LET harus ada tanda "=", tapi menemukan ' + describeToken(peek()));
+      var val = parseExpr();
+      return { type:'LetStatement', name: nameTok.value, value: val, line: kw.line };
+    }
+
+    function parseExpr(){
+      var node = parseTerm();
+      while(check('OP','+') || check('OP','-')){
+        var op = next().value;
+        var right = parseTerm();
+        node = { type:'BinaryExpression', operator: op, left: node, right: right };
+      }
+      return node;
+    }
+
+    function parseTerm(){
+      var node = parseFactor();
+      while(check('OP','*') || check('OP','/')){
+        var op = next().value;
+        var right = parseFactor();
+        node = { type:'BinaryExpression', operator: op, left: node, right: right };
+      }
+      return node;
+    }
+
+    function parseFactor(){
+      var t = peek();
+      if(check('OP','-')){
+        next();
+        var operand = parseFactor();
+        return { type:'UnaryExpression', operator:'-', argument: operand };
+      }
+      if(check('NUMBER')){ next(); return { type:'NumberLiteral', value: t.value }; }
+      if(check('STRING')){ next(); return { type:'StringLiteral', value: t.value }; }
+      if(check('IDENT')){ next(); return { type:'Identifier', name: t.value }; }
+      if(check('LPAREN')){
+        next();
+        var inner = parseExpr();
+        expect('RPAREN', ')', 'Tanda kurung buka "(" tidak ditutup dengan ")", tapi menemukan ' + describeToken(peek()));
+        return inner;
+      }
+      throw new ParseError('Diharapkan angka, teks, nama variabel, atau tanda kurung buka, tapi menemukan ' + describeToken(t), t.line);
+    }
+
+    var program = parseProgram();
+    expect('EOF', undefined, 'Token tersisa padahal program seharusnya sudah selesai');
+    return program;
+  }
+
+  // ---------- EVALUATOR ----------
+  function evaluateProgram(ast){
+    var scope = {};
+    var output = [];
+    var trace = [];
+
+    function evalExpr(node){
+      switch(node.type){
+        case 'NumberLiteral': return node.value;
+        case 'StringLiteral': return node.value;
+        case 'Identifier':
+          if(!(node.name in scope)){
+            throw new RuntimeError('Variabel "' + node.name + '" belum pernah diisi nilai (LET) sebelum dipakai');
+          }
+          return scope[node.name];
+        case 'UnaryExpression': {
+          var v = evalExpr(node.argument);
+          if(typeof v !== 'number'){ throw new RuntimeError('Operator minus (-) hanya berlaku untuk angka, bukan teks'); }
+          return -v;
+        }
+        case 'BinaryExpression': {
+          var l = evalExpr(node.left);
+          var r = evalExpr(node.right);
+          if(node.operator === '+'){
+            if(typeof l === 'string' || typeof r === 'string'){
+              throw new RuntimeError('Operator "+" pada bahasa mini ini hanya untuk angka; teks tidak bisa digabung dengan "+"');
+            }
+            return l + r;
+          }
+          if(typeof l !== 'number' || typeof r !== 'number'){
+            throw new RuntimeError('Operator "' + node.operator + '" hanya berlaku untuk angka, bukan teks');
+          }
+          if(node.operator === '-') return l - r;
+          if(node.operator === '*') return l * r;
+          if(node.operator === '/'){
+            if(r === 0){ throw new RuntimeError('Pembagian dengan nol (0) tidak diperbolehkan'); }
+            return l / r;
+          }
+          throw new RuntimeError('Operator tidak dikenal: ' + node.operator);
+        }
+        default:
+          throw new RuntimeError('Jenis ekspresi tidak dikenal: ' + node.type);
+      }
+    }
+
+    for(var idx = 0; idx < ast.body.length; idx++){
+      var stmt = ast.body[idx];
+      try{
+        if(stmt.type === 'LetStatement'){
+          var val = evalExpr(stmt.value);
+          scope[stmt.name] = val;
+          trace.push({ kind:'LET', name: stmt.name, value: val, line: stmt.line, scopeSnapshot: Object.assign({}, scope) });
+        } else if(stmt.type === 'PrintStatement'){
+          var val2 = evalExpr(stmt.argument);
+          output.push(val2);
+          trace.push({ kind:'PRINT', value: val2, line: stmt.line, scopeSnapshot: Object.assign({}, scope) });
+        }
+      } catch(e){
+        e.line = stmt.line;
+        e.partial = { trace: trace, output: output, scope: scope };
+        throw e;
+      }
+    }
+
+    return { scope: scope, output: output, trace: trace };
+  }
+
+  // ---------- pipeline ----------
+  function runPipeline(source){
+    var res = { source: source };
+    try{
+      var lex = tokenize(source);
+      res.tokens = lex.tokens;
+      res.comments = lex.comments;
+    } catch(e){ res.error = e; return res; }
+
+    try{
+      res.ast = parse(res.tokens);
+    } catch(e){ res.error = e; return res; }
+
+    try{
+      res.evalResult = evaluateProgram(res.ast);
+    } catch(e){ res.error = e; return res; }
+
+    return res;
+  }
+
+  // ---------- rendering helpers ----------
+  function escapeHtml(s){
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function formatNumber(v){
+    var r = Math.round(v * 1e10) / 1e10;
+    return String(r);
+  }
+
+  function formatTyped(v){
+    if(typeof v === 'string') return '"' + v + '"';
+    if(typeof v === 'number') return formatNumber(v);
+    return String(v);
+  }
+
+  function formatOutput(v){
+    if(typeof v === 'number') return formatNumber(v);
+    return String(v);
+  }
+
+  function renderErrorBanner(err){
+    var lineInfo = (err.line !== undefined && err.line !== null) ? (' — baris ' + err.line) : '';
+    return '<div class="error-box"><div class="error-stage">Gagal di tahap ' + err.stage + lineInfo + '</div>' +
+      '<div class="error-msg">' + escapeHtml(err.message) + '</div></div>';
+  }
+
+  function renderHighlightedSource(source, tokens, comments){
+    var spans = [];
+    tokens.forEach(function(t){
+      if(t.type === 'NEWLINE' || t.type === 'EOF') return;
+      spans.push({ start:t.start, end:t.end, cls:'tok-' + t.type.toLowerCase() });
+    });
+    comments.forEach(function(c){ spans.push({ start:c.start, end:c.end, cls:'tok-comment' }); });
+    spans.sort(function(a,b){ return a.start - b.start; });
+
+    var html = '';
+    var cursor = 0;
+    spans.forEach(function(sp){
+      if(sp.start > cursor){ html += escapeHtml(source.slice(cursor, sp.start)); }
+      html += '<span class="' + sp.cls + '">' + escapeHtml(source.slice(sp.start, sp.end)) + '</span>';
+      cursor = sp.end;
+    });
+    if(cursor < source.length){ html += escapeHtml(source.slice(cursor)); }
+    return html || '<span style="color:var(--muted);">(kosong)</span>';
+  }
+
+  // ---------- AST rendering ----------
+  function nodeLabel(node){
+    switch(node.type){
+      case 'LetStatement': return '<span class="ast-type">LetStatement</span><span class="ast-detail">nama variabel = "' + escapeHtml(node.name) + '"</span>';
+      case 'PrintStatement': return '<span class="ast-type">PrintStatement</span>';
+      case 'BinaryExpression': return '<span class="ast-type">BinaryExpression</span><span class="ast-detail">operator = "' + node.operator + '"</span>';
+      case 'UnaryExpression': return '<span class="ast-type">UnaryExpression</span><span class="ast-detail">operator = "' + node.operator + '"</span>';
+      case 'NumberLiteral': return '<span class="ast-type">NumberLiteral</span><span class="ast-detail">nilai = ' + node.value + '</span>';
+      case 'StringLiteral': return '<span class="ast-type">StringLiteral</span><span class="ast-detail">nilai = "' + escapeHtml(node.value) + '"</span>';
+      case 'Identifier': return '<span class="ast-type">Identifier</span><span class="ast-detail">nama = "' + escapeHtml(node.name) + '"</span>';
+      default: return escapeHtml(node.type);
+    }
+  }
+  function childrenOf(node){
+    switch(node.type){
+      case 'LetStatement': return [node.value];
+      case 'PrintStatement': return [node.argument];
+      case 'BinaryExpression': return [node.left, node.right];
+      case 'UnaryExpression': return [node.argument];
+      default: return [];
+    }
+  }
+  function renderAstNode(node){
+    var kids = childrenOf(node);
+    var html = '<div class="ast-line">' + nodeLabel(node) + '</div>';
+    if(kids.length){
+      html += '<div class="ast-node">' + kids.map(renderAstNode).join('') + '</div>';
+    }
+    return html;
+  }
+
+  // ---------- DOM refs ----------
+  var sourceInput = document.getElementById('sourceInput');
+  var lexerBody = document.getElementById('lexerBody');
+  var parserBody = document.getElementById('parserBody');
+  var evaluatorBody = document.getElementById('evaluatorBody');
+  var outputBody = document.getElementById('outputBody');
+
+  // ---------- stage renderers ----------
+  function renderLexerStage(res){
+    if(res.error && res.error.stage === 'LEXER'){
+      lexerBody.innerHTML = renderErrorBanner(res.error) +
+        '<p class="stage-note">Kode sumber sejauh ini (belum sempat ditandai token karena lexer berhenti):</p>' +
+        '<pre class="codeblock">' + escapeHtml(res.source) + '</pre>';
+      return;
+    }
+    var chips = res.tokens.filter(function(t){ return t.type !== 'EOF'; }).map(function(t){
+      var label = t.type === 'NEWLINE' ? '⏎' : (t.type === 'STRING' ? '"' + t.value + '"' : String(t.value));
+      return '<span class="token tok-' + t.type.toLowerCase() + '" title="' + t.type + '">' + escapeHtml(label) + '</span>';
+    }).join('');
+    lexerBody.innerHTML =
+      '<div class="legend">' +
+        '<span class="legend-item"><span class="dot tok-keyword"></span>kata kunci</span>' +
+        '<span class="legend-item"><span class="dot tok-string"></span>teks</span>' +
+        '<span class="legend-item"><span class="dot tok-number"></span>angka</span>' +
+        '<span class="legend-item"><span class="dot tok-ident"></span>nama variabel</span>' +
+        '<span class="legend-item"><span class="dot tok-op"></span>operator</span>' +
+        '<span class="legend-item"><span class="dot tok-comment"></span>komentar (diabaikan)</span>' +
+      '</div>' +
+      '<p class="stage-note">Kode sumber ditandai per jenis token:</p>' +
+      '<pre class="codeblock">' + renderHighlightedSource(res.source, res.tokens, res.comments) + '</pre>' +
+      '<p class="stage-note" style="margin-top:18px;">Aliran token yang diteruskan ke parser (spasi &amp; posisi sudah hilang, hanya jenis dan nilai yang tersisa):</p>' +
+      '<div class="token-stream">' + chips + '</div>';
+  }
+
+  function renderParserStage(res){
+    if(res.error && res.error.stage === 'LEXER'){
+      parserBody.innerHTML = '<div class="stage-skipped">Tidak tercapai — lexer belum berhasil menghasilkan token.</div>';
+      return;
+    }
+    if(res.error && res.error.stage === 'PARSER'){
+      parserBody.innerHTML = renderErrorBanner(res.error);
+      return;
+    }
+    if(!res.ast.body.length){
+      parserBody.innerHTML = '<p class="stage-note">Program kosong — tidak ada pernyataan untuk dibuatkan AST.</p>';
+      return;
+    }
+    var lines = res.source.split('\n');
+    parserBody.innerHTML = res.ast.body.map(function(stmt, i){
+      var srcLine = (lines[stmt.line - 1] || '').trim();
+      return '<div class="ast-block"><div class="ast-caption"><span class="n">Pernyataan ' + (i+1) + '</span>' + escapeHtml(srcLine) + '</div>' + renderAstNode(stmt) + '</div>';
+    }).join('');
+  }
+
+  function renderEvaluatorStage(res){
+    if(res.error && (res.error.stage === 'LEXER' || res.error.stage === 'PARSER')){
+      evaluatorBody.innerHTML = '<div class="stage-skipped">Tidak tercapai — program belum berhasil disusun jadi AST yang valid.</div>';
+      return;
+    }
+    var trace, errBanner = '';
+    if(res.error && res.error.stage === 'EVALUATOR'){
+      trace = res.error.partial.trace;
+      errBanner = renderErrorBanner(res.error);
+    } else {
+      trace = res.evalResult.trace;
+    }
+    if(!trace.length){
+      evaluatorBody.innerHTML = (trace.length === 0 && !errBanner ? '<p class="stage-note">Program kosong — tidak ada pernyataan untuk dijalankan.</p>' : '') + errBanner;
+      return;
+    }
+    var rows = trace.map(function(t, i){
+      var desc;
+      if(t.kind === 'LET'){
+        desc = 'LET ' + t.name + ' = ' + formatTyped(t.value) + ' — disimpan ke variabel <b>' + escapeHtml(t.name) + '</b>';
+      } else {
+        desc = 'PRINT → menghasilkan ' + formatTyped(t.value);
+      }
+      var keys = Object.keys(t.scopeSnapshot);
+      var scopeChips = keys.map(function(k){
+        return '<span class="scope-chip">' + escapeHtml(k) + ' = ' + formatTyped(t.scopeSnapshot[k]) + '</span>';
+      }).join('');
+      var scopeRow = keys.length
+        ? '<div class="scope-row"><span class="scope-label">status variabel:</span>' + scopeChips + '</div>'
+        : '<div class="scope-row"><span class="scope-label">status variabel: belum ada yang tersimpan</span></div>';
+      return '<div class="exec-row"><div class="exec-head"><span class="exec-num">Langkah ' + (i+1) + '</span><span class="exec-desc">' + desc + '</span></div>' + scopeRow + '</div>';
+    }).join('');
+    evaluatorBody.innerHTML = rows + errBanner;
+  }
+
+  function renderOutputStage(res){
+    if(res.error && (res.error.stage === 'LEXER' || res.error.stage === 'PARSER')){
+      outputBody.innerHTML = '<div class="stage-skipped">Tidak tercapai — program tidak sempat dijalankan.</div>';
+      return;
+    }
+    var output, note = '';
+    if(res.error && res.error.stage === 'EVALUATOR'){
+      output = res.error.partial.output;
+      note = '<p class="stage-note" style="margin-top:10px;">Berhenti sebelum selesai — lihat tahap EVALUATOR untuk rincian galat.</p>';
+    } else {
+      output = res.evalResult.output;
+    }
+    if(!output.length){
+      outputBody.innerHTML = '<div class="console">(tidak ada output — tidak ada perintah PRINT yang berhasil dijalankan)</div>' + note;
+      return;
+    }
+    var lines = output.map(function(v){ return '<div class="console-line">' + escapeHtml(formatOutput(v)) + '</div>'; }).join('');
+    outputBody.innerHTML = '<div class="console">' + lines + '</div>' + note;
+  }
+
+  function runAndRender(){
+    var res = runPipeline(sourceInput.value);
+    renderLexerStage(res);
+    renderParserStage(res);
+    renderEvaluatorStage(res);
+    renderOutputStage(res);
+  }
+
+  // ---------- presets ----------
+  var PRESETS = {
+    dasar: 'PRINT "HELLO"\nLET A = 10\nLET B = 20\nPRINT A + B',
+    presedensi: 'LET A = 2 + 3 * 4\nPRINT A\nPRINT (2 + 3) * 4',
+    rantai: 'LET A = 5\nLET B = A * 2\nLET C = A + B\nPRINT C',
+    komentar: '# Baris ini komentar, lexer akan mengabaikannya\nLET A = 1\nPRINT A\n# PRINT A + 100 (baris ini tidak pernah dijalankan)',
+    galat_lexer: 'LET A = 5\nPRINT A @ 3',
+    galat_parser: 'LET = 10\nPRINT A',
+    galat_variabel: 'LET A = 10\nPRINT B',
+    galat_tipe: 'LET A = "HELLO"\nPRINT A + 5'
+  };
+
+  function clearPresetActive(){
+    document.querySelectorAll('.preset-btn').forEach(function(b){ b.classList.remove('active'); });
+  }
+
+  document.getElementById('btnRun').addEventListener('click', runAndRender);
+  sourceInput.addEventListener('keydown', function(e){
+    if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
+      e.preventDefault();
+      runAndRender();
+    }
+  });
+  document.getElementById('btnReset').addEventListener('click', function(){
+    sourceInput.value = PRESETS.dasar;
+    clearPresetActive();
+    document.querySelector('.preset-btn[data-p="dasar"]').classList.add('active');
+    runAndRender();
+  });
+  document.querySelectorAll('.preset-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var key = btn.getAttribute('data-p');
+      sourceInput.value = PRESETS[key];
+      clearPresetActive();
+      btn.classList.add('active');
+      runAndRender();
+    });
+  });
+
+  // init
+  runAndRender();
+
+})();
+</script>
+</body>
+</html>

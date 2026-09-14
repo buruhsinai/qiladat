@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Layangan Bunyi — JAZMI</title>
+<style>
+:root{--bg:#0a1512;--bg2:#0f1e19;--card:#122420;--line:#1f3d34;--emerald:#22c98a;--gold:#e0b354;--text:#e9f3ee;--muted:#8fada0;}
+*{box-sizing:border-box;}body{margin:0;background:var(--bg);color:var(--text);font-family:'Georgia',serif;line-height:1.6;}
+header{padding:26px 20px 18px;text-align:center;background:radial-gradient(ellipse at top,#113b2e 0%,var(--bg) 70%);border-bottom:1px solid var(--line);}
+header .kicker{font-family:-apple-system,sans-serif;letter-spacing:.12em;text-transform:uppercase;font-size:11px;color:var(--gold);}
+header h1{font-size:1.25rem;margin:8px 0;font-weight:600;}
+header p{color:var(--muted);font-family:-apple-system,sans-serif;font-size:13.5px;max-width:600px;margin:0 auto;}
+main{max-width:700px;margin:0 auto;padding:18px;}
+section{padding:18px 0;border-bottom:1px solid var(--line);}section:last-child{border-bottom:none;}
+h2{font-size:1rem;color:var(--emerald);margin:0 0 6px;}p{margin:0 0 10px;font-size:14.5px;}
+.eq{text-align:center;font-size:1.1rem;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0;color:var(--emerald);}
+.eq small{display:block;font-family:-apple-system,sans-serif;font-size:10.5px;color:var(--muted);margin-top:5px;}
+.sim{font-family:-apple-system,sans-serif;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;}
+.sim label{font-size:12.5px;color:var(--muted);display:block;margin-bottom:5px;}
+.sim input{width:100%;accent-color:var(--emerald);margin-bottom:12px;}
+.val{color:var(--gold);font-weight:700;}
+.plot{background:#050a08;border-radius:10px;border:1px solid var(--line);padding:8px;}
+.plot svg{width:100%;height:auto;}
+.result{text-align:center;padding:10px;background:var(--bg2);border-radius:8px;margin-top:10px;font-size:14px;}
+.insight{background:#0e2a20;border-left:3px solid var(--emerald);border-radius:8px;padding:10px 12px;margin-top:10px;font-family:-apple-system,sans-serif;font-size:13px;color:#dff7ec;}
+footer{text-align:center;padding:20px;color:var(--muted);font-family:-apple-system,sans-serif;font-size:11px;}
+</style></head><body>
+<header><div class="kicker">JAZMI · Penghubung Doppler &amp; String Laboratory</div>
+<h1>Layangan Bunyi: Kenapa Dua Nada yang Hampir Sama Bikin Suara "Wuub-Wuub"</h1>
+<p>Ini trik yang dipakai penyetem gitar/piano tanpa alat elektronik — dan sekaligus jembatan langsung dari harmonik senar (String Laboratory) ke soal frekuensi (Doppler).</p></header>
+<main>
+<section><h2>Belajar</h2>
+<p>Dua gelombang bunyi dengan frekuensi hampir sama, dibunyikan bersamaan, akan saling menguatkan lalu saling melemahkan secara bergantian — terdengar sebagai bunyi yang naik-turun volumenya berulang ("layangan"/beat). Kecepatan naik-turun itu persis selisih kedua frekuensinya.</p>
+<div class="eq">f_layangan = |f₁ − f₂|<small>Semakin dekat f₁ ke f₂, semakin lambat layangannya — sampai akhirnya hilang sama sekali saat f₁=f₂ (itulah tandanya sudah "senada")</small></div>
+</section>
+<section><h2>Simulator</h2>
+<div class="sim">
+<label>Frekuensi nada 1: <span class="val" id="f1Val">440 Hz</span></label>
+<input type="range" id="f1Range" min="200" max="600" step="1" value="440">
+<label>Frekuensi nada 2: <span class="val" id="f2Val">444 Hz</span></label>
+<input type="range" id="f2Range" min="200" max="600" step="1" value="444">
+<div class="plot"><svg id="beatSVG" viewBox="0 0 380 140"></svg></div>
+<div class="result">Frekuensi layangan: <b id="beatVal" style="color:var(--gold)">– Hz</b></div>
+<div class="insight">Inilah cara tradisional menyetem senar: petik dua senar bersamaan, dengarkan "wuub"-nya melambat sambil memutar pasak — begitu layangannya berhenti total, kedua senar sudah tepat senada. Coba geser f₂ mendekati f₁ di atas, lihat gelombang gabungannya (garis hijau) makin jarang "mengecil ke nol".</div>
+</div></section>
+</main>
+<footer>Laboratorium JAZMI — versi ringkas, penghubung Doppler &amp; String Laboratory.</footer>
+<script>
+const f1Range=document.getElementById('f1Range'), f2Range=document.getElementById('f2Range');
+function update(){
+  const f1=parseFloat(f1Range.value), f2=parseFloat(f2Range.value);
+  document.getElementById('f1Val').textContent=f1+' Hz';
+  document.getElementById('f2Val').textContent=f2+' Hz';
+  document.getElementById('beatVal').textContent=Math.abs(f1-f2).toFixed(1)+' Hz';
+
+  const W=380,H=140,midY=70,padL=10,plotW=W-20;
+  const tMax=0.05; // 50 ms window
+  let path1='',path2='',pathSum='';
+  const steps=200;
+  for(let i=0;i<=steps;i++){
+    const tf=i/steps, t=tf*tMax;
+    const x=padL+tf*plotW;
+    const y1=midY-Math.sin(2*Math.PI*f1*t)*18;
+    const y2=midY-Math.sin(2*Math.PI*f2*t)*18;
+    const ysum=midY-(Math.sin(2*Math.PI*f1*t)+Math.sin(2*Math.PI*f2*t))*18;
+    path1+=(i===0?'M':'L')+x.toFixed(1)+','+y1.toFixed(1)+' ';
+    path2+=(i===0?'M':'L')+x.toFixed(1)+','+y2.toFixed(1)+' ';
+    pathSum+=(i===0?'M':'L')+x.toFixed(1)+','+(ysum-50).toFixed(1)+' ';
+  }
+  let html=`<line x1="0" y1="${midY}" x2="${W}" y2="${midY}" stroke="#1f3d34" stroke-width="1"/>`;
+  html+=`<path d="${path1}" stroke="#7a5a3a" stroke-width="1.2" fill="none" opacity="0.6"/>`;
+  html+=`<path d="${path2}" stroke="#7fa8d8" stroke-width="1.2" fill="none" opacity="0.6"/>`;
+  html+=`<line x1="0" y1="${midY-50}" x2="${W}" y2="${midY-50}" stroke="#1f3d34" stroke-width="1"/>`;
+  html+=`<path d="${pathSum}" stroke="#22c98a" stroke-width="2" fill="none"/>`;
+  html+=`<text x="5" y="12" font-size="9" fill="#8fada0" font-family="sans-serif">gabungan (yang didengar telinga)</text>`;
+  document.getElementById('beatSVG').innerHTML=html;
+}
+[f1Range,f2Range].forEach(el=>el.addEventListener('input',update));
+update();
+</script>
+</body></html>

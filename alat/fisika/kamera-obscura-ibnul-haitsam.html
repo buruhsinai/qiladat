@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kamar Gelap Ibnul Haitsam — Simulator Kamera Obscura</title>
+<style>
+  :root{
+    --bg:#141210;
+    --panel:#1c1916;
+    --panel2:#211d19;
+    --gold:#c9a24b;
+    --gold-soft:#8a7440;
+    --text:#e8e0d0;
+    --text-dim:#a89a80;
+    --line:#3a332a;
+    --danger:#c25c4a;
+    --ok:#6f9e6a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:Georgia,'Times New Roman',serif;
+    line-height:1.6;
+  }
+  .container{max-width:880px;margin:0 auto;padding:28px 18px 60px;}
+  header{text-align:center;margin-bottom:28px;border-bottom:1px solid var(--line);padding-bottom:20px;}
+  header h1{
+    font-size:1.6rem;color:var(--gold);margin:0 0 6px;
+    letter-spacing:0.3px;
+  }
+  header p{color:var(--text-dim);margin:0;font-size:0.95rem;font-style:italic;}
+  h2{
+    color:var(--gold);font-size:1.15rem;margin:0 0 12px;
+    display:flex;align-items:center;gap:8px;
+  }
+  h2 .num{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:26px;height:26px;border:1px solid var(--gold-soft);border-radius:50%;
+    font-size:0.8rem;color:var(--gold);flex-shrink:0;
+  }
+  section{
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:20px;margin-bottom:18px;
+  }
+  p{margin:0 0 10px;font-size:0.96rem;color:var(--text);}
+  p:last-child{margin-bottom:0;}
+  .dim{color:var(--text-dim);font-size:0.88rem;}
+  .badge{
+    display:inline-block;background:var(--panel2);border:1px solid var(--gold-soft);
+    color:var(--gold);font-size:0.75rem;padding:2px 8px;border-radius:12px;margin-right:6px;
+  }
+  .controls{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:18px;}
+  .field{display:flex;flex-direction:column;gap:4px;}
+  .field label{font-size:0.85rem;color:var(--text-dim);display:flex;justify-content:space-between;}
+  .field label span.val{color:var(--gold);font-weight:bold;}
+  input[type=range]{
+    -webkit-appearance:none;width:100%;height:4px;border-radius:2px;
+    background:var(--line);outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+    background:var(--gold);cursor:pointer;border:2px solid var(--bg);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:16px;height:16px;border-radius:50%;background:var(--gold);
+    cursor:pointer;border:2px solid var(--bg);
+  }
+  .presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+  .presets button{
+    background:var(--panel2);border:1px solid var(--gold-soft);color:var(--text);
+    padding:8px 14px;border-radius:8px;font-family:inherit;font-size:0.85rem;
+    cursor:pointer;
+  }
+  .presets button:hover{background:#2a251f;}
+  .presets button.active{background:var(--gold-soft);color:#1a1712;font-weight:bold;}
+  svg{width:100%;height:auto;background:#0d0c0a;border-radius:8px;border:1px solid var(--line);}
+  .readout{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:10px;margin-top:16px;
+  }
+  .stat{
+    background:var(--panel2);border:1px solid var(--line);border-radius:8px;
+    padding:10px 12px;
+  }
+  .stat .label{font-size:0.75rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;}
+  .stat .value{font-size:1.05rem;color:var(--gold);margin-top:2px;}
+  .verdict{
+    margin-top:14px;padding:12px 14px;border-radius:8px;font-size:0.92rem;
+    border:1px solid var(--line);
+  }
+  .verdict.sharp{border-color:var(--ok);color:var(--ok);background:rgba(111,158,106,0.08);}
+  .verdict.blur{border-color:var(--danger);color:var(--danger);background:rgba(194,92,74,0.08);}
+  .verdict.mid{border-color:var(--gold);color:var(--gold);background:rgba(201,162,75,0.08);}
+  .formula{
+    background:var(--panel2);border:1px solid var(--line);border-radius:6px;
+    padding:10px 14px;font-family:'Courier New',monospace;font-size:0.85rem;
+    color:var(--text);margin:8px 0;overflow-x:auto;
+  }
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;}
+  @media(max-width:560px){.compare{grid-template-columns:1fr;}}
+  .compare .box{border-radius:8px;padding:12px 14px;font-size:0.88rem;}
+  .compare .naif{background:rgba(194,92,74,0.08);border:1px solid var(--danger);}
+  .compare .benar{background:rgba(111,158,106,0.08);border:1px solid var(--ok);}
+  .compare .box .tag{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px;}
+  .naif .tag{color:var(--danger);}
+  .benar .tag{color:var(--ok);}
+  ul{margin:8px 0;padding-left:20px;}
+  li{margin-bottom:6px;font-size:0.94rem;}
+  .refs li{font-size:0.85rem;color:var(--text-dim);}
+  footer{text-align:center;color:var(--text-dim);font-size:0.78rem;margin-top:24px;}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Kamar Gelap Ibnul Haitsam</h1>
+    <p>Dari tahanan rumah Fatimiyah menuju teori optik &amp; kamera obscura</p>
+  </header>
+
+  <!-- BELAJAR -->
+  <section id="belajar">
+    <h2><span class="num">1</span>Belajar</h2>
+    <p><strong>Abu Ali al-Hasan Ibn al-Haytham</strong> (dikenal di Barat sebagai <em>Alhazen</em>, lahir sekitar 965 M di Basra) mengajukan proyek pengendalian banjir Sungai Nil kepada Khalifah Fatimiyah <strong>Al-Hakim bi-Amr Allah</strong> sekitar tahun 1010 M. Setibanya di lokasi dan melihat skala pekerjaan itu, ia sadar rencananya tidak mungkin dilaksanakan.</p>
+    <p>Karena Al-Hakim dikenal tidak segan menghukum kegagalan, Ibnul Haitsam berpura-pura gila untuk menghindari hukuman mati — sebuah siasat yang diakui hukum saat itu untuk membebaskan seseorang dari tanggung jawab. Ia pun ditempatkan dalam status "tahanan rumah" selama kurang lebih sepuluh tahun, hingga Al-Hakim wafat pada 1021.</p>
+    <p>Justru dalam keterasingan itu, di sebuah ruangan gelap yang ia sebut <em>al-Bait al-Muzlim</em> ("rumah gelap"), ia mengamati cahaya yang masuk lewat celah kecil di dinding membentuk bayangan terbalik dari dunia luar pada dinding seberang. Pengamatan inilah — dipadukan dengan eksperimen sistematis — yang menjadi dasar risalah tujuh jilidnya, <em>Kitab al-Manazir</em> (Buku Optik), sekaligus meruntuhkan teori Yunani lama bahwa mata memancarkan sinar untuk melihat (teori ekstramisi Euclid/Ptolemy). Ia membuktikan sebaliknya: cahaya merambat lurus dari benda menuju mata (teori intromisi).</p>
+    <p class="dim">Ruangan gelap dengan celah kecil itulah yang kemudian dikenal sebagai <em>camera obscura</em> — cikal bakal prinsip optik di balik kamera foto modern.</p>
+  </section>
+
+  <!-- PERTANYAAN ILMIAH -->
+  <section id="pertanyaan">
+    <h2><span class="num">2</span>Pertanyaan Ilmiah</h2>
+    <p>Sebelum menghitung, kita perlu menjawab: <strong>apa sebenarnya yang menentukan tajam atau kaburnya bayangan pada dinding kamar gelap?</strong></p>
+    <ul>
+      <li>Apakah cukup lubang dibuat sekecil mungkin agar bayangan makin tajam?</li>
+      <li>Kenapa celah yang terlalu lebar justru membuat bayangan kabur, meski lebih terang?</li>
+      <li>Apakah bentuk bayangan (ukuran, arah) bergantung pada jarak benda, jarak dinding, atau keduanya?</li>
+      <li>Adakah ukuran lubang yang <em>paling optimal</em> — bukan yang paling kecil maupun paling besar?</li>
+    </ul>
+    <p class="dim">Jawabannya ternyata melibatkan dua efek fisika yang saling bertentangan — itulah yang dimodelkan di bawah.</p>
+  </section>
+
+  <!-- EKSPLORASI -->
+  <section id="eksplorasi">
+    <h2><span class="num">3</span>Eksplorasi</h2>
+    <p>Bayangkan Ibnul Haitsam di kamarnya: ada celah di satu dinding, dan di dinding seberang muncul bayangan pohon/orang di luar. Ubah nilainya untuk melihat mengapa lebar celah begitu menentukan.</p>
+
+    <div class="presets">
+      <button data-preset="sempit">Celah Sempit (seperti kisah asli)</button>
+      <button data-preset="lebar">Celah Lebar (retakan besar)</button>
+      <button data-preset="optimal">Ukuran Optimal (dihitung otomatis)</button>
+    </div>
+
+    <div class="controls">
+      <div class="field">
+        <label>Tinggi objek di luar (pohon/orang) <span class="val" id="v_ho">1.7 m</span></label>
+        <input type="range" id="ho" min="0.3" max="5" step="0.1" value="1.7">
+      </div>
+      <div class="field">
+        <label>Jarak objek ke celah (dₒ) <span class="val" id="v_do">6 m</span></label>
+        <input type="range" id="do" min="1" max="30" step="0.5" value="6">
+      </div>
+      <div class="field">
+        <label>Kedalaman kamar / jarak celah ke dinding (dᵢ) <span class="val" id="v_di">2 m</span></label>
+        <input type="range" id="di" min="0.3" max="6" step="0.1" value="2">
+      </div>
+      <div class="field">
+        <label>Diameter celah (D) <span class="val" id="v_D">0.5 mm</span></label>
+        <input type="range" id="D" min="0.1" max="20" step="0.1" value="0.5">
+      </div>
+    </div>
+
+    <svg id="diagram" viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg"></svg>
+
+    <div class="readout">
+      <div class="stat"><div class="label">Tinggi bayangan</div><div class="value" id="out_hi">—</div></div>
+      <div class="stat"><div class="label">Orientasi</div><div class="value" id="out_orient">Terbalik</div></div>
+      <div class="stat"><div class="label">Kabur geometris</div><div class="value" id="out_bgeo">—</div></div>
+      <div class="stat"><div class="label">Kabur difraksi</div><div class="value" id="out_bdiff">—</div></div>
+      <div class="stat"><div class="label">Kabur total (perkiraan)</div><div class="value" id="out_btotal">—</div></div>
+      <div class="stat"><div class="label">Diameter celah optimal</div><div class="value" id="out_Dopt">—</div></div>
+    </div>
+
+    <div class="verdict" id="verdict">—</div>
+  </section>
+
+  <!-- METODE -->
+  <section id="metode">
+    <h2><span class="num">4</span>Metode &amp; Rumus</h2>
+    <p>Bayangan pada dinding kamar gelap dibentuk oleh berkas cahaya yang lurus (prinsip yang justru dibuktikan Ibnul Haitsam sendiri). Ukuran dan ketajaman bayangan mengikuti tiga hubungan berikut.</p>
+
+    <p><strong>1) Geometri dasar (ukuran &amp; pembalikan bayangan)</strong> — segitiga sebangun antara objek–celah dan celah–dinding:</p>
+    <div class="formula">hᵢ = hₒ × (dᵢ / dₒ)</div>
+    <p class="dim">hᵢ = tinggi bayangan, hₒ = tinggi objek, dₒ = jarak objek ke celah, dᵢ = jarak celah ke dinding. Bayangan selalu terbalik karena berkas atas objek jatuh ke bawah dinding, dan sebaliknya.</p>
+
+    <p><strong>2) Kabur geometris</strong> — celah bukan titik matematis, sehingga tiap titik objek memproyeksikan bercak cahaya, bukan titik tajam:</p>
+    <div class="formula">b_geo = D × (dₒ + dᵢ) / dₒ</div>
+    <p class="dim">Makin lebar celah D, makin besar bercak ini → bayangan makin kabur, meski makin terang karena lebih banyak cahaya masuk.</p>
+
+    <p><strong>3) Kabur difraksi</strong> — saat celah dipersempit mendekati skala panjang gelombang cahaya, cahaya melebar akibat difraksi (pola Airy):</p>
+    <div class="formula">b_diff ≈ 2.44 × λ × dᵢ / D</div>
+    <p class="dim">λ = panjang gelombang cahaya (cahaya hijau ≈ 550 nm dipakai sebagai acuan tengah spektrum tampak). Makin sempit celah, makin besar pelebaran difraksi ini.</p>
+
+    <p><strong>4) Diameter celah optimal</strong> — titik temu di mana kedua efek di atas sama-sama minimal, diturunkan dengan meminimalkan jumlah keduanya (∂/∂D dari b_geo + b_diff = 0):</p>
+    <div class="formula">D_opt = √( 2.44 × λ × dᵢ × dₒ / (dₒ + dᵢ) )</div>
+    <p class="dim">Ini bentuk umum dari rumus desain kamera lubang jarum klasik (dikenal sebagai aturan Young), yang biasanya ditulis D_opt ≈ √(2.44 λ f) dengan asumsi objek sangat jauh (dₒ ≫ dᵢ). Di sini dₒ tetap diperhitungkan karena dalam kisah kamar gelap, objek di luar tidak selalu "tak terhingga" jauhnya.</p>
+
+    <p class="dim">Verifikasi kasar: untuk dᵢ = 0.1 m dan λ = 550 nm dengan dₒ ≫ dᵢ, rumus ini memberi D_opt ≈ 0.45 mm — cocok dengan angka yang lazim dipakai fotografer kamera lubang jarum (sekitar 0.3–0.5 mm untuk jarak fokus 10 cm), sehingga model ini konsisten dengan praktik yang sudah dikenal.</p>
+  </section>
+
+  <!-- PERBANDINGAN -->
+  <section id="perbandingan">
+    <h2><span class="num">5</span>Perbandingan Interpretasi</h2>
+    <div class="compare">
+      <div class="box naif">
+        <span class="tag">Anggapan naif</span>
+        Makin besar celah, makin banyak cahaya masuk, jadi bayangan seharusnya makin jelas terlihat.
+      </div>
+      <div class="box benar">
+        <span class="tag">Setelah dimodelkan</span>
+        Celah besar memang lebih terang, tapi setiap titik objek melebar jadi bercak (b_geo) sehingga garis-garis bayangan saling tumpang tindih — bayangan justru makin kabur, bukan makin jelas.
+      </div>
+    </div>
+    <p class="dim" style="margin-top:10px;">Sebaliknya, memperkecil celah tanpa batas juga tidak memberi bayangan sempurna — pada titik tertentu difraksi gelombang cahaya mengambil alih sebagai sumber kekaburan. Inilah mengapa ada satu ukuran optimal, bukan "semakin kecil semakin baik".</p>
+  </section>
+
+  <!-- BATASAN -->
+  <section id="batasan">
+    <h2><span class="num">6</span>Batasan</h2>
+    <ul>
+      <li>Model ini memakai <strong>satu panjang gelombang</strong> (default 550 nm) sebagai wakil cahaya putih; cahaya matahari sesungguhnya adalah campuran banyak panjang gelombang, sehingga pola difraksi nyata sedikit berbeda untuk tiap warna.</li>
+      <li>Kabur total dihitung sebagai <strong>jumlah sederhana</strong> b_geo + b_diff (bukan penjumlahan kuadrat/konvolusi penuh), cukup untuk menunjukkan tren dan titik optimal, bukan untuk presisi rekayasa optik.</li>
+      <li>Diagram di atas adalah <strong>skema, bukan gambar berskala nyata</strong> — rentang dₒ, dᵢ, dan D yang dipakai jauh berbeda ordo besarnya (meter vs milimeter), sehingga posisi elemen disesuaikan agar tetap mudah dibaca, bukan proporsional secara literal.</li>
+      <li>Model mengasumsikan objek sebagai sumber cahaya baur sederhana (tiap titik memancar ke segala arah) dan dinding sebagai layar putih rata — tidak memodelkan warna, kontras, atau distribusi kecerahan bayangan.</li>
+      <li>Detail arsitektural kamar Ibnul Haitsam yang sesungguhnya (bentuk celah, bahan dinding) tidak diketahui presisi — bagian "Belajar" mengikuti catatan sejarah yang umum diterima, bukan rekonstruksi arkeologis.</li>
+    </ul>
+  </section>
+
+  <!-- REFERENSI -->
+  <section id="referensi">
+    <h2><span class="num">7</span>Referensi</h2>
+    <ul class="refs">
+      <li>Erik Høg, "650 Years of Optics: From Alhazen to Fermat and Rømer", Niels Bohr Institute — riwayat tahanan rumah 1010–1021 dan penulisan Kitab al-Manazir.</li>
+      <li>Untold Legacy, "Camera obscura and the father of modern optics" — kisah pengamatan celah cahaya di kamar gelap dan teori intromisi vs ekstramisi.</li>
+      <li>Muhammed Sayeed T. et al., "Science experiments of Ibn Al Hytham and his contribution to modern science" — durasi tahanan rumah dan konteks proyek Sungai Nil.</li>
+      <li>Rumus desain kamera lubang jarum (aturan Young/kriteria Rayleigh) — hubungan klasik diameter optimal dengan panjang gelombang dan jarak fokus, dipakai luas dalam literatur fotografi pinhole.</li>
+    </ul>
+  </section>
+
+  <footer>Bagian dari Laboratorium Sains &amp; Sejarah — Bank Ide Qiladat/JAZMI. Alat ini murni untuk pembelajaran konsep optik, bukan instrumen pengukuran presisi.</footer>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const ho = $('ho'), doEl = $('do'), di = $('di'), D = $('D');
+  const lambda_nm = 550; // acuan cahaya hijau, tengah spektrum tampak
+
+  function fmt(n, d=2){ return n.toLocaleString('id-ID', {minimumFractionDigits:d, maximumFractionDigits:d}); }
+
+  function compute(){
+    const ho_v = parseFloat(ho.value);
+    const do_v = parseFloat(doEl.value);
+    const di_v = parseFloat(di.value);
+    const D_mm = parseFloat(D.value);
+    const D_m = D_mm/1000;
+    const lambda_m = lambda_nm*1e-9;
+
+    const hi = ho_v * (di_v/do_v); // meter
+    const b_geo_m = D_m * (do_v+di_v)/do_v;
+    const b_diff_m = 2.44 * lambda_m * di_v / D_m;
+    const b_total_m = b_geo_m + b_diff_m;
+    const D_opt_m = Math.sqrt(2.44*lambda_m*di_v*do_v/(do_v+di_v));
+
+    return {ho_v, do_v, di_v, D_mm, D_m, hi, b_geo_m, b_diff_m, b_total_m, D_opt_m};
+  }
+
+  function updateReadout(r){
+    $('v_ho').textContent = fmt(r.ho_v,1)+' m';
+    $('v_do').textContent = fmt(r.do_v,1)+' m';
+    $('v_di').textContent = fmt(r.di_v,1)+' m';
+    $('v_D').textContent = fmt(r.D_mm,2)+' mm';
+
+    $('out_hi').textContent = fmt(r.hi*100,1)+' cm';
+    $('out_bgeo').textContent = fmt(r.b_geo_m*1000,3)+' mm';
+    $('out_bdiff').textContent = fmt(r.b_diff_m*1000,3)+' mm';
+    $('out_btotal').textContent = fmt(r.b_total_m*1000,3)+' mm';
+    $('out_Dopt').textContent = fmt(r.D_opt_m*1000,3)+' mm';
+
+    const ratio = r.b_total_m / (r.hi || 1e-9);
+    const verdict = $('verdict');
+    if(ratio < 0.03){
+      verdict.className = 'verdict sharp';
+      verdict.textContent = 'Bayangan cukup tajam — kabur jauh lebih kecil dari ukuran bayangan. Ini mendekati kondisi celah sempit dalam kisah Ibnul Haitsam.';
+    } else if(ratio < 0.15){
+      verdict.className = 'verdict mid';
+      verdict.textContent = 'Bayangan mulai buram di tepinya — masih bisa dikenali bentuknya, tapi detail halus hilang.';
+    } else {
+      verdict.className = 'verdict blur';
+      verdict.textContent = 'Bayangan terlalu kabur untuk dikenali — kabur (geometris atau difraksi) sudah sebanding dengan ukuran bayangan itu sendiri.';
+    }
+  }
+
+  function drawDiagram(r){
+    const svg = $('diagram');
+    const W=700, H=300;
+    const wallX = 260; // posisi dinding berlubang
+    const screenX = 620; // posisi layar/dinding seberang, tetap secara visual
+    const midY = H/2;
+
+    // skala visual tinggi objek & bayangan (dibatasi agar muat, bukan proporsional literal — lihat Batasan)
+    const objVisH = Math.min(90, 20 + r.ho_v*18);
+    const imgVisH = Math.min(90, objVisH * (r.di_v/r.do_v) * 1.0);
+    const imgVisHClamped = Math.max(6, Math.min(110, imgVisH));
+
+    // representasi visual lubang: skala log agar tetap terlihat pada rentang 0.1-20mm
+    const holeVis = Math.max(1.5, Math.min(22, Math.sqrt(r.D_mm)*5));
+
+    const objTopY = midY - objVisH;
+    const objBotY = midY;
+    const imgTopY = midY + imgVisHClamped; // terbalik: bagian atas objek jatuh ke bawah
+    const imgBotY = midY;
+
+    const blurPx = Math.max(0, Math.min(14, (r.b_total_m/ (r.hi||1e-9)) * 40));
+
+    let svgStr = `
+      <defs>
+        <filter id="blurF" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="${blurPx}"/>
+        </filter>
+        <marker id="arrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 z" fill="#c9a24b"/>
+        </marker>
+      </defs>
+      <rect x="0" y="0" width="${W}" height="${H}" fill="#0d0c0a"/>
+      <text x="70" y="30" fill="#a89a80" font-size="12" font-family="Georgia,serif">Luar (terang)</text>
+      <text x="${wallX+30}" y="30" fill="#a89a80" font-size="12" font-family="Georgia,serif">Kamar gelap</text>
+
+      <!-- objek di luar -->
+      <line x1="70" y1="${objBotY}" x2="70" y2="${objTopY}" stroke="#e8e0d0" stroke-width="3" marker-end="url(#arrow)"/>
+      <text x="70" y="${objBotY+16}" fill="#e8e0d0" font-size="11" text-anchor="middle" font-family="Georgia,serif">objek</text>
+
+      <!-- dinding berlubang -->
+      <rect x="${wallX-4}" y="0" width="8" height="${midY-holeVis}" fill="#3a332a"/>
+      <rect x="${wallX-4}" y="${midY+holeVis}" width="8" height="${H-(midY+holeVis)}" fill="#3a332a"/>
+      <circle cx="${wallX}" cy="${midY}" r="${holeVis}" fill="#0d0c0a" stroke="#c9a24b" stroke-width="1.5"/>
+
+      <!-- dinding layar -->
+      <rect x="${screenX+4}" y="0" width="8" height="${H}" fill="#3a332a"/>
+
+      <!-- berkas cahaya: dari ujung atas objek & bawah objek melalui tepi lubang ke layar (terbalik) -->
+      <line x1="70" y1="${objTopY}" x2="${wallX}" y2="${midY-holeVis*0.6}" stroke="#c9a24b" stroke-width="1" opacity="0.55"/>
+      <line x1="${wallX}" y1="${midY-holeVis*0.6}" x2="${screenX}" y2="${imgTopY}" stroke="#c9a24b" stroke-width="1" opacity="0.55"/>
+
+      <line x1="70" y1="${objBotY}" x2="${wallX}" y2="${midY+holeVis*0.6}" stroke="#c9a24b" stroke-width="1" opacity="0.55"/>
+      <line x1="${wallX}" y1="${midY+holeVis*0.6}" x2="${screenX}" y2="${imgBotY}" stroke="#c9a24b" stroke-width="1" opacity="0.55"/>
+
+      <!-- bayangan di layar (terbalik, dengan efek kabur) -->
+      <g filter="url(#blurF)">
+        <line x1="${screenX}" y1="${imgBotY}" x2="${screenX}" y2="${imgTopY}" stroke="#e8956a" stroke-width="3" marker-end="url(#arrow)"/>
+      </g>
+      <text x="${screenX}" y="${H-14}" fill="#e8956a" font-size="11" text-anchor="middle" font-family="Georgia,serif">bayangan (terbalik)</text>
+    `;
+    svg.innerHTML = svgStr;
+  }
+
+  function refresh(){
+    const r = compute();
+    updateReadout(r);
+    drawDiagram(r);
+  }
+
+  [ho, doEl, di, D].forEach(el => el.addEventListener('input', refresh));
+
+  document.querySelectorAll('.presets button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.presets button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const preset = btn.dataset.preset;
+      if(preset==='sempit'){ D.value = 0.5; }
+      else if(preset==='lebar'){ D.value = 15; }
+      else if(preset==='optimal'){
+        const r = compute();
+        D.value = Math.min(20, Math.max(0.1, r.D_opt_m*1000)).toFixed(2);
+      }
+      refresh();
+    });
+  });
+
+  refresh();
+})();
+</script>
+</body>
+</html>

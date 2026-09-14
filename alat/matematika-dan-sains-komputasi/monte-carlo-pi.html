@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estimasi Pi — Monte Carlo Visualizer</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0D1117;--panel:#161B22;--deep:#010409;--text:#C9D1D9;--soft:#8B949E;--blue:#58A6FF;--green:#3FB950;--red:#F85149;--line:#30363D;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.6;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:720px;margin:0 auto;padding:32px 20px 60px;}
+  h1{font-size:1.6rem;margin:0 0 6px;color:#fff;}
+  p{color:var(--soft);font-size:0.9rem;margin:0 0 18px;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 18px;margin-bottom:18px;}
+  .layout{display:flex;gap:16px;flex-wrap:wrap;}
+  canvas#board{background:var(--deep);border:1px solid var(--line);border-radius:6px;}
+  canvas#trend{width:100%;background:var(--deep);border:1px solid var(--line);border-radius:6px;margin-top:10px;}
+  .ctrl-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px;}
+  button{padding:8px 14px;border-radius:6px;border:1px solid var(--line);background:var(--deep);color:var(--text);font-size:0.85rem;cursor:pointer;}
+  button.act{background:var(--blue);color:#0D1117;border-color:var(--blue);font-weight:700;}
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:14px;}
+  .stat-card{background:var(--deep);border:1px solid var(--line);border-radius:6px;padding:10px 12px;}
+  .stat-card .sc-label{font-size:0.68rem;color:var(--soft);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:4px;}
+  .stat-card .sc-value{font-family:'JetBrains Mono',monospace;font-size:1.1rem;color:#fff;font-weight:600;}
+  .foot{font-size:0.78rem;color:#565D66;margin-top:14px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Estimasi π — Monte Carlo Visualizer</h1>
+  <p>Arah lain lagi: bukan algoritma deterministik, bukan otomata seluler — ini soal <b>keacakan yang perlahan mengungkap pola</b>. Lempar titik acak ke kotak berisi lingkaran; rasio titik yang jatuh di dalam lingkaran, dikali 4, mendekati nilai π — makin banyak lemparan, makin akurat.</p>
+
+  <div class="panel">
+    <canvas id="board" width="360" height="360"></canvas>
+    <canvas id="trend" height="90"></canvas>
+    <div class="ctrl-row">
+      <button class="act" id="btnAuto">▶ Jalankan Otomatis</button>
+      <button id="btn1">Lempar 1</button>
+      <button id="btn100">Lempar 100</button>
+      <button id="btn1000">Lempar 1000</button>
+      <button id="btnReset">Reset</button>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="sc-label">Total titik</div><div class="sc-value" id="statTotal">0</div></div>
+      <div class="stat-card"><div class="sc-label">Di dalam lingkaran</div><div class="sc-value" id="statInside">0</div></div>
+      <div class="stat-card"><div class="sc-label">Estimasi π</div><div class="sc-value" id="statPi">–</div></div>
+      <div class="stat-card"><div class="sc-label">Selisih dari π asli</div><div class="sc-value" id="statErr">–</div></div>
+    </div>
+  </div>
+  <p class="foot">Logikanya: luas lingkaran = πr², luas kotak = (2r)² = 4r². Rasio luas lingkaran:kotak = π/4. Kalau titik disebar merata, rasio titik-di-dalam:total akan mendekati rasio luas itu — jadi π ≈ 4 × (di dalam / total).</p>
+</div>
+
+<script>
+const board = document.getElementById('board');
+const bctx = board.getContext('2d');
+const trend = document.getElementById('trend');
+const tctx = trend.getContext('2d');
+trend.width = trend.clientWidth || 600;
+
+const R = board.width/2;
+let total = 0, inside = 0;
+let history = []; // estimate over time, sampled
+let running = false, timer = null;
+
+function drawBoardBase(){
+  bctx.fillStyle = '#010409';
+  bctx.fillRect(0,0,board.width,board.height);
+  bctx.strokeStyle = '#30363D';
+  bctx.lineWidth = 1;
+  bctx.beginPath();
+  bctx.arc(R,R,R-1,0,Math.PI*2);
+  bctx.stroke();
+}
+
+function plotPoint(x,y,isInside){
+  bctx.fillStyle = isInside ? '#3FB950' : '#F85149';
+  bctx.fillRect(x-1,y-1,2,2);
+}
+
+function throwOne(){
+  const x = Math.random()*board.width;
+  const y = Math.random()*board.height;
+  const dx = x-R, dy = y-R;
+  const isInside = (dx*dx+dy*dy) <= R*R;
+  total++;
+  if(isInside) inside++;
+  plotPoint(x,y,isInside);
+  if(total % Math.max(1, Math.floor(total/300)+1) === 0 || total < 50){
+    history.push(4*inside/total);
+    if(history.length > 400) history.shift();
+  }
+}
+
+function throwMany(n){
+  for(let i=0;i<n;i++) throwOne();
+  updateStats();
+  drawTrend();
+}
+
+function updateStats(){
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statInside').textContent = inside;
+  const est = total>0 ? 4*inside/total : 0;
+  document.getElementById('statPi').textContent = total>0 ? est.toFixed(5) : '–';
+  document.getElementById('statErr').textContent = total>0 ? Math.abs(est-Math.PI).toFixed(5) : '–';
+}
+
+function drawTrend(){
+  tctx.clearRect(0,0,trend.width,trend.height);
+  tctx.fillStyle = '#010409';
+  tctx.fillRect(0,0,trend.width,trend.height);
+  // reference line for real Pi
+  const yForVal = v => trend.height - ((v-2.6)/(3.8-2.6))*trend.height;
+  tctx.strokeStyle = '#58A6FF55';
+  tctx.setLineDash([4,4]);
+  tctx.beginPath();
+  tctx.moveTo(0, yForVal(Math.PI));
+  tctx.lineTo(trend.width, yForVal(Math.PI));
+  tctx.stroke();
+  tctx.setLineDash([]);
+
+  if(history.length < 2) return;
+  tctx.strokeStyle = '#3FB950';
+  tctx.lineWidth = 1.5;
+  tctx.beginPath();
+  history.forEach((v,i)=>{
+    const x = (i/(history.length-1)) * trend.width;
+    const y = Math.max(2, Math.min(trend.height-2, yForVal(v)));
+    if(i===0) tctx.moveTo(x,y); else tctx.lineTo(x,y);
+  });
+  tctx.stroke();
+}
+
+function reset(){
+  total=0; inside=0; history=[];
+  drawBoardBase();
+  updateStats();
+  drawTrend();
+}
+
+function speedTick(){
+  throwMany(5);
+}
+
+document.getElementById('btn1').addEventListener('click', ()=>{ throwMany(1); });
+document.getElementById('btn100').addEventListener('click', ()=>{ throwMany(100); });
+document.getElementById('btn1000').addEventListener('click', ()=>{ throwMany(1000); });
+document.getElementById('btnReset').addEventListener('click', reset);
+document.getElementById('btnAuto').addEventListener('click', (e)=>{
+  running = !running;
+  e.target.textContent = running ? '⏸ Jeda' : '▶ Jalankan Otomatis';
+  if(running){ timer = setInterval(speedTick, 60); }
+  else { clearInterval(timer); }
+});
+
+reset();
+</script>
+</body>
+</html>

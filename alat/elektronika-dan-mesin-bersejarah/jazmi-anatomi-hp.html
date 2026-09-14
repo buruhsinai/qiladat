@@ -1,0 +1,2145 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JAZMI — Anatomi &amp; Simulasi Komponen Handphone</title>
+<style>
+  :root{
+    --bg:#12151a; --bg-panel:#1a1e25; --bg-panel-2:#20242c; --line:#2c313b;
+    --text:#e9e6df; --text-dim:#9aa1ad;
+    --gold:#c9a24b; --gold-soft:#e3c988;
+    --ok:#4f9c94; --warn:#e3766a; --electric:#5b8fc9; --charge:#7ec98f;
+    --screen:#5ecbd6; --metal:#8a93a3;
+    --font-mono:"JetBrains Mono",monospace;
+  }
+  *{box-sizing:border-box;}
+  body{background:var(--bg);margin:0;padding:18px;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  .wrap{max-width:1180px;margin:0 auto;}
+
+  header{margin-bottom:16px;}
+  .kicker{color:var(--gold);font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;}
+  h1{margin:4px 0 6px;font-size:22px;font-weight:700;}
+  .sub{color:var(--text-dim);font-size:13.5px;line-height:1.55;max-width:640px;}
+  .note{color:var(--text-dim);font-size:12px;line-height:1.6;max-width:640px;margin-top:8px;padding:8px 12px;border-left:3px solid var(--gold);background:var(--bg-panel);border-radius:0 8px 8px 0;}
+
+  .scenario-block{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:16px 0;}
+  .scenario-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;margin-bottom:10px;}
+  .scenario-head .lbl{font-family:var(--font-mono);font-size:11px;color:var(--gold);letter-spacing:.06em;}
+  .scenario-hint{color:var(--text-dim);font-size:12.5px;}
+  .scenario-grid{display:flex;flex-wrap:wrap;gap:8px;}
+  .scenario-btn{background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);font-size:12.5px;padding:8px 13px;border-radius:20px;cursor:pointer;font-family:inherit;transition:border-color .15s,background .15s,color .15s;}
+  .scenario-btn:hover{border-color:var(--gold-soft);}
+  .scenario-btn.active{background:var(--warn);border-color:var(--warn);color:#2a0d0a;font-weight:700;}
+  .scenario-reset{margin-top:12px;padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--text-dim);font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;}
+  .scenario-reset:hover{border-color:var(--text-dim);}
+  .scenario-tag{display:inline-block;margin-top:10px;font-family:var(--font-mono);font-size:11px;color:var(--gold-soft);background:#2a2312;border:1px solid #4a3f22;border-radius:6px;padding:3px 8px;}
+  .scenario-list{margin:6px 0 0;padding-left:18px;font-size:13.5px;line-height:1.65;}
+  .scenario-jump{background:none;border:none;color:var(--gold-soft);text-decoration:underline;text-underline-offset:2px;cursor:pointer;font-size:13.5px;padding:0;font-family:inherit;}
+  .scenario-jump:hover{color:var(--gold);}
+  .panel .scenario-reset-inline{margin-top:14px;width:100%;padding:10px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--text-dim);font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;}
+  .panel .scenario-reset-inline:hover{border-color:var(--text-dim);}
+
+  .controlbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:16px 0;}
+  .searchbox{position:relative;flex:1;min-width:220px;}
+  .searchbox input{width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg-panel);color:var(--text);font-size:14px;}
+  .searchbox input:focus{outline:2px solid var(--gold);outline-offset:1px;}
+  .suggestions{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;z-index:20;display:none;max-height:280px;overflow-y:auto;}
+  .suggestions.open{display:block;}
+  .sugg-item{padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer;font-size:13.5px;}
+  .sugg-item:last-child{border-bottom:none;}
+  .sugg-item:hover,.sugg-item:focus{background:var(--bg-panel-2);}
+  .sugg-item b{color:var(--gold-soft);}
+  .sugg-item .why{color:var(--text-dim);font-size:12px;display:block;margin-top:2px;}
+
+  .power{display:flex;align-items:center;gap:10px;background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:8px 14px;flex-wrap:wrap;}
+  .power button{background:var(--gold);color:#1a1508;border:none;font-weight:700;font-size:13px;padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit;}
+  .power button.off{background:var(--bg-panel-2);color:var(--text-dim);border:1px solid var(--line);}
+  .lamp{width:10px;height:10px;border-radius:50%;background:#333;transition:.2s;}
+  .lamp.on{background:var(--screen);box-shadow:0 0 8px var(--screen);}
+
+  .levelbar{display:flex;align-items:center;gap:10px;background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:8px 14px;}
+  .levelbar .lbl{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);letter-spacing:.05em;}
+  .level-seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .level-seg button{background:var(--bg-panel-2);color:var(--text-dim);border:none;font-size:12.5px;padding:7px 12px;cursor:pointer;font-family:inherit;border-right:1px solid var(--line);}
+  .level-seg button:last-child{border-right:none;}
+  .level-seg button.active{background:var(--gold);color:#1a1508;font-weight:700;}
+
+  .bodystyle-bar{display:flex;align-items:center;gap:10px;background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:8px 14px;flex-wrap:wrap;margin-bottom:16px;}
+  .bodystyle-bar .lbl{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);letter-spacing:.05em;}
+  .bodystyle-seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .bodystyle-seg button{background:var(--bg-panel-2);color:var(--text-dim);border:none;font-size:12.5px;padding:7px 12px;cursor:pointer;font-family:inherit;border-right:1px solid var(--line);}
+  .bodystyle-seg button:last-child{border-right:none;}
+  .bodystyle-seg button.active{background:var(--gold);color:#1a1508;font-weight:700;}
+
+  .print-btn{background:transparent;color:var(--gold-soft);border:1px solid var(--gold);font-weight:700;font-size:13px;padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit;}
+  .print-btn:hover{background:var(--gold);color:#1a1508;}
+  .share-btn{background:transparent;color:var(--charge);border:1px solid var(--charge);font-weight:700;font-size:13px;padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit;}
+  .share-btn:hover{background:var(--charge);color:#0d2116;}
+  .share-panel{background:var(--bg-panel);border:1px solid var(--charge);border-radius:10px;padding:14px 16px;margin:14px 0 0;display:none;}
+  .share-panel.open{display:block;}
+  .share-panel .lbl{font-family:var(--font-mono);font-size:11px;color:var(--charge);letter-spacing:.06em;}
+  .share-summary{font-size:12.5px;color:var(--text-dim);margin:8px 0 12px;line-height:1.55;}
+  .share-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .share-input{flex:1;min-width:220px;background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);font-family:var(--font-mono);font-size:11.5px;padding:9px 12px;border-radius:8px;}
+  .share-copy-btn{background:var(--charge);color:#0d2116;border:none;font-weight:700;font-size:13px;padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .share-copy-btn.copied{background:var(--gold);color:#1a1508;}
+  .share-applied-banner{display:none;background:#173428;border:1px solid #2f5c47;color:#bfe8d4;border-radius:9px;padding:9px 14px;font-size:12.5px;margin-bottom:14px;line-height:1.5;}
+  .share-applied-banner.show{display:block;}
+  .export-btn{background:transparent;color:var(--electric);border:1px solid var(--electric);font-weight:700;font-size:13px;padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit;}
+  .export-btn:hover{background:var(--electric);color:#0d1a26;}
+
+  .export-panel{background:var(--bg-panel);border:1px solid var(--electric);border-radius:10px;padding:14px 16px;margin:14px 0 0;display:none;}
+  .export-panel.open{display:block;}
+  .export-panel .lbl{font-family:var(--font-mono);font-size:11px;color:var(--electric);letter-spacing:.06em;}
+  .export-summary{font-size:12.5px;color:var(--text-dim);margin:8px 0 12px;line-height:1.55;}
+  .frame-seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:10px;}
+  .frame-seg button{background:var(--bg-panel-2);color:var(--text-dim);border:none;font-size:12.5px;padding:7px 12px;cursor:pointer;font-family:inherit;border-right:1px solid var(--line);}
+  .frame-seg button:last-child{border-right:none;}
+  .frame-seg button.active{background:var(--electric);color:#0d1a26;font-weight:700;}
+  .export-opt-row{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-dim);margin-bottom:12px;}
+  .export-download-btn{background:var(--electric);color:#0d1a26;border:none;font-weight:700;font-size:13px;padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .export-download-btn.done{background:var(--charge);}
+
+  .print-summary{display:none;}
+  @media print{
+    body *{visibility:hidden;}
+    .print-summary, .print-summary *{visibility:visible;}
+    .print-summary{display:block !important;position:absolute;left:0;top:0;width:100%;}
+  }
+  .print-summary{background:#fff;color:#111;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;max-width:900px;margin:0 auto;padding:24px;}
+  .print-summary .ps-header{border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:14px;}
+  .print-summary .ps-kicker{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;color:#555;}
+  .print-summary .ps-header h1{margin:3px 0 4px;font-size:20px;}
+  .print-summary .ps-header p{margin:0;font-size:12px;color:#444;line-height:1.5;}
+  .print-summary .ps-item{break-inside:avoid;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #eee;}
+  .print-summary .ps-item-head{display:flex;align-items:baseline;gap:8px;margin-bottom:3px;}
+  .print-summary .ps-num{font-family:var(--font-mono);font-size:11px;color:#999;}
+  .print-summary .ps-name{font-size:14px;font-weight:700;}
+  .print-summary .ps-fungsi{font-size:12px;line-height:1.5;margin:0 0 4px;color:#222;}
+  .print-summary .ps-row{font-size:11.5px;line-height:1.55;margin:0 0 3px;color:#333;}
+  .print-summary .ps-row b{color:#111;}
+  .print-summary .ps-gejala{margin:2px 0 0;padding-left:16px;font-size:11.5px;line-height:1.55;color:#333;}
+  .print-summary .ps-scenarios{margin-top:22px;break-before:page;}
+  .print-summary .ps-scenarios h2{font-size:15px;margin:0 0 4px;}
+  .print-summary .ps-scenarios > p{font-size:11.5px;color:#444;margin:0 0 12px;}
+  .print-summary .ps-scen-item{break-inside:avoid;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #eee;}
+  .print-summary .ps-scen-label{font-size:12.5px;font-weight:700;margin-bottom:2px;}
+  .print-summary .ps-scen-ids{font-family:var(--font-mono);font-size:10.5px;color:#8a6d1f;margin-bottom:2px;}
+  .print-summary .ps-scen-desc{font-size:11.5px;line-height:1.5;color:#333;margin:0;}
+  .print-summary .ps-footer{margin-top:18px;padding-top:8px;border-top:1px solid #ccc;font-size:10px;color:#888;}
+
+  .gauges{display:flex;gap:18px;margin-top:10px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-dim);flex-wrap:wrap;}
+  .gauge{display:flex;align-items:center;gap:8px;}
+  .gauge b{color:var(--text);font-size:13px;}
+  .gauge .track{width:80px;height:6px;border-radius:4px;background:var(--bg-panel-2);border:1px solid var(--line);overflow:hidden;}
+  .gauge .fill{height:100%;border-radius:4px;transition:width .3s linear;}
+  .gauge.batg .fill{background:var(--charge);}
+  .gauge.tempg .fill{background:var(--warn);}
+
+  .statusline{font-family:var(--font-mono);font-size:12.5px;padding:9px 14px;border-radius:9px;border:1px solid var(--line);background:var(--bg-panel);margin-bottom:14px;}
+  .statusline.ok{color:var(--charge);border-color:#2f4a3c;}
+  .statusline.warn{color:var(--gold-soft);border-color:#4a3f22;}
+  .statusline.err{color:var(--warn);border-color:#4a2c28;}
+
+  .chips-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:-4px 0 14px;}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:#2a1a17;border:1px solid #4a2c28;color:#f2b3a8;border-radius:20px;padding:5px 8px 5px 12px;font-size:12px;}
+  .chip.sev-1{background:#2a2417;border-color:#4a3f28;color:#e3c988;}
+  .chip.sev-1 button{color:#e3c988;}
+  .chip button{background:none;border:none;color:#f2b3a8;cursor:pointer;font-size:14px;line-height:1;padding:2px 4px;font-family:inherit;}
+  .chip-clear{background:transparent;border:1px solid var(--line);color:var(--text-dim);border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;}
+
+  .grid{display:flex;gap:18px;align-items:flex-start;}
+  .diagram-col{flex:1.5;min-width:0;}
+  .jadul-preview-block{border:1px dashed var(--gold);border-radius:12px;padding:16px 18px;margin:0 0 20px;background:linear-gradient(135deg,#1c1a12,#171a1f);}
+  .jadul-preview-head{margin-bottom:12px;}
+  .jadul-preview-head .lbl{font-family:var(--font-mono);font-size:11px;color:var(--gold-soft);letter-spacing:.07em;}
+  .jadul-preview-head p{margin:5px 0 0;font-size:12.5px;color:var(--text-dim);line-height:1.55;max-width:640px;}
+  .jadul-preview-grid{display:flex;gap:18px;align-items:flex-start;}
+  .jadul-preview-grid .panel-col{flex:1;min-width:240px;}
+  .jadul-preview-grid .diagram-col{flex:1.4;min-width:0;}
+  @media (max-width:760px){
+    .jadul-preview-grid{flex-direction:column;}
+  }
+  .hotspot-jadul.active .badge-bg{stroke:#fff;stroke-width:2.6;}
+  .hotspot-jadul.sev-1 .badge-bg{stroke:#e3a23a;stroke-width:1.6;}
+  .hotspot-jadul.sev-1 .badge-num{fill:#e3a23a;}
+  .hotspot-jadul.sev-2 .badge-bg{stroke:var(--warn);stroke-width:2.2;stroke-dasharray:3 2;}
+  .hotspot-jadul.sev-2 .badge-num{fill:var(--warn);}
+  .hotspot-jadul.sev-3 .badge-bg{stroke:var(--warn);stroke-width:3;}
+  .hotspot-jadul.sev-3 .badge-num{fill:var(--warn);}
+  .compare-summary{background:var(--bg-panel-2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:14px;}
+  .compare-summary-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:8px;}
+  .compare-summary-col{flex:1;min-width:150px;display:flex;flex-direction:column;gap:2px;}
+  .compare-summary-col .cs-lbl{font-family:var(--font-mono);font-size:10.5px;color:var(--gold-soft);letter-spacing:.06em;}
+  .compare-summary-col b{font-size:15px;}
+  .compare-summary-col .cs-sub{font-size:12px;color:var(--text-dim);}
+  .compare-summary-note{margin:0;font-size:12px;color:var(--text-dim);line-height:1.5;padding-top:8px;border-top:1px solid var(--line);}
+
+  .arch-table-wrap{margin-top:22px;padding-top:18px;border-top:1px dashed var(--line);}
+  .arch-table-wrap h3{margin:0 0 4px;font-size:15px;}
+  .arch-table-wrap .arch-sub{margin:0 0 14px;font-size:12.5px;color:var(--text-dim);line-height:1.5;max-width:640px;}
+  .arch-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .arch-table th{text-align:left;font-family:var(--font-mono);font-size:11px;letter-spacing:.05em;color:var(--text-dim);text-transform:uppercase;padding:8px 10px;border-bottom:2px solid var(--line);}
+  .arch-table td{padding:10px;vertical-align:top;border-bottom:1px solid var(--line);line-height:1.5;}
+  .arch-table td.arch-cat{font-weight:700;color:var(--gold-soft);white-space:nowrap;}
+  .arch-table td.arch-modern{border-left:2px solid var(--electric);}
+  .arch-table td.arch-jadul{border-left:2px solid var(--screen);}
+  .arch-table tr:last-child td{border-bottom:none;}
+  .arch-table tr:hover td{background:var(--bg-panel-2);}
+  @media (max-width:640px){
+    .arch-table, .arch-table thead, .arch-table tbody, .arch-table th, .arch-table td, .arch-table tr{display:block;}
+    .arch-table thead{display:none;}
+    .arch-table tr{margin-bottom:14px;border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+    .arch-table td{border-bottom:1px solid var(--line);border-left:none !important;}
+    .arch-table td.arch-modern::before{content:"HP Modern: ";color:var(--electric);font-family:var(--font-mono);font-size:10.5px;display:block;margin-bottom:2px;}
+    .arch-table td.arch-jadul::before{content:"HP Jadul: ";color:var(--screen);font-family:var(--font-mono);font-size:10.5px;display:block;margin-bottom:2px;}
+  }
+  .panel-col{flex:1;min-width:280px;}
+
+  svg.chart{width:100%;height:auto;display:block;background:var(--bg-panel-2);border-radius:12px;border:1px solid var(--line);}
+  .badge-bg{fill:var(--bg-panel);stroke:var(--gold);stroke-width:2;cursor:pointer;transition:stroke .15s,r .15s;}
+  .badge-bg:hover{stroke:var(--gold-soft);}
+  .hotspot{cursor:pointer;}
+  .hotspot.active .badge-bg{stroke:#fff;stroke-width:2.6;}
+  .hotspot.sev-1 .badge-bg{stroke:#e3a23a;stroke-width:1.6;}
+  .hotspot.sev-1 .badge-num{fill:#e3a23a;}
+  .hotspot.sev-2 .badge-bg{stroke:var(--warn);stroke-width:2.2;stroke-dasharray:3 2;}
+  .hotspot.sev-2 .badge-num{fill:var(--warn);}
+  .hotspot.sev-3 .badge-bg{stroke:var(--warn);stroke-width:3;}
+  .hotspot.sev-3 .badge-num{fill:var(--warn);}
+  .badge-num{fill:var(--gold-soft);font-family:var(--font-mono);font-size:13px;font-weight:700;text-anchor:middle;pointer-events:none;}
+  .leader{stroke:var(--line);stroke-width:1;opacity:.7;fill:none;}
+  .case-outline{fill:none;stroke:var(--metal);stroke-width:2.5;stroke-dasharray:6,4;opacity:.6;}
+  .part{fill:var(--bg-panel);stroke:var(--metal);stroke-width:1.5;}
+  .chip-part{fill:var(--metal);stroke:#5a6270;stroke-width:1.2;}
+  .board{fill:none;stroke:var(--gold);stroke-width:1.5;stroke-dasharray:4,3;opacity:.55;}
+  .metal-line{stroke:var(--metal);stroke-width:4;stroke-linecap:round;}
+  .bay-label{fill:var(--text-dim);font-family:var(--font-mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;opacity:.75;}
+  .antenna{stroke:var(--electric);stroke-width:1.6;fill:none;opacity:.55;}
+  .signal-dot{fill:var(--electric);}
+  .case-layer{pointer-events:none;}
+
+  .panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;position:sticky;top:12px;}
+  .panel-empty{color:var(--text-dim);font-size:13.5px;line-height:1.6;}
+  .panel .num{color:var(--gold);font-family:var(--font-mono);font-size:12px;margin-bottom:8px;display:block;}
+  .panel h2{margin:0 0 2px;font-size:17px;}
+  .panel h3{margin:14px 0 5px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);}
+  .panel p{margin:0;font-size:13.5px;line-height:1.55;}
+  .panel ul{margin:4px 0 0;padding-left:18px;font-size:13.5px;line-height:1.6;}
+  .panel ul li{margin-bottom:3px;}
+
+  .sev-seg{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+  .sev-seg button{flex:1;min-width:70px;padding:8px 6px;border-radius:8px;border:1px solid var(--line);background:var(--bg-panel-2);color:var(--text-dim);font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s;}
+  .sev-seg button:hover{border-color:var(--gold);}
+  .sev-seg button.active{color:#fff;border-color:transparent;}
+  .sev-seg button[data-lvl="0"].active{background:var(--ok);}
+  .sev-seg button.sev-1.active{background:#e3a23a;color:#2a1c08;}
+  .sev-seg button.sev-2.active{background:#c9673a;}
+  .sev-seg button.sev-3.active{background:var(--warn);}
+
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:12px;color:var(--text-dim);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+
+  @media (max-width:820px){
+    .grid{flex-direction:column;}
+    .panel{position:static;}
+  }
+
+  /* ===== Tur Terpandu ===== */
+  .tour-cta{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(135deg,#20242c,#1a1e25);border:1px solid var(--gold);border-radius:12px;padding:14px 18px;margin:0 0 16px;}
+  .tour-cta .lbl{font-family:var(--font-mono);font-size:11px;color:var(--gold);letter-spacing:.08em;}
+  .tour-cta-text p{margin:4px 0 0;font-size:13px;color:var(--text-dim);line-height:1.5;max-width:520px;}
+  .tour-start-btn{background:var(--gold);color:#1a1508;border:none;font-weight:700;font-size:13.5px;padding:11px 20px;border-radius:9px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .tour-start-btn:hover{background:var(--gold-soft);}
+
+  body.tour-mode{padding-bottom:96px;}
+  body.tour-mode .scenario-block,
+  body.tour-mode .controlbar,
+  body.tour-mode .bodystyle-bar,
+  body.tour-mode .tour-cta{opacity:.32;pointer-events:none;filter:grayscale(.4);transition:opacity .2s;}
+
+  .hotspot.tour-dim .badge-bg{opacity:.25;transition:opacity .2s;}
+  .hotspot.tour-dim .badge-num{opacity:.25;transition:opacity .2s;}
+  .hotspot.tour-active .badge-bg{animation:tourPulse 1.5s ease-in-out infinite;}
+  @keyframes tourPulse{
+    0%,100%{stroke-width:2;filter:none;}
+    50%{stroke-width:4;filter:drop-shadow(0 0 7px var(--gold-soft));}
+  }
+
+  .panel .tour-stage-tag{display:inline-block;margin:2px 0 8px;font-family:var(--font-mono);font-size:11px;color:var(--gold);background:#2a2312;border:1px solid #4a3f22;border-radius:6px;padding:3px 8px;}
+  .panel .tour-narasi{background:var(--bg-panel-2);border-left:3px solid var(--gold);padding:10px 12px;margin:0;border-radius:0 8px 8px 0;line-height:1.6;font-size:13.5px;}
+
+  .tour-bar{position:fixed;left:0;right:0;bottom:0;z-index:50;display:none;align-items:center;gap:14px;flex-wrap:wrap;background:var(--bg-panel);border-top:1px solid var(--gold);padding:10px 18px;box-shadow:0 -6px 18px rgba(0,0,0,.35);}
+  .tour-bar.show{display:flex;}
+  .tour-info{display:flex;flex-direction:column;gap:1px;min-width:140px;}
+  .tour-info .tour-stage{font-family:var(--font-mono);font-size:10.5px;color:var(--gold);letter-spacing:.05em;}
+  .tour-info .tour-step-count{font-size:12px;color:var(--text-dim);}
+  .tour-dots{display:flex;gap:5px;flex-wrap:wrap;flex:1;}
+  .tour-dot{width:8px;height:8px;border-radius:50%;background:var(--bg-panel-2);border:1px solid var(--line);padding:0;cursor:pointer;}
+  .tour-dot.active{background:var(--gold);border-color:var(--gold);}
+  .tour-nav{display:flex;gap:8px;}
+  .tour-nav button{font-family:inherit;font-size:12.5px;font-weight:700;padding:9px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--line);background:var(--bg-panel-2);color:var(--text);}
+  .tour-nav button:disabled{opacity:.35;cursor:not-allowed;}
+  #tourNextBtn{background:var(--gold);color:#1a1508;border-color:var(--gold);}
+  #tourCloseBtn{background:transparent;color:var(--text-dim);}
+
+  /* ===== Kuis Diagnostik ===== */
+  .learn-ctas{display:flex;flex-wrap:wrap;gap:14px;margin:0 0 16px;}
+  .learn-ctas .tour-cta,
+  .learn-ctas .quiz-cta,
+  .learn-ctas .rev-cta{flex:1;min-width:260px;margin:0;}
+  .quiz-cta{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(135deg,#20242c,#1a1e25);border:1px solid var(--electric);border-radius:12px;padding:14px 18px;}
+  .quiz-cta .lbl{font-family:var(--font-mono);font-size:11px;color:var(--electric);letter-spacing:.08em;}
+  .quiz-cta-text p{margin:4px 0 0;font-size:13px;color:var(--text-dim);line-height:1.5;max-width:520px;}
+
+  .rev-cta{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(135deg,#20242c,#1a1e25);border:1px solid var(--screen);border-radius:12px;padding:14px 18px;}
+  .rev-cta .lbl{font-family:var(--font-mono);font-size:11px;color:var(--screen);letter-spacing:.08em;}
+  .rev-cta-text p{margin:4px 0 0;font-size:13px;color:var(--text-dim);line-height:1.5;max-width:520px;}
+  .rev-start-btn{background:var(--screen);color:#062126;border:none;font-weight:700;font-size:13.5px;padding:11px 20px;border-radius:9px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .rev-start-btn:hover{filter:brightness(1.1);}
+
+  body.rev-mode{padding-bottom:0;}
+  body.rev-mode .controlbar,
+  body.rev-mode .scenario-block,
+  body.rev-mode .bodystyle-bar,
+  body.rev-mode .learn-ctas{opacity:.32;pointer-events:none;filter:grayscale(.4);transition:opacity .2s;}
+
+  .rev-block{background:var(--bg-panel);border:1px solid var(--screen);border-radius:12px;padding:16px 18px;margin:0 0 16px;display:none;}
+  .rev-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-bottom:12px;}
+  .rev-head .lbl{font-family:var(--font-mono);font-size:11px;color:var(--screen);letter-spacing:.08em;}
+  .rev-progress{font-size:12px;color:var(--text-dim);}
+  .rev-close{margin-left:auto;background:transparent;border:1px solid var(--line);color:var(--text-dim);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit;}
+  .rev-case-text{font-size:14.5px;line-height:1.6;margin:0 0 6px;padding:12px 14px;background:var(--bg-panel-2);border-radius:10px;border-left:3px solid var(--screen);}
+  .rev-hint{font-size:11.5px;color:var(--text-dim);margin:0 0 14px;font-style:italic;}
+  .rev-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+  .rev-row{display:flex;align-items:center;gap:10px;background:var(--bg-panel-2);border:1px solid var(--line);border-radius:9px;padding:9px 12px;}
+  .rev-rank{font-family:var(--font-mono);font-weight:700;color:var(--screen);min-width:20px;}
+  .rev-name{flex:1;font-size:13.5px;}
+  .rev-arrows{display:flex;gap:4px;}
+  .rev-arrows button{background:var(--bg-panel);border:1px solid var(--line);color:var(--text);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:13px;font-family:inherit;}
+  .rev-arrows button:disabled{opacity:.3;cursor:not-allowed;}
+  .rev-submit{background:var(--screen);color:#062126;border:none;font-weight:700;font-size:13.5px;padding:11px 18px;border-radius:9px;cursor:pointer;font-family:inherit;}
+  .rev-score-line{font-size:13.5px;margin:0 0 12px;padding:10px 12px;border-radius:9px;background:var(--bg-panel-2);border:1px solid var(--line);}
+  .rev-compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+  .rev-compare-col h4{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);}
+  .rev-compare-col ol{margin:0;padding-left:18px;font-size:13px;line-height:1.7;}
+  .rev-alasan{background:var(--bg-panel-2);border-left:3px solid var(--screen);padding:10px 12px;border-radius:0 8px 8px 0;font-size:13px;line-height:1.6;margin-bottom:14px;}
+  .rev-actions{display:flex;flex-wrap:wrap;gap:10px;}
+  .rev-actions button{font-family:inherit;font-weight:700;font-size:13px;padding:10px 16px;border-radius:8px;cursor:pointer;border:1px solid var(--line);background:var(--bg-panel-2);color:var(--text);}
+  .rev-actions .primary{background:var(--screen);color:#062126;border-color:var(--screen);}
+  .rev-actions .ghost{background:transparent;color:var(--gold-soft);border-color:var(--gold);}
+  .rev-summary-list{margin:10px 0 0;padding-left:18px;font-size:13px;line-height:1.8;}
+  @media (max-width:640px){
+    .rev-compare{grid-template-columns:1fr;}
+  }
+  .quiz-start-btn{background:var(--electric);color:#0c1520;border:none;font-weight:700;font-size:13.5px;padding:11px 20px;border-radius:9px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .quiz-start-btn:hover{filter:brightness(1.1);}
+
+  body.quiz-mode{padding-bottom:0;}
+  body.quiz-mode .controlbar,
+  body.quiz-mode .scenario-block,
+  body.quiz-mode .bodystyle-bar,
+  body.quiz-mode .learn-ctas{opacity:.32;pointer-events:none;filter:grayscale(.4);transition:opacity .2s;}
+
+  .hotspot.quiz-flash .badge-bg{animation:tourPulse 1.5s ease-in-out infinite;}
+
+  .quiz-block{background:var(--bg-panel);border:1px solid var(--electric);border-radius:12px;padding:16px 18px;margin:0 0 16px;display:none;}
+  .quiz-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-bottom:12px;}
+  .quiz-head .lbl{font-family:var(--font-mono);font-size:11px;color:var(--electric);letter-spacing:.08em;}
+  .quiz-progress{font-size:12px;color:var(--text-dim);}
+  .quiz-score{font-family:var(--font-mono);font-size:12.5px;color:var(--gold-soft);}
+  .quiz-close{margin-left:auto;background:transparent;border:1px solid var(--line);color:var(--text-dim);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit;}
+  .quiz-question{font-size:15px;line-height:1.55;margin:0 0 14px;padding:12px 14px;background:var(--bg-panel-2);border-radius:10px;border-left:3px solid var(--electric);}
+  .quiz-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .quiz-opt{background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);font-size:13.5px;padding:11px 14px;border-radius:9px;cursor:pointer;text-align:left;font-family:inherit;transition:border-color .15s,background .15s;}
+  .quiz-opt:hover:not(:disabled){border-color:var(--electric);}
+  .quiz-opt:disabled{cursor:default;}
+  .quiz-opt.correct{background:#173428;border-color:var(--charge);color:var(--charge);font-weight:700;}
+  .quiz-opt.wrong{background:#3a1a17;border-color:var(--warn);color:var(--warn);font-weight:700;}
+  .quiz-feedback{margin-top:14px;padding:12px 14px;border-radius:9px;font-size:13.5px;line-height:1.55;}
+  .quiz-feedback.ok{background:#173428;border:1px solid #2f5c47;color:#bfe8d4;}
+  .quiz-feedback.no{background:#3a1a17;border:1px solid #4a2c28;color:#f2b3a8;}
+  .quiz-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
+  .quiz-actions button{font-family:inherit;font-weight:700;font-size:13px;padding:10px 16px;border-radius:8px;cursor:pointer;border:1px solid var(--line);background:var(--bg-panel-2);color:var(--text);}
+  .quiz-actions .primary{background:var(--electric);color:#0c1520;border-color:var(--electric);}
+  .quiz-actions .ghost{background:transparent;color:var(--gold-soft);border-color:var(--gold);}
+  .quiz-summary-list{margin:10px 0 0;padding-left:18px;font-size:13px;line-height:1.7;}
+  .quiz-summary-list li.wrong-item{color:var(--warn);margin-bottom:4px;}
+
+  @media (max-width:600px){
+    .quiz-options{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">PROYEK JAZMI</div>
+    <h1>Anatomi &amp; Simulasi Komponen Handphone</h1>
+    <p class="sub">Bodi handphone digambar transparan agar komponen di dalamnya terlihat. Tekan komponen pada diagram, atau cari lewat gejala kerusakan, untuk melihat fungsi dan pentingnya. Nyalakan HP untuk melihat baterai terpakai dan suhu berubah sesuai tingkat pemakaian.</p>
+    <p class="note">Dikembangkan bertahap — tur terpandu dan kuis diagnostik sudah ditambahkan. Mode diagnosa terbalik, ekspor gambar, dan bagikan tautan menyusul kalau arahnya sudah pas.</p>
+  </header>
+
+  <div class="learn-ctas">
+    <div class="tour-cta" id="tourCta">
+      <div class="tour-cta-text">
+        <span class="lbl">BARU PERTAMA KALI DI SINI?</span>
+        <p>Ikuti tur terpandu — sistem akan menyorot komponen satu per satu mengikuti alur kerja HP sungguhan, dari baterai dinyalakan sampai kembali ke port pengisian daya, lengkap dengan narasi singkat di setiap langkah.</p>
+      </div>
+      <button class="tour-start-btn" id="tourStartBtn">🎓 Mulai Tur Terpandu</button>
+    </div>
+
+    <div class="quiz-cta" id="quizCta">
+      <div class="quiz-cta-text">
+        <span class="lbl">SUDAH IKUT TURNYA?</span>
+        <p>Uji ingatanmu lewat kuis diagnostik — sistem menampilkan gejala kerusakan acak, kamu tebak komponen mana yang bermasalah, lalu bisa langsung dicocokkan dengan simulasinya.</p>
+      </div>
+      <button class="quiz-start-btn" id="quizStartBtn">🧠 Mulai Kuis Diagnostik</button>
+    </div>
+
+    <div class="rev-cta" id="revCta">
+      <div class="rev-cta-text">
+        <span class="lbl">KUIS TERASA TERLALU MUDAH?</span>
+        <p>Coba Mode Diagnosa Terbalik — diberi keluhan pengguna asli dengan beberapa kandidat komponen, kamu urutkan sendiri dari yang paling mungkin sampai paling tidak mungkin jadi penyebabnya.</p>
+      </div>
+      <button class="rev-start-btn" id="revStartBtn">🔍 Mode Diagnosa Terbalik</button>
+    </div>
+  </div>
+
+  <div class="quiz-block" id="quizBlock"></div>
+  <div class="rev-block" id="revBlock"></div>
+
+  <div class="scenario-block">
+    <div class="scenario-head">
+      <span class="lbl">SKENARIO SIAP PAKAI</span>
+      <span class="scenario-hint">Klik salah satu keluhan umum untuk langsung melihat kombinasi komponen yang biasanya jadi penyebabnya.</span>
+    </div>
+    <div class="scenario-grid" id="scenarioGrid"></div>
+    <button class="scenario-reset" id="scenarioReset">↺ Reset Semua Kerusakan</button>
+  </div>
+
+  <div class="controlbar">
+    <div class="searchbox">
+      <input type="text" id="searchInput" placeholder="Cari komponen atau gejala, mis. 'boros baterai', 'kamera buram'…" autocomplete="off">
+      <div class="suggestions" id="suggestions"></div>
+    </div>
+    <div class="power">
+      <span class="lamp" id="lampPower"></span>
+      <button id="powerBtn" class="off">Nyalakan HP</button>
+    </div>
+    <button id="printBtn" class="print-btn" title="Buka ringkasan 14 komponen dalam format siap cetak/PDF">🖨️ Cetak Ringkasan</button>
+    <button id="shareBtn" class="share-btn" title="Buat tautan kondisi simulasi saat ini untuk dibagikan">🔗 Bagikan Kondisi</button>
+    <button id="exportImgBtn" class="export-btn" title="Ekspor diagram HP sebagai gambar dengan bingkai dekoratif">🖼️ Ekspor Gambar</button>
+  </div>
+
+  <div class="share-panel" id="sharePanel"></div>
+
+  <div class="export-panel" id="exportPanel"></div>
+
+  <div class="share-applied-banner" id="shareAppliedBanner"></div>
+
+  <div class="controlbar">
+    <div class="levelbar">
+      <span class="lbl">TINGKAT PEMAKAIAN</span>
+      <div class="level-seg" id="levelSeg">
+        <button data-level="0" class="active">Siaga (Idle)</button>
+        <button data-level="1">Normal</button>
+        <button data-level="2">Berat (Gaming)</button>
+      </div>
+    </div>
+    <div class="gauges">
+      <div class="gauge batg"><span>Baterai</span><div class="track"><div class="fill" id="batFill" style="width:82%"></div></div><b id="batReadout">82%</b></div>
+      <div class="gauge tempg"><span>Suhu</span><div class="track"><div class="fill" id="tempFill" style="width:15%"></div></div><b id="tempReadout">Normal</b></div>
+    </div>
+  </div>
+
+  <div class="bodystyle-bar">
+    <span class="lbl">GAYA CASING</span>
+    <div class="bodystyle-seg" id="bodyStyleSeg">
+      <button data-style="xray" class="active">Rangka Terbuka (X-Ray)</button>
+      <button data-style="batang">Batang (Candybar)</button>
+      <button data-style="kerang">Lipat Kerang (Flip)</button>
+      <button data-style="buku">Lipat Buku (Fold)</button>
+      <button data-style="tablet">Tablet</button>
+    </div>
+  </div>
+
+  <div class="statusline ok" id="statusLine">HP dalam keadaan mati. Tekan "Nyalakan HP" untuk mensimulasikan pemakaian.</div>
+
+  <div class="chips-row" id="chipsRow" style="display:none;"></div>
+
+  <div class="grid">
+    <div class="diagram-col">
+      <svg class="chart" id="svgHp" viewBox="0 0 900 620" xmlns="http://www.w3.org/2000/svg">
+        <g id="hpBody">
+
+          <!-- ===== SILUET & GARIS BODI (dekoratif) ===== -->
+          <rect class="case-outline" x="365" y="42" width="170" height="536" rx="34"/>
+          <rect class="board" x="386" y="60" width="128" height="500" rx="10"/>
+
+          <!-- ===== OVERLAY GAYA CASING (opsional, nomor komponen tetap terlihat) ===== -->
+          <g id="caseBatang" class="case-layer" style="display:none">
+            <rect x="365" y="42" width="170" height="536" rx="34" fill="var(--bg-panel-2)" stroke="var(--gold-soft)" stroke-width="2" opacity=".9"/>
+            <rect x="380" y="58" width="140" height="500" rx="18" fill="none" stroke="var(--gold-soft)" stroke-width="1.2" opacity=".7"/>
+            <rect x="420" y="46" width="60" height="10" rx="5" fill="var(--bg)" opacity=".8"/>
+            <circle cx="450" cy="565" r="16" fill="none" stroke="var(--gold-soft)" stroke-width="1.4" opacity=".6"/>
+          </g>
+
+          <g id="caseKerang" class="case-layer" style="display:none">
+            <rect x="365" y="42" width="170" height="536" rx="34" fill="var(--bg-panel-2)" stroke="var(--gold-soft)" stroke-width="2" opacity=".9"/>
+            <line x1="365" y1="310" x2="535" y2="310" stroke="var(--gold-soft)" stroke-width="3" opacity=".8"/>
+            <circle cx="380" cy="310" r="4" fill="var(--gold-soft)" opacity=".8"/>
+            <circle cx="520" cy="310" r="4" fill="var(--gold-soft)" opacity=".8"/>
+            <rect x="415" y="70" width="70" height="45" rx="8" fill="var(--bg)" stroke="var(--gold-soft)" stroke-width="1.2" opacity=".8"/>
+            <text class="bay-label" x="420" y="98">LAYAR LUAR</text>
+          </g>
+
+          <g id="caseBuku" class="case-layer" style="display:none">
+            <rect x="300" y="60" width="300" height="500" rx="30" fill="var(--bg-panel-2)" stroke="var(--gold-soft)" stroke-width="2" opacity=".85"/>
+            <line x1="450" y1="70" x2="450" y2="550" stroke="var(--gold-soft)" stroke-width="2.5" stroke-dasharray="3,4" opacity=".8"/>
+            <path d="M280,300 L300,300 M600,300 L620,300" stroke="var(--gold-soft)" stroke-width="1.4" opacity=".6"/>
+            <text class="bay-label" x="310" y="52">LIPAT BUKU — TERBUKA PENUH</text>
+          </g>
+
+          <g id="caseTablet" class="case-layer" style="display:none">
+            <rect x="315" y="30" width="270" height="560" rx="24" fill="var(--bg-panel-2)" stroke="var(--gold-soft)" stroke-width="2" opacity=".85"/>
+            <rect x="330" y="46" width="240" height="528" rx="12" fill="none" stroke="var(--gold-soft)" stroke-width="1.2" opacity=".6"/>
+            <rect x="405" y="596" width="90" height="6" rx="3" fill="var(--gold-soft)" opacity=".55"/>
+          </g>
+
+          <!-- ===== KAMERA & AREA ATAS ===== -->
+          <rect class="case-outline" x="410" y="58" width="80" height="46" rx="8" opacity=".8"/>
+          <text class="bay-label" x="412" y="54">Area Sensor Atas</text>
+          <circle id="camDepanDot" cx="443" cy="80" r="5" fill="var(--bg-panel)" stroke="var(--metal)" stroke-width="1.5"/>
+          <circle id="camBelakangDot" cx="470" cy="80" r="6" fill="var(--bg-panel)" stroke="var(--metal)" stroke-width="1.8"/>
+
+          <!-- ===== LAYAR ===== -->
+          <rect id="layarRect" class="part" x="386" y="112" width="128" height="440" rx="10" opacity=".9"/>
+          <g id="screenGlow" style="opacity:0"></g>
+
+          <!-- ===== MAINBOARD & CHIP ===== -->
+          <rect id="mainboardRect" class="part" x="470" y="112" width="60" height="80" rx="4"/>
+          <rect id="socChip" class="chip-part" x="478" y="120" width="20" height="20"/>
+          <rect id="ramChip" class="chip-part" x="502" y="120" width="20" height="20"/>
+          <rect id="storageChip" class="chip-part" x="478" y="146" width="20" height="20"/>
+          <rect id="modemChip" class="chip-part" x="502" y="146" width="20" height="20"/>
+          <path class="antenna" id="antennaTop" d="M522,146 C560,120 570,80 555,50"/>
+          <path class="antenna" id="antennaSide" d="M522,156 C575,180 580,260 570,320"/>
+          <g id="signalDots"></g>
+
+          <!-- ===== BATERAI ===== -->
+          <rect id="bateraiRect" class="part" x="401" y="270" width="98" height="270" rx="8"/>
+          <rect id="batteryFillBg" x="401" y="270" width="98" height="270" fill="none"/>
+          <rect id="batteryFillLevel" x="404" y="273" width="92" height="0" fill="var(--charge)" opacity=".5"/>
+
+          <!-- ===== IC DAYA ===== -->
+          <rect id="icDayaRect" class="chip-part" x="470" y="238" width="34" height="22"/>
+          <path class="antenna" id="chargeWire" d="M487,260 C487,300 460,330 450,560" stroke="var(--charge)" opacity="0"/>
+
+          <!-- ===== PORT, SPEAKER, MIK, GETAR ===== -->
+          <rect id="portDayaRect" class="part" x="435" y="560" width="40" height="12" rx="4"/>
+          <rect id="speakerRect" class="part" x="392" y="560" width="26" height="8" rx="3"/>
+          <circle id="mikDot" cx="522" cy="566" r="5" fill="var(--bg-panel)" stroke="var(--metal)" stroke-width="1.5"/>
+          <circle id="getarDot" cx="520" cy="400" r="7" fill="var(--bg-panel)" stroke="var(--metal)" stroke-width="1.6"/>
+
+          <!-- ===== BADGES & LEADER LINES ===== -->
+          <line class="leader" x1="190" y1="80" x2="443" y2="80"/>
+          <g class="hotspot" data-id="layar"><circle class="badge-bg" cx="190" cy="80" r="13"/><text class="badge-num" x="190" y="84">1</text></g>
+
+          <line class="leader" x1="190" y1="165" x2="440" y2="200"/>
+          <g class="hotspot" data-id="kamera_depan"><circle class="badge-bg" cx="190" cy="165" r="13"/><text class="badge-num" x="190" y="169">2</text></g>
+
+          <line class="leader" x1="190" y1="250" x2="470" y2="80"/>
+          <g class="hotspot" data-id="kamera_belakang"><circle class="badge-bg" cx="190" cy="250" r="13"/><text class="badge-num" x="190" y="254">3</text></g>
+
+          <line class="leader" x1="190" y1="335" x2="500" y2="152"/>
+          <g class="hotspot" data-id="mainboard"><circle class="badge-bg" cx="190" cy="335" r="13"/><text class="badge-num" x="190" y="339">4</text></g>
+
+          <line class="leader" x1="190" y1="420" x2="488" y2="130"/>
+          <g class="hotspot" data-id="soc"><circle class="badge-bg" cx="190" cy="420" r="13"/><text class="badge-num" x="190" y="424">5</text></g>
+
+          <line class="leader" x1="190" y1="505" x2="512" y2="130"/>
+          <g class="hotspot" data-id="ram"><circle class="badge-bg" cx="190" cy="505" r="13"/><text class="badge-num" x="190" y="509">6</text></g>
+
+          <line class="leader" x1="190" y1="580" x2="488" y2="156"/>
+          <g class="hotspot" data-id="penyimpanan"><circle class="badge-bg" cx="190" cy="580" r="13"/><text class="badge-num" x="190" y="584">7</text></g>
+
+          <line class="leader" x1="740" y1="80" x2="512" y2="150"/>
+          <g class="hotspot" data-id="modem"><circle class="badge-bg" cx="740" cy="80" r="13"/><text class="badge-num" x="740" y="84">8</text></g>
+
+          <line class="leader" x1="740" y1="165" x2="470" y2="410"/>
+          <g class="hotspot" data-id="baterai"><circle class="badge-bg" cx="740" cy="165" r="13"/><text class="badge-num" x="740" y="169">9</text></g>
+
+          <line class="leader" x1="740" y1="250" x2="487" y2="250"/>
+          <g class="hotspot" data-id="ic_daya"><circle class="badge-bg" cx="740" cy="250" r="13"/><text class="badge-num" x="740" y="254">10</text></g>
+
+          <line class="leader" x1="740" y1="335" x2="455" y2="566"/>
+          <g class="hotspot" data-id="port_daya"><circle class="badge-bg" cx="740" cy="335" r="13"/><text class="badge-num" x="740" y="339">11</text></g>
+
+          <line class="leader" x1="740" y1="420" x2="405" y2="564"/>
+          <g class="hotspot" data-id="speaker"><circle class="badge-bg" cx="740" cy="420" r="13"/><text class="badge-num" x="740" y="424">12</text></g>
+
+          <line class="leader" x1="740" y1="505" x2="522" y2="566"/>
+          <g class="hotspot" data-id="mikrofon"><circle class="badge-bg" cx="740" cy="505" r="13"/><text class="badge-num" x="740" y="509">13</text></g>
+
+          <line class="leader" x1="740" y1="580" x2="520" y2="400"/>
+          <g class="hotspot" data-id="motor_getar"><circle class="badge-bg" cx="740" cy="580" r="13"/><text class="badge-num" x="740" y="584">14</text></g>
+
+        </g>
+      </svg>
+
+      <div class="legend">
+        <span><span class="dot" style="background:var(--ok)"></span>Normal</span>
+        <span><span class="dot" style="background:#e3a23a"></span>Ringan</span>
+        <span><span class="dot" style="background:#c9673a"></span>Sedang</span>
+        <span><span class="dot" style="background:var(--warn)"></span>Parah</span>
+      </div>
+    </div>
+
+    <div class="panel-col">
+      <div class="panel" id="panel">
+        <div class="panel-empty">Tekan salah satu komponen bernomor pada diagram, atau ketik gejala di kotak pencarian, untuk melihat penjelasannya di sini.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="print-summary" id="printSummary"></div>
+
+  <div class="jadul-preview-block" id="jadulPreviewBlock">
+    <div class="jadul-preview-head">
+      <span class="lbl">⚖️ MODE BANDINGKAN — HP MODERN vs HP JADUL</span>
+      <p>Diagram kedua di bawah ini sekarang bisa disimulasikan penuh sama seperti diagram utama di atas — tekan nomor, atur tingkat kerusakan, dan lihat bagaimana arsitektur HP jadul jauh lebih sederhana.</p>
+    </div>
+    <div class="compare-summary" id="compareSummary"></div>
+    <div class="jadul-preview-grid">
+      <div class="diagram-col">
+        <svg class="chart" id="svgJadul" viewBox="0 0 900 620" xmlns="http://www.w3.org/2000/svg">
+          <g id="jadulBody">
+
+            <!-- ===== SILUET BODI CANDYBAR ===== -->
+            <rect class="case-outline" x="380" y="40" width="140" height="540" rx="26"/>
+
+            <!-- ===== PAPAN SIRKUIT (PCB) — komponen #8 ===== -->
+            <rect id="jadulPcbRect" class="board" x="396" y="58" width="108" height="504" rx="10"/>
+
+            <!-- ===== ANTENA EKSTERNAL — komponen #3 ===== -->
+            <line class="metal-line" x1="505" y1="40" x2="522" y2="6"/>
+            <circle id="jadulAntenaTip" class="chip-part" cx="522" cy="6" r="4"/>
+
+            <!-- ===== SPEAKER EARPIECE — komponen #2 ===== -->
+            <rect id="jadulSpeakerRect" class="part" x="430" y="56" width="40" height="7" rx="3"/>
+
+            <!-- ===== LAYAR LCD — komponen #1 ===== -->
+            <rect id="jadulLayarRect" class="part" x="410" y="70" width="80" height="60" rx="6"/>
+            <text class="bay-label" x="412" y="146">Layar LCD Monokrom</text>
+
+            <!-- ===== KEYPAD FISIK — komponen #4 ===== -->
+            <g id="jadulKeypadGroup">
+              <rect class="part" x="412" y="160" width="24" height="22" rx="4"/>
+              <rect class="part" x="442" y="160" width="24" height="22" rx="4"/>
+              <rect class="part" x="472" y="160" width="24" height="22" rx="4"/>
+              <rect class="part" x="412" y="188" width="24" height="22" rx="4"/>
+              <rect class="part" x="442" y="188" width="24" height="22" rx="4"/>
+              <rect class="part" x="472" y="188" width="24" height="22" rx="4"/>
+              <rect class="part" x="412" y="216" width="24" height="22" rx="4"/>
+              <rect class="part" x="442" y="216" width="24" height="22" rx="4"/>
+              <rect class="part" x="472" y="216" width="24" height="22" rx="4"/>
+              <rect class="part" x="412" y="244" width="24" height="22" rx="4"/>
+              <rect class="part" x="442" y="244" width="24" height="22" rx="4"/>
+              <rect class="part" x="472" y="244" width="24" height="22" rx="4"/>
+            </g>
+            <text class="bay-label" x="412" y="286">Keypad T9</text>
+
+            <!-- ===== CHIP BASEBAND — komponen #7 ===== -->
+            <rect id="jadulBasebandChip" class="chip-part" x="466" y="470" width="28" height="28" rx="3"/>
+
+            <!-- ===== SLOT BATERAI — komponen #6 ===== -->
+            <text class="bay-label" x="406" y="454">Slot Baterai</text>
+            <rect id="jadulBateraiRect" class="part" x="406" y="460" width="50" height="70" rx="6"/>
+
+            <!-- ===== MIKROFON — komponen #5 ===== -->
+            <rect id="jadulMicRect" class="part" x="430" y="552" width="40" height="7" rx="3"/>
+
+            <!-- ===== BADGE & LEADER (sisi kiri) ===== -->
+            <line class="leader" x1="190" y1="80" x2="450" y2="100"/>
+            <g class="hotspot-jadul" data-id="layar_lcd"><circle class="badge-bg" cx="190" cy="80" r="13"/><text class="badge-num" x="190" y="84">1</text></g>
+
+            <line class="leader" x1="190" y1="165" x2="450" y2="59"/>
+            <g class="hotspot-jadul" data-id="speaker_jadul"><circle class="badge-bg" cx="190" cy="165" r="13"/><text class="badge-num" x="190" y="169">2</text></g>
+
+            <line class="leader" x1="190" y1="250" x2="515" y2="20"/>
+            <g class="hotspot-jadul" data-id="antena"><circle class="badge-bg" cx="190" cy="250" r="13"/><text class="badge-num" x="190" y="254">3</text></g>
+
+            <line class="leader" x1="190" y1="335" x2="450" y2="205"/>
+            <g class="hotspot-jadul" data-id="keypad"><circle class="badge-bg" cx="190" cy="335" r="13"/><text class="badge-num" x="190" y="339">4</text></g>
+
+            <!-- ===== BADGE & LEADER (sisi kanan) ===== -->
+            <line class="leader" x1="740" y1="80" x2="450" y2="555"/>
+            <g class="hotspot-jadul" data-id="mikrofon_jadul"><circle class="badge-bg" cx="740" cy="80" r="13"/><text class="badge-num" x="740" y="84">5</text></g>
+
+            <line class="leader" x1="740" y1="165" x2="431" y2="495"/>
+            <g class="hotspot-jadul" data-id="baterai_jadul"><circle class="badge-bg" cx="740" cy="165" r="13"/><text class="badge-num" x="740" y="169">6</text></g>
+
+            <line class="leader" x1="740" y1="250" x2="480" y2="484"/>
+            <g class="hotspot-jadul" data-id="baseband"><circle class="badge-bg" cx="740" cy="250" r="13"/><text class="badge-num" x="740" y="254">7</text></g>
+
+            <line class="leader" x1="740" y1="335" x2="500" y2="300"/>
+            <g class="hotspot-jadul" data-id="pcb_jadul"><circle class="badge-bg" cx="740" cy="335" r="13"/><text class="badge-num" x="740" y="339">8</text></g>
+
+          </g>
+        </svg>
+      </div>
+      <div class="panel-col">
+        <div class="panel" id="panelJadul">
+          <div class="panel-empty">Tekan salah satu komponen bernomor pada diagram HP jadul untuk melihat penjelasannya di sini.</div>
+        </div>
+        <button class="scenario-reset" id="jadulResetBtn" style="margin-top:12px;width:100%;">↺ Reset Kerusakan HP Jadul</button>
+      </div>
+    </div>
+    <div class="arch-table-wrap" id="archTableWrap"></div>
+  </div>
+
+</div>
+
+<div class="tour-bar" id="tourBar">
+  <div class="tour-info">
+    <span class="tour-stage" id="tourStageEl">—</span>
+    <span class="tour-step-count" id="tourStepCountEl">Langkah 1/14</span>
+  </div>
+  <div class="tour-dots" id="tourDots"></div>
+  <div class="tour-nav">
+    <button id="tourPrevBtn">← Kembali</button>
+    <button id="tourNextBtn">Lanjut →</button>
+    <button id="tourCloseBtn">Tutup Tur</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const componentData = {
+    layar: { num:1, name:"Layar Sentuh (Panel OLED &amp; Digitizer)",
+      fungsi:"Menampilkan gambar sekaligus membaca sentuhan jari lewat lapisan digitizer yang menempel di bawah kaca.",
+      penting:"Ini titik interaksi utama pengguna dengan HP — kalau bermasalah, seluruh HP jadi sulit dipakai walau komponen lain sehat.",
+      gejala:["layar bergaris atau ada bercak hitam","sentuhan tidak responsif di area tertentu","layar berkedip atau warnanya berubah","muncul retak pada kaca"],
+      tags:["layar","screen","touchscreen","digitizer","sentuh","bergaris","pecah","retak"] },
+    kamera_depan: { num:2, name:"Kamera Depan (Selfie)",
+      fungsi:"Menangkap gambar untuk swafoto dan panggilan video, juga sering dipakai untuk pemindai wajah.",
+      penting:"Kalau rusak, panggilan video dan swafoto terganggu, dan buka kunci wajah bisa gagal.",
+      gejala:["hasil foto depan buram","kamera depan tidak terbuka saat video call","buka kunci wajah gagal terus"],
+      tags:["kamera depan","selfie","kamera dalam","face id","video call"] },
+    kamera_belakang: { num:3, name:"Modul Kamera Belakang",
+      fungsi:"Menangkap foto dan video utama lewat satu atau beberapa lensa dengan sensor gambar di baliknya.",
+      penting:"Komponen ini paling sering jadi alasan orang upgrade HP, karena kualitas hasil foto sangat bergantung padanya.",
+      gejala:["hasil foto buram atau pecah","kamera lama fokus atau gagal fokus","muncul bercak pada hasil foto","kamera bergetar/error saat dibuka"],
+      tags:["kamera belakang","kamera utama","foto buram","fokus","lensa"] },
+    mainboard: { num:4, name:"Papan Utama (Mainboard/PCB)",
+      fungsi:"Papan sirkuit yang menghubungkan semua chip dan komponen lain, tempat semua jalur data dan daya lewat.",
+      penting:"Ini 'tulang punggung' HP — kalau rusak, hampir semua fungsi bisa terganggu sekaligus.",
+      gejala:["HP mati total tanpa sebab jelas","HP hidup tapi banyak fungsi tidak jalan bersamaan","muncul bau terbakar dari dalam HP"],
+      tags:["mainboard","motherboard","papan utama","pcb","mati total"] },
+    soc: { num:5, name:"Chipset/Prosesor (SoC)",
+      fungsi:"Otak utama HP yang memproses semua perhitungan, dari membuka aplikasi sampai merender grafis.",
+      penting:"Menentukan seberapa cepat dan lancar HP menjalankan aplikasi, termasuk seberapa panas HP saat dipakai berat.",
+      gejala:["HP lag berat saat multitasking","HP sangat panas walau baru dipakai sebentar","aplikasi berat tiba-tiba force close"],
+      tags:["prosesor","chipset","soc","cpu","lag","panas"] },
+    ram: { num:6, name:"RAM (Memori Sementara)",
+      fungsi:"Menyimpan data aplikasi yang sedang aktif agar bisa diakses cepat oleh prosesor.",
+      penting:"Menentukan berapa banyak aplikasi yang bisa dibuka bersamaan tanpa harus dimuat ulang.",
+      gejala:["aplikasi yang baru saja dibuka jadi ter-restart sendiri","HP lambat saat berpindah aplikasi","aplikasi sering force close mendadak"],
+      tags:["ram","memori","multitasking","force close","lag"] },
+    penyimpanan: { num:7, name:"Penyimpanan Internal (Storage)",
+      fungsi:"Menyimpan sistem operasi, aplikasi, foto, video, dan seluruh data secara permanen.",
+      penting:"Kalau penuh atau rusak, HP bisa melambat drastis atau gagal menyimpan data baru.",
+      gejala:["muncul peringatan penyimpanan penuh","HP melambat saat menyimpan foto/video","aplikasi gagal terpasang atau diperbarui"],
+      tags:["penyimpanan","storage","memori internal","rom","penuh"] },
+    modem: { num:8, name:"Modem &amp; Antena Seluler/Wi-Fi",
+      fungsi:"Mengubah data digital menjadi sinyal radio dan sebaliknya, untuk komunikasi seluler, Wi-Fi, dan Bluetooth.",
+      penting:"Menentukan kualitas sinyal, kecepatan internet, dan kestabilan panggilan telepon.",
+      gejala:["sinyal sering hilang atau naik turun","internet lambat walau sinyal penuh","panggilan telepon sering putus","Wi-Fi susah tersambung"],
+      tags:["modem","antena","sinyal","jaringan","wifi","bluetooth"] },
+    baterai: { num:9, name:"Baterai",
+      fungsi:"Menyimpan dan menyalurkan energi listrik ke seluruh komponen HP.",
+      penting:"Kesehatan baterai menentukan berapa lama HP bisa dipakai sebelum harus dicas, dan seberapa aman HP saat panas.",
+      gejala:["baterai boros drastis dibanding biasanya","HP tiba-tiba mati walau baterai belum 0%","bodi HP menggembung"],
+      tags:["baterai","battery","boros","gembung","drop"] },
+    ic_daya: { num:10, name:"IC Manajemen Daya (PMIC)",
+      fungsi:"Mengatur arus dan tegangan listrik dari baterai dan port cas ke setiap komponen agar sesuai kebutuhan.",
+      penting:"Melindungi komponen lain dari arus berlebih, dan menentukan seberapa efisien serta aman proses pengisian daya.",
+      gejala:["HP tidak mau mengisi daya sama sekali","pengisian daya sangat lambat","HP panas berlebihan saat dicas"],
+      tags:["ic daya","pmic","charging ic","tidak bisa cas","panas saat cas"] },
+    port_daya: { num:11, name:"Port Pengisian Daya (USB-C/Lightning)",
+      fungsi:"Titik sambung fisik antara kabel cas (atau kabel data) dengan bagian dalam HP.",
+      penting:"Kalau kotor, longgar, atau rusak, HP bisa gagal mengisi daya walau baterai dan IC daya masih sehat.",
+      gejala:["harus menahan kabel dengan posisi tertentu agar mau cas","port longgar atau ada kotoran menumpuk","kabel data tidak terdeteksi"],
+      tags:["port cas","usb-c","charging port","colokan","longgar"] },
+    speaker: { num:12, name:"Speaker (Pengeras Suara)",
+      fungsi:"Mengubah sinyal listrik menjadi suara untuk musik, video, dan nada dering.",
+      penting:"Kalau rusak, suara jadi pecah atau hilang sama sekali saat menonton atau mendengarkan sesuatu.",
+      gejala:["suara pecah atau sember di volume tinggi","suara hilang sebelah","volume terasa kecil walau sudah maksimal"],
+      tags:["speaker","suara","pecah","sember","volume"] },
+    mikrofon: { num:13, name:"Mikrofon",
+      fungsi:"Menangkap suara pengguna untuk panggilan telepon, rekaman, dan perintah suara.",
+      penting:"Kalau rusak, lawan bicara tidak bisa mendengar suara pengguna dengan jelas saat menelepon.",
+      gejala:["suara pengguna terdengar pelan atau putus-putus saat telepon","rekaman suara jadi bising","perintah suara sering tidak terdeteksi"],
+      tags:["mikrofon","mic","suara tidak terdengar","telepon"] },
+    motor_getar: { num:14, name:"Motor Getar (Vibration Motor)",
+      fungsi:"Membuat HP bergetar untuk notifikasi, keyboard haptik, dan alarm senyap.",
+      penting:"Fungsinya kecil tapi penting untuk notifikasi senyap dan umpan balik saat mengetik.",
+      gejala:["getaran terasa lemah atau kasar","HP tidak bergetar sama sekali saat notifikasi","getaran berbunyi berisik"],
+      tags:["getar","vibrasi","vibration motor","notifikasi diam"] }
+  };
+
+  const scenarios = [
+    { id:"panas_boros", title:"HP Cepat Panas &amp; Boros Baterai",
+      note:"Kombinasi baterai yang sudah menurun kesehatannya dengan prosesor dan IC daya yang bekerja tidak efisien.",
+      set:{ baterai:2, ic_daya:1, soc:1 } },
+    { id:"kamera_buram", title:"Kamera Buram / Hasil Foto Pecah",
+      note:"Biasanya karena lensa kotor, sensor bergeser, atau modul kamera belakang mulai aus.",
+      set:{ kamera_belakang:2 } },
+    { id:"sinyal_hilang", title:"Sinyal Sering Hilang / Tidak Ada Jaringan",
+      note:"Menunjuk ke modem atau antena seluler yang bermasalah, bukan ke operator.",
+      set:{ modem:3 } },
+    { id:"layar_ngaco", title:"Layar Bergaris / Sentuhan Tidak Responsif",
+      note:"Kerusakan pada panel layar atau lapisan digitizer di baliknya.",
+      set:{ layar:3 } },
+    { id:"susah_cas", title:"Susah atau Tidak Bisa Mengisi Daya",
+      note:"Bisa dari port pengisian yang kotor/longgar, atau IC daya yang sudah lemah.",
+      set:{ port_daya:2, ic_daya:2 } },
+    { id:"lag_force_close", title:"Lag Parah &amp; Sering Force Close Aplikasi",
+      note:"Biasanya karena RAM penuh terus-menerus atau penyimpanan yang nyaris habis.",
+      set:{ ram:2, penyimpanan:1 } }
+  ];
+
+  const svg = document.getElementById('svgHp');
+  const panel = document.getElementById('panel');
+  const chipsRow = document.getElementById('chipsRow');
+  const statusLine = document.getElementById('statusLine');
+  const searchInput = document.getElementById('searchInput');
+  const suggestions = document.getElementById('suggestions');
+  const scenarioGrid = document.getElementById('scenarioGrid');
+  const powerBtn = document.getElementById('powerBtn');
+  const lampPower = document.getElementById('lampPower');
+  const levelSeg = document.getElementById('levelSeg');
+  const bodyStyleSeg = document.getElementById('bodyStyleSeg');
+  const batFill = document.getElementById('batFill');
+  const batReadout = document.getElementById('batReadout');
+  const tempFill = document.getElementById('tempFill');
+  const tempReadout = document.getElementById('tempReadout');
+  const printBtn = document.getElementById('printBtn');
+  const printSummary = document.getElementById('printSummary');
+  const shareBtn = document.getElementById('shareBtn');
+  const sharePanel = document.getElementById('sharePanel');
+  const shareAppliedBanner = document.getElementById('shareAppliedBanner');
+  const exportImgBtn = document.getElementById('exportImgBtn');
+  const exportPanel = document.getElementById('exportPanel');
+  const revStartBtn = document.getElementById('revStartBtn');
+  const revBlock = document.getElementById('revBlock');
+
+  const caseLayers = {
+    xray: null,
+    batang: document.getElementById('caseBatang'),
+    kerang: document.getElementById('caseKerang'),
+    buku: document.getElementById('caseBuku'),
+    tablet: document.getElementById('caseTablet')
+  };
+
+  let selected = null;
+  let activeScenarioId = null;
+  let poweredOn = false;
+  let level = 0; // 0 idle, 1 normal, 2 berat
+  let battery = 82;
+  let simTimer = null;
+  const damaged = new Map(); // id -> level 1..3
+
+  function sev(id){ return damaged.get(id) || 0; }
+
+  function updateHotspotStyles(){
+    svg.querySelectorAll('.hotspot').forEach(el => {
+      const id = el.dataset.id;
+      el.classList.toggle('active', id === selected);
+      el.classList.remove('sev-1','sev-2','sev-3');
+      const s = sev(id);
+      if(s>0) el.classList.add('sev-'+s);
+    });
+  }
+
+  function renderPanel(id){
+    const c = componentData[id];
+    if(!c){ panel.innerHTML = '<div class="panel-empty">Tekan salah satu komponen bernomor pada diagram, atau ketik gejala di kotak pencarian, untuk melihat penjelasannya di sini.</div>'; return; }
+    const curSev = sev(id);
+    panel.innerHTML = `
+      <span class="num">Komponen #${c.num}</span>
+      <h2>${c.name}</h2>
+      <h3>Fungsi</h3><p>${c.fungsi}</p>
+      <h3>Kenapa penting</h3><p>${c.penting}</p>
+      <h3>Gejala kalau bermasalah</h3>
+      <ul>${c.gejala.map(g=>`<li>${g}</li>`).join('')}</ul>
+      <h3>Tandai kondisi untuk simulasi</h3>
+      <div class="sev-seg" id="sevSeg">
+        <button data-lvl="0" class="${curSev===0?'active':''}">Normal</button>
+        <button data-lvl="1" class="sev-1 ${curSev===1?'active':''}">Ringan</button>
+        <button data-lvl="2" class="sev-2 ${curSev===2?'active':''}">Sedang</button>
+        <button data-lvl="3" class="sev-3 ${curSev===3?'active':''}">Parah</button>
+      </div>
+    `;
+    panel.querySelectorAll('#sevSeg button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const lvl = parseInt(btn.dataset.lvl,10);
+        if(lvl===0) damaged.delete(id); else damaged.set(id, lvl);
+        updateHotspotStyles();
+        renderChips();
+        renderPanel(id);
+        updateStatus();
+      });
+    });
+  }
+
+  function selectComponent(id){
+    selected = id;
+    activeScenarioId = null;
+    updateScenarioButtonStyles();
+    updateHotspotStyles();
+    renderPanel(id);
+  }
+
+  function renderChips(){
+    const entries = Array.from(damaged.entries());
+    if(entries.length===0){ chipsRow.style.display='none'; chipsRow.innerHTML=''; return; }
+    chipsRow.style.display='flex';
+    const labels = ['','Ringan','Sedang','Parah'];
+    chipsRow.innerHTML = entries.map(([id,l])=>`
+      <span class="chip sev-${l===1?'1':'0'}">${componentData[id].name} · ${labels[l]}
+        <button data-clear="${id}">✕</button>
+      </span>`).join('') + `<button class="chip-clear" id="chipsClearAll">Bersihkan semua</button>`;
+    chipsRow.querySelectorAll('[data-clear]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        damaged.delete(b.dataset.clear);
+        updateHotspotStyles(); renderChips(); updateStatus();
+        if(selected===b.dataset.clear) renderPanel(selected);
+      });
+    });
+    const clearAll = document.getElementById('chipsClearAll');
+    if(clearAll) clearAll.addEventListener('click', resetAll);
+  }
+
+  function resetAll(){
+    damaged.clear();
+    activeScenarioId = null;
+    updateScenarioButtonStyles();
+    updateHotspotStyles(); renderChips(); updateStatus();
+    if(selected) renderPanel(selected);
+    else panel.innerHTML = '<div class="panel-empty">Tekan salah satu komponen bernomor pada diagram, atau ketik gejala di kotak pencarian, untuk melihat penjelasannya di sini.</div>';
+  }
+
+  function worstDamage(){
+    let worstId=null, worstLvl=0;
+    damaged.forEach((lvl,id)=>{ if(lvl>worstLvl){ worstLvl=lvl; worstId=id; } });
+    return { worstId, worstLvl };
+  }
+
+  function updateStatus(){
+    const { worstId, worstLvl } = worstDamage();
+    if(damaged.size===0){
+      statusLine.className = 'statusline ok';
+      statusLine.textContent = poweredOn
+        ? 'HP menyala normal. Semua komponen dalam kondisi baik.'
+        : 'HP dalam keadaan mati. Tekan "Nyalakan HP" untuk mensimulasikan pemakaian.';
+      updateCompareSummary();
+      return;
+    }
+    const c = componentData[worstId];
+    const label = worstLvl===3?'parah':worstLvl===2?'sedang':'ringan';
+    statusLine.className = 'statusline ' + (worstLvl>=2?'err':'warn');
+    statusLine.textContent = `Terdeteksi gangguan ${label} pada ${c.name}: ${c.gejala[0]}.`;
+    updateCompareSummary();
+  }
+
+  // ===== Pencarian =====
+  function searchMatches(q){
+    q = q.trim().toLowerCase();
+    if(!q) return [];
+    const out = [];
+    Object.entries(componentData).forEach(([id,c])=>{
+      let why = null;
+      if(c.name.toLowerCase().includes(q)) why = 'Nama komponen cocok';
+      else if(c.tags.some(t=>t.includes(q))) why = 'Kata kunci cocok';
+      else {
+        const g = c.gejala.find(g=>g.toLowerCase().includes(q));
+        if(g) why = 'Gejala: ' + g;
+      }
+      if(why) out.push({id, name:c.name, why});
+    });
+    return out.slice(0,8);
+  }
+
+  searchInput.addEventListener('input', ()=>{
+    const matches = searchMatches(searchInput.value);
+    if(matches.length===0){ suggestions.classList.remove('open'); suggestions.innerHTML=''; return; }
+    suggestions.innerHTML = matches.map(m=>`
+      <div class="sugg-item" data-id="${m.id}" tabindex="0">
+        <b>${m.name}</b><span class="why">${m.why}</span>
+      </div>`).join('');
+    suggestions.classList.add('open');
+    suggestions.querySelectorAll('.sugg-item').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        selectComponent(el.dataset.id);
+        suggestions.classList.remove('open');
+        searchInput.value = '';
+        const target = svg.querySelector(`.hotspot[data-id="${el.dataset.id}"]`);
+        if(target && target.scrollIntoView) target.scrollIntoView({behavior:'smooth', block:'center'});
+      });
+    });
+  });
+  document.addEventListener('click', (e)=>{
+    if(!e.target.closest('.searchbox')) suggestions.classList.remove('open');
+  });
+
+  // ===== Hotspot klik =====
+  svg.querySelectorAll('.hotspot').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      if(componentData[el.dataset.id]) selectComponent(el.dataset.id);
+    });
+  });
+
+  // ===== Skenario cerdas =====
+  const SEV_LABEL_SC = { 1:'Ringan', 2:'Sedang', 3:'Parah' };
+
+  scenarioGrid.innerHTML = scenarios.map(s=>`
+    <button class="scenario-btn" data-id="${s.id}">${s.title}</button>
+  `).join('');
+
+  function updateScenarioButtonStyles(){
+    scenarioGrid.querySelectorAll('.scenario-btn').forEach(b=>{
+      b.classList.toggle('active', b.dataset.id === activeScenarioId);
+    });
+  }
+
+  function applyScenario(s){
+    damaged.clear();
+    Object.entries(s.set).forEach(([id,lvl])=>damaged.set(id,lvl));
+    selected = null;
+    activeScenarioId = s.id;
+    updateHotspotStyles();
+    renderChips();
+    updateScenarioButtonStyles();
+    renderScenarioPanel(s);
+    updateStatus();
+    suggestions.classList.remove('open');
+    searchInput.value = '';
+  }
+
+  function renderScenarioPanel(s){
+    panel.innerHTML = `
+      <span class="num">SKENARIO</span>
+      <h2>${s.title}</h2>
+      <p>${s.note}</p>
+      <h3>Komponen yang disimulasikan bermasalah</h3>
+      <ul class="scenario-list">
+        ${Object.entries(s.set).map(([id,lvl])=>`<li><button class="scenario-jump" data-id="${id}">${componentData[id].name}</button> — <b>${SEV_LABEL_SC[lvl]}</b>: ${componentData[id].gejala[0]}</li>`).join('')}
+      </ul>
+      <span class="scenario-tag">Coba tekan "Nyalakan HP" untuk melihat efeknya secara langsung</span>
+      <button class="scenario-reset-inline" id="scenarioResetInlineBtn">Pulihkan Semua &amp; Kembali ke Kondisi Normal</button>
+    `;
+    panel.querySelectorAll('.scenario-jump').forEach(btn=>{
+      btn.addEventListener('click', ()=> selectComponent(btn.dataset.id));
+    });
+    document.getElementById('scenarioResetInlineBtn').addEventListener('click', resetAll);
+  }
+
+  scenarioGrid.querySelectorAll('.scenario-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const already = btn.dataset.id === activeScenarioId;
+      if(already){
+        resetAll();
+        return;
+      }
+      const s = scenarios.find(x=>x.id===btn.dataset.id);
+      applyScenario(s);
+    });
+  });
+  document.getElementById('scenarioReset').addEventListener('click', resetAll);
+
+  // ===== Gaya casing =====
+  bodyStyleSeg.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      bodyStyleSeg.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      Object.entries(caseLayers).forEach(([key,g])=>{ if(g) g.style.display = (key===btn.dataset.style) ? '' : 'none'; });
+    });
+  });
+
+  // ===== Tingkat pemakaian =====
+  levelSeg.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      levelSeg.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      level = parseInt(btn.dataset.level,10);
+    });
+  });
+
+  // ===== Simulasi nyala/mati =====
+  function updateGauges(){
+    batFill.style.width = Math.max(0,battery) + '%';
+    batReadout.textContent = Math.round(Math.max(0,battery)) + '%';
+    const baseTemp = [15, 40, 75][level];
+    const bonusTemp = sev('baterai')*10 + sev('soc')*10 + sev('ic_daya')*8;
+    const temp = Math.min(100, baseTemp + (poweredOn?bonusTemp:0));
+    tempFill.style.width = temp + '%';
+    tempReadout.textContent = temp>=70 ? 'Panas' : temp>=40 ? 'Hangat' : 'Normal';
+  }
+
+  function tick(){
+    if(!poweredOn) return;
+    const drainBase = [0.3, 0.8, 1.6][level];
+    const drainBonus = sev('baterai')*0.6 + sev('ic_daya')*0.3;
+    battery = Math.max(0, battery - (drainBase + drainBonus));
+    updateGauges();
+    if(battery<=0){ setPower(false); statusLine.textContent = 'Baterai habis, HP mati otomatis.'; statusLine.className='statusline warn'; }
+  }
+
+  function setPower(on){
+    poweredOn = on;
+    powerBtn.textContent = on ? 'Matikan HP' : 'Nyalakan HP';
+    powerBtn.classList.toggle('off', !on);
+    lampPower.classList.toggle('on', on);
+    document.getElementById('screenGlow').style.opacity = on ? '1' : '0';
+    document.getElementById('layarRect').style.filter = on ? 'drop-shadow(0 0 6px var(--screen))' : 'none';
+    if(on){
+      simTimer = setInterval(tick, 1200);
+    } else if(simTimer){
+      clearInterval(simTimer); simTimer=null;
+    }
+    updateGauges();
+    updateStatus();
+  }
+  powerBtn.addEventListener('click', ()=> setPower(!poweredOn));
+
+  // ===== Tur Terpandu =====
+  const tourSteps = [
+    { id:'baterai', narasi:"Semua bermula di sini. Baterai menyimpan energi kimia yang siap diubah jadi listrik begitu HP dinyalakan." },
+    { id:'ic_daya', narasi:"Sebelum listrik dibagikan ke mana-mana, IC manajemen daya mengatur arus dan tegangannya agar pas untuk tiap komponen — mencegah lonjakan yang bisa merusak." },
+    { id:'mainboard', narasi:"Listrik yang sudah diatur mengalir ke papan utama: jalur yang menghubungkan seluruh komponen jadi satu sistem yang bekerja bersamaan." },
+    { id:'soc', narasi:"Di atas papan utama, chipset mulai bekerja — memproses perintah, menjalankan sistem operasi, dan mengatur semua yang terjadi berikutnya." },
+    { id:'ram', narasi:"Chipset butuh tempat kerja yang cepat. Di sinilah RAM berperan, menyimpan sementara aplikasi yang sedang aktif agar bisa diakses instan." },
+    { id:'penyimpanan', narasi:"Begitu HP dimatikan, hanya penyimpanan internal yang mengingat semuanya — dari sistem operasi sampai foto liburan tahun lalu." },
+    { id:'modem', narasi:"Untuk terhubung ke dunia luar, modem dan antena mengubah data jadi sinyal radio — itulah yang membuat panggilan dan internet bisa berjalan." },
+    { id:'layar', narasi:"Semua proses di dalam akhirnya ditampilkan lewat layar — sekaligus jadi tempat kamu menyentuh dan memberi perintah balik." },
+    { id:'kamera_depan', narasi:"Saat kamu membuka kamera depan, sensor ini menangkap wajahmu untuk swafoto maupun verifikasi identitas." },
+    { id:'kamera_belakang', narasi:"Kamera belakang bekerja lebih berat: menangkap cahaya lewat lensa dan mengubahnya jadi foto atau video." },
+    { id:'speaker', narasi:"Suara yang kamu dengar, dari nada dering sampai musik, keluar lewat speaker yang mengubah sinyal listrik jadi getaran udara." },
+    { id:'mikrofon', narasi:"Sebaliknya, saat kamu bicara, mikrofon menangkap suara itu dan mengubahnya kembali jadi sinyal listrik untuk dikirim ke lawan bicara." },
+    { id:'motor_getar', narasi:"Untuk notifikasi yang tak perlu bersuara, motor getar memberi sinyal lewat getaran halus di tangan." },
+    { id:'port_daya', narasi:"Dan ketika baterai mulai menipis, semua kembali ke titik ini — port pengisian daya, tempat energi baru mengalir masuk lagi." }
+  ];
+  let tourIndex = 0;
+
+  const tourCta = document.getElementById('tourCta');
+  const tourBar = document.getElementById('tourBar');
+  const tourStageEl = document.getElementById('tourStageEl');
+  const tourStepCountEl = document.getElementById('tourStepCountEl');
+  const tourDots = document.getElementById('tourDots');
+  const tourPrevBtn = document.getElementById('tourPrevBtn');
+  const tourNextBtn = document.getElementById('tourNextBtn');
+  const tourCloseBtn = document.getElementById('tourCloseBtn');
+  const tourStartBtn = document.getElementById('tourStartBtn');
+
+  tourDots.innerHTML = tourSteps.map((s,i)=>`<button class="tour-dot" data-i="${i}" title="${componentData[s.id].name}"></button>`).join('');
+  tourDots.querySelectorAll('.tour-dot').forEach(btn=>{
+    btn.addEventListener('click', ()=> renderTourStep(parseInt(btn.dataset.i,10)));
+  });
+
+  function renderTourStep(i){
+    tourIndex = Math.max(0, Math.min(tourSteps.length-1, i));
+    const step = tourSteps[tourIndex];
+    const c = componentData[step.id];
+    svg.querySelectorAll('.hotspot').forEach(el=>{
+      el.classList.toggle('tour-active', el.dataset.id===step.id);
+      el.classList.toggle('tour-dim', el.dataset.id!==step.id);
+    });
+    panel.innerHTML = `
+      <span class="tour-stage-tag">Langkah ${tourIndex+1} dari ${tourSteps.length}</span>
+      <span class="num">Komponen #${c.num}</span>
+      <h2>${c.name}</h2>
+      <p class="tour-narasi">${step.narasi}</p>
+    `;
+    tourStageEl.textContent = c.name;
+    tourStepCountEl.textContent = `Langkah ${tourIndex+1}/${tourSteps.length}`;
+    tourDots.querySelectorAll('.tour-dot').forEach((d,idx)=> d.classList.toggle('active', idx===tourIndex));
+    tourPrevBtn.disabled = tourIndex===0;
+    tourNextBtn.textContent = tourIndex===tourSteps.length-1 ? 'Selesai ✓' : 'Lanjut →';
+    const el = svg.querySelector(`.hotspot[data-id="${step.id}"]`);
+    if(el && el.scrollIntoView) el.scrollIntoView({behavior:'smooth', block:'center'});
+  }
+
+  function startTour(){
+    document.body.classList.add('tour-mode');
+    tourBar.classList.add('show');
+    renderTourStep(0);
+  }
+
+  function closeTour(){
+    document.body.classList.remove('tour-mode');
+    tourBar.classList.remove('show');
+    svg.querySelectorAll('.hotspot').forEach(el=>el.classList.remove('tour-dim','tour-active'));
+    selected = null;
+    panel.innerHTML = '<div class="panel-empty">Tekan salah satu komponen bernomor pada diagram, atau ketik gejala di kotak pencarian, untuk melihat penjelasannya di sini.</div>';
+  }
+
+  tourStartBtn.addEventListener('click', startTour);
+  tourPrevBtn.addEventListener('click', ()=> renderTourStep(tourIndex-1));
+  tourNextBtn.addEventListener('click', ()=>{
+    if(tourIndex===tourSteps.length-1) closeTour();
+    else renderTourStep(tourIndex+1);
+  });
+  tourCloseBtn.addEventListener('click', closeTour);
+
+  // ===== Kuis Diagnostik =====
+  const quizStartBtn = document.getElementById('quizStartBtn');
+  const quizBlock = document.getElementById('quizBlock');
+  const QUIZ_LENGTH = 10;
+  let quizQuestions = [];
+  let quizIndex = 0;
+  let quizScore = 0;
+  let quizAnswered = false;
+  let quizWrongList = [];
+
+  function shuffleArr(arr){
+    const a = [...arr];
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+
+  function flashHotspot(id){
+    const h = svg.querySelector(`.hotspot[data-id="${id}"]`);
+    if(!h) return;
+    h.classList.add('quiz-flash');
+    setTimeout(()=> h.classList.remove('quiz-flash'), 2600);
+  }
+
+  function buildQuizQuestions(){
+    const pool = [];
+    Object.entries(componentData).forEach(([id,c])=>{
+      c.gejala.forEach(g=> pool.push({id, text:g}));
+    });
+    const shuffled = shuffleArr(pool);
+    for(let i=1;i<shuffled.length;i++){
+      if(shuffled[i].id===shuffled[i-1].id){
+        for(let j=i+1;j<shuffled.length;j++){
+          if(shuffled[j].id!==shuffled[i-1].id){
+            [shuffled[i],shuffled[j]] = [shuffled[j],shuffled[i]];
+            break;
+          }
+        }
+      }
+    }
+    return shuffled.slice(0, Math.min(QUIZ_LENGTH, shuffled.length));
+  }
+
+  function buildOptionsFor(correctId){
+    const others = Object.keys(componentData).filter(id=>id!==correctId);
+    const distractors = shuffleArr(others).slice(0,3);
+    return shuffleArr([correctId, ...distractors]);
+  }
+
+  function startQuiz(){
+    damaged.clear();
+    if(poweredOn) setPower(false);
+    activeScenarioId = null;
+    updateScenarioButtonStyles();
+    updateHotspotStyles(); renderChips(); updateStatus();
+    quizQuestions = buildQuizQuestions();
+    quizIndex = 0;
+    quizScore = 0;
+    quizWrongList = [];
+    document.body.classList.add('quiz-mode');
+    quizBlock.style.display = 'block';
+    renderQuizQuestion();
+    quizBlock.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+
+  function renderQuizQuestion(){
+    const q = quizQuestions[quizIndex];
+    quizAnswered = false;
+    const options = buildOptionsFor(q.id);
+    quizBlock.innerHTML = `
+      <div class="quiz-head">
+        <span class="lbl">KUIS DIAGNOSTIK GEJALA</span>
+        <span class="quiz-progress">Soal ${quizIndex+1} dari ${quizQuestions.length}</span>
+        <span class="quiz-score">Skor: ${quizScore}/${quizIndex}</span>
+        <button class="quiz-close" id="quizCloseBtn">✕ Tutup Kuis</button>
+      </div>
+      <p class="quiz-question">"${q.text}" — komponen mana yang kemungkinan besar bermasalah?</p>
+      <div class="quiz-options" id="quizOptions">
+        ${options.map(id=>`<button class="quiz-opt" data-id="${id}">${componentData[id].name}</button>`).join('')}
+      </div>
+      <div id="quizFeedbackArea"></div>
+    `;
+    document.getElementById('quizCloseBtn').addEventListener('click', closeQuiz);
+    quizBlock.querySelectorAll('.quiz-opt').forEach(btn=>{
+      btn.addEventListener('click', ()=> answerQuiz(btn.dataset.id, q.id));
+    });
+  }
+
+  function answerQuiz(chosenId, correctId){
+    if(quizAnswered) return;
+    quizAnswered = true;
+    const correct = chosenId===correctId;
+    if(correct) quizScore++;
+    else quizWrongList.push({text:quizQuestions[quizIndex].text, correctId, chosenId});
+
+    quizBlock.querySelectorAll('.quiz-opt').forEach(btn=>{
+      btn.disabled = true;
+      if(btn.dataset.id===correctId) btn.classList.add('correct');
+      else if(btn.dataset.id===chosenId) btn.classList.add('wrong');
+    });
+
+    const c = componentData[correctId];
+    const isLast = quizIndex===quizQuestions.length-1;
+    const scoreEl = quizBlock.querySelector('.quiz-score');
+    if(scoreEl) scoreEl.textContent = `Skor: ${quizScore}/${quizIndex+1}`;
+
+    document.getElementById('quizFeedbackArea').innerHTML = `
+      <div class="quiz-feedback ${correct?'ok':'no'}">
+        ${correct?'✅ Tepat!':'❌ Belum tepat.'} Gejala itu paling khas menunjuk ke <b>${c.name}</b>. ${c.penting}
+      </div>
+      <div class="quiz-actions">
+        <button class="ghost" id="quizApplyBtn">🔧 Terapkan ke Simulasi</button>
+        <button class="primary" id="quizNextBtn">${isLast?'Lihat Hasil Akhir':'Soal Berikutnya →'}</button>
+      </div>
+    `;
+    document.getElementById('quizApplyBtn').addEventListener('click', ()=>{
+      damaged.set(correctId, 3);
+      updateHotspotStyles(); renderChips(); updateStatus();
+      flashHotspot(correctId);
+    });
+    document.getElementById('quizNextBtn').addEventListener('click', ()=>{
+      if(isLast){ renderQuizSummary(); } else { quizIndex++; renderQuizQuestion(); }
+    });
+  }
+
+  function renderQuizSummary(){
+    const total = quizQuestions.length;
+    const pct = Math.round((quizScore/total)*100);
+    let verdict;
+    if(pct>=85) verdict = 'Mantap — pemahamanmu soal gejala kerusakan HP sudah kuat.';
+    else if(pct>=60) verdict = 'Lumayan — beberapa gejala masih perlu diingat ulang, coba lihat lagi komponennya di diagram.';
+    else verdict = 'Masih perlu latihan — coba ikuti dulu Tur Terpandu, lalu ulangi kuis ini.';
+
+    quizBlock.innerHTML = `
+      <div class="quiz-head">
+        <span class="lbl">HASIL KUIS</span>
+        <button class="quiz-close" id="quizCloseBtn">✕ Tutup Kuis</button>
+      </div>
+      <p class="quiz-question">Skor akhir: <b>${quizScore} dari ${total}</b> (${pct}%). ${verdict}</p>
+      ${quizWrongList.length ? `
+        <h3 style="margin:14px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);">Yang perlu diingat ulang</h3>
+        <ul class="quiz-summary-list">
+          ${quizWrongList.map(w=>`<li class="wrong-item">"${w.text}" → seharusnya <b>${componentData[w.correctId].name}</b>, kamu jawab ${componentData[w.chosenId].name}</li>`).join('')}
+        </ul>` : `<p style="color:var(--charge);margin-top:10px;">Semua jawaban benar — tidak ada yang perlu diulang. 🎉</p>`}
+      <div class="quiz-actions">
+        <button class="ghost" id="quizRestartBtn">↻ Ulangi Kuis</button>
+        <button class="primary" id="quizDoneBtn">Selesai</button>
+      </div>
+    `;
+    document.getElementById('quizCloseBtn').addEventListener('click', closeQuiz);
+    document.getElementById('quizRestartBtn').addEventListener('click', startQuiz);
+    document.getElementById('quizDoneBtn').addEventListener('click', closeQuiz);
+  }
+
+  function closeQuiz(){
+    document.body.classList.remove('quiz-mode');
+    quizBlock.style.display = 'none';
+    quizBlock.innerHTML = '';
+  }
+
+  // ---------- Cetak Ringkasan ----------
+  function buildPrintSummary(){
+    const itemsHtml = tourSteps.map((step, idx) => {
+      const c = componentData[step.id];
+      if(!c) return '';
+      return `
+        <div class="ps-item">
+          <div class="ps-item-head">
+            <span class="ps-num">${String(idx+1).padStart(2,'0')}</span>
+            <span class="ps-name">${c.name}</span>
+          </div>
+          <p class="ps-fungsi">${c.fungsi}</p>
+          <p class="ps-row"><b>Kenapa penting:</b> ${c.penting}</p>
+          <p class="ps-row" style="margin-bottom:1px;"><b>Gejala umum kalau rusak:</b></p>
+          <ul class="ps-gejala">${c.gejala.map(g => `<li>${g}</li>`).join('')}</ul>
+        </div>`;
+    }).join('');
+
+    const scenarioHtml = scenarios.map(s => `
+      <div class="ps-scen-item">
+        <div class="ps-scen-label">${s.title}</div>
+        <div class="ps-scen-ids">Kemungkinan komponen: ${Object.keys(s.set).map(id => componentData[id].name).join(', ')}</div>
+        <p class="ps-scen-desc">${s.note}</p>
+      </div>`).join('');
+
+    printSummary.innerHTML = `
+      <div class="ps-header">
+        <div class="ps-kicker">PROYEK JAZMI — LEMBAR REFERENSI CETAK</div>
+        <h1>Ringkasan ${tourSteps.length} Komponen Anatomi HP</h1>
+        <p>Disusun mengikuti alur kerja HP sungguhan — dari baterai sampai layar dan port pengisian daya. Cocok dibawa sebagai catatan cepat saat servis atau belajar.</p>
+      </div>
+      ${itemsHtml}
+      <div class="ps-scenarios">
+        <h2>Skenario Keluhan Umum (Referensi Cepat)</h2>
+        <p>Kombinasi gejala yang paling sering ditemui di lapangan, beserta komponen yang paling mungkin jadi penyebabnya.</p>
+        ${scenarioHtml}
+      </div>
+      <div class="ps-footer">Dicetak dari simulator interaktif JAZMI — Anatomi &amp; Simulasi HP.</div>
+    `;
+  }
+
+  printBtn.addEventListener('click', () => {
+    buildPrintSummary();
+    window.print();
+  });
+
+  // ---------- Bagikan Kondisi Simulasi ----------
+  const bodyStyleLabel = { xray:'Rangka Terbuka (X-Ray)', batang:'Batang (Candybar)', kerang:'Lipat Kerang (Flip)', buku:'Lipat Buku (Fold)', tablet:'Tablet' };
+  const usageLabel = ['Siaga (Idle)', 'Normal', 'Berat (Gaming)'];
+
+  function currentBodyStyle(){
+    const btn = bodyStyleSeg.querySelector('button.active');
+    return btn ? btn.dataset.style : 'xray';
+  }
+
+  function buildShareURL(){
+    const params = new URLSearchParams();
+    if(damaged.size) params.set('d', [...damaged.entries()].map(([id,lvl]) => `${id}:${lvl}`).join(','));
+    if(level) params.set('usage', level);
+    const style = currentBodyStyle();
+    if(style !== 'xray') params.set('body', style);
+    const base = location.origin + location.pathname;
+    const qs = params.toString();
+    return qs ? `${base}?${qs}` : base;
+  }
+
+  function renderSharePanel(){
+    const url = buildShareURL();
+    const list = damagedSummaryList();
+    const summary = list.length
+      ? `Kerusakan aktif: <b>${list.join(', ')}</b>.`
+      : 'Tidak ada kerusakan aktif — kondisi HP normal.';
+    sharePanel.innerHTML = `
+      <span class="lbl">BAGIKAN KONDISI SIMULASI</span>
+      <p class="share-summary">${summary} Tingkat pemakaian: <b>${usageLabel[level]}</b>. Gaya casing: <b>${bodyStyleLabel[currentBodyStyle()]}</b>. Siapa pun yang membuka tautan ini akan langsung melihat kondisi yang sama — HP dimulai dalam keadaan mati, tinggal ditekan "Nyalakan HP".</p>
+      <div class="share-row">
+        <input type="text" class="share-input" id="shareUrlInput" value="${url}" readonly>
+        <button class="share-copy-btn" id="shareCopyBtn">Salin Tautan</button>
+      </div>
+    `;
+    const urlInput = document.getElementById('shareUrlInput');
+    urlInput.addEventListener('focus', () => urlInput.select());
+    document.getElementById('shareCopyBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('shareCopyBtn');
+      try{
+        await navigator.clipboard.writeText(url);
+      }catch(err){
+        urlInput.select();
+        document.execCommand('copy');
+      }
+      btn.textContent = 'Tersalin ✓';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Salin Tautan'; btn.classList.remove('copied'); }, 1800);
+    });
+  }
+
+  shareBtn.addEventListener('click', () => {
+    const willOpen = !sharePanel.classList.contains('open');
+    if(willOpen) renderSharePanel();
+    sharePanel.classList.toggle('open', willOpen);
+  });
+
+  // ---------- Ekspor Gambar (berbagai ekstensi, dengan bingkai dekoratif) ----------
+  const frameStyles = {
+    klasik:   { label:'Klasik Bergaris Emas' },
+    ornamen:  { label:'Berornamen Sekrup' },
+    polos:    { label:'Polos Minimalis' }
+  };
+  const formatOptions = {
+    png:  { label:'PNG',  mime:'image/png',  ext:'png' },
+    jpeg: { label:'JPEG', mime:'image/jpeg', ext:'jpg' },
+    webp: { label:'WEBP', mime:'image/webp', ext:'webp' },
+    svg:  { label:'SVG (vektor)', mime:null, ext:'svg' }
+  };
+  let selectedFrame = 'klasik';
+  let selectedFormat = 'png';
+
+  function damagedSummaryList(){
+    return [...damaged.entries()].map(([id,lvl]) => `${componentData[id].name} (${SEV_LABEL_SC[lvl]})`);
+  }
+
+  function renderExportPanel(){
+    const dmg = damagedSummaryList();
+    const summary = dmg.length
+      ? `Kerusakan aktif akan ikut tergambar: <b>${dmg.join(', ')}</b>.`
+      : 'Diagram akan diekspor dalam kondisi normal (tidak ada kerusakan aktif).';
+    exportPanel.innerHTML = `
+      <span class="lbl">EKSPOR DIAGRAM SEBAGAI GAMBAR</span>
+      <p class="export-summary">${summary} Cocok untuk disimpan sebagai gambar referensi, dibagikan di grup, atau dicetak sebagai poster kecil — bukan dokumen data seperti ringkasan cetak, tapi tampilan visualnya.</p>
+      <div class="frame-seg" id="formatSeg">
+        ${Object.entries(formatOptions).map(([key, f]) => `<button data-format="${key}" class="${key === selectedFormat ? 'active' : ''}">${f.label}</button>`).join('')}
+      </div>
+      <div class="frame-seg" id="frameSeg">
+        ${Object.entries(frameStyles).map(([key, f]) => `<button data-frame="${key}" class="${key === selectedFrame ? 'active' : ''}">${f.label}</button>`).join('')}
+      </div>
+      <p class="export-summary" id="svgFrameNote" style="display:${selectedFormat === 'svg' ? 'block' : 'none'};margin-top:-4px;">Catatan: format SVG diekspor sebagai vektor bersih tanpa bingkai dekoratif kanvas (bingkai di atas hanya berlaku untuk PNG/JPEG/WEBP).</p>
+      <label class="export-opt-row"><input type="checkbox" id="exportTitleChk" checked> Sertakan judul di bagian atas gambar</label>
+      <button class="export-download-btn" id="exportDownloadBtn">Unduh ${formatOptions[selectedFormat].label}</button>
+    `;
+    exportPanel.querySelectorAll('#formatSeg button').forEach(b => {
+      b.addEventListener('click', () => {
+        selectedFormat = b.dataset.format;
+        renderExportPanel();
+      });
+    });
+    exportPanel.querySelectorAll('#frameSeg button').forEach(b => {
+      b.addEventListener('click', () => {
+        selectedFrame = b.dataset.frame;
+        exportPanel.querySelectorAll('#frameSeg button').forEach(x => x.classList.toggle('active', x.dataset.frame === selectedFrame));
+      });
+    });
+    document.getElementById('exportDownloadBtn').addEventListener('click', doExportImage);
+  }
+
+  function drawDiamond(ctx, cx, cy, s, color){
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(Math.PI / 4);
+    ctx.fillStyle = color;
+    ctx.fillRect(-s/2, -s/2, s, s);
+    ctx.restore();
+  }
+
+  function drawRivet(ctx, cx, cy, r, color, ringColor){
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = ringColor;
+    ctx.stroke();
+  }
+
+  function drawFrame(ctx, style, fx, fy, fw, fh){
+    const gold = '#c9a24b', goldSoft = '#e3c988', dim = '#5a5238';
+    if(style === 'polos'){
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = gold;
+      ctx.strokeRect(fx, fy, fw, fh);
+      return;
+    }
+    if(style === 'klasik'){
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = gold;
+      ctx.strokeRect(fx, fy, fw, fh);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = goldSoft;
+      ctx.strokeRect(fx + 8, fy + 8, fw - 16, fh - 16);
+      [[fx, fy], [fx + fw, fy], [fx, fy + fh], [fx + fw, fy + fh]].forEach(([cx, cy]) => {
+        drawDiamond(ctx, cx, cy, 16, gold);
+        drawDiamond(ctx, cx, cy, 7, goldSoft);
+      });
+      return;
+    }
+    // ornamen: garis emas tunggal + deretan "sekrup" di sepanjang tepi
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = gold;
+    ctx.strokeRect(fx, fy, fw, fh);
+    const step = 26;
+    for(let x = fx + step / 2; x < fx + fw; x += step){
+      drawRivet(ctx, x, fy, 4.5, goldSoft, dim);
+      drawRivet(ctx, x, fy + fh, 4.5, goldSoft, dim);
+    }
+    for(let y = fy + step / 2; y < fy + fh; y += step){
+      drawRivet(ctx, fx, y, 4.5, goldSoft, dim);
+      drawRivet(ctx, fx + fw, y, 4.5, goldSoft, dim);
+    }
+    [[fx, fy], [fx + fw, fy], [fx, fy + fh], [fx + fw, fy + fh]].forEach(([cx, cy]) => {
+      drawRivet(ctx, cx, cy, 7, gold, dim);
+    });
+  }
+
+  function buildStyledSvgString(includeTitle, vbW, vbH){
+    const cssText = document.querySelector('style').textContent;
+    const clone = svg.cloneNode(true);
+    clone.setAttribute('width', vbW);
+    clone.setAttribute('height', vbH);
+    const styleEl = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+    styleEl.textContent = cssText;
+    clone.insertBefore(styleEl, clone.firstChild);
+    if(includeTitle){
+      const titleEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      titleEl.setAttribute('x', vbW / 2);
+      titleEl.setAttribute('y', 26);
+      titleEl.setAttribute('text-anchor', 'middle');
+      titleEl.setAttribute('font-family', 'sans-serif');
+      titleEl.setAttribute('font-weight', 'bold');
+      titleEl.setAttribute('font-size', '20');
+      titleEl.setAttribute('fill', '#c9a24b');
+      titleEl.textContent = 'JAZMI — Anatomi & Simulasi HP';
+      clone.appendChild(titleEl);
+    }
+    return new XMLSerializer().serializeToString(clone);
+  }
+
+  function doExportImage(){
+    const btn = document.getElementById('exportDownloadBtn');
+    const includeTitle = document.getElementById('exportTitleChk').checked;
+    const vbW = 900, vbH = 620;
+    const fmt = formatOptions[selectedFormat];
+
+    if(selectedFormat === 'svg'){
+      const svgString = buildStyledSvgString(includeTitle, vbW, vbH);
+      const blob = new Blob([svgString], { type:'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `jazmi-diagram-anatomi-hp.svg`;
+      a.click();
+      URL.revokeObjectURL(url);
+      btn.textContent = 'Terunduh ✓';
+      btn.classList.add('done');
+      setTimeout(() => { btn.textContent = `Unduh ${fmt.label}`; btn.classList.remove('done'); }, 1800);
+      return;
+    }
+
+    const scale = 2;
+    const pad = 70;
+    const titleH = includeTitle ? 54 : 0;
+    const svgString = buildStyledSvgString(false, vbW, vbH);
+    const dataUri = 'data:image/svg+xml;charset=utf-8;base64,' + btoa(unescape(encodeURIComponent(svgString)));
+
+    const img = new Image();
+    img.onload = () => {
+      const canvasW = vbW + pad * 2;
+      const canvasH = vbH + pad * 2 + titleH;
+      const canvas = document.createElement('canvas');
+      canvas.width = canvasW * scale;
+      canvas.height = canvasH * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(scale, scale);
+
+      ctx.fillStyle = '#12151a';
+      ctx.fillRect(0, 0, canvasW, canvasH);
+
+      if(includeTitle){
+        ctx.fillStyle = '#c9a24b';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('JAZMI — Anatomi & Simulasi HP', canvasW / 2, 32);
+        ctx.fillStyle = '#9aa1ad';
+        ctx.font = '12px sans-serif';
+        ctx.fillText('Diagram komponen HP', canvasW / 2, 50);
+      }
+
+      ctx.fillStyle = '#20242c';
+      ctx.fillRect(pad, pad + titleH, vbW, vbH);
+      ctx.drawImage(img, pad, pad + titleH, vbW, vbH);
+
+      drawFrame(ctx, selectedFrame, pad - 20, pad + titleH - 20, vbW + 40, vbH + 40);
+
+      canvas.toBlob(blob => {
+        if(!blob){
+          btn.textContent = 'Format tak didukung browser';
+          setTimeout(() => { btn.textContent = `Unduh ${fmt.label}`; }, 2000);
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `jazmi-diagram-anatomi-hp-${selectedFrame}.${fmt.ext}`;
+        a.click();
+        URL.revokeObjectURL(url);
+        btn.textContent = 'Terunduh ✓';
+        btn.classList.add('done');
+        setTimeout(() => { btn.textContent = `Unduh ${fmt.label}`; btn.classList.remove('done'); }, 1800);
+      }, fmt.mime, fmt.mime === 'image/jpeg' ? 0.92 : undefined);
+    };
+    img.onerror = () => {
+      btn.textContent = 'Gagal, coba lagi';
+      setTimeout(() => { btn.textContent = `Unduh ${fmt.label}`; }, 1800);
+    };
+    img.src = dataUri;
+  }
+
+  exportImgBtn.addEventListener('click', () => {
+    const willOpen = !exportPanel.classList.contains('open');
+    if(willOpen) renderExportPanel();
+    exportPanel.classList.toggle('open', willOpen);
+  });
+
+  quizStartBtn.addEventListener('click', startQuiz);
+
+  // ---------- Mode Diagnosa Terbalik ----------
+  const reverseCasesData = [
+    {
+      id: 'panas-boros',
+      text: 'HP terasa hangat di genggaman padahal cuma dipakai untuk chatting biasa, dan baterai turun jauh lebih cepat dari biasanya walau layar sudah diredupkan.',
+      candidates: ['baterai','ic_daya','soc','mainboard','penyimpanan'],
+      ranking: ['baterai','ic_daya','soc','mainboard','penyimpanan'],
+      actualCulprits: ['baterai','ic_daya'],
+      alasan: 'Baterai yang kesehatannya sudah menurun adalah penyebab paling umum untuk kombinasi panas dan boros drastis meski pemakaian ringan — itu paling mungkin. IC manajemen daya yang mulai tidak efisien bisa membuat arus tersalur berlebihan ke komponen lain sehingga ikut memanaskan bodi, jadi kandidat kuat kedua. Chipset baru terasa panas kalau benar-benar diajak kerja berat, sementara di sini pemakaiannya ringan, jadi kurang cocok jadi penyebab utama. Mainboard bermasalah biasanya menimbulkan gejala yang lebih ekstrem seperti mati total, bukan sekadar hangat. Penyimpanan tidak berhubungan sama sekali dengan panas atau konsumsi baterai.'
+    },
+    {
+      id: 'kamera-force-close',
+      text: 'Setiap membuka aplikasi kamera untuk memotret pakai kamera belakang, hasil fotonya buram dan kadang aplikasinya tertutup sendiri sebelum sempat menekan tombol jepret.',
+      candidates: ['kamera_belakang','ram','soc','mainboard','kamera_depan'],
+      ranking: ['kamera_belakang','ram','soc','mainboard','kamera_depan'],
+      actualCulprits: ['kamera_belakang','ram'],
+      alasan: 'Modul kamera belakang yang mulai aus atau lensanya bergeser paling langsung menjelaskan hasil foto yang buram — penyebab paling mungkin. RAM yang penuh atau bermasalah bisa membuat aplikasi berat seperti kamera tertutup sendiri sebelum selesai memproses, jadi kandidat kuat kedua yang menjelaskan sisi force close-nya. Chipset yang terlalu panas atau lambat juga bisa memicu force close, tapi biasanya disertai lag di aplikasi lain juga, bukan cuma kamera. Mainboard bermasalah bisa mengganggu jalur ke modul kamera, tapi gejalanya biasanya lebih luas dari sekadar kamera. Kamera depan sama sekali tidak berhubungan dengan kamera belakang yang dipakai di sini.'
+    },
+    {
+      id: 'sinyal-wifi-hilang',
+      text: 'Sudah beberapa hari ini sinyal seluler sering hilang total lalu muncul lagi sendiri, dan Wi-Fi di rumah juga susah tersambung padahal HP lain di rumah yang sama baik-baik saja.',
+      candidates: ['modem','mainboard','soc','baterai','port_daya'],
+      ranking: ['modem','mainboard','soc','baterai','port_daya'],
+      actualCulprits: ['modem'],
+      alasan: 'Karena HP lain di jaringan yang sama tetap normal, masalahnya jelas ada di sisi penerima sinyal HP ini sendiri — modem dan antena seluler/Wi-Fi paling langsung menjelaskan gangguan di kedua jenis sinyal sekaligus. Mainboard yang mulai bermasalah bisa mengganggu jalur ke modem, jadi masih masuk akal sebagai kandidat kedua meski kurang spesifik. Chipset yang terlalu panas kadang membuat sistem mematikan modem sementara untuk mendinginkan diri, jadi masih relevan meski jarang. Baterai dan port pengisian daya sama sekali tidak berhubungan dengan penerimaan sinyal seluler maupun Wi-Fi.'
+    },
+    {
+      id: 'suara-telepon-hilang',
+      text: 'Saat menelepon, lawan bicara berkali-kali bilang tidak bisa mendengar suara pengguna sama sekali, padahal suara panggilan masuk dan musik dari speaker terdengar normal seperti biasa.',
+      candidates: ['mikrofon','speaker','modem','mainboard','soc'],
+      ranking: ['mikrofon','modem','mainboard','soc','speaker'],
+      actualCulprits: ['mikrofon'],
+      alasan: 'Karena suara yang KELUAR dari HP lewat speaker terdengar normal, masalahnya ada di jalur suara yang MASUK — mikrofon adalah penyebab paling langsung saat lawan bicara tidak bisa mendengar pengguna. Modem yang bermasalah bisa mendistorsi suara di kedua arah saat panggilan, jadi masih kandidat yang masuk akal meski kurang spesifik ke satu arah. Mainboard yang terganggu bisa memutus jalur ke mikrofon secara tidak langsung, jadi tetap relevan tapi lebih jarang. Chipset nyaris tidak pernah menyebabkan kegagalan spesifik hanya pada satu arah audio seperti ini. Speaker sudah terbukti berfungsi normal dari cerita di atas, jadi paling tidak mungkin jadi penyebab.'
+    },
+    {
+      id: 'tidak-mau-cas',
+      text: 'HP sama sekali tidak mau mengisi daya walau sudah dicolok semalaman dengan kabel dan kepala charger yang berbeda-beda, dan tidak ada tanda petir atau ikon pengisian yang muncul di layar.',
+      candidates: ['port_daya','ic_daya','baterai','mainboard','soc'],
+      ranking: ['port_daya','ic_daya','baterai','mainboard','soc'],
+      actualCulprits: ['port_daya','ic_daya'],
+      alasan: 'Karena sudah dicoba dengan beberapa kabel dan charger berbeda tapi tetap gagal total, kemungkinan besar bukan soal kabelnya — port pengisian daya yang kotor, longgar, atau rusak secara fisik paling sering jadi penyebab kegagalan total seperti ini. IC manajemen daya yang gagal mengatur arus masuk juga bisa memblokir seluruh proses pengisian sama sekali, jadi kandidat kuat kedua. Baterai yang benar-benar soak biasanya masih menunjukkan sedikit reaksi seperti ikon berkedip, bukan tidak ada tanda sama sekali, jadi agak kurang cocok. Mainboard dan chipset yang bermasalah cenderung menimbulkan gejala yang lebih luas daripada hanya gagal mengisi daya.'
+    },
+    {
+      id: 'sentuhan-mati-sebagian',
+      text: 'Layar tetap menyala dan gambar terlihat jelas seperti biasa, tapi sentuhan di area pojok kanan bawah layar sama sekali tidak merespon walau bagian lain masih normal.',
+      candidates: ['layar','mainboard','soc','ram','kamera_depan'],
+      ranking: ['layar','mainboard','soc','ram','kamera_depan'],
+      actualCulprits: ['layar'],
+      alasan: 'Karena tampilan gambar tetap normal dan masalahnya hanya pada respons sentuhan di satu area tertentu, ini sangat khas kerusakan pada lapisan digitizer di layar yang letaknya terpisah dari lapisan gambar — penyebab paling mungkin. Mainboard yang bermasalah bisa mengganggu seluruh layar sekaligus, bukan hanya satu sudut kecil, jadi kurang cocok meski masih ada kemungkinan konektor longgar. Chipset dan RAM mengurus pemrosesan data secara umum, bukan area sentuh yang sangat spesifik seperti ini, jadi kandidat lemah. Kamera depan sama sekali tidak berhubungan dengan fungsi sentuhan layar.'
+    }
+  ];
+
+  let revCases = [];
+  let revIndex = 0;
+  let revOrder = [];
+  let revScoreSum = 0;
+  let revResults = [];
+  let revActive = false;
+  let revAnswered = false;
+
+  function pairwiseScore(order, ranking){
+    let correct = 0, total = 0;
+    for(let i = 0; i < ranking.length; i++){
+      for(let j = i + 1; j < ranking.length; j++){
+        total++;
+        if(order.indexOf(ranking[i]) < order.indexOf(ranking[j])) correct++;
+      }
+    }
+    return { correct, total };
+  }
+
+  function startReverse(){
+    damaged.clear();
+    activeScenarioId = null;
+    if(poweredOn) setPower(false);
+    renderChips();
+    updateScenarioButtonStyles();
+    revCases = shuffleArr(reverseCasesData);
+    revIndex = 0;
+    revScoreSum = 0;
+    revResults = [];
+    revActive = true;
+    document.body.classList.add('rev-mode');
+    revBlock.style.display = 'block';
+    renderRevCase();
+    updateStatus();
+    revBlock.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function renderRevOptions(){
+    const container = document.getElementById('revOptions');
+    if(!container) return;
+    container.innerHTML = revOrder.map((id, i) => `
+      <div class="rev-row" data-id="${id}">
+        <span class="rev-rank">${i + 1}.</span>
+        <span class="rev-name">${componentData[id].name}</span>
+        <span class="rev-arrows">
+          <button data-dir="-1" data-idx="${i}" ${i === 0 ? 'disabled' : ''} aria-label="Naikkan ${componentData[id].name}">▲</button>
+          <button data-dir="1" data-idx="${i}" ${i === revOrder.length - 1 ? 'disabled' : ''} aria-label="Turunkan ${componentData[id].name}">▼</button>
+        </span>
+      </div>
+    `).join('');
+    container.querySelectorAll('button[data-dir]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.idx, 10);
+        const dir = parseInt(btn.dataset.dir, 10);
+        const swapWith = idx + dir;
+        if(swapWith < 0 || swapWith >= revOrder.length) return;
+        [revOrder[idx], revOrder[swapWith]] = [revOrder[swapWith], revOrder[idx]];
+        renderRevOptions();
+      });
+    });
+  }
+
+  function renderRevCase(){
+    const rc = revCases[revIndex];
+    revOrder = shuffleArr(rc.candidates);
+    revAnswered = false;
+    revBlock.innerHTML = `
+      <div class="rev-head">
+        <span class="lbl">MODE DIAGNOSA TERBALIK</span>
+        <span class="rev-progress">Kasus ${revIndex + 1} dari ${revCases.length}</span>
+        <button class="rev-close" id="revCloseBtn">✕ Tutup</button>
+      </div>
+      <p class="rev-case-text">${rc.text}</p>
+      <p class="rev-hint">Urutkan 5 komponen di bawah dari yang PALING MUNGKIN jadi penyebab (paling atas) ke yang PALING TIDAK MUNGKIN (paling bawah), pakai tombol ▲▼. Ini latihan cara berpikir, bukan statistik servis yang mutlak.</p>
+      <div class="rev-list" id="revOptions"></div>
+      <button class="rev-submit" id="revSubmitBtn">Kunci Urutan &amp; Lihat Hasil</button>
+      <div id="revResultArea"></div>
+    `;
+    renderRevOptions();
+    document.getElementById('revCloseBtn').addEventListener('click', closeReverse);
+    document.getElementById('revSubmitBtn').addEventListener('click', submitRevAnswer);
+  }
+
+  function submitRevAnswer(){
+    if(revAnswered) return;
+    revAnswered = true;
+    const rc = revCases[revIndex];
+    const { correct, total } = pairwiseScore(revOrder, rc.ranking);
+    const pct = Math.round((correct / total) * 100);
+    revScoreSum += pct;
+    revResults.push({ text: rc.text, pct });
+
+    document.getElementById('revSubmitBtn').remove();
+    document.querySelectorAll('#revOptions .rev-arrows').forEach(el => el.remove());
+
+    const isLast = revIndex === revCases.length - 1;
+    let verdict;
+    if(pct >= 90) verdict = 'Urutanmu hampir sama persis dengan yang disarankan — intuisimu sudah bagus.';
+    else if(pct >= 60) verdict = 'Sudah di jalur yang benar, ada beberapa posisi yang tertukar.';
+    else verdict = 'Urutannya masih perlu dipikirkan ulang — coba baca alasannya di bawah.';
+
+    document.getElementById('revResultArea').innerHTML = `
+      <div class="rev-score-line">Ketepatan urutan: <b>${correct} dari ${total}</b> pasang perbandingan tepat (${pct}%). ${verdict}</div>
+      <div class="rev-compare">
+        <div class="rev-compare-col">
+          <h4>Urutanmu</h4>
+          <ol>${revOrder.map(id => `<li>${componentData[id].name}</li>`).join('')}</ol>
+        </div>
+        <div class="rev-compare-col">
+          <h4>Urutan yang disarankan</h4>
+          <ol>${rc.ranking.map(id => `<li>${componentData[id].name}</li>`).join('')}</ol>
+        </div>
+      </div>
+      <div class="rev-alasan">${rc.alasan}</div>
+      <div class="rev-actions">
+        <button class="ghost" id="revApplyBtn">🔧 Terapkan Penyebab Sebenarnya ke Simulasi</button>
+        <button class="primary" id="revNextBtn">${isLast ? 'Lihat Ringkasan' : 'Kasus Berikutnya →'}</button>
+      </div>
+    `;
+    document.getElementById('revApplyBtn').addEventListener('click', () => {
+      damaged.clear();
+      rc.actualCulprits.forEach(id => damaged.set(id, 3));
+      updateHotspotStyles();
+      renderChips();
+      updateStatus();
+      rc.actualCulprits.forEach(id => flashHotspot(id));
+    });
+    document.getElementById('revNextBtn').addEventListener('click', () => {
+      if(isLast){ renderRevSummary(); } else { revIndex++; renderRevCase(); }
+    });
+  }
+
+  function renderRevSummary(){
+    const avg = Math.round(revScoreSum / revCases.length);
+    let verdict;
+    if(avg >= 85) verdict = 'Mantap — cara berpikirmu dalam menimbang kemungkinan penyebab sudah tajam.';
+    else if(avg >= 60) verdict = 'Cukup baik — beberapa kasus masih tertukar urutannya, coba baca lagi alasannya.';
+    else verdict = 'Masih perlu latihan — coba ulangi tur atau kuis dulu, lalu balik lagi ke sini.';
+
+    revBlock.innerHTML = `
+      <div class="rev-head">
+        <span class="lbl">HASIL DIAGNOSA TERBALIK</span>
+        <button class="rev-close" id="revCloseBtn">✕ Tutup</button>
+      </div>
+      <p class="rev-case-text">Rata-rata ketepatan urutan: <b>${avg}%</b> dari ${revCases.length} kasus. ${verdict}</p>
+      <ul class="rev-summary-list">
+        ${revResults.map(r => `<li>"${r.text.slice(0, 60)}${r.text.length > 60 ? '…' : ''}" — ${r.pct}% tepat</li>`).join('')}
+      </ul>
+      <div class="rev-actions">
+        <button class="ghost" id="revRestartBtn">↻ Ulangi dengan Urutan Kasus Baru</button>
+        <button class="primary" id="revDoneBtn">Selesai</button>
+      </div>
+    `;
+    document.getElementById('revCloseBtn').addEventListener('click', closeReverse);
+    document.getElementById('revRestartBtn').addEventListener('click', startReverse);
+    document.getElementById('revDoneBtn').addEventListener('click', closeReverse);
+  }
+
+  function closeReverse(){
+    revActive = false;
+    document.body.classList.remove('rev-mode');
+    revBlock.style.display = 'none';
+    revBlock.innerHTML = '';
+  }
+
+  revStartBtn.addEventListener('click', startReverse);
+
+  function applyJumpFromURL(params){
+    const jumpId = params.get('jump');
+    if(!jumpId || !componentData[jumpId]) return false;
+    selectComponent(jumpId);
+    const el = svg.querySelector(`.hotspot[data-id="${jumpId}"]`);
+    if(el && el.scrollIntoView) el.scrollIntoView({ behavior:'smooth', block:'center' });
+    return true;
+  }
+
+  function applyStateFromURL(){
+    const params = new URLSearchParams(location.search);
+    if(!params.has('d') && !params.has('usage') && !params.has('body')){
+      if(applyJumpFromURL(params)) history.replaceState(null, '', location.pathname);
+      return;
+    }
+
+    const dParam = params.get('d');
+    if(dParam){
+      dParam.split(',').map(s => s.trim()).filter(Boolean).forEach(entry => {
+        const [id, lvlRaw] = entry.split(':');
+        if(!componentData[id]) return;
+        const lvl = parseInt(lvlRaw, 10);
+        damaged.set(id, (lvl >= 1 && lvl <= 3) ? lvl : 3);
+      });
+    }
+
+    const usageParam = parseInt(params.get('usage'), 10);
+    if(!isNaN(usageParam) && usageParam >= 0 && usageParam <= 2){
+      level = usageParam;
+      levelSeg.querySelectorAll('button').forEach(b => b.classList.toggle('active', parseInt(b.dataset.level, 10) === level));
+    }
+
+    const bodyParam = params.get('body');
+    if(bodyParam && caseLayers.hasOwnProperty(bodyParam)){
+      bodyStyleSeg.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.style === bodyParam));
+      Object.entries(caseLayers).forEach(([key, g]) => { if(g) g.style.display = (key === bodyParam) ? '' : 'none'; });
+    }
+
+    updateHotspotStyles();
+    renderChips();
+    updateGauges();
+    updateStatus();
+
+    shareAppliedBanner.textContent = '🔗 Kondisi dari tautan yang dibagikan berhasil diterapkan — HP masih mati, tekan "Nyalakan HP" untuk melihat efeknya.';
+    shareAppliedBanner.classList.add('show');
+
+    applyJumpFromURL(params);
+
+    // bersihkan query string dari address bar biar tidak ikut ter-share ulang tanpa sadar
+    history.replaceState(null, '', location.pathname);
+  }
+
+  // ---------- [Pratinjau A+B] Data & Interaksi HP Jadul ----------
+  const componentDataJadul = {
+    layar_lcd: { num:1, name:"Layar LCD Monokrom/Kecil",
+      fungsi:"Menampilkan teks dan ikon sederhana dalam hitam-putih atau warna terbatas, tanpa lapisan sentuh sama sekali — hanya untuk dilihat, bukan disentuh.",
+      penting:"Beda dari HP modern, layar dan input pengguna benar-benar terpisah: semua perintah masuk lewat tombol fisik, bukan lewat menyentuh layar.",
+      gejala:["Layar kosong/blank meski HP menyala","Kontras layar pudar atau muncul garis-garis","Tampilan macet di satu tampilan (freeze)"],
+      tags:["layar","lcd","monokrom","layar jadul"] },
+    speaker_jadul: { num:2, name:"Speaker Earpiece &amp; Buzzer Dering",
+      fungsi:"Mengeluarkan suara panggilan telepon lewat earpiece kecil, dan suara nada dering lewat buzzer terpisah yang lebih keras.",
+      penting:"Karena fungsinya dipisah dua (earpiece untuk telepon, buzzer untuk dering), kerusakan salah satunya belum tentu mengganggu yang lain.",
+      gejala:["Suara telepon tidak terdengar meski nada dering normal","Nada dering tidak berbunyi sama sekali","Suara pecah atau sangat pelan"],
+      tags:["speaker","earpiece","buzzer","dering","suara jadul"] },
+    antena: { num:3, name:"Antena Sinyal Eksternal",
+      fungsi:"Menangkap dan memancarkan sinyal jaringan seluler lewat batang antena yang menonjol keluar dari bodi HP.",
+      penting:"HP jadul mengandalkan antena fisik yang bisa menonjol atau ditarik, berbeda dari HP modern yang antenanya tersembunyi total di dalam bodi.",
+      gejala:["Sinyal hilang total saat antena ditekuk atau disentuh","Sinyal lemah meski di area yang seharusnya kuat","Antena patah atau longgar secara fisik"],
+      tags:["antena","sinyal","eksternal","jaringan jadul"] },
+    keypad: { num:4, name:"Keypad Fisik (Tombol Angka T9)",
+      fungsi:"Satu-satunya cara memasukkan perintah dan mengetik teks, lewat tombol angka 0-9 dan tombol navigasi yang ditekan langsung dengan jari.",
+      penting:"Karena tidak ada layar sentuh, seluruh interaksi — dari menelepon sampai mengetik SMS pakai metode T9 — bergantung sepenuhnya pada keypad ini.",
+      gejala:["Beberapa tombol tidak merespons saat ditekan","Tombol terasa keras atau macet","Angka yang muncul tidak sesuai tombol yang ditekan"],
+      tags:["keypad","tombol","t9","fisik","tombol jadul"] },
+    mikrofon_jadul: { num:5, name:"Mikrofon",
+      fungsi:"Menangkap suara pengguna saat menelepon, letaknya di ujung bawah bodi HP dekat mulut.",
+      penting:"Fungsinya sama seperti mikrofon di HP modern, tapi biasanya cuma ada satu titik saja tanpa mikrofon kedua untuk peredam bising.",
+      gejala:["Suara pengguna terdengar sangat pelan oleh lawan bicara","Suara berdesing atau bising saat menelepon","Tidak ada suara sama sekali dari sisi pengguna"],
+      tags:["mikrofon","mic","suara","telepon jadul"] },
+    baterai_jadul: { num:6, name:"Baterai Li-ion/NiMH yang Bisa Dilepas",
+      fungsi:"Menyimpan energi dan bisa dicabut-pasang manual lewat penutup belakang, berbeda dari kebanyakan HP modern yang baterainya tertanam permanen.",
+      penting:"Karena bisa dilepas, baterai yang lemah biasanya cukup diganti unit barunya tanpa perlu bongkar HP sama sekali.",
+      gejala:["HP mati mendadak walau indikator baterai masih menunjukkan penuh","Baterai terasa menggembung saat dilepas","HP cuma bisa menyala kalau dicas terus-menerus"],
+      tags:["baterai","battery","bisa dilepas","removable"] },
+    baseband: { num:7, name:"Chip Sinyal/Baseband GSM",
+      fungsi:"Chip kecil terpisah yang khusus mengurus komunikasi dengan jaringan seluler — mengubah suara dan data jadi sinyal radio dan sebaliknya.",
+      penting:"Di HP modern fungsi ini sering digabung jadi satu dengan prosesor utama (SoC), sedangkan di HP jadul biasanya masih jadi chip tersendiri yang lebih sederhana.",
+      gejala:["HP terdaftar di jaringan tapi tidak bisa melakukan/menerima panggilan","SMS terkirim tapi sangat lambat","HP sering menunjukkan status \"Tidak Ada Layanan\""],
+      tags:["baseband","chip sinyal","gsm","modem jadul"] },
+    pcb_jadul: { num:8, name:"Papan Sirkuit Sederhana (PCB)",
+      fungsi:"Papan tunggal yang menghubungkan keypad, layar, baseband, dan baterai — jauh lebih sederhana dibanding papan HP modern yang berlapis-lapis.",
+      penting:"Karena desainnya simpel dan komponennya lebih sedikit, HP jadul sering kali justru lebih tahan banting dibanding HP modern yang padat komponen.",
+      gejala:["HP mati total tanpa sebab jelas","Beberapa fungsi (keypad+layar) mati bersamaan","Muncul karat atau korosi di jalur papan setelah kena air"],
+      tags:["pcb","papan sirkuit","mainboard jadul"] }
+  };
+
+  const svgJadul = document.getElementById('svgJadul');
+  const panelJadul = document.getElementById('panelJadul');
+  const jadulResetBtn = document.getElementById('jadulResetBtn');
+  const compareSummary = document.getElementById('compareSummary');
+
+  let damagedJadul = new Map();
+  let selectedJadul = null;
+
+  function sevJadul(id){ return damagedJadul.get(id) || 0; }
+
+  function updateHotspotStylesJadul(){
+    svgJadul.querySelectorAll('.hotspot-jadul').forEach(el => {
+      const id = el.dataset.id;
+      const s = sevJadul(id);
+      el.classList.remove('sev-1','sev-2','sev-3','active');
+      if(s > 0) el.classList.add('sev-' + s);
+      if(id === selectedJadul) el.classList.add('active');
+    });
+  }
+
+  function renderPanelJadul(id){
+    const c = componentDataJadul[id];
+    if(!c) return;
+    const curSev = sevJadul(id);
+    panelJadul.innerHTML = `
+      <span class="num">KOMPONEN #${c.num} — HP JADUL</span>
+      <h2>${c.name}</h2>
+      <h3>Fungsi</h3><p>${c.fungsi}</p>
+      <h3>Kenapa Penting</h3><p>${c.penting}</p>
+      <h3>Gejala Umum Kalau Rusak</h3>
+      <ul>${c.gejala.map(g => `<li>${g}</li>`).join('')}</ul>
+      <h3>Tandai kondisi untuk simulasi</h3>
+      <div class="sev-seg" id="sevSegJadul">
+        <button data-lvl="0" class="${curSev===0?'active':''}">Normal</button>
+        <button data-lvl="1" class="sev-1 ${curSev===1?'active':''}">Ringan</button>
+        <button data-lvl="2" class="sev-2 ${curSev===2?'active':''}">Sedang</button>
+        <button data-lvl="3" class="sev-3 ${curSev===3?'active':''}">Parah</button>
+      </div>
+    `;
+    panelJadul.querySelectorAll('#sevSegJadul button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const lvl = parseInt(btn.dataset.lvl, 10);
+        if(lvl === 0) damagedJadul.delete(id); else damagedJadul.set(id, lvl);
+        updateHotspotStylesJadul();
+        renderPanelJadul(id);
+        updateCompareSummary();
+      });
+    });
+  }
+
+  function selectComponentJadul(id){
+    selectedJadul = id;
+    updateHotspotStylesJadul();
+    renderPanelJadul(id);
+  }
+
+  function resetJadul(){
+    damagedJadul.clear();
+    selectedJadul = null;
+    updateHotspotStylesJadul();
+    panelJadul.innerHTML = '<div class="panel-empty">Tekan salah satu komponen bernomor pada diagram HP jadul untuk melihat penjelasannya di sini.</div>';
+    updateCompareSummary();
+  }
+
+  function updateCompareSummary(){
+    if(!compareSummary) return;
+    const modernTotal = Object.keys(componentData).length;
+    const jadulTotal = Object.keys(componentDataJadul).length;
+    const modernRusak = damaged.size;
+    const jadulRusak = damagedJadul.size;
+    compareSummary.innerHTML = `
+      <div class="compare-summary-row">
+        <div class="compare-summary-col"><span class="cs-lbl">HP MODERN</span><b>${modernTotal} komponen</b><span class="cs-sub">${modernRusak ? modernRusak + ' sedang disimulasikan rusak' : 'kondisi normal'}</span></div>
+        <div class="compare-summary-col"><span class="cs-lbl">HP JADUL</span><b>${jadulTotal} komponen</b><span class="cs-sub">${jadulRusak ? jadulRusak + ' sedang disimulasikan rusak' : 'kondisi normal'}</span></div>
+      </div>
+      <p class="compare-summary-note">HP jadul tidak punya padanan untuk: kamera, RAM, penyimpanan internal besar, modem data, layar sentuh (digitizer), dan motor getar — semua fungsi ekstra itu baru muncul di era smartphone.</p>
+    `;
+  }
+
+  const architectureComparison = [
+    { kategori:"Layar",
+      modern:"Layar sentuh (touchscreen) beresolusi tinggi dan warna penuh. Lapisan tampilan dan lapisan sentuh (digitizer) menyatu jadi satu panel.",
+      jadul:"Layar LCD kecil, monokrom atau warna sangat terbatas, resolusi rendah. Sama sekali tidak ada lapisan sentuh — murni untuk ditampilkan, bukan disentuh." },
+    { kategori:"Cara Memasukkan Perintah (Input)",
+      modern:"Hampir seluruhnya lewat sentuhan langsung di layar (multi-touch), tombol fisik tersisa sedikit atau tidak ada sama sekali.",
+      jadul:"Sepenuhnya lewat keypad fisik bertombol angka, termasuk mengetik teks dengan metode T9 — satu tombol mewakili beberapa huruf." },
+    { kategori:"Prosesor &amp; Papan Sirkuit",
+      modern:"Satu chip SoC menggabungkan prosesor, pengolah grafis, dan modem jadi satu, dipasang di papan sirkuit berlapis-lapis (multilayer) yang sangat padat.",
+      jadul:"Chip prosesor dan chip sinyal (baseband) masih terpisah, dipasang di satu papan sirkuit tunggal yang jauh lebih sederhana dan lapang." },
+    { kategori:"Memori &amp; Penyimpanan",
+      modern:"Punya RAM khusus untuk menjalankan banyak aplikasi sekaligus, plus penyimpanan puluhan hingga ratusan gigabita untuk foto, video, dan aplikasi.",
+      jadul:"Nyaris tidak ada RAM terpisah yang berarti, penyimpanan internal sangat kecil — biasanya cuma cukup untuk kontak, beberapa SMS, dan nada dering." },
+    { kategori:"Konektivitas",
+      modern:"Modem seluler, Wi-Fi, dan Bluetooth tersembunyi total di dalam bodi lewat antena internal yang tidak terlihat dari luar.",
+      jadul:"Hanya jaringan seluler dasar (GSM/2G), lewat antena eksternal yang menonjol keluar bodi. Tidak ada Wi-Fi maupun Bluetooth." },
+    { kategori:"Kamera",
+      modern:"Punya kamera depan dan belakang beresolusi tinggi, sering lebih dari satu lensa di bagian belakang.",
+      jadul:"Umumnya tidak dilengkapi kamera sama sekali, atau kalau pun ada hanya satu kamera beresolusi sangat rendah sekadar dokumentasi ringan." },
+    { kategori:"Audio",
+      modern:"Speaker stereo untuk media, dan mikrofon ganda yang saling membantu meredam suara bising di sekitar.",
+      jadul:"Earpiece kecil untuk suara telepon dan buzzer terpisah untuk nada dering, dengan hanya satu mikrofon tanpa peredam bising." },
+    { kategori:"Daya",
+      modern:"Baterai tertanam permanen di dalam bodi, diatur oleh IC manajemen daya yang kompleks, diisi ulang lewat port USB-C serbaguna.",
+      jadul:"Baterai bisa dicabut-pasang manual lewat penutup belakang, tanpa IC daya yang rumit, diisi lewat charger khusus bawaan pabrik." },
+    { kategori:"Bodi &amp; Ergonomi",
+      modern:"Tipis, ringan, dan didominasi oleh layar hampir di seluruh permukaan depan.",
+      jadul:"Lebih tebal dan kokoh, dengan keypad fisik yang memakan cukup banyak ruang di permukaan depan." }
+  ];
+
+  function renderArchTable(){
+    const wrap = document.getElementById('archTableWrap');
+    if(!wrap) return;
+    wrap.innerHTML = `
+      <h3>Tabel Perbandingan Arsitektur Detail</h3>
+      <p class="arch-sub">Perbandingan kategori-per-kategori antara arsitektur HP modern dan HP jadul — cocok dibaca setelah mencoba dua diagram di atas, untuk melihat gambaran besarnya sekaligus.</p>
+      <table class="arch-table">
+        <thead><tr><th>Kategori</th><th>HP Modern</th><th>HP Jadul</th></tr></thead>
+        <tbody>
+          ${architectureComparison.map(row => `
+            <tr>
+              <td class="arch-cat">${row.kategori}</td>
+              <td class="arch-modern">${row.modern}</td>
+              <td class="arch-jadul">${row.jadul}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  svgJadul.querySelectorAll('.hotspot-jadul').forEach(el => {
+    el.addEventListener('click', () => selectComponentJadul(el.dataset.id));
+  });
+
+  jadulResetBtn.addEventListener('click', resetJadul);
+  updateCompareSummary();
+  renderArchTable();
+
+  updateHotspotStyles();
+  renderChips();
+  updateGauges();
+  updateStatus();
+  applyStateFromURL();
+})();
+</script>
+</body>
+</html>

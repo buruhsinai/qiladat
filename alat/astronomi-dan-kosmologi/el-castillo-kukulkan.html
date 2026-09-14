@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ular Cahaya Kukulkan — Laboratorium JAZMI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&display=swap');
+
+:root{
+  --bg-top:#1c2e22; --bg-bot:#3a2a1a;
+  --panel:#233227; --panel-border:#3f5443;
+  --stone:#B7AD97; --stone-dark:#847a63; --stone-shadow:#2a2318;
+  --ink:#F2ECDA; --ink-soft:#b7ae98;
+  --jade:#4E8C6C; --gold:#E0A83E; --terracotta:#B5652A;
+  --line:rgba(242,236,218,.16); --line-strong:rgba(242,236,218,.3);
+}
+*{box-sizing:border-box;} html,body{margin:0;padding:0;}
+body{
+  background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-top) 45%, var(--bg-bot) 100%);
+  color:var(--ink); font-family:'Karla',sans-serif; min-height:100vh;
+}
+.wrap{max-width:980px; margin:0 auto; padding:20px 14px 44px;}
+.eyebrow{font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); margin:0 0 4px;}
+h1{font-family:'Fraunces',serif; font-weight:700; font-size:clamp(24px,5.5vw,34px); margin:0 0 6px;}
+.sub{font-size:13.5px; color:var(--ink-soft); max-width:70ch; line-height:1.55;}
+
+.intro{ background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:16px 18px; margin-top:16px; }
+.intro h2{ font-family:'Fraunces',serif; font-size:17px; margin:0 0 8px; color:var(--gold); }
+.intro p{ font-size:13px; line-height:1.65; margin:0 0 8px; color:var(--ink); }
+.fact-pill{ display:inline-block; background:rgba(224,168,62,.14); border:1px solid var(--gold); border-radius:4px; padding:8px 12px; font-size:12.5px; margin-top:4px; }
+
+.controls{ background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:16px; margin-top:16px; }
+.row{ display:flex; flex-wrap:wrap; gap:14px; align-items:center; margin-bottom:8px; }
+.field{ display:flex; flex-direction:column; gap:4px; flex:1; min-width:160px; }
+.field label{ font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); }
+.field input[type=range]{ width:100%; }
+.field input[type=date]{
+  background:#182219; border:1px solid var(--line-strong); color:var(--ink);
+  border-radius:4px; padding:6px 8px; font-family:'Karla',sans-serif; font-size:13px;
+}
+.valtag{ font-family:'Fraunces',serif; font-weight:600; color:var(--gold); font-size:14px; }
+button{
+  font-family:'Karla',sans-serif; font-weight:700; font-size:12.5px;
+  background:var(--gold); color:#241c08; border:none; border-radius:999px; padding:9px 16px; cursor:pointer;
+}
+button.ghost{ background:transparent; color:var(--ink); border:1px solid var(--line-strong); }
+button:hover{ filter:brightness(1.08); }
+
+.stage{
+  display:grid; grid-template-columns:1fr; gap:16px; margin-top:16px;
+}
+@media(min-width:760px){ .stage{ grid-template-columns:1.3fr 1fr; } }
+.diagram-box{ background:linear-gradient(180deg,#1a2a2f 0%, #2f2318 100%); border:1px solid var(--panel-border); border-radius:6px; padding:10px; }
+svg.pyr{ width:100%; height:auto; display:block; }
+
+.readout{ background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:16px; display:flex; flex-direction:column; gap:10px; }
+.rline{ display:flex; justify-content:space-between; font-size:12.5px; border-bottom:1px solid var(--line); padding-bottom:6px; }
+.rline b{ color:var(--ink); }
+.verdict{ margin-top:6px; padding:12px; border-radius:6px; text-align:center; font-family:'Fraunces',serif; font-size:16px; font-weight:700; }
+.verdict.none{ background:rgba(255,255,255,.05); color:var(--ink-soft); }
+.verdict.forming{ background:rgba(224,168,62,.18); color:var(--gold); }
+.verdict.perfect{ background:rgba(78,140,108,.28); color:#8fe0b8; }
+.quality-bar{ height:8px; border-radius:4px; background:rgba(255,255,255,.08); overflow:hidden; margin-top:4px; }
+.quality-fill{ height:100%; background:linear-gradient(90deg,var(--terracotta),var(--gold),var(--jade)); transition:width .2s; }
+
+.section{ margin-top:26px; }
+.section h2{ font-family:'Fraunces',serif; font-size:19px; margin:0 0 8px; color:var(--gold); }
+.section p{ font-size:13px; line-height:1.6; color:var(--ink-soft); max-width:72ch; }
+.yearchart-box{ background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:10px; margin-top:8px; }
+svg.yc{ width:100%; height:auto; display:block; }
+.yc-axis{ stroke:var(--line-strong); stroke-width:1; }
+.yc-grid{ stroke:var(--line); stroke-width:1; }
+.yc-label{ font-size:9.5px; fill:var(--ink-soft); }
+.yc-curve{ fill:none; stroke:var(--gold); stroke-width:2; }
+.yc-marker{ stroke:var(--jade); stroke-width:1; stroke-dasharray:3 2; }
+.yc-marker-label{ font-size:9px; fill:var(--jade); font-weight:700; }
+.yc-today{ stroke:var(--terracotta); stroke-width:1.4; }
+
+footer{margin-top:26px; padding-top:14px; border-top:1px solid var(--line); font-size:11.5px; color:var(--ink-soft); line-height:1.6;}
+footer b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">JAZMI · Laboratorium Arkeoastronomi · Level 4</p>
+  <h1>Ular Cahaya Kukulkan</h1>
+  <p class="sub">Simulasi bayangan sembilan undakan Piramida Kukulkan (El Castillo) di Chichén Itzá,
+  Yucatán — dihitung langsung dari posisi Matahari sungguhan, bukan animasi yang diskrip. Geser
+  tanggal dan jam; perhatikan bayangan hanya "menyambung jadi ular" pada rentang waktu yang sangat
+  sempit di sekitar equinox.</p>
+
+  <div class="intro">
+    <h2>Belajar dulu: apa yang sebenarnya terjadi</h2>
+    <p>El Castillo adalah piramida berundak 9 tingkat peninggalan peradaban Maya (pra-Kolonial, puncak
+    penggunaan diperkirakan abad 9–12 M), didedikasikan untuk Kukulkan — dewa ular berbulu (setara
+    Quetzalcoatl dalam tradisi Mesoamerika lain). Sore hari di sekitar equinox Maret dan September,
+    sudut Matahari yang rendah membuat bayangan sudut barat laut undakan jatuh tepat di sisi
+    balustrade tangga utara, membentuk rangkaian segitiga cahaya-bayangan yang menyatu jadi pola
+    zigzag menyerupai tubuh ular — bersambung ke kepala ular batu berukir di kaki tangga.</p>
+    <div class="fact-pill">🐍 91 anak tangga × 4 sisi tangga + 1 platform puncak bersama = <b>365</b> —
+    jumlah hari dalam setahun matahari. Fakta arsitektur yang didokumentasikan luas.</div>
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <div class="field">
+        <label>Tanggal</label>
+        <input type="date" id="dateIn">
+      </div>
+      <div class="field">
+        <label>Jam lokal (Chichén Itzá, UTC-6): <span class="valtag" id="hourVal">15:30</span></label>
+        <input type="range" id="hourIn" min="12" max="19" step="0.083" value="15.5">
+      </div>
+      <div class="field" style="flex:0 0 auto;">
+        <label>&nbsp;</label>
+        <button id="eqBtn">Lompat ke equinox terdekat</button>
+      </div>
+      <div class="field" style="flex:0 0 auto;">
+        <label>&nbsp;</label>
+        <button class="ghost" id="playBtn">▶ Putar sore ini</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="diagram-box">
+      <svg class="pyr" id="pyrSvg" viewBox="0 0 640 460" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div class="readout">
+      <div class="rline"><span>Altitude Matahari</span><b id="out-alt">–</b></div>
+      <div class="rline"><span>Azimuth Matahari</span><b id="out-az">–</b></div>
+      <div class="rline"><span>Selisih dari azimuth ideal (Δaz)</span><b id="out-daz">–</b></div>
+      <div class="rline"><span>Panjang bayangan per undakan</span><b id="out-shadow">–</b></div>
+      <div>
+        <div style="font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft);">Keselarasan ular</div>
+        <div class="quality-bar"><div class="quality-fill" id="qualityFill" style="width:0%"></div></div>
+      </div>
+      <div class="verdict none" id="verdict">Matahari belum di posisi yang tepat</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Pindai satu tahun penuh</h2>
+    <p>Grafik ini menghitung keselarasan ular untuk setiap hari dalam setahun, pada jam yang sama
+    dengan slider di atas. Dua puncak tajam yang seharusnya muncul di sekitar 20 Maret dan 22
+    September bukan kebetulan — itulah equinox, satu-satunya masa Matahari terbenam persis di titik
+    yang membuat geometri ini bekerja.</p>
+    <div class="yearchart-box">
+      <svg class="yc" id="ycSvg" viewBox="0 0 800 260" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+  </div>
+
+  <footer>
+    <b>Batasan:</b> Ini model skematik 2D yang disederhanakan dari fenomena 3D sungguhan — dimensi
+    undakan (tinggi ~2,57 m, kedalaman ~3 m per tingkat) dan sudut rotasi bangunan (~22° timur dari
+    utara sejati) memakai angka yang umum dikutip, bukan data survei arsitektur presisi tinggi.
+    Azimuth "ideal" untuk efek ini (248°) adalah nilai ilustratif untuk menunjukkan prinsip fisikanya
+    (kenapa hanya bekerja di rentang tanggal & jam sempit), bukan rekonstruksi arkeologis yang
+    diverifikasi lapangan. Koordinat Chichén Itzá, altitude/azimuth Matahari, dan tanggal equinox
+    dihitung dari rumus astronomi yang sama dan sudah divalidasi di alat-alat JAZMI sebelumnya.
+    Pengalaman melihat langsung di lokasi bergantung pada cuaca, presisi tanggal tahun berjalan, dan
+    faktor lain di luar cakupan simulasi ini.
+  </footer>
+</div>
+
+<script>
+const LAT=20.6843, LON=-88.5678, TZ=-6;
+const TERRACES=9, RISER_H=2.57, TREAD_D=3.0;
+const FACADE_AZ=248; // illustrative ideal shadow azimuth
+
+function dateToJD(Y,M,D){
+  if(M<=2){Y-=1;M+=12;}
+  const A=Math.floor(Y/100), B=2-A+Math.floor(A/4);
+  return Math.floor(365.25*(Y+4716))+Math.floor(30.6001*(M+1))+D+B-1524.5;
+}
+function gmstDeg(JD){
+  const T=(JD-2451545.0)/36525.0;
+  let g=280.46061837+360.98564736629*(JD-2451545.0)+0.000387933*T*T-(T*T*T)/38710000.0;
+  g=g%360; if(g<0) g+=360; return g;
+}
+function solarPosition(jd){
+  const n = jd - 2451545.0;
+  let L=(280.460+0.9856474*n)%360; if(L<0) L+=360;
+  let g=(357.528+0.9856003*n)%360; if(g<0) g+=360;
+  const gR=g*Math.PI/180;
+  const lam=L+1.915*Math.sin(gR)+0.020*Math.sin(2*gR);
+  const lamR=lam*Math.PI/180, eps=23.439*Math.PI/180;
+  let ra=Math.atan2(Math.cos(eps)*Math.sin(lamR),Math.cos(lamR))*180/Math.PI; if(ra<0) ra+=360;
+  const dec=Math.asin(Math.sin(eps)*Math.sin(lamR))*180/Math.PI;
+  return {ra,dec};
+}
+function altAz(raH,decD,latD,lstD){
+  const raD=raH*15; let H=lstD-raD; H=((H%360)+360)%360; const Hr=H*Math.PI/180;
+  const decR=decD*Math.PI/180, latR=latD*Math.PI/180;
+  const sinAlt=Math.sin(decR)*Math.sin(latR)+Math.cos(decR)*Math.cos(latR)*Math.cos(Hr);
+  const alt=Math.asin(Math.max(-1,Math.min(1,sinAlt)));
+  const cosAlt=Math.cos(alt)||1e-6;
+  const sinAz=-Math.cos(decR)*Math.sin(Hr)/cosAlt;
+  const cosAz=(Math.sin(decR)-Math.sin(latR)*Math.sin(alt))/(Math.cos(latR)*cosAlt);
+  let az=Math.atan2(sinAz,cosAz)*180/Math.PI; if(az<0) az+=360;
+  return {alt:alt*180/Math.PI, az};
+}
+function sunAltAz(Y,M,D,localHour){
+  const utcHour = localHour - TZ;
+  const dayFrac = D + utcHour/24;
+  const jd = dateToJD(Y,M,dayFrac);
+  const sun = solarPosition(jd);
+  const gmst = gmstDeg(jd);
+  const lst = ((gmst+LON)%360+360)%360;
+  return altAz(sun.ra/15, sun.dec, LAT, lst);
+}
+function equinoxSolsticeJDE(year,type){
+  const Y=(year-2000)/1000, Y2=Y*Y, Y3=Y2*Y, Y4=Y3*Y;
+  if(type==='marEq') return 2451623.80984+365242.37404*Y+0.05169*Y2-0.00411*Y3-0.00057*Y4;
+  if(type==='sepEq') return 2451810.21715+365242.01767*Y-0.11575*Y2+0.00337*Y3+0.00078*Y4;
+}
+function jdToDate(JD){
+  JD+=0.5; const Z=Math.floor(JD), F=JD-Z; let A;
+  if(Z<2299161){ A=Z; } else { const alpha=Math.floor((Z-1867216.25)/36524.25); A=Z+1+alpha-Math.floor(alpha/4); }
+  const B=A+1524, C=Math.floor((B-122.1)/365.25), D=Math.floor(365.25*C), E=Math.floor((B-D)/30.6001);
+  const day=B-D-Math.floor(30.6001*E)+F;
+  const month=(E<14)?E-1:E-13;
+  const year=(month>2)?C-4716:C-4715;
+  return {year,month,day};
+}
+
+function quality(alt,daz){
+  const azFactor=Math.max(0,1-Math.abs(daz)/20);
+  let altFactor;
+  if(alt>=3 && alt<=35) altFactor=1; else altFactor=Math.max(0,1-Math.abs(alt-19)/25);
+  if(alt<=0) altFactor=0;
+  return azFactor*altFactor*100;
+}
+
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs){const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); return e;}
+
+function drawPyramid(alt,az){
+  const svg=document.getElementById('pyrSvg'); svg.innerHTML='';
+  const ox=60, oy=420, scale=32; // px per meter (approx), origin at base-outer-bottom
+  const dAz = az - FACADE_AZ;
+  const dazR = dAz*Math.PI/180, altR = Math.max(0.5,alt)*Math.PI/180;
+
+  // sky gradient hint via simple rect (already have page bg) - draw ground line
+  svg.appendChild(el('line',{x1:0,y1:oy,x2:640,y2:oy,stroke:'#000',opacity:.2}));
+
+  // staircase silhouette (9 terraces)
+  let pathD = `M ${ox},${oy} `;
+  const corners=[];
+  for(let i=0;i<TERRACES;i++){
+    const x = ox + i*TREAD_D*scale/3;
+    const yTop = oy - (i+1)*RISER_H*scale/3;
+    const yBase = oy - i*RISER_H*scale/3;
+    pathD += `L ${x},${yBase} L ${x},${yTop} `;
+    corners.push({x, y:yTop, i});
+  }
+  const lastX = ox + TERRACES*TREAD_D*scale/3;
+  pathD += `L ${lastX},${corners[TERRACES-1].y} L ${lastX},${oy} Z`;
+  svg.appendChild(el('path',{d:pathD, fill:'var(--stone)', stroke:'var(--stone-dark)', 'stroke-width':1.2}));
+
+  // balustrade reference (diagonal ramp)
+  const rampTopX = ox + TERRACES*TREAD_D*scale/3, rampTopY = oy - TERRACES*RISER_H*scale/3;
+  svg.appendChild(el('path',{
+    d:`M ${ox},${oy} L ${rampTopX},${rampTopY} L ${rampTopX+14},${rampTopY} L ${ox+14},${oy} Z`,
+    fill:'var(--stone-dark)', opacity:.85, stroke:'#000', 'stroke-width':.5
+  }));
+
+  // shadow triangles per terrace, using real geometry
+  const shadowReachM = RISER_H/Math.tan(altR); // meters
+  const lateral = shadowReachM*Math.sin(dazR);
+  corners.forEach((c,i)=>{
+    const x0=c.x, y0=c.y;
+    const reachPx = Math.min(lateral, TREAD_D*2.5) * scale/3;
+    const dropPx = RISER_H*scale/3;
+    const x1=x0+reachPx, y1=y0+dropPx;
+    if(alt>0 && reachPx>0.5){
+      svg.appendChild(el('path',{
+        d:`M ${x0},${y0} L ${x1},${y1} L ${x0},${y1} Z`,
+        fill:'#0a0a08', opacity:Math.min(.88, .3+shadowReachM/30)
+      }));
+    }
+  });
+
+  // serpent head glyph at base
+  const headG = el('g',{transform:`translate(${ox-38},${oy-14})`});
+  headG.appendChild(el('path',{d:'M0,20 Q -6,0 14,-4 Q 34,-8 40,6 Q 30,18 16,16 Q 6,22 0,20 Z', fill:'var(--terracotta)', stroke:'#2a1608','stroke-width':1}));
+  headG.appendChild(el('circle',{cx:10,cy:6,r:2.2,fill:'#F2ECDA'}));
+  svg.appendChild(headG);
+
+  // labels
+  const t1=el('text',{x:10,y:20,fill:'var(--ink-soft)','font-size':10}); t1.textContent='Sudut barat laut, 9 undakan (skematik)'; svg.appendChild(t1);
+  const t2=el('text',{x:rampTopX-70,y:rampTopY-8,fill:'var(--ink-soft)','font-size':10}); t2.textContent='balustrade'; svg.appendChild(t2);
+
+  return {shadowReachM, lateral};
+}
+
+function render(){
+  const [Y,M,D]=document.getElementById('dateIn').value.split('-').map(Number);
+  const hour=parseFloat(document.getElementById('hourIn').value);
+  const hh=Math.floor(hour), mm=Math.round((hour-hh)*60);
+  document.getElementById('hourVal').textContent = String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
+
+  const {alt,az} = sunAltAz(Y,M,D,hour);
+  const dAz = az-FACADE_AZ;
+  const {shadowReachM} = drawPyramid(alt,az);
+  const q = quality(alt,dAz);
+
+  document.getElementById('out-alt').textContent = alt.toFixed(1)+'°';
+  document.getElementById('out-az').textContent = az.toFixed(1)+'°';
+  document.getElementById('out-daz').textContent = (dAz>=0?'+':'')+dAz.toFixed(1)+'°';
+  document.getElementById('out-shadow').textContent = alt>0 ? shadowReachM.toFixed(2)+' m' : '– (matahari di bawah ufuk)';
+  document.getElementById('qualityFill').style.width = q.toFixed(0)+'%';
+
+  const v=document.getElementById('verdict');
+  if(q>75){ v.className='verdict perfect'; v.textContent='🐍 Ular sempurna — momen ideal!'; }
+  else if(q>30){ v.className='verdict forming'; v.textContent='Ular mulai terbentuk...'; }
+  else { v.className='verdict none'; v.textContent='Matahari belum di posisi yang tepat'; }
+
+  drawYearChart(Y, hour);
+}
+
+function drawYearChart(year, hour){
+  const svg=document.getElementById('ycSvg'); svg.innerHTML='';
+  const X0=40,X1=780,Y0=20,Y1=200;
+  const isLeap=(year%4===0&&year%100!==0)||year%400===0;
+  const totalDays=isLeap?366:365;
+  svg.appendChild(el('line',{x1:X0,y1:Y1,x2:X1,y2:Y1,class:'yc-axis'}));
+  svg.appendChild(el('line',{x1:X0,y1:Y0,x2:X0,y2:Y1,class:'yc-axis'}));
+  [0,25,50,75,100].forEach(v=>{
+    const y=Y1-(v/100)*(Y1-Y0);
+    svg.appendChild(el('line',{x1:X0,y1:y,x2:X1,y2:y,class:'yc-grid'}));
+    const t=el('text',{x:X0-6,y:y+3,class:'yc-label','text-anchor':'end'}); t.textContent=v+'%'; svg.appendChild(t);
+  });
+  const monthStarts=[1,32,60,91,121,152,182,213,244,274,305,335];
+  const monthNames=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  monthStarts.forEach((d,i)=>{
+    const x=X0+(d/totalDays)*(X1-X0);
+    const t=el('text',{x:x,y:Y1+14,class:'yc-label'}); t.textContent=monthNames[i]; svg.appendChild(t);
+  });
+
+  const jdJan1=dateToJD(year,1,1);
+  let pathD='';
+  for(let d=1; d<=totalDays; d+=2){
+    const {year:yy,month:mm,day:dd}=jdToDate(jdJan1+d-1);
+    const {alt,az}=sunAltAz(yy,mm,Math.floor(dd),hour);
+    const q=quality(alt, az-FACADE_AZ);
+    const x=X0+(d/totalDays)*(X1-X0), y=Y1-(q/100)*(Y1-Y0);
+    pathD += (d===1?'M':'L')+x.toFixed(1)+','+y.toFixed(1)+' ';
+  }
+  svg.appendChild(el('path',{d:pathD, class:'yc-curve'}));
+
+  ['marEq','sepEq'].forEach(type=>{
+    const jde=equinoxSolsticeJDE(year,type);
+    const {year:yy,month:mm,day:dd}=jdToDate(jde-69/86400);
+    const jdThis=dateToJD(yy,mm,Math.floor(dd));
+    const doy=Math.round(jdThis-jdJan1)+1;
+    const x=X0+(doy/totalDays)*(X1-X0);
+    svg.appendChild(el('line',{x1:x,y1:Y0,x2:x,y2:Y1,class:'yc-marker'}));
+    const t=el('text',{x:x,y:Y0-4,class:'yc-marker-label','text-anchor':'middle'}); t.textContent=type==='marEq'?'Eq. Maret':'Eq. September'; svg.appendChild(t);
+  });
+
+  const [ty,tm,td]=document.getElementById('dateIn').value.split('-').map(Number);
+  const jdToday=dateToJD(ty,tm,td);
+  const doyToday=Math.round(jdToday-jdJan1)+1;
+  const xt=X0+(doyToday/totalDays)*(X1-X0);
+  svg.appendChild(el('line',{x1:xt,y1:Y0,x2:xt,y2:Y1,class:'yc-today'}));
+}
+
+document.getElementById('dateIn').addEventListener('input', render);
+document.getElementById('hourIn').addEventListener('input', render);
+document.getElementById('eqBtn').addEventListener('click', ()=>{
+  const year=parseInt(document.getElementById('dateIn').value.split('-')[0])||2026;
+  const jde=equinoxSolsticeJDE(year,'marEq');
+  const {year:yy,month:mm,day:dd}=jdToDate(jde-69/86400);
+  document.getElementById('dateIn').value = yy+'-'+String(mm).padStart(2,'0')+'-'+String(Math.floor(dd)).padStart(2,'0');
+  document.getElementById('hourIn').value = 15.5;
+  render();
+});
+
+let playTimer=null;
+document.getElementById('playBtn').addEventListener('click', function(){
+  if(playTimer){ clearInterval(playTimer); playTimer=null; this.textContent='▶ Putar sore ini'; return; }
+  this.textContent='⏸ Berhenti';
+  document.getElementById('hourIn').value=12;
+  playTimer=setInterval(()=>{
+    let h=parseFloat(document.getElementById('hourIn').value)+0.1;
+    if(h>19){ h=12; }
+    document.getElementById('hourIn').value=h;
+    render();
+  },120);
+});
+
+// init
+(function(){
+  const d=new Date();
+  document.getElementById('dateIn').value = d.toISOString().slice(0,10);
+  render();
+})();
+</script>
+</body>
+</html>

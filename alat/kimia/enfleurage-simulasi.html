@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enfleurage: Menangkap Aroma yang Tak Tahan Panas</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#14161D;--panel:#1A1D27;--panel2:#22252D;--ink:#E9E7DE;--dim:#A6AAB2;--dimmer:#6D717A;
+--line:rgba(233,231,222,.1);--blue:#5B9BD5;--green:#3FAE7A;--gsoft:rgba(63,174,122,.14);}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Karla',sans-serif;line-height:1.65}
+h1,h2{font-family:'Fraunces',serif;font-weight:500;margin:0}
+.wrap{max-width:680px;margin:0 auto;padding:30px 18px 70px}
+.kicker{font-size:.85rem;color:var(--blue);font-weight:600;margin-bottom:14px}
+h1{font-size:1.4rem;line-height:1.3;margin-bottom:12px}
+p{color:var(--dim);font-size:.94rem;margin:0 0 14px}
+.lab{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:18px;padding:22px 20px;margin:18px 0}
+.slider-row label{display:flex;justify-content:space-between;font-size:.84rem;color:var(--dimmer);margin-bottom:8px}
+input[type=range]{width:100%;-webkit-appearance:none;height:4px;border-radius:4px;background:var(--line)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--green);border:3px solid var(--bg);cursor:pointer}
+svg{width:100%;height:auto;display:block;margin:16px 0}
+.result-box{padding:16px 18px;border-radius:12px;background:var(--gsoft);border:1px solid rgba(63,174,122,.4)}
+.result-box .k{font-size:.76rem;color:var(--dimmer);margin-bottom:6px}
+.result-box .v{font-family:'Fraunces',serif;font-size:1.2rem;color:var(--green)}
+footer{margin-top:24px;font-size:.8rem;color:var(--dimmer)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <p class="kicker">Laboratorium JAZMI — Satu Proses, Diperdalam</p>
+  <h1>Enfleurage: satu-satunya proses dingin tanpa pelarut</h1>
+  <p>Dari sebelas proses ekstraksi tradisional, enfleurage berdiri sendiri: tidak memakai panas, tidak memakai pelarut cair sama sekali. Bunga seperti melati dan sedap malam terus "bernapas" mengeluarkan aroma bahkan setelah dipetik — dan aroma itu ditangkap pelan-pelan oleh lapisan lemak dingin tanpa bau, diganti bunga segar berkali-kali selama berminggu-minggu.</p>
+</header>
+
+<section>
+  <div class="lab">
+    <div class="slider-row">
+      <label>Jumlah siklus penggantian bunga <span id="cyclePos"></span></label>
+      <input type="range" id="cycleSlider" min="1" max="30" step="1" value="1">
+    </div>
+    <svg id="curveSvg" viewBox="0 0 400 200"></svg>
+    <div class="result-box" id="resultBox"></div>
+  </div>
+  <p>Setiap siklus menambah aroma baru ke dalam lemak, tapi lemaknya juga makin mendekati titik jenuh — tambahan dari tiap siklus baru jadi makin kecil. Ini pola matematis yang sama dengan pengisian baterai atau pendinginan benda panas: <b>mendekati batas, tak pernah benar-benar menyentuhnya</b>.</p>
+</section>
+
+<footer>Bagian dari Laboratorium JAZMI — dibangun mengikuti metode "Belajar → Memodelkan → Menguji → Membuat Tool".</footer>
+</div>
+
+<script>
+const cycleSlider = document.getElementById('cycleSlider');
+const cyclePos = document.getElementById('cyclePos');
+const resultBox = document.getElementById('resultBox');
+const svg = document.getElementById('curveSvg');
+
+function saturation(n){ return 1 - Math.exp(-n/10); } // mendekati 1 (100%) secara asimtotik
+
+function renderCurve(current){
+  const w=400,h=200,pad=30;
+  let path = `M ${pad} ${h-pad}`;
+  let points = '';
+  for(let n=0;n<=30;n++){
+    const x = pad + (n/30)*(w-2*pad);
+    const y = (h-pad) - saturation(n)*(h-2*pad);
+    path += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+  }
+  const cx = pad + (current/30)*(w-2*pad);
+  const cy = (h-pad) - saturation(current)*(h-2*pad);
+  svg.innerHTML = `
+    <line x1="${pad}" y1="${h-pad}" x2="${w-10}" y2="${h-pad}" stroke="#6D717A" stroke-width="1.5"/>
+    <line x1="${pad}" y1="${h-pad}" x2="${pad}" y2="10" stroke="#6D717A" stroke-width="1.5"/>
+    <text x="${w/2}" y="${h-6}" fill="#6D717A" font-size="11" text-anchor="middle">Siklus penggantian bunga →</text>
+    <text x="12" y="${h/2}" fill="#6D717A" font-size="11" text-anchor="middle" transform="rotate(-90 12 ${h/2})">Kejenuhan aroma</text>
+    <path d="${path}" fill="none" stroke="#3FAE7A" stroke-width="2.5"/>
+    <line x1="${cx}" y1="${cy}" x2="${cx}" y2="${h-pad}" stroke="#3FAE7A" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+    <circle cx="${cx}" cy="${cy}" r="6" fill="#3FAE7A"/>
+  `;
+}
+
+function render(){
+  const n = +cycleSlider.value;
+  cyclePos.textContent = n + (n===1?' siklus':' siklus');
+  const pct = saturation(n)*100;
+  renderCurve(n);
+  resultBox.innerHTML = `
+    <div class="k">Perkiraan kejenuhan aroma dalam lemak (pomade)</div>
+    <div class="v">${pct.toFixed(1)}%</div>
+  `;
+}
+cycleSlider.addEventListener('input', render);
+render();
+</script>
+</body>
+</html>

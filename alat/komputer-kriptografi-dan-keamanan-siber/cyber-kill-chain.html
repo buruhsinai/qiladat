@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visualisasi Cyber Kill Chain</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0F1115;--panel:#161A21;--panel2:#1D222B;--ink:#E7E9EE;--dim:#98A0AE;--dimmer:#5E6673;
+--line:rgba(231,233,238,.1);--red:#E5534B;--amber:#E0A730;--green:#3FB37F;--blue:#5B9BD5;
+--rsoft:rgba(229,83,75,.14);--gsoft:rgba(63,179,127,.14);--bsoft:rgba(91,155,213,.14);}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Karla',sans-serif;line-height:1.6}
+.mono{font-family:'JetBrains Mono',monospace}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0}
+.wrap{max-width:760px;margin:0 auto;padding:32px 18px 70px}
+.kicker{font-size:.82rem;color:var(--blue);font-weight:700;margin-bottom:10px;letter-spacing:.02em}
+h1{font-size:1.5rem;margin-bottom:10px}
+header p{color:var(--dim);font-size:.92rem}
+section{padding:28px 0;border-top:1px solid var(--line)}
+section:first-of-type{border-top:none}
+h2{font-size:1.15rem;margin-bottom:12px}
+p{margin:0 0 12px;color:var(--dim);font-size:.9rem}
+.lab{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:20px}
+
+.chain{display:flex;gap:0;flex-wrap:wrap;justify-content:center;margin-bottom:6px}
+.node-wrap{display:flex;align-items:center}
+.arrow{color:var(--dimmer);font-size:1.2rem;padding:0 2px}
+.node{width:84px;padding:10px 6px;border-radius:10px;border:2px solid var(--line);background:var(--panel2);cursor:pointer;text-align:center;transition:all .2s ease;position:relative}
+.node:hover{border-color:var(--blue)}
+.node.selected{border-color:var(--blue);background:var(--bsoft)}
+.node .num{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--dimmer)}
+.node .nm{font-size:.72rem;font-weight:700;margin-top:3px;line-height:1.25}
+.node.sim-current{border-color:var(--amber);background:rgba(224,167,48,.18);box-shadow:0 0 0 3px rgba(224,167,48,.25)}
+.node.sim-blocked{border-color:var(--green);background:var(--gsoft)}
+.node.sim-passed{border-color:var(--red);background:var(--rsoft)}
+.toggle-row{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:6px;font-size:.62rem;color:var(--dimmer)}
+.toggle{width:26px;height:15px;border-radius:8px;background:var(--line);position:relative;cursor:pointer;flex-shrink:0}
+.toggle.on{background:var(--green)}
+.toggle .knob{width:11px;height:11px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .15s ease}
+.toggle.on .knob{left:13px}
+
+.detail{margin-top:18px;background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+.detail h3{font-size:1.05rem;margin-bottom:4px}
+.detail .sub{font-size:.78rem;color:var(--dimmer);margin-bottom:10px}
+.detail .lbl{font-size:.72rem;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.03em;margin:12px 0 6px}
+.detail ul{margin:0;padding-left:20px;color:var(--dim);font-size:.86rem}
+.detail li{margin-bottom:5px}
+
+.sim-controls{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.btn{padding:10px 16px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);cursor:pointer;font-size:.86rem;font-weight:600}
+.btn.primary{background:var(--bsoft);border-color:var(--blue);color:var(--blue)}
+.sim-result{margin-top:14px;padding:14px 16px;border-radius:10px;border:1px solid;display:none;font-size:.9rem}
+.sim-result.show{display:block}
+.sim-result.ok{background:var(--gsoft);border-color:rgba(63,179,127,.4);color:var(--green)}
+.sim-result.bad{background:var(--rsoft);border-color:rgba(229,83,75,.4);color:var(--red)}
+footer{margin-top:24px;font-size:.78rem;color:var(--dimmer)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <p class="kicker">Laboratorium JAZMI — Modul Keamanan Siber</p>
+  <h1>Visualisasi Cyber Kill Chain</h1>
+  <p>Kerangka kerja dari Lockheed Martin ini membagi satu serangan siber jadi 7 tahap berurutan. Poin pentingnya bukan menghafal namanya — tapi menyadari: <b style="color:var(--ink);">penyerang harus berhasil di SEMUA tahap, sementara pembela hanya perlu berhasil memutus SATU saja.</b> Klik tiap tahap untuk detail, lalu coba aktifkan pertahanan di satu titik dan jalankan simulasinya.</p>
+</header>
+
+<section id="chain-section">
+  <h2>Tujuh Tahap</h2>
+  <div class="lab">
+    <div class="chain" id="chain"></div>
+    <div class="detail" id="detail"></div>
+
+    <div class="sim-controls">
+      <button class="btn primary" id="btnSim">▶ Jalankan Simulasi Serangan</button>
+      <button class="btn" id="btnResetSim">Reset Semua Pertahanan</button>
+    </div>
+    <div class="sim-result" id="simResult"></div>
+  </div>
+</section>
+
+<footer>Bagian dari Laboratorium JAZMI — dibangun mengikuti metode "Belajar → Memodelkan → Menguji → Membuat Tool". Konten bersifat edukatif konseptual, bukan panduan teknis serangan.</footer>
+</div>
+
+<script>
+const STAGES = [
+  {name:'Reconnaissance', id:'Pengintaian',
+   def:'Penyerang mengumpulkan informasi tentang target — struktur organisasi, alamat email, teknologi yang dipakai, karyawan kunci — sebelum menyusun rencana.',
+   example:'Menelusuri LinkedIn untuk daftar staf IT, memindai subdomain publik, membaca lowongan kerja untuk menebak stack teknologi yang dipakai perusahaan.',
+   defense:['Batasi informasi sensitif yang terbuka di media sosial perusahaan/karyawan','Gunakan privasi WHOIS untuk domain','Audit "jejak digital" organisasi secara berkala (apa yang bisa ditemukan lewat OSINT)','Pelatihan kesadaran karyawan soal oversharing di media sosial']},
+  {name:'Weaponization', id:'Pempersenjataan',
+   def:'Penyerang menggabungkan exploit dengan payload (dokumen bermakro jahat, installer trojan) menjadi "senjata" siap kirim — biasanya dilakukan di luar jaringan target, sehingga korban hampir tidak punya visibilitas langsung ke tahap ini.',
+   example:'Membuat dokumen Word berisi macro berbahaya yang dibungkus terlihat seperti invoice atau CV resmi.',
+   defense:['Threat intelligence untuk mengenali pola/tools yang umum dipakai kelompok penyerang','Sandboxing otomatis untuk analisis file mencurigakan sebelum dibuka','Kolaborasi berbagi indikator ancaman antar organisasi']},
+  {name:'Delivery', id:'Pengiriman',
+   def:'"Senjata" tadi dikirim ke target — lewat email phishing, USB yang "tertinggal", website yang disusupi (watering hole), atau iklan berbahaya.',
+   example:'Email phishing menyamar sebagai HR/vendor dengan lampiran atau tautan berbahaya, persis pola yang diperiksa di Simulator Phishing.',
+   defense:['Email gateway filtering & sandboxing lampiran','Pelatihan anti-phishing rutin untuk karyawan','Pemblokiran domain/URL mencurigakan di firewall','Kebijakan kontrol perangkat USB']},
+  {name:'Exploitation', id:'Eksploitasi',
+   def:'Kode berbahaya benar-benar dieksekusi — memanfaatkan kerentanan software, atau memanfaatkan kelalaian pengguna (klik, buka file, aktifkan macro).',
+   example:'Korban membuka lampiran dan mengaktifkan macro; atau kerentanan software yang belum di-patch dieksploitasi otomatis begitu file dibuka.',
+   defense:['Patch management rutin dan cepat','Nonaktifkan macro secara default','Application whitelisting','Endpoint Detection & Response (EDR)','Prinsip least privilege — pengguna tidak punya hak admin berlebih']},
+  {name:'Installation', id:'Instalasi',
+   def:'Malware memasang dirinya secara persisten di sistem korban agar tetap ada meski komputer dinyalakan ulang.',
+   example:'Membuat entri registry startup, scheduled task terjadwal, atau layanan sistem tersembunyi yang menjalankan malware otomatis.',
+   defense:['Endpoint monitoring untuk perubahan mekanisme persistence','Application control / allowlisting','Antivirus berbasis perilaku (behavioral detection), bukan cuma signature','Audit berkala terhadap startup items dan scheduled task']},
+  {name:'Command & Control', id:'Kendali Jarak Jauh (C2)',
+   def:'Malware menghubungi server milik penyerang untuk menerima perintah lanjutan dan mengirim data — kanal komunikasi dua arah dari jarak jauh.',
+   example:'Beacon berkala ke domain C2 (polanya mirip fungsi "checkForCommands" yang dideteksi di Pemindai Kode HTML sebelumnya), kadang disamarkan sebagai trafik web biasa atau DNS tunneling.',
+   defense:['Egress filtering — batasi & pantau trafik keluar dari jaringan','Deteksi anomali DNS','Threat intel untuk blocklist domain C2 yang sudah dikenal','Network segmentation supaya satu mesin terkompromi tidak otomatis menyebar']},
+  {name:'Actions on Objectives', id:'Aksi pada Sasaran',
+   def:'Penyerang akhirnya mencapai tujuan sebenarnya — mencuri data, memasang ransomware, sabotase sistem, atau berpindah (pivot) ke sistem lain di jaringan.',
+   example:'Eksfiltrasi database pelanggan dalam jumlah besar, mengenkripsi seluruh file di jaringan untuk tebusan, atau menghapus log jejak digital.',
+   defense:['Data Loss Prevention (DLP) untuk mendeteksi eksfiltrasi data volume besar','Backup offline yang rutin diuji pemulihannya','Incident response plan yang sudah dilatih tim','Network segmentation membatasi seberapa jauh dampak (blast radius) bisa menyebar']}
+];
+
+let defenseActive = new Array(STAGES.length).fill(false);
+let selectedIdx = 0;
+
+function renderChain(){
+  const chainEl = document.getElementById('chain');
+  chainEl.innerHTML = '';
+  STAGES.forEach((s,i)=>{
+    const wrap = document.createElement('div');
+    wrap.className = 'node-wrap';
+    const node = document.createElement('div');
+    node.className = 'node' + (i===selectedIdx ? ' selected' : '');
+    node.dataset.idx = i;
+    node.innerHTML = `
+      <div class="num">TAHAP ${i+1}</div>
+      <div class="nm">${s.name}</div>
+      <div class="toggle-row">
+        <span>Bela:</span>
+        <div class="toggle ${defenseActive[i]?'on':''}" data-toggle="${i}"><div class="knob"></div></div>
+      </div>`;
+    node.querySelector('.nm').addEventListener('click', ()=>{ selectedIdx=i; renderChain(); renderDetail(); });
+    node.querySelector('.num').addEventListener('click', ()=>{ selectedIdx=i; renderChain(); renderDetail(); });
+    node.querySelector('.toggle').addEventListener('click', (e)=>{
+      e.stopPropagation();
+      defenseActive[i] = !defenseActive[i];
+      renderChain();
+    });
+    wrap.appendChild(node);
+    if(i < STAGES.length-1){
+      const arrow = document.createElement('div');
+      arrow.className = 'arrow';
+      arrow.textContent = '→';
+      wrap.appendChild(arrow);
+    }
+    chainEl.appendChild(wrap);
+  });
+}
+
+function renderDetail(){
+  const s = STAGES[selectedIdx];
+  document.getElementById('detail').innerHTML = `
+    <h3>Tahap ${selectedIdx+1}: ${s.name}</h3>
+    <div class="sub">${s.id}</div>
+    <p style="color:var(--ink);margin-bottom:10px;">${s.def}</p>
+    <div class="lbl">Contoh Pola Nyata</div>
+    <p style="margin-bottom:0;">${s.example}</p>
+    <div class="lbl">Langkah Pertahanan</div>
+    <ul>${s.defense.map(d=>`<li>${d}</li>`).join('')}</ul>
+  `;
+}
+
+document.getElementById('btnResetSim').addEventListener('click', ()=>{
+  defenseActive = new Array(STAGES.length).fill(false);
+  renderChain();
+  document.getElementById('simResult').classList.remove('show');
+});
+
+let simTimer = null;
+document.getElementById('btnSim').addEventListener('click', ()=>{
+  if(simTimer) clearInterval(simTimer);
+  document.querySelectorAll('.node').forEach(n=>n.classList.remove('sim-current','sim-blocked','sim-passed'));
+  document.getElementById('simResult').classList.remove('show');
+  let i = 0;
+  simTimer = setInterval(()=>{
+    document.querySelectorAll('.node').forEach(n=>n.classList.remove('sim-current'));
+    if(i>0){
+      const prevNode = document.querySelector(`.node[data-idx="${i-1}"]`);
+      prevNode.classList.add('sim-passed');
+    }
+    if(i >= STAGES.length){
+      clearInterval(simTimer);
+      const box = document.getElementById('simResult');
+      box.className = 'sim-result show bad';
+      box.innerHTML = '🚨 Tidak ada pertahanan yang aktif di titik manapun — serangan berjalan mulus sampai tahap terakhir dan mencapai tujuannya.';
+      return;
+    }
+    const node = document.querySelector(`.node[data-idx="${i}"]`);
+    node.classList.add('sim-current');
+    if(defenseActive[i]){
+      setTimeout(()=>{
+        clearInterval(simTimer);
+        node.classList.remove('sim-current');
+        node.classList.add('sim-blocked');
+        const box = document.getElementById('simResult');
+        box.className = 'sim-result show ok';
+        box.innerHTML = `✅ Rantai diputus di Tahap ${i+1} (${STAGES[i].name}) — seluruh tahap setelahnya tidak akan pernah terjadi, walau penyerang sudah berhasil sejauh ini.`;
+      }, 500);
+      i = STAGES.length+1;
+      return;
+    }
+    i++;
+  }, 550);
+});
+
+renderChain();
+renderDetail();
+</script>
+</body>
+</html>

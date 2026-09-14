@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator Penanggalan Karbon-14 — JAZMI</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Karla:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--emerald:#0F3D2E;--ivory:#FAF6ED;--soft:#F1EADA;--gold:#B8934A;--goldsoft:#E7D2A0;--line:rgba(15,61,46,.14);}
+*{box-sizing:border-box;} body{margin:0;background:var(--ivory);color:var(--emerald);font-family:'Karla',sans-serif;line-height:1.6;}
+.wrap{max-width:640px;margin:0 auto;padding:24px;}
+h1{font-family:'Fraunces',serif;font-size:24px;margin:0 0 8px;}
+.badge{display:inline-block;background:var(--emerald);color:var(--ivory);font-size:11px;padding:4px 10px;border-radius:3px;font-weight:700;margin-bottom:12px;}
+p.lede{opacity:.85;font-size:14.5px;margin:0 0 18px;}
+.kartu{background:var(--emerald);color:var(--ivory);border-radius:8px;padding:22px;}
+.field{margin-bottom:16px;} .field:last-of-type{margin-bottom:0;}
+.field label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--goldsoft);margin-bottom:5px;}
+.field label b{color:#fff;}
+input[type=range]{width:100%;accent-color:var(--gold);}
+.hasil-box{background:rgba(255,255,255,.08);border-radius:6px;padding:16px;text-align:center;margin-top:16px;}
+.hasil-box .angka{font-family:'Fraunces',serif;font-size:26px;color:var(--goldsoft);}
+.hasil-box .lbl{font-size:11px;opacity:.65;text-transform:uppercase;}
+.catatan{background:var(--soft);border-left:3px solid var(--gold);padding:12px 14px;border-radius:0 4px 4px 0;font-size:13px;margin-top:16px;}
+.rel{background:var(--soft);padding:10px 14px;border-radius:6px;font-size:12.5px;margin-top:14px;}
+.contoh-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+.contoh-row button{background:#fff;border:1px solid var(--line);color:var(--emerald);font-family:'Karla',sans-serif;font-size:11.5px;font-weight:700;padding:7px 12px;border-radius:999px;cursor:pointer;}
+.contoh-row button:hover{background:var(--goldsoft);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="badge">Tier 1 No.4 — Aplikasi Praktis</div>
+  <h1>Kalkulator Penanggalan Karbon-14</h1>
+  <p class="lede">Membalik rumus peluruhan dari Radioactive Decay Laboratory: bukan "berapa sisa setelah t tahun", tapi "sudah berapa lama jika sisanya sekian persen" — inilah cara arkeolog menaksir umur fosil/artefak organik.</p>
+
+  <div class="rel">📎 Memakai rumus &amp; konstanta yang sama dengan <b>Radioactive Decay Laboratory</b> (mode Satu Isotop), dibalik secara aljabar.</div>
+
+  <div class="contoh-row" id="contohRow"></div>
+
+  <div class="kartu">
+    <div class="field">
+      <label>Persentase Karbon-14 tersisa <b id="valPersen">50%</b></label>
+      <input type="range" id="persen" min="0.5" max="99" value="50" step="0.5" oninput="hitung()">
+    </div>
+    <div class="hasil-box">
+      <div class="angka" id="hasilUmur">–</div>
+      <div class="lbl">Perkiraan umur sampel</div>
+    </div>
+  </div>
+
+  <div class="catatan">
+    <b>Rumus:</b> t = −(t½/ln2) × ln(sisa/100), dengan t½ Karbon-14 = 5730 tahun.<br>
+    <b>Batasan:</b> mengasumsikan kadar C-14 atmosfer saat sampel terbentuk sama dengan sekarang (sebenarnya sedikit berfluktuasi — inilah kenapa penanggalan sungguhan memakai kurva kalibrasi tambahan) dan sampel tidak terkontaminasi karbon dari luar. Metode ini praktis dipakai hingga sekitar 50.000 tahun (di luar itu, sisa C-14 sudah terlalu sedikit untuk terukur akurat).
+  </div>
+</div>
+<script>
+const HL = 5730;
+const CONTOH = [
+  {nama:"Ötzi si Manusia Es", persen:52.7},
+  {nama:"Gulungan Laut Mati", persen:77.6},
+  {nama:"Kafan Turin (tes 1988)", persen:92.3},
+  {nama:"Lukisan gua Lascaux", persen:12.8}
+];
+function pakaiContoh(p){
+  document.getElementById('persen').value = p;
+  hitung();
+}
+function bikinContoh(){
+  document.getElementById('contohRow').innerHTML = CONTOH.map(c=>
+    `<button onclick="pakaiContoh(${c.persen})">${c.nama}</button>`
+  ).join('');
+}
+function hitung(){
+  const p = parseFloat(document.getElementById('persen').value);
+  document.getElementById('valPersen').textContent = p+'%';
+  const umur = -(HL/Math.LN2) * Math.log(p/100);
+  document.getElementById('hasilUmur').textContent = Math.round(umur).toLocaleString('id-ID') + ' tahun';
+}
+bikinContoh();
+hitung();
+</script>
+</body>
+</html>

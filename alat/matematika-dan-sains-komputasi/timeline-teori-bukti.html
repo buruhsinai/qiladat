@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dari Teori ke Bukti — Berapa Lama Sains Menunggu?</title>
+<style>
+  :root {
+    --biru-tua: #1B2A4A;
+    --biru-tengah: #2C4270;
+    --biru-muda: #4A6FA5;
+    --emas: #C9A84C;
+    --emas-muda: #E8C96A;
+    --putih: #F7F8FA;
+    --abu-terang: #E2E6EE;
+    --abu-tengah: #8A97AD;
+    --teks-gelap: #0F1B2D;
+    --hijau-valid: #2D7D4E;
+    --merah-invalid: #8B2E2E;
+    --kuning-spekulatif: #7A6020;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--biru-tua);
+    color: var(--putih);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    padding: 2.5rem 2rem 1.5rem;
+    border-bottom: 1px solid rgba(201,168,76,0.3);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .header-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    color: var(--emas);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  h1 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: normal;
+    line-height: 1.25;
+    color: var(--putih);
+    max-width: 600px;
+  }
+
+  .sub {
+    margin-top: 0.75rem;
+    font-size: 0.9rem;
+    color: var(--abu-tengah);
+    max-width: 580px;
+    line-height: 1.6;
+  }
+
+  /* LAYOUT UTAMA */
+  .layout {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 0;
+    min-height: calc(100vh - 140px);
+  }
+
+  /* PANEL FILTER */
+  .panel-filter {
+    padding: 1.5rem;
+    border-right: 1px solid rgba(255,255,255,0.08);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .filter-judul {
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: var(--emas);
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+
+  .filter-grup {
+    margin-bottom: 1.5rem;
+  }
+
+  .filter-label {
+    font-size: 0.78rem;
+    color: var(--abu-tengah);
+    margin-bottom: 0.5rem;
+  }
+
+  .slider-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .slider-nilai {
+    font-size: 0.85rem;
+    color: var(--emas-muda);
+    font-variant-numeric: tabular-nums;
+  }
+
+  input[type=range] {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 4px;
+    background: var(--biru-tengah);
+    border-radius: 2px;
+    outline: none;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--emas);
+    cursor: pointer;
+  }
+
+  .toggle-grup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .toggle-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.82rem;
+    color: var(--abu-terang);
+    padding: 0.35rem 0.5rem;
+    border-radius: 4px;
+    transition: background 0.15s;
+    user-select: none;
+  }
+
+  .toggle-item:hover { background: rgba(255,255,255,0.05); }
+
+  .toggle-item input { display: none; }
+
+  .kotak-cek {
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--biru-muda);
+    border-radius: 3px;
+    flex-shrink: 0;
+    position: relative;
+    transition: all 0.15s;
+  }
+
+  .toggle-item input:checked + .kotak-cek {
+    background: var(--emas);
+    border-color: var(--emas);
+  }
+
+  .toggle-item input:checked + .kotak-cek::after {
+    content: '';
+    position: absolute;
+    left: 2px; top: -1px;
+    width: 5px; height: 9px;
+    border: 2px solid var(--biru-tua);
+    border-left: none; border-top: none;
+    transform: rotate(45deg);
+  }
+
+  .dot-kategori {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .stat-ringkas {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin-top: 0.5rem;
+  }
+
+  .stat-baris {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .stat-baris:last-child { border: none; }
+  .stat-angka { color: var(--emas-muda); font-variant-numeric: tabular-nums; }
+
+  /* AREA KONTEN */
+  .area-konten {
+    padding: 1.5rem;
+  }
+
+  /* TOOLBAR */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  .toolbar-info {
+    font-size: 0.8rem;
+    color: var(--abu-tengah);
+    flex: 1;
+  }
+
+  .btn-urut {
+    font-size: 0.78rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: transparent;
+    color: var(--abu-terang);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-urut:hover, .btn-urut.aktif {
+    border-color: var(--emas);
+    color: var(--emas);
+  }
+
+  /* KARTU TEORI */
+  .grid-kartu {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+
+  .kartu {
+    background: rgba(44, 66, 112, 0.3);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .kartu::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 8px 0 0 8px;
+  }
+
+  .kartu.valid::before { background: var(--hijau-valid); }
+  .kartu.spekulatif::before { background: var(--kuning-spekulatif); }
+  .kartu.retrofitting::before { background: var(--merah-invalid); }
+  .kartu.menggantung::before { background: var(--abu-tengah); }
+
+  .kartu:hover {
+    border-color: rgba(201,168,76,0.4);
+    background: rgba(44, 66, 112, 0.5);
+    transform: translateY(-2px);
+  }
+
+  .kartu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .kartu-nama {
+    font-family: Georgia, serif;
+    font-size: 0.95rem;
+    line-height: 1.3;
+    color: var(--putih);
+  }
+
+  .badge-gap {
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    font-variant-numeric: tabular-nums;
+    padding: 0.2rem 0.45rem;
+    border-radius: 3px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .badge-gap.cepat { background: rgba(45,125,78,0.25); color: #5DBA7E; }
+  .badge-gap.sedang { background: rgba(201,168,76,0.2); color: var(--emas-muda); }
+  .badge-gap.lama { background: rgba(139,46,46,0.25); color: #D97070; }
+  .badge-gap.tidak-berlaku { background: rgba(138,151,173,0.2); color: var(--abu-tengah); }
+
+  .kartu-tokoh {
+    font-size: 0.75rem;
+    color: var(--emas);
+    margin-bottom: 0.5rem;
+  }
+
+  .kartu-deskripsi {
+    font-size: 0.8rem;
+    color: var(--abu-terang);
+    line-height: 1.5;
+    margin-bottom: 0.75rem;
+  }
+
+  .kartu-footer {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .tag {
+    font-size: 0.68rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.07);
+    color: var(--abu-tengah);
+  }
+
+  .tag.ada-matematika { background: rgba(45,125,78,0.15); color: #5DBA7E; }
+  .tag.ada-ledakan-riset { background: rgba(74,111,165,0.3); color: #82AACC; }
+
+  /* STATUS BADGE */
+  .badge-status {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 3px;
+    font-weight: 600;
+    margin-left: auto;
+  }
+
+  .badge-status.valid { background: rgba(45,125,78,0.2); color: #5DBA7E; }
+  .badge-status.spekulatif { background: rgba(122,96,32,0.3); color: #D4A832; }
+  .badge-status.retrofitting { background: rgba(139,46,46,0.2); color: #D97070; }
+  .badge-status.menggantung { background: rgba(138,151,173,0.15); color: var(--abu-tengah); }
+
+  /* MODAL DETAIL */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10,18,35,0.85);
+    z-index: 100;
+    padding: 1.5rem;
+    overflow-y: auto;
+  }
+
+  .overlay.aktif { display: flex; align-items: flex-start; justify-content: center; }
+
+  .modal {
+    background: #1E3158;
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 10px;
+    max-width: 620px;
+    width: 100%;
+    margin: auto;
+    padding: 2rem;
+    position: relative;
+  }
+
+  .modal-tutup {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--abu-tengah);
+    border-radius: 4px;
+    padding: 0.25rem 0.6rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+  }
+
+  .modal-tutup:hover { border-color: var(--emas); color: var(--emas); }
+
+  .modal-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: var(--emas);
+    margin-bottom: 0.5rem;
+  }
+
+  .modal-judul {
+    font-family: Georgia, serif;
+    font-size: 1.4rem;
+    line-height: 1.3;
+    margin-bottom: 0.35rem;
+  }
+
+  .modal-tokoh {
+    font-size: 0.85rem;
+    color: var(--emas-muda);
+    margin-bottom: 1.25rem;
+  }
+
+  .modal-baris {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .modal-kotak {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 0.75rem;
+  }
+
+  .modal-kotak-label {
+    font-size: 0.68rem;
+    color: var(--abu-tengah);
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .modal-kotak-nilai {
+    font-size: 0.9rem;
+    color: var(--putih);
+    font-weight: 500;
+  }
+
+  .modal-bagian {
+    margin-bottom: 1rem;
+  }
+
+  .modal-bagian-judul {
+    font-size: 0.75rem;
+    color: var(--emas);
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .modal-teks {
+    font-size: 0.85rem;
+    color: var(--abu-terang);
+    line-height: 1.65;
+  }
+
+  .modal-indikator {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .indikator {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+  }
+
+  .indikator.ya { background: rgba(45,125,78,0.15); color: #5DBA7E; }
+  .indikator.tidak { background: rgba(139,46,46,0.15); color: #D97070; }
+
+  /* LEGENDA */
+  .legenda {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    background: rgba(255,255,255,0.03);
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .legenda-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.73rem;
+    color: var(--abu-tengah);
+  }
+
+  .legenda-garis {
+    width: 16px; height: 3px;
+    border-radius: 2px;
+  }
+
+  /* KOSONG */
+  .pesan-kosong {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--abu-tengah);
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 720px) {
+    .layout { grid-template-columns: 1fr; }
+    .panel-filter { position: static; height: auto; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .modal-baris { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-label">Alat Epistemologi Sains</div>
+  <h1>Dari Teori ke Bukti — Berapa Lama Sains Menunggu?</h1>
+  <p class="sub">Jelajahi jarak waktu antara sebuah teori diajukan dan saat ia terbukti. Saring berdasarkan kategori, gap waktu, dan kualitas fondasi teorinya.</p>
+</header>
+
+<div class="layout">
+
+  <!-- PANEL FILTER -->
+  <aside class="panel-filter">
+    <div class="filter-judul">SARING & EKSPLORASI</div>
+
+    <div class="filter-grup">
+      <div class="filter-label">Gap maksimum yang ditampilkan</div>
+      <div class="slider-wrap">
+        <div class="slider-nilai"><span id="nilaiSlider">120</span> tahun</div>
+        <input type="range" id="sliderGap" min="5" max="120" value="120" step="5">
+      </div>
+    </div>
+
+    <div class="filter-grup">
+      <div class="filter-label">Status klaim</div>
+      <div class="toggle-grup">
+        <label class="toggle-item">
+          <input type="checkbox" class="cek-status" value="valid" checked>
+          <span class="kotak-cek"></span>
+          <span style="color:#5DBA7E">Terbukti valid</span>
+        </label>
+        <label class="toggle-item">
+          <input type="checkbox" class="cek-status" value="menggantung" checked>
+          <span class="kotak-cek"></span>
+          <span style="color:var(--abu-tengah)">Menggantung / belum terbukti</span>
+        </label>
+        <label class="toggle-item">
+          <input type="checkbox" class="cek-status" value="retrofitting" checked>
+          <span class="kotak-cek"></span>
+          <span style="color:#D97070">Retrofitting / kebetulan cocok</span>
+        </label>
+        <label class="toggle-item">
+          <input type="checkbox" class="cek-status" value="spekulatif" checked>
+          <span class="kotak-cek"></span>
+          <span style="color:#D4A832">Spekulasi filosofis</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="filter-grup">
+      <div class="filter-label">Kualitas fondasi</div>
+      <div class="toggle-grup">
+        <label class="toggle-item">
+          <input type="checkbox" id="cekMatematika">
+          <span class="kotak-cek"></span>
+          Hanya yang punya matematika sejak awal
+        </label>
+        <label class="toggle-item">
+          <input type="checkbox" id="cekLedakanRiset">
+          <span class="kotak-cek"></span>
+          Hanya yang memicu ledakan riset
+        </label>
+      </div>
+    </div>
+
+    <div class="filter-grup">
+      <div class="filter-label">Bidang</div>
+      <div class="toggle-grup" id="filterBidang"></div>
+    </div>
+
+    <div class="stat-ringkas" id="statRingkas"></div>
+  </aside>
+
+  <!-- AREA KONTEN -->
+  <main class="area-konten">
+    <div class="legenda">
+      <div class="legenda-item"><div class="legenda-garis" style="background:#5DBA7E"></div>Garis hijau: terbukti valid</div>
+      <div class="legenda-item"><div class="legenda-garis" style="background:#D97070"></div>Garis merah: retrofitting</div>
+      <div class="legenda-item"><div class="legenda-garis" style="background:#D4A832"></div>Garis kuning: spekulatif</div>
+      <div class="legenda-item"><div class="legenda-garis" style="background:var(--abu-tengah)"></div>Garis abu: menggantung</div>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-info" id="infoJumlah"></div>
+      <button class="btn-urut aktif" data-urut="gap-asc">Gap ↑</button>
+      <button class="btn-urut" data-urut="gap-desc">Gap ↓</button>
+      <button class="btn-urut" data-urut="tahun">Tahun diajukan</button>
+    </div>
+
+    <div class="grid-kartu" id="gridKartu"></div>
+    <div class="pesan-kosong" id="pesanKosong" style="display:none">Tidak ada teori yang cocok dengan filter ini.</div>
+  </main>
+</div>
+
+<!-- MODAL DETAIL -->
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal">
+    <button class="modal-tutup" id="tombolTutup">✕ Tutup</button>
+    <div class="modal-label" id="mLabel"></div>
+    <div class="modal-judul" id="mJudul"></div>
+    <div class="modal-tokoh" id="mTokoh"></div>
+    <div class="modal-baris">
+      <div class="modal-kotak">
+        <div class="modal-kotak-label">Tahun diajukan</div>
+        <div class="modal-kotak-nilai" id="mTahunAjukan"></div>
+      </div>
+      <div class="modal-kotak">
+        <div class="modal-kotak-label">Tahun terbukti</div>
+        <div class="modal-kotak-nilai" id="mTahunBukti"></div>
+      </div>
+      <div class="modal-kotak">
+        <div class="modal-kotak-label">Gap waktu</div>
+        <div class="modal-kotak-nilai" id="mGap"></div>
+      </div>
+      <div class="modal-kotak">
+        <div class="modal-kotak-label">Status</div>
+        <div class="modal-kotak-nilai" id="mStatus"></div>
+      </div>
+    </div>
+    <div class="modal-bagian">
+      <div class="modal-bagian-judul">Apa klaimnya?</div>
+      <div class="modal-teks" id="mKlaim"></div>
+    </div>
+    <div class="modal-bagian">
+      <div class="modal-bagian-judul">Bagaimana akhirnya?</div>
+      <div class="modal-teks" id="mAkhir"></div>
+    </div>
+    <div class="modal-bagian">
+      <div class="modal-bagian-judul">Catatan epistemik</div>
+      <div class="modal-teks" id="mCatatan"></div>
+    </div>
+    <div class="modal-indikator" id="mIndikator"></div>
+  </div>
+</div>
+
+<script>
+const DATA = [
+  {
+    nama: "Antimateri",
+    tokoh: "Paul Dirac",
+    bidang: "Fisika Partikel",
+    tahunAjukan: 1928,
+    tahunBukti: 1932,
+    gap: 4,
+    status: "valid",
+    adaMatematika: true,
+    adaLedakanRiset: true,
+    klaim: "Dari persamaan relativistik Dirac, harus ada pasangan cermin dari elektron — partikel bermassa sama tapi bermuatan berlawanan.",
+    akhir: "Carl Anderson menemukan positron (antielectron) di tahun 1932 melalui foto cloud chamber. Dirac mendapat Nobel 1933, Anderson 1936.",
+    catatan: "Contoh terbaik prediksi matematis murni yang langsung bisa diuji. Gap pendek bukan karena teorinya sederhana, tapi karena prediksinya sangat spesifik sehingga langsung bisa dicari."
+  },
+  {
+    nama: "Boson Higgs",
+    tokoh: "Peter Higgs (dan Englert, Brout)",
+    bidang: "Fisika Partikel",
+    tahunAjukan: 1964,
+    tahunBukti: 2012,
+    gap: 48,
+    status: "valid",
+    adaMatematika: true,
+    adaLedakanRiset: true,
+    klaim: "Ada medan yang meresap seluruh ruang dan memberikan massa pada partikel fundamental. Riak di medan ini adalah partikel Higgs.",
+    akhir: "Dikonfirmasi oleh LHC (Large Hadron Collider) CERN pada Juli 2012. Higgs dan Englert mendapat Nobel 2013.",
+    catatan: "Gap 48 tahun murni karena menunggu teknologi akselerator partikel yang cukup kuat — bukan karena teorinya diragukan. Sepanjang 48 tahun itu riset aktif tidak berhenti."
+  },
+  {
+    nama: "Gelombang Gravitasi",
+    tokoh: "Albert Einstein",
+    bidang: "Fisika / Astronomi",
+    tahunAjukan: 1916,
+    tahunBukti: 2015,
+    gap: 99,
+    status: "valid",
+    adaMatematika: true,
+    adaLedakanRiset: true,
+    klaim: "Relativitas umum memprediksi bahwa percepatan massa besar (seperti tabrakan dua lubang hitam) menciptakan riak dalam ruang-waktu yang merambat dengan kecepatan cahaya.",
+    akhir: "Dideteksi pertama kali oleh LIGO pada 14 September 2015, dari tabrakan dua lubang hitam 1,3 miliar tahun lalu. Nobel Fisika 2017.",
+    catatan: "Gap terpanjang yang valid secara ilmiah dengan prediksi matematis presisi dari hari pertama. Seluruh 99 tahun diisi oleh usaha keras membangun instrumen yang cukup sensitif — distorsi yang diukur lebih kecil dari 1/10.000 diameter proton."
+  },
+  {
+    nama: "Lempeng Tektonik (Continental Drift)",
+    tokoh: "Alfred Wegener",
+    bidang: "Geologi",
+    tahunAjukan: 1912,
+    tahunBukti: 1960,
+    gap: 48,
+    status: "valid",
+    adaMatematika: false,
+    adaLedakanRiset: false,
+    klaim: "Benua-benua dulunya menyatu sebagai satu daratan (Pangaea) lalu bergerak terpisah selama ratusan juta tahun.",
+    akhir: "Diterima luas setelah data sonar dasar laut tahun 1950-60an menunjukkan bukti spreading di punggung tengah samudra. Wegener meninggal 1930 tanpa pengakuan.",
+    catatan: "Menarik karena Wegener BENAR secara substansi tapi tidak bisa menjelaskan mekanismenya — sehingga ditolak selama puluhan tahun. Bukti akhirnya datang dari teknologi yang belum ada di zamannya, bukan dari riset yang membangun di atas teorinya secara langsung."
+  },
+  {
+    nama: "Eksistensi Neptunus",
+    tokoh: "John Couch Adams & Urbain Le Verrier",
+    bidang: "Astronomi",
+    tahunAjukan: 1845,
+    tahunBukti: 1846,
+    gap: 1,
+    status: "valid",
+    adaMatematika: true,
+    adaLedakanRiset: true,
+    klaim: "Anomali orbit Uranus disebabkan oleh tarikan gravitasi planet kedelapan yang belum ditemukan. Posisinya bisa dihitung matematis.",
+    akhir: "Johann Galle mengarahkan teleskop ke koordinat yang dihitung Le Verrier dan menemukan Neptunus pada 23 September 1846, kurang dari 1 derajat dari prediksi.",
+    catatan: "Contoh paling dramatik dari prediksi matematis yang sangat presisi. Gap hanya 1 tahun bukan karena mudah — tapi karena prediksinya sangat spesifik sehingga bisa langsung dicek malam itu juga."
+  },
+  {
+    nama: "Atom sebagai unit dasar materi",
+    tokoh: "Demokritos dari Abdera",
+    bidang: "Filsafat Alam",
+    tahunAjukan: -450,
+    tahunBukti: 1803,
+    gap: 2253,
+    status: "retrofitting",
+    adaMatematika: false,
+    adaLedakanRiset: false,
+    klaim: "Materi terdiri dari partikel tak terbagi (atomos) yang bergerak dalam kekosongan. Tidak ada mekanisme, tidak ada prediksi terukur.",
+    akhir: "Dalton (1803) membangun teori atom modern dari eksperimen kimia. Atom Dalton adalah bola pejal — dan itu juga keliru. Atom modern (Rutherford, Bohr, mekanika kuantum) sama sekali bukan 'atomos' Demokritos.",
+    catatan: "Contoh klasik retrofitting: nama yang sama, intuisi kasar yang sama ('materi punya unit terkecil'), tapi mekanisme, prediksi, dan detailnya berbeda total. Tidak ada riset yang membangun di atas Demokritos selama 2000+ tahun — atom modern dibangun dari nol melalui eksperimen kimia, bukan dari warisan Demokritos."
+  },
+  {
+    nama: "Heliosentrisme (Aristarchus)",
+    tokoh: "Aristarchus dari Samos",
+    bidang: "Filsafat Alam / Astronomi",
+    tahunAjukan: -270,
+    tahunBukti: 1543,
+    gap: 1813,
+    status: "retrofitting",
+    adaMatematika: false,
+    adaLedakanRiset: false,
+    klaim: "Bumi dan planet-planet mengelilingi Matahari, bukan sebaliknya.",
+    akhir: "Copernicus (1543) mengajukan model heliosentris dengan matematika orbital. Kepler dan Galileo mengembangkan lebih lanjut.",
+    catatan: "Aristarchus benar dalam kesimpulan kasarnya tapi tidak punya matematika orbital. Copernicus bukan 'membuktikan Aristarchus' — ia membangun teori baru dari pengamatan independen. Gap 1813 tahun diisi oleh kekosongan, bukan riset progresif."
+  },
+  {
+    nama: "Teori Kalori (panas sebagai cairan)",
+    tokoh: "Antoine Lavoisier",
+    bidang: "Kimia / Fisika",
+    tahunAjukan: 1783,
+    tahunBukti: 1845,
+    gap: 62,
+    status: "retrofitting",
+    adaMatematika: true,
+    adaLedakanRiset: true,
+    klaim: "Panas adalah cairan tak kasat mata ('caloric') yang mengalir dari benda panas ke benda dingin dan tidak bisa diciptakan atau dihancurkan.",
+    akhir: "Dibantah oleh Rumford (1798) lewat percobaan pengeboran meriam, lalu Joule (1845) membuktikan panas adalah energi kinetik. Teori kalori secara resmi mati.",
+    catatan: "Kasus unik: teori yang salah secara ontologis (tidak ada cairan kalori) tapi benar secara prediktif dalam kondisi tertentu. Masih digunakan untuk perhitungan termal sederhana sebagai aproksimasi. Ini berbeda dari retrofitting murni — ini 'teori mati yang masih berguna sebagai kasus khusus'."
+  },
+  {
+    nama: "Aether Luminiferous",
+    tokoh: "Berbagai fisikawan abad 19",
+    bidang: "Fisika",
+    tahunAjukan: 1820,
+    tahunBukti: 1887,
+    gap: 67,
+    status: "retrofitting",
+    adaMatematika: true,
+    adaLedakanRiset: true,
+    klaim: "Cahaya membutuhkan medium untuk merambat — 'aether' yang memenuhi seluruh ruang.",
+    akhir: "Eksperimen Michelson-Morley (1887) gagal mendeteksi aether meski instrumentnya cukup sensitif. Relativitas Einstein (1905) menjelaskan cahaya tanpa medium.",
+    catatan: "Teori yang secara logis masuk akal (semua gelombang butuh medium) dan punya matematika, tapi salah secara fundamental. Dibantah definitif — bukan hanya 'disempurnakan'. Mati total, tidak ada sisa nilai praktis."
+  },
+  {
+    nama: "Teori String",
+    tokoh: "Veneziano, Schwarz, Scherk, dll",
+    bidang: "Fisika Teoretis",
+    tahunAjukan: 1968,
+    tahunBukti: null,
+    gap: null,
+    status: "menggantung",
+    adaMatematika: true,
+    adaLedakanRiset: true,
+    klaim: "Partikel fundamental sebenarnya adalah 'string' (tali) satu dimensi yang bergetar. Teori ini menjanjikan unifikasi semua gaya fundamental termasuk gravitasi.",
+    akhir: "Hingga kini (56+ tahun) tidak ada satu pun prediksi teori string yang berhasil diuji secara eksperimental. Tidak ada konsensus apakah ini bisa difalsifikasi.",
+    catatan: "Kasus paling sering dikutip untuk teori 'menggantung' tanpa batas waktu. Ada ribuan makalah, komunitas riset besar, matematika yang sangat kaya — tapi tanpa prediksi eksperimental yang bisa diuji. Kritik Lee Smolin dan Peter Woit: ini mungkin bukan lagi 'sains' dalam arti Popperian."
+  },
+  {
+    nama: "Mekanika Newton",
+    tokoh: "Isaac Newton",
+    bidang: "Fisika",
+    tahunAjukan: 1687,
+    tahunBukti: 1700,
+    gap: 13,
+    status: "valid",
+    adaMatematika: true,
+    adaLedakanRiset: true,
+    klaim: "Gerak benda diatur tiga hukum dasar: inersia, F=ma, dan aksi-reaksi. Gravitasi adalah gaya tarik antara semua massa berbanding terbalik kuadrat jarak.",
+    akhir: "Terbukti dalam prediksi komet, planet, dan gerakan benda di Bumi. Ditambah (bukan diganti) oleh relativitas Einstein untuk kondisi ekstrem. Masih digunakan untuk semua teknik sehari-hari.",
+    catatan: "Teori yang 'digantikan' tapi tetap valid dalam domainnya — contoh terbaik dari 'teori mati yang masih berguna'. Secara teknis salah pada kecepatan mendekati cahaya dan skala kuantum, tapi presisi sempurna untuk semua keperluan teknik biasa."
+  },
+  {
+    nama: "Fusi Dingin (Cold Fusion)",
+    tokoh: "Fleischmann & Pons",
+    bidang: "Kimia / Fisika",
+    tahunAjukan: 1989,
+    tahunBukti: 1989,
+    gap: 0,
+    status: "retrofitting",
+    adaMatematika: false,
+    adaLedakanRiset: false,
+    klaim: "Reaksi fusi nuklir bisa terjadi pada suhu kamar menggunakan elektrolisis. Klaim diumumkan langsung ke media sebelum peer review.",
+    akhir: "Gagal direplikasi oleh ratusan laboratorium dalam hitungan bulan. Dianggap kesalahan pengukuran atau kontaminasi. Secara ilmiah dianggap mati.",
+    catatan: "Contoh bagus untuk pola BERLAWANAN dari kriteria Anda: teori yang seharusnya CEPAT terbukti (bukan 'tunggu ratusan tahun') tapi justru langsung terbantah. Klaim tanpa matematika yang matang, diumumkan tanpa peer review — semua tanda bahaya terpenuhi."
+  },
+  {
+    nama: "Teori Empat Elemen",
+    tokoh: "Empedokles / Aristoteles",
+    bidang: "Filsafat Alam",
+    tahunAjukan: -450,
+    tahunBukti: null,
+    gap: null,
+    status: "spekulatif",
+    adaMatematika: false,
+    adaLedakanRiset: false,
+    klaim: "Semua materi tersusun dari empat elemen: tanah, air, api, udara. Ini adalah klasifikasi deskriptif sifat material, bukan klaim mekanis.",
+    akhir: "Tidak 'terbukti' maupun 'terbantah' secara ilmiah karena tidak pernah membuat prediksi terukur. Digantikan oleh kimia modern yang tidak membangun di atasnya.",
+    catatan: "Sesuai analisis dalam diskusi: ini lebih tepat disebut kerangka klasifikasi praktis (model deskriptif) daripada teori ilmiah. Masalah muncul ketika generasi kemudian 'mempromosikannya' jadi klaim kausal atau mistis yang tidak pernah dimaksudkan penciptanya."
+  },
+  {
+    nama: "Pembuktian Bumi Bulat (Eratosthenes)",
+    tokoh: "Eratosthenes dari Kyrene",
+    bidang: "Astronomi / Geografi",
+    tahunAjukan: -240,
+    tahunBukti: -240,
+    gap: 0,
+    status: "valid",
+    adaMatematika: true,
+    adaLedakanRiset: true,
+    klaim: "Bumi berbentuk bulat dan kelilingnya bisa dihitung dari perbedaan sudut bayangan matahari di dua lokasi berbeda.",
+    akhir: "Eratosthenes menghitung keliling bumi dengan akurasi ~1% dari nilai modern, menggunakan tongkat dan sumur di Syene dan Alexandria. Tidak perlu menunggu satelit.",
+    catatan: "Relevan untuk diskusi dalam utas: bukti kebulatan bumi mendahului satelit ribuan tahun. Ini bukan 'teori yang menunggu pembuktian' — Eratosthenes langsung menguji dan mengukur pada saat yang sama."
+  },
+  {
+    nama: "Penisilin sebagai antibiotik",
+    tokoh: "Alexander Fleming → Florey & Chain",
+    bidang: "Biologi / Kedokteran",
+    tahunAjukan: 1928,
+    tahunBukti: 1942,
+    gap: 14,
+    status: "valid",
+    adaMatematika: false,
+    adaLedakanRiset: true,
+    klaim: "Jamur Penicillium menghasilkan zat yang membunuh bakteri. Zat ini bisa dikembangkan menjadi obat.",
+    akhir: "Fleming menemukan efeknya 1928 tapi tidak bisa memurnikannya. Florey dan Chain berhasil memurnikan dan menguji secara klinis 1942. Ketiganya dapat Nobel 1945.",
+    catatan: "Contoh dimana teori benar sejak awal tapi gap 14 tahun disebabkan tantangan teknis murni (pemurnian zat). Setelah berhasil, ledakan riset antibiotik terjadi sangat cepat — salah satu revolusi medis terbesar abad 20."
+  }
+];
+
+// Ekstrak bidang unik
+const semuaBidang = [...new Set(DATA.map(d => d.bidang))].sort();
+const warnaBidang = {};
+const palet = ['#4A9D7F','#7A6FA5','#A56F4A','#5A8FA5','#A54A7A','#7AA54A','#A5A54A','#4A5AA5'];
+semuaBidang.forEach((b, i) => { warnaBidang[b] = palet[i % palet.length]; });
+
+// Render filter bidang
+const filterBidangEl = document.getElementById('filterBidang');
+semuaBidang.forEach(b => {
+  const label = document.createElement('label');
+  label.className = 'toggle-item';
+  label.innerHTML = `
+    <input type="checkbox" class="cek-bidang" value="${b}" checked>
+    <span class="kotak-cek"></span>
+    <span class="dot-kategori" style="background:${warnaBidang[b]}"></span>
+    <span>${b}</span>
+  `;
+  filterBidangEl.appendChild(label);
+});
+
+let urutanAktif = 'gap-asc';
+
+function labelGap(gap, status) {
+  if (gap === null) return { teks: '?? tahun', kelas: 'tidak-berlaku' };
+  if (gap === 0) return { teks: '< 1 tahun', kelas: 'cepat' };
+  if (gap <= 15) return { teks: `${gap} tahun`, kelas: 'cepat' };
+  if (gap <= 55) return { teks: `${gap} tahun`, kelas: 'sedang' };
+  return { teks: `${gap} tahun`, kelas: 'lama' };
+}
+
+function labelStatus(status) {
+  const map = {
+    valid: 'Terbukti valid',
+    retrofitting: 'Retrofitting',
+    spekulatif: 'Spekulasi filosofis',
+    menggantung: 'Menggantung'
+  };
+  return map[status] || status;
+}
+
+function render() {
+  const maxGap = parseInt(document.getElementById('sliderGap').value);
+  const statusAktif = [...document.querySelectorAll('.cek-status:checked')].map(c => c.value);
+  const bidangAktif = [...document.querySelectorAll('.cek-bidang:checked')].map(c => c.value);
+  const hanyaMatematika = document.getElementById('cekMatematika').checked;
+  const hanyaLedakan = document.getElementById('cekLedakanRiset').checked;
+
+  let hasil = DATA.filter(d => {
+    if (!statusAktif.includes(d.status)) return false;
+    if (!bidangAktif.includes(d.bidang)) return false;
+    if (hanyaMatematika && !d.adaMatematika) return false;
+    if (hanyaLedakan && !d.adaLedakanRiset) return false;
+    if (d.gap !== null && d.gap > maxGap) return false;
+    return true;
+  });
+
+  // Urutkan
+  if (urutanAktif === 'gap-asc') {
+    hasil.sort((a, b) => (a.gap ?? 9999) - (b.gap ?? 9999));
+  } else if (urutanAktif === 'gap-desc') {
+    hasil.sort((a, b) => (b.gap ?? -1) - (a.gap ?? -1));
+  } else if (urutanAktif === 'tahun') {
+    hasil.sort((a, b) => a.tahunAjukan - b.tahunAjukan);
+  }
+
+  const grid = document.getElementById('gridKartu');
+  const kosong = document.getElementById('pesanKosong');
+  grid.innerHTML = '';
+
+  if (hasil.length === 0) {
+    kosong.style.display = 'block';
+  } else {
+    kosong.style.display = 'none';
+    hasil.forEach(d => {
+      const { teks: gapTeks, kelas: gapKelas } = labelGap(d.gap, d.status);
+      const kartu = document.createElement('div');
+      kartu.className = `kartu ${d.status}`;
+      kartu.style.borderLeftColor = warnaBidang[d.bidang];
+      kartu.innerHTML = `
+        <div class="kartu-header">
+          <div class="kartu-nama">${d.nama}</div>
+          <div class="badge-gap ${gapKelas}">${gapTeks}</div>
+        </div>
+        <div class="kartu-tokoh">${d.tokoh} · ${d.tahunAjukan < 0 ? Math.abs(d.tahunAjukan) + ' SM' : d.tahunAjukan}</div>
+        <div class="kartu-deskripsi">${d.klaim.substring(0, 110)}${d.klaim.length > 110 ? '…' : ''}</div>
+        <div class="kartu-footer">
+          <span class="tag" style="color:${warnaBidang[d.bidang]};background:${warnaBidang[d.bidang]}22">${d.bidang}</span>
+          ${d.adaMatematika ? '<span class="tag ada-matematika">✓ Ada matematika</span>' : ''}
+          ${d.adaLedakanRiset ? '<span class="tag ada-ledakan-riset">✓ Memicu riset</span>' : ''}
+          <span class="badge-status ${d.status}">${labelStatus(d.status)}</span>
+        </div>
+      `;
+      kartu.addEventListener('click', () => bukaModal(d));
+      grid.appendChild(kartu);
+    });
+  }
+
+  // Update info
+  document.getElementById('infoJumlah').textContent = `${hasil.length} teori ditampilkan`;
+
+  // Update statistik
+  const validCount = hasil.filter(d => d.status === 'valid').length;
+  const gapRata = hasil.filter(d => d.gap !== null && d.gap > 0);
+  const rataGap = gapRata.length ? Math.round(gapRata.reduce((s, d) => s + d.gap, 0) / gapRata.length) : 0;
+  const maksGap = gapRata.length ? Math.max(...gapRata.map(d => d.gap)) : 0;
+
+  document.getElementById('statRingkas').innerHTML = `
+    <div class="stat-baris"><span>Ditampilkan</span><span class="stat-angka">${hasil.length}</span></div>
+    <div class="stat-baris"><span>Terbukti valid</span><span class="stat-angka">${validCount}</span></div>
+    <div class="stat-baris"><span>Rata-rata gap</span><span class="stat-angka">${rataGap} thn</span></div>
+    <div class="stat-baris"><span>Gap terpanjang</span><span class="stat-angka">${maksGap} thn</span></div>
+  `;
+}
+
+function bukaModal(d) {
+  const { teks: gapTeks } = labelGap(d.gap, d.status);
+  document.getElementById('mLabel').textContent = d.bidang;
+  document.getElementById('mJudul').textContent = d.nama;
+  document.getElementById('mTokoh').textContent = `${d.tokoh}`;
+  document.getElementById('mTahunAjukan').textContent = d.tahunAjukan < 0 ? Math.abs(d.tahunAjukan) + ' SM' : d.tahunAjukan;
+  document.getElementById('mTahunBukti').textContent = d.tahunBukti ? d.tahunBukti : 'Belum terbukti';
+  document.getElementById('mGap').textContent = gapTeks;
+  document.getElementById('mStatus').textContent = labelStatus(d.status);
+  document.getElementById('mKlaim').textContent = d.klaim;
+  document.getElementById('mAkhir').textContent = d.akhir;
+  document.getElementById('mCatatan').textContent = d.catatan;
+
+  const ind = document.getElementById('mIndikator');
+  ind.innerHTML = `
+    <div class="indikator ${d.adaMatematika ? 'ya' : 'tidak'}">${d.adaMatematika ? '✓' : '✗'} Matematika / mekanisme presisi sejak awal</div>
+    <div class="indikator ${d.adaLedakanRiset ? 'ya' : 'tidak'}">${d.adaLedakanRiset ? '✓' : '✗'} Memicu ledakan riset setelah diajukan</div>
+  `;
+
+  document.getElementById('overlay').classList.add('aktif');
+}
+
+// Event listeners
+document.getElementById('sliderGap').addEventListener('input', function() {
+  document.getElementById('nilaiSlider').textContent = this.value;
+  render();
+});
+
+document.querySelectorAll('.cek-status, .cek-bidang, #cekMatematika, #cekLedakanRiset').forEach(el => {
+  el.addEventListener('change', render);
+});
+
+// Delegasi untuk bidang yang dibuat dinamis
+document.getElementById('filterBidang').addEventListener('change', render);
+
+document.querySelectorAll('.btn-urut').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.btn-urut').forEach(b => b.classList.remove('aktif'));
+    this.classList.add('aktif');
+    urutanAktif = this.dataset.urut;
+    render();
+  });
+});
+
+document.getElementById('tombolTutup').addEventListener('click', () => {
+  document.getElementById('overlay').classList.remove('aktif');
+});
+
+document.getElementById('overlay').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('aktif');
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.getElementById('overlay').classList.remove('aktif');
+});
+
+// Inisialisasi
+render();
+</script>
+</body>
+</html>

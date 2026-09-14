@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rahasia Bunyi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fdf6e8; --card:#ffffff; --line:#f0e2c4;
+    --ink:#3a3226; --dim:#8a7c62;
+    --accent:#c9784f; --accent-soft:#f7e9df;
+    --display:'Fredoka',sans-serif; --sans:'Quicksand',sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;}
+  .wrap{max-width:520px;margin:0 auto;padding:0 18px 70px;}
+
+  .hero{padding:36px 10px 18px;text-align:center;}
+  .hero h1{font-family:var(--display);font-weight:700;font-size:clamp(24px,6.5vw,32px);margin:0 0 8px;color:#8a4a2a;}
+  .hero p{color:var(--dim);font-size:14px;max-width:440px;margin:0 auto;}
+
+  .tab-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:18px;}
+  .tab-btn{font-family:var(--display);font-weight:600;font-size:11.5px;background:#fff;border:2px solid var(--line);
+    color:var(--dim);padding:11px 3px;border-radius:12px;cursor:pointer;text-align:center;line-height:1.3;}
+  .tab-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  .card{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px 18px;margin-bottom:16px;}
+  .card p.desc{font-size:13.5px;color:var(--dim);margin:0 0 16px;}
+
+  .stage{position:relative;height:200px;margin-bottom:16px;}
+  .stage svg{width:100%;height:100%;}
+
+  .field{margin-bottom:16px;}
+  .field label{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;color:var(--dim);margin-bottom:7px;}
+  .field label .val{color:var(--accent);font-weight:700;}
+  input[type=range]{width:100%;height:4px;-webkit-appearance:none;appearance:none;background:var(--line);border-radius:4px;outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.15);}
+  input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;border:3px solid #fff;}
+
+  .result-panel{background:var(--accent-soft);border-radius:14px;padding:16px;text-align:center;margin-top:6px;}
+  .result-num{font-family:var(--display);font-weight:700;font-size:26px;color:#8a4a2a;}
+  .result-sub{font-size:12.5px;color:var(--dim);margin-top:4px;}
+  .compare-row{display:flex;justify-content:space-around;margin-top:12px;padding-top:12px;border-top:1px dashed #e0c8a8;}
+  .compare-box .n{font-family:var(--display);font-weight:700;font-size:16px;color:#8a4a2a;}
+  .compare-box .l{font-size:10.5px;color:var(--dim);font-family:var(--mono);}
+
+  .play-btn{width:100%;font-family:var(--display);font-weight:700;font-size:15px;padding:14px;border-radius:14px;border:none;
+    cursor:pointer;background:var(--accent);color:#fff;box-shadow:0 5px 0 rgba(0,0,0,.08);margin-top:8px;}
+  .play-btn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.08);}
+
+  .note-card{background:var(--accent-soft);border-radius:14px;padding:14px 16px;font-size:12.5px;color:#6b4a30;margin-top:14px;}
+  .note-card strong{color:#4a2e18;}
+
+  footer{text-align:center;padding-top:26px;color:#b9ad94;font-size:11.5px;font-family:var(--mono);}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>🎶 Rahasia Bunyi</h1>
+    <p>Empat cara bunyi bekerja — atur getarannya, lalu <strong>dengarkan sendiri</strong> lewat speaker HP-mu bagaimana fisika mengubah bunyi jadi nada.</p>
+  </div>
+
+  <div class="tab-nav">
+    <button class="tab-btn active" data-tab="nada">🎵 Nada</button>
+    <button class="tab-btn" data-tab="senar">🎸 Senar</button>
+    <button class="tab-btn" data-tab="gema">🔊 Gema</button>
+    <button class="tab-btn" data-tab="resonansi">🎺 Resonansi</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-nada">
+    <div class="card">
+      <p class="desc">Nada tinggi atau rendah sebenarnya cuma soal <strong>seberapa cepat udara bergetar</strong> tiap detik (frekuensi) — geser, lalu dengarkan bedanya langsung.</p>
+      <div class="stage"><svg id="nadaSvg" viewBox="0 0 300 200"></svg></div>
+
+      <div class="field">
+        <label>Frekuensi (Hz) <span class="val" id="nadaFVal">440</span></label>
+        <input type="range" id="nadaF" min="20" max="2000" step="1" value="440">
+      </div>
+
+      <div class="result-panel">
+        <div class="result-num" id="nadaHasil">A4</div>
+        <div class="result-sub" id="nadaSub">Nada terdekat, tepat 0 sen</div>
+      </div>
+      <button class="play-btn" onclick="mainkanNada()">🔊 Dengarkan Nada!</button>
+    </div>
+    <div class="note-card"><strong>Kenapa ada nada "di antara"?</strong> Alat musik dunia sudah sepakat membagi satu oktaf jadi 12 nada (do re mi ...) — kalau frekuensimu meleset sedikit dari salah satu nada itu, selisihnya diukur dalam satuan "sen" (1 nada = 100 sen). Telinga terlatih bisa mendengar selisih beberapa sen saja!</div>
+  </div>
+
+  <div class="tab-panel" id="tab-senar">
+    <div class="card">
+      <p class="desc">Persis seperti gitar atau kecapi — senar yang lebih pendek dan lebih kencang menghasilkan nada yang lebih tinggi.</p>
+      <div class="stage"><svg id="senarSvg" viewBox="0 0 300 200"></svg></div>
+
+      <div class="field">
+        <label>Panjang Senar yang Bergetar (cm) <span class="val" id="senarLVal">65</span></label>
+        <input type="range" id="senarL" min="10" max="100" step="1" value="65">
+      </div>
+      <div class="field">
+        <label>Kekencangan Senar <span class="val" id="senarTVal">5</span></label>
+        <input type="range" id="senarT" min="1" max="10" step="1" value="5">
+      </div>
+
+      <div class="result-panel">
+        <div class="result-num" id="senarHasil">440,3 Hz</div>
+        <div class="result-sub">Frekuensi nada yang dihasilkan senar</div>
+        <div class="compare-row">
+          <div class="compare-box"><div class="n" id="senarNotaN">A4</div><div class="l">NADA TERDEKAT</div></div>
+        </div>
+      </div>
+      <button class="play-btn" onclick="mainkanSenar()">🔊 Petik Senar!</button>
+    </div>
+    <div class="note-card"><strong>Kenapa fret gitar berbaris rapat ke ujung?</strong> Menekan fret memperpendek bagian senar yang bergetar — makin pendek, makin cepat getarannya, makin tinggi nadanya. Mengencangkan senar (memutar pasak) juga menaikkan nada dengan cara berbeda: mempercepat rambatan gelombang di sepanjang senar.</div>
+  </div>
+
+  <div class="tab-panel" id="tab-gema">
+    <div class="card">
+      <p class="desc">Gema terjadi kalau bunyi memantul dari dinding jauh dan kembali cukup terlambat untuk terdengar terpisah dari bunyi aslinya.</p>
+      <div class="stage"><svg id="gemaSvg" viewBox="0 0 300 200"></svg></div>
+
+      <div class="field">
+        <label>Jarak ke Dinding (m) <span class="val" id="gemaDVal">20</span></label>
+        <input type="range" id="gemaD" min="5" max="100" step="1" value="20">
+      </div>
+      <div class="field">
+        <label>Suhu Udara (°C) <span class="val" id="gemaTVal">20</span></label>
+        <input type="range" id="gemaT" min="-10" max="40" step="1" value="20">
+      </div>
+
+      <div class="result-panel">
+        <div class="result-num" id="gemaHasil">Gema Jelas!</div>
+        <div class="result-sub" id="gemaSub">Waktu pantul: 116,6 ms (kecepatan suara 343 m/s)</div>
+        <div class="compare-row">
+          <div class="compare-box"><div class="n" id="gemaJarakN">20 m</div><div class="l">JARAK SAAT INI</div></div>
+          <div class="compare-box"><div class="n" id="gemaMinN">17,2 m</div><div class="l">JARAK MINIMUM AGAR JELAS</div></div>
+        </div>
+      </div>
+      <button class="play-btn" onclick="mainkanGema()">🔊 Dengarkan Gema!</button>
+    </div>
+    <div class="note-card"><strong>Kenapa ada jarak minimum?</strong> Telinga manusia butuh sekitar 0,1 detik jeda supaya dua bunyi terdengar terpisah, bukan menyatu jadi satu bunyi panjang. Suhu udara ikut berpengaruh karena udara hangat merambatkan bunyi lebih cepat daripada udara dingin.</div>
+  </div>
+
+  <div class="tab-panel" id="tab-resonansi">
+    <div class="card">
+      <p class="desc">Meniup mulut botol menggetarkan kolom udara di dalamnya — isi air lebih banyak, kolom udaranya makin pendek, nadanya makin tinggi.</p>
+      <div class="stage"><svg id="resonansiSvg" viewBox="0 0 300 200"></svg></div>
+
+      <div class="field">
+        <label>Panjang Kolom Udara (cm) <span class="val" id="resonansiLVal">20</span></label>
+        <input type="range" id="resonansiL" min="5" max="50" step="1" value="20">
+      </div>
+
+      <div class="result-panel">
+        <div class="result-num" id="resonansiHasil">428,8 Hz</div>
+        <div class="result-sub">Nada resonansi kolom udara</div>
+        <div class="compare-row">
+          <div class="compare-box"><div class="n" id="resonansiNotaN">A4</div><div class="l">NADA TERDEKAT</div></div>
+        </div>
+      </div>
+      <button class="play-btn" onclick="mainkanResonansi()">🔊 Tiup Botolnya!</button>
+    </div>
+    <div class="note-card"><strong>Kenapa banyak orang bisa main "musik botol"?</strong> Kolom udara yang tertutup di satu ujung (oleh air) beresonansi paling kuat di satu frekuensi tertentu, ditentukan panjangnya saja — inilah prinsip yang sama dipakai seruling dan alat musik tiup lainnya.</div>
+  </div>
+
+  <footer>Laboratorium Bunyi & Musik Anak — Bank Alat JAZMI/Qiladat</footer>
+</div>
+
+<script>
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  function fmt1(n){ return n.toFixed(1).replace('.',','); }
+
+  /* ============ AUDIO ENGINE (Web Audio API) ============ */
+  let audioCtx = null;
+  function getCtx(){
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  function playTone(freq, duration, startDelay, volume){
+    startDelay = startDelay || 0;
+    volume = volume === undefined ? 0.25 : volume;
+    const ctx = getCtx();
+    const t0 = ctx.currentTime + startDelay;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, t0);
+    gain.gain.linearRampToValueAtTime(volume, t0+0.02);
+    gain.gain.linearRampToValueAtTime(volume, Math.max(t0+0.02, t0+duration-0.05));
+    gain.gain.linearRampToValueAtTime(0, t0+duration);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0+duration+0.02);
+  }
+
+  /* ============ HELPER: FREKUENSI -> NAMA NADA ============ */
+  const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  function freqToNote(f){
+    const midi = 69 + 12*Math.log2(f/440);
+    const rounded = Math.round(midi);
+    const noteIdx = ((rounded % 12)+12)%12;
+    const octave = Math.floor(rounded/12)-1;
+    const cents = Math.round((midi-rounded)*100);
+    return { name: NOTE_NAMES[noteIdx]+octave, cents };
+  }
+
+  /* ============ TAB 1: NADA & FREKUENSI ============ */
+  function renderNada(){
+    const f = parseFloat(document.getElementById('nadaF').value);
+    document.getElementById('nadaFVal').textContent = f;
+
+    const note = freqToNote(f);
+    document.getElementById('nadaHasil').textContent = note.name;
+    const centsTxt = note.cents === 0 ? 'tepat 0 sen' : (note.cents>0 ? '+'+note.cents+' sen lebih tinggi' : note.cents+' sen lebih rendah');
+    document.getElementById('nadaSub').textContent = 'Nada terdekat, ' + centsTxt;
+
+    const cycles = Math.max(2, Math.min(10, 2 + 8*(Math.log10(f/20)/Math.log10(2000/20))));
+    let points = '';
+    const w = 260, x0 = 20, midY = 100, amp = 45;
+    for(let i=0;i<=120;i++){
+      const x = x0 + (i/120)*w;
+      const y = midY + amp*Math.sin(2*Math.PI*cycles*(i/120));
+      points += x.toFixed(1)+','+y.toFixed(1)+' ';
+    }
+    const svg = document.getElementById('nadaSvg');
+    svg.innerHTML = `
+      <line x1="20" y1="100" x2="280" y2="100" stroke="#e0c8a8" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <polyline points="${points}" fill="none" stroke="#c9784f" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    `;
+  }
+  document.getElementById('nadaF').addEventListener('input', renderNada);
+  function mainkanNada(){
+    const f = parseFloat(document.getElementById('nadaF').value);
+    playTone(f, 0.7);
+  }
+
+  /* ============ TAB 2: SENAR & NADA ============ */
+  const SENAR_K = 256;
+  function renderSenar(){
+    const L = parseFloat(document.getElementById('senarL').value);
+    const tension = parseFloat(document.getElementById('senarT').value);
+    document.getElementById('senarLVal').textContent = L;
+    document.getElementById('senarTVal').textContent = tension;
+
+    const v = SENAR_K * Math.sqrt(tension);
+    const f = v / (2*(L/100));
+    document.getElementById('senarHasil').textContent = fmt1(f) + ' Hz';
+    document.getElementById('senarNotaN').textContent = freqToNote(f).name;
+
+    const x0 = 20, xMaxCm = 100, wPx = 260;
+    const fretX = x0 + (L/xMaxCm)*wPx;
+    const midY = 100;
+    const amp = 10 + tension*2.5;
+
+    let arcPoints = '';
+    for(let i=0;i<=40;i++){
+      const t = i/40;
+      const x = x0 + t*(fretX-x0);
+      const y = midY - Math.sin(Math.PI*t)*amp;
+      arcPoints += x.toFixed(1)+','+y.toFixed(1)+' ';
+    }
+
+    const svg = document.getElementById('senarSvg');
+    svg.innerHTML = `
+      <line x1="${x0}" y1="130" x2="280" y2="130" stroke="#c9c0a4" stroke-width="1.5" stroke-dasharray="3 3"/>
+      <line x1="${fretX}" y1="130" x2="280" y2="${midY}" stroke="#c9c0a4" stroke-width="2" stroke-dasharray="2 3"/>
+      <polyline points="${arcPoints}" fill="none" stroke="#c9784f" stroke-width="3" stroke-linecap="round"/>
+      <rect x="${x0-4}" y="90" width="8" height="60" rx="2" fill="#3a3226"/>
+      <rect x="${fretX-3}" y="90" width="6" height="60" rx="2" fill="#5a8a7c"/>
+      <text x="${x0}" y="175" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8a7c62">kepala</text>
+      <text x="${fretX}" y="175" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#5a7a70">fret</text>
+    `;
+  }
+  ['senarL','senarT'].forEach(id => document.getElementById(id).addEventListener('input', renderSenar));
+  function mainkanSenar(){
+    const L = parseFloat(document.getElementById('senarL').value);
+    const tension = parseFloat(document.getElementById('senarT').value);
+    const v = SENAR_K * Math.sqrt(tension);
+    const f = v / (2*(L/100));
+    playTone(f, 0.9);
+  }
+
+  /* ============ TAB 3: GEMA ============ */
+  function hitungGema(d, T){
+    const v = 331 + 0.6*T;
+    const t = 2*d/v;
+    const dMin = v*0.05;
+    return { v, t, dMin, jelas: d >= dMin };
+  }
+  function renderGema(){
+    const d = parseFloat(document.getElementById('gemaD').value);
+    const T = parseFloat(document.getElementById('gemaT').value);
+    document.getElementById('gemaDVal').textContent = d;
+    document.getElementById('gemaTVal').textContent = T;
+
+    const r = hitungGema(d, T);
+    document.getElementById('gemaHasil').textContent = r.jelas ? 'Gema Jelas!' : 'Menyatu';
+    document.getElementById('gemaSub').textContent = 'Waktu pantul: ' + fmt1(r.t*1000) + ' ms (kecepatan suara ' + r.v.toFixed(0) + ' m/s)';
+    document.getElementById('gemaJarakN').textContent = d + ' m';
+    document.getElementById('gemaMinN').textContent = fmt1(r.dMin) + ' m';
+
+    const svg = document.getElementById('gemaSvg');
+    let arcs = '';
+    for(let i=1;i<=3;i++){
+      arcs += `<circle cx="30" cy="100" r="${i*22}" fill="none" stroke="#c9784f" stroke-width="1.5" opacity="${0.5-i*0.12}"/>`;
+    }
+    svg.innerHTML = `
+      <circle cx="30" cy="100" r="8" fill="#c9784f"/>
+      <line x1="270" y1="30" x2="270" y2="170" stroke="#3a3226" stroke-width="6"/>
+      ${arcs}
+      <text x="30" y="130" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8a7c62">sumber bunyi</text>
+      <text x="270" y="185" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8a7c62">dinding</text>
+    `;
+  }
+  ['gemaD','gemaT'].forEach(id => document.getElementById(id).addEventListener('input', renderGema));
+  function mainkanGema(){
+    const d = parseFloat(document.getElementById('gemaD').value);
+    const T = parseFloat(document.getElementById('gemaT').value);
+    const r = hitungGema(d, T);
+    playTone(700, 0.15, 0, 0.3);
+    playTone(700, 0.15, r.t, 0.16);
+  }
+
+  /* ============ TAB 4: RESONANSI KOLOM UDARA ============ */
+  function renderResonansi(){
+    const L = parseFloat(document.getElementById('resonansiL').value);
+    document.getElementById('resonansiLVal').textContent = L;
+
+    const f = 8575 / L;
+    document.getElementById('resonansiHasil').textContent = fmt1(f) + ' Hz';
+    document.getElementById('resonansiNotaN').textContent = freqToNote(f).name;
+
+    const tubeX = 110, tubeW = 80, tubeTop = 30, tubeBottom = 170, Lmax = 50;
+    const airPx = (L/Lmax) * (tubeBottom-tubeTop);
+    const waterY = tubeTop + airPx;
+
+    let waves = '';
+    for(let i=0;i<3;i++){
+      const y = tubeTop + 15 + i*((waterY-tubeTop-25)/3 > 0 ? (waterY-tubeTop-25)/3 : 0);
+      if(y < waterY-8){
+        waves += `<path d="M ${tubeX+12} ${y} Q ${tubeX+tubeW/2} ${y-8} ${tubeX+tubeW-12} ${y}" fill="none" stroke="#c9784f" stroke-width="2" opacity="0.7"/>`;
+      }
+    }
+
+    const svg = document.getElementById('resonansiSvg');
+    svg.innerHTML = `
+      <rect x="${tubeX}" y="${tubeTop}" width="${tubeW}" height="${tubeBottom-tubeTop}" fill="none" stroke="#8a7c62" stroke-width="3" rx="4"/>
+      <rect x="${tubeX+2}" y="${waterY}" width="${tubeW-4}" height="${tubeBottom-waterY-2}" fill="#a9c8dc" opacity="0.7"/>
+      ${waves}
+      <line x1="${tubeX+2}" y1="${waterY}" x2="${tubeX+tubeW-2}" y2="${waterY}" stroke="#6b93a8" stroke-width="2"/>
+      <text x="${tubeX+tubeW/2}" y="${tubeTop-10}" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8a7c62">tiup di sini</text>
+      <text x="${tubeX+tubeW+10}" y="${(tubeTop+waterY)/2}" text-anchor="start" font-family="JetBrains Mono" font-size="9" fill="#5a7a70">kolom udara</text>
+    `;
+  }
+  document.getElementById('resonansiL').addEventListener('input', renderResonansi);
+  function mainkanResonansi(){
+    const L = parseFloat(document.getElementById('resonansiL').value);
+    const f = 8575 / L;
+    playTone(f, 0.8);
+  }
+
+  renderNada();
+  renderSenar();
+  renderGema();
+  renderResonansi();
+</script>
+
+</body>
+</html>

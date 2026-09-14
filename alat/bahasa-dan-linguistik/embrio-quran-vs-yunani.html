@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tahapan Embrio — Terminologi Qur'an & Yunani</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0D1109;
+  --bg2:#121908;
+  --g-card:rgba(18,32,50,0.72);
+  --q-card:rgba(36,20,3,0.72);
+  --g-acc:#6B9AB8;
+  --g-b:rgba(107,154,184,0.2);
+  --g-dim:rgba(107,154,184,0.09);
+  --gold:#C4963A;
+  --gold-br:#D4AB50;
+  --gold-dim:rgba(196,150,58,0.1);
+  --gold-b:rgba(196,150,58,0.2);
+  --border:rgba(255,255,255,0.07);
+  --green:#4A7840;
+  --text:#DDD5A5;
+  --dim:rgba(221,213,165,0.5);
+}
+
+body{background:var(--bg);color:var(--text);font-family:'Lora',serif;font-weight:400;line-height:1.75;min-height:100vh;}
+
+.stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+.star{position:absolute;border-radius:50%;background:#fff;opacity:0;animation:tw linear infinite;}
+@keyframes tw{0%,100%{opacity:0;}50%{opacity:0.2;}}
+main{position:relative;z-index:1;}
+
+/* Hero */
+.hero{
+  max-width:840px;margin:0 auto;
+  padding:3.8rem 2rem 2rem;
+  position:relative;
+}
+.hero::before{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:500px;height:260px;
+  background:radial-gradient(ellipse,rgba(74,120,60,0.07) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-title{
+  font-size:0.72rem;
+  letter-spacing:0.1em;
+  color:var(--dim);
+  margin-bottom:1.4rem;
+  text-align:center;
+}
+.hero-ayat{
+  font-family:'Amiri',serif;
+  font-size:clamp(1.05rem,2.4vw,1.5rem);
+  line-height:2.4;
+  direction:rtl;
+  text-align:right;
+  margin-bottom:0.7rem;
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:1.4rem 1.8rem;
+}
+.hero-ayat .tm{
+  color:var(--gold-br);
+  border-bottom:1px dotted rgba(196,150,58,0.38);
+}
+.hero-ref{
+  text-align:right;
+  font-size:0.72rem;
+  color:var(--dim);
+  font-style:italic;
+  margin-bottom:1.2rem;
+}
+.hero-note{
+  font-size:0.8rem;
+  color:var(--dim);
+  line-height:1.7;
+  padding:0.9rem 1.2rem;
+  border-left:2px solid var(--green);
+  background:rgba(74,120,60,0.06);
+  border-radius:0 8px 8px 0;
+}
+
+/* Container */
+.container{max-width:840px;margin:0 auto;padding:0 1.5rem 4rem;}
+
+/* Pills */
+.pill-scroll{
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none;padding:0.5rem 0 1rem;
+  margin-bottom:1.5rem;
+}
+.pill-scroll::-webkit-scrollbar{display:none;}
+.pill-row{display:flex;gap:0.55rem;min-width:max-content;}
+
+.pill{
+  background:transparent;
+  border:1px solid var(--border);
+  border-radius:9px;
+  padding:0.5rem 1rem;
+  cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:0.1rem;
+  transition:background 0.15s,border-color 0.15s,color 0.15s;
+  color:var(--dim);
+  font-family:'Lora',serif;
+}
+.pill:hover{background:var(--gold-dim);border-color:var(--gold-b);color:var(--text);}
+.pill.on{background:var(--gold-dim);border-color:var(--gold);color:var(--text);}
+.pill-ar{font-family:'Amiri',serif;font-size:1.05rem;color:var(--dim);direction:rtl;}
+.pill.on .pill-ar{color:var(--gold-br);}
+.pill:hover .pill-ar{color:var(--gold);}
+.pill-la{font-size:0.62rem;font-style:italic;}
+
+/* Stage display area */
+.sd{animation:fi 0.22s ease;}
+@keyframes fi{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:none;}}
+
+/* Stage header card */
+.sd-head{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:14px;padding:1.5rem;
+  text-align:center;margin-bottom:1.1rem;
+}
+.sd-ar{
+  font-family:'Amiri',serif;
+  font-size:clamp(2.2rem,6vw,3.8rem);
+  color:var(--gold-br);direction:rtl;
+  line-height:1.15;margin-bottom:0.25rem;
+}
+.sd-la{font-style:italic;font-size:1rem;color:var(--text);margin-bottom:0.18rem;}
+.sd-meaning{font-size:0.82rem;color:var(--dim);margin-bottom:0.65rem;}
+.sd-week{
+  display:inline-block;
+  background:var(--gold-dim);border:1px solid var(--gold-b);
+  border-radius:20px;padding:0.18rem 0.85rem;
+  font-size:0.7rem;color:var(--gold);
+}
+
+/* Stage ayat */
+.sd-ayat-wrap{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:12px;padding:1.2rem 1.5rem;
+  text-align:center;margin-bottom:1.1rem;
+}
+.sd-ayat{
+  font-family:'Amiri',serif;
+  font-size:clamp(1.1rem,2.8vw,1.65rem);
+  direction:rtl;color:var(--gold);
+  line-height:2.2;margin-bottom:0.4rem;
+}
+.sd-trans{font-size:0.78rem;font-style:italic;color:var(--dim);}
+
+/* Embryo canvas */
+.visual-wrap{display:flex;justify-content:center;margin-bottom:1.1rem;}
+.visual-box{
+  width:100%;max-width:440px;height:196px;
+  background:rgba(0,0,0,0.28);
+  border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;
+}
+#ec{display:block;width:100%;height:100%;}
+
+/* Compare grid */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.1rem;}
+@media(max-width:540px){.compare{grid-template-columns:1fr;}}
+
+.cc{border-radius:12px;overflow:hidden;border:1px solid;}
+.cc.gk{background:var(--g-card);border-color:var(--g-b);}
+.cc.qr{background:var(--q-card);border-color:var(--gold-b);}
+
+.cc-head{
+  padding:0.65rem 1rem;
+  font-size:0.68rem;letter-spacing:0.05em;
+  border-bottom:1px solid;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.cc.gk .cc-head{border-color:var(--g-b);color:var(--g-acc);}
+.cc.qr .cc-head{border-color:var(--gold-b);color:var(--gold);}
+.cc-src{font-size:0.62rem;opacity:0.65;font-style:italic;font-weight:400;}
+
+.cc-body{padding:0.9rem 1rem;font-size:0.79rem;line-height:1.82;color:var(--text);}
+
+.cc-key{
+  margin:0 1rem 1rem;
+  padding:0.55rem 0.8rem;
+  border-radius:6px;
+  font-size:0.71rem;font-style:italic;line-height:1.5;
+}
+.cc.gk .cc-key{background:var(--g-dim);border-left:2px solid var(--g-acc);color:var(--g-acc);}
+.cc.qr .cc-key{background:var(--gold-dim);border-left:2px solid var(--gold);color:var(--gold);}
+
+/* Diff panel */
+.diff{
+  background:rgba(8,5,1,0.65);
+  border:1px solid rgba(196,150,58,0.13);
+  border-left:3px solid var(--gold);
+  border-radius:12px;
+  padding:1.3rem 1.4rem;
+  margin-bottom:2rem;
+}
+.diff-eyebrow{font-size:0.65rem;color:var(--dim);letter-spacing:0.08em;margin-bottom:0.4rem;}
+.diff-title{font-size:0.92rem;font-weight:600;color:var(--gold-br);margin-bottom:0.45rem;line-height:1.5;}
+.diff-text{font-size:0.8rem;line-height:1.88;color:var(--text);}
+
+footer{
+  text-align:center;padding:2rem;
+  font-size:0.7rem;color:rgba(221,213,165,0.2);
+  border-top:1px solid var(--border);
+  font-style:italic;line-height:1.9;
+}
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+<main>
+
+<div class="hero">
+  <div class="hero-title">Qur'an Surah Al-Mu'minun 23:12–14</div>
+  <div class="hero-ayat">
+    وَلَقَدْ خَلَقْنَا الْإِنسَانَ مِن سُلَالَةٍ مِّن طِينٍ ثُمَّ جَعَلْنَاهُ
+    <span class="tm">نُطْفَةً</span>
+    فِي قَرَارٍ مَّكِينٍ ثُمَّ خَلَقْنَا النُّطْفَةَ
+    <span class="tm">عَلَقَةً</span>
+    فَخَلَقْنَا الْعَلَقَةَ
+    <span class="tm">مُضْغَةً</span>
+    فَخَلَقْنَا الْمُضْغَةَ
+    <span class="tm">عِظَامًا</span>
+    فَكَسَوْنَا الْعِظَامَ لَحْمًا ثُمَّ أَنشَأْنَاهُ
+    <span class="tm">خَلْقًا آخَرَ</span>
+    ۚ فَتَبَارَكَ اللَّهُ أَحْسَنُ الْخَالِقِينَ
+  </div>
+  <div class="hero-ref">Al-Mu'minun [23]: 12–14 — istilah kunci ditandai emas</div>
+  <div class="hero-note">Alat ini bukan mencari "cocok dengan sains modern." Ia membandingkan terminologi Qur'an dengan terminologi Yunani — Galen dan Aristoteles — untuk menemukan di mana keduanya <em>berbeda</em>, dan mengapa perbedaan itu penting secara metodologis.</div>
+</div>
+
+<div class="container">
+
+  <div class="pill-scroll">
+    <div class="pill-row" id="pills"></div>
+  </div>
+
+  <div class="sd" id="sd">
+
+    <div class="sd-head">
+      <div class="sd-ar" id="sd-ar">نُطْفَة</div>
+      <div class="sd-la" id="sd-la">Nutfah</div>
+      <div class="sd-meaning" id="sd-meaning">Setetes — sesuatu yang kecil, berharga, dan cair</div>
+      <div class="sd-week" id="sd-week">Perkiraan minggu ke-1–3</div>
+    </div>
+
+    <div class="sd-ayat-wrap">
+      <div class="sd-ayat" id="sd-ayat">ثُمَّ جَعَلْنَاهُ نُطْفَةً فِي قَرَارٍ مَّكِينٍ</div>
+      <div class="sd-trans" id="sd-trans">"Kemudian Kami jadikan ia setetes dalam tempat yang kokoh"</div>
+    </div>
+
+    <div class="visual-wrap">
+      <div class="visual-box">
+        <canvas id="ec"></canvas>
+      </div>
+    </div>
+
+    <div class="compare">
+      <div class="cc gk">
+        <div class="cc-head">
+          <span>Yunani Klasik</span>
+          <span class="cc-src" id="sd-src">Aristoteles</span>
+        </div>
+        <div class="cc-body" id="sd-gk-b">—</div>
+        <div class="cc-key" id="sd-gk-k">—</div>
+      </div>
+      <div class="cc qr">
+        <div class="cc-head">
+          <span>Al-Qur'an</span>
+        </div>
+        <div class="cc-body" id="sd-qr-b">—</div>
+        <div class="cc-key" id="sd-qr-k">—</div>
+      </div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-eyebrow">Perbedaan Kunci</div>
+      <div class="diff-title" id="sd-dt">—</div>
+      <div class="diff-text" id="sd-dd">—</div>
+    </div>
+
+  </div>
+</div>
+</main>
+
+<footer>
+  Perbandingan terminologi historis. Sumber: Aristoteles, <em>De Generatione Animalium</em>; Galenus, <em>De Semine</em> & <em>De Foetuum Formatione</em>.<br>
+  Tafsir: Ibn Kathir, Al-Qurthubi, Al-Baidhawi. Analisis linguistik: Raghib al-Isfahani, <em>Mufradat Alfazh Al-Qur'an</em>.
+</footer>
+
+<script>
+// ── Data ─────────────────────────────────────────────────
+const S = [
+  {
+    ar:'نُطْفَة', la:'Nutfah',
+    mn:'Setetes — sesuatu yang kecil, berharga, dan cair',
+    wk:'1–3',
+    ay:'ثُمَّ جَعَلْنَاهُ نُطْفَةً فِي قَرَارٍ مَّكِينٍ',
+    tr:'"Kemudian Kami jadikan ia setetes dalam tempat yang kokoh"',
+    src:'Aristoteles, De Generatione Animalium',
+    gb:'Aristoteles berpendapat embrio terbentuk dari campuran semen (σπέρμα) dengan darah haid (katamenia). Semen berperan sebagai "bentuk" aktif, darah haid sebagai "materi" pasif. Dominasi semen menentukan jenis kelamin. Fokus penuh pada MEKANISME campuran.',
+    gk:'Sperma + darah haid = campuran aktif-pasif (komposisi)',
+    qb:"Nutfah bukan sekadar nama cairan — ia diletakkan di 'qarar makin', tempat yang kokoh, stabil, terlindungi. Al-Qur'an tidak menjelaskan mekanisme fertilisasi. Penekanan justru pada KONDISI dan LOKASI yang menerima: tempat aman untuk berkembang.",
+    qk:"Fokus: lokasi (qarar makin = tempat kokoh) — bukan komposisi",
+    dt:'Komposisi vs Kondisi',
+    dd:"Aristoteles bertanya: apa yang MEMBENTUK embrio (sperma + darah)? Al-Qur'an tidak menjelaskan mekanisme fertilisasi — ia menekankan KONDISI: tempat yang kokoh dan terlindungi. Penekanan berbeda mencerminkan tujuan berbeda: Yunani menjelaskan mekanisme, Qur'an mengorientasikan manusia pada realitas penciptaan dan perlindungan-Nya."
+  },
+  {
+    ar:'عَلَقَة', la:"'Alaqah",
+    mn:'Sesuatu yang melekat / bergantung / seperti lintah',
+    wk:'4–5',
+    ay:'ثُمَّ خَلَقْنَا النُّطْفَةَ عَلَقَةً',
+    tr:"\"Kemudian Kami ciptakan nutfah itu menjadi 'alaqah\"",
+    src:'Galenus, De Semine & De Foetuum Formatione',
+    gb:"Galen menyebut tahap ini sebagai kondisi 'darah' (haima) — embrio tampak seperti gumpalan darah yang mengental. Deskripsi berfokus pada WARNA (merah) dan KONSISTENSI (padat seperti bekuan). Ini deskripsi komposisi material semata.",
+    gk:'Haima (gumpalan darah) — deskripsi material/komposisional',
+    qb:"'Alaqah memiliki spektrum makna berlapis: (1) sesuatu yang MELEKAT dan BERGANTUNG — menggambarkan perilaku implantasi ke dinding rahim; (2) lintah — bentuk yang mengambil nutrisi dari inangnya; (3) darah kental. Kata ini menangkap PERILAKU dan MORFOLOGI, bukan sekadar komposisi.",
+    qk:"Melekat, bergantung, seperti lintah — fungsional-morfologis",
+    dt:"علقة ≠ Gumpalan Darah Galen — Perbedaan Paling Signifikan",
+    dd:"Galen: 'haima' (gumpalan darah) — apa MATERIALNYA. Qur'an: 'alaqah — apa yang DILAKUKAN dan BAGAIMANA BENTUKNYA. Embrio usia 4–5 minggu memang MELEKAT (berimplantasi) pada dinding rahim melalui vili korionik — fakta fungsional-morfologis yang menjadi inti kata 'alaqah, tapi bukan fokus terminologi Yunani manapun. Inilah mengapa 'alaqah tidak bisa disamakan begitu saja dengan 'haima'."
+  },
+  {
+    ar:'مُضْغَة', la:'Mudghah',
+    mn:'Segumpal seperti yang telah dikunyah',
+    wk:'6–8',
+    ay:'فَخَلَقْنَا الْعَلَقَةَ مُضْغَةً',
+    tr:"\"Lalu Kami ciptakan 'alaqah itu menjadi mudghah\"",
+    src:'Galenus, De Foetuum Formatione',
+    gb:"Galen menyebut tahap ini 'sarx' (daging) — embrio mulai memiliki konsistensi seperti daging. Transisi dari 'darah' menjadi 'daging'. Tidak ada perhatian pada tekstur permukaan atau penampakan visual yang khas dari tahap ini.",
+    gk:'Sarx (daging) — transisi komposisi, tanpa perhatian pada tekstur',
+    qb:"Mudghah: 'seperti yang dikunyah' — sangat spesifik secara VISUAL. Embrio usia 6–8 minggu memiliki somit (segmen embrionik) yang memberi penampakan bergelombang dan bergerigi sepanjang punggung — persis seperti bekas gigitan. Ini deskripsi PENAMPAKAN, bukan komposisi.",
+    qk:"Seperti dikunyah — visual-morfologis; somit sebagai 'bekas gigitan'",
+    dt:'Komposisi (sarx) vs Penampakan (mudghah)',
+    dd:"Galen bertanya: apa yang TERBENTUK (daging)? Al-Qur'an menggambarkan BAGAIMANA TAMPILANNYA. Somit yang muncul usia 6–8 minggu memberikan tekstur bergelombang bergerigi yang sangat akurat dengan metafora 'dikunyah'. Deskripsi Qur'an lebih spesifik secara visual — dan metafora ini tetap relevan bahkan ketika sains mengganti model mekanistiknya."
+  },
+  {
+    ar:'عِظَامٌ وَلَحْم', la:"'Idham & Lahm",
+    mn:'Tulang-tulang, lalu dibungkus daging',
+    wk:'8–12',
+    ay:'فَخَلَقْنَا الْمُضْغَةَ عِظَامًا فَكَسَوْنَا الْعِظَامَ لَحْمًا',
+    tr:'"Maka Kami ciptakan mudghah itu menjadi tulang-tulang, lalu Kami bungkus tulang-tulang itu dengan daging"',
+    src:'Galenus, De Usu Partium',
+    gb:'Galen menyebut jantung, otak, dan hati sebagai organ pertama yang terbentuk hampir simultan. Tulang dan daging tidak dipisahkan sebagai dua tahap sekuensial yang berbeda. Pembentukan organ dipandang sebagai proses paralel dan bertahap.',
+    gk:'Pembentukan organ simultan — tidak ada urutan tulang lalu daging',
+    qb:"Ayat menggunakan urutan eksplisit dengan 'fa' (ف — lalu): tulang LALU daging membungkus tulang. Kata 'kasawna' (Kami bungkus/selimuti) sangat visual — seperti pakaian menutup kerangka. Ini membedakan dua entitas (kerangka + pembungkus) secara konseptual dengan relasi spasial yang tepat.",
+    qk:"Tulang → daging membungkus: sekuensial & visual (kasawna = menyelimuti)",
+    dt:'Titik yang Diperdebatkan — dan Mengapa Tetap Penting',
+    dd:"Embriologi modern: tulang (kartilago) dan otot berkembang relatif bersamaan. Namun: (1) Qur'an membedakan dua entitas berbeda (kerangka dan pembungkus) — kategorisasi yang valid secara anatomi; (2) 'kasawna' (menyelimuti) menggambarkan relasi spasial yang akurat — otot memang MEMBUNGKUS kerangka; (3) kerangka kartilaginous mendahului pembungkusan muskular penuh. Yang paling penting: Qur'an tidak mengklaim mekanisme biologi — ia menggambarkan relasi struktural."
+  },
+  {
+    ar:'خَلْقٌ آخَرُ', la:'Khalqan Akhar',
+    mn:'Ciptaan yang lain — perubahan ontologis',
+    wk:'≥ 16',
+    ay:'ثُمَّ أَنشَأْنَاهُ خَلْقًا آخَرَ ۚ فَتَبَارَكَ اللَّهُ أَحْسَنُ الْخَالِقِينَ',
+    tr:'"Kemudian Kami jadikan ia ciptaan yang lain. Mahasuci Allah, Pencipta yang paling baik."',
+    src:'Aristoteles, De Anima; Galenus, De Foetuum Formatione',
+    gb:'Aristoteles menyebut tiga jiwa yang masuk secara bertahap: jiwa vegetatif (tumbuhan), sensitif (hewan), rasional (manusia). Transisi bersifat biologis dan gradual. Tidak ada momen diskret — tidak ada konsep "ciptaan lain" yang mendadak dalam tradisi Yunani.',
+    gk:'Jiwa bertahap: vegetatif → sensitif → rasional — gradual dan biologis',
+    qb:"'Khalqan akhar' — ciptaan yang LAIN SAMA SEKALI, bukan kelanjutan. Kata 'ansya'nahu' berbeda dari semua kata kerja sebelumnya (khalaqna) — menandai sesuatu yang berbeda secara kualitatif. Ayat ditutup tasbih (kekaguman): ini melampaui biologi biasa. Al-Qur'an menandai momen diskret yang tidak dikenal filsafat Yunani.",
+    qk:"Perubahan ontologis diskret — bukan penambahan gradual, melainkan 'lain'",
+    dt:'Gradual vs Lompatan Ontologis — Perbedaan Paling Filosofis',
+    dd:"Aristoteles: jiwa masuk bertahap, gradual, biologis. Al-Qur'an: ada MOMEN DISKRET di mana sesuatu yang secara kualitatif berbeda hadir — 'khalqan akhar'. Tidak ada paralelnya dalam terminologi Yunani. 'Ansya'nahu' (menjadikannya ada) berbeda dari 'khalaqna' (menciptakan) sebelumnya — bukan sekadar kelanjutan, melainkan awal dari sesuatu yang baru. Penutupan dengan tasbih mengonfirmasi: ini bukan proses biologis yang bisa dijelaskan oleh taksonomi jiwa Aristoteles."
+  }
+];
+
+// ── Canvas ─────────────────────────────────────────────
+let ectx=null, EW=0, EH=0, cur=0;
+
+function initEC() {
+  const c=document.getElementById('ec');
+  const dpr=window.devicePixelRatio||1;
+  EW=c.parentElement.clientWidth;
+  EH=c.parentElement.clientHeight;
+  c.width=EW*dpr; c.height=EH*dpr;
+  c.style.width=EW+'px'; c.style.height=EH+'px';
+  ectx=c.getContext('2d'); ectx.scale(dpr,dpr);
+}
+
+function draw(i) {
+  if(!ectx)return;
+  ectx.clearRect(0,0,EW,EH);
+  const cx=EW/2, cy=EH/2, r=Math.min(EW,EH)*0.3;
+  [dNutfah,dAlaqah,dMudghah,dIdham,dKhalqan][i](ectx,cx,cy,r);
+}
+
+function dNutfah(ctx,cx,cy,r) {
+  // Womb cavity hint
+  ctx.save(); ctx.translate(cx,cy); ctx.scale(0.9,1.2);
+  ctx.beginPath(); ctx.arc(0,0,r*1.08,0,Math.PI*2); ctx.restore();
+  ctx.strokeStyle='rgba(74,120,60,0.12)'; ctx.lineWidth=1; ctx.stroke();
+
+  // Particle field
+  for(let i=0;i<12;i++){
+    const a=i/12*Math.PI*2, d=r*(0.3+Math.random()*0.6);
+    ctx.beginPath(); ctx.arc(cx+Math.cos(a)*d,cy+Math.sin(a)*d*0.85,0.8+Math.random(),0,Math.PI*2);
+    ctx.fillStyle=`rgba(196,150,58,${0.04+Math.random()*0.07})`; ctx.fill();
+  }
+
+  // Main glow
+  const g=ctx.createRadialGradient(cx,cy,0,cx,cy,24);
+  g.addColorStop(0,'rgba(255,248,210,0.96)');
+  g.addColorStop(0.45,'rgba(196,150,58,0.55)');
+  g.addColorStop(1,'rgba(196,150,58,0)');
+  ctx.beginPath(); ctx.arc(cx,cy,24,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
+  ctx.beginPath(); ctx.arc(cx,cy,5,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,252,235,0.98)'; ctx.fill();
+
+  ctx.fillStyle='rgba(74,120,60,0.32)'; ctx.font='10px Amiri,serif';
+  ctx.textAlign='center'; ctx.fillText('قَرَارٌ مَّكِين',cx,cy+r*1.22);
+}
+
+function dAlaqah(ctx,cx,cy,r) {
+  const oy=cy-8;
+  // Wall
+  ctx.strokeStyle='rgba(74,120,60,0.1)'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(cx-r*1.62,oy-r); ctx.lineTo(cx-r*1.62,oy+r); ctx.stroke();
+
+  // Leech/alaqah body
+  ctx.beginPath();
+  ctx.moveTo(cx-r*0.6,oy-r*0.42);
+  ctx.bezierCurveTo(cx-r*1.0,oy-r*0.5,cx-r*1.18,oy-r*0.08,cx-r*1.12,oy+r*0.38);
+  ctx.bezierCurveTo(cx-r*1.0,oy+r*0.78,cx-r*0.58,oy+r*0.9,cx-r*0.08,oy+r*0.84);
+  ctx.bezierCurveTo(cx+r*0.32,oy+r*0.78,cx+r*0.55,oy+r*0.45,cx+r*0.5,oy+r*0.04);
+  ctx.bezierCurveTo(cx+r*0.44,oy-r*0.35,cx+r*0.1,oy-r*0.52,cx-r*0.6,oy-r*0.42);
+  ctx.closePath();
+  const g=ctx.createRadialGradient(cx-r*0.3,oy+r*0.2,0,cx-r*0.3,oy+r*0.2,r);
+  g.addColorStop(0,'rgba(140,38,38,0.5)'); g.addColorStop(0.6,'rgba(100,18,18,0.32)'); g.addColorStop(1,'rgba(80,8,8,0.04)');
+  ctx.fillStyle=g; ctx.fill();
+  ctx.strokeStyle='rgba(196,150,58,0.38)'; ctx.lineWidth=1.1; ctx.stroke();
+
+  // Villi (attachment roots)
+  const vx=cx-r*1.12;
+  [[oy-r*0.18,cx-r*1.62,oy-r*0.22],[oy+r*0.18,cx-r*1.62,oy+r*0.12],[oy+r*0.52,cx-r*1.62,oy+r*0.5]].forEach(([sy,ex,ey])=>{
+    ctx.beginPath(); ctx.moveTo(vx,sy); ctx.lineTo(ex,ey);
+    ctx.strokeStyle='rgba(196,150,58,0.28)'; ctx.lineWidth=0.8; ctx.stroke();
+  });
+
+  ctx.fillStyle='rgba(196,150,58,0.38)'; ctx.font='10px Amiri,serif';
+  ctx.textAlign='center'; ctx.fillText('يَعْلَق — مَلَقَ',cx,oy+r*1.28);
+}
+
+function dMudghah(ctx,cx,cy,r) {
+  // Head region (larger)
+  ctx.beginPath();
+  ctx.arc(cx+r*0.22,cy-r*0.48,r*0.3,0,Math.PI*2);
+  const gh=ctx.createRadialGradient(cx+r*0.22,cy-r*0.48,0,cx+r*0.22,cy-r*0.48,r*0.3);
+  gh.addColorStop(0,'rgba(120,80,38,0.45)'); gh.addColorStop(1,'rgba(80,50,18,0.08)');
+  ctx.fillStyle=gh; ctx.fill();
+  ctx.strokeStyle='rgba(196,150,58,0.3)'; ctx.lineWidth=0.9; ctx.stroke();
+
+  // Main C-body
+  ctx.beginPath();
+  ctx.moveTo(cx+r*0.48,cy-r*0.25);
+  ctx.bezierCurveTo(cx+r*0.6,cy+r*0.1,cx+r*0.5,cy+r*0.5,cx+r*0.18,cy+r*0.75);
+  ctx.bezierCurveTo(cx-r*0.2,cy+r*0.96,cx-r*0.65,cy+r*0.88,cx-r*0.88,cy+r*0.55);
+  ctx.bezierCurveTo(cx-r*1.05,cy+r*0.18,cx-r*0.95,cy-r*0.28,cx-r*0.6,cy-r*0.52);
+  ctx.bezierCurveTo(cx-r*0.32,cy-r*0.68,cx,cy-r*0.68,cx+r*0.22,cy-r*0.6);
+  ctx.lineTo(cx+r*0.22,cy-r*0.48);
+  ctx.closePath();
+  const gb=ctx.createRadialGradient(cx-r*0.2,cy+r*0.2,0,cx-r*0.2,cy+r*0.2,r*0.95);
+  gb.addColorStop(0,'rgba(120,78,35,0.48)'); gb.addColorStop(0.7,'rgba(82,48,16,0.3)'); gb.addColorStop(1,'rgba(60,30,8,0.04)');
+  ctx.fillStyle=gb; ctx.fill();
+  ctx.strokeStyle='rgba(196,150,58,0.32)'; ctx.lineWidth=1; ctx.stroke();
+
+  // Somite ridges
+  [[cx+r*0.38,cy-r*0.05,cx+r*0.57,cy+r*0.14],[cx+r*0.22,cy+r*0.22,cx+r*0.44,cy+r*0.4],[cx+r*0.04,cy+r*0.43,cx+r*0.28,cy+r*0.6],[cx-r*0.17,cy+r*0.58,cx+r*0.06,cy+r*0.74]].forEach(([x1,y1,x2,y2])=>{
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+    ctx.strokeStyle='rgba(196,150,58,0.22)'; ctx.lineWidth=1.4; ctx.stroke();
+  });
+
+  ctx.fillStyle='rgba(196,150,58,0.32)'; ctx.font='9px Lora,serif';
+  ctx.textAlign='center'; ctx.fillText('somit ≈ bekas gigitan',cx,cy+r*1.38);
+}
+
+function dIdham(ctx,cx,cy,r) {
+  ctx.save(); ctx.translate(cx,cy);
+
+  // Main body - more elongated
+  ctx.beginPath();
+  ctx.moveTo(r*0.28,-r*0.88);
+  ctx.bezierCurveTo(r*0.7,-r*0.68,r*0.9,-r*0.15,r*0.8,r*0.42);
+  ctx.bezierCurveTo(r*0.65,r*0.92,r*0.22,r*1.08,-r*0.28,r*1.04);
+  ctx.bezierCurveTo(-r*0.72,r*0.95,-r*0.95,r*0.55,-r*0.9,r*0.1);
+  ctx.bezierCurveTo(-r*0.85,-r*0.32,-r*0.55,-r*0.65,-r*0.05,-r*0.78);
+  ctx.closePath();
+  const g=ctx.createRadialGradient(r*0.1,0,0,r*0.1,0,r*0.95);
+  g.addColorStop(0,'rgba(180,158,95,0.3)'); g.addColorStop(0.7,'rgba(140,110,55,0.18)'); g.addColorStop(1,'rgba(100,70,25,0.04)');
+  ctx.fillStyle=g; ctx.fill();
+  ctx.strokeStyle='rgba(196,150,58,0.32)'; ctx.lineWidth=1; ctx.stroke();
+
+  // Head
+  ctx.beginPath(); ctx.arc(r*0.12,-r*0.7,r*0.3,0,Math.PI*2);
+  const gh=ctx.createRadialGradient(r*0.12,-r*0.7,0,r*0.12,-r*0.7,r*0.3);
+  gh.addColorStop(0,'rgba(200,175,105,0.3)'); gh.addColorStop(1,'rgba(150,120,55,0.06)');
+  ctx.fillStyle=gh; ctx.fill();
+  ctx.strokeStyle='rgba(196,150,58,0.22)'; ctx.lineWidth=0.8; ctx.stroke();
+
+  // Limb buds
+  [[r*0.74,-r*0.1,r*0.2],[r*0.5,r*0.68,r*0.18]].forEach(([bx,by,br])=>{
+    ctx.beginPath(); ctx.arc(bx,by,br,0,Math.PI*2);
+    ctx.strokeStyle='rgba(196,150,58,0.2)'; ctx.lineWidth=0.7; ctx.stroke();
+  });
+
+  // Cartilage hint (dashed internal)
+  ctx.strokeStyle='rgba(220,200,140,0.14)'; ctx.lineWidth=0.7; ctx.setLineDash([2,3]);
+  ctx.beginPath(); ctx.moveTo(-r*0.1,-r*0.28); ctx.lineTo(-r*0.06,r*0.58); ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.restore();
+  ctx.fillStyle='rgba(196,150,58,0.28)'; ctx.font='9px Lora,serif';
+  ctx.textAlign='center'; ctx.fillText('kerangka kartilaginous',cx,cy+r*1.38);
+}
+
+function dKhalqan(ctx,cx,cy,r) {
+  // Outer radiant glow — light rays
+  for(let i=0;i<8;i++){
+    const a=i/8*Math.PI*2;
+    const x1=cx+Math.cos(a)*r*0.5, y1=cy+Math.sin(a)*r*0.5;
+    const x2=cx+Math.cos(a)*r*1.5, y2=cy+Math.sin(a)*r*1.5;
+    const ray=ctx.createLinearGradient(x1,y1,x2,y2);
+    ray.addColorStop(0,'rgba(196,150,58,0.13)'); ray.addColorStop(1,'rgba(196,150,58,0)');
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+    ctx.strokeStyle=ray; ctx.lineWidth=1.2; ctx.stroke();
+  }
+
+  // Ambient glow
+  const g0=ctx.createRadialGradient(cx,cy,r*0.2,cx,cy,r*1.45);
+  g0.addColorStop(0,'rgba(196,150,58,0.16)'); g0.addColorStop(0.6,'rgba(196,150,58,0.06)'); g0.addColorStop(1,'rgba(196,150,58,0)');
+  ctx.beginPath(); ctx.arc(cx,cy,r*1.45,0,Math.PI*2); ctx.fillStyle=g0; ctx.fill();
+
+  ctx.save(); ctx.translate(cx,cy);
+
+  // More complete body
+  ctx.beginPath();
+  ctx.moveTo(r*0.2,-r*0.92);
+  ctx.bezierCurveTo(r*0.65,-r*0.72,r*0.86,-r*0.18,r*0.76,r*0.32);
+  ctx.bezierCurveTo(r*0.6,r*0.78,r*0.25,r*1.02,-r*0.16,r*0.99);
+  ctx.bezierCurveTo(-r*0.58,r*0.92,-r*0.82,r*0.56,-r*0.8,r*0.14);
+  ctx.bezierCurveTo(-r*0.78,-r*0.28,-r*0.55,-r*0.66,-r*0.08,-r*0.82);
+  ctx.closePath();
+  const g=ctx.createRadialGradient(r*0.1,0,0,r*0.1,0,r);
+  g.addColorStop(0,'rgba(222,188,116,0.42)'); g.addColorStop(0.55,'rgba(180,138,68,0.28)'); g.addColorStop(1,'rgba(130,88,28,0.05)');
+  ctx.fillStyle=g; ctx.fill();
+  ctx.strokeStyle='rgba(196,150,58,0.48)'; ctx.lineWidth=1.3; ctx.stroke();
+
+  // Head — larger, more luminous
+  ctx.beginPath(); ctx.arc(r*0.1,-r*0.74,r*0.33,0,Math.PI*2);
+  const ghead=ctx.createRadialGradient(r*0.1,-r*0.74,0,r*0.1,-r*0.74,r*0.33);
+  ghead.addColorStop(0,'rgba(230,200,130,0.42)'); ghead.addColorStop(1,'rgba(190,150,70,0.1)');
+  ctx.fillStyle=ghead; ctx.fill();
+  ctx.strokeStyle='rgba(196,150,58,0.32)'; ctx.lineWidth=0.9; ctx.stroke();
+
+  // Limbs more visible
+  [[r*0.74,-r*0.1,r*0.22],[r*0.52,r*0.7,r*0.22],[-r*0.72,r*0.08,r*0.18]].forEach(([bx,by,br])=>{
+    ctx.beginPath(); ctx.arc(bx,by,br,0,Math.PI*2);
+    ctx.strokeStyle='rgba(196,150,58,0.25)'; ctx.lineWidth=0.9; ctx.stroke();
+  });
+
+  ctx.restore();
+
+  ctx.fillStyle='rgba(196,150,58,0.45)'; ctx.font='10px Amiri,serif';
+  ctx.textAlign='center'; ctx.fillText('خَلْقٌ آخَرُ',cx,cy+r*1.48);
+}
+
+// ── UI ────────────────────────────────────────────────
+function renderPills() {
+  const c=document.getElementById('pills');
+  S.forEach((s,i)=>{
+    const b=document.createElement('button');
+    b.className='pill'+(i===0?' on':'');
+    b.innerHTML=`<span class="pill-ar">${s.ar}</span><span class="pill-la">${s.la}</span>`;
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('.pill').forEach(p=>p.classList.remove('on'));
+      b.classList.add('on');
+      showStage(i);
+    });
+    c.appendChild(b);
+  });
+}
+
+function showStage(i) {
+  cur=i; const s=S[i];
+  const el=document.getElementById('sd');
+  el.style.animation='none'; el.offsetHeight; el.style.animation='fi 0.22s ease';
+
+  document.getElementById('sd-ar').textContent=s.ar;
+  document.getElementById('sd-la').textContent=s.la;
+  document.getElementById('sd-meaning').textContent=s.mn;
+  document.getElementById('sd-week').textContent='Perkiraan minggu ke-'+s.wk;
+  document.getElementById('sd-ayat').textContent=s.ay;
+  document.getElementById('sd-trans').textContent=s.tr;
+  document.getElementById('sd-src').textContent=s.src;
+  document.getElementById('sd-gk-b').textContent=s.gb;
+  document.getElementById('sd-gk-k').textContent=s.gk;
+  document.getElementById('sd-qr-b').textContent=s.qb;
+  document.getElementById('sd-qr-k').textContent=s.qk;
+  document.getElementById('sd-dt').textContent=s.dt;
+  document.getElementById('sd-dd').textContent=s.dd;
+
+  draw(i);
+}
+
+window.addEventListener('load',()=>{
+  initEC(); renderPills(); showStage(0);
+
+  // Stars
+  const se=document.getElementById('stars');
+  for(let i=0;i<42;i++){
+    const s=document.createElement('div'); s.className='star';
+    const sz=Math.random()*1.5+0.4;
+    s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${Math.random()*7}s;animation-duration:${3+Math.random()*5}s;`;
+    se.appendChild(s);
+  }
+
+  window.addEventListener('resize',()=>{ initEC(); draw(cur); });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulator Jendela Pasang Surut — Laboratorium Qiladat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0E1B24;
+    --surface:#152631;
+    --surface-2:#1C3441;
+    --line:#2B4657;
+    --ink:#ECF1F2;
+    --muted:#89A3AF;
+    --amber:#E5A439;
+    --cyan:#3FB6D3;
+    --red:#E1614E;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--font-body); line-height:1.55; padding-bottom:80px;}
+  .wrap{max-width:960px; margin:0 auto; padding:0 20px;}
+  h1,h2,h3{font-family:var(--font-display); font-weight:600; margin:0 0 12px;}
+  p{margin:0 0 14px; max-width:68ch;}
+  .muted{color:var(--muted);}
+  .mono{font-family:var(--font-mono);}
+  section{padding:56px 0; border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+
+  .hero{padding-top:44px;}
+  .hero-tag{font-family:var(--font-mono); font-size:13px; color:var(--cyan); margin-bottom:10px;}
+  .hero h1{font-size:clamp(26px,4vw,40px); max-width:20ch; line-height:1.16;}
+  .hero p.lead{font-size:17px; color:var(--muted); max-width:58ch;}
+  .wave{width:100%; height:60px; margin-top:28px;}
+
+  .sec-head{display:flex; align-items:baseline; gap:10px; margin-bottom:22px;}
+  .sec-num{font-family:var(--font-mono); font-size:13px; color:var(--amber);}
+
+  .split{display:grid; grid-template-columns:1fr; gap:20px;}
+  @media(min-width:720px){ .split{grid-template-columns:1fr 1fr;} }
+  .domain-card{background:var(--surface); border:1px solid var(--line); padding:20px;}
+  .domain-card .pct{font-family:var(--font-mono); font-size:28px; color:var(--cyan);}
+  .domain-card.dim .pct{color:var(--muted);}
+  .domain-card p{font-size:14px;}
+
+  .panel{background:var(--surface); border:1px solid var(--line); padding:24px;}
+  .grid-ctl{display:grid; grid-template-columns:1fr; gap:18px;}
+  @media(min-width:640px){ .grid-ctl{grid-template-columns:1fr 1fr;} }
+  .field{display:flex; flex-direction:column; gap:6px;}
+  .field label{font-size:13px; color:var(--muted);}
+  .field .hint{font-size:11px; color:var(--muted); font-family:var(--font-mono);}
+  input[type=number], input[type=datetime-local], select{
+    background:var(--bg); border:1px solid var(--line); color:var(--ink);
+    padding:9px 10px; font-family:var(--font-mono); font-size:14px;
+  }
+  input:focus, select:focus{outline:2px solid var(--cyan); outline-offset:1px;}
+  .btn{background:var(--cyan); color:#062028; border:none; padding:12px 22px; font-family:var(--font-display); font-weight:600; font-size:15px; cursor:pointer; margin-top:22px;}
+  .btn:hover{background:#63c8e0;}
+  .btn.secondary{background:transparent; color:var(--ink); border:1px solid var(--line); margin-left:10px;}
+  .btn.secondary:hover{border-color:var(--cyan); color:var(--cyan);}
+
+  .chart-wrap{background:var(--surface); border:1px solid var(--line); padding:20px; margin-top:24px;}
+  svg text{font-family:var(--font-mono); fill:var(--muted);}
+  .legend{display:flex; gap:18px; flex-wrap:wrap; margin-top:14px; font-size:12px; color:var(--muted);}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .dot{width:9px; height:9px; display:inline-block;}
+  .ln{width:14px; height:2px; display:inline-block;}
+
+  .kpis{display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--line); margin-top:20px; border:1px solid var(--line);}
+  @media(min-width:640px){ .kpis{grid-template-columns:repeat(4,1fr);} }
+  .kpi{background:var(--surface); padding:16px;}
+  .kpi .val{font-family:var(--font-mono); font-size:22px;}
+  .kpi .lbl{font-size:12px; color:var(--muted); margin-top:2px;}
+  .kpi.warn .val{color:var(--red);}
+
+  .table-wrap{overflow-x:auto; margin-top:24px; border:1px solid var(--line); max-height:360px; overflow-y:auto;}
+  table{border-collapse:collapse; width:100%; font-size:13px;}
+  th, td{padding:8px 10px; text-align:left; border-bottom:1px solid var(--line); white-space:nowrap; font-family:var(--font-mono);}
+  th{background:var(--surface-2); color:var(--muted); font-weight:500; position:sticky; top:0;}
+  .badge{font-family:var(--font-mono); font-size:10px; padding:2px 6px; border:1px solid var(--cyan); color:var(--cyan);}
+
+  .formula{background:var(--surface); border:1px solid var(--line); padding:18px 20px; font-family:var(--font-mono); font-size:13px; color:var(--cyan); margin:16px 0; overflow-x:auto;}
+  ol.steps{padding-left:20px;}
+  ol.steps li{margin-bottom:8px;}
+  ul.limits{padding-left:20px;}
+  ul.limits li{margin-bottom:10px;}
+
+  .ref-list{list-style:none; padding:0; margin:0;}
+  .ref-list li{padding:12px 0; border-bottom:1px solid var(--line);}
+  .ref-list li:last-child{border-bottom:none;}
+  .ref-list .src{font-family:var(--font-mono); font-size:12px; color:var(--muted);}
+
+  .idea-list{list-style:none; padding:0; margin:0;}
+  .idea-list li{padding:16px 0; border-bottom:1px solid var(--line); display:grid; grid-template-columns:32px 1fr; gap:14px;}
+  .idea-list li:last-child{border-bottom:none;}
+  .idea-num{font-family:var(--font-mono); color:var(--amber); font-size:14px;}
+  .idea-list h4{margin:0 0 4px; font-family:var(--font-display); font-size:15px;}
+  .idea-list p{margin:0; font-size:13px; color:var(--muted);}
+
+  footer{padding:40px 0 20px; text-align:center;}
+  footer p{margin:0; font-size:12px; color:var(--muted); max-width:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <section class="hero">
+    <div class="hero-tag">LABORATORIUM QILADAT — TEKNIK MARITIM &amp; LOGISTIK</div>
+    <h1>Bulan dan Matahari yang menentukan, tapi pelabuhan yang menanggung biayanya</h1>
+    <p class="lead">Pasang surut adalah astronomi murni — hasil tarikan gravitasi Bulan dan Matahari terhadap air laut, bisa dihitung persis dari periode orbit. Tapi begitu air itu naik-turun di depan dermaga, yang bicara bukan lagi rumus orbit — melainkan draft kapal, kedalaman alur, dan berapa juta rupiah kerugian kalau kapal terlambat satu jendela pasang.</p>
+    <svg class="wave" viewBox="0 0 900 60" preserveAspectRatio="none">
+      <path d="M0,30 C75,5 150,55 225,30 C300,5 375,55 450,30 C525,5 600,55 675,30 C750,5 825,55 900,30" fill="none" stroke="#3FB6D3" stroke-width="2" opacity="0.6"/>
+      <path d="M0,40 C75,20 150,60 225,40 C300,20 375,60 450,40 C525,20 600,60 675,40 C750,20 825,60 900,40" fill="none" stroke="#2B4657" stroke-width="1.5"/>
+    </svg>
+  </section>
+
+  <section id="konteks">
+    <div class="sec-head"><span class="sec-num">01</span><h2>Ini termasuk ilmu apa?</h2></div>
+    <p>Beda dengan kalender 4-4-5 kemarin (yang <em>bukan</em> astronomi sama sekali), kasus ini justru sebaliknya: fenomenanya 100% astronomi, tapi <em>keputusannya</em> milik bidang lain.</p>
+    <div class="split">
+      <div class="domain-card">
+        <div class="pct">100%</div>
+        <h3 style="font-size:16px;">Astronomi (sumber fenomena)</h3>
+        <p>Tinggi air laut naik-turun karena gaya pasang Bulan (periode ≈12,42 jam) dan Matahari (periode 12,00 jam) yang saling berinterferensi — menghasilkan siklus spring tide/neap tide setiap ≈14,77 hari. Ini fisika langit yang tidak bisa dinegosiasi, sama seperti fase Bulan.</p>
+      </div>
+      <div class="domain-card dim">
+        <div class="pct">~90%</div>
+        <h3 style="font-size:16px;">Teknik Maritim &amp; Logistik Pelabuhan (dominasi keputusan)</h3>
+        <p>Setelah kurva pasang dihitung, semua yang penting bagi manusia — kapan kapal boleh masuk, berapa muatan yang boleh diangkut, berapa hari demurrage harus dibayar — ditentukan oleh draft kapal, squat, under-keel clearance, dan ekonomi pelayaran. Astronominya cuma jadi input tetap di awal.</p>
+      </div>
+    </div>
+    <p style="margin-top:18px;">Jadi arah persilangannya kebalikan dari kasus kalender industri: di sana matematika bisnis <em>menyamar</em> sebagai kalender; di sini astronomi sungguhan <em>menghilang</em> di balik keputusan logistik begitu sampai ke tangan operator pelabuhan.</p>
+  </section>
+
+  <section id="eksplorasi">
+    <div class="sec-head"><span class="sec-num">02</span><h2>Eksplorasi: geser variabelnya</h2></div>
+    <p>Tinggi air dihitung dari tiga komponen pasang (konstituen harmonik) yang dijumlahkan — pendekatan sederhana dari metode <span class="mono">harmonic analysis</span> yang sesungguhnya dipakai badan hidrografi. Periode tiap komponen berasal dari mekanika langit dan tidak diubah; yang bisa Anda mainkan adalah amplitudonya (karakter pelabuhan) dan variabel kapal.</p>
+
+    <div class="panel">
+      <div class="grid-ctl">
+        <div class="field">
+          <label for="tglMulai">Waktu mulai simulasi</label>
+          <input type="datetime-local" id="tglMulai" value="2026-01-05T00:00">
+        </div>
+        <div class="field">
+          <label for="durasi">Durasi simulasi (hari)</label>
+          <input type="number" id="durasi" value="14" min="2" max="30">
+          <span class="hint">14 hari cukup untuk melihat 1 siklus spring–neap</span>
+        </div>
+        <div class="field">
+          <label for="ampM2">Amplitudo komponen bulan M2 (m)</label>
+          <input type="number" id="ampM2" value="1.2" step="0.1" min="0">
+          <span class="hint">periode tetap 12,42 jam</span>
+        </div>
+        <div class="field">
+          <label for="ampS2">Amplitudo komponen matahari S2 (m)</label>
+          <input type="number" id="ampS2" value="0.4" step="0.1" min="0">
+          <span class="hint">periode tetap 12,00 jam — pembentuk siklus spring/neap</span>
+        </div>
+        <div class="field">
+          <label for="ampK1">Amplitudo komponen diurnal K1 (m)</label>
+          <input type="number" id="ampK1" value="0.3" step="0.1" min="0">
+          <span class="hint">periode tetap 23,93 jam — makin besar, makin "diurnal" tipe pasangnya</span>
+        </div>
+        <div class="field">
+          <label for="datum">Kedalaman alur pada surut terendah / chart datum (m)</label>
+          <input type="number" id="datum" value="12.0" step="0.1" min="0">
+        </div>
+        <div class="field">
+          <label for="draft">Draft kapal (m)</label>
+          <input type="number" id="draft" value="10.5" step="0.1" min="0">
+        </div>
+        <div class="field">
+          <label for="squat">Squat &amp; trim margin (m)</label>
+          <input type="number" id="squat" value="0.5" step="0.1" min="0">
+          <span class="hint">tambahan draft akibat kapal "tersedot" turun saat melaju di perairan dangkal</span>
+        </div>
+        <div class="field">
+          <label for="ukc">Under-keel clearance minimum (m)</label>
+          <input type="number" id="ukc" value="1.0" step="0.1" min="0">
+          <span class="hint">margin keselamatan wajib antara lunas kapal dan dasar alur</span>
+        </div>
+      </div>
+      <button class="btn" onclick="jalankanSimulasi()">Jalankan simulasi</button>
+      <button class="btn secondary" onclick="unduhCSV()">Unduh jendela aman (CSV)</button>
+    </div>
+  </section>
+
+  <section id="perhitungan">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Perhitungan</h2></div>
+
+    <div class="kpis" id="kpis"></div>
+
+    <div class="chart-wrap">
+      <svg id="chart" viewBox="0 0 900 320" style="width:100%; height:auto;"></svg>
+      <div class="legend">
+        <span><span class="ln" style="background:var(--cyan);"></span>Tinggi air (aman untuk sandar)</span>
+        <span><span class="ln" style="background:var(--red);"></span>Tinggi air (di bawah kedalaman aman)</span>
+        <span><span class="ln" style="background:var(--amber); height:2px; border-top:2px dashed var(--amber);"></span>Kedalaman minimum yang dibutuhkan</span>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Mulai jendela aman</th><th>Selesai jendela aman</th><th>Durasi</th></tr></thead>
+        <tbody id="tabelBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="metode">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Metode</h2></div>
+    <p>Tinggi air pada waktu t dihitung sebagai jumlah tiga gelombang kosinus (pendekatan sederhana dari analisis harmonik pasang surut sesungguhnya, yang di dunia nyata memakai puluhan konstituen):</p>
+    <div class="formula">h(t) = A_M2·cos(2π·t / 12,42j) + A_S2·cos(2π·t / 12,00j) + A_K1·cos(2π·t / 23,93j)</div>
+    <p>Kapal dinyatakan aman bersandar/berlayar pada waktu t jika:</p>
+    <div class="formula">chart_datum + h(t)  ≥  draft + squat + under_keel_clearance</div>
+    <ol class="steps">
+      <li>Hitung h(t) untuk setiap titik waktu sepanjang durasi simulasi (resolusi 30 menit).</li>
+      <li>Bandingkan kedalaman tersedia (chart datum + h(t)) dengan kedalaman yang dibutuhkan (draft + squat + UKC) — nilai kebutuhan ini konstan sepanjang simulasi.</li>
+      <li>Kelompokkan titik waktu yang berurutan aman menjadi satu "jendela pasang" (tidal window) dengan waktu mulai dan selesai.</li>
+      <li>Karena S2 (periode 12,00 jam) dan M2 (periode 12,42 jam) punya periode yang hampir tapi tidak persis sama, keduanya saling menguatkan (spring tide, rentang pasang maksimum) lalu saling melemahkan (neap tide, rentang minimum) setiap ≈14,77 hari — pola ini akan terlihat sendiri di grafik tanpa diprogram secara eksplisit.</li>
+    </ol>
+  </section>
+
+  <section id="batasan">
+    <div class="sec-head"><span class="sec-num">05</span><h2>Batasan</h2></div>
+    <ul class="limits">
+      <li><strong>Hanya 3 konstituen pasang yang dipakai.</strong> Prediksi pasang surut resmi (mis. dari BIG/Dishidros) memakai belasan hingga puluhan konstituen harmonik dengan fase spesifik per lokasi — angka di sini adalah pendekatan bentuk kurva, bukan prediksi navigasi yang sah dipakai kapal sungguhan.</li>
+      <li><strong>Fase (waktu puncak air tinggi) diasumsikan nol</strong> di awal simulasi — pelabuhan nyata punya fase spesifik hasil pengukuran bertahun-tahun terhadap lokasinya sendiri.</li>
+      <li><strong>Squat dianggap konstan</strong>, padahal nyatanya berubah mengikuti kecepatan kapal dan lebar alur (efek Bernoulli di perairan sempit) — di sini disederhanakan jadi satu angka input.</li>
+      <li><strong>Tidak memodelkan gelombang, angin, atau surge akibat cuaca</strong> — badai bisa mengubah tinggi air jauh di luar pola astronomis murni ini.</li>
+      <li>Alat ini untuk memahami <em>pola</em> jendela pasang, bukan pengganti data hidrografi resmi untuk keputusan pelayaran nyata.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <div class="sec-head"><span class="sec-num">06</span><h2>Referensi</h2></div>
+    <ul class="ref-list">
+      <li>Konsep konstituen harmonik pasang surut (M2, S2, K1) sebagai model standar prediksi tinggi air dalam oseanografi fisis.
+        <div class="src">Rujukan umum oseanografi &amp; hidrografi</div>
+      </li>
+      <li>Konsep <span class="mono">under-keel clearance</span> dan <span class="mono">squat</span> sebagai parameter keselamatan navigasi di alur pelabuhan.
+        <div class="src">Rujukan umum teknik pelabuhan &amp; pandu kapal</div>
+      </li>
+      <li>Lanjutan seri "laboratorium" proyek Qiladat/JAZMI — kasus kedua dari pola "sesuatu yang terasa astronomi ternyata dominan di bidang lain".
+        <div class="src">Dokumen kerja internal, 31 Agustus 2026</div>
+      </li>
+    </ul>
+  </section>
+
+  <section id="saran">
+    <div class="sec-head"><span class="sec-num">07</span><h2>Saran lanjutan</h2></div>
+    <p>Beberapa arah lain yang bisa dijadikan "laboratorium" berikutnya — sebagian masih bermain di perbatasan astronomi/alam vs bidang lain, sebagian sudah lepas total:</p>
+    <ul class="idea-list">
+      <li><span class="idea-num">01</span><div><h4>Simulator tumpang-tindih jam kerja tim lintas zona waktu</h4><p>Terasa geografi/astronomi (rotasi Bumi, garis bujur), tapi dominan jadi masalah Manajemen Proyek Global — geser garis bujur kantor A dan B, lihat berapa jam kerja yang benar-benar tumpang tindih dan kapan rapat "adil" untuk kedua pihak.</p></div></li>
+      <li><span class="idea-num">02</span><div><h4>Kalkulator golden hour untuk anggaran produksi film</h4><p>Posisi Matahari (astronomi) tetap jadi input, tapi yang disimulasikan adalah biaya: setiap menit golden hour yang terlewat berarti lembur kru, sewa lampu tambahan, atau ganti hari syuting — masuk ke Manajemen Produksi Film.</p></div></li>
+      <li><span class="idea-num">03</span><div><h4>Simulator break-even &amp; unit economics UMKM</h4><p>Tidak ada unsur astronomi sama sekali — murni Ekonomi/Bisnis. Geser harga jual, biaya bahan baku, biaya tetap, dan volume penjualan; lihat kapan titik impas tercapai dan seberapa sensitif keuntungan terhadap perubahan harga bahan baku.</p></div></li>
+      <li><span class="idea-num">04</span><div><h4>Simulator antrean (queueing) untuk klinik/apotek kecil</h4><p>Murni Riset Operasi — geser jumlah loket, rata-rata waktu layani, dan tingkat kedatangan pasien; lihat kapan antrean mulai menumpuk tak terkendali (fenomena yang sangat tidak intuitif tanpa disimulasikan).</p></div></li>
+      <li><span class="idea-num">05</span><div><h4>Simulator radiasi UV harian vs waktu aman beraktivitas luar ruang</h4><p>Astronomi murni di input (sudut elevasi Matahari menurut lintang &amp; tanggal), tapi keluarannya milik Kesehatan Masyarakat/industri produk pelindung — cocok dijadikan alat edukatif, bukan alat rekomendasi dosis personal.</p></div></li>
+      <li><span class="idea-num">06</span><div><h4>Simulator arus kas pesantren/yayasan dengan siklus donasi musiman</h4><p>Bidang berbeda total dari astronomi: Akuntansi Nirlaba. Geser pola donasi bulanan (naik saat Ramadhan/Qurban), biaya operasional tetap, lalu lihat bulan mana kas paling rawan minus — relevan langsung untuk ekosistem JAZMI/Qiladat sendiri.</p></div></li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Simulator ini adalah alat bantu eksplorasi konsep, bukan data hidrografi resmi untuk keputusan navigasi nyata.</p>
+  </footer>
+
+</div>
+
+<script>
+function jalankanSimulasi(){
+  const tglMulaiInput = document.getElementById('tglMulai').value;
+  const durasiHari = parseFloat(document.getElementById('durasi').value)||14;
+  const aM2 = parseFloat(document.getElementById('ampM2').value)||0;
+  const aS2 = parseFloat(document.getElementById('ampS2').value)||0;
+  const aK1 = parseFloat(document.getElementById('ampK1').value)||0;
+  const datum = parseFloat(document.getElementById('datum').value)||0;
+  const draft = parseFloat(document.getElementById('draft').value)||0;
+  const squat = parseFloat(document.getElementById('squat').value)||0;
+  const ukc = parseFloat(document.getElementById('ukc').value)||0;
+
+  const T_M2 = 12.42, T_S2 = 12.00, T_K1 = 23.93; // jam, periode astronomis tetap
+  const kebutuhan = draft + squat + ukc;
+
+  const mulai = tglMulaiInput ? new Date(tglMulaiInput) : new Date();
+  const totalJam = durasiHari * 24;
+  const stepJam = 0.5;
+  const n = Math.round(totalJam/stepJam);
+
+  const pts = [];
+  for(let i=0; i<=n; i++){
+    const t = i*stepJam;
+    const h = aM2*Math.cos(2*Math.PI*t/T_M2) + aS2*Math.cos(2*Math.PI*t/T_S2) + aK1*Math.cos(2*Math.PI*t/T_K1);
+    const tersedia = datum + h;
+    const aman = tersedia >= kebutuhan;
+    const waktu = new Date(mulai.getTime() + t*3600*1000);
+    pts.push({t, h, tersedia, aman, waktu});
+  }
+
+  // kelompokkan jendela aman
+  const windows = [];
+  let cur = null;
+  pts.forEach((p,i)=>{
+    if(p.aman){
+      if(!cur){ cur = {startIdx:i, endIdx:i}; }
+      else { cur.endIdx = i; }
+    } else {
+      if(cur){ windows.push(cur); cur=null; }
+    }
+  });
+  if(cur) windows.push(cur);
+
+  window._pts = pts;
+  window._windows = windows.map(w=>({start:pts[w.startIdx].waktu, end:pts[w.endIdx].waktu, jam:(w.endIdx-w.startIdx)*stepJam}));
+
+  renderKPI(pts, window._windows, kebutuhan, datum, aM2, aS2, aK1);
+  renderTabel(window._windows);
+  renderChart(pts, kebutuhan, datum);
+}
+
+function fmtJam(d){
+  const dd=String(d.getDate()).padStart(2,'0'), mm=String(d.getMonth()+1).padStart(2,'0');
+  const hh=String(d.getHours()).padStart(2,'0'), mi=String(d.getMinutes()).padStart(2,'0');
+  return `${dd}/${mm} ${hh}:${mi}`;
+}
+function fmtM(n){ return n.toFixed(2)+' m'; }
+
+function renderKPI(pts, windows, kebutuhan, datum, aM2, aS2, aK1){
+  const amanCount = pts.filter(p=>p.aman).length;
+  const pctAman = (amanCount/pts.length*100).toFixed(0);
+  const rentangMax = Math.max(...pts.map(p=>p.h));
+  const rentangMin = Math.min(...pts.map(p=>p.h));
+  const kpis = document.getElementById('kpis');
+  kpis.innerHTML = `
+    <div class="kpi"><div class="val">${pctAman}%</div><div class="lbl">waktu berstatus jendela aman</div></div>
+    <div class="kpi"><div class="val">${windows.length}</div><div class="lbl">jendela pasang terpisah</div></div>
+    <div class="kpi"><div class="val">${fmtM(rentangMax)}</div><div class="lbl">puncak tertinggi (spring tide)</div></div>
+    <div class="kpi ${rentangMin+datum<kebutuhan?'warn':''}"><div class="val">${fmtM(rentangMin)}</div><div class="lbl">titik terendah (neap/surut)</div></div>
+  `;
+}
+
+function renderTabel(windows){
+  const body = document.getElementById('tabelBody');
+  if(windows.length===0){
+    body.innerHTML = `<tr><td colspan="4">Tidak ada jendela aman ditemukan — kedalaman alur terlalu dangkal untuk draft kapal ini di seluruh periode simulasi.</td></tr>`;
+    return;
+  }
+  body.innerHTML = windows.map((w,i)=>`
+    <tr>
+      <td>${i+1}</td>
+      <td>${fmtJam(w.start)}</td>
+      <td>${fmtJam(w.end)}</td>
+      <td><span class="badge">${w.jam.toFixed(1)} jam</span></td>
+    </tr>
+  `).join('');
+}
+
+function renderChart(pts, kebutuhan, datum){
+  const svg = document.getElementById('chart');
+  const W=900, H=320, padL=55, padR=20, padT=20, padB=30;
+  const innerW=W-padL-padR, innerH=H-padT-padB;
+
+  const tersediaVals = pts.map(p=>p.tersedia);
+  let maxV = Math.max(...tersediaVals, kebutuhan);
+  let minV = Math.min(...tersediaVals, kebutuhan);
+  const range=(maxV-minV)||1;
+  maxV += range*0.08; minV -= range*0.08;
+
+  const x = i => padL + innerW*i/(pts.length-1);
+  const y = v => padT + innerH - ((v-minV)/(maxV-minV))*innerH;
+
+  let parts=[];
+  const steps=5;
+  for(let s=0;s<=steps;s++){
+    const val = minV + (maxV-minV)*s/steps;
+    const yy=y(val);
+    parts.push(`<line x1="${padL}" y1="${yy}" x2="${W-padR}" y2="${yy}" stroke="#2B4657" stroke-width="1"/>`);
+    parts.push(`<text x="${padL-8}" y="${yy+4}" font-size="10" text-anchor="end">${val.toFixed(1)}</text>`);
+  }
+
+  // garis kebutuhan minimum
+  const yk = y(kebutuhan);
+  parts.push(`<line x1="${padL}" y1="${yk}" x2="${W-padR}" y2="${yk}" stroke="#E5A439" stroke-width="1.5" stroke-dasharray="5,4"/>`);
+
+  // path per-segmen warna sesuai status aman/tidak
+  let seg=[pts[0]]; let segAman=pts[0].aman;
+  const segments=[];
+  for(let i=1;i<pts.length;i++){
+    if(pts[i].aman===segAman){ seg.push(pts[i]); }
+    else { segments.push({pts:seg, aman:segAman}); seg=[pts[i-1],pts[i]]; segAman=pts[i].aman; }
+  }
+  segments.push({pts:seg, aman:segAman});
+
+  segments.forEach(sgObj=>{
+    const idxMap = sgObj.pts.map(p=>pts.indexOf(p));
+    let d = idxMap.map((idx,j)=> (j===0?'M':'L') + x(idx).toFixed(1) + ' ' + y(pts[idx].tersedia).toFixed(1)).join(' ');
+    const color = sgObj.aman ? '#3FB6D3' : '#E1614E';
+    parts.push(`<path d="${d}" fill="none" stroke="${color}" stroke-width="2"/>`);
+  });
+
+  // label sumbu-x setiap 24 jam (2 titik per jam karena step 0.5)
+  const stepPerHour = 2;
+  pts.forEach((p,i)=>{
+    if(i % (24*stepPerHour) === 0){
+      parts.push(`<text x="${x(i).toFixed(1)}" y="${H-8}" font-size="9" text-anchor="middle">${p.waktu.getDate()}/${p.waktu.getMonth()+1}</text>`);
+    }
+  });
+
+  svg.innerHTML = parts.join('');
+}
+
+function unduhCSV(){
+  if(!window._windows) jalankanSimulasi();
+  const windows = window._windows;
+  let csv = 'No,Mulai,Selesai,DurasiJam\n';
+  windows.forEach((w,i)=>{
+    csv += [i+1, fmtJam(w.start), fmtJam(w.end), w.jam.toFixed(1)].join(',') + '\n';
+  });
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download='jendela-pasang-surut.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+jalankanSimulasi();
+</script>
+</body>
+</html>

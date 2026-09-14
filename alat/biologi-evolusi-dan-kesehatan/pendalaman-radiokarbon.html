@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pendalaman Radiokarbon — Studi Kasus Nyata</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --bg:#12141c; --bg-panel:#1b1f2b; --bg-panel-2:#20263a;
+  --line:#333a4f; --text:#eee7d6; --text-dim:#a9a6ac;
+  --gold:#c9a15a; --gold-soft:#8a713c; --teal:#5a9c92; --red:#c07a6e; --blue:#6f9bd1; --radius:10px;
+}
+*{box-sizing:border-box;}
+body{ margin:0; background:var(--bg); color:var(--text); font-family:'Karla',sans-serif; line-height:1.6; }
+h1,h2,h3{ font-family:'Fraunces',serif; font-weight:600; margin:0 0 0.5em; }
+.mono{ font-family:'JetBrains Mono', monospace; }
+.wrap{ max-width:860px; margin:0 auto; padding:0 20px; }
+.hero{ padding:48px 0 30px; border-bottom:1px solid var(--line); text-align:center; }
+.hero .eyebrow{ text-transform:uppercase; font-size:0.7rem; letter-spacing:2.5px; color:var(--gold); margin-bottom:12px; }
+.hero h1{ font-size:clamp(1.4rem,4.4vw,2.1rem); color:#fff; }
+.hero p.tag{ color:var(--text-dim); max-width:600px; margin:10px auto 0; font-size:0.94rem; }
+section{ padding:36px 0; border-bottom:1px solid var(--line); }
+section:last-of-type{ border-bottom:none; }
+.kicker{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+.kicker .num{ font-family:'Fraunces',serif; color:var(--gold); font-size:0.85rem; border:1px solid var(--gold-soft); border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.kicker h2{ font-size:1.2rem; margin:0; color:#fff; }
+p{ color:var(--text); } p.dim{ color:var(--text-dim); font-size:0.9rem; }
+.panel{ background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-top:16px; }
+
+label{ display:block; font-size:0.82rem; color:var(--text-dim); margin:14px 0 6px; }
+label:first-of-type{ margin-top:0; }
+input[type=range]{ width:100%; accent-color:var(--gold); }
+.slider-row{ display:flex; justify-content:space-between; font-size:0.74rem; color:var(--text-dim); margin-top:4px; }
+
+.hasil-grid{ display:grid; grid-template-columns:1fr; gap:8px; margin-top:16px; }
+.hasil-card{ background:var(--bg-panel-2); border:1px solid var(--line); border-radius:8px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.hasil-card .lbl{ font-size:0.82rem; color:var(--text-dim); }
+.hasil-card .val{ font-family:'JetBrains Mono',monospace; font-size:1.05rem; color:var(--gold); text-align:right; }
+.hasil-card.warn .val{ color:var(--red); }
+.hasil-card.ok .val{ color:var(--teal); }
+
+.mode-tag{ display:inline-block; font-size:0.72rem; padding:4px 10px; border-radius:20px; background:rgba(201,161,90,0.15); color:var(--gold); margin-bottom:10px; }
+
+.kasus-list{ display:flex; flex-direction:column; gap:8px; margin-top:14px; }
+.kasus-card{ background:var(--bg-panel-2); border:1px solid var(--line); border-radius:8px; padding:14px 16px; cursor:pointer; transition:border-color 0.15s; }
+.kasus-card:hover{ border-color:var(--gold-soft); }
+.kasus-card.aktif{ border-color:var(--gold); background:rgba(201,161,90,0.08); }
+.kasus-card .kj{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:5px; }
+.kasus-card .knama{ font-weight:700; font-size:0.92rem; color:#fff; }
+.kasus-card .ktahun{ font-size:0.74rem; color:var(--gold); font-family:'JetBrains Mono',monospace; }
+.kasus-card .kringkas{ font-size:0.84rem; color:var(--text-dim); margin:0; }
+.kasus-card .ktag{ display:inline-block; font-size:0.66rem; padding:2px 8px; border-radius:10px; margin-top:6px; }
+.ktag.gagal{ background:rgba(192,122,110,0.2); color:var(--red); }
+.ktag.berhasil{ background:rgba(90,156,146,0.2); color:var(--teal); }
+
+.formula{ font-family:'Fraunces',serif; font-style:italic; background:var(--bg-panel-2); border-radius:8px; padding:14px 18px; margin:14px 0; overflow-x:auto; color:#f4eede; }
+ul.batas li{ margin-bottom:10px; }
+.refs li{ margin-bottom:10px; font-size:0.9rem; color:var(--text-dim); }
+.consult{ background:linear-gradient(135deg,var(--bg-panel-2),var(--bg-panel)); border:1px solid var(--gold-soft); border-radius:var(--radius); padding:22px; text-align:center; }
+.consult a.wa{ display:inline-block; margin-top:14px; background:var(--teal); color:#12141c; text-decoration:none; font-weight:700; padding:12px 26px; border-radius:30px; }
+footer{ text-align:center; padding:26px 0; color:var(--text-dim); font-size:0.8rem; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Sains Arkeologi · Pendalaman</div>
+    <h1>Radiokarbon: Pendalaman &amp; Studi Kasus Nyata</h1>
+    <p class="tag">Dari 16 teknik penanggalan, ini yang paling terkenal, paling sering dipakai, dan pemenang Hadiah Nobel Kimia 1960 (Willard Libby). Tapi justru karena paling banyak dipakai, jejak kekeliruannya juga paling banyak terdokumentasi.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <div class="kicker"><div class="num">1</div><h2>Kenapa Radiokarbon?</h2></div>
+    <p>Di antara 16 teknik yang sudah kita bahas, radiokarbon adalah satu-satunya yang dipakai secara rutin di hampir setiap penggalian arkeologi bahan organik di dunia — dari tulang, arang, kayu, kain, hingga cangkang kerang. Cakupannya (hingga ~50.000 tahun) pas menutupi hampir seluruh sejarah pertanian dan peradaban manusia. Karena dipakai sedemikian luas selama 75 tahun terakhir, radiokarbon juga punya arsip kekeliruan paling kaya untuk dipelajari — tiga di antaranya yang paling terkenal ada di bawah panel ini.</p>
+  </section>
+
+  <section id="panel-utama">
+    <div class="kicker"><div class="num">2</div><h2>Panel Interaktif</h2></div>
+    <div class="panel">
+      <div class="mode-tag" id="mode-tag">Mode: eksplorasi manual</div>
+
+      <label>Umur sebenarnya sampel (tahun sebelum sekarang)</label>
+      <input type="range" id="rc-umur" min="50" max="48000" step="10" value="2000">
+      <div class="slider-row"><span id="rc-umur-label">2000 tahun</span><span></span></div>
+
+      <label>Efek reservoir / "kayu tua" (tahun — karbon sudah tua saat masuk sampel)</label>
+      <input type="range" id="rc-reservoir" min="0" max="1000" step="5" value="0">
+      <div class="slider-row"><span id="rc-reservoir-label">0 tahun</span><span></span></div>
+
+      <label>Kontaminasi karbon modern (% — mis. bahan modern ikut tercampur)</label>
+      <input type="range" id="rc-kontaminasi" min="0" max="100" step="0.5" value="0">
+      <div class="slider-row"><span id="rc-kontaminasi-label">0%</span><span></span></div>
+
+      <div class="hasil-grid">
+        <div class="hasil-card"><span class="lbl">Umur sebenarnya</span><span class="val" id="rc-out-benar">—</span></div>
+        <div class="hasil-card warn"><span class="lbl">Umur yang "terbaca" alat</span><span class="val" id="rc-out-tampak">—</span></div>
+        <div class="hasil-card warn"><span class="lbl">Selisih kekeliruan</span><span class="val" id="rc-out-selisih">—</span></div>
+      </div>
+      <p class="dim" style="margin-top:10px;" id="rc-catatan"></p>
+
+      <h3 style="margin-top:26px; font-size:1rem; color:#fff;">Pilih studi kasus nyata</h3>
+      <p class="dim" style="margin-top:0;">Menekan salah satu kartu akan langsung menggeser ketiga slider di atas mengikuti angka riwayat penelitian sungguhan — atau kembali geser manual kapan saja.</p>
+      <div class="kasus-list" id="kasus-list"></div>
+    </div>
+  </section>
+
+  <section id="metode">
+    <div class="kicker"><div class="num">3</div><h2>Metode</h2></div>
+    <div class="formula">fraksi_sisa = 0,5^((umur+reservoir)/5730) × (1−kontaminasi) + 1×kontaminasi<br>umur_tampak = 5730 × log₂(1/fraksi_sisa)</div>
+    <p class="dim">Waktu paruh yang dipakai: 5.730 tahun (nilai fisis Cambridge). Reservoir bekerja seperti menambah "usia awal" sebelum peluruhan dimulai; kontaminasi modern mencampurkan sebagian karbon berumur nol ke sampel.</p>
+  </section>
+
+  <section id="batasan">
+    <div class="kicker"><div class="num">4</div><h2>Batasan</h2></div>
+    <ul class="batas">
+      <li>Angka pada tiap studi kasus adalah <strong>perkiraan ilustratif</strong> yang disusun ulang dari laporan penelitian aslinya untuk keperluan belajar — bukan angka mentah laboratorium yang sesungguhnya (yang jauh lebih rinci &amp; melibatkan banyak sub-sampel/statistik).</li>
+      <li>Kasus Kain Kafan Turin khususnya <strong>masih diperdebatkan</strong> — angka 60% kontaminasi yang dipakai di sini mengikuti salah satu hipotesis (Rogers dkk.), bukan konsensus tunggal yang disepakati semua peneliti. Hasil 1988 sendiri tetap dianggap valid oleh mayoritas ilmuwan radiokarbon hingga kini.</li>
+      <li>Model ini hanya menyimulasikan dua sumber kekeliruan (reservoir &amp; kontaminasi) — dunia nyata punya lebih banyak lagi (fraksinasi isotop, kalibrasi kurva, dll.) yang tidak dimodelkan di sini.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <div class="kicker"><div class="num">5</div><h2>Referensi</h2></div>
+    <ul class="refs">
+      <li>Damon, P.E. dkk. (1989), <em>"Radiocarbon Dating of the Shroud of Turin"</em>, Nature — hasil asli 1260-1390 M oleh tiga laboratorium AMS (Oxford, Zurich, Arizona).</li>
+      <li>Rogers, R.N. (2005) &amp; diskusi lanjutan di npj Heritage Science (2026) — hipotesis kontaminasi pada sampel Kain Kafan Turin.</li>
+      <li>de Vries, H. &amp; Oakley, K.P. (1959), <em>"Radiocarbon dating of the Piltdown skull and jaw"</em>, Nature — hasil pasti rahang 500±100 BP, tengkorak 620±100 BP.</li>
+      <li>Wilmshurst, J.M., Hunt, T.L., Lipo, C.P., Anderson, A.J. (2011), <em>"High-precision radiocarbon dating shows recent and rapid initial human colonization of East Polynesia"</em>, PNAS — revisi taksiran pemukiman Selandia Baru/Polinesia Timur.</li>
+    </ul>
+  </section>
+
+  <section id="konsultasi">
+    <div class="consult">
+      <h3 style="color:#fff;">Ingin studi kasus lain ditambahkan?</h3>
+      <p class="dim">Alat ini masih pengembangan versi awal. Silakan hubungi kami untuk usulan kasus lain.</p>
+      <a class="wa" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20bertanya%20seputar%20Pendalaman%20Radiokarbon." target="_blank">Hubungi via WhatsApp</a>
+    </div>
+  </section>
+
+</div>
+<footer>Prototipe alat sains arkeologi · belum masuk struktur menu utama.</footer>
+
+<script>
+const HALFLIFE = 5730;
+function hitungFraksi(umur){ return Math.pow(0.5, umur/HALFLIFE); }
+function hitungUmurDariFraksi(fraksi){ return HALFLIFE * Math.log2(1/fraksi); }
+function fmtTahun(n){ return Math.round(n).toLocaleString('id-ID') + ' tahun'; }
+
+const KASUS = [
+  {
+    nama: 'Kain Kafan Turin (1988)', tahun: '1260–1390 M (diuji 1988)', tag:'gagal', tagLabel:'diperdebatkan',
+    umur: 1990, reservoir: 0, kontam: 60,
+    ringkas: 'Diuji 3 laboratorium AMS (Oxford, Zurich, Arizona), hasilnya abad ke-13/14 M — kontroversial hingga kini.',
+    penjelasan: 'Jika klaim sebagian pihak benar bahwa kain ini berasal dari ~2000 tahun lalu, salah satu hipotesis (Rogers dkk.) memperkirakan dibutuhkan sekitar 60% kontaminasi karbon modern (dari jelaga kebakaran 1532, minyak tangan peziarah, benang tambalan restorasi abad pertengahan) untuk membuat sampel setua itu "terbaca" seusia abad ke-13/14. Mayoritas ilmuwan radiokarbon tetap menganggap hasil 1988 valid — ini contoh kasus yang genuinely masih diperdebatkan, bukan kasus yang sudah pasti terbukti keliru.'
+  },
+  {
+    nama: 'Manusia Piltdown — rahang (1959)', tahun: '~500 tahun (bukan 500.000 seperti klaim awal)', tag:'berhasil', tagLabel:'radiokarbon berhasil membongkar',
+    umur: 500, reservoir: 0, kontam: 0,
+    ringkas: 'Radiokarbon justru BERHASIL di sini — mengungkap bahwa "fosil purba" yang diklaim berumur 500.000 tahun ternyata cuma berumur beberapa ratus tahun.',
+    penjelasan: 'Rahang yang diklaim sebagai mata rantai evolusi manusia purba di Inggris ternyata rahang orangutan modern yang sengaja diwarnai bahan kimia (besi &amp; bikromat) agar terlihat kuno. Radiokarbon 1959 oleh de Vries &amp; Oakley TIDAK terkecoh oleh pewarnaan visual itu — hasilnya tepat 500±100 tahun, sesuai umur sebenarnya. Bukan setiap kisah terkenal radiokarbon adalah tentang kegagalan; ini contoh penting sebaliknya.'
+  },
+  {
+    nama: 'Pemukiman Selandia Baru (revisi 2011)', tahun: 'Taksiran lama vs revisi ~1250–1300 M', tag:'gagal', tagLabel:'masalah kayu tua',
+    umur: 745, reservoir: 450, kontam: 0,
+    ringkas: 'Taksiran umur pemukiman Polinesia di Selandia Baru sempat berbeda-beda lebih dari 1000 tahun antar penelitian, sebelum direvisi jadi jauh lebih baru.',
+    penjelasan: 'Penelitian awal banyak memakai arang dari kayu pohon berumur sangat panjang — pohon itu sendiri bisa sudah berusia ratusan tahun sebelum akhirnya ditebang/terbakar dalam aktivitas manusia, membuat sampel "tampak" jauh lebih tua dari peristiwa yang sebenarnya ingin ditanggali ("masalah kayu tua"/inbuilt age). Wilmshurst dkk. (2011, PNAS) memakai bahan tumbuhan berumur pendek (biji, ranting kecil) dari 1.434 tanggal radiokarbon, merevisi pemukiman jadi sekitar 1250–1300 M — jauh lebih baru daripada sebagian taksiran awal.'
+  },
+];
+
+function pilihKasus(idx){
+  const k = KASUS[idx];
+  document.getElementById('rc-umur').value = k.umur;
+  document.getElementById('rc-reservoir').value = k.reservoir;
+  document.getElementById('rc-kontaminasi').value = k.kontam;
+  document.getElementById('mode-tag').textContent = 'Mode: studi kasus — ' + k.nama;
+  updateRC();
+  renderKasusList(idx);
+  document.getElementById('rc-catatan').textContent = k.penjelasan;
+  document.getElementById('panel-utama').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function renderKasusList(aktifIdx){
+  const area = document.getElementById('kasus-list');
+  area.innerHTML = KASUS.map((k,i)=>`
+    <div class="kasus-card ${i===aktifIdx?'aktif':''}" onclick="pilihKasus(${i})">
+      <div class="kj"><span class="knama">${k.nama}</span><span class="ktahun">${k.tahun}</span></div>
+      <p class="kringkas">${k.ringkas}</p>
+      <span class="ktag ${k.tag}">${k.tagLabel}</span>
+    </div>
+  `).join('');
+}
+
+function updateRC(){
+  const umur = parseFloat(document.getElementById('rc-umur').value);
+  const reservoir = parseFloat(document.getElementById('rc-reservoir').value);
+  const kontam = parseFloat(document.getElementById('rc-kontaminasi').value);
+
+  document.getElementById('rc-umur-label').textContent = fmtTahun(umur);
+  document.getElementById('rc-reservoir-label').textContent = fmtTahun(reservoir);
+  document.getElementById('rc-kontaminasi-label').textContent = kontam + '%';
+
+  const umurEfektif = umur + reservoir;
+  const fraksiReservoir = hitungFraksi(umurEfektif);
+  const fMod = kontam/100;
+  const fraksiAkhir = fraksiReservoir*(1-fMod) + 1*fMod;
+  const umurTampak = hitungUmurDariFraksi(fraksiAkhir);
+  const selisih = umurTampak - umur;
+
+  document.getElementById('rc-out-benar').textContent = fmtTahun(umur);
+  document.getElementById('rc-out-tampak').textContent = fmtTahun(umurTampak);
+  const elSelisih = document.getElementById('rc-out-selisih');
+  elSelisih.textContent = (selisih>=0?'+':'') + Math.round(selisih).toLocaleString('id-ID') + ' tahun';
+  elSelisih.parentElement.className = 'hasil-card ' + (Math.abs(selisih)<5 ? 'ok' : 'warn');
+}
+
+function inputManual(){
+  document.getElementById('mode-tag').textContent = 'Mode: eksplorasi manual';
+  renderKasusList(-1);
+  updateRC();
+}
+['rc-umur','rc-reservoir','rc-kontaminasi'].forEach(id=> document.getElementById(id).addEventListener('input', inputManual));
+
+renderKasusList(-1);
+updateRC();
+</script>
+
+</body>
+</html>

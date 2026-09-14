@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trisection Sudut — Al-Biruni</title>
+<style>
+  :root{
+    --bg:#141210; --panel:#1c1916; --panel2:#211d19;
+    --gold:#c9a24b; --gold-soft:#8a7440; --text:#e8e0d0; --text-dim:#a89a80;
+    --line:#3a332a; --danger:#c25c4a; --ok:#6f9e6a; --blue:#6a91c2;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Georgia,'Times New Roman',serif;line-height:1.6;}
+  .container{max-width:900px;margin:0 auto;padding:24px 16px 60px;}
+  header{text-align:center;margin-bottom:26px;border-bottom:1px solid var(--line);padding-bottom:18px;}
+  header h1{font-size:1.4rem;color:var(--gold);margin:0 0 6px;}
+  header p{color:var(--text-dim);margin:0;font-size:0.9rem;font-style:italic;}
+  h2{color:var(--gold);font-size:1.08rem;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+  h2 .num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;
+    border:1px solid var(--gold-soft);border-radius:50%;font-size:0.78rem;color:var(--gold);flex-shrink:0;}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:16px;}
+  p{margin:0 0 9px;font-size:0.92rem;} p:last-child{margin-bottom:0;}
+  .dim{color:var(--text-dim);font-size:0.84rem;}
+  ul{margin:6px 0;padding-left:20px;} li{margin-bottom:5px;font-size:0.9rem;}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;}
+  .row label{font-size:0.88rem;flex:1;display:flex;justify-content:space-between;}
+  .row label span.val{color:var(--gold);font-weight:bold;}
+  input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:var(--line);outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+    background:var(--gold);cursor:pointer;border:2px solid var(--bg);}
+  svg.canvas{width:100%;height:auto;background:#0d0c0a;border-radius:8px;border:1px solid var(--line);}
+  .readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px;}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;}
+  .stat .label{font-size:0.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.4px;}
+  .stat .value{font-size:1.05rem;color:var(--gold);margin-top:2px;}
+  .formula{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:10px 14px;
+    font-family:'Courier New',monospace;font-size:0.84rem;margin:8px 0;overflow-x:auto;}
+  .refs li{font-size:0.82rem;color:var(--text-dim);}
+  footer{text-align:center;color:var(--text-dim);font-size:0.76rem;margin-top:22px;}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Trisection Sudut: Mustahil, tapi Ada Jalannya</h1>
+  <p>Al-Biruni dan soal klasik Yunani yang tak terpecahkan 2000 tahun</p>
+</header>
+
+<section id="belajar">
+  <h2><span class="num">1</span>Belajar</h2>
+  <p>Membagi sudut sembarang jadi TIGA bagian sama besar terdengar sepele — membagi jadi DUA (bisection) gampang sekali dengan jangka dan penggaris polos. Tapi membagi tiga (trisection) untuk sudut SEMBARANG ternyata <strong>terbukti mustahil</strong> hanya dengan jangka dan penggaris tanpa tanda (dibuktikan secara aljabar pada abad ke-19, lebih dari 2000 tahun setelah pertama kali diajukan orang Yunani kuno).</p>
+  <p>Tapi "mustahil dengan alat terbatas" bukan berarti "mustahil sama sekali". Para matematikawan — Archimedes di zaman Yunani, lalu dilanjutkan cendekiawan dunia Islam termasuk Al-Biruni — menemukan solusinya dengan sedikit "curang" secara terkontrol: memakai penggaris yang diberi TANDA (neusis), bukan penggaris polos. MacTutor (arsip sejarah matematika akademik) mencatat Al-Biruni memang mengerjakan "trisection sudut dan soal-soal lain yang tak bisa diselesaikan hanya dengan jangka-penggaris" sebagai bagian dari kontribusi matematikanya.</p>
+  <p>Kenapa jangka-penggaris biasa gagal? Karena trisection sudut sembarang, secara aljabar, setara dengan menyelesaikan <strong>persamaan pangkat tiga (kubik)</strong> — dan jangka-penggaris polos hanya sanggup menyelesaikan persamaan pangkat dua (kuadrat). Neusis "curang sedikit" ini justru memberi kekuatan ekstra yang dibutuhkan untuk menembus batas itu.</p>
+</section>
+
+<section id="pertanyaan">
+  <h2><span class="num">2</span>Pertanyaan Ilmiah</h2>
+  <ul>
+    <li>Mengapa jangka-penggaris polos hanya bisa menyelesaikan persamaan kuadrat, tidak kubik?</li>
+    <li>Bagaimana konstruksi neusis (penggaris bertanda) bisa "menembus" batas itu?</li>
+  </ul>
+</section>
+
+<section id="simulator">
+  <h2><span class="num">3</span>Simulator Konstruksi Neusis</h2>
+  <div class="row">
+    <label>Sudut yang akan ditrisection (θ) <span class="val" id="v_theta">75°</span></label>
+    <input type="range" id="theta" min="10" max="170" value="75">
+  </div>
+  <svg id="canvas" class="canvas" viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div class="readout">
+    <div class="stat"><div class="label">Sudut asli (θ)</div><div class="value" id="out_theta">—</div></div>
+    <div class="stat"><div class="label">Hasil konstruksi (∠QCB)</div><div class="value" id="out_hasil">—</div></div>
+    <div class="stat"><div class="label">θ/3 (target)</div><div class="value" id="out_target">—</div></div>
+  </div>
+</section>
+
+<section id="metode">
+  <h2><span class="num">4</span>Metode: Konstruksi Klasik</h2>
+  <p>Diberikan lingkaran pusat C, titik A dan P di lingkaran dengan sudut PCA=θ. Tarik diameter melalui A hingga titik B di sisi seberang, lalu perpanjang garis itu melewati B. Cari titik R di perpanjangan garis itu, dan titik Q di lingkaran, sedemikian rupa sehingga <strong>panjang QR = jari-jari lingkaran</strong> DAN garis R-Q, jika diperpanjang, tepat melewati P.</p>
+  <p>Klaimnya: sudut QCB yang terbentuk = θ/3 tepat.</p>
+  <div class="formula">Secara aljabar, posisi R (jarak d dari C) memenuhi:
+d³ − 3d − 2cos(θ) = 0   (persamaan kubik!)</div>
+  <p class="dim">Verifikasi numerik: untuk θ=30°,45°,60°,75°,90°,120°, konstruksi ini menghasilkan sudut QCB = 10°,15°,20°,25°,30°,40° — tepat θ/3 di setiap kasus, presisi hingga 3 desimal.</p>
+</section>
+
+<section id="batasan">
+  <h2><span class="num">5</span>Batasan</h2>
+  <ul>
+    <li>Simulator ini menyelesaikan persamaan kubik secara numerik (bisection) untuk mencari posisi R — bukan mensimulasikan gerakan fisik "menggeser penggaris bertanda" seperti yang dilakukan matematikawan klasik, meski hasil akhirnya identik.</li>
+    <li>Ini konstruksi bidang datar (planar) klasik — bukan rekonstruksi persis metode/notasi asli Al-Biruni, yang naskah lengkapnya memerlukan kajian filologi tersendiri.</li>
+  </ul>
+</section>
+
+<section id="referensi">
+  <h2><span class="num">6</span>Referensi</h2>
+  <ul class="refs">
+    <li>MacTutor History of Mathematics, biografi Al-Biruni — mencatat kontribusinya pada trisection sudut dan soal tak terselesaikan jangka-penggaris.</li>
+    <li>J.P. Hogendijk, "The Trisection of the Angle" — konstruksi neusis klasik yang dipakai di alat ini.</li>
+    <li>Konsep konstruksi neusis (νεῦσις) — dipakai luas dalam sejarah matematika Yunani-Islam untuk soal trisection dan duplikasi kubus.</li>
+  </ul>
+</section>
+
+<footer>Bagian dari Laboratorium Sains &amp; Sejarah — Bank Ide Qiladat/JAZMI.</footer>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+
+  function solveCubicForD(theta){
+    const cosT = Math.cos(theta);
+    function f(d){ return d*d*d - 3*d - 2*cosT; }
+    let lo=1, hi=5;
+    while (f(hi)<0) hi*=2;
+    for (let i=0;i<100;i++){
+      const mid=(lo+hi)/2;
+      if (f(mid)>0) hi=mid; else lo=mid;
+    }
+    return (lo+hi)/2;
+  }
+
+  function hitung(){
+    const thetaDeg = parseFloat($('theta').value);
+    $('v_theta').textContent = thetaDeg+'°';
+    const theta = thetaDeg*Math.PI/180;
+    const d = solveCubicForD(theta);
+    const m = Math.cos(theta)+d;
+    const A = m*m + Math.sin(theta)*Math.sin(theta);
+    const t2 = (d*d-1)/A;
+    const Qx = -d + t2*m, Qy = t2*Math.sin(theta);
+    const angleQ = Math.atan2(Qy,Qx)*180/Math.PI;
+    const angleQCB = 180-angleQ;
+
+    $('out_theta').textContent = thetaDeg.toFixed(1)+'°';
+    $('out_hasil').textContent = angleQCB.toFixed(3)+'°';
+    $('out_target').textContent = (thetaDeg/3).toFixed(3)+'°';
+
+    drawDiagram(theta, d, Qx, Qy);
+  }
+
+  function drawDiagram(theta, d, Qx, Qy){
+    const cx=250, cy=220, R=130;
+    const Ax=cx+R, Ay=cy;
+    const Bx=cx-R, By=cy;
+    const Px = cx+R*Math.cos(theta), Py = cy-R*Math.sin(theta);
+    const Rx = cx-d*R, Ry = cy;
+    const Qsx = cx+Qx*R, Qsy = cy-Qy*R;
+
+    let svg = `<rect x="0" y="0" width="500" height="400" fill="#0d0c0a"/>`;
+    svg += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#3a332a" stroke-width="1.5"/>`;
+    svg += `<circle cx="${cx}" cy="${cy}" r="2" fill="#8a7440"/>`;
+    svg += `<text x="${cx-4}" y="${cy+16}" fill="#8a7440" font-size="11" font-family="Georgia,serif">C</text>`;
+
+    // garis diameter A-B diperpanjang ke R
+    svg += `<line x1="${Ax}" y1="${Ay}" x2="${Rx-10}" y2="${Ry}" stroke="#3a332a" stroke-width="1.5"/>`;
+    svg += `<circle cx="${Ax}" cy="${Ay}" r="3" fill="#8fc9e8"/>`;
+    svg += `<text x="${Ax+6}" y="${Ay-6}" fill="#8fc9e8" font-size="11" font-family="Georgia,serif">A</text>`;
+    svg += `<circle cx="${Bx}" cy="${By}" r="3" fill="#8fc9e8"/>`;
+    svg += `<text x="${Bx-14}" y="${By-6}" fill="#8fc9e8" font-size="11" font-family="Georgia,serif">B</text>`;
+    svg += `<circle cx="${Rx}" cy="${Ry}" r="4" fill="#e8d05a"/>`;
+    svg += `<text x="${Rx-8}" y="${Ry-10}" fill="#e8d05a" font-size="11" font-family="Georgia,serif">R</text>`;
+
+    // titik P
+    svg += `<circle cx="${Px}" cy="${Py}" r="3" fill="#c9a24b"/>`;
+    svg += `<text x="${Px+6}" y="${Py-6}" fill="#c9a24b" font-size="11" font-family="Georgia,serif">P</text>`;
+    svg += `<line x1="${cx}" y1="${cy}" x2="${Px}" y2="${Py}" stroke="#c9a24b" stroke-width="1" stroke-dasharray="3,3"/>`;
+
+    // garis R-Q-P (neusis line)
+    svg += `<line x1="${Rx}" y1="${Ry}" x2="${Px}" y2="${Py}" stroke="#e8956a" stroke-width="1.8"/>`;
+
+    // titik Q
+    svg += `<circle cx="${Qsx}" cy="${Qsy}" r="4" fill="#6f9e6a"/>`;
+    svg += `<text x="${Qsx+6}" y="${Qsy-6}" fill="#6f9e6a" font-size="11" font-family="Georgia,serif">Q</text>`;
+    svg += `<line x1="${cx}" y1="${cy}" x2="${Qsx}" y2="${Qsy}" stroke="#6f9e6a" stroke-width="1.5"/>`;
+
+    // tandai QR = radius
+    svg += `<text x="${(Rx+Qsx)/2}" y="${(Ry+Qsy)/2-8}" fill="#e8956a" font-size="10" text-anchor="middle" font-family="Georgia,serif">QR = jari-jari</text>`;
+
+    svg += `<text x="250" y="380" fill="#a89a80" font-size="11" text-anchor="middle" font-family="Georgia,serif">∠QCB = sepertiga dari ∠PCA</text>`;
+
+    $('canvas').innerHTML = svg;
+  }
+
+  $('theta').addEventListener('input', hitung);
+  hitung();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,2176 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atlas Panah — Sains &amp; Tradisi Proyektil Manusia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{
+  --paper:#e9dfc4;
+  --paper-2:#ded1a9;
+  --paper-3:#f4ecd6;
+  --ink:#2b1f16;
+  --ink-soft:#5a4a37;
+  --wood:#3d2a1c;
+  --wood-deep:#241610;
+  --brass:#a5762f;
+  --brass-light:#c99a4b;
+  --forest:#3a4d31;
+  --forest-light:#5b7248;
+  --ochre:#9b4326;
+  --line: rgba(43,31,22,.22);
+  --shadow: rgba(36,22,16,.25);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--paper);
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(255,255,255,.10), transparent 40%),
+    radial-gradient(circle at 85% 75%, rgba(0,0,0,.05), transparent 45%);
+  color:var(--ink);
+  font-family:"Work Sans", sans-serif;
+  line-height:1.55;
+}
+h1,h2,h3,h4{font-family:"Spectral", serif; font-weight:600; margin:0 0 .4em; color:var(--wood-deep)}
+p{margin:.3em 0 .8em}
+a{color:var(--ochre)}
+button{font-family:inherit}
+::selection{background:var(--brass-light); color:var(--wood-deep)}
+
+/* ---------- HEADER ---------- */
+header.hero{
+  background:linear-gradient(160deg, var(--wood) 0%, var(--wood-deep) 100%);
+  color:var(--paper-3);
+  padding:2.6rem 1.25rem 1.6rem;
+  position:relative;
+  overflow:hidden;
+}
+header.hero::after{
+  content:"";
+  position:absolute; inset:0;
+  background-image:repeating-linear-gradient(45deg, rgba(255,255,255,.025) 0 2px, transparent 2px 6px);
+  pointer-events:none;
+}
+.hero-inner{max-width:1180px; margin:0 auto; position:relative; display:flex; gap:2rem; align-items:center; flex-wrap:wrap}
+.hero-text{flex:1 1 380px; min-width:280px}
+.hero-text h1{color:#f4ecd6; font-size:clamp(1.9rem, 4.4vw, 3.1rem); letter-spacing:.01em; line-height:1.08}
+.hero-text .sub{color:#cbb98d; font-size:1.05rem; max-width:52ch}
+.hero-badge{
+  display:inline-block; font-size:.78rem; color:var(--wood-deep); background:var(--brass-light);
+  padding:.25em .7em; border-radius:3px; margin-bottom:.9em; font-family:"Work Sans"; font-weight:600;
+}
+.brand-tag{
+  font-family:"Work Sans"; font-size:.7rem; letter-spacing:.1em; text-transform:uppercase;
+  color:#cbb98d; opacity:.85; margin-bottom:.6em;
+}
+.brand-tag b{color:#f4ecd6; letter-spacing:.14em; font-weight:700}
+.brand-tag .sep{opacity:.5; margin:0 .35em}
+svg.bowmark{width:150px; height:150px; flex:0 0 auto}
+
+/* ---------- NAV ---------- */
+nav.tabs{
+  position:sticky; top:0; z-index:40;
+  background:var(--wood-deep);
+  border-bottom:3px solid var(--brass);
+  overflow-x:auto;
+  white-space:nowrap;
+}
+nav.tabs .inner{max-width:1180px; margin:0 auto; display:flex; padding:0 .5rem}
+nav.tabs button{
+  background:none; border:none; color:#cbb98d; padding:.85rem 1.05rem; font-size:.92rem;
+  cursor:pointer; border-bottom:3px solid transparent; margin-bottom:-3px; transition:color .15s;
+}
+nav.tabs button:hover{color:#f4ecd6}
+nav.tabs button.active{color:#f4ecd6; border-bottom-color:var(--brass-light); font-weight:600}
+
+main{max-width:1180px; margin:0 auto; padding:1.8rem 1.25rem 5rem}
+.panel{display:none; animation:fadein .35s ease}
+.panel.active{display:block}
+@keyframes fadein{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+
+.panel > .lede{max-width:70ch; color:var(--ink-soft); font-size:1.02rem}
+.section-head{margin-bottom:1.2rem; border-bottom:1px solid var(--line); padding-bottom:.8rem}
+.section-head h2{font-size:1.65rem}
+
+/* ---------- CARDS / GRID ---------- */
+.grid{display:grid; gap:1rem; grid-template-columns:repeat(auto-fill,minmax(255px,1fr)); margin:1.2rem 0}
+.card{
+  background:var(--paper-3); border:1px solid var(--line); border-left:4px solid var(--brass);
+  border-radius:3px; padding:1rem 1.1rem; box-shadow:0 2px 8px var(--shadow);
+}
+.card h3{font-size:1.05rem; margin-bottom:.25em}
+.card .meta{font-size:.82rem; color:var(--ink-soft); margin-bottom:.5em}
+.card p{font-size:.9rem; margin:.35em 0}
+.tagrow{display:flex; flex-wrap:wrap; gap:.35rem; margin-top:.5rem}
+.tag{
+  font-size:.72rem; padding:.15em .55em; border-radius:999px; background:var(--paper-2);
+  border:1px solid var(--line); color:var(--ink-soft);
+}
+.badge{
+  font-size:.7rem; font-weight:600; padding:.16em .55em; border-radius:3px; display:inline-block;
+}
+.badge.historis{background:#d7e6cf; color:#2e4321}
+.badge.eksperimental{background:#cfe0ec; color:#1d3a52}
+.badge.teoretis{background:#e3d3ef; color:#432a5a}
+.badge.etnografis{background:#f2ddbb; color:#5c3c10}
+
+/* ---------- FILTER BAR ---------- */
+.filterbar{display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; margin:1rem 0; padding:.85rem 1rem; background:var(--paper-2); border-radius:4px; border:1px solid var(--line)}
+.filterbar label{font-size:.82rem; color:var(--ink-soft); display:flex; flex-direction:column; gap:.25rem}
+.filterbar select, .filterbar input[type=text]{
+  font:inherit; padding:.4em .55em; border-radius:3px; border:1px solid var(--line); background:var(--paper-3); color:var(--ink);
+}
+.filterbar .count{margin-left:auto; font-size:.82rem; color:var(--ink-soft)}
+
+/* ---------- LAB / CALC BLOCKS ---------- */
+.lab{
+  background:var(--paper-3); border:1px solid var(--line); border-radius:5px; padding:1.3rem 1.4rem;
+  margin:1.4rem 0; box-shadow:0 2px 10px var(--shadow);
+}
+.lab h3{font-size:1.15rem; color:var(--forest); border-bottom:1px dashed var(--line); padding-bottom:.4em}
+.lab .formula{font-family:"Spectral", serif; font-style:italic; background:var(--paper-2); padding:.6em .9em; border-radius:3px; display:inline-block; margin:.4em 0}
+.field-row{display:flex; gap:1rem; flex-wrap:wrap; margin:.8rem 0}
+.field{display:flex; flex-direction:column; gap:.3rem; min-width:150px}
+.field label{font-size:.82rem; color:var(--ink-soft)}
+.field input{font:inherit; padding:.45em .6em; border:1px solid var(--line); border-radius:3px; background:var(--paper-3)}
+.field input.field-invalid{border-color:var(--ochre); box-shadow:0 0 0 1px var(--ochre)}
+.calc-warning{color:var(--ochre); font-weight:600; display:inline-block; line-height:1.6}
+.btn{
+  background:var(--forest); color:#f4ecd6; border:none; padding:.55em 1.1em; border-radius:3px; cursor:pointer;
+  font-weight:600; font-size:.9rem; transition:background .15s;
+}
+.btn:hover{background:var(--forest-light)}
+.btn:disabled{opacity:.5; cursor:not-allowed}
+.btn:disabled:hover{background:var(--forest)}
+.btn.secondary{background:var(--brass)}
+.btn.secondary:hover{background:var(--brass-light); color:var(--wood-deep)}
+.output{
+  margin-top:1rem; padding:.9rem 1rem; background:var(--wood-deep); color:#f4ecd6; border-radius:4px; font-size:.95rem;
+}
+.output b{color:var(--brass-light)}
+canvas{max-width:100%; background:var(--paper-3); border:1px solid var(--line); border-radius:4px}
+
+/* ---------- 3D PANEL ---------- */
+.panel3d-wrap{margin-top:1rem; border-top:1px dashed var(--line); padding-top:1rem}
+.panel3d-wrap h4{font-size:1rem; color:var(--forest); margin-bottom:.2em}
+.panel3d-wrap .viewhint{font-size:.78rem; color:var(--ink-soft); margin-bottom:.5em; font-style:italic}
+.three-stage{
+  width:100%; height:330px; border-radius:4px; border:1px solid var(--line);
+  background:linear-gradient(180deg, #cfe4ee 0%, #cfe4ee 55%, #d9cf9f 55%, #d9cf9f 100%);
+  cursor:grab; touch-action:none; position:relative; overflow:hidden;
+}
+.three-stage.grabbing{cursor:grabbing}
+.three-stage canvas{border-radius:4px; background:transparent !important; border:none !important; max-width:none}
+.three-badge{
+  position:absolute; top:8px; left:8px; z-index:2; font-size:.72rem; background:rgba(43,31,22,.75); color:#f4ecd6;
+  padding:.2em .6em; border-radius:3px; pointer-events:none;
+}
+
+/* ---------- MAP ---------- */
+.mapwrap{position:relative; background:var(--paper-3); border:1px solid var(--line); border-radius:5px; overflow:hidden; box-shadow:0 2px 10px var(--shadow); max-width:620px; margin:0 auto}
+.map-stage{position:relative; width:100%}
+.map-stage svg{display:block; width:100%; height:auto}
+.sea{fill:#c3d3d1}
+.landmass{fill:#dccb9e; stroke:rgba(43,31,22,.35); stroke-width:.3; stroke-linejoin:round}
+.distring{fill:none; stroke:rgba(43,31,22,.26); stroke-width:.15; stroke-dasharray:.6 .6}
+.distring.outer{fill:none; stroke:rgba(43,31,22,.45); stroke-width:.35; stroke-dasharray:none}
+.radial{stroke:rgba(43,31,22,.18); stroke-width:.12}
+.center-pin{fill:var(--forest); stroke:var(--paper-3); stroke-width:.5}
+.map-label.center-label{font-style:italic; color:var(--forest)}
+.pin{cursor:pointer}
+.pin circle{fill:var(--ochre); stroke:var(--paper-3); stroke-width:.6; transition:r .12s}
+.pin:hover circle, .pin.active circle{fill:var(--brass-light)}
+/* Labels are plain HTML positioned by %, so they never inherit the SVG's internal
+   coordinate scale (that mismatch — 9 “SVG units” rendered at full container width —
+   was why labels appeared gigantic/overlapping on small viewBoxes). */
+.map-labels{position:absolute; inset:0; pointer-events:none}
+.map-label{
+  position:absolute; transform:translate(-50%,-165%);
+  font-size:clamp(9px, 1.35vw, 12.5px); font-weight:600; color:var(--wood-deep);
+  white-space:nowrap; line-height:1; cursor:pointer; pointer-events:auto;
+  text-shadow:0 1px 0 var(--paper-3), 0 -1px 0 var(--paper-3), 1px 0 0 var(--paper-3), -1px 0 0 var(--paper-3), 0 0 5px rgba(244,236,214,.85);
+}
+.map-label:hover, .map-label.active{color:var(--ochre)}
+.map-info{padding:1rem 1.2rem; border-top:1px dashed var(--line)}
+
+/* ---------- SEQUENCE (fase teknik) ---------- */
+.sequence{display:flex; flex-direction:column; gap:.5rem; counter-reset:step}
+.seqstep{display:flex; gap:.9rem; align-items:flex-start; background:var(--paper-3); border:1px solid var(--line); border-radius:4px; padding:.7rem .9rem}
+.seqstep .num{
+  counter-increment:step; flex:0 0 auto; width:1.9rem; height:1.9rem; border-radius:50%; background:var(--forest); color:#f4ecd6;
+  display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.9rem;
+}
+.seqstep .num::before{content:counter(step)}
+.seqstep.active{border-color:var(--forest); box-shadow:0 0 0 2px rgba(91,114,72,.28)}
+
+/* ---------- ARCHER FIGURE (peraga siklus gerakan) ---------- */
+.archer-stage{text-align:center}
+.archer-phaselabel{font-weight:600; color:var(--forest); text-align:center; margin-top:.5rem; font-size:.95rem}
+.archer-slider-row{display:flex; gap:1.4rem; flex-wrap:wrap; align-items:flex-end; justify-content:center; margin-top:.9rem}
+.archer-slider-row label{display:flex; flex-direction:column; align-items:flex-start; gap:.25rem; font-size:.82rem; color:var(--ink-soft)}
+.archer-slider-row input[type=range]{width:220px}
+.archer-mode-row{text-align:center; margin-bottom:.6rem}
+.archer-toggle{font-size:.9rem; color:var(--ink-soft); cursor:pointer; display:inline-flex; align-items:center; gap:.4em}
+.archer-toggle input{cursor:pointer}
+
+/* ---------- ARCHER'S PARADOX (launch sequence) ---------- */
+.paradox-stage{background:var(--paper-2); border-radius:4px; padding:1rem; text-align:center}
+.paradox-stage canvas{max-width:100%; width:100%; background:linear-gradient(180deg, var(--paper-3) 0%, #e4d7b3 100%); border:1px solid var(--line); border-radius:4px}
+.paradox-controls{display:flex; gap:1rem; flex-wrap:wrap; justify-content:center; align-items:center; margin-top:.7rem}
+.paradox-controls label{display:flex; align-items:center; gap:.4em; font-size:.85rem; color:var(--ink-soft); cursor:pointer}
+.paradox-controls .btn.secondary:disabled{opacity:.55; cursor:not-allowed}
+
+/* ---------- NOTICE / SAFETY ---------- */
+.notice{
+  background:#f2e3c2; border:1px solid var(--brass); border-left:5px solid var(--ochre);
+  border-radius:4px; padding:1rem 1.2rem; margin:1.2rem 0; font-size:.93rem;
+}
+.notice h4{margin-bottom:.3em; color:var(--ochre); font-size:1rem}
+
+/* ---------- TAXONOMY TREE ---------- */
+.axis-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1rem; margin:1rem 0}
+.axis-card{background:var(--paper-3); border:1px solid var(--line); border-radius:4px; padding:.9rem 1rem}
+.axis-card h4{font-size:.95rem; color:var(--forest); margin-bottom:.4em}
+.axis-card ul{margin:0; padding-left:1.1em; font-size:.87rem; color:var(--ink-soft)}
+
+footer{
+  background:var(--wood-deep); color:#a99672; text-align:center; padding:2rem 1rem; font-size:.85rem;
+}
+footer a{color:var(--brass-light)}
+.wa-btn{
+  display:inline-flex; align-items:center; gap:.55em; background:#25D366; color:#0b3d24;
+  font-weight:700; font-size:.9rem; padding:.65em 1.3em; border-radius:999px; text-decoration:none;
+  margin-top:1.1rem; box-shadow:0 3px 10px rgba(0,0,0,.3); transition:transform .15s, box-shadow .15s;
+}
+.wa-btn:hover{transform:translateY(-1px); box-shadow:0 5px 14px rgba(0,0,0,.4); color:#0b3d24}
+.wa-btn svg{width:18px; height:18px; fill:#0b3d24; flex:0 0 auto}
+
+@media (max-width:640px){
+  .hero-inner{flex-direction:column; text-align:center}
+  svg.bowmark{width:110px; height:110px}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <div class="brand-tag"><b>JAZMI</b> — Jalinan Zamrud Islamiyah <span class="sep">·</span> qiladat.com</div>
+      <span class="hero-badge">Laboratorium &amp; Ensiklopedia Interaktif</span>
+      <h1>Atlas Panah</h1>
+      <p class="sub">Dari busur bambu Nusantara hingga compound modern, dari boomerang Aborigin hingga hukum Newton — satu peta ilmiah tentang bagaimana manusia melempar sesuatu dengan sangat presisi.</p>
+    </div>
+    <svg class="bowmark" viewBox="0 0 200 200" fill="none">
+      <path d="M60 20 C20 60 20 140 60 180" stroke="#c99a4b" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <line x1="60" y1="20" x2="60" y2="180" stroke="#e9dfc4" stroke-width="1.5" stroke-dasharray="3 4"/>
+      <line x1="30" y1="100" x2="175" y2="100" stroke="#e9dfc4" stroke-width="3" stroke-linecap="round"/>
+      <path d="M160 90 L178 100 L160 110 Z" fill="#e9dfc4"/>
+      <path d="M30 100 L44 93 L44 107 Z" fill="#c99a4b"/>
+    </svg>
+  </div>
+</header>
+
+<nav class="tabs"><div class="inner" id="tabnav"></div></nav>
+
+<main id="panels"></main>
+
+<footer>
+  <p style="margin:0">Atlas Panah — proyek referensi &amp; edukasi. Data ditandai tingkat kepastiannya (Historis / Eksperimental / Teoretis / Etnografis) dan bersifat terbuka untuk diperluas &amp; diverifikasi lebih lanjut.</p>
+  <a class="wa-btn" href="https://wa.me/6281356572588?text=Halo%2C%20saya%20ingin%20bertanya%20soal%20Atlas%20Panah%20di%20qiladat.com" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.03 2 11c0 2.09.87 4 2.3 5.5L3 22l5.8-1.52C10.02 20.8 11 21 12 21c5.52 0 10-4.03 10-9S17.52 2 12 2z"/></svg>
+    Hubungi Pengembang via WhatsApp
+  </a>
+</footer>
+
+<script>
+/* =========================================================
+   DATA
+   evidence: 'historis' | 'eksperimental' | 'teoretis' | 'etnografis'
+   ========================================================= */
+const EVID_LABEL = {historis:'🟢 Historis', eksperimental:'🔵 Eksperimental', teoretis:'🟣 Teoretis', etnografis:'🟠 Etnografis'};
+
+/* Peta memakai proyeksi Azimuthal Equidistant SUNGGUHAN (rumus Snyder), dihitung
+   langsung dari koordinat lintang/bujur asli — bukan ditaruh manual — sehingga arah &
+   jarak sudut dari titik pusat akurat, dan tidak ada risiko dua wilayah tertukar posisi.
+   Titik pusat: Makkah al-Mukarramah, Jazirah Arab. */
+const MAP_CENTER = {lat:21.4225, lon:39.8262, name:'Makkah al-Mukarramah'};
+
+function aeqdProject(latDeg, lonDeg){
+  const R = 47; // radius peta (unit SVG) untuk jarak antipodal 180°
+  const toRad = d => d*Math.PI/180;
+  const phi0 = toRad(MAP_CENTER.lat), lam0 = toRad(MAP_CENTER.lon);
+  const phi = toRad(latDeg), lam = toRad(lonDeg);
+  const dlam = lam - lam0;
+  let cosc = Math.sin(phi0)*Math.sin(phi) + Math.cos(phi0)*Math.cos(phi)*Math.cos(dlam);
+  cosc = Math.max(-1, Math.min(1, cosc));
+  const c = Math.acos(cosc);
+  if(c < 1e-6) return {x:50, y:50};
+  const k = c / Math.sin(c);
+  const X = k * Math.cos(phi) * Math.sin(dlam);          // + ke timur
+  const Y = k * (Math.cos(phi0)*Math.sin(phi) - Math.sin(phi0)*Math.cos(phi)*Math.cos(dlam)); // + ke utara
+  const scale = R / Math.PI;
+  return { x: 50 + X*scale, y: 50 - Y*scale }; // y dibalik: utara = ke atas layar
+}
+
+const REGIONS = [
+  {id:'nusantara', name:'Nusantara', lat:-2, lon:115},
+  {id:'asiatimur', name:'Asia Timur', lat:35, lon:115},
+  {id:'stepa', name:'Stepa Eurasia', lat:48, lon:90},
+  {id:'timteng', name:'Timur Tengah & Asia Selatan', lat:25, lon:55},
+  {id:'eropa', name:'Eropa', lat:50, lon:15},
+  {id:'afrika', name:'Afrika', lat:5, lon:20},
+  {id:'amerika', name:'Amerika Pribumi', lat:40, lon:-100},
+  {id:'aborigin', name:'First Nations Australia', lat:-25, lon:135},
+];
+
+const BOWS = [
+  {id:'jemparingan', name:'Busur Jemparingan (Gandewa)', region:'nusantara', construction:'self bow', materials:['kayu sawo/sonokeling','bambu'], period:'Jawa pra-Islam – kontemporer', fungsi:'target/olahraga & tradisi', evidence:'etnografis', note:'Dipanah sambil duduk bersila, sasaran gantung (bandulan) sekitar 35–50 m; diteliti berlanjut dari tradisi pra-Islam Jawa.'},
+  {id:'papua-bow', name:'Busur Kayu Papua', region:'nusantara', construction:'self bow', materials:['kayu keras lokal'], period:'koleksi etnografika', fungsi:'berburu & pertahanan', evidence:'etnografis', note:'Variasi bentuk & mata panah berbeda antar wilayah asal (mis. Manokwari, Mimika); jangan digeneralisasi sebagai satu "busur Papua".'},
+  {id:'yumi', name:'Yumi', region:'asiatimur', construction:'composite asimetris', materials:['bambu','kayu','rotan'], period:'Jepang, kuno–kini', fungsi:'seremonial, olahraga (kyudo), historis militer', evidence:'historis', note:'Busur sangat panjang, pegangan tidak di tengah — ciri unik dibanding tradisi lain.'},
+  {id:'gungdo', name:'Gakgung (busur Korea)', region:'asiatimur', construction:'composite', materials:['kayu','tanduk','urat'], period:'Korea, historis–kini', fungsi:'militer historis & olahraga (gungdo)', evidence:'historis'},
+  {id:'mongol', name:'Busur Komposit Mongol', region:'stepa', construction:'composite berkuda', materials:['kayu','tanduk','urat','lem hewani'], period:'era stepa Eurasia', fungsi:'berkuda, perang, berburu', evidence:'historis', note:'Bagian dari tradisi busur komposit stepa (Skithia–Turkik–Mongol).'},
+  {id:'turkish', name:'Busur Komposit Turki/Ottoman', region:'timteng', construction:'composite', materials:['tanduk','kayu','urat','kertas/lak'], period:'Ottoman, contoh museum ~1719–20', fungsi:'target flight shooting, militer historis', evidence:'historis', note:'UNESCO mendokumentasikan tradisi ini mencakup kerajinan, disiplin, ritual, teknik jalan kaki & berkuda.'},
+  {id:'longbow', name:'English Longbow', region:'eropa', construction:'self bow', materials:['kayu yew (taxus)'], period:'Abad Pertengahan Inggris', fungsi:'militer historis, target modern', evidence:'historis'},
+  {id:'crossbow-eu', name:'Crossbow Eropa (historis)', region:'eropa', construction:'mechanical / composite', materials:['kayu','logam','komposit'], period:'Abad Pertengahan – awal modern', fungsi:'militer historis', evidence:'historis'},
+  {id:'egyptian', name:'Busur Mesir (self & komposit)', region:'timteng', construction:'self bow → composite', materials:['kayu akasia/sidr','tanduk','urat (fase komposit)'], period:'Mesir Kuno, contoh ~1491–1473 SM', fungsi:'berburu, militer, seremonial', evidence:'historis'},
+  {id:'na-bow', name:'Busur Pribumi Amerika Utara', region:'amerika', construction:'self / sinew-backed', materials:['kayu lokal','urat penguat'], period:'beragam per bangsa/suku', fungsi:'berburu, pertahanan', evidence:'etnografis', note:'Sangat beragam antar bangsa; hindari label tunggal "busur Indian".'},
+  {id:'recurve-modern', name:'Recurve Olimpiade', region:'eropa', construction:'laminasi modern + limb recurve', materials:['karbon/fiberglass/kayu laminasi'], period:'modern', fungsi:'olahraga kompetisi (Olimpiade)', evidence:'eksperimental'},
+  {id:'compound', name:'Compound Bow', region:'eropa', construction:'sistem cam/pulley', materials:['logam, komposit modern'], period:'modern (sejak 1960-an)', fungsi:'olahraga & berburu modern', evidence:'eksperimental'},
+];
+
+const ARROWS = [
+  {id:'target-arrow', name:'Target Arrow', region:'eropa', fungsi:'target/olahraga', head:'target point', shaft:'karbon/aluminium', bunyi:false, evidence:'eksperimental'},
+  {id:'blunt', name:'Blunt Arrow', region:'eropa', fungsi:'berburu small game/burung, latihan', head:'tumpul', shaft:'kayu/karbon', bunyi:false, evidence:'etnografis', note:'Ditemukan pada banyak tradisi: Eropa, Oceania, Kalahari, Arktik, Amerika Utara.'},
+  {id:'broadhead', name:'Broadhead', region:'eropa', fungsi:'berburu', head:'lebar/tajam', shaft:'kayu historis / karbon modern', bunyi:false, evidence:'historis'},
+  {id:'bodkin', name:'Bodkin', region:'eropa', fungsi:'militer historis', head:'sempit, menusuk', shaft:'kayu', bunyi:false, evidence:'historis', note:'Royal Armouries mencatat varian bodkin & broadhead Eropa Abad Pertengahan dengan fungsi berbeda.'},
+  {id:'whistling-cn', name:'Panah Siul Tiongkok (鳴鏑)', region:'asiatimur', fungsi:'sinyal/komunikasi militer', head:'berlubang penghasil suara', shaft:'kayu/bambu', bunyi:true, evidence:'historis', note:'Tercatat dalam sumber sejarah Tiongkok; koleksi The Met memiliki contoh dari kemungkinan abad ke-18.'},
+  {id:'kaburaya', name:'Kabura-ya', region:'asiatimur', fungsi:'sinyal/ritual pembuka pertempuran', head:'kepala berongga penghasil siulan', shaft:'kayu/bambu', bunyi:true, evidence:'historis', note:'Tradisi Jepang; sering dikaitkan dengan penanda dimulainya pertempuran secara seremonial.'},
+  {id:'fire-arrow', name:'Fire Arrow (panah api)', region:'asiatimur', fungsi:'sinyal/insendiari historis', head:'khusus, bervariasi per periode', shaft:'kayu', bunyi:false, evidence:'historis', note:'Ditampilkan sebagai sejarah teknologi, bukan panduan pembuatan.'},
+  {id:'jemparing', name:'Jemparing', region:'nusantara', fungsi:'target/olahraga & tradisi', head:'ujung target kerucut', shaft:'bambu', bunyi:false, evidence:'etnografis', note:'Nock membulat sesuai teknik pinch draw jemparingan.'},
+  {id:'papua-arrow-bambu', name:'Anak Panah Bermata Bambu (Papua)', region:'nusantara', fungsi:'berburu', head:'bambu', shaft:'bambu', bunyi:false, evidence:'etnografis', note:'Dari katalog koleksi Manokwari; diikat dengan anyaman rotan.'},
+  {id:'papua-arrow-kayu', name:'Anak Panah Mata Kayu Berkait (Papua)', region:'nusantara', fungsi:'berburu', head:'kayu berukir berkait', shaft:'bambu', bunyi:false, evidence:'etnografis', note:'Dari katalog koleksi Mimika; sebagian batang dihias.'},
+  {id:'dayak-ikan', name:'Panah Ikat / Panah Ikan (Dayak Sisang)', region:'nusantara', fungsi:'berburu ikan sambil menyelam', head:'besi', shaft:'gagang kayu tengkawang', bunyi:false, evidence:'etnografis', note:'Contoh klasifikasi anak panah berdasar lingkungan penggunaan (air), bukan hanya bentuk mata.'},
+  {id:'mentawai-silogui', name:'Silogui / Rourou (Mentawai)', region:'nusantara', fungsi:'berburu & pertahanan', head:'kayu atau besi', shaft:'kayu sagu/bambu', bunyi:false, evidence:'etnografis', note:'Istilah bervariasi antar dokumentasi (silogui vs rourou); perlu verifikasi komunitas lanjutan.'},
+  {id:'ceremonial', name:'Anak Panah Seremonial', region:'timteng', fungsi:'upacara/simbolik', head:'bervariasi', shaft:'bervariasi', bunyi:false, evidence:'historis'},
+  {id:'signal-general', name:'Panah Penanda/Pesan', region:'stepa', fungsi:'sinyal, penanda kepemilikan/komando', head:'bervariasi, kadang berlubang', shaft:'kayu', bunyi:true, evidence:'historis', note:'Konsep umum lintas tradisi stepa & militer kuno untuk komando jarak jauh.'},
+];
+
+const BOOMERANGS = [
+  {id:'returning', name:'Returning Boomerang', type:'kembali', fungsi:'olahraga, permainan, sebagian konteks berburu burung', note:'Dirancang aerodinamis agar melengkung kembali ke pelempar berkat presesi giroskopik & gaya angkat asimetris pada kedua lengan.', evidence:'teoretis'},
+  {id:'hunting-boomerang', name:'Hunting / Non-returning Boomerang', type:'tidak kembali', fungsi:'berburu, alat, senjata', note:'Lebih berat & tidak dirancang untuk kembali; mayoritas boomerang First Nations Australia sebenarnya tipe ini, bukan tipe yang kembali.', evidence:'etnografis'},
+  {id:'hooked', name:'Hooked Boomerang', type:'tidak kembali', fungsi:'berburu/berkelahi (konteks komunitas tertentu)', note:'Bentuk khas berkait yang tercatat pada komunitas tertentu; AIATSIS mencatat perbedaan penting antar bentuk & fungsi.', evidence:'etnografis'},
+  {id:'central-aus', name:'Central Australian (bentuk asimetris seperti tongkat)', type:'tidak kembali', fungsi:'alat genggam/lempar', note:'Museum Australia mencatat bentuk ini dapat digenggam atau dilempar namun tidak kembali — membongkar stereotip "semua boomerang kembali".', evidence:'etnografis'},
+  {id:'ceremonial-boom', name:'Boomerang Seremonial', type:'tidak kembali', fungsi:'upacara, kadang sebagai alat musik perkusi', note:'Sebagian boomerang dipakai untuk mengiringi upacara/nyanyian, bukan untuk dilempar sama sekali.', evidence:'etnografis'},
+];
+
+const CROSS_CULTURE_STICKS = [
+  {name:'Kylie / Throw Stick Mesir Kuno', wilayah:'Mesir, contoh dari makam Tutankhamun ~1323 SM', ciri:'Puluhan tongkat lempar ditemukan dalam koleksi makam Tutankhamun, dipakai bangsawan berburu unggas air di rawa Sungai Nil — digambarkan pada relief makam Nebamun &amp; Nakht. Mayoritas dirancang melesat mendatar untuk merobohkan mangsa, bukan untuk kembali ke pelempar.', evidence:'historis', catatan:'Menariknya, replika sejumlah contoh koleksi Tutankhamun yang diuji peneliti ternyata bisa melengkung kembali secara aerodinamis — jadi prinsip fisikanya kemungkinan dipahami sebagian di Mesir Kuno, meski tak dijadikan tradisi utama seperti di Australia.'},
+  {name:'Rabbit Stick (Hopi, Navajo, Zuni, dll.)', wilayah:'Barat Daya Amerika Utara', ciri:'Tongkat lempar melengkung dari kayu keras, dipakai suku-suku Puebloan untuk berburu kelinci &amp; anjing padang rumput. Sebagian bahkan berpuntir seperti baling-baling, tapi tetap dilempar rendah &amp; lurus ke sasaran — bukan untuk kembali.', evidence:'etnografis'},
+  {name:'Valari / Valari Thadi', wilayah:'Tamil Nadu, Asia Selatan', ciri:'Tongkat/bilah lempar melengkung tradisi Tamil yang bentuk &amp; fungsinya dicatat mirip tongkat lempar Mesir Kuno — sejumlah contoh bahkan memakai penguat logam serupa. Dipakai untuk berburu, bukan dirancang melengkung balik ke pelempar.', evidence:'etnografis'},
+  {name:'Boomerang Gading Mammoth Obłazowa', wilayah:'Gua Obłazowa, Polandia — sekitar 40.000 tahun lalu', ciri:'Diukir dari gading mammoth sepanjang 72 cm, salah satu artefak melengkung tertua yang pernah ditemukan — kemungkinan boomerang tertua di dunia. Bentuknya menyerupai boomerang berburu Queensland, dan uji eksperimental menunjukkan ia terbang sebagai tipe "tidak kembali".', evidence:'historis'},
+  {name:'Knobkerrie &amp; tongkat lempar Afrika', wilayah:'berbagai wilayah Afrika Sub-Sahara', ciri:'Tongkat/gada lempar berujung membulat atau melengkung, dipakai untuk berburu maupun bertarung jarak dekat–menengah di berbagai budaya Afrika — sekali lagi dirancang untuk melesat &amp; menghantam, bukan untuk kembali.', evidence:'etnografis'},
+];
+
+const MATERIALS_WOOD = [
+  {name:'Yew (Taxus)', ciri:'Elastisitas tinggi, tekan-tarik alami baik (heartwood tekan, sapwood tarik)', wilayah:'Eropa (longbow)'},
+  {name:'Osage Orange', ciri:'Sangat elastis & kuat, populer pada busur tradisional Amerika Utara modern', wilayah:'Amerika Utara'},
+  {name:'Bambu', ciri:'Ringan, lentur, tumbuh cepat — dipakai luas di Asia & Nusantara', wilayah:'Nusantara, Asia Timur'},
+  {name:'Hickory', ciri:'Kuat & tahan banting, sering untuk backing busur laminasi', wilayah:'Amerika Utara'},
+  {name:'Kayu Sawo / Sonokeling', ciri:'Disebut dalam sejumlah sumber jemparingan; kepadatan tinggi', wilayah:'Jawa'},
+  {name:'Akasia / Sidr', ciri:'Kayu self bow Mesir Kuno sebelum era busur komposit', wilayah:'Mesir'},
+  {name:'Kayu Tengkawang', ciri:'Dipakai untuk gagang panah ikan Dayak Sisang', wilayah:'Kalimantan'},
+];
+const MATERIALS_STRING = [
+  {name:'Urat hewan (sinew)', ciri:'Kuat, elastis, tradisional pada busur komposit stepa & Asia', wilayah:'Stepa, Asia'},
+  {name:'Serat tumbuhan/rami', ciri:'Mudah didapat, dipakai luas pada tradisi tropis', wilayah:'Nusantara, Afrika'},
+  {name:'Sutra', ciri:'Halus & kuat, sebagian tradisi Asia Timur', wilayah:'Asia Timur'},
+  {name:'Kulit mentah (rawhide)', ciri:'Tahan lama dalam kondisi kering', wilayah:'beragam'},
+  {name:'Dacron', ciri:'Serat sintetis modern, elastis, standar pemula recurve', wilayah:'modern'},
+  {name:'Fastflight / serat performa tinggi', ciri:'Minim regangan, transfer energi lebih efisien, umum di compound', wilayah:'modern'},
+];
+
+/* =========================================================
+   PANEL DEFINITIONS
+   ========================================================= */
+const TABS = [
+  {id:'beranda', label:'Beranda'},
+  {id:'fisika', label:'Fisika & Mekanika'},
+  {id:'busur', label:'Ensiklopedia Busur'},
+  {id:'panah', label:'Ensiklopedia Anak Panah'},
+  {id:'boomerang', label:'Boomerang'},
+  {id:'material', label:'Material'},
+  {id:'teknik', label:'Teknik & Berkuda'},
+  {id:'buruan', label:'Etika & Hasil Buruan'},
+];
+
+const tabnav = document.getElementById('tabnav');
+const panels = document.getElementById('panels');
+const navBar = document.querySelector('nav.tabs');
+TABS.forEach((t,i)=>{
+  const b=document.createElement('button');
+  b.textContent=t.label; b.dataset.target=t.id;
+  if(i===0) b.classList.add('active');
+  b.addEventListener('click', ()=>showPanel(t.id));
+  tabnav.appendChild(b);
+});
+function showPanel(id){
+  const leavingTeknik = id!=='teknik' && document.getElementById('teknik') && document.getElementById('teknik').classList.contains('active');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', p.id===id));
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.target===id));
+
+  // Loop animasi kuda berderap (Mode Berkuda) dulu terus jalan selamanya di
+  // background begitu tab "Teknik & Berkuda" ditinggalkan — boros baterai/CPU
+  // untuk canvas yang sudah display:none, tak ada manfaat visualnya. Sekarang
+  // loop dijeda begitu tab ini ditinggalkan, dan disambung lagi otomatis kalau
+  // pengguna kembali ke tab ini selama checkbox "Mode Berkuda" masih dicentang
+  // — pilihan pengguna tidak direset, cuma requestAnimationFrame-nya dijeda.
+  if(leavingTeknik && typeof stopMountedLoop==='function') stopMountedLoop();
+  if(id==='teknik' && typeof archerMounted!=='undefined' && archerMounted
+     && typeof mountedLoopId!=='undefined' && !mountedLoopId && typeof startMountedLoop==='function'){
+    startMountedLoop();
+  }
+
+  // Dulu selalu scrollTo top:0 — itu menggulir ke paling atas HALAMAN (di atas
+  // header hero yang tinggi), bukan ke tab yang baru dipilih. Sekarang digulir
+  // pas ke posisi nav-tab (navBar.offsetTop, titik di mana ia mulai "sticky"),
+  // supaya konten panel baru langsung terlihat penuh tepat di bawah nav —
+  // baik saat sedang di atas maupun sudah scroll jauh ke bawah sebelumnya.
+  window.scrollTo({top: navBar.offsetTop, behavior:'smooth'});
+
+  // Kanvas WebGL panel 3D dibuat dengan ukuran clientWidth/clientHeight
+  // kontainernya saat itu juga — kalau kontainer masih display:none (tab
+  // belum aktif) ukurannya 0. Begitu tab aktif, paksa resize sekali supaya
+  // renderer menyesuaikan ke ukuran sesungguhnya, bukan tetap di 0×0.
+  setTimeout(()=>{
+    if(id==='fisika' && THREE3D.arrow) THREE3D.arrow.ctx3.resize();
+    if(id==='boomerang' && THREE3D.boom) THREE3D.boom.ctx3.resize();
+  }, 60);
+}
+
+function el(html){ const d=document.createElement('div'); d.innerHTML=html.trim(); return d.firstElementChild; }
+function badge(ev){ return `<span class="badge ${ev}">${EVID_LABEL[ev]}</span>`; }
+
+/* =========================================================
+   PANEL 3D — Three.js (r128)
+   Dua panel independen: panah (arrow3d) & boomerang (boom3d),
+   masing-masing punya scene/camera/renderer sendiri dengan orbit
+   kamera manual (drag=putar, wheel/pinch=zoom). Posisi objek di
+   dalamnya diperbarui dari DALAM loop animasi 2D yang sudah ada
+   (render() di drawTrajectory/drawBoomerang) — bukan loop terpisah
+   yang menebak-nebak progres — sehingga gerakan 2D & 3D dijamin
+   berada di frame yang sama persis.
+   ========================================================= */
+const THREE3D = { arrow:null, boom:null };
+
+function makeOrbitScene(container, opts){
+  const o = Object.assign({radius:70, theta:0.85, phi:1.0, targetY:5, gridSize:140}, opts||{});
+  const w = container.clientWidth || 300, h = container.clientHeight || 330;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, w/h, 0.1, 3000);
+  const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+  renderer.setSize(w,h); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  container.appendChild(renderer.domElement);
+
+  scene.add(new THREE.AmbientLight(0xffffff, .7));
+  const sun = new THREE.DirectionalLight(0xffffff, .8); sun.position.set(40,60,20); scene.add(sun);
+  scene.add(new THREE.GridHelper(o.gridSize, 24, 0x8a7a54, 0xb9ae95));
+
+  let radius=o.radius, theta=o.theta, phi=o.phi;
+  const target = new THREE.Vector3(0, o.targetY, 0);
+  function updateCam(){
+    camera.position.x = target.x + radius*Math.sin(phi)*Math.sin(theta);
+    camera.position.z = target.z + radius*Math.sin(phi)*Math.cos(theta);
+    camera.position.y = target.y + radius*Math.cos(phi);
+    camera.lookAt(target);
+  }
+  updateCam();
+
+  let dragging=false, lastX=0, lastY=0;
+  container.addEventListener('pointerdown', e=>{dragging=true; lastX=e.clientX; lastY=e.clientY; container.classList.add('grabbing');});
+  window.addEventListener('pointerup', ()=>{dragging=false; container.classList.remove('grabbing');});
+  window.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    theta -= (e.clientX-lastX)*0.006;
+    phi = Math.max(0.25, Math.min(1.5, phi-(e.clientY-lastY)*0.006));
+    lastX=e.clientX; lastY=e.clientY; updateCam();
+  });
+  container.addEventListener('wheel', e=>{
+    e.preventDefault();
+    radius = Math.max(12, Math.min(220, radius + e.deltaY*0.06));
+    updateCam();
+  }, {passive:false});
+  let pinch=null;
+  const dist=(a,b)=>Math.hypot(b.clientX-a.clientX, b.clientY-a.clientY);
+  container.addEventListener('touchstart', e=>{ if(e.touches.length===2){pinch=dist(e.touches[0],e.touches[1]); dragging=false;} }, {passive:true});
+  container.addEventListener('touchmove', e=>{
+    if(e.touches.length===2 && pinch!==null){
+      e.preventDefault();
+      const d=dist(e.touches[0],e.touches[1]);
+      radius = Math.max(12, Math.min(220, radius - (d-pinch)*0.12));
+      pinch=d; updateCam();
+    }
+  }, {passive:false});
+  container.addEventListener('touchend', e=>{ if(e.touches.length<2) pinch=null; }, {passive:true});
+
+  function resize(){
+    const w2=container.clientWidth, h2=container.clientHeight;
+    if(!w2||!h2) return;
+    camera.aspect=w2/h2; camera.updateProjectionMatrix(); renderer.setSize(w2,h2);
+  }
+  window.addEventListener('resize', resize);
+
+  function loop(){ requestAnimationFrame(loop); renderer.render(scene,camera); }
+  loop();
+
+  return {scene, camera, renderer, resize};
+}
+
+function initArrow3D(){
+  if(THREE3D.arrow) return;
+  const container = document.getElementById('arrow3d-stage');
+  if(!container) return;
+  const ctx3 = makeOrbitScene(container, {radius:70, targetY:6, gridSize:160});
+  const scene = ctx3.scene;
+
+  const archer = new THREE.Mesh(new THREE.CylinderGeometry(.6,.9,4,10), new THREE.MeshStandardMaterial({color:0x3d2a1c}));
+  archer.position.set(0,2,0); scene.add(archer);
+
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,3.2,8), new THREE.MeshStandardMaterial({color:0x9b4326}));
+  shaft.rotation.z = Math.PI/2;
+  const head = new THREE.Mesh(new THREE.ConeGeometry(.28,.7,8), new THREE.MeshStandardMaterial({color:0xc99a4b}));
+  head.rotation.z = Math.PI/2; head.position.x = 1.9;
+  const arrowGroup = new THREE.Group(); arrowGroup.add(shaft); arrowGroup.add(head);
+  scene.add(arrowGroup);
+
+  const trailGeo = new THREE.BufferGeometry();
+  const trailMat = new THREE.LineBasicMaterial({color:0x9b4326, linewidth:2});
+  const trailLine = new THREE.Line(trailGeo, trailMat);
+  scene.add(trailLine);
+
+  const trailGeo2 = new THREE.BufferGeometry();
+  const trailMat2 = new THREE.LineBasicMaterial({color:0x5b7248, linewidth:2});
+  const trailLine2 = new THREE.Line(trailGeo2, trailMat2);
+  scene.add(trailLine2);
+
+  THREE3D.arrow = {ctx3, archer, arrowGroup, trailLine, trailLine2, trailPts:[], trailPts2:[]};
+}
+
+function initBoomerang3D(){
+  if(THREE3D.boom) return;
+  const container = document.getElementById('boom3d-stage');
+  if(!container) return;
+  const ctx3 = makeOrbitScene(container, {radius:55, targetY:6, gridSize:120});
+  const scene = ctx3.scene;
+
+  const thrower = new THREE.Mesh(new THREE.CylinderGeometry(.6,.9,4,10), new THREE.MeshStandardMaterial({color:0x3d2a1c}));
+  thrower.position.set(0,2,0); scene.add(thrower);
+
+  const armMat = new THREE.MeshStandardMaterial({color:0x9b4326, side:THREE.DoubleSide});
+  const arm1 = new THREE.Mesh(new THREE.BoxGeometry(3.2,.12,.55), armMat);
+  const arm2 = new THREE.Mesh(new THREE.BoxGeometry(3.2,.12,.55), armMat);
+  arm1.position.x = 1.2; arm2.position.x = 1.2; arm2.rotation.y = Math.PI/2.4;
+  const boomGroup = new THREE.Group(); boomGroup.add(arm1); boomGroup.add(arm2);
+  boomGroup.position.y = 6;
+  scene.add(boomGroup);
+
+  const trailGeo = new THREE.BufferGeometry();
+  const trailMat = new THREE.LineBasicMaterial({color:0x5b7248, linewidth:2});
+  const trailLine = new THREE.Line(trailGeo, trailMat);
+  scene.add(trailLine);
+
+  THREE3D.boom = {ctx3, boomGroup, trailLine, trailPts:[]};
+}
+
+/* ---------------------------------------------------------------
+   VALIDASI INPUT ANGKA
+   Field angka (draw weight, massa panah, kecepatan boomerang, dst.)
+   sebelumnya tidak dibatasi sama sekali — kosong, 0, atau negatif
+   bisa lolos ke perhitungan dan menghasilkan NaN/Infinity/akar dari
+   bilangan negatif yang tampil aneh di kotak output, tanpa
+   penjelasan apa pun ke pengguna soal apa yang salah.
+   readValidatedNumber() membaca & memvalidasi satu field terhadap
+   batas wajarnya, menandai field yang bermasalah (garis merah-ochre)
+   dan mengembalikan pesan yang jelas kalau tidak valid; showCalcError()
+   menampilkan pesan itu di kotak output sebagai ganti hasil hitungan,
+   supaya pengguna tahu persis field mana yang perlu diperbaiki.
+   ------------------------------------------------------------- */
+function readValidatedNumber(id, opts){
+  opts = opts || {};
+  const elx = document.getElementById(id);
+  elx.classList.remove('field-invalid');
+  const raw = String(elx.value).trim();
+  const val = +raw;
+  let problem = null;
+  if(raw===''){
+    problem = `${opts.label} tidak boleh kosong`;
+  } else if(!isFinite(val)){
+    problem = `${opts.label} harus berupa angka`;
+  } else if(opts.min!==undefined && val<opts.min){
+    problem = `${opts.label} minimal ${opts.min}`;
+  } else if(opts.max!==undefined && val>opts.max){
+    problem = `${opts.label} maksimal ${opts.max}`;
+  }
+  if(problem){ elx.classList.add('field-invalid'); return {ok:false, message:problem}; }
+  return {ok:true, value:val};
+}
+function showCalcError(outId, messages){
+  document.getElementById(outId).innerHTML =
+    `<span class="calc-warning">⚠ ${messages.join('<br>⚠ ')}</span>`;
+}
+
+/* ---------- BERANDA (peta dunia — Azimuthal Equidistant) ---------- */
+/* Siluet benua tetap disederhanakan (bukan data GIS/garis pantai presisi), tapi
+   titik-titiknya berupa koordinat lintang/bujur asli yang diproyeksikan lewat
+   aeqdProject() yang sama dengan titik wilayah — jadi posisi & jarak relatifnya
+   konsisten dan dihitung, bukan ditaruh manual. */
+const CONTINENTS = {
+  afrika: [[35,-6],[37,10],[32,32],[12,43],[2,45],[-4,40],[-26,33],[-34,20],[-29,17],[-17,12],[4,9],[6,-3],[15,-17],[21,-17],[31,-9],[35,-6]],
+  eurasia: [[37,-9],[43,-2],[51,-5],[58,6],[60,10],[70,25],[77,60],[77,100],[70,140],[60,163],[50,157],[43,132],[35,127],[22,113],[10,106],[6,100],[8,80],[17,73],[24,67],[25,57],[30,49],[37,36],[36,23],[37,-9]],
+  nusantara_land: [[5,95],[6,99],[1,104],[-3,106],[-6,106],[-8,114],[-8,119],[-2,120],[1,117],[4,109],[5,98],[5,95]],
+  australia: [[-11,131],[-12,136],[-16,145],[-24,153],[-33,151],[-38,145],[-35,137],[-32,126],[-25,114],[-20,114],[-14,126],[-11,131]],
+  amerika_utara: [[49,-123],[60,-140],[70,-155],[70,-128],[68,-95],[63,-80],[50,-56],[45,-60],[35,-76],[26,-80],[26,-97],[18,-95],[16,-92],[20,-105],[32,-117],[49,-123]],
+  amerika_selatan: [[12,-72],[11,-64],[5,-52],[-3,-44],[-13,-39],[-23,-43],[-34,-58],[-52,-68],[-54,-70],[-45,-73],[-33,-71],[-18,-70],[-5,-81],[4,-77],[12,-72]],
+};
+
+function buildBeranda(){
+  const p = el(`<section class="panel active" id="beranda">
+    <div class="section-head"><h2>Peta Tradisi Dunia</h2></div>
+    <p class="lede">Klik salah satu titik atau nama wilayah untuk melihat gambaran singkat tradisi memanah di sana, lalu lanjut ke ensiklopedia busur/anak panah untuk detail lengkap.</p>
+    <div class="notice" style="margin-top:0">
+      <h4>Tentang proyeksi peta ini</h4>
+      <p>Peta ini memakai proyeksi <b>Azimuthal Equidistant</b> sungguhan, berpusat di ${MAP_CENTER.name} (Jazirah Arab) — ditandai titik hijau di tengah. Lingkaran putus-putus menunjukkan jarak sudut dari pusat (tiap 30°, hingga 180° di lingkaran terluar), dan garis tipis dari tengah menunjukkan arah mata angin. Semua posisi dihitung dari koordinat lintang/bujur asli tiap wilayah, jadi arah &amp; jarak relatifnya akurat secara sudut — hanya <b>garis pantai benuanya yang disederhanakan</b>, bukan data GIS presisi.</p>
+    </div>
+    <div class="mapwrap">
+      <div class="map-stage">
+        <svg viewBox="0 0 100 100" id="mapsvg" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="map-labels" id="maplabels"></div>
+      </div>
+      <div class="map-info" id="mapinfo"><p>Pilih sebuah wilayah pada peta di atas.</p></div>
+    </div>
+  </section>`);
+
+  const svg = p.querySelector('#mapsvg');
+  const svgns = 'http://www.w3.org/2000/svg';
+  const labelsBox = p.querySelector('#maplabels');
+  const R = 47;
+
+  let bg = `<circle class="sea" cx="50" cy="50" r="${R}"/>`;
+
+  // lingkaran jarak sudut dari pusat (tiap 30°, ~3.336 km per 30° busur)
+  [30,60,90,120,150,180].forEach(deg=>{
+    const r = R*(deg/180);
+    bg += `<circle class="distring${deg===180?' outer':''}" cx="50" cy="50" r="${r.toFixed(2)}"/>`;
+  });
+  // garis arah (bearing) dari pusat, tiap 30°
+  for(let b=0;b<360;b+=30){
+    const rad = b*Math.PI/180;
+    const x2 = 50 + R*Math.sin(rad), y2 = 50 - R*Math.cos(rad);
+    bg += `<line class="radial" x1="50" y1="50" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}"/>`;
+  }
+
+  // benua — diproyeksikan dari lintang/bujur
+  Object.values(CONTINENTS).forEach(pts=>{
+    const proj = pts.map(([la,lo])=>{ const q=aeqdProject(la,lo); return q.x.toFixed(2)+','+q.y.toFixed(2); }).join(' ');
+    bg += `<polygon class="landmass" points="${proj}"/>`;
+  });
+
+  // penanda pusat proyeksi
+  const c0 = aeqdProject(MAP_CENTER.lat, MAP_CENTER.lon);
+  bg += `<circle class="center-pin" cx="${c0.x.toFixed(2)}" cy="${c0.y.toFixed(2)}" r="1.3"/>`;
+
+  svg.innerHTML = bg;
+
+  const centerLabel = document.createElement('div');
+  centerLabel.className = 'map-label center-label';
+  centerLabel.style.left = c0.x + '%';
+  centerLabel.style.top = c0.y + '%';
+  centerLabel.textContent = '◎ ' + MAP_CENTER.name;
+  labelsBox.appendChild(centerLabel);
+
+  REGIONS.forEach(r=>{
+    const q = aeqdProject(r.lat, r.lon);
+    const g = document.createElementNS(svgns,'g');
+    g.setAttribute('class','pin'); g.dataset.region=r.id;
+    g.innerHTML = `<circle cx="${q.x.toFixed(2)}" cy="${q.y.toFixed(2)}" r="1.1"/>`;
+    g.addEventListener('click', ()=>selectRegion(r.id));
+    svg.appendChild(g);
+
+    const label = document.createElement('div');
+    label.className = 'map-label';
+    label.dataset.region = r.id;
+    label.style.left = q.x + '%';
+    label.style.top = q.y + '%';
+    label.textContent = r.name;
+    label.addEventListener('click', ()=>selectRegion(r.id));
+    labelsBox.appendChild(label);
+  });
+
+  function selectRegion(id){
+    const r = REGIONS.find(x=>x.id===id);
+    svg.querySelectorAll('.pin').forEach(pin=>pin.classList.toggle('active', pin.dataset.region===id));
+    labelsBox.querySelectorAll('.map-label').forEach(lb=>lb.classList.toggle('active', lb.dataset.region===id));
+    const bows = BOWS.filter(b=>b.region===id).map(b=>b.name).join(', ') || '—';
+    const arrows = ARROWS.filter(a=>a.region===id).map(a=>a.name).join(', ') || '—';
+    p.querySelector('#mapinfo').innerHTML = `
+      <h3>${r.name}</h3>
+      <p><b>Busur terkait:</b> ${bows}</p>
+      <p><b>Anak panah terkait:</b> ${arrows}</p>
+      <p><button class="btn secondary" data-goto="busur" data-region="${id}">Lihat di Ensiklopedia Busur</button></p>
+    `;
+    p.querySelector('[data-goto="busur"]').addEventListener('click', ()=>{
+      showPanel('busur');
+      const sel = document.querySelector('#busur-filter-region');
+      if(sel){ sel.value = id; sel.dispatchEvent(new Event('change')); }
+    });
+  }
+  return p;
+}
+
+/* ---------- FISIKA ---------- */
+function buildFisika(){
+  const p = el(`<section class="panel" id="fisika">
+    <div class="section-head"><h2>Laboratorium Fisika &amp; Mekanika</h2></div>
+    <p class="lede">Model di bawah ini disederhanakan untuk tujuan edukasi. Ditandai ${badge('teoretis')} karena berbasis rumus fisika standar, bukan pengukuran alat sungguhan.</p>
+
+    <div class="lab">
+      <h3>1. Energi &amp; Kecepatan Anak Panah</h3>
+      <p class="formula">E<sub>simpan</sub> ≈ ½ · F<sub>tarik</sub> · d &nbsp;&nbsp;|&nbsp;&nbsp; E<sub>k</sub> = ½ · m · v²</p>
+      <div class="field-row">
+        <div class="field"><label>Draw weight (lbs)</label><input type="number" id="f-weight" value="35" min="1" max="300" step="1"></div>
+        <div class="field"><label>Draw length (inch)</label><input type="number" id="f-length" value="28" min="1" max="40" step="0.5"></div>
+        <div class="field"><label>Massa anak panah (grain)</label><input type="number" id="f-mass" value="400" min="1" max="2000" step="1"></div>
+        <div class="field"><label>Efisiensi transfer (%)</label><input type="number" id="f-eff" value="80" min="1" max="100" step="1"></div>
+      </div>
+      <button class="btn" onclick="calcEnergy()">Hitung</button>
+      <div class="output" id="f-out">Isi parameter lalu klik Hitung.</div>
+    </div>
+
+    <div class="lab">
+      <h3>2. Simulator Lintasan (Trajektori)</h3>
+      <p class="formula">y(x) = x·tanθ − g·x² / (2·v₀²·cos²θ)</p>
+      <div class="field-row">
+        <div class="field"><label>Kecepatan awal (m/s)</label><input type="number" id="t-v0" value="55" min="1" max="150" step="1"></div>
+        <div class="field"><label>Sudut (°)</label><input type="number" id="t-angle" value="8" min="-90" max="90" step="1"></div>
+        <div class="field"><label><input type="checkbox" id="t-drag" checked> Sertakan hambatan udara (drag)</label></div>
+      </div>
+      <button class="btn" onclick="drawTrajectory()">Simulasikan</button>
+      <canvas id="t-canvas" width="800" height="320"></canvas>
+      <div class="output" id="t-out"></div>
+      <div class="panel3d-wrap">
+        <h4>Perspektif 3D — bergerak sinkron dengan simulasi 2D di atas</h4>
+        <div class="viewhint">Seret untuk memutar kamera · scroll/cubit dua jari untuk zoom. Sudut pandang bebas membantu melihat lengkungan lintasan yang sulit dibaca dari tampak-samping saja.</div>
+        <div class="three-stage" id="arrow3d-stage"><span class="three-badge">Panah + hambatan udara</span></div>
+      </div>
+    </div>
+
+    <div class="lab">
+      <h3>3. Kalkulator FOC (Front of Center)</h3>
+      <p>FOC menunjukkan keseimbangan anak panah — memengaruhi stabilitas terbang.</p>
+      <p class="formula">FOC% = [(titik-tengah-fisik − titik-seimbang) / panjang-total] × 100</p>
+      <div class="field-row">
+        <div class="field"><label>Panjang total (cm)</label><input type="number" id="foc-len" value="70" min="10" max="150" step="0.5"></div>
+        <div class="field"><label>Titik seimbang dari nock (cm)</label><input type="number" id="foc-bal" value="40" min="0" max="150" step="0.5"></div>
+      </div>
+      <button class="btn" onclick="calcFOC()">Hitung FOC</button>
+      <div class="output" id="foc-out"></div>
+    </div>
+
+    <div class="lab">
+      <h3>4. Archer's Paradox — Kenapa Panah Lurus Bisa Melengkung Saat Lepas</h3>
+      <p>Saat busur dilepas, poros anak panah mengalami lenturan dinamis (bending) di sekitar pegangan busur, lalu berosilasi dengan amplitudo yang meluruh selama ia melesat — hingga akhirnya stabil terbang lurus. Simulasi di bawah memperagakan seluruh perjalanan panah dari lepas tali sampai menancap di target, lengkap dengan recoil busur &amp; jejak lenturannya — bukan cuma lenturan diam di tempat.</p>
+      <div class="paradox-stage" id="paradox-stage">
+        <canvas id="paradox-canvas" width="720" height="230"></canvas>
+        <div class="paradox-controls">
+          <button class="btn secondary" id="paradox-play-btn" onclick="playParadoxLaunch()">🏹 Lepas Panah!</button>
+          <label><input type="checkbox" id="paradox-slowmo"> Mode slow-motion</label>
+          <label><input type="checkbox" id="paradox-loop"> Putar berulang otomatis</label>
+        </div>
+        <div class="output" id="paradox-out" style="display:none; text-align:left"></div>
+      </div>
+    </div>
+  </section>`);
+  return p;
+}
+
+function calcEnergy(){
+  const cW = readValidatedNumber('f-weight', {min:1, max:300, label:'Draw weight'});
+  const cLen = readValidatedNumber('f-length', {min:1, max:40, label:'Draw length'});
+  const cMass = readValidatedNumber('f-mass', {min:1, max:2000, label:'Massa anak panah'});
+  const cEff = readValidatedNumber('f-eff', {min:1, max:100, label:'Efisiensi transfer'});
+  const checks = [cW, cLen, cMass, cEff];
+  const errs = checks.filter(c=>!c.ok).map(c=>c.message);
+  if(errs.length){ showCalcError('f-out', errs); return; }
+  const w = cW.value; // lbs
+  const len = cLen.value; // inch
+  const mGrain = cMass.value; // grain
+  const eff = cEff.value/100;
+  // Approx: 1 lb*inch ≈ 0.0007062 ft-lb -> convert to joule via ft-lb*1.3558; simplified constant chain:
+  const storedFtLb = 0.5 * w * (len/12); // ft-lb approx (linear model)
+  const storedJ = storedFtLb * 1.3558;
+  const keJ = storedJ * eff;
+  const mKg = mGrain * 0.00006479891;
+  const v = Math.sqrt(2*keJ/mKg);
+  const momentum = mKg*v;
+  document.getElementById('f-out').innerHTML =
+    `Energi tersimpan (estimasi linear): <b>${storedJ.toFixed(1)} J</b><br>
+     Energi kinetik anak panah (setelah efisiensi): <b>${keJ.toFixed(1)} J</b><br>
+     Estimasi kecepatan lepas: <b>${v.toFixed(1)} m/s</b><br>
+     Momentum: <b>${momentum.toFixed(3)} kg·m/s</b><br>
+     <small>Model linear F≈konstan; busur nyata punya kurva gaya-tarikan non-linear, jadi ini estimasi kasar. ${badge('teoretis')}</small>`;
+}
+
+let trajAnimHandle = null; // supaya klik ulang "Simulasikan" membatalkan animasi sebelumnya, bukan menumpuknya
+
+/* ---------------------------------------------------------------
+   PERBAIKAN: teks kanvas jadi sangat kecil di layar sempit.
+   Kanvas trajektori & boomerang punya resolusi internal tetap
+   (mis. 800×320) sementara CSS cuma menyusutkan lebar TAMPILANnya
+   lewat max-width:100%. Di HP, penyusutan itu ikut mengecilkan
+   semua yang digambar — termasuk label teks 10-11px — sampai
+   efektif jadi ~4-5px dan nyaris tak terbaca.
+   Sebelum menggambar, resolusi internal kanvas disamakan dulu
+   dengan lebar tampil sesungguhnya di layar (rasio aspek asli
+   dipertahankan), jadi 1px kanvas = 1px CSS dan font tetap
+   terbaca di ukuran aslinya, seberapa pun sempit layarnya.
+   ------------------------------------------------------------- */
+function fitCanvasToDisplayWidth(canvas, origW, origH){
+  const displayW = canvas.clientWidth || (canvas.parentElement && canvas.parentElement.clientWidth) || origW;
+  const w = Math.max(1, Math.round(displayW));
+  const h = Math.max(1, Math.round(w * (origH / origW)));
+  if(canvas.width !== w || canvas.height !== h){
+    canvas.width = w;
+    canvas.height = h;
+  }
+}
+let tCanvasDrawn = false, bmCanvasDrawn = false;
+
+// Saat jendela di-resize (mis. HP diputar ke landscape, atau browser desktop
+// diubah lebarnya), lebar tampil kanvas berubah juga — gambar ulang (dengan
+// resolusi baru dari fitCanvasToDisplayWidth di atas) supaya teksnya tetap
+// terbaca, bukan cuma benar sekali di render pertama. Hanya kanvas yang sudah
+// pernah digambar & sedang terlihat (bukan di tab tersembunyi) yang digambar
+// ulang. Di-debounce supaya tidak menggambar ulang di setiap piksel resize.
+let canvasResizeTimer = null;
+window.addEventListener('resize', ()=>{
+  clearTimeout(canvasResizeTimer);
+  canvasResizeTimer = setTimeout(()=>{
+    const tCanvas = document.getElementById('t-canvas');
+    if(tCanvasDrawn && tCanvas && tCanvas.offsetParent) drawTrajectory();
+    const bmCanvas = document.getElementById('bm-canvas');
+    if(bmCanvasDrawn && bmCanvas && bmCanvas.offsetParent) drawBoomerang();
+  }, 200);
+});
+
+function drawTrajectory(){
+  const cV0 = readValidatedNumber('t-v0', {min:1, max:150, label:'Kecepatan awal'});
+  const cAngle = readValidatedNumber('t-angle', {min:-90, max:90, label:'Sudut'});
+  const checks = [cV0, cAngle];
+  const errs = checks.filter(c=>!c.ok).map(c=>c.message);
+  if(errs.length){ showCalcError('t-out', errs); return; }
+  const v0 = cV0.value;
+  const angleDeg = cAngle.value;
+  const withDrag = document.getElementById('t-drag').checked;
+  const g = 9.81;
+  const rad = angleDeg*Math.PI/180;
+  const canvas = document.getElementById('t-canvas');
+  fitCanvasToDisplayWidth(canvas, 800, 320);
+  const ctx = canvas.getContext('2d');
+  tCanvasDrawn = true;
+
+  // Panah dilepas kira-kira setinggi tangan/bahu pemanah berdiri (~1,3 m),
+  // bukan dari permukaan tanah setinggi kaki — sebelumnya titik lepas selalu
+  // y=0 sehingga panah terasa "muncul dari bawah". Lintasan kini dimulai dari
+  // ketinggian ini dan tetap disimulasikan sampai betul-betul menyentuh tanah
+  // (y=0), bukan sampai kembali ke ketinggian lepasnya.
+  const LAUNCH_HEIGHT = 1.3;
+
+  // setiap titik lintasan menyimpan [x, y, vx, vy] — vx/vy dipakai untuk mengarahkan
+  // ikon anak panah searah kecepatan sesaatnya, bukan cuma menggambar garis.
+  function simulate(drag){
+    let x=0,y=LAUNCH_HEIGHT,vx=v0*Math.cos(rad), vy=v0*Math.sin(rad);
+    const dt=0.01; const pts=[[x,y,vx,vy]];
+    const k = drag? 0.0018 : 0; // simplified drag coefficient*area/mass proxy
+    let t=0;
+    while(y>=0 && t<8){
+      const speed = Math.sqrt(vx*vx+vy*vy);
+      const ax = -k*speed*vx;
+      const ay = -g - k*speed*vy;
+      vx += ax*dt; vy += ay*dt;
+      x += vx*dt; y += vy*dt;
+      t+=dt;
+      pts.push([x,y,vx,vy]);
+    }
+    return pts;
+  }
+
+  const idealPts = simulate(false);
+  const dragPts = withDrag ? simulate(true) : null;
+
+  const idealRange = idealPts[idealPts.length-1][0];
+  let out = `Jangkauan (tanpa drag, model ideal): <b>${idealRange.toFixed(1)} m</b>`;
+  if(dragPts){
+    const dragRange = dragPts[dragPts.length-1][0];
+    out += `<br>Jangkauan (dengan drag sederhana): <b>${dragRange.toFixed(1)} m</b><br><small style="color:#9b4326">— anak panah &amp; jejak hijau = ideal, anak panah &amp; jejak merah-ochre = dengan hambatan udara</small>`;
+  }
+  out += `<br><small>${badge('teoretis')} Model 2D disederhanakan; belum memasukkan spin, orientasi fletching, atau angin silang.</small>`;
+  document.getElementById('t-out').innerHTML = out;
+
+  // ---- auto-fit: skala dihitung dari jangkauan & ketinggian sesungguhnya, bukan
+  // angka tetap — supaya lintasan tidak pernah terpotong di kecepatan tinggi, dan
+  // tidak pernah tampak mini terdampar di pojok pada kecepatan rendah. ----
+  const maxRangeAll = Math.max(idealRange, dragPts ? dragPts[dragPts.length-1][0] : 0);
+  const maxHeightAll = Math.max(
+    idealPts.reduce((m,p)=>Math.max(m,p[1]),0),
+    dragPts ? dragPts.reduce((m,p)=>Math.max(m,p[1]),0) : 0
+  );
+  const padLeft=24, padRight=24, padTop=26, padBottom=34;
+  const availW = canvas.width - padLeft - padRight;
+  const availH = canvas.height - padTop - padBottom;
+  const scale = Math.min(availW/Math.max(1,maxRangeAll), availH/Math.max(1,maxHeightAll));
+  const originX = padLeft, originY = canvas.height - padBottom;
+
+  function toCanvas(pt){ return [originX + pt[0]*scale, originY - pt[1]*scale]; }
+
+  // ---- panel 3D: skala dunia-3D dihitung terpisah dari skala kanvas 2D di atas
+  // (satuan px vs satuan Three.js beda dunia), tapi dari SUMBER FISIKA yang sama
+  // (idealPts/dragPts). PENTING: sumbu horizontal (jarak tembak, bisa puluhan-
+  // ratusan meter) dan sumbu vertikal (tinggi lepas + puncak lintasan, biasanya
+  // cuma beberapa meter) memakai skala BERBEDA yang sengaja tidak proporsional
+  // — kalau dipaksa satu skala isotropik, ketinggian lepas 1,3 m jadi seret ke
+  // beberapa piksel/unit saja dan tetap terlihat "nempel tanah" walau angkanya
+  // sudah benar secara fisika. Sumbu-Y sengaja dilebih-lebihkan (vertical
+  // exaggeration) semata demi keterbacaan visual, bukan akurasi skala 1:1. ----
+  initArrow3D();
+  const scaleX3D = 45 / Math.max(1, maxRangeAll);
+  // PERBAIKAN: sebelumnya scaleY3D dihitung independen dari maxHeightAll
+  // (45/tinggi-puncak). Untuk tembakan datar (sudut kecil), maxHeightAll bisa
+  // sangat kecil (2-3 m) sehingga scaleY3D meledak jadi belasan kali lipat
+  // scaleX3D — lintasan yang mestinya melengkung landai jadi terlihat seperti
+  // tusukan tajam ke atas (keanehan yang dilaporkan). Sekarang scaleY3D diikat
+  // sebagai KELIPATAN TETAP dari scaleX3D, jadi rasio "lebih-lebihan vertikal"
+  // selalu konsisten di semua kombinasi kecepatan/sudut — bukan berubah-ubah
+  // liar tergantung seberapa datar/tinggi lintasan yang kebetulan dihasilkan.
+  const VERTICAL_EXAGGERATION = 3.2;
+  const scaleY3D = scaleX3D * VERTICAL_EXAGGERATION;
+  if(THREE3D.arrow){
+    THREE3D.arrow.trailPts=[]; THREE3D.arrow.trailPts2=[];
+    // Figur pemanah dekoratif tingginya disamakan dengan LAUNCH_HEIGHT×scaleY3D
+    // (dilebihkan sedikit) supaya panah tampak lepas persis di sekitar bahu/
+    // tangannya, bukan di kakinya — dan ini ikut memakai skala vertikal yang
+    // sudah dilebih-lebihkan di atas, bukan skala jarak yang jauh lebih kecil.
+    const archerH = Math.max(3.5, Math.min(14, LAUNCH_HEIGHT*scaleY3D*1.7));
+    THREE3D.arrow.archer.scale.set(1, archerH/4, 1);
+    THREE3D.arrow.archer.position.y = archerH/2;
+  }
+
+  // jarak antar-garis grid dibulatkan ke angka "wajar" (1/2/5/10× kelipatan 10)
+  // supaya labelnya enak dibaca, bukan angka desimal ganjil.
+  function niceStep(maxVal, targetCount){
+    const raw = Math.max(1e-6, maxVal)/targetCount;
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const norm = raw/mag;
+    const step = norm<1.5 ? 1 : norm<3 ? 2 : norm<7 ? 5 : 10;
+    return step*mag;
+  }
+  const gridStep = niceStep(maxRangeAll, 5);
+
+  function drawGroundAndGrid(){
+    const groundGrad = ctx.createLinearGradient(0, originY, 0, canvas.height);
+    groundGrad.addColorStop(0, 'rgba(91,114,72,.22)');
+    groundGrad.addColorStop(1, 'rgba(91,114,72,.04)');
+    ctx.fillStyle = groundGrad;
+    ctx.fillRect(0, originY, canvas.width, canvas.height-originY);
+
+    ctx.strokeStyle = 'rgba(43,31,22,.12)'; ctx.setLineDash([3,4]); ctx.lineWidth=1;
+    ctx.fillStyle = '#5a4a37'; ctx.font='10px "Work Sans", sans-serif'; ctx.textAlign='center';
+    for(let gx=gridStep; gx<=maxRangeAll+gridStep*0.5; gx+=gridStep){
+      const [px] = toCanvas([gx,0]);
+      if(px>canvas.width-4) break;
+      ctx.beginPath(); ctx.moveTo(px, padTop*0.3); ctx.lineTo(px, originY); ctx.stroke();
+      ctx.fillText(gx.toFixed(gridStep<1?1:0)+'m', px, originY+13);
+    }
+    ctx.setLineDash([]); ctx.textAlign='left';
+
+    ctx.strokeStyle = '#5a4a37'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(0,originY); ctx.lineTo(canvas.width,originY); ctx.stroke();
+  }
+
+  function drawTrail(pts, uptoIdx, color){
+    ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 1.6;
+    for(let i=0;i<=uptoIdx;i++){
+      const [px,py] = toCanvas(pts[i]);
+      if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+  }
+
+  function drawArrowIcon(px, py, angle, color){
+    ctx.save();
+    ctx.translate(px,py);
+    ctx.rotate(angle);
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 2;
+    // batang
+    ctx.beginPath(); ctx.moveTo(-14,0); ctx.lineTo(3,0); ctx.stroke();
+    // mata panah
+    ctx.beginPath(); ctx.moveTo(10,0); ctx.lineTo(-1,-4); ctx.lineTo(-1,4); ctx.closePath(); ctx.fill();
+    // fletching (bulu) di ekor
+    ctx.beginPath();
+    ctx.moveTo(-14,0); ctx.lineTo(-9,-3.5);
+    ctx.moveTo(-14,0); ctx.lineTo(-9,3.5);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // ping benturan + label jarak tempuh di titik jatuh — dipanggil hanya di frame
+  // terakhir animasi, jadi bukan animasi berjalan sendiri (tidak berisiko
+  // menimbulkan bug rekursi seperti pada simulator boomerang sebelumnya).
+  function drawImpact(pt, color){
+    const [ix,iy] = toCanvas([pt[0],0]);
+    ctx.strokeStyle = color; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(ix-6,iy-6); ctx.lineTo(ix+6,iy+6);
+    ctx.moveTo(ix+6,iy-6); ctx.lineTo(ix-6,iy+6); ctx.stroke();
+    ctx.fillStyle = color;
+    for(let k=0;k<5;k++){
+      const ang = (k/5)*Math.PI*2;
+      ctx.beginPath(); ctx.arc(ix+Math.cos(ang)*11, iy-2+Math.sin(ang)*3.5, 1.5, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.textAlign='center'; ctx.font='11px "Work Sans", sans-serif';
+    ctx.fillText(pt[0].toFixed(1)+' m', ix, iy-15);
+    ctx.textAlign='left';
+  }
+
+  function render(frac, frameCount){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    drawGroundAndGrid();
+
+    // efek "lepasan" di titik tembak — senada gaya visual archer's paradox &amp;
+    // simulator boomerang, supaya bahasanya konsisten se-atlas. Diposisikan di
+    // ketinggian lepas (LAUNCH_HEIGHT), bukan di tanah, karena di situlah panah
+    // sesungguhnya lepas dari tangan pemanah.
+    if(frameCount<14){
+      const [ox,oy] = toCanvas([0,LAUNCH_HEIGHT]);
+      ctx.strokeStyle = `rgba(165,118,47,${Math.max(0,0.5-frameCount*0.035)})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(ox,oy, frameCount*3, 0, Math.PI*2); ctx.stroke();
+    }
+
+    const iIdeal = clampIdx(idealPts, frac);
+    drawTrail(idealPts, iIdeal, '#5b7248');
+    const pIdeal = idealPts[iIdeal];
+    if(pIdeal){
+      const [ipx,ipy] = toCanvas(pIdeal);
+      drawArrowIcon(ipx, ipy, Math.atan2(-pIdeal[3], pIdeal[2]), '#3a4d31');
+    }
+
+    if(dragPts){
+      const iDrag = clampIdx(dragPts, frac);
+      drawTrail(dragPts, iDrag, '#c07a54');
+      const pDrag = dragPts[iDrag];
+      if(pDrag){
+        const [dpx,dpy] = toCanvas(pDrag);
+        drawArrowIcon(dpx, dpy, Math.atan2(-pDrag[3], pDrag[2]), '#9b4326');
+      }
+    }
+
+    if(frac>=1){
+      drawImpact(idealPts[idealPts.length-1], '#3a4d31');
+      if(dragPts) drawImpact(dragPts[dragPts.length-1], '#9b4326');
+    }
+
+    // ---- panel 3D: digerakkan DI DALAM frame yang sama dengan render 2D di
+    // atas, memakai indeks (iIdeal/iDrag) yang persis sama — inilah yang membuat
+    // gerakan 2D & 3D benar-benar sinkron, bukan cuma "kelihatan mirip". Objek
+    // aktif (yang mengikuti orientasi & posisi utama) adalah lintasan drag kalau
+    // dicentang, karena itu yang paling relevan secara fisik; lintasan ideal tetap
+    // ditampilkan sebagai jejak hijau pembanding di ruang 3D yang sama. ----
+    if(THREE3D.arrow){
+      const {arrowGroup, trailLine, trailLine2, trailPts, trailPts2} = THREE3D.arrow;
+      const activePts = dragPts || idealPts;
+      const activeI = dragPts ? clampIdx(dragPts, frac) : iIdeal;
+      const ap = activePts[activeI];
+      arrowGroup.position.set(ap[0]*scaleX3D, Math.max(0.05, ap[1]*scaleY3D), 0);
+      // Orientasi mengikuti sudut kemiringan VISUAL (setelah skala X/Y yang
+      // beda diterapkan), bukan sudut kecepatan fisika mentah — supaya moncong
+      // panah tetap terlihat sejajar dengan kelengkungan jejak yang tergambar,
+      // bukan miring sendiri karena sumbu-Y dilebih-lebihkan sementara arahnya
+      // masih pakai proporsi fisika asli.
+      arrowGroup.rotation.z = Math.atan2(ap[3]*scaleY3D, ap[2]*scaleX3D);
+      trailPts.push(new THREE.Vector3(ap[0]*scaleX3D, Math.max(0.02, ap[1]*scaleY3D), 0));
+      trailLine.geometry.setFromPoints(trailPts);
+      if(dragPts){
+        const ip = idealPts[iIdeal];
+        trailPts2.push(new THREE.Vector3(ip[0]*scaleX3D, Math.max(0.02, ip[1]*scaleY3D), 0));
+        trailLine2.geometry.setFromPoints(trailPts2);
+      }
+    }
+  }
+  // dijaga selalu 0..length-1 walau frac karena sebab apapun keluar dari rentang 0..1
+  function clampIdx(pts, frac){
+    const maxIdx = pts.length - 1;
+    return Math.max(0, Math.min(maxIdx, Math.floor(frac*maxIdx)));
+  }
+
+  if(trajAnimHandle) cancelAnimationFrame(trajAnimHandle);
+  // Dianimasikan berdasar hitungan frame (bukan selisih jam performance.now()) —
+  // ini menghindari kasus tepi di mana selisih waktu frame pertama bisa negatif
+  // pada sebagian browser/WebView, yang tadinya membuat indeks titik jadi negatif
+  // dan menyebabkan error "Cannot read properties of undefined (reading '0')".
+  const totalFrames = 90; // ±1.5 detik pada 60fps, tidak bergantung jarak tempuh
+  let frameCount = 0;
+  function step(){
+    frameCount++;
+    const frac = Math.min(1, frameCount/totalFrames);
+    render(frac, frameCount);
+    if(frac < 1){ trajAnimHandle = requestAnimationFrame(step); }
+    else { trajAnimHandle = null; }
+  }
+  trajAnimHandle = requestAnimationFrame(step);
+}
+
+function calcFOC(){
+  const cLen = readValidatedNumber('foc-len', {min:10, max:150, label:'Panjang total'});
+  const cBal = readValidatedNumber('foc-bal', {min:0, max:150, label:'Titik seimbang dari nock'});
+  const checks = [cLen, cBal];
+  let errs = checks.filter(c=>!c.ok).map(c=>c.message);
+  // Titik seimbang harus berada di sepanjang batang panah itu sendiri — kalau
+  // lolos dari batas per-field di atas tapi tetap melebihi panjang total,
+  // hasilnya (>100% atau negatif ekstrem) tidak fisis, jadi dicegat di sini.
+  if(!errs.length && cBal.value>cLen.value){
+    document.getElementById('foc-bal').classList.add('field-invalid');
+    errs = ['Titik seimbang dari nock tidak boleh melebihi panjang total'];
+  }
+  if(errs.length){ showCalcError('foc-out', errs); return; }
+  const len = cLen.value, bal = cBal.value;
+  const mid = len/2;
+  const foc = ((bal-mid)/len)*100;
+  document.getElementById('foc-out').innerHTML = `FOC: <b>${foc.toFixed(1)}%</b><br><small>Umumnya panah target berada sekitar 10–15% FOC; panah berburu tradisional bisa lebih tinggi untuk penetrasi lebih stabil.</small>`;
+}
+
+/* ---------- ARCHER'S PARADOX — launch sequence engine ---------- */
+let paradoxAnimId = null;
+const PDX_BOWX = 70, PDX_GROUND_Y_FRAC = 0.72, PDX_TARGET_MARGIN = 70;
+
+function pdxGeom(canvas){
+  const groundY = canvas.height*PDX_GROUND_Y_FRAC;
+  const targetX = canvas.width - PDX_TARGET_MARGIN;
+  return { groundY, targetX, y: groundY-40 };
+}
+
+function drawParadoxTarget(ctx, tx, y){
+  ctx.save(); ctx.translate(tx, y);
+  ctx.fillStyle='#ded1a9'; ctx.strokeStyle='#5a4a37'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(0,0,26,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#9b4326'; ctx.beginPath(); ctx.arc(0,0,15,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#c99a4b'; ctx.beginPath(); ctx.arc(0,0,6,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawParadoxBow(ctx, y, recoil){
+  ctx.save(); ctx.translate(PDX_BOWX, y);
+  ctx.strokeStyle='#241610'; ctx.lineWidth=6; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(0,-46); ctx.lineTo(0,46); ctx.stroke();
+  const limbBend = recoil*10;
+  ctx.strokeStyle='#a5762f'; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.moveTo(0,-46); ctx.quadraticCurveTo(-18-limbBend,-24,-6,0); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,46); ctx.quadraticCurveTo(-18-limbBend,24,-6,0); ctx.stroke();
+  ctx.strokeStyle='#5a4a37'; ctx.lineWidth=1.4;
+  ctx.beginPath(); ctx.moveTo(0,-46); ctx.lineTo(-6+recoil*6,0); ctx.lineTo(0,46); ctx.stroke();
+  ctx.restore();
+}
+
+// poros digambar sebagai kurva dengan lenturan 'amp' di titik tengah — bukan garis
+// lurus — plus fletching yang ikut goyang berlawanan arah lenturan (koreksi arah).
+function drawParadoxArrow(ctx, x, y, amp, alpha){
+  const tailX = x-50;
+  ctx.save(); ctx.globalAlpha = alpha;
+  ctx.strokeStyle='#9b4326'; ctx.lineWidth=3; ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(tailX, y);
+  ctx.quadraticCurveTo((tailX+x)/2, y+amp, x, y);
+  ctx.stroke();
+  ctx.fillStyle='#9b4326';
+  ctx.beginPath(); ctx.moveTo(x+10,y); ctx.lineTo(x-3,y-5); ctx.lineTo(x-3,y+5); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='#3a4d31'; ctx.lineWidth=2.4;
+  const fletchAngle = Math.atan2(amp*0.6, 12);
+  ctx.save(); ctx.translate(tailX, y+amp*0.3); ctx.rotate(fletchAngle);
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(-10,-6); ctx.moveTo(0,0); ctx.lineTo(-10,6); ctx.stroke();
+  ctx.restore();
+  ctx.restore();
+}
+
+// Pose diam (nocked) — ditampilkan begitu halaman dimuat, sebelum tombol ditekan.
+function drawParadoxIdle(){
+  const canvas = document.getElementById('paradox-canvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const {groundY, y} = pdxGeom(canvas);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.strokeStyle='#c9bb92'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(0,groundY); ctx.lineTo(canvas.width,groundY); ctx.stroke();
+  drawParadoxTarget(ctx, pdxGeom(canvas).targetX, y);
+  drawParadoxBow(ctx, y, 0);
+  drawParadoxArrow(ctx, PDX_BOWX+14, y, 0, 1);
+}
+
+function playParadoxLaunch(){
+  if(paradoxAnimId){ cancelAnimationFrame(paradoxAnimId); paradoxAnimId=null; }
+  const canvas = document.getElementById('paradox-canvas');
+  const ctx = canvas.getContext('2d');
+  const outBox = document.getElementById('paradox-out');
+  const btn = document.getElementById('paradox-play-btn');
+  outBox.style.display = 'none';
+  btn.disabled = true;
+
+  const { groundY, targetX, y } = pdxGeom(canvas);
+  const flightDist = targetX - PDX_BOWX;
+  const maxBend = 20;         // amplitudo lenturan maksimum (unit-visual)
+  const decayPerPx = 0.012;   // laju peluruhan amplitudo terhadap jarak tempuh
+  const oscFreq = 0.085;      // frekuensi osilasi terhadap jarak tempuh
+
+  // pra-hitung seluruh lintasan: posisi x & amplitudo lentur di tiap titik
+  const totalStep = 340;
+  const pts = [];
+  for(let i=0;i<=totalStep;i++){
+    const frac = i/totalStep;
+    const eased = 1-Math.pow(1-frac, 2.2); // dorongan cepat di awal, lalu melaju rata
+    const x = PDX_BOWX + eased*flightDist;
+    const dist = x-PDX_BOWX;
+    const amp = maxBend*Math.exp(-decayPerPx*dist)*Math.sin(dist*oscFreq);
+    pts.push({x, amp, dist});
+  }
+  let stableIdx = pts.length-1;
+  for(let i=0;i<pts.length;i++){
+    if(Math.abs(pts[i].amp) < 1 && pts[i].dist > 30){ stableIdx = i; break; }
+  }
+
+  const slowmo = document.getElementById('paradox-slowmo').checked;
+  const loop = document.getElementById('paradox-loop').checked;
+  const speedMul = slowmo ? 0.3 : 1;
+  const shakeUntil = 14;
+  const trail = [];
+  let frame = 0;
+
+  function render(){
+    const idx = Math.min(pts.length-1, Math.floor(frame*speedMul));
+    const shakeK = frame<shakeUntil ? (shakeUntil-frame)/shakeUntil : 0;
+    const shakeX = (Math.random()-0.5)*shakeK*6;
+    const shakeY = (Math.random()-0.5)*shakeK*3.5;
+
+    ctx.save();
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.translate(shakeX, shakeY);
+
+    ctx.strokeStyle='#c9bb92'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(0,groundY); ctx.lineTo(canvas.width,groundY); ctx.stroke();
+
+    drawParadoxTarget(ctx, targetX, y);
+
+    // shockwave cincin saat baru lepas dari tali
+    if(frame<20){
+      ctx.strokeStyle = `rgba(165,118,47,${Math.max(0,0.5-frame*0.025)})`;
+      ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(PDX_BOWX, y, frame*3.5, 0, Math.PI*2); ctx.stroke();
+    }
+
+    const recoil = frame<10 ? Math.max(0,1-frame/10) : 0;
+    drawParadoxBow(ctx, y, recoil);
+
+    // jejak motion-blur dari beberapa posisi sebelumnya
+    trail.forEach((t,ti)=> drawParadoxArrow(ctx, t.x, y, t.amp, 0.10+0.07*ti));
+
+    if(idx < pts.length){
+      const cur = pts[idx];
+      drawParadoxArrow(ctx, cur.x, y, cur.amp, 1);
+      trail.push({x:cur.x, amp:cur.amp});
+      if(trail.length>5) trail.shift();
+    }
+    ctx.restore();
+
+    frame++;
+    if(idx >= pts.length-1){
+      ctx.save(); ctx.translate(targetX, y);
+      ctx.strokeStyle='#241610'; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(-4,-4); ctx.lineTo(4,4); ctx.moveTo(4,-4); ctx.lineTo(-4,4); ctx.stroke();
+      ctx.restore();
+
+      const stableDist = pts[stableIdx].dist;
+      outBox.style.display = 'block';
+      outBox.innerHTML = `Lenturan awal maksimum saat lepas dari tali: <b>≈${maxBend.toFixed(0)} unit-visual</b>.<br>
+        Amplitudo meluruh hingga nyaris stabil (&lt;1 unit) setelah menempuh <b>≈${stableDist.toFixed(0)} unit-simulasi</b> dari busur.<br>
+        <small>Model ilustratif peluruhan eksponensial + osilasi untuk menunjukkan konsep, bukan pengukuran fisik anak panah sungguhan. ${badge('teoretis')}</small>`;
+      btn.disabled = false;
+      paradoxAnimId = null;
+      if(loop){
+        setTimeout(()=>{ if(document.getElementById('paradox-loop').checked) playParadoxLaunch(); }, 650);
+      }
+    } else {
+      paradoxAnimId = requestAnimationFrame(render);
+    }
+  }
+  paradoxAnimId = requestAnimationFrame(render);
+}
+
+/* ---------- GENERIC FILTERABLE ENCYCLOPEDIA BUILDER ---------- */
+function buildEncyclopedia(cfg){
+  const {id, title, lede, data, regionKey, funcKey, cardFn} = cfg;
+  const regions = [...new Set(data.map(d=>d[regionKey]))];
+  const funcs = [...new Set(data.map(d=>d[funcKey]))];
+  const p = el(`<section class="panel" id="${id}">
+    <div class="section-head"><h2>${title}</h2></div>
+    <p class="lede">${lede}</p>
+    <div class="filterbar">
+      <label>Wilayah/peradaban
+        <select id="${id}-filter-region"><option value="">Semua</option>${regions.map(r=>`<option value="${r}">${REGIONS.find(x=>x.id===r)?.name||r}</option>`).join('')}</select>
+      </label>
+      <label>Fungsi
+        <select id="${id}-filter-func"><option value="">Semua</option>${funcs.map(f=>`<option value="${f}">${f}</option>`).join('')}</select>
+      </label>
+      <label>Cari nama
+        <input type="text" id="${id}-filter-text" placeholder="ketik nama...">
+      </label>
+      <span class="count" id="${id}-count"></span>
+    </div>
+    <div class="grid" id="${id}-grid"></div>
+  </section>`);
+
+  function render(){
+    const rf = p.querySelector(`#${id}-filter-region`).value;
+    const ff = p.querySelector(`#${id}-filter-func`).value;
+    const tf = p.querySelector(`#${id}-filter-text`).value.toLowerCase();
+    const filtered = data.filter(d =>
+      (!rf || d[regionKey]===rf) &&
+      (!ff || d[funcKey]===ff) &&
+      (!tf || d.name.toLowerCase().includes(tf))
+    );
+    p.querySelector(`#${id}-grid`).innerHTML = filtered.map(cardFn).join('') || '<p>Tidak ada entri yang cocok dengan filter.</p>';
+    p.querySelector(`#${id}-count`).textContent = `${filtered.length} entri`;
+  }
+  ['region','func','text'].forEach(k=>{
+    p.querySelector(`#${id}-filter-${k}`).addEventListener(k==='text'?'input':'change', render);
+  });
+  setTimeout(render,0);
+  return p;
+}
+
+function bowCard(b){
+  return `<div class="card">
+    <h3>${b.name}</h3>
+    <div class="meta">${REGIONS.find(r=>r.id===b.region)?.name||b.region} · ${b.period}</div>
+    <p><b>Konstruksi:</b> ${b.construction}</p>
+    <p><b>Material:</b> ${b.materials.join(', ')}</p>
+    <p><b>Fungsi:</b> ${b.fungsi}</p>
+    ${b.note?`<p><small>${b.note}</small></p>`:''}
+    <div class="tagrow">${badge(b.evidence)}</div>
+  </div>`;
+}
+function arrowCard(a){
+  return `<div class="card">
+    <h3>${a.name}</h3>
+    <div class="meta">${REGIONS.find(r=>r.id===a.region)?.name||a.region}</div>
+    <p><b>Fungsi:</b> ${a.fungsi}</p>
+    <p><b>Kepala:</b> ${a.head} &nbsp;|&nbsp; <b>Batang:</b> ${a.shaft}</p>
+    <p><b>Menghasilkan suara:</b> ${a.bunyi?'Ya':'Tidak'}</p>
+    ${a.note?`<p><small>${a.note}</small></p>`:''}
+    <div class="tagrow">${badge(a.evidence)}</div>
+  </div>`;
+}
+
+/* ---------- BOOMERANG ---------- */
+function buildBoomerang(){
+  const p = el(`<section class="panel" id="boomerang">
+    <div class="section-head"><h2>Boomerang — Cabang Mekanika Rotasi</h2></div>
+    <p class="lede">Boomerang bukan "jenis busur" — ia keluarga teknologi lempar tersendiri milik berbagai bangsa Aborigin Australia, dengan fisika penerbangan yang unik: gabungan translasi dan rotasi. Penting: <b>tidak semua boomerang kembali</b> — mayoritas justru dirancang untuk berburu &amp; tidak kembali.</p>
+
+    <div class="grid">${BOOMERANGS.map(bm=>`
+      <div class="card">
+        <h3>${bm.name}</h3>
+        <div class="meta">Tipe: ${bm.type}</div>
+        <p><b>Fungsi:</b> ${bm.fungsi}</p>
+        <p><small>${bm.note}</small></p>
+        <div class="tagrow">${badge(bm.evidence)}</div>
+      </div>`).join('')}
+    </div>
+
+    <div class="lab">
+      <h3>Yang Benar-Benar Khas dari Boomerang Kembali</h3>
+      <p>Tongkat lempar melengkung sendiri <b>bukan monopoli Australia</b> — hampir tiap peradaban pemburu punya versinya sendiri: lurus, melengkung, atau berbentuk bilah. Yang langka secara global bukan bentuknya yang "melengkung/miring", melainkan satu sifat khusus: <b>kembali secara aerodinamis ke tangan pelemparnya</b> — hasil dari penampang airfoil asimetris pada kedua "lengan" dan presesi giroskopik yang disetel presisi lewat trial-and-error generasi demi generasi. Sejauh yang tercatat, tradisi yang benar-benar memahami, menyempurnakan, dan mengandalkan sifat "kembali" ini sebagai fungsi utama sebuah alat hanya berkembang matang pada berbagai bangsa Aborigin Australia. Di tempat lain, alat yang bentuknya mirip nyaris selalu tetap berupa tongkat/bilah lempar biasa:</p>
+      <div class="grid">${CROSS_CULTURE_STICKS.map(cs=>`
+        <div class="card">
+          <h3>${cs.name}</h3>
+          <div class="meta">${cs.wilayah}</div>
+          <p>${cs.ciri}</p>
+          ${cs.catatan?`<p><small><b>Catatan:</b> ${cs.catatan}</small></p>`:''}
+          <div class="tagrow">${badge(cs.evidence)}<span class="tag">tidak dirancang kembali</span></div>
+        </div>`).join('')}
+      </div>
+      <p><small>Perbandingan ini menyoroti perbedaan fungsi, bukan mengecilkan peradaban lain — tongkat lempar lurus maupun melengkung di atas semuanya teknologi berburu yang cerdas &amp; efektif pada masanya, dan sebagian (seperti rabbit stick) masih dipraktikkan hingga kini.</small></p>
+    </div>
+
+    <div class="lab">
+      <h3>Simulator: Kenapa Boomerang Membelok &amp; Bisa Kembali?</h3>
+      <p>Kedua "lengan" boomerang bergerak dengan kecepatan relatif berbeda terhadap udara saat berputar sambil melaju — lengan bagian atas rotasi bergerak lebih cepat relatif terhadap udara dibanding lengan bawah, menciptakan gaya angkat tak seimbang. Gaya tak seimbang ini, dikombinasikan dengan presesi giroskopik, membelokkan lintasan menjadi lengkung — bukan garis lurus seperti anak panah.</p>
+      <div class="field-row">
+        <div class="field"><label>Kecepatan lempar (m/s)</label><input type="number" id="bm-v" value="20" min="1" max="60" step="1"></div>
+        <div class="field"><label>Laju putar (RPM)</label><input type="number" id="bm-rpm" value="600" min="1" max="2000" step="10"></div>
+        <div class="field"><label>Target (opsional)</label>
+          <select id="bm-target">
+            <option value="none">Tidak ada</option>
+            <option value="jerami">Target jerami (bulat)</option>
+            <option value="kaleng">Kaleng</option>
+            <option value="burung">Siluet burung</option>
+            <option value="kanguru">Siluet kanguru</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn" onclick="drawBoomerang()">▶ Animasikan Lintasan</button>
+      <canvas id="bm-canvas" width="640" height="440"></canvas>
+      <div class="output" id="bm-output" style="display:none"></div>
+      <p><small>${badge('teoretis')} Simulasi 2D pandangan-atas yang disederhanakan untuk ilustrasi konsep presesi &amp; lengkungan balik, bukan model aerodinamika penuh. Cincin putus-putus menandai skala jarak dari titik lempar; jejak berubah warna makin jauh ia melesat, dan ikon boomerang berputar lengkap dengan efek motion-blur putarannya. Tampilan otomatis menyesuaikan (auto-fit) skala &amp; posisi agar lintasan selalu berada di tengah kanvas, apa pun kecepatan/RPM yang dipilih. Target hanya penanda visual berskala jarak, diletakkan tepat di luar titik terjauh lintasan saat ini supaya lemparan tampak melintas dekat sasarannya — bukan simulasi tumbukan/penetrasi sungguhan, dan untuk pilihan hewan sengaja hanya ditampilkan sebagai siluet.</small></p>
+      <div class="panel3d-wrap">
+        <h4>Perspektif 3D — bergerak sinkron dengan simulasi 2D di atas</h4>
+        <div class="viewhint">Seret untuk memutar kamera · scroll/cubit dua jari untuk zoom. Perhatikan bagaimana rotasi (spin) dan lengkungan lintasan balik terjadi bersamaan.</div>
+        <div class="three-stage" id="boom3d-stage"><span class="three-badge">Boomerang berputar</span></div>
+      </div>
+    </div>
+  </section>`);
+  return p;
+}
+let bmAnimId = null;
+
+// Siluet boomerang sungguhan (dua "lengan" bertemu di siku), bukan sekadar garis
+// melengkung — diisi gradien kayu-ke-brass supaya putarannya terbaca jelas, dan
+// dipanggil berulang dengan alpha menurun untuk efek motion-blur putaran (spin blur).
+function drawBoomerangGlyph(ctx, rot, alpha, scale){
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.rotate(rot);
+  ctx.scale(scale, scale);
+  const grad = ctx.createLinearGradient(-2, 0, 20, 0);
+  grad.addColorStop(0, '#241610');
+  grad.addColorStop(1, '#c99a4b');
+  function arm(){
+    ctx.beginPath();
+    ctx.moveTo(-2.4, 0);
+    ctx.quadraticCurveTo(8, -2.6, 18, -1.4);
+    ctx.quadraticCurveTo(20.5, 0, 18, 1.4);
+    ctx.quadraticCurveTo(8, 2.6, 2.4, 0);
+    ctx.closePath();
+    ctx.fillStyle = grad; ctx.fill();
+    ctx.strokeStyle = 'rgba(36,22,16,.5)'; ctx.lineWidth = 0.5; ctx.stroke();
+  }
+  arm();
+  ctx.save(); ctx.rotate(115*Math.PI/180); arm(); ctx.restore();
+  ctx.restore();
+}
+
+function drawThrowerFigure(ctx, x, y, raise){
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.strokeStyle = '#2b1f16'; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(0, -32, 4.5, 0, Math.PI*2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, -27.5); ctx.lineTo(0, -10); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(-6, 0); ctx.moveTo(0, -10); ctx.lineTo(6, 0); ctx.stroke();
+  const armAng = -Math.PI/2 - raise*0.85;
+  ctx.beginPath(); ctx.moveTo(0, -23); ctx.lineTo(Math.cos(armAng)*13, -23 + Math.sin(armAng)*13); ctx.stroke();
+  ctx.restore();
+}
+
+// Target yang bisa diganti-ganti lewat dropdown — murni penanda visual berskala
+// jarak (bukan simulasi tumbukan/penetrasi). Untuk pilihan hewan, sengaja hanya
+// digambar sebagai SILUET satu warna solid, bukan ilustrasi detail.
+function drawTarget(ctx, type, x, y, iconScale){
+  if(type==='none') return;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(iconScale, iconScale);
+  if(type==='jerami'){
+    ctx.fillStyle='#ded1a9'; ctx.strokeStyle='#5a4a37'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(0,0,17,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#9b4326'; ctx.beginPath(); ctx.arc(0,0,10,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#c99a4b'; ctx.beginPath(); ctx.arc(0,0,4,0,Math.PI*2); ctx.fill();
+  } else if(type==='kaleng'){
+    ctx.fillStyle='#9aa3a6'; ctx.strokeStyle='#5a4a37'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.ellipse(0,0,11,14,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle='rgba(43,31,22,.35)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.ellipse(0,-3,7,9,0,0,Math.PI*2); ctx.stroke();
+  } else if(type==='burung'){
+    ctx.fillStyle='#241610';
+    ctx.beginPath();
+    ctx.moveTo(0,2);
+    ctx.quadraticCurveTo(-13,-9,-23,-2);
+    ctx.quadraticCurveTo(-11,-1,0,5);
+    ctx.quadraticCurveTo(11,-1,23,-2);
+    ctx.quadraticCurveTo(13,-9,0,2);
+    ctx.closePath(); ctx.fill();
+  } else if(type==='kanguru'){
+    ctx.fillStyle='#241610';
+    ctx.beginPath();
+    ctx.moveTo(-5,15);
+    ctx.quadraticCurveTo(-11,3,-6,-8);
+    ctx.quadraticCurveTo(-3,-15,4,-16);
+    ctx.quadraticCurveTo(8,-15,7,-11);
+    ctx.quadraticCurveTo(4,-10,4,-7);
+    ctx.quadraticCurveTo(9,-4,15,4);
+    ctx.quadraticCurveTo(11,7,7,6);
+    ctx.quadraticCurveTo(6,10,3,9);
+    ctx.quadraticCurveTo(2,14,-2,17);
+    ctx.quadraticCurveTo(-4,16,-5,15);
+    ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawBoomerang(){
+  if(bmAnimId){ cancelAnimationFrame(bmAnimId); bmAnimId=null; }
+  const outBox = document.getElementById('bm-output');
+  const cV = readValidatedNumber('bm-v', {min:1, max:60, label:'Kecepatan lempar'});
+  const cRpm = readValidatedNumber('bm-rpm', {min:1, max:2000, label:'Laju putar'});
+  const checks = [cV, cRpm];
+  const errs = checks.filter(c=>!c.ok).map(c=>c.message);
+  if(errs.length){
+    outBox.style.display = 'block';
+    outBox.innerHTML = `<span class="calc-warning">⚠ ${errs.join('<br>⚠ ')}</span>`;
+    return;
+  }
+  const v = cV.value;
+  const rpm = cRpm.value;
+  const targetType = document.getElementById('bm-target').value;
+  const canvas = document.getElementById('bm-canvas');
+  fitCanvasToDisplayWidth(canvas, 640, 440);
+  const ctx = canvas.getContext('2d');
+  bmCanvasDrawn = true;
+  outBox.style.display = 'none';
+
+  // Simulasi dihitung dalam koordinat RELATIF terhadap titik pelempar (0,0) —
+  // posisi di kanvas baru ditentukan belakangan lewat auto-fit di bawah, supaya
+  // lintasan selalu tampil DI TENGAH & sebesar mungkin, bukan terpaku di pojok
+  // kiri-bawah seperti sebelumnya.
+  const headingStart = -Math.PI/2.1;
+  const pts = [{x:0,y:0}];
+  let heading=headingStart, x=0, y=0;
+  const turnRate = Math.min(0.09, rpm/12000) * (v/20);
+  const step = v*0.6;
+  const N = 70;
+  for(let i=0;i<N;i++){
+    heading += turnRate;
+    x += Math.cos(heading)*step*0.14;
+    y += Math.sin(heading)*step*0.14;
+    pts.push({x,y,heading});
+  }
+
+  // titik lintasan terdekat balik ke pelempar (selain area awal)
+  let closestIdx=1, closestDist=Infinity;
+  for(let i=12;i<pts.length;i++){
+    const d = Math.hypot(pts[i].x, pts[i].y);
+    if(d<closestDist){ closestDist=d; closestIdx=i; }
+  }
+  const maxReach = pts.reduce((m,p)=>Math.max(m, Math.hypot(p.x,p.y)), 0);
+
+  // Target diletakkan sedikit di LUAR titik terjauh lintasan saat ini (bukan
+  // sekadar arah lempar awal) — supaya lemparan benar-benar tampak melintas
+  // dekat targetnya sebelum melengkung balik, bukan berdiri sendiri di tempat
+  // yang tidak pernah didekati lintasan sama sekali.
+  let targetWorld = null;
+  if(targetType!=='none'){
+    let apexIdx=1, apexDist=0;
+    for(let i=1;i<pts.length;i++){
+      const d = Math.hypot(pts[i].x, pts[i].y);
+      if(d>apexDist){ apexDist=d; apexIdx=i; }
+    }
+    const apex = pts[apexIdx];
+    targetWorld = { x: apex.x*1.15, y: apex.y*1.15 };
+  }
+
+  // ---- auto-fit: hitung skala & titik pusat agar seluruh lintasan (+ target)
+  // selalu tampil di tengah kanvas & memenuhi ruang yang tersedia, berapa pun
+  // kecepatan/RPM yang dipilih — inilah yang memperbaiki keluhan "kepojok". ----
+  let minX=0,maxX=0,minY=0,maxY=0;
+  pts.forEach(p=>{ minX=Math.min(minX,p.x); maxX=Math.max(maxX,p.x); minY=Math.min(minY,p.y); maxY=Math.max(maxY,p.y); });
+  if(targetWorld){ minX=Math.min(minX,targetWorld.x); maxX=Math.max(maxX,targetWorld.x); minY=Math.min(minY,targetWorld.y); maxY=Math.max(maxY,targetWorld.y); }
+  const pad = 56;
+  const worldW = Math.max(1, maxX-minX), worldH = Math.max(1, maxY-minY);
+  const fitScale = Math.min((canvas.width-2*pad)/worldW, (canvas.height-2*pad)/worldH);
+  const wcx = (minX+maxX)/2, wcy = (minY+maxY)/2;
+  const scx = canvas.width/2, scy = canvas.height/2;
+  function toScreen(p){ return { x: scx + (p.x-wcx)*fitScale, y: scy + (p.y-wcy)*fitScale }; }
+  const iconScale = Math.max(0.7, Math.min(1.5, fitScale/1.6));
+
+  const thrower = toScreen({x:0,y:0});
+  const targetScreen = targetWorld ? toScreen(targetWorld) : null;
+  const closestScreen = toScreen(pts[closestIdx]);
+
+  let frame = 0;
+  let finished = false;
+  const spinRate = Math.max(4, rpm/60);
+
+  // ---- panel 3D: satuan lokal pts (relatif thrower) dinormalisasi ke ~28 unit
+  // Three.js supaya kamera tidak perlu diseret ulang tiap RPM/kecepatan berubah.
+  // (x,y) top-down dipetakan ke bidang X-Z 3D; ketinggian semu (sin) ditambahkan
+  // murni sebagai ilustrasi "ia melayang", bukan hasil hitungan aerodinamika. ----
+  initBoomerang3D();
+  const scale3D = 28 / Math.max(1, maxReach);
+  let last3DIdx = -1;
+  if(THREE3D.boom) THREE3D.boom.trailPts = [];
+
+  function drawRings(){
+    // cincin jarak seperti radar, berpusat di titik pelempar — memberi skala visual
+    // yang sebelumnya sama sekali tidak ada.
+    const ringStep = maxReach/4;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(43,31,22,.14)'; ctx.setLineDash([3,4]); ctx.lineWidth=1;
+    for(let r=ringStep; r<=maxReach*1.05; r+=ringStep){
+      ctx.beginPath(); ctx.arc(thrower.x, thrower.y, r*fitScale, 0, Math.PI*2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // Menggambar SATU frame statis (tanpa memutuskan apa pun soal lanjut/berhenti
+  // animasi) — dipakai baik oleh loop utama maupun oleh efek "ping" penutup, supaya
+  // keduanya tidak saling memanggil satu sama lain (itulah penyebab bug stack
+  // overflow sebelumnya: ping() memanggil render(), dan render() yang sudah selesai
+  // memanggil ping() lagi, tanpa henti).
+  function drawScene(shown, frame){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    drawRings();
+
+    if(targetScreen){
+      drawTarget(ctx, targetType, targetScreen.x, targetScreen.y, iconScale);
+    }
+
+    // efek "lepasan" di detik-detik awal — cincin kejut memudar, senada dengan
+    // simulasi archer's paradox supaya bahasa visualnya konsisten se-atlas.
+    if(frame<18){
+      ctx.strokeStyle = `rgba(155,67,38,${Math.max(0,0.45-frame*0.025)})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(thrower.x, thrower.y, frame*2.6*iconScale, 0, Math.PI*2); ctx.stroke();
+    }
+
+    // jejak lintasan bergradien: hijau (dekat pelempar) melebur ke ochre (terjauh),
+    // dengan ekor yang meredup — bukan satu garis hijau solid & datar
+    for(let i=1;i<=shown;i++){
+      const t = Math.hypot(pts[i].x,pts[i].y)/Math.max(1,maxReach);
+      const fade = Math.max(.25, 1 - (shown-i)*0.05);
+      const p0 = toScreen(pts[i-1]), p1 = toScreen(pts[i]);
+      ctx.strokeStyle = `rgba(${Math.round(91+t*74)},${Math.round(114-t*34)},${Math.round(72-t*40)},${fade})`;
+      ctx.lineWidth = 2.6;
+      ctx.beginPath(); ctx.moveTo(p0.x,p0.y); ctx.lineTo(p1.x,p1.y); ctx.stroke();
+    }
+
+    // figur pelempar sederhana, lengan turun kembali setelah lemparan
+    const raise = frame<12 ? Math.max(0,1-frame/12) : 0;
+    ctx.save(); ctx.translate(thrower.x, thrower.y); ctx.scale(iconScale, iconScale);
+    drawThrowerFigure(ctx, 0, 0, raise);
+    ctx.restore();
+    ctx.fillStyle='#5a4a37'; ctx.font='11px "Work Sans", sans-serif'; ctx.textAlign='center';
+    ctx.fillText('pelempar', thrower.x, thrower.y+20*iconScale);
+    ctx.textAlign='left';
+
+    // penanda titik terdekat balik, berdenyut begitu animasi melewatinya
+    if(shown>=closestIdx){
+      const pulse = 3 + Math.sin(frame*0.25)*1.4;
+      ctx.setLineDash([2,3]); ctx.strokeStyle='#a5762f'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(thrower.x,thrower.y); ctx.lineTo(closestScreen.x,closestScreen.y); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle='#a5762f'; ctx.beginPath(); ctx.arc(closestScreen.x,closestScreen.y,pulse,0,Math.PI*2); ctx.fill();
+    }
+
+    // ikon boomerang: bentuk lengan-ganda sesungguhnya, berputar dengan motion-blur
+    // (beberapa fase putaran sebelumnya digambar transparan di baliknya) — hanya
+    // selagi masih melesat, tidak lagi digambar setelah lintasan selesai
+    if(shown<N){
+      const tip = toScreen(pts[shown]);
+      const rot = frame*spinRate*0.05;
+      ctx.save();
+      ctx.translate(tip.x, tip.y);
+      ctx.scale(iconScale, iconScale);
+      for(let b=3;b>=1;b--){
+        drawBoomerangGlyph(ctx, rot - b*0.35, 0.12*b, 1);
+      }
+      drawBoomerangGlyph(ctx, rot, 1, 1);
+      ctx.restore();
+    }
+
+    // ---- panel 3D: diperbarui di dalam drawScene yang sama, dipanggil baik
+    // oleh loop utama maupun oleh efek "ping" penutup — jejak baru hanya
+    // ditambahkan saat indeks 'shown' benar-benar maju, supaya ping (yang
+    // memanggil drawScene berulang di indeks akhir yang sama) tidak menumpuk
+    // titik jejak duplikat di ujung lintasan. ----
+    if(THREE3D.boom){
+      const idx = Math.min(shown, N-1);
+      const wp = pts[idx] || pts[0];
+      const wx = wp.x*scale3D, wz = wp.y*scale3D;
+      const heightProg = Math.min(1, idx/N);
+      const height = 5 + Math.sin(heightProg*Math.PI)*6;
+      const {boomGroup, trailLine, trailPts} = THREE3D.boom;
+      boomGroup.position.set(wx, height, wz);
+      boomGroup.rotation.y = frame*spinRate*0.05;
+      if(idx > last3DIdx){
+        trailPts.push(new THREE.Vector3(wx, height, wz));
+        trailLine.geometry.setFromPoints(trailPts);
+        last3DIdx = idx;
+      }
+    }
+  }
+
+  function render(){
+    const shown = Math.min(N, Math.floor(frame/2));
+    drawScene(shown, frame);
+    frame++;
+
+    if(shown<N){
+      bmAnimId = requestAnimationFrame(render);
+      return;
+    }
+    if(finished) return; // frame terakhir sudah pernah memicu efek ping — jangan ulangi
+    finished = true;
+    bmAnimId = null;
+
+    // efek "tangkap kembali" di titik terdekat — ping halus, memakai drawScene()
+    // (bukan render()) supaya tidak memicu balik ke blok penyelesaian ini lagi
+    let pingFrame = 0;
+    (function ping(){
+      drawScene(N, frame);
+      ctx.save();
+      ctx.strokeStyle = `rgba(58,77,49,${Math.max(0,0.55-pingFrame*0.045)})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(closestScreen.x, closestScreen.y, (4+pingFrame*3.2)*iconScale, 0, Math.PI*2); ctx.stroke();
+      ctx.restore();
+      pingFrame++;
+      if(pingFrame<13) requestAnimationFrame(ping);
+    })();
+    outBox.style.display = 'block';
+    let targetNote = '';
+    if(targetWorld){
+      const targetDist = Math.min(...pts.map(p=>Math.hypot(p.x-targetWorld.x, p.y-targetWorld.y)));
+      targetNote = `<br>Jarak terdekat lintasan ke target: <b>≈ ${targetDist.toFixed(0)} unit-simulasi</b> — penanda visual saja, bukan simulasi tumbukan.`;
+    }
+    outBox.innerHTML = `Jarak terdekat lintasan balik ke titik lempar: <b>≈ ${closestDist.toFixed(0)} unit-simulasi</b> — makin kecil angkanya, makin rapat ia melengkung kembali ke arah pelempar. Coba naikkan RPM relatif terhadap kecepatan lempar untuk melihat lengkungan makin tajam.${targetNote}`;
+  }
+  render();
+}
+
+
+/* ---------- MATERIAL ---------- */
+function buildMaterial(){
+  const p = el(`<section class="panel" id="material">
+    <div class="section-head"><h2>Material: Kayu &amp; Tali Busur</h2></div>
+    <p class="lede">Pemilihan bahan selalu mengikuti apa yang tersedia secara ekologis di wilayah masing-masing — bukan satu "bahan terbaik" universal.</p>
+    <h3>Kayu Busur</h3>
+    <div class="grid">${MATERIALS_WOOD.map(m=>`
+      <div class="card"><h3>${m.name}</h3><p>${m.ciri}</p><div class="tagrow"><span class="tag">${m.wilayah}</span></div></div>`).join('')}
+    </div>
+    <h3>Tali Busur</h3>
+    <div class="grid">${MATERIALS_STRING.map(m=>`
+      <div class="card"><h3>${m.name}</h3><p>${m.ciri}</p><div class="tagrow"><span class="tag">${m.wilayah}</span></div></div>`).join('')}
+    </div>
+  </section>`);
+  return p;
+}
+
+/* ---------- TEKNIK & BERKUDA ---------- */
+function buildTeknik(){
+  const steps = [
+    ['Stance','Posisi kaki & tubuh terhadap target — dasar stabilitas seluruh gerakan.'],
+    ['Set-up','Memasang panah pada tali & posisi tangan awal.'],
+    ['Drawing','Menarik tali hingga panjang tarikan penuh.'],
+    ['Anchoring','Menjangkarkan tangan tarik ke titik referensi tetap di wajah/rahang.'],
+    ['Aiming','Membidik menggunakan referensi visual (instinctive, gap, atau alat bidik tergantung disiplin).'],
+    ['Release','Melepas tali sehalus mungkin agar tidak mengganggu arah panah.'],
+    ['Follow-through','Mempertahankan posisi tubuh sesaat setelah lepas agar gerakan konsisten.'],
+  ];
+  const p = el(`<section class="panel" id="teknik">
+    <div class="section-head"><h2>Teknik Memanah &amp; Memanah Berkuda</h2></div>
+    <p class="lede">Bukan satu "teknik paling benar" — setiap disiplin (recurve, compound, barebow, tradisional, berkuda) punya penekanan berbeda. Berikut fase umum yang biasa dipakai sebagai kerangka analisis lintas disiplin.</p>
+    <div class="sequence">${steps.map(([t,d],i)=>`<div class="seqstep" onclick="setArcherPhase(${i})" style="cursor:pointer"><div class="num"></div><div><b>${t}</b><br><span style="font-size:.88rem;color:var(--ink-soft)">${d}</span></div></div>`).join('')}</div>
+
+    <div class="lab">
+      <h3>Peraga Interaktif: Siklus Gerakan Memanah</h3>
+      <p>Klik salah satu fase di daftar di atas, geser penggeser fase, atau tekan Putar untuk melihat animasi satu siklus penuh — dari berdiri hingga follow-through. Siluet dipakai (bukan gambar orang sungguhan) sekadar untuk memperjelas sudut sendi &amp; postur, bukan rujukan biomekanika presisi.</p>
+      <div class="archer-mode-row">
+        <label class="archer-toggle"><input type="checkbox" id="archer-mounted" onchange="onArcherMountedChange(this.checked)"> 🐎 Mode Berkuda (Mounted Archery)</label>
+      </div>
+      <div class="archer-stage">
+        <canvas id="archer-canvas" width="500" height="260"></canvas>
+        <div class="archer-phaselabel" id="archer-phaselabel">1. Stance</div>
+      </div>
+      <div class="archer-slider-row">
+        <button class="btn secondary" id="archer-play-btn" onclick="playArcherCycle()">▶ Putar Siklus Penuh</button>
+        <label>Fase (geser manual)
+          <input type="range" id="archer-phase" min="0" max="6" step="0.01" value="0" oninput="setArcherPhase(this.value)">
+        </label>
+        <label>Panjang tarikan relatif: <b id="archer-drawlen-val">100%</b>
+          <input type="range" id="archer-drawlen" min="70" max="120" step="1" value="100" oninput="onArcherDrawLenChange(this.value)">
+        </label>
+      </div>
+      <div class="output" id="archer-out">Fase <b>1. Stance</b> — posisi kaki &amp; tubuh terhadap target, dasar stabilitas seluruh gerakan. Busur &amp; tangan tarik masih rileks di samping tubuh.</div>
+      <p style="margin-top:.9rem"><small>${badge('teoretis')} Sudut &amp; pose adalah ilustrasi konseptual untuk menjelaskan urutan fase — bukan hasil motion-capture atlet sungguhan. Geser "Panjang tarikan relatif" untuk melihat bagaimana titik anchor &amp; lenturan busur berubah bila jangkauan tarikan lebih pendek/panjang dari baseline. Mode Berkuda menambahkan kuda yang berderap terus-menerus di bawah pemanah (siklus 4-ketuk/gallop yang disederhanakan) — arah tembak digambar searah lari kuda demi kejelasan visual; dalam praktik nyata pemanah berkuda kerap menembak ke samping atau ke belakang (Parthian shot). Lihat catatan keselamatan di bawah sebelum mencoba disiplin ini secara langsung.</small></p>
+    </div>
+
+    <div class="lab">
+      <h3>Memanah Berkuda (Mounted Archery)</h3>
+      <p>Ditemukan pada berbagai tradisi: Mongol, Hongaria, Yabusame Jepang, hingga tradisi Turki yang diakui UNESCO mencakup disiplin berjalan kaki maupun berkuda. Yang dipelajari bukan sekadar "memanah sambil naik kuda", melainkan stabilitas postur, timing terhadap gaya kuda, dan koordinasi pelepasan saat platform (kuda) terus bergerak.</p>
+      <div class="notice">
+        <h4>Catatan keselamatan</h4>
+        <p>Memanah berkuda memiliki risiko cedera ganda (jatuh + proyektil) dan tidak disarankan sebagai latihan mandiri. Perlu keterampilan berkuda memadai, pelatih bersertifikat, arena tertutup terkendali, dan mengikuti aturan organisasi resmi setempat.</p>
+      </div>
+    </div>
+
+    <div class="lab">
+      <h3>Keselamatan Umum</h3>
+      <p>Panahan secara umum aman jika mengikuti protokol standar: periksa peralatan sebelum memakai, gunakan area/range yang sah dengan backstop memadai, jangan pernah dry-fire (melepas tali tanpa anak panah), gunakan pelindung lengan/jari, dan selalu perhatikan arah tembak yang aman. Studi biomekanika juga mencatat risiko cedera berulang pada bahu, punggung, siku, dan tangan pada atlet panahan — sehingga pemanasan &amp; teknik yang konsisten penting untuk pencegahan.</p>
+    </div>
+  </section>`);
+  return p;
+}
+
+/* ---------- TEKNIK: PERAGA SIKLUS GERAKAN (archer figure) ---------- */
+const ARCHER_PHASE_NAMES = ['Stance','Set-up','Drawing','Anchoring','Aiming','Release','Follow-through'];
+const ARCHER_PHASE_DESC = [
+  'posisi kaki &amp; tubuh terhadap target, dasar stabilitas seluruh gerakan. Busur &amp; tangan tarik masih rileks di samping tubuh.',
+  'busur diangkat &amp; anak panah dipasang (nocking) — tangan tarik baru menyentuh tali, belum menarik.',
+  'tali ditarik menuju panjang tarikan penuh — perhatikan busur mulai melentur &amp; siku tarik bergerak ke belakang.',
+  'tangan tarik dijangkarkan ke titik referensi tetap di wajah/rahang — busur berada pada lenturan penuh.',
+  'membidik memakai referensi visual sambil menahan posisi anchor sesaat sebelum lepas.',
+  'tali dilepas — busur mendorong anak panah, lenturan busur melepas energinya dengan sangat cepat.',
+  'tangan tarik &amp; badan mempertahankan posisi sesaat setelah lepas agar gerakan tetap konsisten.'
+];
+
+let archerAnimId = null;
+let archerDrawLenPct = 100;
+let archerMounted = false;
+let archerCurrentFrac = 0;
+let mountedLoopId = null;
+
+// Keyframe pose per fase. Titik anchor (x tangan tarik saat Anchoring/Aiming) dihitung
+// dari parameter "panjang tarikan relatif" — makin panjang tarikannya, makin jauh
+// tangan bergerak ke belakang &amp; makin besar lenturan busur yang digambar.
+function archerKeyframes(pct){
+  const f = pct/100;
+  const bow = {x:300, y:92};
+  const anchorX = 300 - 105*f;
+  return [
+    {torso:0, bow:{x:215,y:145}, hand:{x:195,y:150}, elbow:{x:200,y:120}, limb:0,     arrow:'none', foot:{fr:225,bk:170}},
+    {torso:0, bow, hand:{x:272,y:95},                elbow:{x:242,y:90}, limb:0.05,  arrow:'nock', foot:{fr:228,bk:168}},
+    {torso:1, bow, hand:{x:(bow.x+anchorX)/2+18,y:90},elbow:{x:212,y:86}, limb:0.55*f,arrow:'nock', foot:{fr:228,bk:168}},
+    {torso:2, bow, hand:{x:anchorX,y:84},             elbow:{x:anchorX-20,y:88}, limb:1.0*f, arrow:'nock', foot:{fr:228,bk:168}},
+    {torso:2, bow, hand:{x:anchorX,y:84},             elbow:{x:anchorX-20,y:88}, limb:1.0*f, arrow:'nock', foot:{fr:228,bk:168}},
+    {torso:2, bow, hand:{x:anchorX-32,y:80},          elbow:{x:anchorX-52,y:83}, limb:0.15,  arrow:'fly',  foot:{fr:228,bk:168}},
+    {torso:1, bow, hand:{x:anchorX-45,y:78},          elbow:{x:anchorX-65,y:95}, limb:0.05,  arrow:'none', foot:{fr:227,bk:169}},
+  ];
+}
+function aLerp(a,b,t){ return a+(b-a)*t; }
+function aLerpPt(a,b,t){ return {x:aLerp(a.x,b.x,t), y:aLerp(a.y,b.y,t)}; }
+
+// Kuda siluet dengan derap 4-ketuk (gallop) yang disederhanakan: tiap kaki diberi
+// fase berbeda sehingga hanya 1-2 kaki menapak tanah pada satu waktu, plus badan
+// yang naik-turun ringan (bodyBob) — bukan rekonstruksi biomekanik kuda sungguhan,
+// sekadar untuk memberi kesan gerak berlari yang jelas dan terus-menerus.
+function drawHorse(ctx, bodyBob, gallopPhase, groundY){
+  const cx=178, cy=178+bodyBob, rx=78, ry=30;
+  const legAttach = [
+    {x:cx-58, y:cy+18, offset:0},
+    {x:cx-46, y:cy+20, offset:Math.PI*0.45},
+    {x:cx+50, y:cy+18, offset:Math.PI*1.0},
+    {x:cx+62, y:cy+20, offset:Math.PI*1.45},
+  ];
+  ctx.strokeStyle='#3d2a1c'; ctx.lineWidth=7; ctx.lineCap='round';
+  legAttach.forEach(L=>{
+    const ph = gallopPhase + L.offset;
+    const lift = Math.max(0, Math.sin(ph)) * 15;
+    const swing = Math.cos(ph) * 13;
+    const foot = {x:L.x+swing, y:groundY-lift};
+    const knee = {x:L.x+swing*0.4, y:(L.y+foot.y)/2};
+    ctx.beginPath(); ctx.moveTo(L.x,L.y); ctx.lineTo(knee.x,knee.y); ctx.lineTo(foot.x,foot.y); ctx.stroke();
+  });
+  ctx.fillStyle='#3d2a1c';
+  ctx.beginPath(); ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2); ctx.fill();
+  // leher & kepala
+  ctx.beginPath();
+  ctx.moveTo(cx+rx-14, cy-ry+6);
+  ctx.quadraticCurveTo(cx+rx+22, cy-ry-22, cx+rx+34, cy-ry-6);
+  ctx.quadraticCurveTo(cx+rx+20, cy-ry+4, cx+rx-2, cy-ry+18);
+  ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx+rx+34, cy-ry-8, 12, 8, -0.3, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(cx+rx+30,cy-ry-16); ctx.lineTo(cx+rx+34,cy-ry-26); ctx.lineTo(cx+rx+38,cy-ry-15); ctx.closePath(); ctx.fill();
+  // ekor
+  ctx.strokeStyle='#3d2a1c'; ctx.lineWidth=5;
+  ctx.beginPath(); ctx.moveTo(cx-rx+6,cy-6); ctx.quadraticCurveTo(cx-rx-18,cy+10, cx-rx-14,cy+34); ctx.stroke();
+}
+
+function drawArcherFigure(frac, ts){
+  const canvas = document.getElementById('archer-canvas');
+  if(!canvas) return;
+  archerCurrentFrac = frac;
+  const ctx = canvas.getContext('2d');
+  const kf = archerKeyframes(archerDrawLenPct);
+  const idx = Math.max(0, Math.min(5, Math.floor(frac)));
+  const t = frac-idx;
+  const a = kf[idx], b = kf[Math.min(6,idx+1)];
+  const torso = aLerp(a.torso,b.torso,t);
+  const bow = aLerpPt(a.bow,b.bow,t);
+  const hand = aLerpPt(a.hand,b.hand,t);
+  const elbow = aLerpPt(a.elbow,b.elbow,t);
+  const limb = aLerp(a.limb,b.limb,t);
+  const footFr = aLerp(a.foot.fr,b.foot.fr,t), footBk = aLerp(a.foot.bk,b.foot.bk,t);
+  const groundY = 225;
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  const gallopPhase = archerMounted ? (ts||performance.now())/220 : 0;
+  const bodyBob = archerMounted ? Math.sin(gallopPhase*2)*3 : 0;
+  const mountOffsetY = archerMounted ? (-34+bodyBob) : 0;
+
+  if(archerMounted){
+    drawHorse(ctx, bodyBob, gallopPhase, groundY);
+  } else {
+    ctx.strokeStyle='#c9bb92'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(0,groundY); ctx.lineTo(canvas.width,groundY); ctx.stroke();
+  }
+
+  const hip = {x:200,y:150+mountOffsetY}, shoulder = {x:204-torso*3, y:88+mountOffsetY};
+  const head = {x:shoulder.x+3, y:64+mountOffsetY};
+  bow.y += mountOffsetY; hand.y += mountOffsetY; elbow.y += mountOffsetY;
+
+  ctx.save();
+  ctx.lineCap='round';
+
+  if(archerMounted){
+    // kaki penunggang: satu kaki dilipat menggantung di sisi kuda (tampak sisi)
+    ctx.strokeStyle='#241610';
+    const knee = {x:hip.x+10, y:hip.y+28};
+    const footPt = {x:hip.x+3, y:hip.y+52};
+    ctx.lineWidth=8;
+    ctx.beginPath(); ctx.moveTo(hip.x,hip.y); ctx.lineTo(knee.x,knee.y); ctx.stroke();
+    ctx.lineWidth=7;
+    ctx.beginPath(); ctx.moveTo(knee.x,knee.y); ctx.lineTo(footPt.x,footPt.y); ctx.stroke();
+  } else {
+    // kaki (berdiri di tanah)
+    ctx.strokeStyle='#241610'; ctx.lineWidth=9;
+    ctx.beginPath(); ctx.moveTo(hip.x,hip.y); ctx.lineTo(footBk,groundY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(hip.x,hip.y); ctx.lineTo(footFr,groundY); ctx.stroke();
+  }
+
+  // busur (dua lengan busur melengkung sesuai lenturan)
+  const limbLen=42, bend = limb*16;
+  ctx.strokeStyle='#a5762f'; ctx.lineWidth=4.5;
+  ctx.beginPath();
+  ctx.moveTo(bow.x, bow.y-limbLen);
+  ctx.quadraticCurveTo(bow.x-10-bend, bow.y, bow.x, bow.y+limbLen);
+  ctx.stroke();
+
+  // tali busur, melewati posisi tangan tarik
+  ctx.strokeStyle='#5a4a37'; ctx.lineWidth=1.3;
+  ctx.beginPath();
+  ctx.moveTo(bow.x, bow.y-limbLen);
+  ctx.lineTo(hand.x, hand.y);
+  ctx.lineTo(bow.x, bow.y+limbLen);
+  ctx.stroke();
+
+  // Anak panah. Sebelumnya tahap "melesat" dihitung dari t lokal tiap segmen
+  // fase, sehingga saat berpindah dari segmen Aiming→Release ke segmen
+  // Release→Follow-through, t lokalnya reset ke 0 dan anak panah tampak
+  // "teleport" mundur lalu melesat lagi — terlihat seperti muncul dua kali
+  // berurutan. Sekarang progres lepasannya dihitung dari frac global (0..6)
+  // yang selalu naik, jadi geraknya kontinu satu arah saja.
+  const releaseStart = 4.85, releaseEnd = 6;
+  if(frac < 0.95){
+    // belum dipasang (fase Stance)
+  } else if(frac < releaseStart){
+    // terpasang di tali: digambar utuh (poros + mata panah + fletching), bukan sekadar garis polos
+    const tailX = hand.x, tailY = hand.y;
+    const tipX = bow.x+16, tipY = bow.y;
+    const ang = Math.atan2(tipY-tailY, tipX-tailX);
+    ctx.strokeStyle='#9b4326'; ctx.lineWidth=2.4;
+    ctx.beginPath(); ctx.moveTo(tailX,tailY); ctx.lineTo(tipX,tipY); ctx.stroke();
+    ctx.save(); ctx.translate(tipX,tipY); ctx.rotate(ang);
+    ctx.fillStyle='#9b4326';
+    ctx.beginPath(); ctx.moveTo(9,0); ctx.lineTo(-4,-4.5); ctx.lineTo(-4,4.5); ctx.closePath(); ctx.fill();
+    ctx.restore();
+    ctx.save(); ctx.translate(tailX,tailY); ctx.rotate(ang);
+    ctx.strokeStyle='#3a4d31'; ctx.lineWidth=2.2;
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(-9,-5); ctx.moveTo(0,0); ctx.lineTo(-9,5); ctx.stroke();
+    ctx.restore();
+  } else {
+    // melesat pergi: satu progres 0→1 yang mulus sepanjang sisa animasi, tanpa lompatan
+    const flightT = Math.min(1, (frac-releaseStart)/(releaseEnd-releaseStart));
+    const startX = bow.x+16;
+    const flyX = startX + flightT*(canvas.width-startX+40);
+    if(flyX < canvas.width+24){
+      ctx.strokeStyle='rgba(155,67,38,.85)'; ctx.lineWidth=2.4;
+      ctx.beginPath(); ctx.moveTo(flyX-24,bow.y); ctx.lineTo(flyX,bow.y); ctx.stroke();
+      ctx.fillStyle='#9b4326';
+      ctx.beginPath(); ctx.moveTo(flyX+7,bow.y); ctx.lineTo(flyX-5,bow.y-4.5); ctx.lineTo(flyX-5,bow.y+4.5); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle='#3a4d31'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(flyX-24,bow.y); ctx.lineTo(flyX-31,bow.y-4); ctx.moveTo(flyX-24,bow.y); ctx.lineTo(flyX-31,bow.y+4); ctx.stroke();
+    }
+  }
+
+  // torso — siluet padat, sengaja tanpa detail wajah
+  ctx.fillStyle='#241610';
+  ctx.beginPath();
+  ctx.moveTo(hip.x-9,hip.y);
+  ctx.quadraticCurveTo(hip.x-11,(hip.y+shoulder.y)/2, shoulder.x-8,shoulder.y);
+  ctx.lineTo(shoulder.x+9,shoulder.y);
+  ctx.quadraticCurveTo(hip.x+12,(hip.y+shoulder.y)/2, hip.x+9,hip.y);
+  ctx.closePath(); ctx.fill();
+
+  // lengan pemegang busur
+  ctx.strokeStyle='#241610'; ctx.lineWidth=7;
+  ctx.beginPath(); ctx.moveTo(shoulder.x,shoulder.y); ctx.lineTo(bow.x-4,bow.y); ctx.stroke();
+
+  // lengan tarik: bahu → siku → tangan
+  ctx.beginPath(); ctx.moveTo(shoulder.x,shoulder.y); ctx.lineTo(elbow.x,elbow.y); ctx.stroke();
+  ctx.lineWidth=6.5;
+  ctx.beginPath(); ctx.moveTo(elbow.x,elbow.y); ctx.lineTo(hand.x,hand.y); ctx.stroke();
+
+  // kepala — siluet bulat polos
+  ctx.fillStyle='#241610';
+  ctx.beginPath(); ctx.arc(head.x,head.y,13,0,Math.PI*2); ctx.fill();
+
+  ctx.restore();
+}
+
+function setArcherPhase(val){
+  const frac = +val;
+  archerCurrentFrac = frac;
+  if(!archerMounted) drawArcherFigure(frac); // saat berkuda, loop derap yang menggambar tiap frame
+  const idx = Math.round(Math.max(0,Math.min(6,frac)));
+  document.getElementById('archer-phase').value = frac;
+  document.getElementById('archer-phaselabel').textContent = (idx+1)+'. '+ARCHER_PHASE_NAMES[idx];
+  document.getElementById('archer-out').innerHTML = `Fase <b>${idx+1}. ${ARCHER_PHASE_NAMES[idx]}</b> — ${ARCHER_PHASE_DESC[idx]}`;
+  document.querySelectorAll('#teknik .seqstep').forEach((elx,i)=>elx.classList.toggle('active', i===idx));
+}
+
+function onArcherDrawLenChange(val){
+  archerDrawLenPct = +val;
+  document.getElementById('archer-drawlen-val').textContent = val+'%';
+  setArcherPhase(document.getElementById('archer-phase').value);
+}
+
+function onArcherMountedChange(checked){
+  archerMounted = checked;
+  if(checked){
+    startMountedLoop();
+  } else {
+    stopMountedLoop();
+  }
+}
+
+// Kuda tetap berderap terus-menerus selama Mode Berkuda aktif, terlepas dari
+// apakah slider fase sedang digeser/diputar atau diam — sehingga animasinya
+// tidak "mati" saat pengguna berhenti di satu fase untuk mengamati posturnya.
+function startMountedLoop(){
+  if(mountedLoopId) return;
+  function loop(ts){
+    drawArcherFigure(archerCurrentFrac, ts);
+    mountedLoopId = requestAnimationFrame(loop);
+  }
+  mountedLoopId = requestAnimationFrame(loop);
+}
+function stopMountedLoop(){
+  if(mountedLoopId){ cancelAnimationFrame(mountedLoopId); mountedLoopId=null; }
+  drawArcherFigure(archerCurrentFrac);
+}
+
+function playArcherCycle(){
+  if(archerAnimId) cancelAnimationFrame(archerAnimId);
+  const btn = document.getElementById('archer-play-btn');
+  btn.disabled = true;
+  const totalFrames = 260;
+  let fCount = 0;
+  function step(){
+    fCount++;
+    const frac = Math.min(6, (fCount/totalFrames)*6);
+    setArcherPhase(frac);
+    if(frac<6){ archerAnimId = requestAnimationFrame(step); }
+    else { archerAnimId = null; btn.disabled = false; }
+  }
+  archerAnimId = requestAnimationFrame(step);
+}
+
+/* ---------- ETIKA & HASIL BURUAN ---------- */
+function buildBuruan(){
+  const p = el(`<section class="panel" id="buruan">
+    <div class="section-head"><h2>Etika, Konservasi &amp; Pasca-Perburuan</h2></div>
+    <p class="lede">Bagian ini sengaja difokuskan pada tanggung jawab dan konservasi — bukan detail teknis untuk melukai. Perburuan dengan panah punya sejarah panjang lintas budaya sebagai sumber pangan &amp; kelangsungan hidup, dan modul ini membingkainya secara ilmiah-etis.</p>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Kepatuhan Hukum</h3>
+        <p>Lisensi, musim buru, spesies yang boleh diburu, dan kuota selalu mengikuti regulasi wilayah masing-masing. Berburu spesies dilindungi atau di luar musim adalah pelanggaran.</p>
+      </div>
+      <div class="card">
+        <h3>Prinsip Pengambilan Keputusan</h3>
+        <p>Jangan mengambil tembakan bila identifikasi target, jarak, kondisi angin, atau kemampuan pemanah tidak memadai — prinsip ini mengutamakan kepastian dibanding peluang.</p>
+      </div>
+      <div class="card">
+        <h3>Pemulihan Hasil Buruan</h3>
+        <p>Pemulihan yang sah dan aman, melibatkan otoritas/pemilik lahan/pelacak berizin bila diperlukan, serta penanganan pangan mengikuti panduan kesehatan &amp; otoritas satwa liar setempat.</p>
+      </div>
+      <div class="card">
+        <h3>Konservasi</h3>
+        <p>Sebagian besar sistem perburuan legal modern justru terhubung dengan pendanaan konservasi &amp; pengelolaan populasi satwa liar melalui lisensi dan pelaporan panen.</p>
+      </div>
+    </div>
+
+    <div class="lab">
+      <h3>Hukum Hasil Buruan Panah dalam Fikih Islam</h3>
+      <p>Ditambahkan sebagai konteks tradisi &amp; hukum bagi pemanah Muslim — bukan pengganti rujukan ke ulama/lembaga fatwa setempat untuk kasus spesifik.</p>
+      <div class="grid">
+        <div class="card">
+          <h3>Membaca Basmalah Saat Melepas Panah</h3>
+          <p>Berdasar QS. Al-Ma'idah (5): 4, buruan yang terkena &amp; mati akibat alat/senjata (termasuk anak panah) menjadi <b>halal</b> dimakan apabila nama Allah (basmalah) dibaca saat melepaskannya — sama prinsipnya dengan hewan buruan yang diterkam hewan pemburu terlatih.</p>
+        </div>
+        <div class="card">
+          <h3>Jika Buruan Ditemukan Masih Hidup</h3>
+          <p>Bila pemanah mendatangi buruannya dan ternyata masih hidup ketika ditemukan, ia <b>wajib disembelih</b> secara syar'i (memutus saluran napas, saluran makanan, dan salah satu/kedua urat leher) sebelum boleh dikonsumsi — panah dianggap hanya melukai, bukan menjadi sebab kematian yang menghalalkan tanpa penyembelihan.</p>
+        </div>
+        <div class="card">
+          <h3>Jika Ditemukan Sudah Mati</h3>
+          <p>Jika buruan ditemukan sudah mati akibat luka panah tersebut (tanpa sempat hidup untuk disembelih), dagingnya halal dimakan selama basmalah telah dibaca saat pelepasan &amp; tidak bercampur sebab kematian lain yang meragukan (mis. jatuh dari tebing, tenggelam) yang menimbulkan syubhat penyebab kematian.</p>
+        </div>
+        <div class="card">
+          <h3>Catatan Madzhab &amp; Kehati-hatian</h3>
+          <p>Rincian seperti batas waktu penemuan, status jika panah hanya melukai ringan, atau jika buruan sempat lolos lalu ditemukan mati beberapa waktu kemudian, memiliki nuansa perbedaan pendapat antar madzhab fikih. Untuk kasus-kasus tersebut, dianjurkan merujuk ke ulama atau lembaga fatwa tepercaya di wilayah masing-masing.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="notice">
+      <h4>Yang sengaja tidak dimasukkan modul ini</h4>
+      <p>Desain/optimalisasi mata panah untuk memperbesar luka, detail penetrasi organ, umpan ilegal, atau target spesies dilindungi — hal-hal ini bertentangan dengan prinsip etika &amp; keselamatan yang ingin dijaga proyek ini.</p>
+    </div>
+
+    <p style="margin-top:1.5rem"><small>Sejarah anak panah beracun (mis. dalam katalog beberapa museum) ditampilkan di modul Anak Panah semata sebagai konteks sejarah benda budaya — tanpa formulasi atau instruksi pembuatan.</small></p>
+  </section>`);
+  return p;
+}
+
+/* ---------- TAXONOMY NOTE panel bonus di dalam Beranda? -> tambahkan sebagai bagian kecil di Fisika/atas ---------- */
+
+/* ---------- ASSEMBLE ---------- */
+panels.appendChild(buildBeranda());
+panels.appendChild(buildFisika());
+drawParadoxIdle();
+panels.appendChild(buildEncyclopedia({
+  id:'busur', title:'Ensiklopedia Busur', regionKey:'region', funcKey:'fungsi', data:BOWS, cardFn:bowCard,
+  lede:'Diklasifikasikan lintas tiga sumbu: bentuk/konstruksi, material, dan fungsi — bukan satu daftar datar "jenis busur".'
+}));
+panels.appendChild(buildEncyclopedia({
+  id:'panah', title:'Ensiklopedia Anak Panah', regionKey:'region', funcKey:'fungsi', data:ARROWS, cardFn:arrowCard,
+  lede:'Anak panah dipecah menjadi komponen: kepala, batang, fletching, dan fungsi — termasuk anak panah sinyal/siulan dari tradisi Asia Timur &amp; stepa yang mengandalkan suara, bukan hanya daya tembus.'
+}));
+panels.appendChild(buildBoomerang());
+panels.appendChild(buildMaterial());
+panels.appendChild(buildTeknik());
+drawArcherFigure(0);
+panels.appendChild(buildBuruan());
+</script>
+</body>
+</html>

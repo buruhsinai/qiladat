@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Efek Compton — JAZMI</title>
+<style>
+:root{--bg:#0a1512;--bg2:#0f1e19;--card:#122420;--line:#1f3d34;--emerald:#22c98a;--gold:#e0b354;--text:#e9f3ee;--muted:#8fada0;}
+*{box-sizing:border-box;}body{margin:0;background:var(--bg);color:var(--text);font-family:'Georgia',serif;line-height:1.6;}
+header{padding:26px 20px 18px;text-align:center;background:radial-gradient(ellipse at top,#113b2e 0%,var(--bg) 70%);border-bottom:1px solid var(--line);}
+header .kicker{font-family:-apple-system,sans-serif;letter-spacing:.12em;text-transform:uppercase;font-size:11px;color:var(--gold);}
+header h1{font-size:1.25rem;margin:8px 0;font-weight:600;}
+header p{color:var(--muted);font-family:-apple-system,sans-serif;font-size:13.5px;max-width:600px;margin:0 auto;}
+main{max-width:700px;margin:0 auto;padding:18px;}
+section{padding:18px 0;border-bottom:1px solid var(--line);}section:last-child{border-bottom:none;}
+h2{font-size:1rem;color:var(--emerald);margin:0 0 6px;}p{margin:0 0 10px;font-size:14.5px;}
+.eq{text-align:center;font-size:1.05rem;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0;color:var(--emerald);}
+.eq small{display:block;font-family:-apple-system,sans-serif;font-size:10.5px;color:var(--muted);margin-top:5px;}
+.sim{font-family:-apple-system,sans-serif;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;}
+.sim label{font-size:12.5px;color:var(--muted);display:block;margin-bottom:5px;}
+.sim input{width:100%;accent-color:var(--emerald);margin-bottom:12px;}
+.val{color:var(--gold);font-weight:700;}
+.plot{background:#050a08;border-radius:10px;border:1px solid var(--line);padding:8px;}
+.plot svg{width:100%;height:auto;}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+.result{text-align:center;padding:9px;background:var(--bg2);border-radius:8px;font-size:12.5px;}
+.result b{display:block;color:var(--gold);font-size:14px;margin-top:2px;}
+.insight{background:#0e2a20;border-left:3px solid var(--emerald);border-radius:8px;padding:10px 12px;margin-top:10px;font-family:-apple-system,sans-serif;font-size:13px;color:#dff7ec;}
+footer{text-align:center;padding:20px;color:var(--muted);font-family:-apple-system,sans-serif;font-size:11px;}
+</style></head><body>
+<header><div class="kicker">JAZMI · Bukti Kedua Sifat Partikel Cahaya</div>
+<h1>Efek Compton: Foton yang "Terpental" Seperti Bola Bilyar</h1>
+<p>Kalau fotolistrik membuktikan cahaya bisa dilepaskan sebagai paket energi, efek Compton (1923) membuktikan paket itu juga punya momentum — bertumbukan dengan elektron persis seperti dua bola fisik.</p></header>
+<main>
+<section><h2>Belajar</h2>
+<p>Saat foton sinar-X menumbuk elektron bebas, sebagian energi &amp; momentumnya berpindah ke elektron — persis tumbukan bola bilyar. Foton yang terpental balik jadi punya energi lebih rendah, artinya <b>panjang gelombangnya bertambah panjang</b>. Makin besar sudut pentalannya, makin besar pertambahan panjang gelombangnya — pola ini mustahil dijelaskan kalau cahaya dianggap gelombang murni tanpa momentum partikel.</p>
+<div class="eq">Δλ = (h/mₑc)·(1−cosθ)<small>h/mₑc = 2,43×10⁻¹² m ("panjang gelombang Compton") · θ = sudut pentalan foton</small></div>
+</section>
+<section><h2>Simulator</h2>
+<div class="sim">
+<label>Sudut pentalan foton (θ): <span class="val" id="thetaVal">90°</span></label>
+<input type="range" id="thetaRange" min="0" max="180" step="1" value="90">
+<div class="plot"><svg id="compSVG" viewBox="0 0 380 160"></svg></div>
+<div class="result-grid">
+<div class="result">Pertambahan panjang gelombang (Δλ)<b id="dlVal">–</b></div>
+<div class="result">Energi yang berpindah ke elektron<b id="eVal">–</b></div>
+</div>
+<div class="insight">Coba geser ke 0° — Δλ=0 (foton lurus, tidak ada tumbukan berarti, elektron diam). Geser ke 180° (pentalan lurus ke belakang) — di situlah Δλ MAKSIMUM, karena momentum yang berpindah ke elektron paling besar.</div>
+</div></section>
+</main>
+<footer>Laboratorium JAZMI — lanjutan ringkas seri Fisika Kuantum (Fotolistrik → Compton).</footer>
+<script>
+const C=2.43e-12; // meter, konstanta h/(me*c)
+const thetaRange=document.getElementById('thetaRange');
+function update(){
+  const thetaDeg=parseFloat(thetaRange.value);
+  document.getElementById('thetaVal').textContent=thetaDeg.toFixed(0)+'°';
+  const rad=thetaDeg*Math.PI/180;
+  const dl=C*(1-Math.cos(rad));
+  document.getElementById('dlVal').textContent=(dl*1e12).toFixed(2)+' pm';
+  // perkiraan kasar energi berpindah relatif terhadap foton sinar-X khas ~0.1nm (100pm)
+  const lambda0=100; // pm, asumsi foton sinar-X awal
+  const fracLost = (dl*1e12)/(lambda0+dl*1e12);
+  document.getElementById('eVal').textContent=(fracLost*100).toFixed(1)+'% dari energi foton awal';
+
+  const W=380,H=160,cx=190,cy=90;
+  let html=`<line x1="20" y1="${cy}" x2="${cx}" y2="${cy}" stroke="#ffd94a" stroke-width="2.5"/>`;
+  html+=`<circle cx="${cx}" cy="${cy}" r="6" fill="#7fa8d8"/>`;
+  html+=`<text x="${cx}" y="${cy+22}" font-size="9" fill="#8fada0" text-anchor="middle" font-family="sans-serif">elektron</text>`;
+  const fx=cx+120*Math.cos(-rad), fy=cy+120*Math.sin(-rad);
+  html+=`<line x1="${cx}" y1="${cy}" x2="${fx}" y2="${fy}" stroke="#ffd94a" stroke-width="2" stroke-dasharray="5,3"/>`;
+  html+=`<text x="${fx}" y="${fy-8}" font-size="9" fill="#ffd94a" text-anchor="middle" font-family="sans-serif">foton terpental</text>`;
+  const ex=cx-60*Math.cos(-rad*0.4), ey=cy+40+60*Math.sin(-rad*0.4)*0.3;
+  html+=`<line x1="${cx}" y1="${cy}" x2="${cx-30}" y2="${cy+45}" stroke="#7fa8d8" stroke-width="2"/>`;
+  html+=`<text x="20" y="${cy-8}" font-size="9" fill="#8fada0" font-family="sans-serif">foton datang →</text>`;
+  document.getElementById('compSVG').innerHTML=html;
+}
+thetaRange.addEventListener('input',update);
+update();
+</script>
+</body></html>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulator Kurva Lorenz &amp; Gini — Efek Zakat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12151a; --bg-panel:#1a1e25; --bg-panel-2:#20242c; --line:#2c313b;
+    --text:#e9e6df; --text-dim:#9aa1ad;
+    --gold:#c9a24b; --gold-soft:#e3c988;
+    --ok:#4f9c94; --warn:#e3766a; --blue:#5b8fc9; --purple:#9b7fc9;
+    --font-display:"Fraunces",serif; --font-body:"Karla",sans-serif; --font-mono:"JetBrains Mono",monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px 80px;}
+  header.hero{padding:56px 20px 40px;text-align:center;border-bottom:1px solid var(--line);
+    background:radial-gradient(ellipse at 50% 0%, rgba(79,156,148,0.10), transparent 60%);}
+  .eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ok);margin-bottom:14px;}
+  h1{font-family:var(--font-display);font-weight:600;font-size:clamp(26px,5vw,40px);margin:0 0 12px;}
+  .subtitle{color:var(--text-dim);font-size:15px;max-width:660px;margin:0 auto;}
+  section{padding:36px 0;border-bottom:1px solid var(--line);} section:last-of-type{border-bottom:none;}
+  h2{font-family:var(--font-display);font-weight:600;font-size:22px;color:var(--gold-soft);margin:0 0 6px;display:flex;align-items:baseline;gap:10px;}
+  h2 .num{font-family:var(--font-mono);font-size:13px;color:var(--text-dim);font-weight:400;}
+  h3{font-family:var(--font-display);font-weight:600;font-size:16.5px;color:var(--text);margin:22px 0 10px;}
+  p{font-size:15.5px;} p.dim{color:var(--text-dim);font-size:14px;}
+  ul{padding-left:20px;} li{margin-bottom:6px;font-size:14.5px;}
+
+  .panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:24px;}
+  .controls-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:18px;}
+  .field label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--text-dim);margin-bottom:6px;font-family:var(--font-mono);text-transform:uppercase;}
+  .field label .val{color:var(--gold-soft);}
+  .field input[type=range]{width:100%;accent-color:var(--ok);}
+
+  .preset-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+  .preset-btn{background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text-dim);
+    padding:9px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);}
+  .preset-btn:hover{border-color:var(--ok);color:var(--ok);}
+  .preset-btn.reroll{border-color:var(--blue);color:var(--blue);}
+
+  .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:640px){.chart-grid{grid-template-columns:1fr;}}
+  svg.chart{width:100%;height:auto;display:block;background:var(--bg-panel-2);border-radius:8px;border:1px solid var(--line);margin-top:6px;}
+  .chart-label{font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-transform:uppercase;margin-top:12px;}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:12.5px;color:var(--text-dim);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .swatch{width:14px;height:14px;border-radius:3px;display:inline-block;}
+
+  .results{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px;}
+  .result-card{background:var(--bg-panel-2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;}
+  .result-card .l{font-family:var(--font-mono);font-size:10.5px;color:var(--text-dim);text-transform:uppercase;}
+  .result-card .v{font-family:var(--font-display);font-size:19px;color:var(--gold-soft);}
+
+  .insight-box{margin-top:16px;background:var(--bg-panel-2);border:1px dashed var(--gold);border-radius:8px;padding:14px 18px;font-size:14px;color:var(--text);}
+  .insight-box b{color:var(--gold-soft);}
+
+  .group-table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin-top:16px;}
+  table.groups{width:100%;border-collapse:collapse;font-size:13px;}
+  table.groups th{background:var(--bg-panel);font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;color:var(--text-dim);padding:8px;text-align:right;border-bottom:1px solid var(--line);}
+  table.groups th:first-child,table.groups td:first-child{text-align:left;padding-left:14px;}
+  table.groups td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--line);color:var(--text-dim);}
+  table.groups td.pre{color:var(--warn);} table.groups td.post{color:var(--ok);}
+
+  .benefit-list{display:grid;gap:10px;}
+  .benefit-item{background:var(--bg-panel);border:1px solid var(--line);border-radius:8px;padding:14px 18px;}
+  .benefit-item .btitle{font-weight:700;color:var(--gold-soft);font-size:15px;margin-bottom:4px;}
+  .limit-item{background:var(--bg-panel);border:1px solid var(--line);border-left:3px solid var(--warn);
+    padding:12px 16px;border-radius:6px;margin-bottom:8px;font-size:14.5px;color:var(--text-dim);}
+  table.refs{width:100%;border-collapse:collapse;font-size:14px;}
+  table.refs td{padding:8px 4px;border-bottom:1px solid var(--line);color:var(--text-dim);vertical-align:top;}
+  table.refs td:first-child{color:var(--text);width:32%;font-weight:600;}
+  footer{text-align:center;padding:36px 20px 10px;color:var(--text-dim);font-size:12.5px;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="eyebrow">Ekonomi Islam · Ekonomi Ketimpangan</div>
+  <h1>Kurva Lorenz &amp; Koefisien Gini</h1>
+  <p class="subtitle">Seberapa timpang distribusi kekayaan pada suatu populasi hipotetis — dan seberapa besar penyaluran zakat mengubahnya? Atur jumlah kelompok penduduk beserta kekayaannya, tentukan tarif &amp; ambang zakat, lalu lihat kurva Lorenz dan koefisien Gini bergeser sebelum dan sesudah zakat disalurkan.</p>
+</header>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <h2><span class="num">01</span> Belajar</h2>
+    <p><strong>Kurva Lorenz</strong> memetakan persentase kumulatif populasi (dari yang termiskin ke terkaya) pada sumbu-x, melawan persentase kumulatif kekayaan yang mereka kuasai pada sumbu-y. Jika kekayaan terbagi rata sempurna, kurva ini akan berimpit dengan garis diagonal 45° ("garis kesetaraan sempurna"). Semakin jauh kurva melengkung ke bawah garis diagonal, semakin timpang distribusinya.</p>
+    <p><strong>Koefisien Gini</strong> meringkas kelengkungan itu menjadi satu angka: rasio luas area antara garis diagonal dan kurva Lorenz, dibagi luas total segitiga di bawah garis diagonal.</p>
+    <ul>
+      <li><strong>Gini = 0</strong> — kesetaraan sempurna (semua orang punya kekayaan sama).</li>
+      <li><strong>Gini = 1</strong> — ketimpangan sempurna (satu orang menguasai seluruh kekayaan).</li>
+    </ul>
+    <p><strong>Zakat maal</strong> adalah kewajiban menyalurkan sebagian (umumnya 2,5%) dari kekayaan yang telah mencapai nisab (ambang batas) dan haul (masa kepemilikan setahun), dari kelompok kaya kepada kelompok yang berhak menerima (mustahik). Karena zakat mengambil dari kelompok kekayaan tinggi dan menambah kekayaan kelompok bawah, secara matematis ia menggeser kurva Lorenz mendekati garis kesetaraan — menurunkan koefisien Gini.</p>
+  </section>
+
+  <section id="pertanyaan">
+    <h2><span class="num">02</span> Pertanyaan Ilmiah</h2>
+    <p class="dim" style="font-style:italic;">Seberapa besar pengaruh penyaluran zakat terhadap koefisien Gini sebuah populasi — apakah dampaknya kecil-tapi-nyata, atau bisa cukup besar tergantung seberapa timpang kondisi awalnya? Apakah efek zakat terhadap ketimpangan lebih terasa pada populasi yang sudah relatif setara, atau justru pada populasi yang sangat timpang? Bagaimana tarif zakat dan pola penyaluran (rata ke semua mustahik vs terpusat ke kelompok termiskin) memengaruhi besar pergeseran ini?</p>
+  </section>
+
+  <section id="eksplorasi">
+    <h2><span class="num">03</span> Eksplorasi &amp; Perhitungan</h2>
+    <div class="panel">
+
+      <h3>A. Susun Populasi Hipotetis (10 Kelompok Kekayaan)</h3>
+      <p class="dim">Setiap kelompok mewakili 10% populasi. Atur kekayaan rata-rata tiap kelompok (dalam juta Rupiah) untuk membentuk pola distribusi kekayaan yang ingin Anda uji.</p>
+      <div class="controls-row" id="wealthSliders"></div>
+
+      <div class="preset-row">
+        <button class="preset-btn" data-preset="setara">Preset: Relatif Setara</button>
+        <button class="preset-btn" data-preset="sedang">Preset: Timpang Sedang</button>
+        <button class="preset-btn" data-preset="ekstrem">Preset: Sangat Timpang</button>
+        <button class="preset-btn reroll" id="btnReroll">🎲 Acak Populasi</button>
+      </div>
+
+      <h3>B. Skema Zakat</h3>
+      <div class="controls-row">
+        <div class="field"><label>Tarif Zakat (%) <span class="val" id="vTarif">2.5</span></label><input type="range" id="inTarif" min="0" max="10" step="0.1" value="2.5"></div>
+        <div class="field"><label>Nisab — Ambang Wajib Zakat (juta Rp) <span class="val" id="vNisab">85</span></label><input type="range" id="inNisab" min="0" max="300" step="5" value="85"></div>
+        <div class="field"><label>Ambang Penerima Mustahik (juta Rp, di bawah ini) <span class="val" id="vMustahik">30</span></label><input type="range" id="inMustahik" min="0" max="150" step="5" value="30"></div>
+      </div>
+
+      <h3>C. Kurva Lorenz — Sebelum vs Sesudah Zakat</h3>
+      <div class="chart-grid">
+        <div>
+          <div class="chart-label">Sebelum Zakat</div>
+          <svg class="chart" id="svgPre" viewBox="0 0 300 300"></svg>
+        </div>
+        <div>
+          <div class="chart-label">Sesudah Zakat</div>
+          <svg class="chart" id="svgPost" viewBox="0 0 300 300"></svg>
+        </div>
+      </div>
+      <div class="legend">
+        <span><span class="swatch" style="background:#3a4150"></span> Garis Kesetaraan Sempurna</span>
+        <span><span class="swatch" style="background:#e3766a"></span> Kurva Lorenz — Sebelum</span>
+        <span><span class="swatch" style="background:#4f9c94"></span> Kurva Lorenz — Sesudah</span>
+      </div>
+
+      <div class="results" id="results"></div>
+      <div class="insight-box" id="insightBox"></div>
+
+      <h3>D. Kekayaan per Kelompok — Sebelum vs Sesudah</h3>
+      <div class="group-table-wrap">
+        <table class="groups" id="groupTable"></table>
+      </div>
+    </div>
+  </section>
+
+  <section id="manfaat">
+    <h2><span class="num">04</span> Manfaat &amp; Kegunaan</h2>
+    <div class="benefit-list">
+      <div class="benefit-item"><div class="btitle">Memvisualisasikan dampak nyata zakat terhadap ketimpangan</div>Mengubah konsep zakat dari sekadar kewajiban ritual menjadi instrumen kebijakan redistribusi yang bisa diukur dengan alat ekonomi standar (kurva Lorenz, koefisien Gini) yang juga dipakai Bank Dunia dan lembaga statistik.</div>
+      <div class="benefit-item"><div class="btitle">Menyambung ke Kalkulator Zakat Maal</div>Satu pemahaman nisab &amp; tarif zakat dari kalkulator zakat individual bisa diperluas menjadi simulasi dampak populasi — menunjukkan bagaimana kewajiban personal berakumulasi jadi efek makro.</div>
+      <div class="benefit-item"><div class="btitle">Alat edukasi kebijakan sosial</div>Berguna untuk lembaga amil zakat atau peneliti yang ingin menunjukkan secara kuantitatif kepada pemangku kepentingan bagaimana perubahan tarif atau ambang nisab memengaruhi ketimpangan.</div>
+      <div class="benefit-item"><div class="btitle">Perbandingan dengan instrumen redistribusi lain</div>Koefisien Gini adalah bahasa universal ekonomi pembangunan — hasil simulator ini bisa dibandingkan langsung dengan literatur tentang pajak progresif atau bantuan sosial di negara lain.</div>
+    </div>
+  </section>
+
+  <section id="batasan">
+    <h2><span class="num">05</span> Batasan</h2>
+    <div class="limit-item">Populasi disederhanakan menjadi 10 kelompok besar (desil) dengan kekayaan rata rata per kelompok — dunia nyata punya sebaran kontinu dengan variasi besar bahkan di dalam satu kelompok kekayaan yang sama.</div>
+    <div class="limit-item">Simulator mengasumsikan seluruh dana zakat tersalurkan sempurna dan merata kepada kelompok di bawah ambang mustahik pada periode yang sama — tidak memodelkan biaya operasional amil, keterlambatan penyaluran, atau ketidaktepatan sasaran yang terjadi dalam praktik nyata.</div>
+    <div class="limit-item">Perhitungan Gini di sini memakai pendekatan integrasi numerik sederhana (aturan trapesium) atas 10 titik data — cukup akurat untuk demonstrasi, namun bukan metode presisi tinggi yang dipakai lembaga statistik resmi dengan data mikro jutaan individu.</div>
+    <div class="limit-item">Nisab dan tarif zakat pada simulator ini disederhanakan menjadi angka tunggal dalam Rupiah — dalam fikih riil, nisab dihitung berdasarkan setara harga emas/perak dan berbeda-beda menurut jenis harta (maal, pertanian, perniagaan, dsb).</div>
+    <div class="limit-item">Simulator ini adalah potret satu periode (statis) — tidak memodelkan efek dinamis jangka panjang seperti bagaimana penerima zakat bisa naik kelas ekonomi dan menjadi pembayar zakat di periode berikutnya.</div>
+  </section>
+
+  <section id="referensi">
+    <h2><span class="num">06</span> Referensi</h2>
+    <table class="refs">
+      <tr><td>Max O. Lorenz — "Methods of Measuring the Concentration of Wealth" (1905)</td><td>Sumber asli konsep kurva Lorenz</td></tr>
+      <tr><td>Corrado Gini — "Variabilità e mutabilità" (1912)</td><td>Sumber asli koefisien Gini sebagai ukuran ketimpangan</td></tr>
+      <tr><td>Monzer Kahf — <em>The Calculation of Zakah for Muslims in North America</em></td><td>Rujukan kontemporer perhitungan nisab &amp; tarif zakat maal</td></tr>
+      <tr><td>Yusuf al-Qaradawi — <em>Fiqh az-Zakah</em></td><td>Rujukan fikih klasik-kontemporer tentang ketentuan zakat &amp; golongan mustahik</td></tr>
+    </table>
+  </section>
+
+</div>
+
+<footer>Simulator edukasi ekonomi ketimpangan &amp; zakat — bagian dari seri Alat JAZMI.</footer>
+
+<script>
+(function(){
+  const el = id => document.getElementById(id);
+  const N = 10;
+  const state = {
+    wealth: [8,15,22,30,40,55,75,110,180,420],
+    tarif: 2.5, nisab: 85, mustahikAmbang: 30
+  };
+
+  function fmt(v){ return v.toLocaleString('id-ID', {maximumFractionDigits:1}); }
+
+  function buildSliders(){
+    const wrap = el('wealthSliders');
+    wrap.innerHTML = state.wealth.map((w,i)=>`
+      <div class="field">
+        <label>Kelompok ${i+1} (juta Rp) <span class="val" id="vW${i}">${w}</span></label>
+        <input type="range" id="inW${i}" min="1" max="600" step="1" value="${w}">
+      </div>`).join('');
+    state.wealth.forEach((w,i)=>{
+      el('inW'+i).addEventListener('input', ()=>{
+        state.wealth[i] = +el('inW'+i).value;
+        el('vW'+i).textContent = state.wealth[i];
+        compute();
+      });
+    });
+  }
+
+  function applyPreset(p){
+    if(p==='setara') state.wealth = [40,45,50,55,58,62,66,70,75,80];
+    if(p==='sedang') state.wealth = [10,18,25,32,40,50,65,85,120,210];
+    if(p==='ekstrem') state.wealth = [3,5,7,9,12,16,22,35,90,650];
+    buildSliders();
+    compute();
+  }
+  document.querySelectorAll('.preset-btn[data-preset]').forEach(btn=>{
+    btn.addEventListener('click', ()=>applyPreset(btn.dataset.preset));
+  });
+  el('btnReroll').addEventListener('click', ()=>{
+    state.wealth = Array.from({length:N}, ()=> Math.round(5 + Math.random()*Math.random()*500));
+    state.wealth.sort((a,b)=>a-b);
+    buildSliders();
+    compute();
+  });
+
+  ['inTarif','inNisab','inMustahik'].forEach((id,idx)=>{
+    el(id).addEventListener('input', ()=>{
+      state.tarif = +el('inTarif').value;
+      state.nisab = +el('inNisab').value;
+      state.mustahikAmbang = +el('inMustahik').value;
+      el('vTarif').textContent = state.tarif;
+      el('vNisab').textContent = state.nisab;
+      el('vMustahik').textContent = state.mustahikAmbang;
+      compute();
+    });
+  });
+
+  function computeZakat(wealthArr){
+    const arr = wealthArr.slice();
+    let totalZakat = 0;
+    const wajib = arr.map(w => w >= state.nisab);
+    arr.forEach((w,i)=>{ if(wajib[i]) totalZakat += w * (state.tarif/100); });
+    const mustahikIdx = [];
+    arr.forEach((w,i)=>{ if(w < state.mustahikAmbang) mustahikIdx.push(i); });
+    const post = arr.slice();
+    arr.forEach((w,i)=>{ if(wajib[i]) post[i] = w - w*(state.tarif/100); });
+    if(mustahikIdx.length>0){
+      const share = totalZakat / mustahikIdx.length;
+      mustahikIdx.forEach(i=>{ post[i] += share; });
+    }
+    return post;
+  }
+
+  function gini(wealthArr){
+    const arr = wealthArr.slice().sort((a,b)=>a-b);
+    const n = arr.length;
+    const total = arr.reduce((a,b)=>a+b,0);
+    if(total<=0) return 0;
+    let cumPop=[0], cumWealth=[0];
+    let runningW=0;
+    for(let i=0;i<n;i++){
+      runningW += arr[i];
+      cumPop.push((i+1)/n);
+      cumWealth.push(runningW/total);
+    }
+    let areaB=0;
+    for(let i=1;i<cumPop.length;i++){
+      const x1=cumPop[i-1], x2=cumPop[i];
+      const y1=cumWealth[i-1], y2=cumWealth[i];
+      areaB += (x2-x1)*(y1+y2)/2;
+    }
+    const giniVal = (0.5 - areaB) / 0.5;
+    return {gini: giniVal, cumPop, cumWealth};
+  }
+
+  function renderLorenz(svgId, cumPop, cumWealth, color){
+    const S=300, pad=34;
+    const plot = S-2*pad;
+    function pt(x,y){ return [pad+x*plot, S-pad-y*plot]; }
+    let svg='';
+    svg += `<line x1="${pt(0,0)[0]}" y1="${pt(0,0)[1]}" x2="${pt(1,0)[0]}" y2="${pt(1,0)[1]}" stroke="#3a4150" stroke-width="1"/>`;
+    svg += `<line x1="${pt(0,0)[0]}" y1="${pt(0,0)[1]}" x2="${pt(0,1)[0]}" y2="${pt(0,1)[1]}" stroke="#3a4150" stroke-width="1"/>`;
+    svg += `<line x1="${pt(0,0)[0]}" y1="${pt(0,0)[1]}" x2="${pt(1,1)[0]}" y2="${pt(1,1)[1]}" stroke="#3a4150" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+    const pts = cumPop.map((x,i)=>pt(x,cumWealth[i]).join(',')).join(' ');
+    svg += `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5"/>`;
+    svg += `<text x="${pad}" y="${S-pad+16}" fill="#9aa1ad" font-size="10" font-family="JetBrains Mono, monospace">0%</text>`;
+    svg += `<text x="${S-pad}" y="${S-pad+16}" fill="#9aa1ad" font-size="10" text-anchor="end" font-family="JetBrains Mono, monospace">100% populasi</text>`;
+    el(svgId).innerHTML = svg;
+  }
+
+  function renderGroupTable(pre, post){
+    const rows = [`<tr><th>Kelompok</th><th>Sebelum</th><th>Sesudah</th><th>Perubahan</th></tr>`];
+    for(let i=0;i<N;i++){
+      const delta = post[i]-pre[i];
+      rows.push(`<tr>
+        <td>Kelompok ${i+1}</td>
+        <td class="pre">${fmt(pre[i])} jt</td>
+        <td class="post">${fmt(post[i])} jt</td>
+        <td class="${delta>=0?'post':'pre'}">${delta>=0?'+':''}${fmt(delta)} jt</td>
+      </tr>`);
+    }
+    el('groupTable').innerHTML = rows.join('');
+  }
+
+  function compute(){
+    const pre = state.wealth.slice();
+    const post = computeZakat(pre);
+
+    const giniPre = gini(pre);
+    const giniPost = gini(post);
+
+    renderLorenz('svgPre', giniPre.cumPop, giniPre.cumWealth, '#e3766a');
+    renderLorenz('svgPost', giniPost.cumPop, giniPost.cumWealth, '#4f9c94');
+    renderGroupTable(pre, post);
+
+    const totalZakat = pre.reduce((sum,w)=> w>=state.nisab ? sum + w*(state.tarif/100) : sum, 0);
+    const jumlahMustahik = pre.filter(w=>w<state.mustahikAmbang).length;
+
+    const results = [
+      {l:'Gini Sebelum Zakat', v: giniPre.gini.toFixed(3)},
+      {l:'Gini Sesudah Zakat', v: giniPost.gini.toFixed(3)},
+      {l:'Total Dana Zakat', v: fmt(totalZakat)+' jt'},
+      {l:'Kelompok Mustahik', v: jumlahMustahik+'/'+N},
+    ];
+    el('results').innerHTML = results.map(r=>`<div class="result-card"><div class="l">${r.l}</div><div class="v">${r.v}</div></div>`).join('');
+
+    const turun = giniPre.gini - giniPost.gini;
+    const persenTurun = giniPre.gini>0 ? (turun/giniPre.gini*100) : 0;
+    let msg = `Koefisien Gini turun dari <b>${giniPre.gini.toFixed(3)}</b> menjadi <b>${giniPost.gini.toFixed(3)}</b> — penurunan sebesar ${(turun>=0?'':'-') }${Math.abs(turun).toFixed(3)} poin (~${fmt(Math.abs(persenTurun))}%) setelah zakat disalurkan. `;
+    if(jumlahMustahik===0){
+      msg += `Tidak ada kelompok yang berada di bawah ambang mustahik pada pengaturan saat ini, sehingga dana zakat tidak tersalurkan dan Gini tidak berubah — coba turunkan ambang penerima atau ubah distribusi kekayaan.`;
+    } else if(persenTurun < 3){
+      msg += `Efeknya relatif kecil pada pengaturan ini — coba bandingkan dengan preset "Sangat Timpang" untuk melihat apakah dampak zakat lebih terasa saat ketimpangan awal jauh lebih tinggi.`;
+    } else {
+      msg += `Perhatikan pada kurva: bagian bawah kurva Lorenz (kelompok termiskin) naik paling nyata, sementara ujung atas nyaris tidak berubah — pola khas instrumen redistribusi yang menyasar dasar piramida kekayaan.`;
+    }
+    el('insightBox').innerHTML = msg;
+  }
+
+  buildSliders();
+  compute();
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skala Magnitudo Bintang — JAZMI</title>
+<style>
+body{margin:0;background:#0a0b12;color:#e6e6f0;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;line-height:1.6;}
+.wrap{max-width:640px;margin:0 auto;padding:32px 20px 60px;}
+h1{font-family:Georgia,serif;font-weight:normal;font-size:24px;margin:0 0 8px;}
+p{color:#9494ac;font-size:14px;}
+input[type=range]{width:100%;accent-color:#d9b25a;}
+.val{font-size:22px;color:#eecc80;font-weight:600;margin:12px 0 4px;}
+.sub{font-size:13px;color:#8f8fa8;}
+.readout{background:#1a140c66;border:1px solid #d9b25a;border-radius:8px;padding:14px 18px;margin-top:12px;}
+.readout .l{font-size:10.5px;color:#8f8fa8;text-transform:uppercase;}
+.readout .v{font-size:16px;color:#eecc80;font-weight:600;}
+.btnrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.btnrow button{background:#1a1c2b;border:1px solid #262838;color:#e6e6f0;padding:6px 10px;border-radius:12px;font-size:11px;cursor:pointer;}
+.note{font-size:12px;color:#8f8fa8;margin-top:16px;border-top:1px solid #262838;padding-top:12px;}
+</style></head>
+<body><div class="wrap">
+<p style="color:#eecc80;font-size:11px;letter-spacing:1px;text-transform:uppercase;">JAZMI · terhubung balik ke Diagram HR (Tier 3 No.15)</p>
+<h1>Skala magnitudo bintang</h1>
+<p>Penutup seri skala logaritmik (Kelvin, desibel, Richter, pH) — dan ini yang paling aneh: <strong>makin kecil angkanya, makin terang</strong> bendanya (kebalikan intuisi). Warisan sistem kuno Hipparchus yang memberi angka 1 untuk bintang paling terang, 6 untuk paling redup yang masih terlihat mata telanjang.</p>
+<input type="range" id="dmSlider" min="-5" max="20" value="0" step="0.1">
+<p class="val" id="dmOut"></p>
+<div class="readout">
+  <div class="l">Rasio kecerahan</div>
+  <div class="v" id="ratioOut"></div>
+</div>
+<div class="btnrow" id="btns"></div>
+<p class="note">Rasio kecerahan = 2,512^(Δm) — didefinisikan tepat supaya selisih 5 magnitudo = persis 100× kecerahan (skala Pogson, 1856). Ini prinsip yang sama dengan sumbu luminositas Diagram HR, cuma dibalik arahnya.</p>
+</div>
+<script>
+const refs=[{n:'Matahari vs Sirius',dm:-1.46-(-26.74)},{n:'Sirius vs Vega (Δm≈1.5)',dm:1.5},{n:'Selisih 5 magnitudo (persis 100×)',dm:5},{n:'Mata telanjang vs teleskop Hubble (Δm≈24)',dm:24}];
+const s=document.getElementById('dmSlider');
+function u(){
+  const dm=parseFloat(s.value);
+  const ratio=Math.pow(2.512,dm);
+  document.getElementById('dmOut').textContent='Δm = '+dm.toFixed(1);
+  document.getElementById('ratioOut').textContent = (ratio>=1?ratio:1/ratio).toLocaleString('id-ID',{maximumFractionDigits:2})+'× '+(dm>=0?'lebih redup':'lebih terang');
+}
+s.addEventListener('input',u); u();
+const b=document.getElementById('btns');
+refs.forEach(r=>{
+  const btn=document.createElement('button');
+  btn.textContent=r.n;
+  btn.onclick=()=>{s.value=Math.max(-5,Math.min(20,r.dm));u();};
+  b.appendChild(btn);
+});
+</script>
+</body></html>

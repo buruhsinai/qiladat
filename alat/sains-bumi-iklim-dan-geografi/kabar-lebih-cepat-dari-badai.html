@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kenapa Ramalan Cuaca Dulu Selalu Terlambat?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky1:#EAF4FB; --sky2:#D3E9FA; --card:#FFFFFF;
+    --navy:#1D3557; --navy-soft:#4A6178;
+    --gold:#FFB703; --gold-deep:#E09000;
+    --storm:#6B4E9E; --storm-soft:rgba(107,78,158,0.1);
+    --good:#2A9D8F; --bad:#E76F51;
+    --line: #DCEBF7;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:linear-gradient(180deg,var(--sky1) 0%, var(--sky2) 340px, #FFFFFF 340px);
+    color:var(--navy); font-family:'Nunito',sans-serif; font-size:17px; line-height:1.65;
+  }
+  h1,h2,h3{ font-family:'Fredoka',sans-serif; font-weight:600; color:var(--navy); margin:0; }
+  .wrap{ max-width:640px; margin:0 auto; padding:0 20px 70px; }
+
+  header.hero{ padding:40px 0 20px; text-align:center; }
+  header.hero .badge{ display:inline-block; background:#fff; border-radius:100px; padding:7px 16px; font-size:13px; font-weight:800; color:var(--storm); box-shadow:0 2px 10px rgba(29,53,87,0.08); margin-bottom:18px; }
+  header.hero h1{ font-size:clamp(26px,7vw,36px); line-height:1.25; margin-bottom:14px; }
+  header.hero p{ color:var(--navy-soft); font-size:16.5px; max-width:46ch; margin:0 auto; }
+
+  .sky-illust{ margin:26px auto 6px; display:block; }
+
+  section{ margin-top:46px; }
+  section h2{ font-size:clamp(21px,5.5vw,26px); margin-bottom:12px; line-height:1.3; }
+  section > p.intro{ color:var(--navy-soft); font-size:16px; margin:0 0 18px; }
+
+  .card{ background:var(--card); border-radius:20px; padding:22px 22px; box-shadow:0 4px 22px rgba(29,53,87,0.08); }
+  .card + .card{ margin-top:14px; }
+
+  /* race widget */
+  .race-card{ background:var(--card); border-radius:22px; padding:24px 22px 22px; box-shadow:0 6px 26px rgba(29,53,87,0.1); }
+  .race-track{ position:relative; height:64px; margin:18px 0 8px; }
+  .race-lane{ position:relative; height:26px; background:var(--sky1); border-radius:100px; margin-bottom:10px; overflow:visible; }
+  .race-fill{ position:absolute; left:0; top:0; height:100%; border-radius:100px; transition:width .4s ease; }
+  .race-fill.storm{ background:linear-gradient(90deg,var(--bad),#f3a58e); }
+  .race-fill.kabar{ background:linear-gradient(90deg,var(--good),#7fd8cc); }
+  .race-emoji{ position:absolute; top:50%; transform:translate(-50%,-50%); font-size:22px; transition:left .4s ease; }
+  .race-label{ font-size:13.5px; font-weight:800; color:var(--navy-soft); display:flex; justify-content:space-between; margin-bottom:2px; }
+  .race-label b{ color:var(--navy); }
+  .race-result{ margin-top:16px; padding:14px 16px; border-radius:14px; font-size:15px; font-weight:700; text-align:center; }
+  .race-result.win{ background:rgba(42,157,143,0.12); color:var(--good); }
+  .race-result.lose{ background:rgba(231,111,81,0.12); color:var(--bad); }
+
+  .slider-row{ margin:18px 0 6px; }
+  .slider-row label{ display:flex; justify-content:space-between; font-size:14.5px; font-weight:700; color:var(--navy); margin-bottom:8px; }
+  .slider-row label span.val{ color:var(--storm); font-family:'Fredoka',sans-serif; }
+  input[type=range]{ width:100%; accent-color:var(--storm); height:6px; }
+  .choice-row{ display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 4px; }
+  .choice-btn{ flex:1; min-width:100px; padding:10px 10px; border-radius:12px; border:2px solid var(--line); background:#fff; font-family:'Nunito',sans-serif; font-weight:700; font-size:13.5px; color:var(--navy-soft); cursor:pointer; text-align:center; }
+  .choice-btn.active{ border-color:var(--storm); color:var(--storm); background:var(--storm-soft); }
+
+  /* lightning calculator */
+  .flash-card{ background:linear-gradient(160deg,#1D3557,#0F2038); color:#fff; border-radius:22px; padding:26px 22px; }
+  .flash-card h3{ color:#fff; font-size:20px; margin-bottom:6px; }
+  .flash-card p.sub{ color:#B7C6D9; font-size:14.5px; margin:0 0 18px; }
+  .flash-card .slider-row label{ color:#EAF4FB; }
+  .flash-card .slider-row label span.val{ color:var(--gold); }
+  .flash-card input[type=range]{ accent-color:var(--gold); }
+  .flash-result{ margin-top:18px; text-align:center; }
+  .flash-result .num{ font-family:'Fredoka',sans-serif; font-size:42px; color:var(--gold); line-height:1; }
+  .flash-result .lbl{ font-size:13.5px; color:#B7C6D9; margin-top:4px; }
+
+  /* chapters as simple analogies */
+  .analogy-list{ display:flex; flex-direction:column; gap:12px; margin-top:16px; }
+  .analogy{ display:flex; gap:14px; align-items:flex-start; background:#fff; border-radius:16px; padding:16px 16px; box-shadow:0 3px 14px rgba(29,53,87,0.07); }
+  .analogy .emoji{ font-size:28px; line-height:1; flex-shrink:0; margin-top:2px; }
+  .analogy h4{ font-family:'Fredoka',sans-serif; font-size:16px; color:var(--navy); margin:0 0 4px; }
+  .analogy p{ font-size:14.5px; color:var(--navy-soft); margin:0; }
+
+  .timeline-simple{ margin-top:16px; }
+  .ts-item{ display:flex; gap:14px; padding:14px 0; border-bottom:1px solid var(--line); }
+  .ts-item:last-child{ border-bottom:none; }
+  .ts-year{ font-family:'Fredoka',sans-serif; color:var(--storm); font-size:14px; width:64px; flex-shrink:0; }
+  .ts-item.key .ts-year{ color:var(--gold-deep); font-weight:700; }
+  .ts-text{ font-size:15px; color:var(--navy); }
+  .ts-item.key .ts-text{ font-weight:700; }
+
+  .closing{ text-align:center; margin-top:52px; padding:30px 22px; background:linear-gradient(160deg,#1D3557,#0F2038); border-radius:24px; color:#fff; }
+  .closing h2{ color:#fff; font-size:22px; margin-bottom:10px; }
+  .closing p{ color:#B7C6D9; font-size:15.5px; max-width:44ch; margin:0 auto; }
+
+  footer{ text-align:center; margin-top:40px; font-size:13px; color:var(--navy-soft); }
+  footer a{ color: var(--storm); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="badge">☁️ Cerita Sains untuk Semua Orang</span>
+    <h1>Kenapa dulu, kabar badai selalu datang terlambat?</h1>
+    <p>Bukan karena orang zaman dulu bodoh soal cuaca. Masalahnya cuma satu: kabar tidak bisa berjalan lebih cepat daripada badainya sendiri. Sampai satu hari, itu berubah.</p>
+  </header>
+
+  <svg class="sky-illust" width="100%" height="110" viewBox="0 0 400 110" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Awan badai dengan kilat">
+    <ellipse cx="120" cy="55" rx="85" ry="34" fill="#B9D4EA"/>
+    <ellipse cx="210" cy="45" rx="100" ry="40" fill="#9FC3E0"/>
+    <ellipse cx="300" cy="58" rx="75" ry="30" fill="#B9D4EA"/>
+    <polygon points="205,70 190,100 202,100 192,130 225,90 210,90" fill="#FFB703"/>
+  </svg>
+
+  <!-- ============ 1. RACE WIDGET ============ -->
+  <section id="lomba">
+    <h2>Coba sendiri: lomba antara badai dan kabar</h2>
+    <p class="intro">Bayangkan sebuah kota, 300 km jauhnya dari tempat badai terbentuk di laut. Badai itu bergerak menuju kota. Sebuah kapal di laut sudah melihatnya — pertanyaannya, kabar dari kapal itu bisa sampai ke kota lebih dulu atau tidak?</p>
+
+    <div class="race-card">
+      <div class="slider-row">
+        <label>Jarak badai ke kota <span class="val" id="distVal">300 km</span></label>
+        <input type="range" id="distSlider" min="50" max="800" value="300" step="10">
+      </div>
+      <div class="slider-row">
+        <label>Kecepatan badai bergerak <span class="val" id="stormSpeedVal">40 km/jam</span></label>
+        <input type="range" id="stormSpeedSlider" min="10" max="90" value="40" step="5">
+      </div>
+      <p style="font-size:13.5px;font-weight:800;color:var(--navy-soft);margin:14px 0 6px;">Cara kabar dikirim:</p>
+      <div class="choice-row">
+        <button class="choice-btn" data-speed="20">🐎 Penunggang kuda<br><span style="font-weight:600;">(± 20 km/jam)</span></button>
+        <button class="choice-btn" data-speed="900">⛵ Kapal pos cepat<br><span style="font-weight:600;">(± 15 knot)</span></button>
+        <button class="choice-btn active" data-speed="1000000">⚡ Telegraf listrik<br><span style="font-weight:600;">(nyaris instan)</span></button>
+      </div>
+
+      <div class="race-track">
+        <div class="race-label"><span>🌩️ Badai</span><b id="stormTimeLbl">7.5 jam</b></div>
+        <div class="race-lane"><div class="race-fill storm" id="stormFill" style="width:0%"></div></div>
+        <div class="race-label"><span>📨 Kabar</span><b id="kabarTimeLbl">nyaris 0 jam</b></div>
+        <div class="race-lane"><div class="race-fill kabar" id="kabarFill" style="width:0%"></div></div>
+      </div>
+      <div class="race-result win" id="raceResult">Kabar menang — kota masih sempat bersiap!</div>
+    </div>
+  </section>
+
+  <!-- ============ 2. CERITA SINGKAT ============ -->
+  <section id="cerita">
+    <h2>Yang sungguh terjadi, 1854</h2>
+    <p class="intro">Ini bukan cuma andai-andai. Ini benar-benar terjadi.</p>
+    <div class="card">
+      <p>Di tengah laut dekat Krimea, badai besar menenggelamkan puluhan kapal perang Prancis dan Inggris. Ratusan orang tewas — bukan dalam perang, tapi karena cuaca.</p>
+      <p style="margin-top:10px;">Kaisar Prancis marah dan bertanya ke seorang astronom bernama <b>Le Verrier</b>: apakah badai seperti ini bisa diketahui lebih awal?</p>
+      <p style="margin-top:10px;">Le Verrier mengumpulkan semua laporan cuaca dari kota-kota Eropa di hari-hari sebelum badai itu. Hasilnya mengejutkan: <b>badai itu sebenarnya sudah "terlihat" beberapa hari sebelumnya</b> — di kota-kota lain, dalam bentuk hujan dan angin yang bergerak perlahan mendekat. Masalahnya cuma satu: <b>tidak ada yang sempat memberi tahu</b> sebelum badai itu sendiri sampai duluan.</p>
+      <p style="margin-top:10px;">Untungnya, satu alat baru sudah ada waktu itu: <b>telegraf listrik</b>. Untuk pertama kalinya dalam sejarah manusia, kabar bisa bergerak lebih cepat daripada cuaca. Beberapa tahun kemudian, jaringan telegraf cuaca pertama di dunia dibangun — dan ramalan cuaca sungguhan pun lahir.</p>
+    </div>
+  </section>
+
+  <!-- ============ 3. HITUNG JARAK PETIR ============ -->
+  <section id="petir">
+    <h2>Trik lama yang masih berlaku hari ini</h2>
+    <p class="intro">Kamu sebenarnya bisa melakukan hal yang mirip dengan Le Verrier — tanpa alat apa pun, cuma pakai hitungan detik. Ini triknya:</p>
+    <div class="flash-card">
+      <h3>⚡ Seberapa jauh petir itu?</h3>
+      <p class="sub">Cahaya kilat sampai ke matamu nyaris seketika. Suara gunturnya butuh waktu untuk sampai. Geser berapa detik jeda antara kilat dan guntur yang kamu dengar:</p>
+      <div class="slider-row">
+        <label>Jeda kilat → guntur <span class="val" id="thunderDelayVal">5 detik</span></label>
+        <input type="range" id="thunderDelaySlider" min="1" max="30" value="5" step="1">
+      </div>
+      <div class="flash-result">
+        <div class="num" id="thunderDistVal">1.7 km</div>
+        <div class="lbl">perkiraan jarak petir itu darimu</div>
+      </div>
+    </div>
+    <p style="font-size:13.5px;color:var(--navy-soft);margin-top:10px;">Cara kerjanya: suara bergerak sekitar 343 meter setiap detik di udara biasa. Kalau jeda kilat-guntur 5 detik, jaraknya kira-kira 343 × 5 ≈ 1.715 meter, atau sekitar 1,7 km.</p>
+  </section>
+
+  <!-- ============ 4. RADAR DALAM BAHASA SEHARI-HARI ============ -->
+  <section id="radar-sederhana">
+    <h2>Terus, apa hubungannya dengan radar cuaca?</h2>
+    <p class="intro">Kabar cuaca lewat telegraf itu cikal bakalnya. Hari ini, "kabar" itu datang dari alat bernama <b>radar cuaca</b> — dan cara kerjanya sebenarnya sederhana kalau dijelaskan tanpa istilah rumit.</p>
+    <div class="analogy-list">
+      <div class="analogy"><span class="emoji">🦇</span><div><h4>Radar itu seperti kelelawar</h4><p>Kelelawar memancarkan suara, lalu mendengarkan pantulannya untuk tahu ada apa di depannya dalam gelap. Radar cuaca memancarkan gelombang, lalu "mendengarkan" pantulan dari tetes hujan di langit — dari situ ia tahu di mana hujan sedang turun, tanpa perlu ada orang di sana.</p></div></div>
+      <div class="analogy"><span class="emoji">🌧️</span><div><h4>Semakin kuat pantulannya, semakin deras hujannya</h4><p>Tetes hujan besar memantulkan gelombang lebih kuat daripada gerimis halus. Radar memakai kekuatan pantulan itu untuk menerka: ini gerimis, hujan sedang, atau hujan sangat deras.</p></div></div>
+      <div class="analogy"><span class="emoji">🚓</span><div><h4>Radar juga tahu arah angin bergerak</h4><p>Mirip radar kecepatan yang dipakai polisi mengukur kecepatan mobil — radar cuaca bisa mendeteksi apakah tetes hujan sedang bergerak mendekat atau menjauh, dan seberapa cepat. Dari situ, terlihat pola angin di dalam badai.</p></div></div>
+      <div class="analogy"><span class="emoji">👻</span><div><h4>Radar bisa "melihat" udara yang kelihatannya kosong</h4><p>Kadang tidak ada awan sama sekali, tapi radar tetap menangkap sinyal samar dari udara yang bergerak tidak rata. Ini membantu mendeteksi turbulensi, jauh sebelum pesawat terbang merasakannya.</p></div></div>
+      <div class="analogy"><span class="emoji">🐦</span><div><h4>Bahkan burung dan petir pun tertangkap</h4><p>Radar modern cukup peka untuk menangkap kawanan burung yang terbang, sambaran petir, bahkan dipakai untuk menerka suhu udara dari kecepatan rambat suara — semuanya dari alat yang sama.</p></div></div>
+    </div>
+  </section>
+
+  <!-- ============ 5. GARIS WAKTU SANGAT SINGKAT ============ -->
+  <section id="waktu-singkat">
+    <h2>Perjalanan singkatnya</h2>
+    <div class="timeline-simple">
+      <div class="ts-item"><div class="ts-year">1643</div><div class="ts-text">Alat pertama untuk mengukur tekanan udara ditemukan, tapi cuma berguna di satu tempat.</div></div>
+      <div class="ts-item"><div class="ts-year">1844</div><div class="ts-text">Telegraf listrik mulai dipakai — kabar akhirnya bisa lebih cepat dari cuaca.</div></div>
+      <div class="ts-item key"><div class="ts-year">1854</div><div class="ts-text">Badai Krimea, dan Le Verrier membuktikan badai bisa "dilihat" datang dari jauh.</div></div>
+      <div class="ts-item"><div class="ts-year">1940-an</div><div class="ts-text">Tentara Perang Dunia II tanpa sengaja menemukan radar bisa "melihat" hujan.</div></div>
+      <div class="ts-item"><div class="ts-year">1960</div><div class="ts-text">Satelit cuaca pertama meluncur — kini Bumi dipotret dari luar angkasa setiap saat.</div></div>
+      <div class="ts-item"><div class="ts-year">Hari ini</div><div class="ts-text">Ribuan radar dan satelit bekerja bersama, memberi tahu kita jauh sebelum badai tiba.</div></div>
+    </div>
+  </section>
+
+  <div class="closing">
+    <h2>Intinya cuma satu hal</h2>
+    <p>Ramalan cuaca yang baik bukan soal alat paling canggih. Intinya selalu sama sejak 1854: kabar harus sampai lebih dulu daripada cuacanya sendiri. Yang berubah cuma caranya — dari telegraf, ke radio, ke radar, sampai satelit.</p>
+  </div>
+
+  <footer>
+    Versi sederhana dari <a href="#">"Dari Klimatologi ke Meteorologi"</a> — laboratorium Qiladat/JAZMI. Ditulis ulang supaya siapa pun bisa mengerti tanpa latar belakang sains.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Race widget ----------
+  var distSlider = document.getElementById('distSlider');
+  var stormSpeedSlider = document.getElementById('stormSpeedSlider');
+  var distVal = document.getElementById('distVal');
+  var stormSpeedVal = document.getElementById('stormSpeedVal');
+  var stormFill = document.getElementById('stormFill');
+  var kabarFill = document.getElementById('kabarFill');
+  var stormTimeLbl = document.getElementById('stormTimeLbl');
+  var kabarTimeLbl = document.getElementById('kabarTimeLbl');
+  var raceResult = document.getElementById('raceResult');
+  var choiceBtns = document.querySelectorAll('.choice-btn');
+  var messageSpeed = 1000000; // default: telegraf, nyaris instan
+
+  function formatJam(h){
+    if(h < 0.05) return 'nyaris 0 jam';
+    if(h < 1) return Math.round(h*60) + ' menit';
+    return (Math.round(h*10)/10) + ' jam';
+  }
+
+  function updateRace(){
+    var dist = parseFloat(distSlider.value);
+    var stormSpeed = parseFloat(stormSpeedSlider.value);
+    distVal.textContent = dist + ' km';
+    stormSpeedVal.textContent = stormSpeed + ' km/jam';
+
+    var stormTime = dist / stormSpeed;           // jam
+    var kabarTime = dist / messageSpeed;         // jam (nyaris 0 untuk telegraf)
+
+    var maxTime = Math.max(stormTime, kabarTime, 0.01);
+    stormFill.style.width = Math.min(100, (stormTime / maxTime) * 100) + '%';
+    kabarFill.style.width = Math.min(100, (kabarTime / maxTime) * 100) + '%';
+
+    stormTimeLbl.textContent = formatJam(stormTime) + ' sampai kota';
+    kabarTimeLbl.textContent = formatJam(kabarTime) + ' sampai kota';
+
+    if(kabarTime < stormTime){
+      var selisih = stormTime - kabarTime;
+      raceResult.className = 'race-result win';
+      raceResult.textContent = 'Kabar menang — kota punya sekitar ' + formatJam(selisih) + ' untuk bersiap!';
+    } else if(kabarTime > stormTime){
+      raceResult.className = 'race-result lose';
+      raceResult.textContent = 'Badai menang — kabarnya baru sampai setelah badainya sendiri tiba.';
+    } else {
+      raceResult.className = 'race-result win';
+      raceResult.textContent = 'Nyaris bersamaan — nyaris tidak ada waktu untuk bersiap.';
+    }
+  }
+
+  choiceBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      choiceBtns.forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      messageSpeed = parseFloat(btn.getAttribute('data-speed'));
+      updateRace();
+    });
+  });
+  distSlider.addEventListener('input', updateRace);
+  stormSpeedSlider.addEventListener('input', updateRace);
+  updateRace();
+
+  // ---------- Lightning distance calculator ----------
+  var thunderDelaySlider = document.getElementById('thunderDelaySlider');
+  var thunderDelayVal = document.getElementById('thunderDelayVal');
+  var thunderDistVal = document.getElementById('thunderDistVal');
+  var SPEED_OF_SOUND = 343; // m/s, kira-kira di udara ± 20°C
+
+  function updateThunder(){
+    var delay = parseFloat(thunderDelaySlider.value);
+    thunderDelayVal.textContent = delay + ' detik';
+    var meters = SPEED_OF_SOUND * delay;
+    var km = meters / 1000;
+    thunderDistVal.textContent = (Math.round(km*10)/10) + ' km';
+  }
+  thunderDelaySlider.addEventListener('input', updateThunder);
+  updateThunder();
+
+})();
+</script>
+</body>
+</html>

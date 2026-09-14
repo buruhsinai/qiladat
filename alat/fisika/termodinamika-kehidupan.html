@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Termodinamika Kehidupan &amp; Argumen Peluang Abiogenesis</title>
+<style>
+  :root{
+    --bg:#141210; --panel:#1c1916; --panel2:#211d19;
+    --gold:#c9a24b; --gold-soft:#8a7440; --text:#e8e0d0; --text-dim:#a89a80;
+    --line:#3a332a; --danger:#c25c4a; --ok:#6f9e6a; --blue:#6a91c2;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Georgia,'Times New Roman',serif;line-height:1.6;}
+  .container{max-width:880px;margin:0 auto;padding:28px 18px 60px;}
+  header{text-align:center;margin-bottom:28px;border-bottom:1px solid var(--line);padding-bottom:20px;}
+  header h1{font-size:1.5rem;color:var(--gold);margin:0 0 6px;}
+  header p{color:var(--text-dim);margin:0;font-size:0.92rem;font-style:italic;}
+  h2{color:var(--gold);font-size:1.1rem;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+  h2 .num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;
+    border:1px solid var(--gold-soft);border-radius:50%;font-size:0.8rem;color:var(--gold);flex-shrink:0;}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px;margin-bottom:18px;}
+  p{margin:0 0 10px;font-size:0.95rem;} p:last-child{margin-bottom:0;}
+  .dim{color:var(--text-dim);font-size:0.87rem;}
+  .field{display:flex;flex-direction:column;gap:4px;margin-bottom:16px;}
+  .field label{font-size:0.85rem;color:var(--text-dim);display:flex;justify-content:space-between;}
+  .field label span.val{color:var(--gold);font-weight:bold;}
+  input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:var(--line);outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+    background:var(--gold);cursor:pointer;border:2px solid var(--bg);}
+  input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--gold);
+    cursor:pointer;border:2px solid var(--bg);}
+  .toggle-row{display:flex;gap:8px;margin-bottom:16px;}
+  .toggle-row button{flex:1;background:var(--panel2);border:1px solid var(--gold-soft);color:var(--text);
+    padding:10px;border-radius:8px;font-family:inherit;font-size:0.9rem;cursor:pointer;}
+  .toggle-row button.active{background:var(--gold-soft);color:#1a1712;font-weight:bold;}
+  svg{width:100%;height:auto;background:#0d0c0a;border-radius:8px;border:1px solid var(--line);}
+  .readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px;}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;}
+  .stat .label{font-size:0.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.4px;}
+  .stat .value{font-size:1.02rem;color:var(--gold);margin-top:2px;}
+  .formula{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:10px 14px;
+    font-family:'Courier New',monospace;font-size:0.84rem;margin:8px 0;overflow-x:auto;}
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;}
+  @media(max-width:560px){.compare{grid-template-columns:1fr;}}
+  .compare .box{border-radius:8px;padding:12px 14px;font-size:0.87rem;}
+  .compare .klasik{background:rgba(194,92,74,0.08);border:1px solid var(--danger);}
+  .compare .sanggah{background:rgba(111,158,106,0.08);border:1px solid var(--ok);}
+  .compare .box .tag{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:4px;}
+  .klasik .tag{color:var(--danger);} .sanggah .tag{color:var(--ok);}
+  .honesty{background:rgba(106,145,194,0.08);border:1px solid var(--blue);border-radius:8px;padding:12px 14px;
+    font-size:0.87rem;margin-top:10px;color:var(--text);}
+  .honesty .tag{color:var(--blue);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:4px;}
+  .weasel-target{font-family:'Courier New',monospace;background:var(--panel2);border:1px solid var(--line);
+    border-radius:6px;padding:10px;font-size:0.95rem;letter-spacing:1px;text-align:center;margin-bottom:10px;color:var(--gold);}
+  .weasel-current{font-family:'Courier New',monospace;background:#0d0c0a;border:1px solid var(--gold-soft);
+    border-radius:6px;padding:12px;font-size:1.05rem;letter-spacing:1px;text-align:center;margin-bottom:10px;
+    color:var(--text);min-height:20px;}
+  .weasel-current .match{color:var(--ok);}
+  .weasel-current .miss{color:var(--text-dim);}
+  button.run{background:var(--gold-soft);color:#1a1712;border:none;padding:10px 18px;border-radius:8px;
+    font-family:inherit;font-weight:bold;cursor:pointer;font-size:0.9rem;}
+  button.run:disabled{opacity:0.5;cursor:not-allowed;}
+  ul{margin:8px 0;padding-left:20px;} li{margin-bottom:6px;font-size:0.93rem;}
+  .refs li{font-size:0.84rem;color:var(--text-dim);}
+  .clarif{background:rgba(201,162,75,0.08);border:1px solid var(--gold-soft);border-radius:8px;padding:12px 14px;
+    font-size:0.87rem;margin-top:10px;}
+  .clarif .tag{color:var(--gold);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:4px;}
+  footer{text-align:center;color:var(--text-dim);font-size:0.78rem;margin-top:24px;}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Termodinamika Kehidupan</h1>
+    <p>Mengapa unsur penyusun makhluk hidup "ingin bercerai" — dan mengapa argumen peluang tentang asal-usul kehidupan tidak sesederhana kelihatannya</p>
+  </header>
+
+  <!-- BELAJAR -->
+  <section id="belajar">
+    <h2><span class="num">1</span>Belajar</h2>
+    <p>Eksperimen Miller–Urey (1953) memang berhasil membentuk asam amino dari gas metana, amonia, hidrogen, dan uap air yang diberi percikan listrik — meniru dugaan atmosfer bumi purba. Sampai tinjauan ilmiah 2026, sains memang belum punya satu model tunggal yang menjelaskan penuh perjalanan dari kimia sederhana menjadi sel hidup pertama; ini status yang jujur, bukan klaim usang.</p>
+    <p>Tapi ada satu hal spesifik yang menjelaskan kenapa unsur-unsur dalam makhluk hidup "ingin bercerai-berai": fisikawan <strong>Erwin Schrödinger</strong> (dalam bukunya <em>What is Life?</em>, 1944) menjelaskan bahwa makhluk hidup mempertahankan keteraturannya dengan terus-menerus menyerap "negentropi" — energi teratur dari luar (makanan, cahaya matahari) — untuk melawan hukum termodinamika kedua yang selalu mendorong ke arah kekacauan. Ahli kimia <strong>Ilya Prigogine</strong> (peraih Nobel Kimia 1977) menyebut sistem semacam ini <em>struktur disipatif</em>: keteraturan lokal yang bertahan HANYA selama energi terus mengalir melewatinya.</p>
+    <p>Begitu aliran energi berhenti — organisme mati — tidak ada lagi yang melawan hukum kedua termodinamika, dan penguraian pun berjalan menurut laju kimiawi yang bisa dihitung. Itulah yang dimodelkan di Bagian 3.</p>
+    <div class="clarif">
+      <span class="tag">Koreksi jujur atas satu premis</span>
+      Perlu diluruskan satu hal: <strong>"3.000 material buatan manusia" tidak setara dengan "3.000 percobaan mengulang kehidupan pertama".</strong> Membuat plastik, paduan logam, atau bahan sintetis lain adalah ilmu material — tidak satu pun dari situ benar-benar mencoba mengulang detik "benda mati menjadi hidup". Menyamakan keduanya adalah kesalahan kategori, meski niatnya jujur mencari pola. Yang benar-benar relevan sebagai "percobaan mengulang abiogenesis" hanya riset origin-of-life itu sendiri (Miller-Urey dan penerusnya) — dan di situ pun, sains belum pernah mengklaim sudah berhasil.
+    </div>
+  </section>
+
+  <!-- PERTANYAAN ILMIAH -->
+  <section id="pertanyaan">
+    <h2><span class="num">2</span>Pertanyaan Ilmiah</h2>
+    <ul>
+      <li>Apa sebenarnya yang dimaksud "keteraturan" pada makhluk hidup secara termodinamika?</li>
+      <li>Seberapa cepat keteraturan itu runtuh begitu energi berhenti mengalir, dan apa yang memengaruhi kecepatannya?</li>
+      <li>Apakah argumen "peluangnya terlalu kecil untuk terjadi kebetulan" itu valid secara matematis, ataukah keliru premis?</li>
+      <li>Kalau keliru premis, di mana letak kekeliruannya — dan apakah sanggahannya juga punya batas?</li>
+    </ul>
+  </section>
+
+  <!-- SIMULATOR TERMODINAMIKA -->
+  <section id="simulator">
+    <h2><span class="num">3</span>Simulator: Order vs Entropi</h2>
+    <p>Model ini <strong>ilustratif</strong> (bukan prediksi presisi untuk kasus nyata tertentu) — menunjukkan tren umum, bukan angka pasti sebuah sistem biologis spesifik.</p>
+
+    <div class="toggle-row">
+      <button id="btnHidup" class="active">Energi Mengalir (Hidup)</button>
+      <button id="btnMati">Energi Terhenti (Mati)</button>
+    </div>
+
+    <div class="field">
+      <label>Suhu lingkungan <span class="val" id="v_suhu">20 °C</span></label>
+      <input type="range" id="suhu" min="0" max="45" step="1" value="20">
+    </div>
+
+    <svg id="chart" viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg"></svg>
+
+    <div class="readout">
+      <div class="stat"><div class="label">Laju peluruhan k(T)</div><div class="value" id="out_k">—</div></div>
+      <div class="stat"><div class="label">Waktu paruh keteraturan</div><div class="value" id="out_thalf">—</div></div>
+      <div class="stat"><div class="label">Relatif thd 20°C</div><div class="value" id="out_rel">—</div></div>
+    </div>
+    <p class="dim" style="margin-top:10px;">Perhatikan: menaikkan suhu 10°C melipatgandakan laju peluruhan (sekitar ×2,5) — konsisten dengan aturan Q10 yang dipakai luas dalam kimia dan ekologi dekomposisi.</p>
+  </section>
+
+  <!-- METODE -->
+  <section id="metode">
+    <h2><span class="num">4</span>Metode &amp; Rumus</h2>
+    <p>Selama energi terus mengalir (hidup), sistem mempertahankan keteraturan mendekati konstan (O ≈ 1) karena perbaikan/metabolisme terus melawan peluruhan alami — inilah struktur disipatif Prigogine.</p>
+    <p>Begitu energi berhenti (mati, t=0), keteraturan meluruh eksponensial dengan laju bergantung suhu, memakai koefisien suhu Q10 (aturan Van't Hoff, dipakai luas untuk laju reaksi biokimia/dekomposisi):</p>
+    <div class="formula">k(T) = k_acuan × Q10^((T − T_acuan)/10)</div>
+    <div class="formula">O(t) = exp(−k(T) × t)</div>
+    <p class="dim">Dipakai: T_acuan = 20°C, Q10 = 2,5 (nilai representatif umum untuk proses dekomposisi/enzimatik, bervariasi tergantung jenis molekul), k_acuan dipilih agar waktu paruh di 20°C ≈ 240 jam (10 hari) — angka ilustratif untuk menunjukkan tren, bukan klaim presisi.</p>
+    <p>Waktu paruh: t½ = ln(2) / k(T)</p>
+  </section>
+
+  <!-- ARGUMEN PELUANG -->
+  <section id="peluang">
+    <h2><span class="num">5</span>Argumen Peluang — Dua Sisi</h2>
+    <div class="compare">
+      <div class="box klasik">
+        <span class="tag">Argumen Klasik (Fred Hoyle, 1983)</span>
+        Astronom Fred Hoyle menghitung peluang sekitar 2.000 enzim tersusun sekaligus secara acak sekitar 1 banding 10^40.000 — dianalogikan dengan tornado yang melewati tumpukan besi tua dan kebetulan merakit pesawat Boeing 747 yang siap terbang. Kesimpulannya: kehidupan tidak mungkin muncul murni dari kebetulan acak.
+      </div>
+      <div class="box sanggah">
+        <span class="tag">Sanggahan Utama Sains Arus Utama</span>
+        Argumen ini dianggap keliru premis (dikenal sebagai "Hoyle's fallacy") karena mencampur dua hal berbeda: rongsokan pesawat adalah benda mati yang tidak bisa mewariskan perubahan, sedangkan replikator kimia sederhana (begitu satu bentuk penyalinan-diri muncul) bisa diseleksi bertahap — bukan tersusun sekali jadi menuju 2.000 enzim sekaligus.
+      </div>
+    </div>
+    <p class="dim" style="margin-top:10px;">Menariknya, Hoyle sendiri seorang ateis yang memakai argumen ini untuk mendukung teori panspermia (kehidupan datang dari luar angkasa), bukan untuk mendukung penciptaan — argumen ini kemudian dipinjam oleh kalangan lain untuk tujuan berbeda dari maksud aslinya.</p>
+
+    <p style="margin-top:16px;"><strong>Coba sendiri perbedaannya:</strong> Richard Dawkins (1986) mendemonstrasikan lewat program "Weasel" bahwa mencapai satu target string secara acak sekaligus nyaris mustahil, tapi lewat <em>seleksi kumulatif bertahap</em> (menyimpan progres yang membaik dari generasi ke generasi) tercapai hanya dalam puluhan generasi.</p>
+
+    <div class="weasel-target" id="weaselTarget">METHINKS IT IS LIKE A WEASEL</div>
+    <div class="weasel-current" id="weaselCurrent">—</div>
+    <div class="readout">
+      <div class="stat"><div class="label">Peluang acak sekali-jadi</div><div class="value" id="w_naif">—</div></div>
+      <div class="stat"><div class="label">Generasi (seleksi kumulatif)</div><div class="value" id="w_gen">—</div></div>
+    </div>
+    <div style="margin-top:12px;"><button class="run" id="w_run">Jalankan Simulasi Weasel</button></div>
+  </section>
+
+  <!-- CATATAN KEJUJURAN -->
+  <section id="kejujuran">
+    <h2><span class="num">6</span>Catatan Kejujuran Ilmiah</h2>
+    <div class="honesty">
+      <span class="tag">Batas analogi Weasel</span>
+      Dawkins sendiri mengakui program Weasel adalah analogi yang tidak sempurna: program ini menyeleksi menuju frasa target yang <em>sudah diketahui sebelumnya</em>. Evolusi kimia/biologi nyata tidak punya tujuan yang ditentukan di depan — seleksi hanya bekerja pada "apa yang berfungsi lebih baik sekarang", bukan mengarah ke target masa depan. Jadi simulasi ini bagus untuk menunjukkan BEDA antara peluang acak sekali-jadi vs seleksi bertahap, tapi bukan bukti utuh tentang bagaimana abiogenesis sesungguhnya terjadi.
+    </div>
+    <div class="honesty" style="margin-top:10px;">
+      <span class="tag">Status pertanyaan asli</span>
+      Sanggahan terhadap argumen Hoyle menunjukkan hitungannya keliru premis — tapi itu TIDAK sama dengan "abiogenesis sudah terbukti terjadi". Sampai 2026, mekanisme pasti dari kimia sederhana menuju sel hidup pertama tetap menjadi problem terbuka yang diakui sains sendiri. Kejujuran ilmiahnya: argumen peluang klasik bukan bukti kemustahilan yang valid, tapi ketiadaan bukti kemustahilan juga bukan bukti bahwa jawabannya sudah ditemukan.
+    </div>
+    <ul style="margin-top:12px;">
+      <li>Model peluruhan di Bagian 3–4 memakai nilai Q10 dan waktu-paruh yang <strong>ilustratif</strong>, dipilih agar tren terlihat jelas — bukan hasil pengukuran satu sistem biologis nyata tertentu.</li>
+      <li>Simulasi Weasel adalah demonstrasi matematika/komputasi murni (bagaimana seleksi kumulatif mengubah skala peluang), bukan simulasi kimia prebiotik sungguhan.</li>
+      <li>Alat ini tidak dimaksudkan untuk memihak kesimpulan filosofis atau keagamaan apa pun — hanya menyajikan dua argumen yang benar-benar beredar dalam diskusi ilmiah, apa adanya.</li>
+    </ul>
+  </section>
+
+  <!-- REFERENSI -->
+  <section id="referensi">
+    <h2><span class="num">7</span>Referensi</h2>
+    <ul class="refs">
+      <li>Erwin Schrödinger, <em>What is Life?</em> (1944) — konsep negentropi dan keteraturan biologis.</li>
+      <li>Ilya Prigogine — konsep struktur disipatif pada sistem jauh-dari-kesetimbangan (Nobel Kimia 1977).</li>
+      <li>Miller, S. L. &amp; Urey, H. C., <em>Science</em> (1953) — eksperimen pembentukan asam amino dari atmosfer purba tiruan.</li>
+      <li>Tinjauan <em>Communications Chemistry</em> (2026) — status terkini: belum ada model tunggal yang diterima penuh untuk sintesis abiotik hingga munculnya sel.</li>
+      <li>Fred Hoyle, <em>The Intelligent Universe</em> (1983) — argumen "tornado di tumpukan besi tua" / peluang 2.000 enzim.</li>
+      <li>Richard Dawkins, <em>The Blind Watchmaker</em> (1986) — program "Weasel" dan konsep seleksi kumulatif, termasuk pengakuan keterbatasan analoginya sendiri.</li>
+      <li>Konsep koefisien suhu Q10 (aturan Van't Hoff) — dipakai luas dalam kimia dan ekologi dekomposisi.</li>
+    </ul>
+  </section>
+
+  <footer>Bagian dari Laboratorium Sains &amp; Filsafat — Bank Ide Qiladat/JAZMI. Disusun untuk mendalami, bukan untuk memihak kesimpulan tertentu.</footer>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  let mode = 'hidup'; // 'hidup' | 'mati'
+  const Q10 = 2.5, T_ref = 20, t_half_ref_hours = 240; // ilustratif
+  const k_ref = Math.log(2)/t_half_ref_hours;
+
+  function kOfT(T){ return k_ref * Math.pow(Q10, (T - T_ref)/10); }
+
+  function fmt(n,d=3){ return n.toLocaleString('id-ID',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+
+  function updateSim(){
+    const T = parseFloat($('suhu').value);
+    $('v_suhu').textContent = T + ' °C';
+    const k = kOfT(T);
+    const thalf = Math.log(2)/k;
+    const kRefNow = kOfT(20);
+    const rel = k/kRefNow;
+
+    $('out_k').textContent = fmt(k,5) + ' /jam';
+    $('out_thalf').textContent = fmt(thalf,1) + ' jam';
+    $('out_rel').textContent = '×' + fmt(rel,2);
+
+    drawChart(T, k);
+  }
+
+  function drawChart(T, k){
+    const svg = $('chart');
+    const W=700, H=260, padL=50, padR=20, padT=20, padB=30;
+    const plotW = W-padL-padR, plotH = H-padT-padB;
+    const tMax = 500; // jam
+
+    let points = [];
+    const N = 60;
+    for(let i=0;i<=N;i++){
+      const t = tMax*i/N;
+      let O;
+      if(mode==='hidup'){ O = 1; }
+      else { O = Math.exp(-k*t); }
+      const x = padL + plotW*(t/tMax);
+      const y = padT + plotH*(1-O);
+      points.push([x,y]);
+    }
+    const pathD = points.map((p,i)=> (i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+
+    let gridLines = '';
+    for(let g=0; g<=4; g++){
+      const y = padT + plotH*g/4;
+      gridLines += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#3a332a" stroke-width="1"/>`;
+      const val = (1-g/4).toFixed(2);
+      gridLines += `<text x="${padL-8}" y="${y+4}" fill="#a89a80" font-size="10" text-anchor="end" font-family="Georgia,serif">${val}</text>`;
+    }
+    for(let g=0; g<=5; g++){
+      const x = padL + plotW*g/5;
+      const val = Math.round(tMax*g/5);
+      gridLines += `<text x="${x}" y="${H-8}" fill="#a89a80" font-size="10" text-anchor="middle" font-family="Georgia,serif">${val}j</text>`;
+    }
+
+    const color = mode==='hidup' ? '#6f9e6a' : '#c25c4a';
+
+    svg.innerHTML = `
+      <rect x="0" y="0" width="${W}" height="${H}" fill="#0d0c0a"/>
+      ${gridLines}
+      <text x="${padL}" y="14" fill="#a89a80" font-size="11" font-family="Georgia,serif">Keteraturan (O)</text>
+      <path d="${pathD}" fill="none" stroke="${color}" stroke-width="2.5"/>
+    `;
+  }
+
+  $('btnHidup').addEventListener('click', ()=>{
+    mode='hidup'; $('btnHidup').classList.add('active'); $('btnMati').classList.remove('active');
+    updateSim();
+  });
+  $('btnMati').addEventListener('click', ()=>{
+    mode='mati'; $('btnMati').classList.add('active'); $('btnHidup').classList.remove('active');
+    updateSim();
+  });
+  $('suhu').addEventListener('input', updateSim);
+  updateSim();
+
+  // ---- Weasel simulation ----
+  const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ '.split('');
+  const target = $('weaselTarget').textContent.trim();
+  const L = target.length;
+  const naiveProb = Math.pow(1/27, L);
+  const exponent = Math.log10(1/naiveProb);
+  $('w_naif').textContent = '1 dari 10^' + Math.round(exponent);
+
+  function randChar(){ return ALPHABET[Math.floor(Math.random()*ALPHABET.length)]; }
+  function randString(len){ let s=''; for(let i=0;i<len;i++) s+=randChar(); return s; }
+  function fitness(s){ let c=0; for(let i=0;i<L;i++) if(s[i]===target[i]) c++; return c; }
+  function mutate(s, rate){
+    let arr = s.split('');
+    for(let i=0;i<arr.length;i++){ if(Math.random()<rate) arr[i]=randChar(); }
+    return arr.join('');
+  }
+  function renderCurrent(s){
+    let html='';
+    for(let i=0;i<s.length;i++){
+      const cls = s[i]===target[i] ? 'match' : 'miss';
+      html += `<span class="${cls}">${s[i]===' '?'&nbsp;':s[i]}</span>`;
+    }
+    $('weaselCurrent').innerHTML = html;
+  }
+
+  let running = false;
+  $('w_run').addEventListener('click', async ()=>{
+    if(running) return;
+    running = true;
+    $('w_run').disabled = true;
+    $('w_run').textContent = 'Berjalan...';
+    let current = randString(L);
+    renderCurrent(current);
+    let gen = 0;
+    const maxGen = 2000;
+    const copiesPerGen = 30;
+    const mutationRate = 0.05;
+
+    while(current !== target && gen < maxGen){
+      let best = current, bestFit = fitness(current);
+      for(let c=0;c<copiesPerGen;c++){
+        const candidate = mutate(current, mutationRate);
+        const f = fitness(candidate);
+        if(f > bestFit){ bestFit = f; best = candidate; }
+      }
+      current = best;
+      gen++;
+      renderCurrent(current);
+      $('w_gen').textContent = gen + ' generasi';
+      if(gen % 2 === 0) await new Promise(r=>setTimeout(r, 30));
+    }
+    $('w_gen').textContent = gen + ' generasi (selesai)';
+    $('w_run').disabled = false;
+    $('w_run').textContent = 'Ulangi Simulasi';
+    running = false;
+  });
+})();
+</script>
+</body>
+</html>

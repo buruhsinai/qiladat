@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partikel dalam Kotak — Laboratorium JAZMI</title>
+<style>
+  :root{
+    --bg:#0a1512; --bg2:#0f1e19; --card:#122420; --card2:#16302a; --line:#1f3d34;
+    --emerald:#22c98a; --emerald-dim:#0e6b4f; --gold:#e0b354; --text:#e9f3ee;
+    --muted:#8fada0; --danger:#e07a5f; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:'Georgia','Iowan Old Style',serif; line-height:1.65;}
+  .sans{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;}
+  header{padding:34px 20px 24px; text-align:center; background:radial-gradient(ellipse at top, #113b2e 0%, var(--bg) 70%); border-bottom:1px solid var(--line);}
+  header .kicker{font-family:-apple-system,sans-serif; letter-spacing:.14em; text-transform:uppercase; font-size:12px; color:var(--gold); margin-bottom:10px;}
+  header h1{font-size:1.45rem; margin:0 0 10px; font-weight:600; line-height:1.35;}
+  header p{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px; max-width:640px; margin:0 auto;}
+  nav.tabs{position:sticky; top:0; z-index:10; display:flex; overflow-x:auto; gap:6px; padding:10px 14px; background:rgba(10,21,18,.96); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); font-family:-apple-system,sans-serif; -webkit-overflow-scrolling:touch;}
+  nav.tabs a{flex:0 0 auto; padding:7px 13px; border-radius:999px; font-size:12.5px; color:var(--muted); text-decoration:none; border:1px solid var(--line); white-space:nowrap;}
+  main{max-width:780px; margin:0 auto; padding:8px 18px 60px;}
+  section{padding:32px 0; border-bottom:1px solid var(--line);}
+  section:last-child{border-bottom:none;}
+  h2{font-size:1.1rem; color:var(--emerald); margin:0 0 6px; display:flex; align-items:center; gap:8px;}
+  h2 .num{font-family:-apple-system,sans-serif; font-size:11px; background:var(--emerald-dim); color:#dff7ec; padding:2px 8px; border-radius:6px;}
+  h3{color:var(--gold); font-size:1rem; margin:20px 0 8px;}
+  p{margin:0 0 14px; font-size:15.5px;}
+  .lead{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px; margin:14px 0;}
+  .qbox{background:var(--card2); border-left:3px solid var(--gold); border-radius:8px; padding:14px 16px; margin:16px 0; font-style:italic; color:#f0e6cc; font-size:14.5px;}
+  ul{padding-left:20px; margin:10px 0;} li{margin-bottom:7px; font-size:15px;}
+  .sourceline{font-family:-apple-system,sans-serif; font-size:11.5px; color:var(--muted); margin-top:6px; padding-top:6px; border-top:1px dashed var(--line);}
+  .warn{background:#241407; border:1px solid #5c3a12; border-radius:10px; padding:14px 16px; margin:14px 0; font-family:-apple-system,sans-serif; font-size:13.5px; color:#f0d3a8;}
+  .warn b{color:var(--gold);}
+  .insight{background:#0e2a20; border-left:3px solid var(--emerald); border-radius:8px; padding:14px 16px; margin:14px 0; font-family:-apple-system,sans-serif; font-size:14px; color:#dff7ec;}
+  .insight .lbl{color:var(--emerald); font-size:11px; text-transform:uppercase; letter-spacing:.08em; display:block; margin-bottom:6px; font-weight:700;}
+  .eq{font-family:'Cambria Math',Georgia,serif; text-align:center; font-size:1.3rem; background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:16px; margin:14px 0; color:var(--emerald);}
+  .eq small{display:block; font-family:-apple-system,sans-serif; font-size:11px; color:var(--muted); margin-top:8px;}
+
+  .sim-card{font-family:-apple-system,sans-serif; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin:14px 0;}
+  .sim-card label{font-size:13px; color:var(--muted); display:block; margin-bottom:6px;}
+  .sim-card input[type=range]{width:100%; accent-color:var(--emerald); margin-bottom:14px;}
+  .val{color:var(--gold); font-weight:700;}
+  .preset-row{display:flex; gap:8px; margin-bottom:14px;}
+  .preset-btn{flex:1; text-align:center; padding:9px; border-radius:9px; border:1.5px solid var(--line); background:var(--card2); font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer;}
+  .preset-btn.active{background:#0e2a20; color:var(--emerald); border-color:var(--emerald);}
+  .plot-wrap{background:var(--bg2); border-radius:10px; border:1px solid var(--line); padding:8px;}
+  .plot-wrap svg{width:100%; height:auto;}
+  .plot-legend{display:flex; gap:14px; flex-wrap:wrap; margin-top:8px; font-size:11.5px; color:var(--muted);}
+  .plot-legend span{display:inline-flex; align-items:center; gap:5px;}
+  .plot-legend i{width:14px; height:3px; display:inline-block;}
+
+  .result-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; font-family:-apple-system,sans-serif;}
+  .result-box{background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:12px; text-align:center;}
+  .result-box .rlabel{font-size:11px; color:var(--muted); text-transform:uppercase;}
+  .result-box .rval{font-size:1.15rem; color:var(--emerald); font-weight:800; margin-top:4px;}
+
+  table.compare{width:100%; border-collapse:collapse; font-family:-apple-system,sans-serif; font-size:12.5px; margin:14px 0;}
+  table.compare th, table.compare td{padding:8px 9px; border-bottom:1px solid var(--line); text-align:left;}
+  table.compare th{color:var(--gold); font-size:11px;}
+
+  .refs{font-family:-apple-system,sans-serif; font-size:12.5px; color:var(--muted);} .refs li{margin-bottom:8px;}
+  footer{text-align:center; padding:30px 20px; color:var(--muted); font-family:-apple-system,sans-serif; font-size:12px;}
+  @media(max-width:420px){ .result-grid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kicker">Laboratorium JAZMI · Fisika Kuantum · Tier 3 No.17</div>
+  <h1>Partikel dalam Kotak: Kenapa Energinya Terkuantisasi</h1>
+  <p>Level 1–5. Solusi analitik paling sederhana dalam mekanika kuantum — sumur potensial tak berhingga satu dimensi — lengkap dengan visualisasi fungsi gelombang &amp; rapat peluang yang bisa Anda otak-atik.</p>
+</header>
+
+<nav class="tabs">
+  <a href="#belajar">Belajar</a>
+  <a href="#pertanyaan">Pertanyaan Ilmiah</a>
+  <a href="#derivasi">Derivasi Singkat</a>
+  <a href="#simulator">Simulator</a>
+  <a href="#korespondensi">Prinsip Korespondensi</a>
+  <a href="#verifikasi">Verifikasi</a>
+  <a href="#batasan">Batasan</a>
+  <a href="#referensi">Referensi</a>
+</nav>
+
+<main>
+
+  <section id="belajar">
+    <h2><span class="num">01</span>Belajar</h2>
+    <p>Bayangkan sebuah partikel terjebak sempurna di antara dua dinding yang benar-benar tidak bisa ditembus — di luar dua dinding itu, energinya butuh jadi tak terhingga untuk bisa berada di sana, jadi partikelnya mustahil ada di luar. Inilah "sumur potensial tak berhingga" (infinite square well), atau lebih dikenal sebagai <strong>partikel dalam kotak</strong>.</p>
+    <p>Sistem ini istimewa karena jadi <strong>satu dari sedikit soal mekanika kuantum yang punya solusi analitik penuh</strong> — tidak perlu komputer sama sekali untuk menyelesaikannya secara eksak. Justru karena itu, ia jadi soal pertama yang diajarkan untuk membangun intuisi soal <em>kenapa energi partikel kuantum tidak bisa sembarang nilai</em> — hanya nilai-nilai tertentu yang diizinkan.</p>
+    <div class="qbox">"Bukan alam yang aneh karena membatasi energi jadi angka-angka tertentu — justru itulah konsekuensi matematis wajar begitu Anda memaksa sebuah gelombang muat pas di ruang terbatas."</div>
+  </section>
+
+  <section id="pertanyaan">
+    <h2><span class="num">02</span>Pertanyaan Ilmiah</h2>
+    <ul>
+      <li>Kenapa partikel di dalam kotak tidak bisa punya sembarang energi — dari mana asal pengkuantisasiannya?</li>
+      <li>Apa bentuk fungsi gelombangnya, dan kenapa harus nol persis di kedua dinding?</li>
+      <li>Bagaimana bentuk rapat peluang (probabilitas menemukan partikel) berubah seiring nomor kuantum n bertambah?</li>
+      <li>Apa yang terjadi pada energi kuantisasi ini kalau partikelnya diganti jadi benda yang jauh lebih berat, atau kotaknya diperbesar jadi ukuran sehari-hari?</li>
+    </ul>
+  </section>
+
+  <section id="derivasi">
+    <h2><span class="num">03</span>Derivasi Singkat</h2>
+    <p>Di dalam kotak (0 ≤ x ≤ L), partikel bebas sepenuhnya (tidak ada gaya), jadi persamaan Schrödinger tak gayut waktu-nya sesederhana persamaan gelombang biasa. Solusi umumnya kombinasi sinus-cosinus — tapi ada satu syarat batas yang mengunci semuanya: <strong>fungsi gelombang harus nol persis di kedua dinding</strong> (ψ(0)=0 dan ψ(L)=0), karena peluang menemukan partikel menembus dinding tak berhingga itu harus nol.</p>
+    <p>Syarat ψ(0)=0 otomatis menyingkirkan suku cosinus, menyisakan bentuk sinus saja. Syarat ψ(L)=0 hanya terpenuhi kalau <strong>panjang gelombangnya muat pas sejumlah bilangan bulat setengah-gelombang</strong> di dalam kotak — persis seperti senar gitar yang dijepit di kedua ujung hanya bisa bergetar di nada-nada tertentu (harmonik), bukan sembarang frekuensi.</p>
+    <div class="eq">
+      ψₙ(x) = √(2/L) · sin(nπx/L)     ·     Eₙ = n²h² / (8mL²)
+      <small>n = 1,2,3,... (nomor kuantum) · L = lebar kotak · m = massa partikel · h = konstanta Planck</small>
+    </div>
+  </section>
+
+  <section id="simulator">
+    <h2><span class="num">04</span>Simulator: Fungsi Gelombang &amp; Rapat Peluang</h2>
+    <p class="lead">Geser lebar kotak dan nomor kuantum, pilih massa partikel — lihat bentuk gelombang dan energinya berubah langsung.</p>
+
+    <div class="sim-card">
+      <label>Massa partikel:</label>
+      <div class="preset-row" id="massPresets"></div>
+
+      <label>Lebar kotak (L): <span class="val" id="lVal">1.0 nm</span></label>
+      <input type="range" id="lRange" min="0.1" max="10" step="0.1" value="1.0">
+
+      <label>Nomor kuantum (n): <span class="val" id="nVal">1</span></label>
+      <input type="range" id="nRange" min="1" max="10" step="1" value="1">
+
+      <div class="plot-wrap">
+        <svg id="waveSVG" viewBox="0 0 380 220" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="plot-legend">
+        <span><i style="background:#e0b354;"></i>ψₙ(x) — fungsi gelombang</span>
+        <span><i style="background:#22c98a;"></i>|ψₙ(x)|² — rapat peluang</span>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-box"><div class="rlabel">Energi Eₙ</div><div class="rval" id="energyVal">– eV</div></div>
+        <div class="result-box"><div class="rlabel">Jumlah Simpul (Node)</div><div class="rval" id="nodeVal">–</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="korespondensi">
+    <h2><span class="num">05</span>Prinsip Korespondensi: Kapan Efek Kuantum Menghilang?</h2>
+    <p>Perhatikan rumus energinya sekali lagi: Eₙ berbanding terbalik dengan massa (m) dan kuadrat lebar kotak (L²). Ini konsekuensi besar: geser massa dari elektron ke benda sehari-hari (misalnya bola pingpong), dan jarak antar tingkat energi runtuh menjadi sedemikian rapat sehingga <strong>terlihat kontinu</strong> — persis seperti yang kita alami di dunia makroskopik, walau sebenarnya tetap terkuantisasi di baliknya.</p>
+    <table class="compare">
+      <tr><th>Skenario</th><th>Konsekuensi</th></tr>
+      <tr><td>Elektron, kotak 0,1–1 nm (skala atom)</td><td>Jarak antar tingkat energi besar (puluhan eV) — efek kuantum sangat nyata</td></tr>
+      <tr><td>Proton, kotak sama</td><td>Energi ~1800× lebih kecil dari elektron (rasio massa proton-elektron) — efek kuantum jauh lebih lemah</td></tr>
+      <tr><td>Massa skala sehari-hari, kotak berukuran ruangan</td><td>Jarak antar tingkat energi menjadi sangat kecil sehingga praktis tak teramati — inilah kenapa dunia makroskopik terasa "klasik"</td></tr>
+    </table>
+    <div class="insight">
+      <span class="lbl">Bukan alam berbeda hukum — cuma beda skala</span>
+      Tidak ada titik ajaib di mana "hukum kuantum berhenti berlaku dan hukum klasik mengambil alih" — keduanya rumus yang sama persis, cuma untuk massa/skala besar, celah antar tingkat energi sudah sedemikian rapat sehingga tidak mungkin terukur beda dari kontinu.
+    </div>
+  </section>
+
+  <section id="verifikasi">
+    <h2><span class="num">06</span>Verifikasi</h2>
+    <p>Cek angka baku: elektron dalam kotak lebar 0,1 nm (skala atom) pada n=1 menghasilkan E₁ ≈ <strong>37,6 eV</strong> — angka ini konsisten dengan nilai yang biasa dijadikan patokan di buku teks fisika kuantum pengantar, dan bisa Anda cek ulang sendiri lewat simulator di atas (set lebar kotak ke 0,1 nm, massa elektron, n=1).</p>
+    <div class="sourceline">Perhitungan: E₁ = h²/(8mL²) = (6,626×10⁻³⁴)² / (8 × 9,109×10⁻³¹ × (1×10⁻¹⁰)²) ≈ 6,03×10⁻¹⁸ J ≈ 37,6 eV.</div>
+  </section>
+
+  <section id="batasan">
+    <h2><span class="num">07</span>Batasan</h2>
+    <ul>
+      <li>Model ini murni 1 dimensi dan mengasumsikan dinding benar-benar tak berhingga (partikel 100% terkurung) — di dunia nyata, sumur potensial selalu berhingga dan ada peluang kecil partikel "menerobos" (efek terowongan/tunneling), yang tidak dimodelkan di sini.</li>
+      <li>Grafik fungsi gelombang dinormalisasi untuk kejelasan visual (skala amplitudo disesuaikan tampilan), bukan plot ke skala fisik absolut.</li>
+      <li>Konversi eV memakai konstanta fisika standar (h, massa elektron/proton/neutron) — pembulatan kecil mungkin muncul dibanding kalkulator presisi tinggi.</li>
+      <li>Ini alat edukatif untuk membangun intuisi kuantisasi energi — bukan pengganti penyelesaian soal mekanika kuantum penuh (termasuk normalisasi formal &amp; operator momentum).</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <h2><span class="num">08</span>Referensi</h2>
+    <ul class="refs">
+      <li>Griffiths, D.J. — "Introduction to Quantum Mechanics" (bab sumur potensial tak berhingga, solusi baku).</li>
+      <li>HyperPhysics (Georgia State University) — "Particle in a Box".</li>
+      <li>Konstanta fisika CODATA — konstanta Planck (h), massa elektron/proton/neutron, elektronvolt.</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  Laboratorium JAZMI — Jalinan Zamrud Islamiah · Belajar → Model → Uji → Tool<br>
+  Peta Prioritas Tools Fisika · Tier 3 No.17. Versi pengembangan awal.
+</footer>
+
+<script>
+const h = 6.62607015e-34;
+const eV = 1.602176634e-19;
+const MASSES = {
+  'Elektron': 9.1093837015e-31,
+  'Proton': 1.67262192369e-27,
+  'Neutron': 1.67492749804e-27
+};
+let currentMass = 'Elektron';
+
+const massPresets = document.getElementById('massPresets');
+Object.keys(MASSES).forEach(m=>{
+  const btn = document.createElement('div');
+  btn.className = 'preset-btn' + (m===currentMass?' active':'');
+  btn.textContent = m;
+  btn.addEventListener('click', ()=>{
+    currentMass = m;
+    [...massPresets.children].forEach(c=>c.classList.remove('active'));
+    btn.classList.add('active');
+    update();
+  });
+  massPresets.appendChild(btn);
+});
+
+const lRange = document.getElementById('lRange');
+const nRange = document.getElementById('nRange');
+
+function update(){
+  const L_nm = parseFloat(lRange.value);
+  const n = parseInt(nRange.value);
+  const L = L_nm * 1e-9; // meter
+  const m = MASSES[currentMass];
+
+  document.getElementById('lVal').textContent = L_nm.toFixed(1)+' nm';
+  document.getElementById('nVal').textContent = n;
+
+  const E_J = (n*n*h*h) / (8*m*L*L);
+  const E_eV = E_J/eV;
+  document.getElementById('energyVal').textContent =
+    E_eV >= 0.001 ? E_eV.toPrecision(4)+' eV' : E_eV.toExponential(2)+' eV';
+  document.getElementById('nodeVal').textContent = (n-1);
+
+  drawWave(n);
+}
+
+function drawWave(n){
+  const W=380, H=220, padL=20, padR=20, padT=20, padB=20;
+  const plotW = W-padL-padR, plotH=(H-padT-padB)/2 - 10;
+  const midY1 = padT + plotH/2 + 5;
+  const midY2 = padT + plotH + 20 + plotH/2 + 5;
+
+  let html = '';
+  // dinding kotak
+  html += `<rect x="${padL}" y="${padT}" width="${plotW}" height="${plotH}" fill="none" stroke="#3a5a50" stroke-width="1"/>`;
+  html += `<rect x="${padL}" y="${padT+plotH+20}" width="${plotW}" height="${plotH}" fill="none" stroke="#3a5a50" stroke-width="1"/>`;
+  html += `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+plotH}" stroke="#7a5a3a" stroke-width="4"/>`;
+  html += `<line x1="${padL+plotW}" y1="${padT}" x2="${padL+plotW}" y2="${padT+plotH}" stroke="#7a5a3a" stroke-width="4"/>`;
+  html += `<line x1="${padL}" y1="${padT+plotH+20}" x2="${padL}" y2="${padT+plotH+20+plotH}" stroke="#7a5a3a" stroke-width="4"/>`;
+  html += `<line x1="${padL+plotW}" y1="${padT+plotH+20}" x2="${padL+plotW}" y2="${padT+plotH+20+plotH}" stroke="#7a5a3a" stroke-width="4"/>`;
+
+  html += `<line x1="${padL}" y1="${midY1}" x2="${padL+plotW}" y2="${midY1}" stroke="#1f3d34" stroke-width="1"/>`;
+  html += `<line x1="${padL}" y1="${padT+plotH+20}" x2="${padL+plotW}" y2="${padT+plotH+20}" stroke="#1f3d34" stroke-width="1"/>`;
+
+  // psi(x)
+  let pathPsi = '';
+  let pathProb = '';
+  const steps = 100;
+  for(let i=0;i<=steps;i++){
+    const xf = i/steps; // 0..1
+    const x = padL + xf*plotW;
+    const psi = Math.sin(n*Math.PI*xf); // -1..1
+    const y1 = midY1 - psi*(plotH/2-6);
+    pathPsi += (i===0?'M':'L') + x.toFixed(1) + ',' + y1.toFixed(1) + ' ';
+
+    const prob = psi*psi; // 0..1
+    const y2 = (padT+plotH+20+plotH) - prob*(plotH-6);
+    pathProb += (i===0?'M':'L') + x.toFixed(1) + ',' + y2.toFixed(1) + ' ';
+  }
+  html += `<path d="${pathPsi}" stroke="#e0b354" stroke-width="2.5" fill="none"/>`;
+  html += `<path d="${pathProb}" stroke="#22c98a" stroke-width="2.5" fill="none"/>`;
+
+  html += `<text x="${padL}" y="${padT-6}" font-size="10" fill="#8fada0" font-family="sans-serif">ψₙ(x)</text>`;
+  html += `<text x="${padL}" y="${padT+plotH+14}" font-size="10" fill="#8fada0" font-family="sans-serif">|ψₙ(x)|²</text>`;
+  html += `<text x="${padL+plotW/2}" y="${H-4}" font-size="10" fill="#8fada0" text-anchor="middle" font-family="sans-serif">0 ────────── posisi di dalam kotak ──────────  L</text>`;
+
+  document.getElementById('waveSVG').innerHTML = html;
+}
+
+lRange.addEventListener('input', update);
+nRange.addEventListener('input', update);
+update();
+</script>
+
+</body>
+</html>

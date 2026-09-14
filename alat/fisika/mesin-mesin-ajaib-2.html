@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mesin-Mesin Ajaib 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fdf6e8; --card:#ffffff; --line:#f0e2c4;
+    --ink:#3a3226; --dim:#8a7c62;
+    --accent:#3a8a9c; --accent-soft:#e3f2f4;
+    --display:'Fredoka',sans-serif; --sans:'Quicksand',sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;}
+  .wrap{max-width:520px;margin:0 auto;padding:0 18px 70px;}
+
+  .hero{padding:36px 10px 18px;text-align:center;}
+  .hero h1{font-family:var(--display);font-weight:700;font-size:clamp(24px,6.5vw,32px);margin:0 0 8px;color:#1f5a68;}
+  .hero p{color:var(--dim);font-size:14px;max-width:440px;margin:0 auto;}
+
+  .tab-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:18px;}
+  .tab-btn{font-family:var(--display);font-weight:600;font-size:11.5px;background:#fff;border:2px solid var(--line);
+    color:var(--dim);padding:11px 3px;border-radius:12px;cursor:pointer;text-align:center;line-height:1.3;}
+  .tab-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  .card{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px 18px;margin-bottom:16px;}
+  .card p.desc{font-size:13.5px;color:var(--dim);margin:0 0 16px;}
+
+  .stage{position:relative;height:200px;margin-bottom:16px;}
+  .stage svg{width:100%;height:100%;}
+
+  .field{margin-bottom:16px;}
+  .field label{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;color:var(--dim);margin-bottom:7px;}
+  .field label .val{color:var(--accent);font-weight:700;}
+  input[type=range]{width:100%;height:4px;-webkit-appearance:none;appearance:none;background:var(--line);border-radius:4px;outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.15);}
+  input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;border:3px solid #fff;}
+
+  .result-panel{background:var(--accent-soft);border-radius:14px;padding:16px;text-align:center;margin-top:6px;}
+  .result-num{font-family:var(--display);font-weight:700;font-size:24px;color:#1f5a68;}
+  .result-sub{font-size:12.5px;color:var(--dim);margin-top:4px;}
+  .compare-row{display:flex;justify-content:space-around;margin-top:12px;padding-top:12px;border-top:1px dashed #b8dde0;}
+  .compare-box .n{font-family:var(--display);font-weight:700;font-size:16px;color:#1f5a68;}
+  .compare-box .l{font-size:10.5px;color:var(--dim);font-family:var(--mono);}
+
+  .play-btn{width:100%;font-family:var(--display);font-weight:700;font-size:15px;padding:14px;border-radius:14px;border:none;
+    cursor:pointer;background:var(--accent);color:#fff;box-shadow:0 5px 0 rgba(0,0,0,.08);margin-top:8px;}
+  .play-btn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.08);}
+
+  .note-card{background:var(--accent-soft);border-radius:14px;padding:14px 16px;font-size:12.5px;color:#1f5a68;margin-top:14px;}
+  .note-card strong{color:#123b45;}
+
+  footer{text-align:center;padding-top:26px;color:#b9ad94;font-size:11.5px;font-family:var(--mono);}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>⚙️ Mesin-Mesin Ajaib 2</h1>
+    <p>Melengkapi mesin sederhana sebelumnya — sekrup, baji, plus dua favorit fisika: bandul dan pegas.</p>
+  </div>
+
+  <div class="tab-nav">
+    <button class="tab-btn active" data-tab="sekrup">🔩 Sekrup</button>
+    <button class="tab-btn" data-tab="baji">🪓 Baji</button>
+    <button class="tab-btn" data-tab="bandul">🕰️ Bandul</button>
+    <button class="tab-btn" data-tab="pegas">🌀 Pegas</button>
+  </div>
+
+  <!-- ===================== SEKRUP ===================== -->
+  <div class="tab-panel active" id="tab-sekrup">
+    <div class="card">
+      <p class="desc">Sekrup itu sebenarnya tanjakan yang dililit jadi spiral — makin rapat ulirnya, makin ringan memutarnya, tapi makin banyak putaran yang dibutuhkan.</p>
+      <div class="stage"><svg id="sekrupSvg" viewBox="0 0 300 200"></svg></div>
+
+      <div class="field">
+        <label>Jarak Antar Ulir / Pitch (mm) <span class="val" id="sekrupPitchVal">3</span></label>
+        <input type="range" id="sekrupPitch" min="1" max="10" step="0.5" value="3">
+      </div>
+      <div class="field">
+        <label>Diameter Sekrup (mm) <span class="val" id="sekrupDiaVal">8</span></label>
+        <input type="range" id="sekrupDia" min="4" max="20" value="8">
+      </div>
+
+      <div class="result-panel">
+        <div class="result-num" id="sekrupHasil">8,4×</div>
+        <div class="result-sub">Kelipatan gaya yang dihemat dibanding mendorong lurus</div>
+        <div class="compare-row">
+          <div class="compare-box"><div class="n" id="sekrupPutaran">3,3 putaran</div><div class="l">UNTUK MASUK 10mm</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="note-card"><strong>Kenapa begitu?</strong> Setiap satu putaran penuh, sekrup hanya maju sejauh satu pitch — jarak yang sangat pendek dibanding keliling putarannya, itulah yang membuat gaya dorong yang kamu butuhkan jadi jauh lebih kecil.</div>
+  </div>
+
+  <!-- ===================== BAJI ===================== -->
+  <div class="tab-panel" id="tab-baji">
+    <div class="card">
+      <p class="desc">Baji (mata kapak/pasak) mengubah dorongan searah jadi gaya pembelah ke samping — makin runcing ujungnya, makin besar gaya pembelahnya.</p>
+      <div class="stage"><svg id="bajiSvg" viewBox="0 0 300 200"></svg></div>
+
+      <div class="field">
+        <label>Gaya Dorong / Pukulan (kg) <span class="val" id="bajiDorongVal">20</span></label>
+        <input type="range" id="bajiDorong" min="5" max="60" value="20">
+      </div>
+      <div class="field">
+        <label>Sudut Ujung Baji (derajat) <span class="val" id="bajiSudutVal">20°</span></label>
+        <input type="range" id="bajiSudut" min="5" max="60" value="20">
+      </div>
+
+      <div class="result-panel">
+        <div class="result-num" id="bajiHasil">114 kg</div>
+        <div class="result-sub">Gaya pembelah ke samping yang dihasilkan</div>
+      </div>
+    </div>
+    <div class="note-card"><strong>Kenapa begitu?</strong> Baji yang tipis dan runcing (sudut kecil) mengubah dorongan jadi gaya pembelah yang jauh lebih besar — inilah kenapa kapak dan pisau selalu diasah tipis di ujungnya, bukan tebal.</div>
+  </div>
+
+  <!-- ===================== BANDUL ===================== -->
+  <div class="tab-panel" id="tab-bandul">
+    <div class="card">
+      <p class="desc">Bandul yang berayun punya waktu ayun yang cuma bergantung pada panjang talinya — bukan pada beratnya! Dulu bandul dipakai untuk menjaga ketepatan jam.</p>
+      <div class="stage"><svg id="bandulSvg" viewBox="0 0 300 200"></svg></div>
+
+      <div class="field">
+        <label>Panjang Tali (cm) <span class="val" id="bandulPanjangVal">50</span></label>
+        <input type="range" id="bandulPanjang" min="10" max="150" value="50">
+      </div>
+
+      <div class="result-panel">
+        <div class="result-num" id="bandulHasil">1,42 detik</div>
+        <div class="result-sub">Waktu satu kali ayunan penuh (bolak-balik)</div>
+      </div>
+      <button class="play-btn" onclick="toggleBandul()" id="bandulPlayBtn">▶️ Ayunkan</button>
+    </div>
+    <div class="note-card"><strong>Kenapa cuma panjang tali yang penting?</strong> Baik bandul berat maupun ringan, dengan panjang tali yang sama, akan berayun bolak-balik dalam waktu yang sama persis — inilah sebabnya jam bandul kuno bisa sangat akurat hanya dengan mengatur panjang talinya, dan menyambung ke topik "kenapa satu detik segitu lamanya" yang pernah kita bahas.</div>
+  </div>
+
+  <!-- ===================== PEGAS ===================== -->
+  <div class="tab-panel" id="tab-pegas">
+    <div class="card">
+      <p class="desc">Pegas meregang sebanding dengan berat yang digantungkan — makin kaku pegasnya, makin sedikit ia meregang untuk beban yang sama.</p>
+      <div class="stage"><svg id="pegasSvg" viewBox="0 0 300 200"></svg></div>
+
+      <div class="field">
+        <label>Kekakuan Pegas <span class="val" id="pegasKVal">5</span></label>
+        <input type="range" id="pegasK" min="1" max="10" value="5">
+      </div>
+      <div class="field">
+        <label>Berat Beban (kg) <span class="val" id="pegasBebanVal">3</span></label>
+        <input type="range" id="pegasBeban" min="1" max="10" value="3">
+      </div>
+
+      <div class="result-panel">
+        <div class="result-num" id="pegasHasil">6,0 cm</div>
+        <div class="result-sub">Panjang regangan pegas</div>
+      </div>
+      <button class="play-btn" onclick="lepasPegas()">🌀 Lepas &amp; Pantulkan!</button>
+    </div>
+    <div class="note-card"><strong>Kenapa meregangnya sebanding?</strong> Ini disebut Hukum Hooke — selama pegas tidak diregangkan sampai rusak, semakin berat bebannya, semakin jauh regangannya, dengan pola yang bisa dihitung persis, bukan acak.</div>
+  </div>
+
+  <footer>Laboratorium Fisika Anak — Bank Alat JAZMI/Qiladat</footer>
+</div>
+
+<script>
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ===================== SEKRUP =====================
+  function renderSekrup(){
+    const pitch = parseFloat(document.getElementById('sekrupPitch').value);
+    const dia = parseFloat(document.getElementById('sekrupDia').value);
+    document.getElementById('sekrupPitchVal').textContent = pitch;
+    document.getElementById('sekrupDiaVal').textContent = dia;
+
+    const keliling = Math.PI * dia;
+    const ma = keliling / pitch;
+    document.getElementById('sekrupHasil').textContent = ma.toFixed(1).replace('.',',') + '×';
+    document.getElementById('sekrupPutaran').textContent = (10/pitch).toFixed(1).replace('.',',') + ' putaran';
+
+    let ulir = '';
+    const cx = 150, topY = 30, botY = 160, r = 10 + dia*1.2;
+    const jumlahUlir = Math.max(3, Math.round(20/pitch));
+    for(let i=0;i<jumlahUlir;i++){
+      const y = topY + (i/(jumlahUlir-1))*(botY-topY);
+      ulir += `<ellipse cx="${cx}" cy="${y}" rx="${r}" ry="5" fill="none" stroke="#3a8a9c" stroke-width="2"/>`;
+    }
+
+    const svg = document.getElementById('sekrupSvg');
+    svg.innerHTML = `
+      <line x1="${cx}" y1="${topY}" x2="${cx}" y2="${botY}" stroke="#8a7c62" stroke-width="3"/>
+      ${ulir}
+      <polygon points="${cx-8},${topY-15} ${cx+8},${topY-15} ${cx},${topY}" fill="#c9784f"/>
+      <rect x="60" y="${botY}" width="180" height="25" fill="#e6ddc6" stroke="#8a7c62" stroke-width="1.5"/>
+    `;
+  }
+  ['sekrupPitch','sekrupDia'].forEach(id => document.getElementById(id).addEventListener('input', renderSekrup));
+
+  // ===================== BAJI =====================
+  function renderBaji(){
+    const dorong = parseFloat(document.getElementById('bajiDorong').value);
+    const sudut = parseFloat(document.getElementById('bajiSudut').value);
+    document.getElementById('bajiDorongVal').textContent = dorong;
+    document.getElementById('bajiSudutVal').textContent = sudut + '°';
+
+    const gayaPembelah = dorong / Math.sin((sudut/2) * Math.PI/180);
+    document.getElementById('bajiHasil').textContent = Math.min(gayaPembelah, 9999).toFixed(0) + ' kg';
+
+    const halfAngleRad = (sudut/2) * Math.PI/180;
+    const height = 120;
+    const halfBase = height * Math.tan(halfAngleRad);
+    const cx = 150, topY = 30;
+
+    const svg = document.getElementById('bajiSvg');
+    svg.innerHTML = `
+      <rect x="40" y="${topY+height}" width="220" height="30" fill="#c9a76f" stroke="#8a6a4a" stroke-width="1.5"/>
+      <polygon points="${cx},${topY} ${cx-halfBase},${topY+height} ${cx+halfBase},${topY+height}" fill="#8a7c62"/>
+      <line x1="${cx}" y1="5" x2="${cx}" y2="${topY}" stroke="#3a3226" stroke-width="4"/>
+      <polygon points="${cx-10},0 ${cx+10},0 ${cx},14" fill="#c9784f"/>
+    `;
+  }
+  ['bajiDorong','bajiSudut'].forEach(id => document.getElementById(id).addEventListener('input', renderBaji));
+
+  // ===================== BANDUL =====================
+  let bandulPlaying = false;
+  let bandulAngle = 0;
+  function renderBandul(){
+    const L = parseFloat(document.getElementById('bandulPanjang').value);
+    document.getElementById('bandulPanjangVal').textContent = L;
+
+    const g = 980; // cm/s^2
+    const T = 2 * Math.PI * Math.sqrt(L/g);
+    document.getElementById('bandulHasil').textContent = T.toFixed(2).replace('.',',') + ' detik';
+
+    drawBandul(bandulAngle, L);
+  }
+  function drawBandul(angleDeg, L){
+    const cx = 150, pivotY = 20;
+    const lenPx = 20 + L*0.9;
+    const rad = angleDeg * Math.PI/180;
+    const bx = cx + lenPx*Math.sin(rad), by = pivotY + lenPx*Math.cos(rad);
+
+    const svg = document.getElementById('bandulSvg');
+    svg.innerHTML = `
+      <line x1="100" y1="${pivotY}" x2="200" y2="${pivotY}" stroke="#3a3226" stroke-width="4"/>
+      <line x1="${cx}" y1="${pivotY}" x2="${bx}" y2="${by}" stroke="#8a7c62" stroke-width="2"/>
+      <circle cx="${bx}" cy="${by}" r="14" fill="#3a8a9c"/>
+    `;
+  }
+  let bandulRaf = null, bandulStart = null;
+  function bandulLoop(ts){
+    if(!bandulStart) bandulStart = ts;
+    const L = parseFloat(document.getElementById('bandulPanjang').value);
+    const g = 980;
+    const T = 2 * Math.PI * Math.sqrt(L/g);
+    const t = (ts - bandulStart)/1000;
+    const maxAngle = 30;
+    bandulAngle = maxAngle * Math.sin((2*Math.PI/T) * t);
+    drawBandul(bandulAngle, L);
+    if(bandulPlaying) bandulRaf = requestAnimationFrame(bandulLoop);
+  }
+  function toggleBandul(){
+    bandulPlaying = !bandulPlaying;
+    document.getElementById('bandulPlayBtn').textContent = bandulPlaying ? '⏸️ Berhenti' : '▶️ Ayunkan';
+    if(bandulPlaying){ bandulStart = null; bandulRaf = requestAnimationFrame(bandulLoop); }
+    else { cancelAnimationFrame(bandulRaf); }
+  }
+  document.getElementById('bandulPanjang').addEventListener('input', renderBandul);
+
+  // ===================== PEGAS =====================
+  function renderPegas(offsetExtra){
+    offsetExtra = offsetExtra || 0;
+    const k = parseFloat(document.getElementById('pegasK').value);
+    const beban = parseFloat(document.getElementById('pegasBeban').value);
+    document.getElementById('pegasKVal').textContent = k;
+    document.getElementById('pegasBebanVal').textContent = beban;
+
+    const regang = (beban * 10) / k;
+    document.getElementById('pegasHasil').textContent = regang.toFixed(1).replace('.',',') + ' cm';
+
+    drawPegas(regang + offsetExtra);
+  }
+  function drawPegas(regangCm){
+    const topY = 15, cx = 150;
+    const baseLen = 40;
+    const coilLen = baseLen + regangCm*3;
+    const coils = 8;
+    let path = `M ${cx} ${topY}`;
+    for(let i=0;i<coils;i++){
+      const y = topY + (i+0.5)*(coilLen/coils);
+      const x = cx + (i%2===0 ? 20 : -20);
+      path += ` L ${x} ${y}`;
+    }
+    path += ` L ${cx} ${topY+coilLen}`;
+
+    const svg = document.getElementById('pegasSvg');
+    svg.innerHTML = `
+      <line x1="110" y1="${topY}" x2="190" y2="${topY}" stroke="#3a3226" stroke-width="4"/>
+      <path d="${path}" fill="none" stroke="#3a8a9c" stroke-width="3"/>
+      <rect x="${cx-16}" y="${topY+coilLen}" width="32" height="28" rx="4" fill="#c9784f"/>
+    `;
+  }
+  function lepasPegas(){
+    const k = parseFloat(document.getElementById('pegasK').value);
+    const beban = parseFloat(document.getElementById('pegasBeban').value);
+    const regangTarget = (beban * 10) / k;
+    let t = 0;
+    const iv = setInterval(() => {
+      t += 0.15;
+      const bounce = regangTarget + Math.sin(t*6) * regangTarget * 0.3 * Math.exp(-t*0.8);
+      drawPegas(Math.max(5, bounce));
+      if(t > 4){ clearInterval(iv); renderPegas(); }
+    }, 30);
+  }
+  ['pegasK','pegasBeban'].forEach(id => document.getElementById(id).addEventListener('input', () => renderPegas()));
+
+  renderSekrup();
+  renderBaji();
+  renderBandul();
+  renderPegas();
+</script>
+
+</body>
+</html>

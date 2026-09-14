@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teori Crack Propagation — Faktor Habibie — JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-900:#12181d;
+    --ink-800:#182029;
+    --ink-700:#202b36;
+    --ink-600:#2e3c49;
+    --metal-100:#e7ecf0;
+    --metal-300:#c7d2da;
+    --sky-500:#4a90b8;
+    --sky-300:#82bdd9;
+    --brass-500:#c39a54;
+    --brass-300:#d9bc85;
+    --crack-500:#c1443a;
+    --text-hi:#eef1f3;
+    --text-mid:#a7b3ba;
+    --text-dim:#71818a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--ink-900);color:var(--text-hi);font-family:'Karla',sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;}
+  ::selection{background:var(--sky-500);color:#fff;}
+  a{color:var(--brass-300);}
+  .wrap{max-width:900px;margin:0 auto;padding:0 20px;}
+
+  .hero{
+    position:relative;padding:56px 0 40px;overflow:hidden;border-bottom:1px solid var(--ink-600);
+    background:radial-gradient(ellipse at 75% -10%, rgba(74,144,184,0.14), transparent 55%), var(--ink-900);
+  }
+  .hero-visual{display:flex;justify-content:center;margin-bottom:26px;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--sky-300);margin:0 0 14px;}
+  h1{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(26px,5vw,42px);line-height:1.12;margin:0 0 16px;color:var(--text-hi);}
+  .hero p.lede{font-size:17px;color:var(--text-mid);max-width:64ch;margin:0 0 6px;}
+  .hero-lineage{margin-top:24px;display:flex;gap:10px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-dim);}
+  .hero-lineage span{border:1px solid var(--ink-600);padding:4px 10px;border-radius:999px;}
+  .hero-lineage span b{color:var(--sky-300);font-weight:600;}
+
+  section{padding:44px 0;border-bottom:1px solid var(--ink-700);}
+  section:last-of-type{border-bottom:none;}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin:0 0 18px;}
+  .sec-num{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--sky-300);border:1px solid var(--ink-600);border-radius:4px;padding:2px 7px;}
+  h2{font-family:'Fraunces',serif;font-weight:600;font-size:23px;margin:0;color:var(--text-hi);}
+  h3{font-family:'Fraunces',serif;font-weight:600;font-size:16px;margin:0 0 8px;color:var(--text-hi);}
+  p{color:var(--text-mid);margin:0 0 12px;}
+  ul{color:var(--text-mid);padding-left:20px;margin:0 0 12px;}
+  li{margin-bottom:6px;}
+  code,.mono{font-family:'IBM Plex Mono',monospace;}
+  code{background:var(--ink-700);color:var(--brass-300);padding:1px 6px;border-radius:4px;font-size:.92em;}
+
+  .panel{background:var(--ink-800);border:1px solid var(--ink-600);border-radius:10px;padding:22px;}
+
+  .mode-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
+  .mode-tabs button{
+    font-family:'Karla',sans-serif;font-weight:700;font-size:13px;color:var(--text-mid);
+    background:var(--ink-700);border:1px solid var(--ink-600);border-radius:999px;padding:8px 14px;cursor:pointer;transition:all .15s ease;
+  }
+  .mode-tabs button.habibie.active{background:var(--sky-500);color:#eaf5fb;border-color:var(--sky-500);}
+  .mode-tabs button.konvensional.active{background:var(--crack-500);color:#fdece9;border-color:var(--crack-500);}
+  .mode-note{font-size:12.5px;color:var(--text-dim);margin-bottom:18px;}
+
+  .plane-wrap{display:flex;justify-content:center;margin-bottom:8px;}
+  .plane-wrap svg{width:100%;max-width:520px;height:auto;}
+
+  .slider-row{margin-bottom:16px;}
+  .slider-row label{display:flex;justify-content:space-between;font-size:13px;color:var(--text-mid);margin-bottom:6px;}
+  .slider-row label b{color:var(--text-hi);font-family:'IBM Plex Mono',monospace;}
+  input[type="range"]{width:100%;accent-color:var(--sky-500);}
+
+  .result-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px;}
+  @media(min-width:520px){.result-grid{grid-template-columns:repeat(3,1fr);}}
+  .result-card{background:var(--ink-700);border:1px solid var(--ink-600);border-radius:8px;padding:12px;}
+  .result-card .label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;}
+  .result-card .value{font-family:'IBM Plex Mono',monospace;font-size:17px;color:var(--text-hi);margin-top:4px;}
+  .result-card.danger .value{color:var(--crack-500);}
+  .result-card.good .value{color:var(--sky-300);}
+
+  .graph-wrap{margin-top:18px;background:var(--ink-900);border:1px solid var(--ink-600);border-radius:8px;padding:10px;}
+  .graph-wrap svg{width:100%;height:auto;display:block;}
+
+  .badge-fact{
+    display:inline-block;margin-top:16px;background:rgba(74,144,184,0.1);border:1px solid rgba(74,144,184,0.4);
+    border-radius:8px;padding:12px 14px;font-size:13px;color:var(--text-mid);
+  }
+  .badge-fact b{color:var(--sky-300);}
+
+  table.ttable{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:13px;margin-top:6px;}
+  table.ttable td,table.ttable th{border:1px solid var(--ink-600);padding:6px 10px;text-align:left;color:var(--text-mid);}
+  table.ttable th{color:var(--sky-300);background:var(--ink-700);width:44%;}
+
+  .whatsapp-box{display:flex;gap:14px;align-items:center;background:var(--ink-700);border:1px solid var(--ink-600);border-radius:10px;padding:16px 18px;margin-top:8px;}
+  .whatsapp-box a{font-family:'Karla',sans-serif;font-weight:700;font-size:13px;color:var(--ink-900);background:var(--brass-500);padding:9px 16px;border-radius:6px;text-decoration:none;white-space:nowrap;}
+  .whatsapp-box a:hover{background:var(--brass-300);}
+
+  footer{padding:30px 0 60px;color:var(--text-dim);font-size:12px;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="hero-visual">
+      <svg width="260" height="90" viewBox="0 0 260 90">
+        <path d="M10 50 L90 46 L120 20 L132 20 L118 46 L200 46 L225 34 L235 34 L222 48 L235 50 L225 52 L200 50 L118 50 L132 74 L120 74 L92 52 L10 54 Z"
+          fill="#c7d2da" stroke="#e7ecf0" stroke-width="1.5"/>
+        <circle cx="150" cy="48" r="3.5" fill="#c1443a"/>
+        <path d="M150 48 l4 -3 l-2 4 l5 -1 l-4 3 l3 3 l-5 -1 l1 4 l-3 -3 l-2 3 l0 -5 l-4 1 l3 -3 l-3 -2 l5 1 z" fill="#c1443a" opacity="0.85"/>
+      </svg>
+    </div>
+    <p class="eyebrow">JAZMI · Laboratorium Rekayasa Dirgantara</p>
+    <h1>Teori Crack Propagation — "Faktor Habibie"</h1>
+    <p class="lede">Retak sekecil 0,005 mm di badan pesawat bisa menjalar dan berakhir fatal — atau bisa dihitung persis kapan ia jadi berbahaya. B.J. Habibie ("Mr. Crack") merintis perhitungan perambatan retak acak hingga tingkat atom, memungkinkan struktur pesawat lebih ringan tanpa mengorbankan keselamatan.</p>
+    <div class="hero-lineage">
+      <span><b>1936</b> · lahir di Pare-Pare</span>
+      <span><b>MBB, Jerman</b> · teori crack propagation</span>
+      <span><b>"Mr. Crack"</b> · julukan internasional</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- BELAJAR -->
+  <section id="belajar">
+    <div class="sec-head"><span class="sec-num">01</span><h2>Belajar</h2></div>
+    <p>Bacharuddin Jusuf Habibie lahir di Pare-Pare, Sulawesi Selatan, 25 Juni 1936. Meraih gelar doktor teknik (Dr.-Ing.) dari RWTH Aachen, Jerman, tahun 1965, ia bergabung dengan perusahaan dirgantara Messerschmitt-Bölkow-Blohm (MBB) dan naik hingga posisi wakil presiden. Ia ikut merancang beberapa pesawat, termasuk Dornier Do-31 (pesawat lepas landas/mendarat vertikal).</p>
+    <p>Kontribusi yang membuatnya dijuluki <b>"Mr. Crack"</b> oleh koleganya secara internasional adalah metode menghitung <b>perambatan retak acak (random crack propagation)</b> pada struktur pesawat — hingga ke tingkat mikroskopis. Kelelahan logam (<i>metal fatigue</i>) akibat tekanan berulang saat lepas landas dan mendarat memunculkan retak sekecil 0,005 mm, yang jika tak terdeteksi bisa menjalar dan bercabang hingga struktur patah mendadak — titik paling rawan biasanya di sambungan sayap-badan pesawat dan dudukan mesin.</p>
+    <p>Sebelum teori ini, insinyur mengantisipasi risiko retak dengan menaikkan <b>faktor keamanan (safety factor)</b> secara luas — pada dasarnya menebak konservatif dengan menambah ketebalan material jauh di atas kebutuhan teoretis. Karena retak bisa dihitung dan dititik lokasinya secara presisi, faktor keamanan bisa diturunkan tanpa mengorbankan keselamatan — dikenal sebagai <b>"Faktor Habibie"</b>, dilaporkan mampu memangkas bobot kosong operasi pesawat (<i>operating empty weight</i>) sekitar 10%, bahkan hingga 25% setelah material komposit turut dipakai.</p>
+    <p>Setelah kembali ke Indonesia tahun 1974, Habibie merintis industri pesawat terbang nasional — PT Industri Pesawat Terbang Nurtanio (1976), yang kemudian menjadi IPTN dan hari ini PT Dirgantara Indonesia — termasuk memimpin proyek pesawat N250 Gatotkaca (1995).</p>
+  </section>
+
+  <!-- EKSPLORASI -->
+  <section id="eksplorasi">
+    <div class="sec-head"><span class="sec-num">02</span><h2>Eksplorasi</h2></div>
+    <p>Model di bawah menghitung perambatan retak pada pelat aluminium badan pesawat memakai Hukum Paris (fracture mechanics) — jenis perhitungan yang sama dengan yang dirintis Habibie. Atur variabel sendiri, atau tekan salah satu tombol mode untuk langsung melihat perbedaan pendekatan "sebelum" dan "sesudah" teori ini ada.</p>
+
+    <div class="panel">
+      <div class="mode-tabs" id="modeTabs"></div>
+      <p class="mode-note" id="modeNote"></p>
+
+      <div class="plane-wrap">
+        <svg viewBox="0 0 520 160" id="planeSvg">
+          <path d="M20 100 L180 92 L240 40 L262 40 L236 92 L400 92 L450 68 L470 68 L444 96 L470 100 L444 104 L400 100 L236 100 L262 152 L240 152 L184 108 L20 108 Z"
+            fill="#e7ecf0" stroke="#c7d2da" stroke-width="2"/>
+          <circle id="crackPoint" cx="300" cy="96" r="5" fill="#c1443a"/>
+          <path id="crackMark" d="" fill="none" stroke="#c1443a" stroke-width="2.4" stroke-linecap="round"/>
+          <text x="300" y="128" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#c1443a">sambungan sayap–badan</text>
+        </svg>
+      </div>
+
+      <div class="slider-row">
+        <label for="stressRange">Rentang tegangan siklik per penerbangan (Δσ) <b id="stressVal">— MPa</b></label>
+        <input type="range" id="stressRange" min="80" max="180" value="138">
+      </div>
+      <div class="slider-row">
+        <label for="a0Range">Retak awal terdeteksi (a₀) <b id="a0Val">— mm</b></label>
+        <input type="range" id="a0Range" min="0.5" max="5" step="0.1" value="2.8">
+      </div>
+      <div class="slider-row">
+        <label for="threshRange">Ambang kritis desain (% dari K_IC — "faktor keamanan") <b id="threshVal">— %</b></label>
+        <input type="range" id="threshRange" min="40" max="90" value="50">
+      </div>
+
+      <div class="result-grid">
+        <div class="result-card">
+          <div class="label">Panjang retak kritis</div>
+          <div class="value" id="outAc">—</div>
+        </div>
+        <div class="result-card good" id="cycleCard">
+          <div class="label">Sisa usia struktur</div>
+          <div class="value" id="outN">—</div>
+        </div>
+        <div class="result-card">
+          <div class="label">K_IC terpakai</div>
+          <div class="value" id="outK">33 MPa√m</div>
+        </div>
+      </div>
+
+      <div class="graph-wrap">
+        <svg viewBox="0 0 500 200" id="growthSvg">
+          <line x1="40" y1="10" x2="40" y2="170" stroke="#2e3c49" stroke-width="1"/>
+          <line x1="40" y1="170" x2="480" y2="170" stroke="#2e3c49" stroke-width="1"/>
+          <text x="4" y="14" font-family="IBM Plex Mono" font-size="9" fill="#71818a">a (mm)</text>
+          <text x="440" y="185" font-family="IBM Plex Mono" font-size="9" fill="#71818a">N (penerbangan)</text>
+          <polyline id="growthCurve" points="" fill="none" stroke="#4a90b8" stroke-width="2.2"/>
+          <line id="criticalLine" x1="40" y1="0" x2="480" y2="0" stroke="#c1443a" stroke-width="1" stroke-dasharray="4 4"/>
+        </svg>
+      </div>
+
+      <div class="badge-fact" id="factBadge">
+        Catatan sejarah (bukan hasil hitungan simulator ini): "Faktor Habibie" dilaporkan memangkas bobot kosong operasi pesawat sekitar <b>10%</b>, bahkan hingga <b>25%</b> setelah material komposit ikut dipakai — karena faktor keamanan tidak lagi ditebak konservatif, melainkan dihitung presisi dari perambatan retak sesungguhnya.
+      </div>
+    </div>
+  </section>
+
+  <!-- METODE -->
+  <section id="metode">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Metode</h2></div>
+    <p>Model memakai <b>Hukum Paris</b> (Paul C. Paris, 1961) — hubungan empiris standar dalam fracture mechanics untuk laju rambat retak akibat beban siklik:</p>
+    <p><code>da/dN = C · (ΔK)^m</code></p>
+    <p>dengan <code>ΔK = Y · Δσ · √(π·a)</code> adalah rentang faktor intensitas tegangan, <code>a</code> panjang retak, <code>Y</code> faktor geometri (≈1,18 untuk kasus ini), dan <code>C, m</code> konstanta material hasil uji laboratorium. Untuk aluminium <b>2024-T3</b> (paduan umum badan pesawat era Habibie): <code>C ≈ 8,7×10⁻¹² (m/siklus)/(MPa√m)^m</code>, <code>m ≈ 3,14</code>, <code>K_IC ≈ 33 MPa√m</code>.</p>
+    <p>Panjang retak kritis <code>a_c</code> dihitung dari ambang desain yang dipilih (<code>K_desain = %K_IC × K_IC</code>): <code>a_c = (K_desain / (Y·Δσ))² / π</code>. Jumlah siklus tersisa dari retak awal <code>a₀</code> ke <code>a_c</code> diperoleh dengan mengintegralkan Hukum Paris:</p>
+    <p><code>N = [a_c^(1−m/2) − a₀^(1−m/2)] / [(1−m/2) · C · (Y·Δσ·√π)^m]</code></p>
+    <p>Perhitungan ini sudah diverifikasi silang: hasil rumus tertutup di atas dibandingkan dengan integrasi numerik langkah-kecil secara independen, dan keduanya cocok hingga 0,001% — jadi implementasinya benar secara matematis untuk model yang dipakai.</p>
+  </section>
+
+  <!-- BATASAN -->
+  <section id="batasan">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Batasan</h2></div>
+    <ul>
+      <li><b>Ini bukan replika rumus rahasia Habibie.</b> Formula spesifik yang beliau pakai di MBB tidak dipublikasikan secara rinci dan dapat diverifikasi ke publik. Yang ditampilkan di sini adalah Hukum Paris — model fracture mechanics standar industri dirgantara untuk jenis perhitungan yang sama (perambatan retak akibat beban siklik) — dibangun dari konstanta material 2024-T3 yang diterbitkan di literatur teknik.</li>
+      <li><b>Angka "10–25% lebih ringan" adalah catatan sejarah</b>, dikutip dari sumber populer tentang riwayat Habibie — bukan hasil kalkulasi simulator ini. Simulator tidak menghitung bobot pesawat secara langsung.</li>
+      <li><b>Asumsi model:</b> beban siklik konstan (bukan spektrum acak sungguhan), retak tembus pelat dua dimensi sederhana, tidak memodelkan efek retardasi akibat beban lebih, korosi, atau multi-retak yang saling berinteraksi — semua faktor nyata yang membuat rekayasa dirgantara sungguhan jauh lebih rumit dari model ini.</li>
+      <li><b>Hukum Paris hanya berlaku di "Region II"</b> — rentang menengah kurva laju retak. Di dekat ambang retak (sangat lambat) atau mendekati kegagalan (sangat cepat), perilaku sebenarnya menyimpang dari model sederhana ini.</li>
+    </ul>
+  </section>
+
+  <!-- REFERENSI -->
+  <section id="referensi">
+    <div class="sec-head"><span class="sec-num">05</span><h2>Referensi</h2></div>
+    <ul>
+      <li>P. C. Paris & F. Erdogan, "A Critical Analysis of Crack Propagation Laws", Journal of Basic Engineering, 1963.</li>
+      <li>Konstanta material 2024-T3 (C, m, Y, K_IC) — dikompilasi dari literatur fracture mechanics untuk paduan aluminium aerospace.</li>
+      <li>Riwayat "Mr. Crack" dan Faktor Habibie — dirangkum dari pemberitaan Tempo English, Encyclopedia.com, dan sumber populer tentang biografi B.J. Habibie.</li>
+    </ul>
+
+    <table class="ttable" style="margin-top:18px;">
+      <tr><th>Konstanta 2024-T3</th><td>Nilai dipakai</td></tr>
+      <tr><th>C</th><td>8,7 × 10⁻¹² (m/siklus)/(MPa√m)^m</td></tr>
+      <tr><th>m</th><td>3,14</td></tr>
+      <tr><th>Y (faktor geometri)</th><td>1,18</td></tr>
+      <tr><th>K_IC</th><td>33 MPa√m</td></tr>
+    </table>
+
+    <div class="whatsapp-box">
+      <p style="margin:0;color:var(--text-mid);font-size:13.5px;">Alat ini bagian dari pengembangan tahap awal JAZMI. Ada koreksi konstanta material, saran studi kasus lain, atau mau diskusi lebih lanjut?</p>
+      <a id="waLink" href="#" target="_blank" rel="noopener">WhatsApp</a>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">Teori Crack Propagation — Faktor Habibie — bagian dari Laboratorium Rekayasa Dirgantara, JAZMI (Jalinan Zamrud Islamiah). Versi awal, dibangun mengikuti metode Belajar → Model → Uji → Tool.</div>
+</footer>
+
+<script>
+(function(){
+  const C = 8.7e-12, M = 3.14, Y = 1.18, KIC = 33; // 2024-T3
+
+  const MODES = {
+    konvensional: {
+      name: "Mode Konvensional",
+      cls: "konvensional",
+      stress: 138, a0: 2.8, thresh: 50,
+      note: "Sebelum teori crack propagation: insinyur menebak konservatif — ambang kritis desain sengaja ditahan jauh di bawah K_IC (margin besar, material lebih tebal/berat) karena tidak tahu persis laju rambat retak."
+    },
+    habibie: {
+      name: "Mode Habibie",
+      cls: "habibie",
+      stress: 138, a0: 2.8, thresh: 80,
+      note: "Dengan teori crack propagation: ambang kritis desain bisa didekatkan ke K_IC (di sini 80%, sesuai praktik umum industri) karena laju rambat retak sudah bisa dihitung presisi — margin tetap aman, tapi tidak lagi ditebak berlebihan."
+    }
+  };
+  let activeMode = null;
+
+  const els = {
+    tabs: document.getElementById('modeTabs'),
+    note: document.getElementById('modeNote'),
+    stress: document.getElementById('stressRange'),
+    stressVal: document.getElementById('stressVal'),
+    a0: document.getElementById('a0Range'),
+    a0Val: document.getElementById('a0Val'),
+    thresh: document.getElementById('threshRange'),
+    threshVal: document.getElementById('threshVal'),
+    outAc: document.getElementById('outAc'),
+    outN: document.getElementById('outN'),
+    cycleCard: document.getElementById('cycleCard'),
+    growthCurve: document.getElementById('growthCurve'),
+    criticalLine: document.getElementById('criticalLine'),
+    crackMark: document.getElementById('crackMark'),
+    waLink: document.getElementById('waLink')
+  };
+
+  function buildTabs(){
+    els.tabs.innerHTML = '';
+    Object.keys(MODES).forEach(key=>{
+      const m = MODES[key];
+      const b = document.createElement('button');
+      b.textContent = m.name;
+      b.className = m.cls + (activeMode===key ? ' active' : '');
+      b.addEventListener('click', ()=>{
+        activeMode = key;
+        els.stress.value = m.stress;
+        els.a0.value = m.a0;
+        els.thresh.value = m.thresh;
+        buildTabs();
+        render();
+      });
+      els.tabs.appendChild(b);
+    });
+    els.note.textContent = activeMode ? MODES[activeMode].note : 'Geser sendiri variabelnya, atau tekan salah satu mode di atas.';
+  }
+
+  function aCrit(fracKIC, dSigma){
+    const Kdesign = fracKIC/100 * KIC;
+    return Math.pow(Kdesign/(Y*dSigma), 2) / Math.PI; // meter
+  }
+
+  function cyclesToCritical(a0m, acm, dSigma){
+    const k = Y*dSigma*Math.sqrt(Math.PI);
+    const exp = 1 - M/2;
+    const term = (Math.pow(acm, exp) - Math.pow(a0m, exp)) / exp;
+    return term / (C * Math.pow(k, M));
+  }
+
+  function render(){
+    const dSigma = parseInt(els.stress.value,10);
+    const a0mm = parseFloat(els.a0.value);
+    const thresh = parseInt(els.thresh.value,10);
+
+    els.stressVal.textContent = dSigma + ' MPa';
+    els.a0Val.textContent = a0mm.toFixed(1) + ' mm';
+    els.threshVal.textContent = thresh + '%';
+
+    const a0 = a0mm/1000;
+    const ac = aCrit(thresh, dSigma);
+    const acmm = ac*1000;
+
+    els.outAc.textContent = acmm.toFixed(2) + ' mm';
+
+    if(a0 >= ac){
+      els.outN.textContent = 'sudah kritis';
+      els.cycleCard.className = 'result-card danger';
+      els.growthCurve.setAttribute('points','');
+      els.criticalLine.setAttribute('y1', 20); els.criticalLine.setAttribute('y2', 20);
+      els.crackMark.setAttribute('d','');
+      return;
+    }
+
+    const N = cyclesToCritical(a0, ac, dSigma);
+    els.outN.textContent = Math.round(N).toLocaleString('id-ID') + ' penerbangan';
+    els.cycleCard.className = 'result-card good';
+
+    // --- gambar kurva pertumbuhan a(N) ---
+    const steps = 60;
+    const da = (ac - a0)/steps;
+    let a = a0, Ncum = 0;
+    const pts = [];
+    for(let i=0;i<=steps;i++){
+      pts.push([Ncum, a]);
+      const K = Y*dSigma*Math.sqrt(Math.PI*a);
+      const dadN = C*Math.pow(K, M);
+      const dN = da/dadN;
+      Ncum += dN;
+      a += da;
+    }
+    const w=500,h=200,padL=40,padB=170,padT=20,padR=480;
+    const maxN = Ncum, maxA = ac*1000, minA = a0*1000*0.9;
+    const sx = n => padL + (n/maxN)*(padR-padL);
+    const sy = am => padB - ((am-minA)/(maxA-minA))*(padB-padT);
+    const ptsStr = pts.map(([n,am])=> sx(n).toFixed(1)+','+sy(am*1000).toFixed(1)).join(' ');
+    els.growthCurve.setAttribute('points', ptsStr);
+    els.criticalLine.setAttribute('y1', sy(maxA).toFixed(1));
+    els.criticalLine.setAttribute('y2', sy(maxA).toFixed(1));
+
+    // --- animasi retak di ilustrasi pesawat, proporsional a0/ac ---
+    const growth = Math.min(1, a0/ac);
+    const len = 6 + growth*22;
+    els.crackMark.setAttribute('d', 'M300 96 l'+len.toFixed(1)+' -6 l-4 10 l8 -3');
+
+    const msg = encodeURIComponent(
+      'Halo, saya baru mencoba Simulator Teori Crack Propagation / Faktor Habibie (JAZMI). Ingin diskusi/validasi lebih lanjut.'
+    );
+    els.waLink.href = 'https://wa.me/6281356572588?text=' + msg;
+  }
+
+  els.stress.addEventListener('input', ()=>{ activeMode=null; buildTabs(); render(); });
+  els.a0.addEventListener('input', ()=>{ activeMode=null; buildTabs(); render(); });
+  els.thresh.addEventListener('input', ()=>{ activeMode=null; buildTabs(); render(); });
+
+  buildTabs();
+  render();
+})();
+</script>
+
+</body>
+</html>

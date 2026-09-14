@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lambung, Pencernaan & Risiko Metabolik</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#14171c; --panel2:#1b1f26; --line:#2a2f38;
+    --text:#e8e6df; --muted:#9aa1ab; --accent:#c9a24d; --accent2:#6fae8c;
+    --warn:#d98c5f; --danger:#c1595a; --blue:#7f9fe8; --font-d:'Georgia',serif; --font-b:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-b);margin:0;padding:0;line-height:1.6}
+  .wrap{max-width:840px;margin:0 auto;padding:28px 18px 80px}
+  header{border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:28px}
+  h1{font-family:var(--font-d);font-size:1.45rem;margin:0 0 8px;color:var(--accent)}
+  .tagline{color:var(--muted);font-size:.95rem}
+  h2{font-family:var(--font-d);font-size:1.2rem;color:var(--accent2);border-left:3px solid var(--accent2);padding-left:10px;margin-top:40px}
+  h3{color:var(--text);font-size:1rem;margin-top:0}
+  section{margin-bottom:10px}
+  p{color:#d7d5cd}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;margin:14px 0}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px}
+  @media(min-width:640px){.grid-2{grid-template-columns:1fr 1fr}}
+  @media(min-width:640px){.grid-3{grid-template-columns:1fr 1fr 1fr}}
+  .slider-field label{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);margin-bottom:6px}
+  .slider-field label b{color:var(--accent);font-weight:600}
+  .slider-field input[type=range]{width:100%;accent-color:var(--accent2)}
+  .slider-hint{font-size:.78rem;color:#767c85;margin-top:3px}
+  select{width:100%;padding:9px 10px;border-radius:6px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:1rem}
+  .field{margin-bottom:12px}
+  label.plain{display:block;font-size:.85rem;color:var(--muted);margin-bottom:4px}
+  .result{background:var(--panel2);border:1px solid var(--accent);border-radius:8px;padding:14px;margin-top:14px;font-size:1.02rem}
+  .result b{color:var(--accent)}
+  .verdict{border-radius:8px;padding:14px;margin-top:10px;font-size:.95rem}
+  .v-ok{background:#152a1f;border:1px solid var(--accent2);color:#bfe6cf}
+  .v-warn{background:#2a2416;border:1px solid var(--warn);color:#f0dcc4}
+  .v-bad{background:#2a1616;border:1px solid var(--danger);color:#f0c4c4}
+  .note{font-size:.82rem;color:var(--muted);margin-top:6px}
+  .sysgrid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px}
+  @media(min-width:640px){.sysgrid{grid-template-columns:1fr 1fr 1fr}}
+  .sysbox{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:14px}
+  .sysbox h4{margin:0 0 6px;color:var(--accent2);font-size:.85rem}
+  .sysbox .num{font-size:1.2rem;font-weight:700;color:var(--accent)}
+  .sysbox .cat{font-size:.78rem;margin-top:4px;padding:3px 8px;border-radius:12px;display:inline-block}
+  .cat-ok{background:#152a1f;color:#bfe6cf}
+  .cat-warn{background:#2a2416;color:#f0dcc4}
+  .cat-bad{background:#2a1616;color:#f0c4c4}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:.86rem}
+  th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left}
+  th{color:var(--accent2)}
+  .wa{display:inline-block;margin-top:14px;background:#25D366;color:#04250f;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:600}
+  .limitbox{background:#241a14;border:1px solid var(--warn);border-radius:8px;padding:14px;color:#e8d3c1}
+  .disclaimbox{background:#1a1420;border:1px solid #6b4a8f;border-radius:8px;padding:14px;color:#d8c9e8;font-size:.88rem;margin-bottom:14px}
+  ul{color:#d7d5cd}
+  svg{width:100%;height:auto;background:var(--panel2);border-radius:8px;border:1px solid var(--line)}
+  .chartbox{margin-top:10px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);margin-top:8px}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+  footer{margin-top:50px;border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:.8rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Lambung, Pencernaan & Risiko Metabolik</h1>
+  <div class="tagline">Dari satu suap makanan sampai bagaimana pola bertahun-tahun perlahan membentuk apa yang orang sebut "penyakit gula", "kolesterol", dan "darah tinggi" — dua skala waktu, satu mekanisme yang saling terhubung.</div>
+</header>
+
+<div class="disclaimbox">
+  ⚠️ Halaman ini murni edukasi mekanisme fisiologi umum berbasis pola populasi — <b>bukan alat diagnosis, bukan penilaian risiko personal, dan bukan pengganti pemeriksaan/konsultasi dokter.</b> Kondisi kesehatan nyata dipengaruhi genetika, riwayat medis, dan banyak faktor lain yang tidak dimodelkan di sini.
+</div>
+
+<section>
+  <h2>1. Belajar — Perjalanan Makanan dan Kenapa Kategorinya Penting</h2>
+  <p>Makanan yang masuk mulut dipecah bertahap: enzim amilase di air liur mulai memecah karbohidrat, asam lambung dan pepsin memecah protein, lalu di usus halus enzim pankreas dan empedu menyelesaikan pemecahan lemak dan karbohidrat kompleks sebelum diserap ke aliran darah. Yang menentukan seberapa cepat gula darah naik bukan cuma "berapa banyak karbohidrat", tapi <b>jenis</b> karbohidratnya.</p>
+  <div class="card">
+    <p><b>Indeks Glikemik (IG)</b> — konsep yang diperkenalkan Jenkins dkk. (1981) — mengukur seberapa cepat suatu makanan menaikkan gula darah dibanding glukosa murni. Nasi putih, roti tawar, dan gula sederhana punya IG tinggi (dipecah &amp; diserap cepat); biji-bijian utuh, kacang-kacangan, dan sayuran berserat punya IG rendah (dipecah &amp; diserap perlahan, sebagian besar serat bahkan tidak dicerna sama sekali). Lemak dan protein yang menyertai satu porsi makan juga memperlambat pengosongan lambung, meratakan lonjakan gula darah meski karbohidratnya sama.</p>
+    <p style="margin-bottom:0">Setiap kali gula darah naik, pankreas melepas <b>insulin</b> — hormon yang membuka "pintu" sel agar glukosa bisa masuk dan dipakai/disimpan. Sistem ini bekerja baik untuk lonjakan sesekali. Masalah metabolik yang oleh orang awam disebut "penyakit gula", "kolesterol", "darah tinggi" pada dasarnya adalah <b>akumulasi bertahun-tahun</b> dari pola yang membebani sistem ini terus-menerus — bukan kejadian yang muncul tiba-tiba dalam semalam.</p>
+  </div>
+</section>
+
+<section>
+  <h2>2. Eksplorasi A — Simulator Respons Glikemik Satu Porsi Makan</h2>
+  <p>Geser komposisi satu porsi makan dan lihat bagaimana bentuk kurva gula darahnya berubah.</p>
+  <div class="card">
+    <div class="grid grid-3">
+      <div class="slider-field">
+        <label>Indeks Glikemik makanan <b id="valGI">70</b></label>
+        <input type="range" id="gi" min="20" max="100" step="1" value="70">
+        <div class="slider-hint">20-40 rendah (kacang, sayur) · 70-100 tinggi (nasi putih, gula)</div>
+      </div>
+      <div class="slider-field">
+        <label>Jumlah karbohidrat <b id="valKarbo">60</b> g</label>
+        <input type="range" id="karbo" min="10" max="120" step="5" value="60">
+      </div>
+      <div class="field">
+        <label class="plain">Lemak/protein pendamping</label>
+        <select id="lemakProtein">
+          <option value="rendah">Rendah (mis. makan nasi saja)</option>
+          <option value="sedang" selected>Sedang</option>
+          <option value="tinggi">Tinggi (mis. dengan daging/minyak banyak)</option>
+        </select>
+      </div>
+    </div>
+    <div class="chartbox">
+      <svg id="chartGlukosa" viewBox="0 0 600 220"></svg>
+    </div>
+    <div class="result" id="hasilGlukosa"></div>
+  </div>
+</section>
+
+<section>
+  <h2>3. Eksplorasi B — Simulator Akumulasi Risiko Metabolik (Ilustrasi Pola Bertahun-tahun)</h2>
+  <p>Bukan satu porsi makan — ini simulasi <b>pola rata-rata yang dipertahankan bertahun-tahun</b>. Geser kebiasaan makan dan aktivitas, lihat tiga jalur berbeda bergerak seiring waktu.</p>
+  <div class="card">
+    <div class="grid grid-2">
+      <div class="slider-field">
+        <label>Frekuensi makan tinggi-IG <b id="valFrek">7</b>×/minggu</label>
+        <input type="range" id="frekuensi" min="0" max="21" step="1" value="7">
+      </div>
+      <div class="slider-field">
+        <label>Asupan lemak jenuh relatif <b id="valLemakJenuh">50</b></label>
+        <input type="range" id="lemakJenuh" min="0" max="100" step="5" value="50">
+      </div>
+      <div class="slider-field">
+        <label>Asupan natrium/garam relatif <b id="valGaram">50</b></label>
+        <input type="range" id="garam" min="0" max="100" step="5" value="50">
+      </div>
+      <div class="slider-field">
+        <label>Tingkat aktivitas fisik <b id="valAktivitas">50</b></label>
+        <input type="range" id="aktivitas" min="0" max="100" step="5" value="50">
+        <div class="slider-hint">Faktor pelindung — mengimbangi ketiga faktor di atas</div>
+      </div>
+    </div>
+    <div class="chartbox">
+      <svg id="chartTahun" viewBox="0 0 600 240"></svg>
+    </div>
+    <div class="legend">
+      <span><i class="dot" style="background:#d98c5f"></i> Sensitivitas insulin</span>
+      <span><i class="dot" style="background:#c1595a"></i> Rasio LDL/HDL</span>
+      <span><i class="dot" style="background:#7f9fe8"></i> Tekanan darah sistolik</span>
+    </div>
+    <div class="sysgrid" id="sysgridHasil"></div>
+  </div>
+</section>
+
+<section>
+  <h2>4. Metode / Rumus</h2>
+  <div class="card">
+    <p><b>Kurva glukosa (Panel A, model fungsi puncak sederhana):</b> glukosa(t) = 90 + A × (t/tp) × e^(1−t/tp), dengan A ∝ IG × karbohidrat, dan tp (waktu puncak) diperlambat oleh kandungan lemak/protein</p>
+    <p><b>Akumulasi risiko (Panel B, per tahun simulasi, ilustratif):</b> Δsensitivitas_insulin = −(frekuensi_tinggiIG × k₁) + (aktivitas × k₂); Δrasio_LDL/HDL = (lemak_jenuh × k₃) − (aktivitas × k₄); Δtekanan_sistolik = (garam × k₅) − (aktivitas × k₆)</p>
+    <p>Ambang kategori mengacu kisaran umum yang dipakai WHO/ADA untuk sindrom metabolik — bukan nilai diagnostik presisi untuk individu manapun.</p>
+  </div>
+</section>
+
+<section>
+  <h2>5. Batasan</h2>
+  <div class="limitbox">
+    <ul>
+      <li><b>Kedua simulator ini adalah model ilustratif yang disederhanakan drastis</b> — respons glikemik nyata dipengaruhi urutan makan, waktu makan, mikrobiota usus, dan variasi individual yang besar; akumulasi risiko metabolik nyata melibatkan genetika, hormon, kondisi medis lain, dan interaksi yang jauh lebih kompleks dari 4 variabel di Panel B.</li>
+      <li><b>Konstanta k₁-k₆ dan skala waktu di Panel B bersifat ilustratif</b> untuk menunjukkan ARAH dan POLA pengaruh (mis. aktivitas fisik melindungi, natrium tinggi menaikkan tekanan) — bukan laju perubahan yang diverifikasi secara klinis presisi per individu.</li>
+      <li>Kategori "normal / waspada / berisiko" yang muncul di hasil adalah <b>kategori populasi umum</b>, sama sekali bukan penilaian terhadap kondisi kesehatan Anda pribadi. Diagnosis penyakit metabolik apapun hanya bisa ditegakkan lewat pemeriksaan medis langsung (tes darah, tekanan darah terukur, riwayat klinis).</li>
+      <li>Ini bukan panduan diet atau rekomendasi asupan — sengaja tidak diberikan target angka gram/kalori spesifik yang bisa disalahartikan sebagai anjuran personal.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>6. Referensi</h2>
+  <ul>
+    <li>Jenkins, D.J.A. et al. (1981) — pengenalan konsep Indeks Glikemik, <i>American Journal of Clinical Nutrition</i></li>
+    <li>WHO — kriteria sindrom metabolik &amp; klasifikasi tekanan darah</li>
+    <li>American Diabetes Association (ADA) — fisiologi resistensi insulin &amp; diabetes tipe 2</li>
+    <li>National Cholesterol Education Program (NCEP ATP III) — klasifikasi profil lipid</li>
+  </ul>
+</section>
+
+<div class="card" style="text-align:center">
+  <p style="margin:0 0 8px">Ingin diskusi lebih lanjut soal topik ini?</p>
+  <a class="wa" id="waLink" href="#" target="_blank">Konsultasi via WhatsApp</a>
+</div>
+
+<footer>
+  Bagian dari Bank Alat JAZMI — Level 1–5 (Belajar → Eksplorasi → Metode → Batasan → Referensi).<br>
+  Alat ini edukasi mekanisme fisiologi umum, bukan diagnosis atau anjuran diet personal.
+</footer>
+</div>
+
+<script>
+function fmt(x, d=1){
+  if(!isFinite(x)) return "-";
+  return parseFloat(x.toFixed(d)).toString();
+}
+
+// ===== Panel A =====
+const giEl = document.getElementById('gi');
+const karboEl = document.getElementById('karbo');
+const lpEl = document.getElementById('lemakProtein');
+
+function hitungGlukosa(){
+  const gi = parseFloat(giEl.value);
+  const karbo = parseFloat(karboEl.value);
+  const lp = lpEl.value;
+  document.getElementById('valGI').textContent = gi;
+  document.getElementById('valKarbo').textContent = karbo;
+
+  const A = (gi/100)*(karbo/60)*55; // amplitude mg/dL, dikalibrasi kasar
+  let tp = 40 + (100-gi)*0.4; // menit, GI rendah -> puncak lebih lambat
+  if(lp==='sedang') tp *= 1.25;
+  if(lp==='tinggi') tp *= 1.6;
+
+  const puncakNilai = 90+A;
+
+  document.getElementById('hasilGlukosa').innerHTML = `
+    Perkiraan puncak gula darah: <b>${fmt(puncakNilai,0)} mg/dL</b> pada menit ke-<b>${fmt(tp,0)}</b><br>
+    <span class="note">${gi>65 ? 'Kurva tajam dan cepat — pola khas makanan tinggi-IG.' : 'Kurva landai dan bertahan lebih lama — pola khas makanan rendah-IG/tinggi serat.'}</span>
+  `;
+
+  gambarChartGlukosa(A, tp);
+}
+
+function gambarChartGlukosa(A, tp){
+  const svg = document.getElementById('chartGlukosa');
+  const W=600,H=220,padL=48,padR=14,padT=16,padB=32;
+  const TMAX=180;
+  function px(t){ return padL + (t/TMAX)*(W-padL-padR); }
+  function py(v){ 
+    const maxV=200;
+    return (H-padB) - (v/maxV)*(H-padT-padB);
+  }
+
+  let path="";
+  for(let t=0;t<=TMAX;t+=2){
+    const g = 90 + A*(t/tp)*Math.exp(1-t/tp);
+    const x=px(t), y=py(g);
+    path += (t===0?'M':'L')+x.toFixed(1)+','+y.toFixed(1);
+  }
+
+  let ticks='';
+  [0,60,120,180].forEach(t=>{
+    const x=px(t);
+    ticks += `<text x="${x}" y="${H-padB+18}" fill="#9aa1ab" font-size="10" text-anchor="middle">${t} mnt</text>`;
+  });
+  const yBaseline = py(90);
+
+  svg.innerHTML = `
+    <line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#2a2f38"/>
+    <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-padB}" stroke="#2a2f38"/>
+    <line x1="${padL}" y1="${yBaseline}" x2="${W-padR}" y2="${yBaseline}" stroke="#6fae8c" stroke-width="1" stroke-dasharray="3,3"/>
+    ${ticks}
+    <path d="${path}" fill="none" stroke="#d98c5f" stroke-width="2.5"/>
+    <text x="${W/2}" y="${H-4}" fill="#9aa1ab" font-size="11" text-anchor="middle">waktu setelah makan</text>
+  `;
+}
+
+[giEl,karboEl,lpEl].forEach(el=>el.addEventListener('input', hitungGlukosa));
+
+// ===== Panel B =====
+const frekuensiEl = document.getElementById('frekuensi');
+const lemakJenuhEl = document.getElementById('lemakJenuh');
+const garamEl = document.getElementById('garam');
+const aktivitasEl = document.getElementById('aktivitas');
+
+function hitungTahun(){
+  const frek = parseFloat(frekuensiEl.value);
+  const lemakJ = parseFloat(lemakJenuhEl.value);
+  const garam = parseFloat(garamEl.value);
+  const aktivitas = parseFloat(aktivitasEl.value);
+
+  document.getElementById('valFrek').textContent = frek;
+  document.getElementById('valLemakJenuh').textContent = lemakJ;
+  document.getElementById('valGaram').textContent = garam;
+  document.getElementById('valAktivitas').textContent = aktivitas;
+
+  const NTAHUN = 20;
+  let insulin = 100, ldlHdl = 2.5, sistolik = 115;
+  let seriInsulin=[insulin], seriLdl=[ldlHdl], seriSistolik=[sistolik];
+
+  for(let y=1;y<=NTAHUN;y++){
+    insulin += -(frek*0.35) + (aktivitas*0.12);
+    insulin = Math.max(20, Math.min(100, insulin));
+    ldlHdl += (lemakJ*0.006) - (aktivitas*0.0035);
+    ldlHdl = Math.max(1.5, ldlHdl);
+    sistolik += (garam*0.045) - (aktivitas*0.025);
+    sistolik = Math.max(100, sistolik);
+    seriInsulin.push(insulin); seriLdl.push(ldlHdl); seriSistolik.push(sistolik);
+  }
+
+  function kategori(val, batasWarn, batasBad, terbalik){
+    if(terbalik){ // makin rendah makin buruk (insulin sensitivity)
+      if(val>70) return ['Normal','cat-ok'];
+      if(val>40) return ['Waspada (mendekati resistensi insulin)','cat-warn'];
+      return ['Kategori resistensi insulin tinggi','cat-bad'];
+    } else {
+      if(val<batasWarn) return ['Normal','cat-ok'];
+      if(val<batasBad) return ['Waspada','cat-warn'];
+      return ['Kategori berisiko tinggi','cat-bad'];
+    }
+  }
+
+  const [catIns,clsIns] = kategori(insulin,0,0,true);
+  const [catLdl,clsLdl] = kategori(ldlHdl,3.5,4.5,false);
+  const [catSis,clsSis] = kategori(sistolik,130,140,false);
+
+  document.getElementById('sysgridHasil').innerHTML = `
+    <div class="sysbox">
+      <h4>SENSITIVITAS INSULIN (thn ke-20)</h4>
+      <div class="num">${fmt(insulin,0)}%</div>
+      <span class="cat ${clsIns}">${catIns}</span>
+    </div>
+    <div class="sysbox">
+      <h4>RASIO LDL/HDL (thn ke-20)</h4>
+      <div class="num">${fmt(ldlHdl,2)}</div>
+      <span class="cat ${clsLdl}">${catLdl}</span>
+    </div>
+    <div class="sysbox">
+      <h4>TEKANAN SISTOLIK (thn ke-20)</h4>
+      <div class="num">${fmt(sistolik,0)} mmHg</div>
+      <span class="cat ${clsSis}">${catSis}</span>
+    </div>
+  `;
+
+  gambarChartTahun(seriInsulin, seriLdl, seriSistolik);
+}
+
+function gambarChartTahun(seriIns, seriLdl, seriSis){
+  const svg = document.getElementById('chartTahun');
+  const W=600,H=240,padL=48,padR=14,padT=16,padB=32;
+  const n = seriIns.length;
+  function px(i){ return padL + (i/(n-1))*(W-padL-padR); }
+
+  function normPath(arr, minV, maxV, warna){
+    let path = arr.map((v,i)=>{
+      const norm = (v-minV)/(maxV-minV);
+      const y = (H-padB) - Math.max(0,Math.min(1,norm))*(H-padT-padB);
+      return (i===0?'M':'L')+px(i).toFixed(1)+','+y.toFixed(1);
+    }).join(' ');
+    return `<path d="${path}" fill="none" stroke="${warna}" stroke-width="2.5"/>`;
+  }
+
+  let ticks='';
+  [0,5,10,15,20].forEach(y=>{
+    const x=px(y);
+    ticks += `<text x="${x}" y="${H-padB+18}" fill="#9aa1ab" font-size="10" text-anchor="middle">th${y}</text>`;
+  });
+
+  svg.innerHTML = `
+    <line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#2a2f38"/>
+    <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-padB}" stroke="#2a2f38"/>
+    ${ticks}
+    ${normPath(seriIns, 20, 100, '#d98c5f')}
+    ${normPath(seriLdl, 1.5, 6, '#c1595a')}
+    ${normPath(seriSis, 100, 180, '#7f9fe8')}
+    <text x="${W/2}" y="${H-4}" fill="#9aa1ab" font-size="11" text-anchor="middle">tahun simulasi (pola dipertahankan konstan)</text>
+  `;
+}
+
+[frekuensiEl,lemakJenuhEl,garamEl,aktivitasEl].forEach(el=>el.addEventListener('input', hitungTahun));
+
+const waMsg = encodeURIComponent("Assalamu'alaikum, saya ingin diskusi terkait Lambung, Pencernaan & Risiko Metabolik JAZMI.");
+document.getElementById('waLink').href = `https://wa.me/6281356572588?text=${waMsg}`;
+
+hitungGlukosa();
+hitungTahun();
+</script>
+</body>
+</html>

@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pemetaan Akad Pesanan | JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#241F1A; --paper:#F7F4EE; --paper-2:#EEE7D6;
+  --night:#1B2A4A; --night-2:#28395E; --gold:#B8912E; --gold-soft:#DCC98A;
+  --stone:#8B7E6A; --clay:#8C3B2E; --teal:#2E5A55;
+  --line:rgba(36,31,26,0.14);
+  --font-display:'Fraunces', serif; --font-body:'Karla', sans-serif; --font-mono:'JetBrains Mono', monospace;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-body);line-height:1.6;}
+.wrap{max-width:840px;margin:0 auto;padding:40px 20px 80px;}
+h1{font-family:var(--font-display);font-weight:600;font-size:clamp(26px,4vw,36px);color:var(--night);margin:0 0 12px;}
+h2{font-family:var(--font-display);font-weight:600;font-size:1.35rem;color:var(--night);margin:0 0 12px;}
+p{color:#4A443A;font-size:0.95rem;max-width:70ch;}
+.lead{font-size:1rem;color:#4A443A;}
+.panel{background:#fff;border:1px solid var(--line);border-radius:8px;padding:22px 24px;margin-bottom:22px;}
+.panel.dark{background:var(--night);color:#E7EAF2;}
+.panel.dark h2{color:#fff;}
+.panel.dark p{color:#C6CCDE;}
+.callout{border-left:3px solid var(--gold);background:rgba(184,145,46,0.08);padding:12px 16px;border-radius:0 6px 6px 0;font-size:0.88rem;margin:14px 0;}
+.callout b{color:var(--clay);}
+
+/* dimension sections */
+.dim{margin-bottom:26px;}
+.dim:last-child{margin-bottom:0;}
+.dim-title{font-weight:700;font-size:0.95rem;color:var(--night);margin-bottom:4px;}
+.dim-sub{font-size:0.82rem;color:var(--stone);margin-bottom:10px;}
+.opt-list{display:flex;flex-direction:column;gap:8px;}
+.opt-card{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:6px;padding:10px 12px;cursor:pointer;background:var(--paper);transition:border-color .15s, background .15s;}
+.opt-card:hover{border-color:var(--gold);}
+.opt-card.active{border-color:var(--gold);background:rgba(184,145,46,0.1);}
+.opt-card input{margin-top:3px;accent-color:var(--gold);}
+.opt-card span{font-size:0.88rem;color:var(--ink);}
+.chk-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+.chk-pill{border:1px solid var(--line);border-radius:16px;padding:5px 12px;font-size:0.78rem;cursor:pointer;background:var(--paper);color:var(--ink);}
+.chk-pill.active{background:var(--teal);color:#fff;border-color:var(--teal);}
+
+/* bars */
+.bar-item{margin-bottom:16px;}
+.bar-head{display:flex;justify-content:space-between;font-size:0.9rem;margin-bottom:4px;}
+.bar-head b{color:var(--night);}
+.bar-track{height:14px;background:var(--paper-2);border-radius:8px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:8px;transition:width .3s ease;}
+.tier-tag{font-size:0.7rem;padding:2px 8px;border-radius:10px;font-weight:700;margin-left:8px;}
+.tier-tinggi{background:rgba(63,150,90,0.15);color:#2E7D4F;}
+.tier-sedang{background:rgba(184,145,46,0.18);color:var(--gold);}
+.tier-rendah{background:rgba(140,59,46,0.12);color:var(--clay);}
+.bar-desc{font-size:0.8rem;color:var(--stone);margin-top:2px;}
+.bar-why{font-size:0.8rem;color:#4A443A;margin-top:6px;padding-left:14px;}
+.bar-why li{margin-bottom:3px;}
+
+.banner{display:none;background:var(--clay);color:#fff;padding:10px 16px;border-radius:6px;font-size:0.85rem;margin-bottom:16px;}
+.banner.show{display:block;}
+
+table.matrix{width:100%;border-collapse:collapse;font-size:0.86rem;margin-top:6px;}
+table.matrix th, table.matrix td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+table.matrix th{color:var(--night);font-size:0.78rem;}
+
+select{width:100%;padding:9px 10px;border-radius:6px;border:1px solid var(--line);background:var(--paper);font-family:var(--font-body);font-size:0.9rem;}
+.problem-out{margin-top:14px;background:var(--paper-2);border-radius:6px;padding:14px 16px;font-size:0.87rem;display:none;}
+.problem-out.show{display:block;}
+.problem-out b{color:var(--clay);}
+
+.disclaimer{border:1px dashed var(--stone);border-radius:6px;padding:12px 16px;font-size:0.8rem;color:#5A5348;margin-top:16px;}
+.roadmap{font-size:0.8rem;color:var(--stone);}
+.roadmap b{color:var(--night);}
+
+/* WhatsApp CTA */
+.wa-panel{text-align:center;}
+.wa-btn{display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#fff;border:none;padding:12px 22px;border-radius:24px;font-family:var(--font-body);font-weight:700;font-size:0.95rem;cursor:pointer;}
+.wa-btn:hover{background:#1EBE5A;}
+.group-link{display:block;margin-top:14px;font-size:0.85rem;color:var(--teal);text-decoration:none;}
+.group-link:hover{text-decoration:underline;}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);align-items:center;justify-content:center;z-index:50;padding:20px;}
+.modal-overlay.show{display:flex;}
+.modal-box{background:#fff;border-radius:10px;max-width:520px;width:100%;padding:26px 26px 22px;max-height:88vh;overflow-y:auto;}
+.modal-box h3{font-family:var(--font-display);color:var(--night);margin:0 0 8px;font-size:1.2rem;}
+.modal-box p{font-size:0.87rem;margin:0 0 12px;}
+.modal-box textarea{width:100%;min-height:90px;border:1px solid var(--line);border-radius:6px;padding:10px;font-family:var(--font-body);font-size:0.88rem;resize:vertical;}
+.modal-preview{background:var(--paper-2);border-radius:6px;padding:10px 12px;font-size:0.76rem;color:#4A443A;max-height:160px;overflow-y:auto;white-space:pre-wrap;margin-top:10px;font-family:var(--font-mono);}
+.modal-btn-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+.btn-primary{background:#25D366;color:#fff;border:none;padding:10px 18px;border-radius:6px;font-weight:700;font-size:0.88rem;cursor:pointer;}
+.btn-secondary{background:transparent;border:1px solid var(--line);color:var(--ink);padding:10px 18px;border-radius:6px;font-size:0.88rem;cursor:pointer;}
+
+footer{background:var(--night);color:#B9C0D2;padding:32px 24px;font-size:0.78rem;text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Pemetaan Akad Pesanan</h1>
+  <p class="lead">Bukan "akad ini pasti salam" — tapi: berdasarkan karakteristik yang Anda masukkan, struktur mana yang paling mendekati, dan mengapa. Kata "pesan" hanyalah fenomena permukaan; alat ini membongkar apa yang sebenarnya dijanjikan tiap pihak.</p>
+  <p class="roadmap">Proyek 02 dari 6 — Bank Ilmu JAZMI, seri Fikih Muamalah: <b>01 Hak Mengembalikan Barang → 02 Pemetaan Akad Pesanan → 03 Akad atau Bukan? → 04 Peta Tanggung Jawab → 05 Ketika Akad Bermasalah → 06 Hak yang Timbul</b>.</p>
+
+  <div class="panel dark">
+    <h2>Masukkan Karakteristik Transaksi</h2>
+    <p>Ubah jawaban mana pun — hasil di bawah akan langsung terhitung ulang. Ini yang membuat alat ini terasa seperti laboratorium: Anda bisa melihat langsung parameter mana yang benar-benar mengubah struktur akad.</p>
+
+    <div class="dim">
+      <div class="dim-title" style="color:#DCC98A;">A. Status Barang</div>
+      <div class="dim-sub" style="color:#9AA1B4;">Ketika akad terjadi, seperti apa keberadaan barangnya?</div>
+      <div class="opt-list" id="grp-status"></div>
+    </div>
+
+    <div class="dim">
+      <div class="dim-title" style="color:#DCC98A;">B. Cara Objek Ditentukan</div>
+      <div class="dim-sub" style="color:#9AA1B4;">Bagaimana kedua pihak menyepakati barang yang dimaksud?</div>
+      <div class="opt-list" id="grp-spesifikasi"></div>
+      <div class="chk-row" id="grp-kriteria"></div>
+    </div>
+
+    <div class="dim">
+      <div class="dim-title" style="color:#DCC98A;">C. Waktu Penyerahan</div>
+      <div class="opt-list" id="grp-waktu"></div>
+    </div>
+
+    <div class="dim">
+      <div class="dim-title" style="color:#DCC98A;">D. Pola Pembayaran</div>
+      <div class="opt-list" id="grp-pembayaran"></div>
+    </div>
+
+    <div class="dim">
+      <div class="dim-title" style="color:#DCC98A;">E. Siapa Bertanggung Jawab atas Keberadaan Barang</div>
+      <div class="opt-list" id="grp-tanggungjawab"></div>
+      <label class="opt-card" style="margin-top:8px;" id="pihakKetigaWrap">
+        <input type="checkbox" id="pihakKetiga">
+        <span>Barang yang dimaksud diketahui berasal dari / milik pihak ketiga tertentu</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Mesin 1 — Kecocokan Struktur Akad</h2>
+    <div class="banner" id="changeBanner"></div>
+    <p style="margin-top:0;">Persentase di bawah adalah <b>tingkat kecocokan struktur</b> terhadap karakteristik klasik tiap akad — bukan "probabilitas keabsahan syar'i". Baca sebagai peta kemiripan pola, bukan vonis hukum.</p>
+    <div id="barsOut"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Mesin 2 — Peta Tanggung Jawab</h2>
+    <p style="margin-top:0;">Diturunkan dari jawaban Anda di bagian E, dipadukan dengan prinsip umum fikih muamalah soal risiko sebelum/sesudah serah terima (qabdh).</p>
+    <table class="matrix" id="matrixOut"></table>
+    <div class="disclaimer">Baris risiko bersifat prinsip umum, bukan ketentuan mutlak — bisa berbeda tergantung kesepakatan eksplisit dan mazhab yang diikuti.</div>
+  </div>
+
+  <div class="panel">
+    <h2>Mesin 3 — Ketika Transaksi Bermasalah</h2>
+    <p style="margin-top:0;">Pilih jenis masalah yang terjadi. Penjelasan akan disambungkan otomatis ke peta tanggung jawab di atas.</p>
+    <select id="problemSelect">
+      <option value="">— pilih jenis masalah —</option>
+      <option value="tidak_ada">① Barang tidak ada / tidak jadi tersedia</option>
+      <option value="tidak_sesuai">② Barang ada tetapi tidak sesuai spesifikasi</option>
+      <option value="terlambat">③ Barang sesuai tetapi terlambat diserahkan</option>
+      <option value="kualitas">④ Barang sesuai tetapi kualitas berbeda</option>
+      <option value="rusak_sebelum">⑤ Barang rusak sebelum diserahkan</option>
+      <option value="rusak_kirim">⑥ Barang rusak dalam proses pengiriman</option>
+      <option value="hasil_beda">⑦ Barang dibuat tetapi hasil tidak sesuai pesanan</option>
+    </select>
+    <div class="problem-out" id="problemOut"></div>
+  </div>
+
+  <div class="panel wa-panel">
+    <h2>Konsultasi Lebih Lanjut</h2>
+    <p style="margin-top:0;">Kirim seluruh checklist yang sudah Anda isi beserta hasil analisisnya langsung ke konsultan via WhatsApp — Anda akan diminta menambahkan catatan dulu sebelum benar-benar terkirim.</p>
+    <button class="wa-btn" id="btnOpenModal">💬 Konsultasi via WhatsApp</button>
+    <a class="group-link" href="https://chat.whatsapp.com/BQErP8IRZkdIHwXY7KkIQA" target="_blank" rel="noopener">Atau gabung dulu ke Grup Diskusi Fikih Muamalah JAZMI →</a>
+  </div>
+
+  <div class="disclaimer">
+    Alat ini tidak memutuskan hukum dan tidak "berfatwa" — ia membantu melihat <i>struktur</i> transaksi dan tanggung jawab yang melekat padanya. Untuk keputusan mengikat (termasuk hak retur/pembatalan, yang dibahas di Proyek 01 dan 06), konsultasikan dengan ahli fikih muamalah.
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <h3>Sebelum Dikirim ke WhatsApp</h3>
+    <p>Ringkasan checklist dan hasil analisis di bawah ini akan dikirim ke konsultan. Ada yang mau ditambahkan atau keterangan yang belum tercantum di checklist?</p>
+    <textarea id="modalNote" placeholder="Contoh: barangnya berupa mesin custom, sudah ada uang muka 30%, dst. (boleh dikosongkan)"></textarea>
+    <div class="modal-preview" id="modalPreview"></div>
+    <a class="group-link" href="https://chat.whatsapp.com/BQErP8IRZkdIHwXY7KkIQA" target="_blank" rel="noopener">Sambil menunggu balasan, gabung juga ke Grup Diskusi Fikih Muamalah JAZMI →</a>
+    <div class="modal-btn-row">
+      <button class="btn-primary" id="btnSendWa">Kirim ke WhatsApp</button>
+      <button class="btn-secondary" id="btnCancelModal">Batal</button>
+    </div>
+  </div>
+</div>
+
+<footer>Bagian dari Bank Ilmu JAZMI — Belajar → Memodelkan → Menguji → Membuat Tool.</footer>
+
+<script>
+/* ===================== OPTION DEFINITIONS ===================== */
+const OPTS = {
+  status: [
+    {v:'tersedia_spesifik', t:'Barang sudah tersedia dan merupakan unit tertentu (bisa ditunjuk/dilihat)'},
+    {v:'didatangkan', t:'Barang belum tersedia, tapi akan dicarikan/didatangkan (bukan dibuat dari nol)'},
+    {v:'dibuat', t:'Barang belum ada dan harus dibuat/diproduksi lebih dulu'},
+    {v:'belum_individual', t:'Barang belum ditentukan unitnya — cukup memenuhi kriteria/sifat tertentu'}
+  ],
+  spesifikasi: [
+    {v:'lihat_fisik', t:'Dengan menunjuk/melihat langsung barang tertentu'},
+    {v:'sifat_kriteria', t:'Berdasarkan sifat/kriteria (jenis, ukuran, jumlah, kualitas, dll) tanpa menunjuk unit fisik'}
+  ],
+  waktu: [
+    {v:'langsung', t:'Diserahkan langsung/segera saat akad'},
+    {v:'tidak_ditentukan', t:'Waktu penyerahan tidak ditentukan'},
+    {v:'ditentukan', t:'Waktu penyerahan ditentukan di masa depan'},
+    {v:'unsur_penting', t:'Waktu penyerahan menjadi unsur penting kesepakatan (ada tenggat ketat)'}
+  ],
+  pembayaran: [
+    {v:'lunas_awal', t:'Lunas di awal / saat akad (majelis akad)'},
+    {v:'sebagian_awal', t:'Sebagian di awal, sisanya kemudian'},
+    {v:'setelah_tersedia', t:'Dibayar setelah barang tersedia/selesai dibuat'},
+    {v:'saat_diterima', t:'Dibayar saat barang diterima (COD)'},
+    {v:'cicilan_tempo', t:'Tempo/cicilan/bertahap setelah barang diterima'}
+  ],
+  tanggungjawab: [
+    {v:'sudah_punya', t:'Penjual sudah memiliki barang (stok siap)'},
+    {v:'wajib_menyediakan', t:'Penjual wajib menyediakan (dari sumber sendiri, bukan membuat)'},
+    {v:'wajib_membuat', t:'Penjual wajib membuat barang (proses produksi)'},
+    {v:'wajib_mencari', t:'Penjual hanya mencari/mendatangkan dari pihak lain atas namanya sendiri'},
+    {v:'wakil_perantara', t:'Penjual bertindak sebagai wakil/perantara atas nama pembeli'},
+    {v:'pembeli_tentukan_sumber', t:'Pembeli sendiri yang menentukan sumber barang'}
+  ]
+};
+const KRITERIA = ['Jenis','Ukuran','Jumlah','Berat','Warna','Kualitas','Bahan','Lainnya'];
+
+const CANDIDATE_META = {
+  salam:{name:'Salam', desc:'Jual beli dengan pembayaran lunas di muka untuk barang bersifat/sejenis yang diserahkan belakangan.'},
+  istishna:{name:"Istishna'", desc:'Pemesanan pembuatan barang dengan spesifikasi tertentu, pembayaran fleksibel.'},
+  jualbeli:{name:'Jual Beli Biasa dengan Pemesanan', desc:'Barang sudah ada / unit tertentu, "pesan" hanya berarti reservasi.'},
+  wakalah:{name:'Wakalah (Titip Belikan)', desc:'Penerima pesanan hanya mewakili, barang milik/berasal dari pihak ketiga.'}
+};
+
+/* ===================== STATE ===================== */
+let answers = {status:null, spesifikasi:null, kriteria:[], waktu:null, pembayaran:null, tanggungjawab:null, pihak_ketiga:false};
+let prevTop = null;
+let firstRun = true;
+let lastScores = {};
+
+/* ===================== RENDER OPTION GROUPS ===================== */
+function renderRadioGroup(containerId, field, options){
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  options.forEach(opt=>{
+    const label = document.createElement('label');
+    label.className = 'opt-card';
+    label.innerHTML = `<input type="radio" name="${field}" value="${opt.v}"><span>${opt.t}</span>`;
+    label.querySelector('input').addEventListener('change', ()=>{
+      answers[field] = opt.v;
+      refreshActiveStates(containerId, field);
+      recompute();
+    });
+    el.appendChild(label);
+  });
+}
+function refreshActiveStates(containerId, field){
+  document.getElementById(containerId).querySelectorAll('.opt-card').forEach(card=>{
+    const input = card.querySelector('input');
+    card.classList.toggle('active', input.checked);
+  });
+}
+
+renderRadioGroup('grp-status','status',OPTS.status);
+renderRadioGroup('grp-spesifikasi','spesifikasi',OPTS.spesifikasi);
+renderRadioGroup('grp-waktu','waktu',OPTS.waktu);
+renderRadioGroup('grp-pembayaran','pembayaran',OPTS.pembayaran);
+renderRadioGroup('grp-tanggungjawab','tanggungjawab',OPTS.tanggungjawab);
+
+const krEl = document.getElementById('grp-kriteria');
+KRITERIA.forEach(k=>{
+  const pill = document.createElement('div');
+  pill.className = 'chk-pill';
+  pill.textContent = k;
+  pill.addEventListener('click', ()=>{
+    pill.classList.toggle('active');
+    const idx = answers.kriteria.indexOf(k);
+    if(pill.classList.contains('active') && idx===-1) answers.kriteria.push(k);
+    if(!pill.classList.contains('active') && idx!==-1) answers.kriteria.splice(idx,1);
+    recompute();
+  });
+  krEl.appendChild(pill);
+});
+document.getElementById('pihakKetiga').addEventListener('change', (e)=>{
+  answers.pihak_ketiga = e.target.checked;
+  document.getElementById('pihakKetigaWrap').classList.toggle('active', e.target.checked);
+  recompute();
+});
+
+/* ===================== SCORING ===================== */
+function evalDim(cond, w, label, arr){ arr.push({ok:!!cond, w, label}); }
+function finalize(arr){
+  const max = arr.reduce((s,x)=>s+x.w,0);
+  const score = arr.reduce((s,x)=>s+(x.ok?x.w:0),0);
+  return { pct: max ? Math.round(score/max*100) : 0, matched: arr.filter(x=>x.ok).map(x=>x.label) };
+}
+function computeScores(a){
+  const c = {};
+  let s=[];
+  evalDim(a.status && a.status!=='tersedia_spesifik', 3, 'Barang belum tersedia / bukan unit tertentu yang ditunjuk', s);
+  evalDim(a.spesifikasi==='sifat_kriteria', 3, 'Objek ditentukan berdasarkan sifat/kriteria, bukan barang tertentu', s);
+  evalDim(a.waktu==='ditentukan'||a.waktu==='unsur_penting', 2, 'Waktu penyerahan ditentukan di masa depan', s);
+  evalDim(a.pembayaran==='lunas_awal', 4, 'Pembayaran lunas di awal/majelis akad (syarat utama salam)', s);
+  evalDim(a.tanggungjawab==='wajib_menyediakan'||a.tanggungjawab==='wajib_mencari', 2, 'Penjual bertanggung jawab menyediakan/mendatangkan barang sejenis', s);
+  c.salam = finalize(s);
+
+  let i=[];
+  evalDim(a.status==='dibuat', 4, 'Barang harus dibuat/diproduksi lebih dulu', i);
+  evalDim(a.tanggungjawab==='wajib_membuat', 4, 'Penjual bertanggung jawab membuat barang (produsen)', i);
+  evalDim(a.spesifikasi==='sifat_kriteria', 2, 'Spesifikasi ditentukan rinci', i);
+  evalDim(a.pembayaran && a.pembayaran!=='lunas_awal', 3, 'Pembayaran fleksibel, tidak disyaratkan lunas di awal', i);
+  evalDim(a.waktu && a.waktu!=='langsung', 1, 'Waktu penyerahan mengikuti proses pembuatan', i);
+  c.istishna = finalize(i);
+
+  let j=[];
+  evalDim(a.status==='tersedia_spesifik', 5, 'Barang sudah tersedia / unit tertentu sudah ditunjuk', j);
+  evalDim(a.spesifikasi==='lihat_fisik', 3, 'Objek ditentukan dengan menunjuk barang tertentu', j);
+  evalDim(a.waktu==='langsung', 2, 'Penyerahan dilakukan langsung/segera', j);
+  evalDim(a.tanggungjawab==='sudah_punya', 3, 'Penjual sudah memiliki barang (stok siap)', j);
+  c.jualbeli = finalize(j);
+
+  let w=[];
+  evalDim(a.tanggungjawab==='wakil_perantara', 6, 'Pihak penerima pesanan bertindak sebagai wakil/perantara', w);
+  evalDim(a.pihak_ketiga===true, 4, 'Barang diketahui berasal dari pihak ketiga', w);
+  evalDim(a.pembayaran==='lunas_awal'||a.pembayaran==='sebagian_awal', 2, 'Dana diserahkan lebih dulu untuk dibelikan', w);
+  c.wakalah = finalize(w);
+
+  return c;
+}
+
+function tierLabel(pct){
+  if(pct>=65) return {cls:'tier-tinggi', label:'kecocokan tinggi'};
+  if(pct>=35) return {cls:'tier-sedang', label:'kecocokan sedang'};
+  return {cls:'tier-rendah', label:'kecocokan rendah'};
+}
+
+function renderBars(scores){
+  const order = Object.keys(scores).sort((a,b)=>scores[b].pct - scores[a].pct);
+  const out = document.getElementById('barsOut');
+  out.innerHTML = '';
+  order.forEach((key, idx)=>{
+    const s = scores[key];
+    const meta = CANDIDATE_META[key];
+    const tier = tierLabel(s.pct);
+    const rankLabel = idx===0 ? 'Kandidat utama' : idx===1 ? 'Alternatif' : 'Kemungkinan lain';
+    const color = idx===0 ? 'var(--gold)' : idx===1 ? 'var(--teal)' : 'var(--stone)';
+    const div = document.createElement('div');
+    div.className = 'bar-item';
+    div.innerHTML = `
+      <div class="bar-head">
+        <span><b>${rankLabel}:</b> ${meta.name} <span class="tier-tag ${tier.cls}">${tier.label}</span></span>
+        <span class="tier-tag" style="background:transparent;color:var(--night);">${s.pct}%</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${s.pct}%;background:${color};"></div></div>
+      <div class="bar-desc">${meta.desc}</div>
+      ${s.matched.length ? `<ul class="bar-why">${s.matched.map(m=>`<li>${m}</li>`).join('')}</ul>` : `<div class="bar-desc" style="font-style:italic;">Belum ada indikator yang cocok dari jawaban saat ini.</div>`}
+    `;
+    out.appendChild(div);
+  });
+  return order[0];
+}
+
+/* ===================== RESPONSIBILITY MATRIX ===================== */
+function renderMatrix(a){
+  const rows = [
+    {k:'keberadaan', label:'Keberadaan barang'},
+    {k:'spesifikasi', label:'Kesesuaian spesifikasi'},
+    {k:'waktu', label:'Waktu penyerahan'},
+    {k:'kualitas', label:'Kualitas'},
+    {k:'risiko_sebelum', label:'Risiko sebelum penyerahan (qabla al-qabdh)'},
+    {k:'risiko_sesudah', label:'Risiko setelah penyerahan (ba\'da al-qabdh)'}
+  ];
+  let pihakUtama, catatan;
+  if(a.tanggungjawab==='wakil_perantara'){
+    pihakUtama = 'Pihak ketiga (pemilik asli)';
+    catatan = {
+      keberadaan:'Wakil hanya menanggung amanah pelaksanaan tugas, bukan ketersediaan barangnya',
+      spesifikasi:'Tergantung kesepakatan wakalah — perlu diperjelas',
+      waktu:'Tergantung kecepatan wakil melaksanakan tugas',
+      kualitas:'Pemilik asli barang yang menentukan',
+      risiko_sebelum:'Umumnya di pihak ketiga selama barang belum diserahkan',
+      risiko_sesudah:'Berpindah ke pembeli setelah barang diterima'
+    };
+  } else if(a.tanggungjawab==='pembeli_tentukan_sumber'){
+    pihakUtama = 'Bergeser sebagian ke pembeli';
+    catatan = {
+      keberadaan:'Pembeli ikut menanggung karena ia sendiri menentukan sumbernya',
+      spesifikasi:'Penjual, sepanjang mengikuti sumber yang ditentukan pembeli',
+      waktu:'Penjual, kecuali keterlambatan sumber di luar kendalinya',
+      kualitas:'Bergantung kualitas dari sumber yang ditentukan pembeli',
+      risiko_sebelum:'Perlu diperjelas — berpotensi dibagi kedua pihak',
+      risiko_sesudah:'Berpindah ke pembeli setelah serah terima'
+    };
+  } else if(a.tanggungjawab){
+    pihakUtama = 'Penjual';
+    catatan = {
+      keberadaan:'Penjual menanggung kewajiban ini secara penuh',
+      spesifikasi:'Penjual',
+      waktu: a.waktu==='unsur_penting' ? 'Penjual — waktu adalah unsur penting yang disepakati' : 'Penjual',
+      kualitas:'Penjual',
+      risiko_sebelum:'Penjual — prinsip umum: risiko ada pada pihak yang masih menguasai barang',
+      risiko_sesudah:"Berpindah ke pembeli setelah serah terima (qabdh) sempurna"
+    };
+  } else {
+    pihakUtama = '—'; catatan = {};
+  }
+
+  const table = document.getElementById('matrixOut');
+  if(!a.tanggungjawab){
+    table.innerHTML = '<tr><td style="color:var(--stone);font-style:italic;">Lengkapi bagian E untuk melihat peta tanggung jawab.</td></tr>';
+    return catatan;
+  }
+  table.innerHTML = `<tr><th>Persoalan</th><th>Pihak Utama</th><th>Catatan</th></tr>` +
+    rows.map(r=>`<tr><td>${r.label}</td><td>${pihakUtama}</td><td>${catatan[r.k]||'—'}</td></tr>`).join('');
+  return catatan;
+}
+
+/* ===================== PROBLEM ANALYZER ===================== */
+const PROBLEM_MAP = {
+  tidak_ada: {row:'keberadaan', q:'Siapa yang wajib menyediakan barang ini?'},
+  tidak_sesuai: {row:'spesifikasi', q:'Siapa yang bertanggung jawab terhadap kesesuaian spesifikasi?'},
+  terlambat: {row:'waktu', q:'Siapa yang bertanggung jawab terhadap keterlambatan waktu?'},
+  kualitas: {row:'kualitas', q:'Apa yang menjadi standar kualitas, dan siapa yang menanggung selisihnya?'},
+  rusak_sebelum: {row:'risiko_sebelum', q:'Siapa yang menanggung kerusakan sebelum barang diserahkan?'},
+  rusak_kirim: {row:'risiko_sesudah', q:'Siapa yang menanggung kerusakan dalam proses pengiriman, berdasarkan kesepakatan siapa yang mengatur pengiriman?'},
+  hasil_beda: {row:'spesifikasi', q:'Apakah persoalannya di spesifikasi, pengerjaan, atau bahan? (relevan khususnya untuk struktur istishna\')'}
+};
+let lastCatatan = {};
+document.getElementById('problemSelect').addEventListener('change', (e)=>{
+  const out = document.getElementById('problemOut');
+  const val = e.target.value;
+  if(!val){ out.classList.remove('show'); return; }
+  const map = PROBLEM_MAP[val];
+  const jawaban = lastCatatan[map.row] || 'Lengkapi bagian E terlebih dulu agar peta tanggung jawab dapat dihitung.';
+  out.innerHTML = `<b>Pertanyaan kunci:</b> ${map.q}<br><br><b>Berdasarkan peta tanggung jawab saat ini:</b> ${jawaban}`;
+  out.classList.add('show');
+});
+
+/* ===================== MAIN RECOMPUTE ===================== */
+function recompute(){
+  const scores = computeScores(answers);
+  lastScores = scores;
+  const top = renderBars(scores);
+  lastCatatan = renderMatrix(answers) || {};
+
+  const banner = document.getElementById('changeBanner');
+  if(!firstRun && prevTop && top !== prevTop){
+    banner.textContent = `🔄 Perubahan parameter ini mengubah kandidat utama dari "${CANDIDATE_META[prevTop].name}" menjadi "${CANDIDATE_META[top].name}".`;
+    banner.classList.add('show');
+  } else if(firstRun){
+    banner.classList.remove('show');
+  }
+  prevTop = top;
+  firstRun = false;
+
+  // refresh problem analyzer text if a problem is already selected
+  const sel = document.getElementById('problemSelect');
+  if(sel.value) sel.dispatchEvent(new Event('change'));
+
+  if(document.getElementById('modalOverlay').classList.contains('show')) updatePreview();
+}
+
+/* ===================== WHATSAPP CONSULTATION ===================== */
+function labelFor(dim, value){
+  if(!value) return 'Belum diisi';
+  const opt = OPTS[dim].find(o=>o.v===value);
+  return opt ? opt.t : value;
+}
+
+function buildWaMessage(note){
+  const order = Object.keys(lastScores).sort((a,b)=>lastScores[b].pct - lastScores[a].pct);
+  let lines = [];
+  lines.push('*Konsultasi — Pemetaan Akad Pesanan (JAZMI)*');
+  lines.push('');
+  lines.push('*Checklist yang dipilih:*');
+  lines.push(`A. Status Barang: ${labelFor('status', answers.status)}`);
+  lines.push(`B. Cara Objek Ditentukan: ${labelFor('spesifikasi', answers.spesifikasi)}`);
+  lines.push(`   Kriteria detail: ${answers.kriteria.length ? answers.kriteria.join(', ') : '-'}`);
+  lines.push(`C. Waktu Penyerahan: ${labelFor('waktu', answers.waktu)}`);
+  lines.push(`D. Pola Pembayaran: ${labelFor('pembayaran', answers.pembayaran)}`);
+  lines.push(`E. Tanggung Jawab: ${labelFor('tanggungjawab', answers.tanggungjawab)}`);
+  lines.push(`   Barang dari pihak ketiga: ${answers.pihak_ketiga ? 'Ya' : 'Tidak'}`);
+  lines.push('');
+  lines.push('*Hasil Mesin 1 (tingkat kecocokan struktur):*');
+  order.forEach((k,idx)=>{
+    lines.push(`${idx+1}. ${CANDIDATE_META[k].name} — ${lastScores[k].pct}%`);
+  });
+  lines.push('');
+  lines.push('*Catatan tambahan dari pengguna:*');
+  lines.push(note && note.trim() ? note.trim() : '-');
+  return lines.join('\n');
+}
+
+function updatePreview(){
+  const note = document.getElementById('modalNote').value;
+  document.getElementById('modalPreview').textContent = buildWaMessage(note);
+}
+
+document.getElementById('btnOpenModal').addEventListener('click', ()=>{
+  document.getElementById('modalOverlay').classList.add('show');
+  updatePreview();
+});
+document.getElementById('btnCancelModal').addEventListener('click', ()=>{
+  document.getElementById('modalOverlay').classList.remove('show');
+});
+document.getElementById('modalOverlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'modalOverlay') document.getElementById('modalOverlay').classList.remove('show');
+});
+document.getElementById('modalNote').addEventListener('input', updatePreview);
+document.getElementById('btnSendWa').addEventListener('click', ()=>{
+  const note = document.getElementById('modalNote').value;
+  const text = buildWaMessage(note);
+  const url = `https://wa.me/6281356572588?text=${encodeURIComponent(text)}`;
+  window.open(url, '_blank');
+  document.getElementById('modalOverlay').classList.remove('show');
+});
+
+recompute();
+</script>
+</body>
+</html>

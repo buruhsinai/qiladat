@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paradoks Bootstrap Kehidupan</title>
+<style>
+  :root {
+    --bg: #080a0c;
+    --bg2: #0e1214;
+    --bg3: #141c1e;
+    --border: #1c2a2e;
+    --text: #b0c8c0;
+    --text-dim: #405858;
+    --dna: #5090d0;
+    --rna: #50b870;
+    --protein: #d0a040;
+    --ribosome: #c06080;
+    --broken: #c04040;
+    --font: 'Georgia', serif;
+    --mono: 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; line-height: 1.7; }
+
+  header { max-width: 1080px; margin: 0 auto; padding: 2.5rem 2rem 1.5rem; border-bottom: 1px solid var(--border); }
+  .eyebrow { font-family: var(--mono); font-size: 0.68rem; color: var(--text-dim); letter-spacing: 0.15em; margin-bottom: 0.6rem; }
+  h1 { font-size: clamp(1.4rem, 3vw, 2rem); font-weight: normal; color: #c8e0d8; line-height: 1.3; margin-bottom: 0.5rem; }
+  h1 em { color: var(--rna); font-style: normal; }
+  .sub { font-size: 0.85rem; color: var(--text-dim); max-width: 640px; font-style: italic; line-height: 1.7; }
+
+  .main { max-width: 1080px; margin: 0 auto; padding: 1.5rem 2rem; display: grid; grid-template-columns: 1fr 340px; gap: 1.2rem; }
+  @media(max-width:750px){ .main { grid-template-columns:1fr; padding:1rem; } }
+  .full { grid-column: 1/-1; }
+
+  .panel { background: var(--bg2); border: 1px solid var(--border); border-radius: 3px; padding: 1.4rem; }
+  .ptitle { font-family: var(--mono); font-size: 0.68rem; color: var(--text-dim); letter-spacing: 0.12em; border-bottom: 1px solid var(--border); padding-bottom: 0.6rem; margin-bottom: 1.1rem; }
+
+  canvas#bootstrapCanvas { display: block; width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 3px; cursor: pointer; }
+
+  /* NODE CONTROLS */
+  .node-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 1rem; }
+  .node-btn {
+    padding: 0.6rem 0.8rem; border: 2px solid; background: var(--bg);
+    border-radius: 3px; cursor: pointer; font-family: var(--font);
+    font-size: 0.8rem; transition: all 0.25s; text-align: left;
+  }
+  .node-btn.dna { border-color: var(--dna); color: var(--dna); }
+  .node-btn.rna { border-color: var(--rna); color: var(--rna); }
+  .node-btn.protein { border-color: var(--protein); color: var(--protein); }
+  .node-btn.ribosome { border-color: var(--ribosome); color: var(--ribosome); }
+  .node-btn.broken { opacity: 0.5; text-decoration: line-through; border-style: dashed; }
+  .node-btn:hover { background: var(--bg3); }
+  .node-btn .nb-label { font-size: 0.65rem; font-family: var(--mono); opacity: 0.7; display: block; margin-top: 0.1rem; }
+
+  /* STATUS */
+  .status-display {
+    padding: 1rem; border-radius: 3px; text-align: center;
+    font-family: var(--mono); font-size: 0.9rem; letter-spacing: 0.05em;
+    transition: all 0.4s; margin-bottom: 0.8rem;
+  }
+  .status-display.alive { background: #0a1e14; border: 1px solid var(--rna); color: var(--rna); }
+  .status-display.broken { background: #1e0a0a; border: 1px solid var(--broken); color: var(--broken); }
+  .status-display.partial { background: #1e160a; border: 1px solid var(--protein); color: var(--protein); }
+
+  /* CHAIN VISUAL */
+  .chain-display { display: flex; align-items: center; justify-content: center; gap: 0.3rem; margin: 0.7rem 0; flex-wrap: wrap; }
+  .chain-node { padding: 0.3rem 0.6rem; border-radius: 2px; font-family: var(--mono); font-size: 0.72rem; transition: all 0.3s; }
+  .chain-arrow { color: var(--text-dim); font-size: 0.8rem; }
+  .chain-node.dna { background: var(--dna); color: #fff; }
+  .chain-node.rna { background: var(--rna); color: #fff; }
+  .chain-node.protein { background: var(--protein); color: #000; }
+  .chain-node.ribosome { background: var(--ribosome); color: #fff; }
+  .chain-node.broken { background: var(--broken); color: #fff; opacity: 0.6; text-decoration: line-through; }
+
+  /* READOUT */
+  .readout { background: var(--bg); border-left: 3px solid var(--rna); padding: 0.85rem 1rem; font-size: 0.82rem; line-height: 1.85; border-radius: 0 3px 3px 0; transition: border-color 0.4s; }
+  .readout em { font-style: normal; color: var(--rna); }
+  .readout .ar { direction: rtl; color: var(--protein); font-size: 0.9rem; display: block; margin-top: 0.5rem; text-align: right; }
+
+  /* HYPOTHESIS PANEL */
+  .hyp-card { background: var(--bg); border: 1px solid var(--border); padding: 0.8rem; border-radius: 3px; margin-bottom: 0.6rem; cursor: pointer; transition: all 0.2s; }
+  .hyp-card:hover { border-color: var(--text-dim); }
+  .hyp-card.active { border-color: var(--rna); background: var(--bg3); }
+  .hyp-title { font-size: 0.82rem; color: var(--text); margin-bottom: 0.2rem; }
+  .hyp-status { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.08em; margin-bottom: 0.3rem; }
+  .hyp-status.partial { color: var(--protein); }
+  .hyp-status.open { color: var(--broken); }
+  .hyp-status.speculative { color: var(--text-dim); }
+  .hyp-desc { font-size: 0.75rem; color: var(--text-dim); line-height: 1.65; display: none; }
+  .hyp-card.active .hyp-desc { display: block; }
+
+  .sep { height: 1px; background: var(--border); margin: 1rem 0; }
+  .infobox { background: var(--bg3); border: 1px solid var(--border); padding: 0.85rem; border-radius: 3px; font-size: 0.8rem; color: var(--text-dim); line-height: 1.75; }
+  .infobox strong { color: var(--text); }
+  .infobox em { color: var(--rna); font-style: normal; }
+
+  button.b { padding: 0.28rem 0.7rem; border: 1px solid var(--border); background: var(--bg); color: var(--text-dim); font-size: 0.72rem; border-radius: 3px; cursor: pointer; font-family: var(--mono); transition: all 0.2s; }
+  button.b:hover { border-color: var(--rna); color: var(--rna); }
+
+  .step-indicator { display: flex; gap: 0.4rem; margin-bottom: 0.8rem; flex-wrap: wrap; }
+  .step { padding: 0.2rem 0.5rem; border-radius: 2px; font-family: var(--mono); font-size: 0.65rem; border: 1px solid var(--border); color: var(--text-dim); cursor: pointer; transition: all 0.2s; }
+  .step.active { border-color: var(--rna); color: var(--rna); background: var(--bg3); }
+  .step:hover { border-color: var(--text-dim); color: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">LABORATORIUM INTERAKTIF · QIDALAT.COM</div>
+  <h1>Paradoks <em>Bootstrap</em> Kehidupan</h1>
+  <p class="sub">DNA membutuhkan protein untuk dibaca. Protein membutuhkan ribosom untuk dibuat. Ribosom terbuat dari protein. Protein dikode oleh DNA. Lingkaran ini tidak bisa dimulai dari nol — tapi kehidupan sudah ada. Bagaimana?</p>
+</header>
+
+<div class="main">
+
+  <!-- KIRI: VISUALISASI -->
+  <div style="display:flex;flex-direction:column;gap:1.2rem;">
+
+    <div class="panel">
+      <div class="ptitle">VISUALISASI SIRKUIT — KLIK NODE UNTUK MEMUTUS</div>
+      <canvas id="bootstrapCanvas" height="380"></canvas>
+
+      <div style="margin-top:0.8rem;">
+        <div class="step-indicator" id="stepIndicator"></div>
+      </div>
+
+      <div class="chain-display" id="chainDisplay"></div>
+
+      <div style="display:flex;gap:0.5rem;margin-top:0.6rem;flex-wrap:wrap;">
+        <button class="b" onclick="resetAll()">Reset Semua</button>
+        <button class="b" onclick="breakAll()">Putus Semua</button>
+        <button class="b" onclick="animateBootstrap()">Animasi Skenario</button>
+      </div>
+    </div>
+
+    <!-- HIPOTESIS -->
+    <div class="panel">
+      <div class="ptitle">HIPOTESIS YANG PERNAH DIAJUKAN</div>
+      <div id="hypotheses"></div>
+    </div>
+
+  </div>
+
+  <!-- KANAN -->
+  <div style="display:flex;flex-direction:column;gap:1.2rem;">
+
+    <!-- STATUS -->
+    <div class="panel">
+      <div class="ptitle">STATUS SISTEM</div>
+
+      <div class="status-display alive" id="status-display">
+        ● SISTEM BERFUNGSI
+      </div>
+
+      <div class="node-controls" id="nodeControls"></div>
+
+      <div class="readout" id="main-readout">
+        Sistem sirkular berjalan. Klik node untuk memutus dan lihat apa yang terjadi.
+      </div>
+    </div>
+
+    <!-- DETAIL NODE -->
+    <div class="panel">
+      <div class="ptitle" id="detail-title">DETAIL NODE</div>
+      <div id="detail-content" style="font-size:0.82rem;color:var(--text-dim);line-height:1.8;">
+        Klik node pada canvas atau tombol di atas untuk melihat detail.
+      </div>
+    </div>
+
+    <!-- PERTANYAAN INTI -->
+    <div class="panel">
+      <div class="ptitle">PERTANYAAN INTI</div>
+      <div class="infobox">
+        <strong>Paradoks chicken-and-egg paling dalam:</strong><br><br>
+        Sistem ini hanya bisa berjalan jika <em>sudah berjalan</em>. Tidak ada "versi sederhana" yang bisa dimulai dari nol dan bertahap menjadi lengkap — karena setiap versi yang tidak lengkap tidak bisa bekerja sama sekali.<br><br>
+        Ini berbeda dari pertanyaan "bagaimana bumi terbentuk" yang bisa dijawab bertahap. Ini adalah pertanyaan tentang <em>logika sirkular yang mendasar</em>.
+      </div>
+
+      <div style="margin-top:0.8rem;padding:0.9rem;background:var(--bg);border-left:3px solid var(--protein);border-radius:0 3px 3px 0;font-size:0.82rem;line-height:1.8;color:var(--text-dim);">
+        Sains hari ini punya hipotesis — RNA World yang paling kuat. Tapi "paling kuat" bukan berarti terjawab. Masalah-masalah serius tetap ada. Dan kejujuran intelektual mengharuskan kita menyebut itu dengan jelas.
+        <span style="direction:rtl;display:block;text-align:right;color:var(--protein);font-size:0.9rem;margin-top:0.5rem;">وَمَا أُوتِيتُم مِّنَ الْعِلْمِ إِلَّا قَلِيلًا</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BAWAH -->
+  <div class="panel full">
+    <div class="ptitle">MENGAPA INI BERBEDA DARI PERTANYAAN SAINS BIASA</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;">
+      <div class="infobox">
+        <strong>Bukan masalah kompleksitas biasa</strong><br><br>
+        Banyak masalah sains sulit karena banyak variabel. Paradoks bootstrap berbeda: ia adalah masalah <em>logika kausal</em>. A menyebabkan B, B menyebabkan C, C menyebabkan A. Tidak ada urutan linear yang bisa dimulai.
+      </div>
+      <div class="infobox">
+        <strong>RNA World: sejauh mana menjawab?</strong><br><br>
+        Hipotesis RNA World menarik karena RNA bisa menyimpan informasi DAN mengkatalisis reaksi. Tapi: RNA yang stabil dan fungsional masih sangat sulit terbentuk secara abiotik, dan transisi dari RNA World ke sistem DNA+Protein tetap belum dijelaskan.
+      </div>
+      <div class="infobox">
+        <strong>Bukan argumen untuk berhenti mencari</strong><br><br>
+        Mengakui bahwa ini belum terjawab bukan berarti sains harus berhenti. Justru sebaliknya — ini adalah salah satu pertanyaan terpenting yang bisa mendorong biologi dan kimia ke batas baru. <em>Ketidaktahuan yang jujur adalah bahan bakar penelitian.</em>
+      </div>
+      <div class="infobox">
+        <strong>Yang saintisme lakukan</strong><br><br>
+        Saintisme berkata "pada prinsipnya sudah bisa dijelaskan" — sebelum penjelasannya ada. Ini adalah penutupan prematur yang justru menghambat rasa ingin tahu. Pertanyaan ini layak tetap terbuka dan dihadapi dengan sepenuhnya.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ==========================================
+// DATA NODE
+// ==========================================
+const NODES = {
+  dna: {
+    id: 'dna', label: 'DNA', color: '#5090d0', textColor: '#fff',
+    x: 0.5, y: 0.18,
+    desc: 'Menyimpan informasi genetik dalam urutan basa A-T-G-C. Mengkode semua protein yang dibutuhkan sel — termasuk semua enzim dan ribosom.',
+    needs: ['protein', 'ribosome'],
+    provides: 'Instruksi untuk semua protein',
+    paradox: 'DNA tidak bisa dibaca tanpa protein polimerase. Protein polimerase dikode oleh DNA. Dari mana polimerase pertama?',
+    detail: `DNA adalah perpustakaan instruksi. Tapi perpustakaan yang terkunci — kunci untuk membukanya (RNA polimerase) harus dibuat menggunakan instruksi di dalam perpustakaan itu sendiri.
+
+Panjang DNA minimum sel paling sederhana yang diketahui (Mycoplasma): ~580.000 pasang basa. Peluang sekuens fungsional muncul secara acak dari panjang itu: sangat jauh dari "mungkin."`,
+  },
+  mrna: {
+    id: 'mrna', label: 'mRNA', color: '#50b870', textColor: '#fff',
+    x: 0.82, y: 0.42,
+    desc: 'Perantara: salinan instruksi dari DNA yang dibawa ke ribosom untuk diterjemahkan menjadi protein.',
+    needs: ['dna', 'protein'],
+    provides: 'Salinan instruksi yang bisa dibaca ribosom',
+    paradox: 'mRNA dibuat oleh RNA polimerase (protein). Tapi RNA polimerase dikode oleh DNA yang hanya bisa dibaca setelah ada RNA polimerase.',
+    detail: `mRNA adalah kurir. Tapi kurir ini harus dibuat oleh sistem yang sudah lengkap — RNA polimerase (protein), faktor transkripsi (protein), sistem capping (protein).
+
+Tanpa mRNA, ribosom tidak punya instruksi. Tanpa ribosom, tidak ada protein untuk membuat mRNA.`,
+  },
+  ribosome: {
+    id: 'ribosome', label: 'Ribosom', color: '#c06080', textColor: '#fff',
+    x: 0.82, y: 0.72,
+    desc: 'Mesin pembuat protein. Terdiri dari ~50 protein dan beberapa rRNA. Membaca mRNA dan merakit asam amino menjadi protein.',
+    needs: ['dna', 'mrna', 'protein'],
+    provides: 'Sintesis semua protein',
+    paradox: 'Ribosom terbuat dari protein. Protein dibuat oleh ribosom. Ribosom pertama dibuat oleh apa?',
+    detail: `Ribosom adalah paradoks paling telak. Ia adalah mesin yang membuat semua protein — termasuk dirinya sendiri. Sekitar 50 protein berbeda harus bergabung secara presisi untuk membentuk ribosom yang fungsional.
+
+Ribosom tidak bisa dibuat sedikit-sedikit — ia harus lengkap untuk bisa bekerja. Setengah ribosom tidak lebih berguna dari setengah gunting.`,
+  },
+  protein: {
+    id: 'protein', label: 'Protein', color: '#d0a040', textColor: '#000',
+    x: 0.18, y: 0.72,
+    desc: 'Molekul pekerja: enzim, struktural, transport, regulasi. Semua proses sel dijalankan oleh protein yang spesifik.',
+    needs: ['ribosome', 'mrna'],
+    provides: 'Semua fungsi katalitik dan struktural sel',
+    paradox: 'Protein dibuat oleh ribosom menggunakan instruksi mRNA. Tapi ribosom sendiri terbuat dari protein. Dan enzim untuk membaca DNA (membuat mRNA) adalah protein.',
+    detail: `Protein adalah eksekutor semua instruksi DNA. Tapi protein hanya bisa dibuat setelah ada instruksi (DNA → mRNA) dan mesin (ribosom) — keduanya membutuhkan protein yang sudah ada.
+
+Protein fungsional membutuhkan urutan asam amino yang sangat spesifik. Dari 20²⁰⁰ kombinasi yang mungkin untuk protein 200 asam amino, hanya sebagian kecil yang fungsional.`,
+  },
+  trna: {
+    id: 'trna', label: 'tRNA + Synthetase', color: '#8060b0', textColor: '#fff',
+    x: 0.18, y: 0.42,
+    desc: 'Penerjemah antara bahasa kodon RNA dan bahasa asam amino. 20 aminoacyl-tRNA synthetase berbeda untuk 20 asam amino.',
+    needs: ['dna', 'ribosome', 'protein'],
+    provides: 'Penerjemahan kode genetik ke asam amino',
+    paradox: 'Synthetase adalah protein — dibuat oleh ribosom dari instruksi DNA. Tapi tanpa synthetase, ribosom tidak bisa menerjemahkan instruksi DNA untuk membuat synthetase.',
+    detail: `tRNA adalah kamus yang menerjemahkan bahasa DNA (kodon) ke bahasa protein (asam amino). Tapi kamus ini membutuhkan "pembuat kamus" (aminoacyl-tRNA synthetase) yang merupakan protein kompleks.
+
+20 synthetase berbeda harus ada serentak — satu untuk setiap asam amino. Mereka harus presisi ganda: mengenali tRNA yang tepat DAN asam amino yang tepat.`,
+  },
+};
+
+const EDGES = [
+  { from: 'dna', to: 'mrna', label: 'Transkripsi\n(butuh RNA Pol)' },
+  { from: 'mrna', to: 'ribosome', label: 'Instruksi\nuntuk ribosom' },
+  { from: 'ribosome', to: 'protein', label: 'Translasi\n(membuat protein)' },
+  { from: 'protein', to: 'dna', label: 'DNA Pol\n& Repair' },
+  { from: 'protein', to: 'ribosome', label: 'Komponen\nribosom' },
+  { from: 'mrna', to: 'trna', label: 'Dibaca\nbersama' },
+  { from: 'trna', to: 'protein', label: 'Membawa\nasam amino' },
+  { from: 'dna', to: 'trna', label: 'Mengkode\ntRNA' },
+  { from: 'ribosome', to: 'trna', label: 'Bersama\nsintesis' },
+];
+
+// ==========================================
+// STATE
+// ==========================================
+let broken = new Set();
+let selectedNode = null;
+let animRunning = false;
+let animStep = 0;
+let canvas, ctx;
+
+const HYPOTHESES = [
+  {
+    title: 'RNA World Hypothesis',
+    status: 'partial',
+    statusLabel: 'PALING KUAT — MASIH BERMASALAH',
+    desc: 'RNA bisa menyimpan informasi (seperti DNA) DAN mengkatalisis reaksi (seperti protein). Mungkin RNA datang lebih dulu, lalu DNA dan protein berkembang kemudian. Ribozyme (RNA enzim) membuktikan RNA bisa katalisis. Masalah: RNA abiotik sangat sulit terbentuk dan tidak stabil. Transisi ke sistem DNA+Protein belum dijelaskan dengan memuaskan.'
+  },
+  {
+    title: 'Metabolism-First (Thermo-Chemical)',
+    status: 'speculative',
+    statusLabel: 'SPEKULATIF',
+    desc: 'Metabolisme sederhana muncul lebih dulu dari replikasi — di vent hidrotermal atau mineral tertentu. Reaksi kimia yang self-sustaining tanpa informasi genetik. Masalah: tanpa informasi genetik, sistem tidak bisa mewariskan "identitasnya" — setiap generasi mulai dari nol.'
+  },
+  {
+    title: 'Panspermia (Kehidupan dari Luar Bumi)',
+    status: 'open',
+    statusLabel: 'TERBUKA — MEMINDAHKAN MASALAH',
+    desc: 'Kehidupan mungkin berasal dari luar bumi — melalui meteor atau benda antarplanet. Bukan mustahil secara fisika — organisme bisa bertahan perjalanan antarplanet. Masalah kritis: ini hanya memindahkan masalah, bukan menjawabnya. Di mana pun kehidupan pertama muncul, paradoks bootstrap tetap ada.'
+  },
+  {
+    title: 'Directed Panspermia (Crick & Orgel)',
+    status: 'speculative',
+    statusLabel: 'SANGAT SPEKULATIF',
+    desc: 'Francis Crick — co-penemu DNA — pada 1973 mengusulkan bahwa kehidupan mungkin dikirim ke bumi oleh peradaban lain. Ini bukan penolakan sains — ini pengakuan bahwa masalah abiogenesis sangat sulit sehingga seorang ilmuwan besar pun mempertimbangkan ini. Masalah: sama seperti panspermia biasa, ditambah tidak ada bukti peradaban lain.'
+  },
+  {
+    title: 'Simultan Assembly (Masih Terbuka)',
+    status: 'open',
+    statusLabel: 'AKTIF DITELITI',
+    desc: 'Komponen-komponen muncul secara paralel dan bergabung ketika kondisi terpenuhi — bukan satu per satu. Analoginya: bukan ayam lalu telur, tapi keduanya berkembang bersama dari nenek moyang bersama. Masalah: belum ada mekanisme konkret yang menunjukkan bagaimana tepatnya ini bisa terjadi.'
+  },
+];
+
+// ==========================================
+// CANVAS
+// ==========================================
+function initCanvas() {
+  canvas = document.getElementById('bootstrapCanvas');
+  ctx = canvas.getContext('2d');
+  resizeCanvas();
+}
+
+function resizeCanvas() {
+  canvas.width = canvas.parentElement.offsetWidth - 2;
+  canvas.height = 380;
+}
+
+function getNodePos(node) {
+  return {
+    x: node.x * canvas.width,
+    y: node.y * canvas.height
+  };
+}
+
+function drawAll() {
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Background subtle grid
+  ctx.strokeStyle = 'rgba(28,42,46,0.5)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 40) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let y = 0; y < H; y += 40) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  // Draw edges
+  EDGES.forEach(e => drawEdge(e));
+
+  // Draw nodes
+  Object.values(NODES).forEach(n => drawNode(n));
+
+  // Center label
+  const allBroken = Object.keys(NODES).every(id => broken.has(id));
+  const noneBroken = broken.size === 0;
+
+  ctx.save();
+  ctx.font = '11px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  if (noneBroken) {
+    ctx.fillStyle = 'rgba(80,184,112,0.5)';
+    ctx.fillText('SISTEM BERJALAN', W/2, H/2);
+    ctx.font = '9px monospace';
+    ctx.fillStyle = 'rgba(80,184,112,0.3)';
+    ctx.fillText('klik node untuk memutus', W/2, H/2 + 16);
+  } else if (allBroken) {
+    ctx.fillStyle = 'rgba(192,64,64,0.6)';
+    ctx.fillText('SISTEM KOLAPS TOTAL', W/2, H/2);
+  } else {
+    ctx.fillStyle = 'rgba(192,160,64,0.4)';
+    ctx.fillText('SISTEM TIDAK STABIL', W/2, H/2);
+  }
+
+  ctx.restore();
+}
+
+function drawEdge(edge) {
+  const from = NODES[edge.from];
+  const to = NODES[edge.to];
+  if (!from || !to) return;
+
+  const fp = getNodePos(from);
+  const tp = getNodePos(to);
+
+  const isBroken = broken.has(edge.from) || broken.has(edge.to);
+
+  // Curved edge
+  const mx = (fp.x + tp.x) / 2;
+  const my = (fp.y + tp.y) / 2;
+  const dx = tp.x - fp.x;
+  const dy = tp.y - fp.y;
+  const len = Math.sqrt(dx*dx + dy*dy);
+  const curve = 30;
+  const cx = mx - (dy/len) * curve;
+  const cy = my + (dx/len) * curve;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(fp.x, fp.y);
+  ctx.quadraticCurveTo(cx, cy, tp.x, tp.y);
+
+  if (isBroken) {
+    ctx.setLineDash([5, 5]);
+    ctx.strokeStyle = 'rgba(192,64,64,0.35)';
+    ctx.lineWidth = 1.5;
+  } else {
+    ctx.setLineDash([]);
+    const grad = ctx.createLinearGradient(fp.x, fp.y, tp.x, tp.y);
+    grad.addColorStop(0, from.color + '80');
+    grad.addColorStop(1, to.color + '80');
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 2;
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Arrowhead at midpoint toward to
+  if (!isBroken) {
+    const t = 0.6;
+    const ax = (1-t)*(1-t)*fp.x + 2*(1-t)*t*cx + t*t*tp.x;
+    const ay = (1-t)*(1-t)*fp.y + 2*(1-t)*t*cy + t*t*tp.y;
+    const t2 = 0.61;
+    const ax2 = (1-t2)*(1-t2)*fp.x + 2*(1-t2)*t2*cx + t2*t2*tp.x;
+    const ay2 = (1-t2)*(1-t2)*fp.y + 2*(1-t2)*t2*cy + t2*t2*tp.y;
+    const ang = Math.atan2(ay2-ay, ax2-ax);
+    const aLen = 8;
+    ctx.beginPath();
+    ctx.moveTo(ax + Math.cos(ang)*aLen, ay + Math.sin(ang)*aLen);
+    ctx.lineTo(ax + Math.cos(ang+2.4)*aLen*0.6, ay + Math.sin(ang+2.4)*aLen*0.6);
+    ctx.lineTo(ax + Math.cos(ang-2.4)*aLen*0.6, ay + Math.sin(ang-2.4)*aLen*0.6);
+    ctx.closePath();
+    ctx.fillStyle = to.color + 'a0';
+    ctx.fill();
+  }
+
+  // Edge label at curve midpoint
+  const lx = (fp.x + tp.x) / 2 + (cx - (fp.x+tp.x)/2) * 0.4;
+  const ly = (fp.y + tp.y) / 2 + (cy - (fp.y+tp.y)/2) * 0.4;
+  const lines = edge.label.split('\n');
+  ctx.font = '8px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = isBroken ? 'rgba(192,64,64,0.4)' : 'rgba(160,192,180,0.35)';
+  lines.forEach((l, i) => {
+    ctx.fillText(l, lx, ly + (i - (lines.length-1)/2) * 10);
+  });
+
+  ctx.restore();
+}
+
+function drawNode(node) {
+  const pos = getNodePos(node);
+  const r = 36;
+  const isBroken = broken.has(node.id);
+  const isSelected = selectedNode === node.id;
+
+  ctx.save();
+
+  // Glow if selected
+  if (isSelected) {
+    ctx.shadowColor = node.color;
+    ctx.shadowBlur = 20;
+  }
+
+  // Circle
+  ctx.beginPath();
+  ctx.arc(pos.x, pos.y, r, 0, Math.PI*2);
+  ctx.fillStyle = isBroken ? '#1a0a0a' : node.color + '25';
+  ctx.fill();
+  ctx.strokeStyle = isBroken ? 'rgba(192,64,64,0.6)' : node.color;
+  ctx.lineWidth = isSelected ? 3 : 2;
+  if (isBroken) ctx.setLineDash([5,4]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.shadowBlur = 0;
+
+  // Label
+  ctx.font = `bold 13px monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = isBroken ? 'rgba(192,64,64,0.7)' : node.color;
+  ctx.fillText(node.label, pos.x, pos.y - 5);
+
+  // Sub-label
+  ctx.font = '9px monospace';
+  ctx.fillStyle = isBroken ? 'rgba(192,64,64,0.4)' : node.color + 'aa';
+  ctx.fillText(isBroken ? '✗ PUTUS' : '● aktif', pos.x, pos.y + 10);
+
+  // Break indicator
+  if (isBroken) {
+    ctx.font = '18px serif';
+    ctx.fillStyle = 'rgba(192,64,64,0.5)';
+    ctx.fillText('✗', pos.x, pos.y - 22);
+  }
+
+  ctx.restore();
+}
+
+// ==========================================
+// INTERAKSI CANVAS
+// ==========================================
+function getClickedNode(ex, ey) {
+  for (const node of Object.values(NODES)) {
+    const pos = getNodePos(node);
+    const dx = ex - pos.x, dy = ey - pos.y;
+    if (dx*dx + dy*dy < 36*36) return node.id;
+  }
+  return null;
+}
+
+canvas?.addEventListener('click', e => {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const x = (e.clientX - rect.left) * scaleX;
+  const y = (e.clientY - rect.top) * scaleY;
+  const hit = getClickedNode(x, y);
+  if (hit) {
+    if (broken.has(hit)) broken.delete(hit);
+    else broken.add(hit);
+    selectedNode = hit;
+    updateAll();
+  }
+});
+
+// ==========================================
+// UPDATE UI
+// ==========================================
+function updateAll() {
+  drawAll();
+  updateStatus();
+  updateNodeControls();
+  updateChainDisplay();
+  updateReadout();
+  if (selectedNode) showDetail(selectedNode);
+}
+
+function updateStatus() {
+  const el = document.getElementById('status-display');
+  const n = broken.size;
+  if (n === 0) {
+    el.className = 'status-display alive';
+    el.innerHTML = '● SISTEM BERFUNGSI<br><span style="font-size:0.7rem;opacity:0.7;">Semua komponen terhubung</span>';
+  } else if (n >= Object.keys(NODES).length - 1) {
+    el.className = 'status-display broken';
+    el.innerHTML = '✗ SISTEM KOLAPS<br><span style="font-size:0.7rem;opacity:0.7;">' + n + ' komponen terputus</span>';
+  } else {
+    el.className = 'status-display partial';
+    el.innerHTML = '⚠ SISTEM TIDAK STABIL<br><span style="font-size:0.7rem;opacity:0.7;">' + n + ' komponen terputus</span>';
+  }
+}
+
+function updateNodeControls() {
+  const wrap = document.getElementById('nodeControls');
+  wrap.innerHTML = Object.values(NODES).map(n => `
+    <button class="node-btn ${n.id} ${broken.has(n.id) ? 'broken' : ''}"
+      onclick="toggleNode('${n.id}')">
+      ${n.label}
+      <span class="nb-label">${broken.has(n.id) ? 'TERPUTUS — klik untuk sambung' : 'klik untuk putus'}</span>
+    </button>
+  `).join('');
+}
+
+function updateChainDisplay() {
+  const chain = ['dna','mrna','ribosome','protein','trna'];
+  document.getElementById('chainDisplay').innerHTML =
+    chain.map((id, i) => {
+      const n = NODES[id];
+      const cls = broken.has(id) ? 'broken' : id;
+      return `<span class="chain-node ${cls}">${n.label}</span>${i < chain.length-1 ? '<span class="chain-arrow">→</span>' : '<span class="chain-arrow">↩ DNA</span>'}`;
+    }).join('');
+}
+
+function updateReadout() {
+  const el = document.getElementById('main-readout');
+  const n = broken.size;
+
+  if (n === 0) {
+    el.innerHTML = `Sistem berjalan lengkap. Semua komponen saling bergantung dan saling menghasilkan. <em>Pertanyaannya: bagaimana sirkuit seperti ini bisa pertama kali dimulai?</em> Ini yang disebut paradoks bootstrap — sistem hanya bisa berjalan jika sudah berjalan.
+    <span class="ar">وَمَا أُوتِيتُم مِّنَ الْعِلْمِ إِلَّا قَلِيلًا</span>`;
+    el.style.borderColor = 'var(--rna)';
+  } else if (broken.has('ribosome') && broken.has('protein')) {
+    el.innerHTML = `Ribosom dan protein keduanya terputus — <em>paradoks paling telak tersingkap</em>. Ribosom tidak bisa ada tanpa protein. Protein tidak bisa ada tanpa ribosom. Tidak ada jalan keluar dari lingkaran ini tanpa sesuatu yang mendahului keduanya.`;
+    el.style.borderColor = 'var(--broken)';
+  } else if (broken.has('dna')) {
+    el.innerHTML = `DNA terputus — seluruh sistem kehilangan sumber instruksinya. Tanpa DNA, tidak ada yang tahu protein apa yang harus dibuat. Tidak ada memori yang bisa diwariskan. <em>Sistem bisa berputar sesaat, lalu berhenti selamanya.</em>`;
+    el.style.borderColor = 'var(--broken)';
+  } else if (n >= 3) {
+    el.innerHTML = `${n} komponen terputus. Sistem tidak bisa berfungsi. Ini menunjukkan betapa <em>tidak ada komponen yang opsional</em> — setiap node dalam sirkuit ini esensial. Tidak ada "versi disederhanakan" yang masih bisa bekerja.`;
+    el.style.borderColor = 'var(--broken)';
+  } else {
+    const brokenNames = [...broken].map(id => NODES[id].label).join(' dan ');
+    el.innerHTML = `${brokenNames} terputus. Sirkuit terganggu — rantai produksi terpotong. Sel nyata akan segera mati karena komponen yang ada akan terdegradasi tanpa bisa diganti.`;
+    el.style.borderColor = 'var(--protein)';
+  }
+}
+
+function showDetail(id) {
+  const n = NODES[id];
+  if (!n) return;
+  selectedNode = id;
+  document.getElementById('detail-title').textContent = `DETAIL — ${n.label}`;
+  document.getElementById('detail-content').innerHTML = `
+    <div style="color:${n.color};font-family:var(--mono);font-size:0.7rem;margin-bottom:0.5rem;">
+      ${broken.has(id) ? '✗ TERPUTUS' : '● AKTIF'}
+    </div>
+    <p style="margin-bottom:0.6rem;">${n.desc}</p>
+    <div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.4rem;font-family:var(--mono);">MENYEDIAKAN:</div>
+    <p style="font-size:0.78rem;color:var(--rna);margin-bottom:0.7rem;">${n.provides}</p>
+    <div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.4rem;font-family:var(--mono);">PARADOKS YANG DITUNJUKKAN:</div>
+    <p style="font-size:0.78rem;color:var(--protein);margin-bottom:0.7rem;font-style:italic;">${n.paradox}</p>
+    <div style="font-size:0.75rem;color:var(--text-dim);padding:0.6rem;background:var(--bg);border-radius:2px;border-left:2px solid ${n.color};line-height:1.7;white-space:pre-line;">${n.detail}</div>
+  `;
+  drawAll();
+}
+
+function toggleNode(id) {
+  if (broken.has(id)) broken.delete(id);
+  else broken.add(id);
+  selectedNode = id;
+  updateAll();
+}
+
+// ==========================================
+// ANIMASI SKENARIO
+// ==========================================
+const ANIM_STEPS = [
+  { break: [], msg: 'Mulai: sistem lengkap dan berjalan.' },
+  { break: ['ribosome'], msg: 'Bayangkan: ribosom tidak ada. Protein tidak bisa dibuat...' },
+  { break: ['ribosome','protein'], msg: '...tanpa protein baru, sistem mulai gagal. DNA tidak bisa dibaca...' },
+  { break: ['ribosome','protein','mrna'], msg: '...mRNA tidak bisa dibuat. Informasi tidak bisa mengalir...' },
+  { break: ['ribosome','protein','mrna','trna'], msg: '...tanpa penerjemah, bahkan jika mRNA ada, tidak ada yang bisa membacanya...' },
+  { break: ['ribosome','protein','mrna','trna','dna'], msg: 'Sistem kolaps total. Inilah mengapa sirkuit ini tidak bisa dimulai dari nol.' },
+  { break: [], msg: 'Reset: bagaimana sistem ini pertama kali bisa ada jika ia membutuhkan dirinya sendiri untuk ada?' },
+];
+
+let animTimer = null;
+function animateBootstrap() {
+  if (animTimer) { clearInterval(animTimer); animTimer = null; animStep = 0; broken = new Set(); updateAll(); return; }
+  animStep = 0;
+  animTimer = setInterval(() => {
+    if (animStep >= ANIM_STEPS.length) {
+      clearInterval(animTimer); animTimer = null; animStep = 0; return;
+    }
+    const step = ANIM_STEPS[animStep];
+    broken = new Set(step.break);
+    document.getElementById('main-readout').innerHTML = step.msg;
+    updateStatus(); updateNodeControls(); updateChainDisplay(); drawAll();
+    animStep++;
+  }, 1800);
+}
+
+// ==========================================
+// STEP INDICATOR
+// ==========================================
+function renderStepIndicator() {
+  const steps = [
+    { id:'full', label:'Sistem Penuh', action: () => { broken=new Set(); updateAll(); } },
+    { id:'no-rib', label:'Tanpa Ribosom', action: () => { broken=new Set(['ribosome']); updateAll(); } },
+    { id:'no-prot', label:'Tanpa Protein', action: () => { broken=new Set(['ribosome','protein']); updateAll(); } },
+    { id:'no-dna', label:'Tanpa DNA', action: () => { broken=new Set(['dna']); updateAll(); } },
+    { id:'collapse', label:'Kolaps Total', action: () => { broken=new Set(Object.keys(NODES)); updateAll(); } },
+  ];
+  const wrap = document.getElementById('stepIndicator');
+  wrap.innerHTML = steps.map((s,i) => `
+    <div class="step" onclick="(${s.action.toString()})()">${s.label}</div>
+  `).join('');
+}
+
+// ==========================================
+// HIPOTESIS
+// ==========================================
+function renderHypotheses() {
+  const wrap = document.getElementById('hypotheses');
+  wrap.innerHTML = HYPOTHESES.map((h, i) => `
+    <div class="hyp-card" onclick="toggleHyp(this)">
+      <div class="hyp-title">${h.title}</div>
+      <div class="hyp-status ${h.status}">${h.statusLabel}</div>
+      <div class="hyp-desc">${h.desc}</div>
+    </div>
+  `).join('');
+}
+
+function toggleHyp(el) {
+  el.classList.toggle('active');
+}
+
+// ==========================================
+// RESET
+// ==========================================
+function resetAll() {
+  broken = new Set();
+  selectedNode = null;
+  updateAll();
+}
+
+function breakAll() {
+  broken = new Set(Object.keys(NODES));
+  updateAll();
+}
+
+// ==========================================
+// INIT
+// ==========================================
+window.addEventListener('load', () => {
+  initCanvas();
+
+  canvas.addEventListener('click', e => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+    const hit = getClickedNode(x, y);
+    if (hit) {
+      if (broken.has(hit)) broken.delete(hit);
+      else broken.add(hit);
+      selectedNode = hit;
+      updateAll();
+    }
+  });
+
+  renderStepIndicator();
+  renderHypotheses();
+  updateAll();
+});
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  drawAll();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalender Maya Interaktif — Tzolk'in, Haab' & Long Count</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --bg:#161217; --bg-panel:#211a20; --bg-panel-2:#2a2128;
+  --line:#453a42; --text:#f0e6da; --text-dim:#b3a29c;
+  --gold:#d19b4c; --teal:#4f9e8f; --red:#a8514a; --radius:10px;
+}
+*{box-sizing:border-box;}
+body{ margin:0; background:var(--bg); color:var(--text); font-family:'Karla',sans-serif; line-height:1.6; }
+h1,h2,h3{ font-family:'Fraunces',serif; font-weight:600; margin:0 0 0.5em; }
+.mono{ font-family:'JetBrains Mono', monospace; }
+.wrap{ max-width:840px; margin:0 auto; padding:0 20px; }
+.hero{ padding:48px 0 30px; border-bottom:1px solid var(--line); text-align:center; }
+.hero .eyebrow{ text-transform:uppercase; font-size:0.7rem; letter-spacing:2.5px; color:var(--gold); margin-bottom:12px; }
+.hero h1{ font-size:clamp(1.5rem,4.6vw,2.2rem); color:#fff; }
+.hero p.tag{ color:var(--text-dim); max-width:580px; margin:10px auto 0; font-size:0.94rem; }
+section{ padding:36px 0; border-bottom:1px solid var(--line); }
+section:last-of-type{ border-bottom:none; }
+.kicker{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+.kicker .num{ font-family:'Fraunces',serif; color:var(--gold); font-size:0.85rem; border:1px solid var(--gold); border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.kicker h2{ font-size:1.2rem; margin:0; color:#fff; }
+p{ color:var(--text); } p.dim{ color:var(--text-dim); font-size:0.9rem; }
+.panel{ background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-top:16px; }
+
+label{ display:block; font-size:0.82rem; color:var(--text-dim); margin:14px 0 6px; }
+label:first-of-type{ margin-top:0; }
+input[type=date]{ width:100%; background:#0d0a0d; border:1px solid var(--line); color:var(--text); padding:10px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:0.95rem; }
+input[type=range]{ width:100%; accent-color:var(--gold); }
+.slider-row{ display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-dim); margin-top:4px; }
+
+.hasil-grid{ display:grid; grid-template-columns:1fr; gap:10px; margin-top:20px; }
+.hasil-card{ background:var(--bg-panel-2); border:1px solid var(--line); border-radius:8px; padding:14px 16px; text-align:center; }
+.hasil-card .lbl{ font-size:0.72rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+.hasil-card .val{ font-family:'Fraunces',serif; font-size:1.5rem; color:var(--gold); }
+.hasil-card .sub{ font-size:0.76rem; color:var(--text-dim); margin-top:4px; }
+
+.dial-wrap{ display:flex; gap:20px; margin-top:18px; flex-wrap:wrap; justify-content:center; }
+.dial{ text-align:center; }
+.dial svg{ width:120px; height:120px; }
+.dial .capt{ font-size:0.76rem; color:var(--text-dim); margin-top:6px; }
+
+.formula{ font-family:'Fraunces',serif; font-style:italic; background:var(--bg-panel-2); border-radius:8px; padding:14px 18px; margin:14px 0; overflow-x:auto; color:#f4eede; }
+ul{ padding-left:20px; } ul.batas li{ margin-bottom:10px; }
+.refs li{ margin-bottom:10px; font-size:0.9rem; color:var(--text-dim); }
+.consult{ background:linear-gradient(135deg,var(--bg-panel-2),var(--bg-panel)); border:1px solid var(--gold); border-radius:var(--radius); padding:22px; text-align:center; }
+.consult a.wa{ display:inline-block; margin-top:14px; background:var(--teal); color:#0d0a0d; text-decoration:none; font-weight:700; padding:12px 26px; border-radius:30px; }
+footer{ text-align:center; padding:26px 0; color:var(--text-dim); font-size:0.8rem; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Sains Kalender Dunia</div>
+    <h1>Kalender Maya Interaktif</h1>
+    <p class="tag">Bangsa Maya tidak memakai satu kalender, tapi tiga sistem berjalan bersamaan — satu untuk ritual, satu untuk musim tanam, satu lagi untuk mencatat sejarah ribuan tahun. Geser slidernya, lihat sendiri ketiganya berputar pada kecepatan berbeda.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <div class="kicker"><div class="num">1</div><h2>Belajar</h2></div>
+    <p><strong>Tzolk'in</strong> (260 hari) adalah kalender ritual/sakral — dipakai untuk penanggalan upacara, penamaan anak, dan ramalan nasib. Dibentuk dari perpaduan 13 angka dan 20 nama hari yang berjalan bersamaan seperti dua roda gigi berukuran beda, menghasilkan 260 kombinasi unik sebelum berulang.</p>
+    <p><strong>Haab'</strong> (365 hari) adalah kalender sipil/musiman — 18 bulan berisi 20 hari, ditambah 5 hari "sial" di penghujung tahun (Wayeb') yang dianggap waktu berbahaya, tanpa upacara. Karena tidak memakai tahun kabisat, Haab' perlahan bergeser dari musim sesungguhnya seiring waktu.</p>
+    <p>Yang membuatnya istimewa: <strong>kedua kalender berjalan bersamaan, tidak terpisah</strong>. Setiap hari punya "nama ganda" — posisi di Tzolk'in sekaligus posisi di Haab'. Kombinasi keduanya disebut <strong>Calendar Round</strong>, dan karena 260 dan 365 sama-sama kelipatan 5, kombinasi yang persis sama baru berulang setelah <strong>18.980 hari — sekitar 52 tahun Haab'</strong>. Bagi banyak bangsa Mesoamerika, usia 52 tahun adalah satu "generasi kalender" penuh, momen perayaan besar.</p>
+    <p class="dim">Untuk mencatat rentang waktu lebih panjang dari 52 tahun (sejarah kerajaan, prasasti), bangsa Maya punya sistem ketiga: <strong>Long Count</strong> — hitungan hari linear sejak "hari penciptaan" (4 Ahau 8 Cumku, dihitung setara 11 Agustus 3114 SM). Fakta menarik: 13 B'ak'tun (1.872.000 hari) — yang berakhir pada 21 Desember 2012 dan sempat dikira "kiamat" — ternyata kembali lagi ke tanggal Tzolk'in yang persis sama, 4 Ahau, karena 1.872.000 habis dibagi 260 tepat 7.200 kali. Bukan kiamat, hanya siklus besar yang menutup diri.</p>
+  </section>
+
+  <section id="alat">
+    <div class="kicker"><div class="num">2</div><h2>Alat: Konverter &amp; Penjelajah</h2></div>
+    <div class="panel">
+      <label>Tanggal Masehi</label>
+      <input type="date" id="tgl-input" value="2026-09-01">
+
+      <label>Geser hari (−3650 sampai +3650, sekitar ±10 tahun dari tanggal di atas)</label>
+      <input type="range" id="geser-slider" min="-3650" max="3650" value="0" step="1">
+      <div class="slider-row"><span id="geser-label">Geseran: 0 hari</span><span id="tgl-efektif">—</span></div>
+
+      <div class="hasil-grid">
+        <div class="hasil-card">
+          <div class="lbl">Tzolk'in (ritual, 260 hari)</div>
+          <div class="val" id="hasil-tzolkin">—</div>
+          <div class="sub" id="tzolkin-posisi">—</div>
+        </div>
+        <div class="hasil-card">
+          <div class="lbl">Haab' (sipil, 365 hari)</div>
+          <div class="val" id="hasil-haab">—</div>
+          <div class="sub" id="haab-posisi">—</div>
+        </div>
+        <div class="hasil-card">
+          <div class="lbl">Long Count</div>
+          <div class="val mono" id="hasil-longcount">—</div>
+          <div class="sub" id="longcount-sub">B'ak'tun.Katun.Tun.Winal.Kin</div>
+        </div>
+      </div>
+
+      <div class="dial-wrap">
+        <div class="dial">
+          <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="#453a42" stroke-width="10"/><circle id="dial-tzolkin" cx="60" cy="60" r="50" fill="none" stroke="var(--gold)" stroke-width="10" stroke-dasharray="314" stroke-dashoffset="314" transform="rotate(-90 60 60)"/><text x="60" y="65" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#fff" id="dial-tzolkin-text">0/260</text></svg>
+          <div class="capt">Posisi dalam siklus Tzolk'in</div>
+        </div>
+        <div class="dial">
+          <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="#453a42" stroke-width="10"/><circle id="dial-haab" cx="60" cy="60" r="50" fill="none" stroke="var(--teal)" stroke-width="10" stroke-dasharray="314" stroke-dashoffset="314" transform="rotate(-90 60 60)"/><text x="60" y="65" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#fff" id="dial-haab-text">0/365</text></svg>
+          <div class="capt">Posisi dalam siklus Haab'</div>
+        </div>
+      </div>
+
+      <div class="hasil-card" style="margin-top:16px;">
+        <div class="lbl">Calendar Round (gabungan keduanya)</div>
+        <div class="val" id="hasil-cr" style="font-size:1.1rem;">—</div>
+        <div class="sub" id="cr-sub">—</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="metode">
+    <div class="kicker"><div class="num">3</div><h2>Metode</h2></div>
+    <p>Semua dihitung dari satu angka: <strong>N</strong>, jumlah hari sejak hari penciptaan (memakai Julian Day Number dikurangi konstanta korelasi GMT = 584.283, standar yang paling banyak dipakai peneliti Maya modern):</p>
+    <div class="formula">Tzolk'in: angka = ((N+3) mod 13)+1, nama = urutan ke-((N+19) mod 20)<br>Haab': h=(N+348) mod 365, bulan=⌊h/20⌋, hari=h mod 20<br>Long Count: pecah N ke basis campuran 20-20-18-20-20 (kin-winal-tun-katun-b'ak'tun)</div>
+    <p class="dim">Rumus ini sudah saya uji dulu terhadap tiga tanggal rujukan yang sudah pasti benar: hari penciptaan (N=0 → 4 Ahau 8 Cumku, Long Count 0.0.0.0.0) dan 21 Desember 2012 (harus tepat Long Count 13.0.0.0.0) — keduanya cocok sebelum alat ini diserahkan.</p>
+  </section>
+
+  <section id="batasan">
+    <div class="kicker"><div class="num">4</div><h2>Batasan</h2></div>
+    <ul class="batas">
+      <li><strong>Korelasi tanggal diperdebatkan:</strong> GMT (584.283) yang dipakai di sini adalah yang paling luas diterima, tapi bukan satu-satunya — beberapa peneliti mengusulkan varian berbeda 1-2 hari.</li>
+      <li>Tanggal sebelum kalender Gregorian berlaku (sebelum 1582) dihitung secara proleptik (mundur matematis), bukan tanggal yang benar-benar dipakai orang pada masanya.</li>
+      <li>Alat ini murni konversi matematis kalender — bukan sistem ramalan/astrologi Tzolk'in yang sesungguhnya jauh lebih kaya makna budaya dan spiritual di baliknya.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <div class="kicker"><div class="num">5</div><h2>Referensi</h2></div>
+    <ul class="refs">
+      <li>Dr. Diane Davies, <em>The Maya Calendar Explained</em> — Maya Archaeologist — rincian Tzolk'in, Haab', dan Calendar Round beserta konstanta korelasi GMT.</li>
+      <li>ClassicMayan Portal — sejarah penguraian sistem kalender oleh Förstemann, Goodman, dan Bowditch.</li>
+      <li>Anthony Aveni, <em>The End of Time: The Maya Mystery of 2012</em>; David Stuart, <em>The Order of Days</em> — konteks makna 13 B'ak'tun dan mitos "akhir zaman" 2012.</li>
+      <li>graphsearch.epfl.ch — konfirmasi korespondensi tanggal epoch 11 Agustus 3114 SM (proleptik Gregorian).</li>
+    </ul>
+  </section>
+
+  <section id="konsultasi">
+    <div class="consult">
+      <h3 style="color:#fff;">Ingin kalender Mesoamerika lain?</h3>
+      <p class="dim">Alat ini masih pengembangan versi awal. Silakan hubungi kami untuk usulan (mis. Tonalpohualli Aztek, atau kalender Zapotek).</p>
+      <a class="wa" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20bertanya%20seputar%20Kalender%20Maya%20Interaktif." target="_blank">Hubungi via WhatsApp</a>
+    </div>
+  </section>
+
+</div>
+<footer>Prototipe alat sains kalender · belum masuk struktur menu utama.</footer>
+
+<script>
+const TZOLKIN_NAMES = ['Imix','Ik','Akbal','Kan','Chicchan','Cimi','Manik','Lamat','Muluc','Oc','Chuen','Eb','Ben','Ix','Men','Cib','Caban','Etznab','Cauac','Ahau'];
+const HAAB_NAMES = ['Pop','Uo','Zip','Zotz','Tzec','Xul','Yaxkin','Mol','Chen','Yax','Zac','Ceh','Mac','Kankin','Muan','Pax','Kayab','Cumku','Uayeb'];
+const C = 584283;
+
+function gregorianToJD(y,m,d){
+  const a = Math.floor((14-m)/12);
+  const y2 = y+4800-a;
+  const m2 = m+12*a-3;
+  return d + Math.floor((153*m2+2)/5) + 365*y2 + Math.floor(y2/4) - Math.floor(y2/100) + Math.floor(y2/400) - 32045;
+}
+function jdToGregorian(jd){
+  jd = Math.floor(jd);
+  const a = jd+32044, b = Math.floor((4*a+3)/146097), c = a-Math.floor(146097*b/4);
+  const d_ = Math.floor((4*c+3)/1461), e = c-Math.floor(1461*d_/4), m_ = Math.floor((5*e+2)/153);
+  const day = e-Math.floor((153*m_+2)/5)+1, month = m_+3-12*Math.floor(m_/10), year = 100*b+d_-4800+Math.floor(m_/10);
+  return {year, month, day};
+}
+function mod(n,m){ return ((n%m)+m)%m; }
+
+function hitungMaya(N){
+  const tzNum = mod(N+3,13)+1;
+  const tzIdx = mod(N+19,20);
+  const h = mod(N+348,365);
+  const habMonthIdx = Math.floor(h/20);
+  const habDay = h%20;
+  let kin=mod(N,20), sisa=Math.floor(N/20);
+  let winal=mod(sisa,18); sisa=Math.floor(sisa/18);
+  let tun=mod(sisa,20); sisa=Math.floor(sisa/20);
+  let katun=mod(sisa,20); sisa=Math.floor(sisa/20);
+  let baktun=sisa;
+  const habNama = habMonthIdx===18 ? 'Uayeb' : HAAB_NAMES[habMonthIdx];
+  return {
+    tzolkinNum: tzNum, tzolkinNama: TZOLKIN_NAMES[tzIdx], tzolkinIdx: tzIdx,
+    habDay, habNama, habMonthIdx,
+    longcount: [baktun,katun,tun,winal,kin].join('.'),
+    posisiTzolkin: mod(N,260), posisiHaab: mod(N,365)
+  };
+}
+
+function update(){
+  const tglInput = document.getElementById('tgl-input').value;
+  const geser = parseInt(document.getElementById('geser-slider').value);
+  const [y,m,d] = tglInput.split('-').map(Number);
+
+  const jd = gregorianToJD(y,m,d) + geser;
+  const N = jd - C;
+  const r = hitungMaya(N);
+  const tglEfektif = jdToGregorian(jd);
+
+  document.getElementById('geser-label').textContent = 'Geseran: ' + (geser>=0?'+':'') + geser + ' hari';
+  document.getElementById('tgl-efektif').textContent = tglEfektif.day+'/'+tglEfektif.month+'/'+tglEfektif.year;
+
+  document.getElementById('hasil-tzolkin').textContent = r.tzolkinNum + ' ' + r.tzolkinNama;
+  document.getElementById('tzolkin-posisi').textContent = 'Hari ke-' + (r.posisiTzolkin+1) + ' dari 260';
+  document.getElementById('hasil-haab').textContent = r.habDay + ' ' + r.habNama;
+  document.getElementById('haab-posisi').textContent = 'Hari ke-' + (r.posisiHaab+1) + ' dari 365';
+  document.getElementById('hasil-longcount').textContent = r.longcount;
+
+  const circ = 314;
+  document.getElementById('dial-tzolkin').setAttribute('stroke-dashoffset', circ - (circ*r.posisiTzolkin/260));
+  document.getElementById('dial-tzolkin-text').textContent = r.posisiTzolkin+'/260';
+  document.getElementById('dial-haab').setAttribute('stroke-dashoffset', circ - (circ*r.posisiHaab/365));
+  document.getElementById('dial-haab-text').textContent = r.posisiHaab+'/365';
+
+  const posisiCR = mod(N, 18980);
+  const sisaHariCR = 18980 - posisiCR;
+  document.getElementById('hasil-cr').textContent = r.tzolkinNum+' '+r.tzolkinNama+' — '+r.habDay+' '+r.habNama;
+  document.getElementById('cr-sub').textContent = sisaHariCR + ' hari lagi (± ' + (sisaHariCR/365).toFixed(1) + ' tahun) sebelum kombinasi persis ini terulang';
+}
+
+document.getElementById('tgl-input').addEventListener('input', update);
+document.getElementById('geser-slider').addEventListener('input', update);
+update();
+</script>
+
+</body>
+</html>

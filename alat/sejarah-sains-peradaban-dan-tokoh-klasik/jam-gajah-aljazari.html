@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jam Gajah Al-Jazari — Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Vollkorn:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --parchment:#F1E6D0;
+    --parchment-deep:#E7D8B8;
+    --ink:#2B2018;
+    --ink-soft:#5A4A38;
+    --teal:#16423C;
+    --teal-deep:#0E2E29;
+    --brass:#C99A3B;
+    --brass-bright:#E3B655;
+    --water:#3E7C8A;
+    --marker:#7A2E2E;
+    --jade:#3C7A5E;
+    --vermillion:#9A3B2E;
+    --indigo:#3A4A7A;
+    --silhouette:#111;
+    --rule: rgba(43,32,24,0.18);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--parchment);color:var(--ink);font-family:'Vollkorn', serif;line-height:1.65;}
+  h1,h2,h3{font-family:'Cinzel', serif;}
+  .wrap{max-width:860px;margin:0 auto;padding:0 24px 96px;}
+  header.hero{background:linear-gradient(180deg,var(--teal) 0%, var(--teal-deep) 100%);color:var(--parchment);padding:56px 24px 40px;}
+  header.hero .wrap{padding-bottom:0;}
+  .eyebrow{color:var(--brass-bright);font-size:0.95rem;letter-spacing:0.02em;margin:0 0 6px;}
+  h1{font-size:clamp(1.9rem,4vw,2.7rem);margin:0 0 14px;font-weight:600;color:#fff;}
+  .lede{max-width:560px;color:#DCE4E1;font-size:1.05rem;margin:0;}
+  .note{max-width:560px;color:#B9CFC7;font-size:0.88rem;margin:14px 0 0;border-left:2px solid var(--brass);padding-left:12px;}
+  section{padding:44px 0;border-bottom:1px solid var(--rule);}
+  section:last-of-type{border-bottom:none;}
+  h2{font-size:1.5rem;font-weight:600;margin:0 0 18px;color:var(--teal-deep);}
+  h3{font-size:1.05rem;font-weight:600;margin:26px 0 8px;color:var(--ink);}
+  p{margin:0 0 14px;}
+  ul,ol{padding-left:22px;}
+  li{margin-bottom:8px;}
+
+  #simulator{background:var(--teal-deep);border-radius:6px;padding:20px;margin-top:24px;}
+  #stage-holder{width:100%;background:linear-gradient(180deg,#0A2320,#123A34);border-radius:4px;overflow:hidden;}
+  svg{display:block;width:100%;height:auto;}
+
+  .silhouette{fill:var(--silhouette);}
+  .howdah{fill:var(--brass);stroke:#7A5A1E;stroke-width:1;}
+  .dome{fill:var(--brass-bright);stroke:#7A5A1E;}
+  .band-jade{fill:var(--jade);}
+  .band-verm{fill:var(--vermillion);}
+  .band-indigo{fill:var(--indigo);}
+  .cymbal{fill:var(--brass-bright);stroke:var(--teal-deep);stroke-width:1;transition:transform 0.15s;}
+  .pellet{fill:#fff;opacity:0;}
+  .water{fill:var(--water);}
+  .bowl-outline{fill:none;stroke:#7A5A1E;stroke-width:2;}
+
+  .controls{display:flex;flex-wrap:wrap;gap:20px;margin-top:18px;color:var(--parchment);}
+  .control{flex:1 1 200px;}
+  .control label{display:block;font-size:0.82rem;color:#BFD2CC;margin-bottom:6px;}
+  .control input[type=range]{width:100%;accent-color:var(--brass-bright);}
+  .control .value{font-family:'Cinzel',serif;color:var(--brass-bright);font-size:0.9rem;}
+  .btn-row{display:flex;gap:10px;margin-top:16px;}
+  button{font-family:'Cinzel',serif;background:var(--brass);color:var(--teal-deep);border:none;padding:10px 18px;border-radius:3px;font-size:0.85rem;cursor:pointer;letter-spacing:0.02em;}
+  button:hover{background:var(--brass-bright);}
+  button.secondary{background:transparent;color:var(--parchment);border:1px solid var(--brass);}
+  .readout{display:flex;gap:28px;margin-top:16px;flex-wrap:wrap;color:var(--parchment);font-family:'Cinzel',serif;font-size:0.95rem;}
+  .readout span.n{color:var(--brass-bright);font-size:1.3rem;display:block;}
+  .readout div{min-width:110px;}
+  .readout small{color:#9FB6AF;font-size:0.72rem;letter-spacing:0.03em;}
+
+  .pertanyaan{font-style:italic;color:var(--ink-soft);border-left:3px solid var(--brass);padding-left:16px;margin:16px 0;}
+  .method-flow{display:flex;flex-direction:column;gap:4px;margin:16px 0;}
+  .method-flow div{padding:10px 14px;background:var(--parchment-deep);border-left:3px solid var(--brass);font-size:0.95rem;}
+  .limits{background:#EFE0D5;border:1px solid var(--rule);border-radius:4px;padding:20px;}
+  .limits h3{margin-top:0;}
+  .culture-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0;}
+  .culture-grid .c{padding:14px;border-radius:4px;color:#fff;font-size:0.88rem;}
+  footer{padding:32px 24px;text-align:center;color:var(--ink-soft);font-size:0.85rem;}
+  @media (max-width:640px){header.hero{padding:40px 18px 32px;}section{padding:32px 0;}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">JAZMI — Laboratorium Sains &amp; Peradaban · Alat 002</p>
+    <h1>Jam Gajah Al-Jazari</h1>
+    <p class="lede">Simulator jam air yang menggabungkan unsur India, Persia, Tiongkok, dan Yunani dalam satu mesin — dicatat Al-Jazari dalam manuskripnya sebagai lambang pertemuan ilmu lintas peradaban.</p>
+    <p class="note">Catatan desain: seluruh figur makhluk bernyawa pada alat ini (gajah, burung, naga, ular, sais) digambarkan sebagai siluet hitam pekat tanpa wajah maupun mata, sesuai preferensi yang diminta.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <h2>Belajar</h2>
+    <p>Jam Gajah adalah salah satu rancangan paling terkenal dalam <em>Kitab fi Ma'rifat al-Hiyal al-Handasiyya</em> karya Al-Jazari (1206 M). Berbeda dari Jam Istana yang menonjolkan skala dan automata musisi, Jam Gajah menonjolkan sesuatu yang lain: sebuah pernyataan simbolis tentang pertemuan peradaban.</p>
+    <div class="culture-grid">
+      <div class="c" style="background:var(--teal);">Gajah — motif dari tradisi India, hewan penyangga utama mesin</div>
+      <div class="c band-verm">Burung di puncak kubah — dari mitologi Persia</div>
+      <div class="c band-jade">Figur naga di dalam mekanisme — terinspirasi motif Tiongkok</div>
+      <div class="c band-indigo">Prinsip jam air itu sendiri — warisan tradisi Yunani (Hellenistic)</div>
+    </div>
+    <p>Dengan menyatukan keempatnya dalam satu mesin yang berfungsi, Al-Jazari — insinyur istana Muslim di Diyarbakir — seolah menegaskan bahwa ilmu pengetahuan pada masanya adalah hasil pertukaran lintas bangsa, bukan milik satu peradaban saja.</p>
+    <div class="pertanyaan">Pertanyaan ilmiah yang kami ajukan sebelum membangun simulator ini: apa yang membuat mesin ini berdentang setiap setengah jam — apakah gajahnya yang "bergerak", atau ada mekanisme tersembunyi yang menghitung waktu di baliknya? Jawabannya: gajah, kubah, dan seluruh figur di atasnya hanyalah tampilan luar. Jantung mesin ini adalah mangkuk kecil tersembunyi di dalam tubuh gajah yang perlahan terisi air.</div>
+  </section>
+
+  <section id="eksplorasi">
+    <h2>Eksplorasi</h2>
+    <p>Jalankan simulasi untuk melihat mangkuk tersembunyi di dalam gajah terisi air. Begitu penuh, ia memicu bola jatuh, ular mekanis bergerak, sais memukul simbal, dan burung di puncak kubah berputar — lalu mangkuk mengosongkan diri dan siklus dimulai lagi.</p>
+
+    <div id="simulator">
+      <div id="stage-holder">
+        <svg id="stage" viewBox="0 0 640 440" xmlns="http://www.w3.org/2000/svg">
+
+          <!-- howdah / castle structure on elephant back -->
+          <rect x="220" y="70" width="200" height="110" class="howdah" rx="3"/>
+          <rect x="220" y="70" width="200" height="8" class="band-verm"/>
+          <rect x="220" y="172" width="200" height="8" class="band-jade"/>
+          <rect x="220" y="150" width="200" height="8" class="band-indigo"/>
+
+          <!-- dome -->
+          <path d="M260 70 Q320 20 380 70 Z" class="dome"/>
+          <rect x="315" y="6" width="10" height="18" class="brass" fill="var(--brass)"/>
+
+          <!-- bird silhouette on dome, no eye -->
+          <g id="bird" transform="translate(320,10)">
+            <path d="M-14 4 Q0 -14 14 4 Q4 0 0 4 Q-4 0 -14 4 Z" class="silhouette"/>
+          </g>
+
+          <!-- snake silhouettes flanking howdah -->
+          <g id="snake-left" transform="translate(228,78)">
+            <path d="M0 0 Q-14 14 0 30 Q10 40 0 55" fill="none" stroke="#111" stroke-width="7" stroke-linecap="round"/>
+          </g>
+          <g id="snake-right" transform="translate(412,78)">
+            <path d="M0 0 Q14 14 0 30 Q-10 40 0 55" fill="none" stroke="#111" stroke-width="7" stroke-linecap="round"/>
+          </g>
+
+          <!-- mahout silhouette sitting on neck, no face -->
+          <g id="mahout" transform="translate(200,95)">
+            <path d="M0 30 Q-4 8 8 4 Q18 2 18 14 L18 34 Q18 40 10 40 L4 40 Q0 40 0 30 Z" class="silhouette"/>
+            <circle cx="9" cy="0" r="7" class="silhouette"/>
+            <rect id="stick" x="16" y="6" width="18" height="3" class="silhouette" transform-origin="16px 7px"/>
+          </g>
+          <!-- cymbal near mahout -->
+          <circle id="cymbal" class="cymbal" cx="238" cy="14" r="6"/>
+
+          <!-- elephant silhouette, no face/eye -->
+          <path id="elephant" class="silhouette" d="
+            M90 260
+            Q80 200 140 190
+            Q160 150 230 150
+            L410 150
+            Q440 150 445 180
+            Q460 185 458 205
+            Q456 220 440 218
+            L440 250
+            Q470 260 466 300
+            L450 300
+            Q448 280 434 280
+            L434 300
+            L410 300
+            L410 250
+            L200 250
+            L200 300
+            L176 300
+            L176 260
+            Q160 260 158 300
+            L134 300
+            Q132 268 148 258
+            L120 258
+            Q92 258 90 260 Z
+          "/>
+          <!-- trunk -->
+          <path id="trunk" class="silhouette" d="M140 190 Q110 200 108 230 Q106 250 122 260 Q112 246 118 226 Q124 206 148 198 Z" transform-origin="140px 190px"/>
+          <!-- ear -->
+          <path class="silhouette" d="M225 155 Q195 160 195 195 Q195 225 225 220 Q205 200 210 178 Q213 162 225 155Z" opacity="0.92"/>
+
+          <!-- ground / plinth -->
+          <rect x="70" y="298" width="420" height="14" fill="#0E2E29" stroke="#7A5A1E"/>
+
+          <!-- hidden bowl mechanism panel -->
+          <g transform="translate(500,60)">
+            <rect x="0" y="0" width="120" height="230" rx="4" fill="none" stroke="#7A5A1E" stroke-width="1.5"/>
+            <text x="60" y="16" text-anchor="middle" fill="#9FB6AF" font-size="10" font-family="Cinzel">MEKANISME TERSEMBUNYI</text>
+            <circle class="bowl-outline" cx="60" cy="120" r="46"/>
+            <rect id="bowl-water" class="water" x="16" y="160" width="88" height="0"/>
+            <clipPath id="bowl-clip"><circle cx="60" cy="120" r="44"/></clipPath>
+            <g clip-path="url(#bowl-clip)">
+              <rect id="bowl-fill" class="water" x="16" y="164" width="90" height="0"/>
+            </g>
+            <circle id="pellet" class="pellet" cx="60" cy="30" r="5"/>
+            <text x="60" y="204" text-anchor="middle" fill="#9FB6AF" font-size="9" font-family="Cinzel">MANGKUK TENGGELAM</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="readout">
+        <div><span class="n" id="read-fill">0%</span><small>ISI MANGKUK</small></div>
+        <div><span class="n" id="read-count">0</span><small>DENTANG SETENGAH-JAM</small></div>
+        <div><span class="n" id="read-status">Berhenti</span><small>STATUS</small></div>
+      </div>
+
+      <div class="controls">
+        <div class="control">
+          <label>Kecepatan pengisian — <span class="value" id="speed-val">6 dtk / siklus</span></label>
+          <input type="range" id="speed" min="2" max="20" value="6">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button id="btn-play">▶ Jalankan</button>
+        <button class="secondary" id="btn-reset">↺ Ulang</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="perhitungan">
+    <h2>Perhitungan &amp; Parameter</h2>
+    <p>Simulator ini memodelkan satu siklus berulang yang menjadi jantung Jam Gajah:</p>
+    <ul>
+      <li><strong>Laju pengisian mangkuk:</strong> air menetes masuk ke mangkuk tersembunyi melalui lubang kecil berkalibrasi. Semakin lambat laju ini diatur, semakin panjang jarak antar-dentang.</li>
+      <li><strong>Titik pemicu (100% penuh):</strong> saat mangkuk penuh air, ia menjadi berat dan tenggelam — menarik tali yang menggerakkan seluruh rangkaian di atasnya sekaligus: ular mekanis, bola/pelet, sais, dan burung.</li>
+      <li><strong>Reset otomatis:</strong> setelah tenggelam dan memicu mekanisme, mangkuk tersebut secara mekanis dikosongkan kembali (lewat sistem sifon), siap mengisi ulang untuk siklus berikutnya.</li>
+    </ul>
+  </section>
+
+  <section id="metode">
+    <h2>Metode / Cara Kerja</h2>
+    <div class="method-flow">
+      <div>Air menetes perlahan melalui lubang kalibrasi menuju mangkuk tersembunyi di dalam tubuh gajah</div>
+      <div>Mangkuk terisi penuh setelah durasi tertentu (idealnya tiap setengah jam) lalu tenggelam karena beratnya</div>
+      <div>Tenggelamnya mangkuk menarik tali yang terhubung ke rangkaian tuas di dalam howdah</div>
+      <div>Tuas melepaskan bola/pelet yang jatuh, memicu figur ular mekanis bergerak turun di kedua sisi</div>
+      <div>Pada saat bersamaan, figur sais di leher gajah memukul simbal, dan burung di puncak kubah berputar/berbunyi</div>
+      <div>Sistem sifon mengosongkan mangkuk secara otomatis, siklus dimulai kembali</div>
+    </div>
+    <p>Yang membuat mesin ini istimewa secara teknik bukan gajahnya — melainkan bahwa satu peristiwa sederhana (mangkuk tenggelam) diterjemahkan menjadi beberapa gerakan berbeda sekaligus, lewat satu titik picu mekanis. Ini prinsip dasar yang kelak dikenal sebagai <em>sistem tuas majemuk</em> dalam sejarah rekayasa mesin.</p>
+  </section>
+
+  <section id="batasan">
+    <div class="limits">
+      <h3>Batasan Simulator Ini</h3>
+      <ul>
+        <li>Siklus di sini disederhanakan menjadi satu pengisian-tenggelam berulang untuk kejelasan visual; mesin asli dikalibrasi seakurat mungkin agar tepat berdentang setiap 30 menit sepanjang hari.</li>
+        <li>Detail rangkaian tuas dan sistem sifon disederhanakan; mekanisme asli melibatkan beberapa tuas dan pemberat yang bekerja berurutan.</li>
+        <li>Atribusi budaya (India/Persia/Tiongkok/Yunani) mengikuti narasi yang umum dikutip tentang alat ini — sebagian detail sejarahnya masih diperdebatkan sejarawan dan sebaiknya diverifikasi ulang terhadap terjemahan Donald R. Hill sebelum dipublikasikan resmi.</li>
+        <li>Seluruh figur makhluk bernyawa digambarkan sebagai siluet non-figuratif tanpa wajah, sesuai preferensi desain yang diminta — bukan representasi rupa yang akurat secara historis.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="referensi">
+    <h2>Referensi</h2>
+    <ul>
+      <li>Al-Jazari, <em>Kitab fi Ma'rifat al-Hiyal al-Handasiyya</em> (1206 M) — diterjemahkan Donald R. Hill sebagai <em>The Book of Knowledge of Ingenious Mechanical Devices</em> (1974).</li>
+      <li>Donald R. Hill, kajian tentang teknik jam air dan automata Al-Jazari.</li>
+      <li>Tulisan populer sejarah sains tentang Jam Gajah sebagai simbol pertukaran ilmu lintas peradaban Abad Pertengahan.</li>
+    </ul>
+    <p style="color:var(--ink-soft);font-size:0.9rem;">Catatan: mohon verifikasi ulang detail atribusi budaya di atas terhadap sumber akademik sebelum dipublikasikan resmi di JAZMI.</p>
+  </section>
+
+  <section id="artikel-terkait">
+    <h2>Alat Terkait</h2>
+    <p><a href="jam-istana-aljazari.html">Jam Istana Al-Jazari</a> — pasangan alat ini, dengan skala dan kompleksitas automata yang lebih besar.</p>
+  </section>
+
+</div>
+
+<footer>JAZMI — Laboratorium Sains &amp; Peradaban · Disusun mengikuti metode Belajar → Memodelkan → Menguji → Membuat</footer>
+
+<script>
+(function(){
+  const bowlFillRect = document.getElementById('bowl-fill');
+  const bird = document.getElementById('bird');
+  const snakeL = document.getElementById('snake-left');
+  const snakeR = document.getElementById('snake-right');
+  const cymbal = document.getElementById('cymbal');
+  const stick = document.getElementById('stick');
+  const pellet = document.getElementById('pellet');
+  const speedInput = document.getElementById('speed');
+  const speedVal = document.getElementById('speed-val');
+  const readFill = document.getElementById('read-fill');
+  const readCount = document.getElementById('read-count');
+  const readStatus = document.getElementById('read-status');
+  const btnPlay = document.getElementById('btn-play');
+
+  let fill = 0;
+  let count = 0;
+  let running = false;
+  let timer = null;
+
+  function setBowl(pct){
+    const maxH = 84;
+    const h = maxH * (pct/100);
+    bowlFillRect.setAttribute('y', 164 - h + 40);
+    bowlFillRect.setAttribute('height', h);
+    // reposition to bottom of circle area (circle center y=120,r=44 -> bottom ~164, top ~76)
+    const bottom = 164, top = 76;
+    const hh = (bottom-top) * (pct/100);
+    bowlFillRect.setAttribute('y', bottom - hh);
+    bowlFillRect.setAttribute('height', hh);
+  }
+
+  function triggerChime(){
+    count++;
+    readCount.textContent = count;
+    bird.style.transition='transform 0.4s';
+    bird.style.transform='rotate(25deg)';
+    snakeL.style.transition='transform 0.35s';
+    snakeR.style.transition='transform 0.35s';
+    snakeL.style.transform='translateY(14px)';
+    snakeR.style.transform='translateY(14px)';
+    stick.style.transition='transform 0.15s';
+    stick.style.transform='rotate(-30deg)';
+    cymbal.setAttribute('r',9);
+    pellet.style.opacity=1;
+    pellet.setAttribute('cy',30);
+    let cy=30;
+    const fall=setInterval(()=>{
+      cy+=6; pellet.setAttribute('cy',cy);
+      if(cy>150){clearInterval(fall); pellet.style.opacity=0;}
+    },25);
+    setTimeout(()=>{
+      bird.style.transform='rotate(0deg)';
+      snakeL.style.transform='translateY(0px)';
+      snakeR.style.transform='translateY(0px)';
+      stick.style.transform='rotate(0deg)';
+      cymbal.setAttribute('r',6);
+    },420);
+  }
+
+  function tick(){
+    const speed = parseInt(speedInput.value,10);
+    fill += 100/(speed*10);
+    if(fill>=100){
+      fill=0;
+      triggerChime();
+    }
+    setBowl(fill);
+    readFill.textContent = Math.round(fill)+'%';
+  }
+
+  function startSim(){
+    if(running) return;
+    running=true; btnPlay.textContent='❙❙ Jeda'; readStatus.textContent='Berjalan';
+    timer=setInterval(tick,100);
+  }
+  function stopSim(){
+    running=false; btnPlay.textContent='▶ Jalankan'; readStatus.textContent='Berhenti';
+    clearInterval(timer);
+  }
+  btnPlay.addEventListener('click', ()=> running?stopSim():startSim());
+  document.getElementById('btn-reset').addEventListener('click', ()=>{
+    stopSim(); fill=0; count=0; setBowl(0);
+    readFill.textContent='0%'; readCount.textContent='0';
+  });
+  speedInput.addEventListener('input', ()=>{
+    speedVal.textContent = speedInput.value+' dtk / siklus';
+  });
+
+  setBowl(0);
+})();
+</script>
+
+</body>
+</html>

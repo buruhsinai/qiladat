@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Duopoli Cournot vs Bertrand — Kuantitas vs Harga</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12151a; --bg-panel:#1a1e25; --bg-panel-2:#20242c; --line:#2c313b;
+    --text:#e9e6df; --text-dim:#9aa1ad;
+    --gold:#c9a24b; --gold-soft:#e3c988;
+    --ok:#4f9c94; --warn:#e3766a; --blue:#5b8fc9; --purple:#9b7fc9;
+    --font-display:"Fraunces",serif; --font-body:"Karla",sans-serif; --font-mono:"JetBrains Mono",monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px 80px;}
+  header.hero{padding:56px 20px 40px;text-align:center;border-bottom:1px solid var(--line);
+    background:radial-gradient(ellipse at 50% 0%, rgba(91,143,201,0.10), transparent 60%);}
+  .eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);margin-bottom:14px;}
+  h1{font-family:var(--font-display);font-weight:600;font-size:clamp(26px,5vw,40px);margin:0 0 12px;}
+  .subtitle{color:var(--text-dim);font-size:15px;max-width:660px;margin:0 auto;}
+  section{padding:36px 0;border-bottom:1px solid var(--line);} section:last-of-type{border-bottom:none;}
+  h2{font-family:var(--font-display);font-weight:600;font-size:22px;color:var(--gold-soft);margin:0 0 6px;display:flex;align-items:baseline;gap:10px;}
+  h2 .num{font-family:var(--font-mono);font-size:13px;color:var(--text-dim);font-weight:400;}
+  h3{font-family:var(--font-display);font-weight:600;font-size:16.5px;color:var(--text);margin:22px 0 10px;}
+  p{font-size:15.5px;} p.dim{color:var(--text-dim);font-size:14px;}
+  ul{padding-left:20px;} li{margin-bottom:6px;font-size:14.5px;}
+
+  .panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:24px;margin-bottom:20px;}
+  .panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px;}
+  .panel-tag{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;padding:3px 9px;border-radius:20px;border:1px solid var(--line);}
+  .tag-blue{color:var(--blue);border-color:var(--blue);}
+  .tag-purple{color:var(--purple);border-color:var(--purple);}
+  .tag-gold{color:var(--gold-soft);border-color:var(--gold);}
+
+  .controls-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:18px;}
+  .field label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--text-dim);margin-bottom:6px;font-family:var(--font-mono);text-transform:uppercase;}
+  .field label .val{color:var(--gold-soft);}
+  .field input[type=range]{width:100%;accent-color:var(--blue);}
+
+  .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:640px){.chart-grid{grid-template-columns:1fr;}}
+  svg.chart{width:100%;height:auto;display:block;background:var(--bg-panel-2);border-radius:8px;border:1px solid var(--line);margin-top:6px;}
+  .chart-label{font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-transform:uppercase;margin-top:12px;}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:12.5px;color:var(--text-dim);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .swatch{width:14px;height:14px;border-radius:3px;display:inline-block;}
+
+  .results{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px;}
+  .result-card{background:var(--bg-panel-2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;}
+  .result-card .l{font-family:var(--font-mono);font-size:10.5px;color:var(--text-dim);text-transform:uppercase;}
+  .result-card .v{font-family:var(--font-display);font-size:19px;color:var(--gold-soft);}
+  .result-card.f1 .v{color:var(--blue);} .result-card.f2 .v{color:var(--purple);}
+
+  .insight-box{margin-top:16px;background:var(--bg-panel-2);border:1px dashed var(--gold);border-radius:8px;padding:14px 18px;font-size:14px;color:var(--text);}
+  .insight-box b{color:var(--gold-soft);}
+
+  .benefit-list{display:grid;gap:10px;}
+  .benefit-item{background:var(--bg-panel);border:1px solid var(--line);border-radius:8px;padding:14px 18px;}
+  .benefit-item .btitle{font-weight:700;color:var(--gold-soft);font-size:15px;margin-bottom:4px;}
+  .limit-item{background:var(--bg-panel);border:1px solid var(--line);border-left:3px solid var(--warn);
+    padding:12px 16px;border-radius:6px;margin-bottom:8px;font-size:14.5px;color:var(--text-dim);}
+  table.refs{width:100%;border-collapse:collapse;font-size:14px;}
+  table.refs td{padding:8px 4px;border-bottom:1px solid var(--line);color:var(--text-dim);vertical-align:top;}
+  table.refs td:first-child{color:var(--text);width:32%;font-weight:600;}
+  footer{text-align:center;padding:36px 20px 10px;color:var(--text-dim);font-size:12.5px;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="eyebrow">Teori Permainan · Organisasi Industri</div>
+  <h1>Duopoli Cournot vs Bertrand</h1>
+  <p class="subtitle">Dua firma, satu pasar — tapi hasilnya bisa sangat berbeda tergantung apa yang mereka perebutkan: kuantitas produksi (Cournot) atau harga jual (Bertrand). Atur permintaan pasar dan biaya marjinal, lalu lihat bagaimana kedua model menghasilkan keseimbangan Nash yang berlainan dari struktur pasar yang sama persis.</p>
+</header>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <h2><span class="num">01</span> Belajar</h2>
+    <p>Dalam <strong>duopoli</strong>, dua firma menguasai satu pasar untuk produk yang (dalam model dasar ini) identik/homogen. Permintaan pasar berbentuk linear: <strong>P = a − b·Q</strong>, dengan Q = q₁+q₂ adalah total kuantitas yang beredar, a adalah harga tertinggi saat kuantitas nol, dan b menentukan seberapa cepat harga turun saat pasokan bertambah. Masing-masing firma punya biaya marjinal konstan (c₁, c₂).</p>
+    <p><strong>Model Cournot (Antoine Cournot, 1838)</strong> — kedua firma memilih <em>kuantitas produksi</em> secara simultan, lalu harga pasar terbentuk otomatis dari total pasokan. Setiap firma punya "fungsi reaksi": kuantitas optimalnya tergantung berapa banyak lawan diperkirakan memproduksi. Titik potong kedua fungsi reaksi adalah keseimbangan Nash — kondisi di mana tak ada firma yang untung mengubah kuantitasnya sendirian.</p>
+    <p><strong>Model Bertrand (Joseph Bertrand, 1883)</strong> — kedua firma memilih <em>harga jual</em> secara simultan untuk produk yang identik. Karena produk sama persis, konsumen rasional membeli 100% dari firma dengan harga terendah. Ini memicu "perang banting harga": selama harga masih di atas biaya marjinal, tiap firma tergoda memotong sedikit di bawah lawan untuk merebut seluruh pasar — sampai harga tertekan turun ke titik biaya marjinal itu sendiri.</p>
+    <p>Hasilnya sangat kontras — inilah yang dikenal sebagai <strong>Paradoks Bertrand</strong>: hanya dengan dua firma yang bersaing harga (bukan ribuan seperti pasar persaingan sempurna), harga sudah tertekan turun ke biaya marjinal dan laba ekonomi menjadi nol — padahal Cournot dengan struktur biaya & permintaan yang identis masih menyisakan harga di atas biaya marjinal dan laba positif.</p>
+  </section>
+
+  <section id="pertanyaan">
+    <h2><span class="num">02</span> Pertanyaan Ilmiah</h2>
+    <p class="dim" style="font-style:italic;">Mengapa hanya mengubah variabel strategis — dari "berapa banyak saya produksi" menjadi "berapa harga yang saya pasang" — bisa mengubah total hasil kompetisi begitu drastis, padahal permintaan pasar dan biaya produksinya identik? Apakah pilihan model yang lebih realistis tergantung pada sifat industrinya sendiri — Cournot untuk industri dengan kapasitas produksi yang butuh waktu dibangun (manufaktur berat, semikonduktor), Bertrand untuk komoditas yang mudah diproduksi ulang dan mudah dibandingkan harganya (bahan bakar eceran, tiket pesawat rute sama)? Dan apa yang terjadi pada keseimbangan Cournot saat jumlah firma bertambah dari 2 menuju sangat banyak — apakah ia perlahan mendekati hasil pasar persaingan sempurna?</p>
+  </section>
+
+  <section id="eksplorasi">
+    <h2><span class="num">03</span> Eksplorasi &amp; Perhitungan</h2>
+
+    <div class="panel">
+      <div class="panel-head"><h3 style="margin:0;">A. Parameter Pasar &amp; Biaya</h3><span class="panel-tag tag-gold">Dipakai di semua panel</span></div>
+      <p class="dim">Permintaan pasar P = a − b·Q. Firma 1 &amp; Firma 2 boleh punya biaya marjinal berbeda (asimetris) untuk melihat siapa yang diuntungkan.</p>
+      <div class="controls-row">
+        <div class="field"><label>a — Harga Maksimum <span class="val" id="vA">100</span></label><input type="range" id="inA" min="40" max="200" step="1" value="100"></div>
+        <div class="field"><label>b — Kemiringan Permintaan <span class="val" id="vB">1.0</span></label><input type="range" id="inB" min="0.2" max="3" step="0.1" value="1.0"></div>
+        <div class="field"><label>c₁ — Biaya Marjinal Firma 1 <span class="val" id="vC1">20</span></label><input type="range" id="inC1" min="0" max="80" step="1" value="20"></div>
+        <div class="field"><label>c₂ — Biaya Marjinal Firma 2 <span class="val" id="vC2">20</span></label><input type="range" id="inC2" min="0" max="80" step="1" value="20"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3 style="margin:0;">B. Model Cournot — Kompetisi Kuantitas</h3><span class="panel-tag tag-blue">q₁, q₂ simultan</span></div>
+      <p class="dim">Garis reaksi menunjukkan kuantitas optimal tiap firma untuk setiap dugaan kuantitas lawan. Perpotongan keduanya = keseimbangan Nash Cournot.</p>
+      <svg class="chart" id="svgCournot" viewBox="0 0 400 320" style="max-width:460px;"></svg>
+      <div class="legend">
+        <span><span class="swatch" style="background:#5b8fc9"></span> Reaksi Firma 1 (q₁ optimal vs q₂)</span>
+        <span><span class="swatch" style="background:#9b7fc9"></span> Reaksi Firma 2 (q₂ optimal vs q₁)</span>
+        <span><span class="swatch" style="background:#e3c988"></span> Keseimbangan Nash</span>
+      </div>
+      <div class="results" id="resultsCournot"></div>
+      <div class="insight-box" id="insightCournot"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3 style="margin:0;">C. Model Bertrand — Kompetisi Harga</h3><span class="panel-tag tag-purple">p₁, p₂ simultan</span></div>
+      <p class="dim">Produk identik → konsumen selalu memilih harga terendah. Selama harga di atas biaya marjinal, ada insentif membanting harga sedikit di bawah lawan. Geser c₁/c₂ di atas untuk melihat siapa yang menang perang harga saat biaya asimetris.</p>
+      <div class="results" id="resultsBertrand"></div>
+      <div class="insight-box" id="insightBertrand"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3 style="margin:0;">D. Generalisasi n-Firma Cournot</h3><span class="panel-tag tag-gold">Simetris, biaya = rata-rata c₁ &amp; c₂</span></div>
+      <p class="dim">Bila jumlah firma simetris n bertambah (bukan cuma 2), apa yang terjadi pada harga keseimbangan Cournot? Geser n untuk melihat konvergensinya menuju harga persaingan sempurna (P = biaya marjinal).</p>
+      <div class="controls-row" style="max-width:320px;">
+        <div class="field"><label>n — Jumlah Firma <span class="val" id="vN">2</span></label><input type="range" id="inN" min="1" max="30" step="1" value="2"></div>
+      </div>
+      <svg class="chart" id="svgNFirm" viewBox="0 0 500 220"></svg>
+      <div class="legend">
+        <span><span class="swatch" style="background:#5b8fc9"></span> Harga Cournot P(n)</span>
+        <span><span class="swatch" style="background:#e3766a"></span> Harga Kompetitif (P = biaya marjinal)</span>
+        <span><span class="swatch" style="background:#e3c988"></span> Harga Monopoli (n=1)</span>
+      </div>
+      <div class="results" id="resultsNFirm"></div>
+    </div>
+  </section>
+
+  <section id="manfaat">
+    <h2><span class="num">04</span> Manfaat &amp; Kegunaan</h2>
+    <div class="benefit-list">
+      <div class="benefit-item"><div class="btitle">Memahami mengapa struktur industri memengaruhi harga</div>Menjelaskan secara kuantitatif kenapa industri dengan sedikit pemain tapi produk terdiferensiasi/kapasitas terbatas (Cournot) cenderung punya margin lebih tebal dibanding industri komoditas dengan produk seragam (Bertrand), meski jumlah pesaingnya sama-sama sedikit.</div>
+      <div class="benefit-item"><div class="btitle">Melengkapi seri simulator dilema tahanan</div>Tetap dalam keluarga teori permainan dengan matriks payoff berbasis fungsi kontinu (kalkulus optimisasi), bukan matriks payoff tetap — memperluas cara membaca strategi dari diskrit ke berkelanjutan.</div>
+      <div class="benefit-item"><div class="btitle">Dasar untuk memahami regulasi antimonopoli</div>Menunjukkan secara matematis kenapa regulator persaingan usaha peduli pada jumlah pemain pasar dan sifat produk (homogen vs terdiferensiasi) saat menilai risiko harga tinggi.</div>
+      <div class="benefit-item"><div class="btitle">Edukasi kalkulus ekonomi terapan</div>Fungsi reaksi diturunkan langsung dari syarat orde pertama (turunan profit terhadap kuantitas = 0) — latihan konkret penerapan optimisasi matematis di luar konteks fisika/astronomi.</div>
+    </div>
+  </section>
+
+  <section id="batasan">
+    <h2><span class="num">05</span> Batasan</h2>
+    <div class="limit-item">Permintaan diasumsikan linear sempurna (P = a − b·Q) — dunia nyata sering punya kurva permintaan melengkung (elastisitas berubah sepanjang kurva), yang bisa menggeser hasil kuantitatif meski arah kesimpulan kualitatifnya tetap berlaku.</div>
+    <div class="limit-item">Model Bertrand di sini mengasumsikan produk benar-benar identik (homogen) dan kapasitas produksi tak terbatas — begitu produk terdiferensiasi sedikit saja (merek, lokasi, kualitas), Paradoks Bertrand melunak dan harga bisa naik di atas biaya marjinal meski hanya kompetisi harga.</div>
+    <div class="limit-item">Kedua model bersifat statis-simultan (satu putaran keputusan) — tidak memodelkan permainan berulang (repeated game) di mana firma bisa "belajar" berkolusi diam-diam dari waktu ke waktu, sebuah dinamika nyata yang jauh lebih kompleks.</div>
+    <div class="limit-item">Panel generalisasi n-firma mengasumsikan seluruh firma simetris (biaya marjinal sama rata) — di dunia nyata biaya antarfirma jarang benar-benar sama, dan firma dengan efisiensi biaya lebih baik biasanya mendapat pangsa pasar lebih besar.</div>
+    <div class="limit-item">Tidak ada biaya tetap (fixed cost) dalam model ini — laba nol pada keseimbangan Bertrand berarti laba <em>ekonomi</em> nol (menutup semua biaya termasuk biaya kesempatan), bukan berarti perusahaan otomatis bangkrut secara akuntansi.</div>
+  </section>
+
+  <section id="referensi">
+    <h2><span class="num">06</span> Referensi</h2>
+    <table class="refs">
+      <tr><td>Antoine Augustin Cournot — <em>Recherches sur les Principes Mathématiques de la Théorie des Richesses</em> (1838)</td><td>Sumber asli model kompetisi kuantitas duopoli</td></tr>
+      <tr><td>Joseph Bertrand — resensi kritis atas Cournot, <em>Journal des Savants</em> (1883)</td><td>Sumber asli model kompetisi harga &amp; Paradoks Bertrand</td></tr>
+      <tr><td>Jean Tirole — <em>The Theory of Industrial Organization</em> (1988)</td><td>Rujukan standar penurunan formal kedua model &amp; ekstensinya</td></tr>
+      <tr><td>Hal R. Varian — <em>Intermediate Microeconomics</em></td><td>Rujukan penurunan fungsi reaksi &amp; keseimbangan Nash duopoli linear</td></tr>
+    </table>
+  </section>
+
+</div>
+
+<footer>Simulator edukasi teori permainan &amp; organisasi industri — bagian dari seri Alat JAZMI.</footer>
+
+<script>
+(function(){
+  const el = id => document.getElementById(id);
+  const state = { a:100, b:1.0, c1:20, c2:20, n:2 };
+  const fmt = v => (+v).toLocaleString('id-ID', {maximumFractionDigits:2});
+
+  function bindSlider(inputId, valId, key, isFloat){
+    el(inputId).addEventListener('input', ()=>{
+      state[key] = isFloat ? +el(inputId).value : +el(inputId).value;
+      el(valId).textContent = isFloat ? (+el(inputId).value).toFixed(1) : el(inputId).value;
+      computeAll();
+    });
+  }
+  bindSlider('inA','vA','a',false);
+  bindSlider('inB','vB','b',true);
+  bindSlider('inC1','vC1','c1',false);
+  bindSlider('inC2','vC2','c2',false);
+  bindSlider('inN','vN','n',false);
+
+  // ---------- Cournot duopoly ----------
+  function cournot(a,b,c1,c2){
+    let q1 = (a - 2*c1 + c2) / (3*b);
+    let q2 = (a - 2*c2 + c1) / (3*b);
+    // clip to monopoly outcome if asymmetry pushes a firm out of the market
+    if(q1 < 0){
+      q1 = 0;
+      q2 = Math.max(0,(a-c2)/(2*b));
+    } else if(q2 < 0){
+      q2 = 0;
+      q1 = Math.max(0,(a-c1)/(2*b));
+    }
+    const Q = q1+q2;
+    const P = Math.max(0, a - b*Q);
+    const pi1 = (P-c1)*q1;
+    const pi2 = (P-c2)*q2;
+    return {q1,q2,Q,P,pi1,pi2};
+  }
+
+  function renderCournotChart(a,b,c1,c2,res){
+    const S=320, W=400, pad=44;
+    const qMax = Math.max((a-c1)/(2*b), (a-c2)/(2*b), res.q1, res.q2, 1) * 1.25;
+    const px = q => pad + (q/qMax)*(W-2*pad);
+    const py = q => S-pad - (q/qMax)*(S-2*pad);
+    function line(x1,y1,x2,y2,color,dash){
+      return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="2" ${dash?'stroke-dasharray="5,4"':''}/>`;
+    }
+    let svg='';
+    svg += `<line x1="${px(0)}" y1="${py(0)}" x2="${px(qMax)}" y2="${py(0)}" stroke="#3a4150" stroke-width="1"/>`;
+    svg += `<line x1="${px(0)}" y1="${py(0)}" x2="${px(0)}" y2="${py(qMax)}" stroke="#3a4150" stroke-width="1"/>`;
+    // Reaction function 1: q1 = (a-c1)/(2b) - q2/2  -> plotted with q2 on x-axis effectively? We plot q1 (x) vs q2 (y).
+    // RF1 gives q1 as function of q2: q1 = (a-c1)/(2b) - q2/2  => for q2 in [0, 2*(a-c1)/(2b)]
+    const q1Int = Math.max(0,(a-c1)/(2*b));
+    const q2Int = Math.max(0,(a-c2)/(2*b));
+    // RF1: points (q1, q2) where q1 = q1Int - q2/2, q2 from 0..2*q1Int
+    const rf1_q2max = Math.min(qMax, 2*q1Int);
+    svg += line(px(q1Int), py(0), px(Math.max(0,q1Int-rf1_q2max/2)), py(rf1_q2max), '#5b8fc9', false);
+    // RF2: q2 = q2Int - q1/2, q1 from 0..2*q2Int
+    const rf2_q1max = Math.min(qMax, 2*q2Int);
+    svg += line(px(0), py(q2Int), px(rf2_q1max), py(Math.max(0,q2Int-rf2_q1max/2)), '#9b7fc9', false);
+    // Nash point
+    svg += `<circle cx="${px(res.q1)}" cy="${py(res.q2)}" r="5.5" fill="#e3c988" stroke="#12151a" stroke-width="1.5"/>`;
+    svg += `<text x="${px(res.q1)+10}" y="${py(res.q2)-8}" fill="#e3c988" font-size="11" font-family="JetBrains Mono, monospace">Nash (${fmt(res.q1)}, ${fmt(res.q2)})</text>`;
+    svg += `<text x="${pad}" y="${S-14}" fill="#9aa1ad" font-size="11" font-family="JetBrains Mono, monospace">q₁ →</text>`;
+    svg += `<text x="8" y="${pad-6}" fill="#9aa1ad" font-size="11" font-family="JetBrains Mono, monospace">q₂ ↑</text>`;
+    el('svgCournot').innerHTML = svg;
+  }
+
+  function renderCournotResults(res){
+    const cards = [
+      {l:'Kuantitas Firma 1', v:fmt(res.q1), cls:'f1'},
+      {l:'Kuantitas Firma 2', v:fmt(res.q2), cls:'f2'},
+      {l:'Total Kuantitas Q', v:fmt(res.Q), cls:''},
+      {l:'Harga Pasar', v:fmt(res.P), cls:''},
+      {l:'Laba Firma 1', v:fmt(res.pi1), cls:'f1'},
+      {l:'Laba Firma 2', v:fmt(res.pi2), cls:'f2'},
+    ];
+    el('resultsCournot').innerHTML = cards.map(c=>`<div class="result-card ${c.cls}"><div class="l">${c.l}</div><div class="v">${c.v}</div></div>`).join('');
+    let msg = `Pada keseimbangan Nash Cournot, harga pasar (<b>${fmt(res.P)}</b>) berada <b>di atas</b> total biaya marjinal rata-rata — kedua firma tetap meraih laba positif meski saling bersaing. `;
+    if(res.q1===0 || res.q2===0){
+      msg += `Perbedaan biaya marjinal cukup besar sehingga firma berbiaya tinggi terdorong keluar sepenuhnya dari pasar (kuantitas nol) — hasilnya menjadi monopoli oleh firma yang bertahan.`;
+    } else if(state.c1===state.c2){
+      msg += `Karena biaya marjinal simetris, kedua firma membagi pasar sama rata.`;
+    } else {
+      msg += `Firma dengan biaya marjinal lebih rendah (${state.c1<state.c2?'Firma 1':'Firma 2'}) memproduksi lebih banyak dan meraih laba lebih besar — keunggulan biaya diterjemahkan langsung menjadi pangsa pasar.`;
+    }
+    el('insightCournot').innerHTML = msg;
+  }
+
+  // ---------- Bertrand duopoly ----------
+  function bertrand(a,b,c1,c2){
+    let p,q,pi1,pi2,winner;
+    if(c1===c2){
+      p = c1;
+      const Qtot = Math.max(0,(a-p)/b);
+      q = Qtot/2;
+      pi1 = 0; pi2 = 0; winner='seri';
+    } else if(c1<c2){
+      p = Math.min(a, c2); // undercuts just below c2, approximated as = c2
+      const Qtot = Math.max(0,(a-p)/b);
+      q = Qtot;
+      pi1 = (p-c1)*q; pi2 = 0; winner='f1';
+    } else {
+      p = Math.min(a, c1);
+      const Qtot = Math.max(0,(a-p)/b);
+      q = Qtot;
+      pi1 = 0; pi2 = (p-c2)*q; winner='f2';
+    }
+    return {p,q,pi1,pi2,winner};
+  }
+
+  function renderBertrandResults(res){
+    const cards = [
+      {l:'Harga Keseimbangan', v:fmt(res.p), cls:''},
+      {l:'Kuantitas Terjual', v:fmt(res.q), cls:''},
+      {l:'Laba Firma 1', v:fmt(res.pi1), cls:'f1'},
+      {l:'Laba Firma 2', v:fmt(res.pi2), cls:'f2'},
+    ];
+    el('resultsBertrand').innerHTML = cards.map(c=>`<div class="result-card ${c.cls}"><div class="l">${c.l}</div><div class="v">${c.v}</div></div>`).join('');
+    let msg='';
+    if(res.winner==='seri'){
+      msg = `Biaya marjinal kedua firma sama (<b>${fmt(state.c1)}</b>) — harga tertekan turun tepat ke titik biaya marjinal dan laba ekonomi kedua firma menjadi <b>nol</b>. Inilah inti Paradoks Bertrand: hanya dua pesaing sudah cukup meniadakan laba, seolah pasar ini persaingan sempurna.`;
+    } else {
+      const menang = res.winner==='f1'?'Firma 1':'Firma 2';
+      const kalah = res.winner==='f1'?'Firma 2':'Firma 1';
+      msg = `${menang} punya biaya marjinal lebih rendah dan memasang harga tepat di bawah biaya marjinal ${kalah} (≈ <b>${fmt(res.p)}</b>) — cukup rendah untuk merebut <b>seluruh</b> pasar, tapi masih di atas biaya sendiri sehingga tetap untung. ${kalah} kehilangan seluruh penjualan dan labanya nol. Berbeda dari Cournot: di sini keunggulan biaya diterjemahkan menjadi "menang telak", bukan sekadar pangsa lebih besar.`;
+    }
+    el('insightBertrand').innerHTML = msg;
+  }
+
+  // ---------- n-firm symmetric Cournot generalization ----------
+  function nFirmPrice(a,b,c,n){
+    // P* = (a + n*c) / (n+1)
+    return (a + n*c) / (n+1);
+  }
+
+  function renderNFirmChart(a,b,c){
+    const S=220, W=500, pad=44;
+    const nMaxPlot = 30;
+    const pMax = a, pMin = c;
+    const px = n => pad + (n/nMaxPlot)*(W-2*pad);
+    const py = p => S-pad - ((p-Math.min(0,c))/(a-Math.min(0,c)))*(S-2*pad);
+    let svg='';
+    svg += `<line x1="${px(1)}" y1="${py(0)}" x2="${px(nMaxPlot)}" y2="${py(0)}" stroke="#3a4150" stroke-width="1"/>`;
+    svg += `<line x1="${px(1)}" y1="${py(0)}" x2="${px(1)}" y2="${py(a)}" stroke="#3a4150" stroke-width="1"/>`;
+    // competitive price line (c)
+    svg += `<line x1="${px(1)}" y1="${py(c)}" x2="${px(nMaxPlot)}" y2="${py(c)}" stroke="#e3766a" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+    // monopoly price marker at n=1
+    const pMono = (a+c)/2;
+    svg += `<circle cx="${px(1)}" cy="${py(pMono)}" r="4" fill="#e3c988"/>`;
+    // price curve
+    let pts=[];
+    for(let n=1;n<=nMaxPlot;n++){
+      pts.push(`${px(n)},${py(nFirmPrice(a,b,c,n))}`);
+    }
+    svg += `<polyline points="${pts.join(' ')}" fill="none" stroke="#5b8fc9" stroke-width="2.5"/>`;
+    // current n marker
+    const curP = nFirmPrice(a,b,c,state.n);
+    svg += `<circle cx="${px(state.n)}" cy="${py(curP)}" r="5.5" fill="#5b8fc9" stroke="#12151a" stroke-width="1.5"/>`;
+    svg += `<text x="${px(1)}" y="${S-12}" fill="#9aa1ad" font-size="10" font-family="JetBrains Mono, monospace">n=1</text>`;
+    svg += `<text x="${px(nMaxPlot)-24}" y="${S-12}" fill="#9aa1ad" font-size="10" font-family="JetBrains Mono, monospace">n=30</text>`;
+    el('svgNFirm').innerHTML = svg;
+  }
+
+  function renderNFirmResults(a,b,c){
+    const P = nFirmPrice(a,b,c,state.n);
+    const Qtot = Math.max(0,(a-P)/b);
+    const pMono = (a+c)/2;
+    const cards = [
+      {l:'Harga Cournot P(n)', v:fmt(P)},
+      {l:'Total Kuantitas Pasar', v:fmt(Qtot)},
+      {l:'Harga Monopoli (n=1)', v:fmt(pMono)},
+      {l:'Harga Kompetitif (n→∞)', v:fmt(c)},
+    ];
+    el('resultsNFirm').innerHTML = cards.map(c2=>`<div class="result-card"><div class="l">${c2.l}</div><div class="v">${c2.v}</div></div>`).join('');
+  }
+
+  function computeAll(){
+    const {a,b,c1,c2,n} = state;
+    const resC = cournot(a,b,c1,c2);
+    renderCournotChart(a,b,c1,c2,resC);
+    renderCournotResults(resC);
+
+    const resB = bertrand(a,b,c1,c2);
+    renderBertrandResults(resB);
+
+    const cAvg = (c1+c2)/2;
+    renderNFirmChart(a,b,cAvg);
+    renderNFirmResults(a,b,cAvg);
+  }
+
+  computeAll();
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratorium Khiyar — Analisis Hak Pengembalian Barang</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#14161B;--panel:#1A1D24;--panel2:#22252D;--ink:#E9E7DE;--dim:#A6AAB2;--dimmer:#6D717A;
+  --line:rgba(233,231,222,.1);--blue:#5B9BD5;--green:#3FAE7A;--amber:#CBA134;--orange:#D9824E;
+  --red:#C4634F;--grey:#8C93A8;--gsoft:rgba(63,174,122,.14);--asoft:rgba(203,161,52,.14);
+  --osoft:rgba(217,130,78,.14);--rsoft:rgba(196,99,79,.14);--wsoft:rgba(140,147,168,.14);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Karla',sans-serif;line-height:1.6}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:500;color:var(--ink);margin:0}
+.mono{font-family:'JetBrains Mono',monospace}
+.wrap{max-width:720px;margin:0 auto;padding:28px 18px 70px}
+.banner{background:var(--asoft);border:1px solid rgba(203,161,52,.4);border-radius:10px;padding:14px 16px;font-size:.85rem;color:var(--dim);margin-bottom:22px}
+.banner b{color:var(--amber)}
+header h1{font-size:1.5rem;margin-bottom:8px}
+header p{color:var(--dim);font-size:.95rem;margin-bottom:20px}
+.progress{display:flex;gap:6px;margin-bottom:22px}
+.progress .seg{flex:1;height:4px;border-radius:4px;background:var(--line)}
+.progress .seg.done{background:var(--blue)}
+.card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:22px 20px;margin-bottom:16px}
+.step-label{font-size:.76rem;color:var(--dimmer);margin-bottom:14px}
+.q{margin-bottom:22px}
+.q:last-child{margin-bottom:0}
+.q label.qtext{display:block;font-size:.96rem;color:var(--ink);margin-bottom:10px;font-weight:600}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--dim);font-size:.86rem;cursor:pointer;user-select:none}
+.opt.sel{background:rgba(91,155,213,.18);border-color:var(--blue);color:var(--ink)}
+.opt.unsure{opacity:.75}
+textarea.note{width:100%;margin-top:10px;background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:8px;color:var(--ink);padding:10px;font-size:.85rem;min-height:52px}
+.nav{display:flex;justify-content:space-between;margin-top:20px}
+button{font-family:'Karla',sans-serif;cursor:pointer;border-radius:9px;border:1px solid var(--line);padding:11px 18px;font-size:.88rem;font-weight:600}
+.btn-primary{background:var(--blue);border-color:var(--blue);color:#12141B}
+.btn-ghost{background:transparent;color:var(--dim)}
+.btn-sm{padding:6px 12px;font-size:.78rem;font-weight:500}
+
+.status-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:100px;font-size:.9rem;font-weight:700;margin-bottom:18px}
+.status-hijau{background:var(--gsoft);color:var(--green);border:1px solid rgba(63,174,122,.4)}
+.status-kuning{background:var(--asoft);color:var(--amber);border:1px solid rgba(203,161,52,.4)}
+.status-oranye{background:var(--osoft);color:var(--orange);border:1px solid rgba(217,130,78,.4)}
+.status-merah{background:var(--rsoft);color:var(--red);border:1px solid rgba(196,99,79,.4)}
+.status-abu{background:var(--wsoft);color:var(--grey);border:1px solid rgba(140,147,168,.4)}
+
+.section-title{font-size:.78rem;color:var(--dimmer);text-transform:uppercase;letter-spacing:.03em;margin:20px 0 10px}
+.section-title:first-child{margin-top:0}
+.list-item{padding:10px 14px;background:rgba(0,0,0,.16);border-radius:8px;margin-bottom:6px;font-size:.88rem;color:var(--dim)}
+.list-item b{color:var(--ink)}
+.reasoning-step{display:flex;gap:10px;padding:9px 0;font-size:.88rem;color:var(--dim);border-bottom:1px dashed var(--line)}
+.reasoning-step:last-child{border-bottom:none}
+.reasoning-step .n{color:var(--dimmer);font-family:'JetBrains Mono',monospace;flex-shrink:0}
+.varpanel{display:grid;gap:6px}
+.varrow{display:flex;justify-content:space-between;padding:8px 12px;background:rgba(0,0,0,.14);border-radius:6px;font-size:.84rem;cursor:pointer}
+.varrow .k{color:var(--dimmer)}
+.varrow .v{color:var(--ink);font-weight:600}
+.varwhy{display:none;font-size:.8rem;color:var(--dim);padding:8px 12px;background:rgba(0,0,0,.1);border-radius:0 0 6px 6px;margin-top:-4px;margin-bottom:2px}
+.varwhy.show{display:block}
+.disclaimer{margin-top:20px;padding:14px 16px;background:var(--rsoft);border:1px solid rgba(196,99,79,.3);border-radius:10px;font-size:.84rem;color:var(--dim)}
+.disclaimer b{color:var(--red)}
+.tools-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10;align-items:center;justify-content:center;padding:20px}
+.modal-bg.show{display:flex}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:16px;max-width:600px;width:100%;max-height:85vh;overflow-y:auto;padding:24px}
+.modal h2{font-size:1.2rem;margin-bottom:14px}
+.modal h3{font-size:1rem;color:var(--blue);margin:18px 0 8px}
+.modal p{font-size:.9rem;color:var(--dim);margin-bottom:10px}
+.modal .close{float:right;cursor:pointer;color:var(--dimmer);font-size:1.3rem;line-height:1}
+
+.case-grid{display:grid;gap:8px}
+.case-btn{text-align:left;padding:12px 14px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;cursor:pointer}
+.case-btn b{display:block;color:var(--ink);font-size:.88rem;margin-bottom:3px}
+.case-btn span{font-size:.8rem;color:var(--dimmer)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Laboratorium Khiyar</h1>
+    <p>Analisis kemungkinan hak pembeli untuk mengembalikan barang, membatalkan akad, atau menuntut penyelesaian — dipetakan dari fakta ke variabel, aturan, dan penalaran yang transparan.</p>
+  </header>
+  <div class="banner">⚠️ <b>Ini bukan fatwa.</b> Tool ini membantu memetakan fakta ke konsep fikih muamalah yang relevan dan menunjukkan jalur penalarannya. Untuk keputusan pada kasus nyata, tetap konsultasikan ke ahli fikih/ustadz yang Anda percaya.</div>
+
+  <div class="tools-row">
+    <button class="btn-ghost btn-sm" onclick="openCases()">📋 Coba Kasus Contoh</button>
+    <button class="btn-ghost btn-sm" onclick="openLearn('intro')">📖 Pelajari Mengapa</button>
+  </div>
+
+  <div class="progress" id="progress"></div>
+  <div id="wizardArea"></div>
+  <div id="resultArea"></div>
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal" id="modalBody"></div>
+</div>
+
+<script>
+/* ============ DATA: PERTANYAAN ============ */
+const STEPS = [
+  { key:'transaksi', label:'01 Transaksi', questions:[
+    { id:'jenisTransaksi', text:'Jenis transaksi', type:'choice',
+      opts:['Jual beli biasa','Pembelian online','Pre-order','Pesanan spesifikasi khusus (custom)','Tidak yakin'] },
+    { id:'barangDiterima', text:'Apakah barang sudah diterima pembeli?', type:'choice', opts:['Ya','Belum','Tidak yakin'] },
+    { id:'adaKebijakanRetur', text:'Apakah ada kebijakan retur tertulis dari penjual/platform?', type:'choice', opts:['Ya','Tidak','Tidak yakin'] },
+  ]},
+  { key:'barang', label:'02 Kondisi Barang', questions:[
+    { id:'kondisiBarang', text:'Kondisi barang saat diterima', type:'choice',
+      opts:['Sesuai pesanan','Terdapat cacat','Rusak','Spesifikasi/ukuran/warna berbeda','Jumlah tidak sesuai','Barang tidak sebagaimana klaim','Tidak yakin'] },
+    { id:'cacatSudahAdaSebelum', text:'(Jika cacat/rusak) Apakah kondisi ini sudah ada sebelum atau saat barang diterima?', type:'choice', opts:['Ya, sebelum diterima','Tidak, terjadi setelah diterima','Sulit dipastikan','Tidak relevan'] },
+  ]},
+  { key:'pengetahuan', label:'03 Pengetahuan Pembeli', questions:[
+    { id:'buyerKnewBefore', text:'Apakah pembeli mengetahui masalah ini SEBELUM akad/transaksi?', type:'choice', opts:['Ya','Tidak','Tidak yakin'] },
+    { id:'buyerInspected', text:'Apakah pembeli sempat memeriksa barang sebelum membeli?', type:'choice', opts:['Ya','Tidak','Tidak memungkinkan (mis. beli online)','Tidak yakin'] },
+    { id:'defectDisclosed', text:'Apakah penjual memberitahukan masalah ini sebelumnya?', type:'choice', opts:['Ya','Tidak','Tidak yakin'] },
+  ]},
+  { key:'setelah', label:'04 Kondisi Setelah Diterima', questions:[
+    { id:'sudahDigunakan', text:'Apakah barang sudah digunakan/dipakai?', type:'choice', opts:['Belum sama sekali','Sudah, sebelum tahu masalah','Sudah, setelah tahu masalah','Tidak yakin'] },
+    { id:'sudahDiubah', text:'Apakah barang sudah diubah/dipotong/dicampur/dijual lagi?', type:'choice', opts:['Tidak','Ya','Tidak yakin'] },
+    { id:'kemasanUtuh', text:'Apakah kemasan dan kondisi fisik masih utuh?', type:'choice', opts:['Ya','Tidak','Tidak yakin'] },
+  ]},
+  { key:'syarat', label:'05 Syarat & Janji Penjual', questions:[
+    { id:'adaJanjiRetur', text:'Apakah penjual secara eksplisit menjanjikan hak retur/garansi/refund saat akad?', type:'choice', opts:['Ya','Tidak','Tidak yakin'] },
+    { id:'isiJanji', text:'Kalau ada, tuliskan ringkasannya (opsional)', type:'text' },
+  ]},
+  { key:'keinginan', label:'06 Keinginan Pembeli', questions:[
+    { id:'keinginan', text:'Apa yang diinginkan pembeli?', type:'choice',
+      opts:['Kembalikan barang & uang kembali','Tukar barang','Minta perbaikan','Minta potongan harga','Hanya ingin tahu status hukumnya'] },
+  ]},
+];
+
+/* ============ RULE DEFINITIONS (dengan sumber & catatan) ============ */
+const RULES = {
+  KHIYAR_AIB_001: {
+    nama:"Khiyar 'Aib (hak karena cacat tersembunyi)",
+    ringkas:"Konsep klasik fikih muamalah: pembeli berhak atas barang yang bebas cacat; bila ditemukan cacat yang sudah ada sebelum/saat akad dan tidak diketahui pembeli, ia berpotensi punya pilihan untuk mengembalikan barang.",
+    sumber:"Konsep umum khiyar 'aib dalam fikih muamalah (dibahas luas di kitab-kitab fikih empat mazhab). Rincian syarat & pengecualian per mazhab berbeda-beda dan BELUM dimasukkan sebagai kutipan spesifik pada versi ini — tandai sebagai belum diverifikasi untuk kasus rinci.",
+    status:'belum diverifikasi untuk detail per-mazhab'
+  },
+  KHIYAR_SYARAT_001: {
+    nama:'Khiyar Syarat / Hak berdasarkan kesepakatan',
+    ringkas:'Jika penjual secara eksplisit menjanjikan hak retur/garansi tertentu saat akad, janji ini pada dasarnya mengikat sebagai bagian dari kesepakatan — terlepas dari ada/tidaknya cacat.',
+    sumber:'Prinsip umum "al-muslimuna \'ala syurutihim" (kaum muslimin terikat pada syarat-syarat mereka) yang masyhur dalam fikih muamalah. Batasan detail (mis. syarat yang membatalkan akad) belum dimasukkan pada versi ini.',
+    status:'belum diverifikasi untuk detail teknis syarat'
+  },
+  MISMATCH_SPEC_001: {
+    nama:'Ketidaksesuaian dengan Deskripsi/Pesanan',
+    ringkas:'Barang yang diterima berbeda dari spesifikasi yang disepakati (ukuran, warna, jumlah) berpotensi memberi hak menuntut kesesuaian, penggantian, atau pembatalan — karena objek akad semestinya sesuai dengan yang disepakati.',
+    sumber:'Prinsip umum kesesuaian objek akad dengan yang disepakati. Istilah spesifik (mis. khiyar washf) bisa berbeda penyebutannya antar sumber — belum dirujuk ke kitab tertentu pada versi ini.',
+    status:'belum diverifikasi untuk istilah & rujukan spesifik'
+  },
+  RIDA_SETELAH_TAHU_001: {
+    nama:'Indikasi Rida (menerima) setelah mengetahui masalah',
+    ringkas:'Jika pembeli tetap menggunakan barang SETELAH mengetahui adanya cacat/masalah, ini bisa dipandang sebagai indikasi menerima kondisi barang apa adanya, yang berpotensi melemahkan hak khiyar.',
+    sumber:'Prinsip umum bahwa penggunaan barang setelah tahu cacat dapat dianggap tindakan yang menunjukkan rida — dibahas dalam pembahasan gugurnya khiyar. Detail per-mazhab belum dimasukkan.',
+    status:'belum diverifikasi untuk detail per-mazhab'
+  },
+  CUSTOM_ORDER_NOTE_001: {
+    nama:'Catatan: Barang Pesanan Khusus (Istisna\')',
+    ringkas:'Barang yang dibuat khusus sesuai permintaan pembeli sendiri (custom/istisna\') punya karakteristik akad yang bisa berbeda dari jual beli barang siap pakai — analisis mungkin perlu kerangka akad yang berbeda.',
+    sumber:'Perbedaan akad istisna\' vs jual beli biasa adalah pembahasan umum dalam fikih muamalah. Detail aturan istisna\' belum dimodelkan penuh pada versi ini.',
+    status:'belum dimodelkan penuh — tandai perlu pemeriksaan lanjutan'
+  },
+};
+
+/* ============ ENGINE (terpisah dari UI) ============ */
+function analyzeCase(d){
+  const reasoning = [];
+  const uncertainties = [];
+  const relevantConcepts = [];
+  const applicableRules = [];
+  const push = (s) => reasoning.push(s);
+
+  push(`Jenis transaksi: ${d.jenisTransaksi||'tidak diisi'}.`);
+  if(d.jenisTransaksi === 'Pesanan spesifikasi khusus (custom)'){
+    applicableRules.push('CUSTOM_ORDER_NOTE_001');
+    relevantConcepts.push(RULES.CUSTOM_ORDER_NOTE_001.nama);
+    push('Transaksi berupa pesanan custom — dicatat sebagai kerangka akad yang bisa berbeda (lihat catatan istisna\').');
+  }
+
+  if(d.barangDiterima !== 'Ya'){
+    push('Barang belum dinyatakan diterima — banyak konsep khiyar terkait erat dengan pasca-penerimaan barang.');
+    uncertainties.push('Status penerimaan barang belum pasti (Ya/Belum/Tidak yakin).');
+  }
+
+  let statusScore = null; // 'hijau'|'kuning'|'oranye'|'merah'|'abu'
+  const setStatus = (s) => { if(statusScore===null || rank(s)>rank(statusScore)) statusScore = s; };
+  function rank(s){ return {abu:0, merah:1, oranye:2, kuning:3, hijau:4}[s]; }
+
+  // --- Cabang: Janji retur eksplisit ---
+  if(d.adaJanjiRetur === 'Ya'){
+    applicableRules.push('KHIYAR_SYARAT_001');
+    relevantConcepts.push(RULES.KHIYAR_SYARAT_001.nama);
+    push('Penjual menjanjikan hak retur/garansi secara eksplisit saat akad — ini berpotensi menjadi dasar hak berdasarkan kesepakatan (khiyar syarat), terlepas dari ada/tidaknya cacat.');
+    if(d.sudahDiubah === 'Ya' || d.sudahDigunakan === 'Sudah, setelah tahu masalah'){
+      setStatus('kuning');
+      push('Namun barang sudah diubah/digunakan setelah masalah diketahui — perlu diperiksa apakah ini memengaruhi keberlakuan janji tersebut.');
+    } else {
+      setStatus('hijau');
+      push('Tidak ditemukan indikasi yang melemahkan janji tersebut dari fakta yang dimasukkan.');
+    }
+  } else if(d.adaJanjiRetur === 'Tidak yakin'){
+    uncertainties.push('Belum jelas apakah ada janji retur eksplisit dari penjual saat akad.');
+  }
+
+  // --- Cabang: Cacat / Rusak ---
+  if(d.kondisiBarang === 'Terdapat cacat' || d.kondisiBarang === 'Rusak'){
+    push(`Barang dilaporkan: ${d.kondisiBarang.toLowerCase()}.`);
+    if(d.buyerKnewBefore === 'Ya'){
+      setStatus('merah');
+      push('Pembeli menyatakan sudah mengetahui masalah ini SEBELUM akad — ini adalah faktor kuat yang melemahkan dasar khiyar \'aib, karena pengetahuan sebelumnya umumnya dipandang sebagai penerimaan atas kondisi tersebut.');
+    } else if(d.buyerKnewBefore === 'Tidak'){
+      applicableRules.push('KHIYAR_AIB_001');
+      relevantConcepts.push(RULES.KHIYAR_AIB_001.nama);
+      push('Pembeli menyatakan TIDAK mengetahui masalah ini sebelum akad — ini konsisten dengan syarat dasar khiyar \'aib.');
+
+      if(d.cacatSudahAdaSebelum === 'Ya, sebelum diterima'){
+        push('Cacat/kerusakan dinyatakan sudah ada sebelum/saat barang diterima.');
+        if(d.sudahDigunakan === 'Sudah, setelah tahu masalah'){
+          applicableRules.push('RIDA_SETELAH_TAHU_001');
+          push('Namun barang tetap digunakan SETELAH masalah diketahui — ini indikasi yang bisa melemahkan hak khiyar (potensi rida).');
+          setStatus('oranye');
+        } else if(d.sudahDiubah === 'Ya'){
+          push('Barang sudah diubah/dipotong/dicampur/dijual lagi — kondisi fisik yang berubah bisa memengaruhi kemungkinan pelaksanaan hak retur secara fisik.');
+          setStatus('oranye');
+        } else {
+          setStatus('hijau');
+          push('Tidak ditemukan faktor pelemah dari fakta yang dimasukkan — indikasi khiyar \'aib cukup kuat, namun tetap perlu pemeriksaan detail (lihat bagian "Perlu Diperiksa").');
+        }
+      } else if(d.cacatSudahAdaSebelum === 'Sulit dipastikan'){
+        setStatus('kuning');
+        uncertainties.push('Belum jelas kapan tepatnya cacat/kerusakan terjadi — ini krusial untuk khiyar \'aib.');
+      } else if(d.cacatSudahAdaSebelum === 'Tidak, terjadi setelah diterima'){
+        setStatus('merah');
+        push('Cacat/kerusakan dinyatakan terjadi SETELAH barang diterima — pada prinsipnya ini di luar cakupan khas khiyar \'aib (yang mensyaratkan cacat sudah ada sebelum/saat risiko berpindah ke pembeli).');
+      } else {
+        setStatus('kuning');
+        uncertainties.push('Waktu munculnya cacat belum diisi.');
+      }
+    } else {
+      setStatus('kuning');
+      uncertainties.push('Belum jelas apakah pembeli mengetahui masalah ini sebelum akad — ini variabel penting untuk khiyar \'aib.');
+    }
+
+    if(d.defectDisclosed === 'Tidak yakin' || d.defectDisclosed === undefined){
+      uncertainties.push('Belum jelas apakah penjual memberitahukan masalah ini sebelumnya.');
+    }
+    if(d.buyerInspected === 'Tidak yakin'){
+      uncertainties.push('Belum jelas apakah pembeli sempat memeriksa barang sebelum membeli.');
+    }
+  }
+
+  // --- Cabang: Ketidaksesuaian spesifikasi (bukan cacat) ---
+  if(d.kondisiBarang === 'Spesifikasi/ukuran/warna berbeda' || d.kondisiBarang === 'Jumlah tidak sesuai' || d.kondisiBarang === 'Barang tidak sebagaimana klaim'){
+    applicableRules.push('MISMATCH_SPEC_001');
+    relevantConcepts.push(RULES.MISMATCH_SPEC_001.nama);
+    push(`Barang dilaporkan tidak sesuai spesifikasi/pesanan (${d.kondisiBarang.toLowerCase()}) — ini kategori berbeda dari cacat tersembunyi, terkait kesesuaian objek akad.`);
+    if(d.sudahDigunakan === 'Sudah, setelah tahu masalah' || d.sudahDiubah==='Ya'){
+      setStatus('oranye');
+      push('Barang sudah digunakan/diubah setelah masalah diketahui — perlu diperiksa pengaruhnya terhadap hak menuntut kesesuaian.');
+    } else {
+      setStatus('kuning');
+      push('Indikasi ada, namun detail (apakah ketidaksesuaian ini "material" secara fikih, dan bagaimana konsekuensinya) memerlukan pemeriksaan lebih lanjut.');
+    }
+  }
+
+  if(d.kondisiBarang === 'Sesuai pesanan'){
+    push('Barang dinyatakan sesuai pesanan — dari sisi kesesuaian objek akad, tidak ditemukan indikasi masalah.');
+    if(statusScore === null) setStatus('merah');
+  }
+
+  if(d.kondisiBarang === 'Tidak yakin' || !d.kondisiBarang){
+    uncertainties.push('Kondisi barang saat diterima belum jelas.');
+    if(statusScore === null) setStatus('abu');
+  }
+
+  if(statusScore === null) setStatus('abu');
+  if(uncertainties.length && statusScore === 'hijau') setStatus('kuning');
+  if(relevantConcepts.length === 0 && statusScore !== 'abu'){
+    // tidak ada konsep relevan yang teridentifikasi dari parameter yang dimasukkan
+  }
+
+  const possibleActions = [];
+  if(d.keinginan) possibleActions.push(`Pembeli menyatakan ingin: ${d.keinginan.toLowerCase()}.`);
+  if(relevantConcepts.length){
+    possibleActions.push('Kemungkinan langkah yang relevan untuk didiskusikan dengan penjual/ahli fikih: mengembalikan barang, meminta penggantian, atau penyesuaian harga — tergantung konsep mana yang berlaku dan kesepakatan pihak.');
+  }
+
+  push(`Menyimpulkan status: ${statusLabel(statusScore)}.`);
+
+  return {
+    status: statusScore,
+    relevantConcepts: [...new Set(relevantConcepts)],
+    reasoning,
+    uncertainties,
+    applicableRules: [...new Set(applicableRules)],
+    possibleActions,
+    sources: [...new Set(applicableRules)].map(r=>RULES[r]),
+  };
+}
+function statusLabel(s){
+  return {hijau:'🟢 Indikasi Kuat', kuning:'🟡 Indikasi Ada, Perlu Pemeriksaan', oranye:'🟠 Ada Kondisi Khusus/Perbedaan',
+    merah:'🔴 Tidak Teridentifikasi Dasar Retur dari Parameter Ini', abu:'⚪ Data Tidak Cukup'}[s] || '⚪ Data Tidak Cukup';
+}
+
+/* ============ KASUS CONTOH ============ */
+const SAMPLE_CASES = [
+  { nama:'Kasus 1 — Cacat sudah ada sebelum dibeli', ket:'Cacat baru diketahui, tak pernah dibongkar sebelumnya',
+    data:{jenisTransaksi:'Jual beli biasa', barangDiterima:'Ya', adaKebijakanRetur:'Tidak yakin', kondisiBarang:'Terdapat cacat', cacatSudahAdaSebelum:'Ya, sebelum diterima', buyerKnewBefore:'Tidak', buyerInspected:'Tidak memungkinkan (mis. beli online)', defectDisclosed:'Tidak', sudahDigunakan:'Belum sama sekali', sudahDiubah:'Tidak', kemasanUtuh:'Ya', adaJanjiRetur:'Tidak yakin', keinginan:'Kembalikan barang & uang kembali'} },
+  { nama:'Kasus 2 — Cacat sudah diketahui sebelum beli', ket:'Pembeli tahu risikonya sejak awal',
+    data:{jenisTransaksi:'Jual beli biasa', barangDiterima:'Ya', adaKebijakanRetur:'Tidak', kondisiBarang:'Terdapat cacat', cacatSudahAdaSebelum:'Ya, sebelum diterima', buyerKnewBefore:'Ya', buyerInspected:'Ya', defectDisclosed:'Ya', sudahDigunakan:'Belum sama sekali', sudahDiubah:'Tidak', kemasanUtuh:'Ya', adaJanjiRetur:'Tidak', keinginan:'Kembalikan barang & uang kembali'} },
+  { nama:'Kasus 3 — Beda spesifikasi', ket:'Warna/ukuran tidak sesuai pesanan',
+    data:{jenisTransaksi:'Pembelian online', barangDiterima:'Ya', adaKebijakanRetur:'Ya', kondisiBarang:'Spesifikasi/ukuran/warna berbeda', cacatSudahAdaSebelum:'Tidak relevan', buyerKnewBefore:'Tidak', buyerInspected:'Tidak memungkinkan (mis. beli online)', defectDisclosed:'Tidak', sudahDigunakan:'Belum sama sekali', sudahDiubah:'Tidak', kemasanUtuh:'Ya', adaJanjiRetur:'Tidak yakin', keinginan:'Tukar barang'} },
+  { nama:'Kasus 4 — Rusak akibat pemakaian sendiri', ket:'Kerusakan muncul setelah dipakai pembeli',
+    data:{jenisTransaksi:'Jual beli biasa', barangDiterima:'Ya', adaKebijakanRetur:'Tidak', kondisiBarang:'Rusak', cacatSudahAdaSebelum:'Tidak, terjadi setelah diterima', buyerKnewBefore:'Tidak', buyerInspected:'Ya', defectDisclosed:'Tidak yakin', sudahDigunakan:'Sudah, sebelum tahu masalah', sudahDiubah:'Tidak', kemasanUtuh:'Tidak', adaJanjiRetur:'Tidak', keinginan:'Minta perbaikan'} },
+  { nama:'Kasus 5 — Pesanan custom', ket:'Barang dibuat khusus sesuai permintaan',
+    data:{jenisTransaksi:'Pesanan spesifikasi khusus (custom)', barangDiterima:'Ya', adaKebijakanRetur:'Tidak yakin', kondisiBarang:'Spesifikasi/ukuran/warna berbeda', cacatSudahAdaSebelum:'Tidak relevan', buyerKnewBefore:'Tidak', buyerInspected:'Tidak memungkinkan (mis. beli online)', defectDisclosed:'Tidak yakin', sudahDigunakan:'Belum sama sekali', sudahDiubah:'Tidak', kemasanUtuh:'Ya', adaJanjiRetur:'Tidak yakin', keinginan:'Minta barang sesuai pesanan'} },
+  { nama:'Kasus 6 — Penjual janji retur eksplisit', ket:'Ada garansi tertulis dari penjual',
+    data:{jenisTransaksi:'Pembelian online', barangDiterima:'Ya', adaKebijakanRetur:'Ya', kondisiBarang:'Sesuai pesanan', cacatSudahAdaSebelum:'Tidak relevan', buyerKnewBefore:'Tidak', buyerInspected:'Tidak memungkinkan (mis. beli online)', defectDisclosed:'Tidak yakin', sudahDigunakan:'Belum sama sekali', sudahDiubah:'Tidak', kemasanUtuh:'Ya', adaJanjiRetur:'Ya', isiJanji:'Garansi retur 7 hari uang kembali', keinginan:'Kembalikan barang & uang kembali'} },
+  { nama:'Kasus 7 — Dipakai setelah tahu masalah', ket:'Cacat diketahui, tapi barang tetap dipakai',
+    data:{jenisTransaksi:'Jual beli biasa', barangDiterima:'Ya', adaKebijakanRetur:'Tidak yakin', kondisiBarang:'Terdapat cacat', cacatSudahAdaSebelum:'Ya, sebelum diterima', buyerKnewBefore:'Tidak', buyerInspected:'Tidak memungkinkan (mis. beli online)', defectDisclosed:'Tidak', sudahDigunakan:'Sudah, setelah tahu masalah', sudahDiubah:'Tidak', kemasanUtuh:'Tidak', adaJanjiRetur:'Tidak yakin', keinginan:'Kembalikan barang & uang kembali'} },
+];
+
+/* ============ UI STATE & RENDER ============ */
+let current = {};
+let stepIdx = 0;
+
+function renderProgress(){
+  const p = document.getElementById('progress');
+  p.innerHTML = STEPS.map((s,i)=>`<div class="seg ${i<=stepIdx?'done':''}"></div>`).join('');
+}
+
+function renderStep(){
+  renderProgress();
+  document.getElementById('resultArea').innerHTML = '';
+  const step = STEPS[stepIdx];
+  const area = document.getElementById('wizardArea');
+  area.innerHTML = `<div class="card">
+    <div class="step-label">${step.label} — langkah ${stepIdx+1} dari ${STEPS.length}</div>
+    ${step.questions.map(q=>renderQuestion(q)).join('')}
+    <div class="nav">
+      <button class="btn-ghost" ${stepIdx===0?'disabled style="opacity:.3"':''} onclick="prevStep()">← Kembali</button>
+      <button class="btn-primary" onclick="nextStep()">${stepIdx===STEPS.length-1?'Lihat Analisis →':'Lanjut →'}</button>
+    </div>
+  </div>`;
+  step.questions.forEach(q=>{
+    if(q.type==='choice'){
+      area.querySelectorAll(`.opt[data-q="${q.id}"]`).forEach(el=>{
+        el.addEventListener('click', ()=>{
+          current[q.id] = el.dataset.v;
+          area.querySelectorAll(`.opt[data-q="${q.id}"]`).forEach(o=>o.classList.remove('sel'));
+          el.classList.add('sel');
+        });
+      });
+    } else if(q.type==='text'){
+      const ta = area.querySelector(`textarea[data-q="${q.id}"]`);
+      ta.addEventListener('input', ()=>{ current[q.id] = ta.value; });
+    }
+  });
+}
+
+function renderQuestion(q){
+  if(q.type==='text'){
+    return `<div class="q"><label class="qtext">${q.text}</label><textarea class="note" data-q="${q.id}" placeholder="Opsional...">${current[q.id]||''}</textarea></div>`;
+  }
+  return `<div class="q"><label class="qtext">${q.text}</label><div class="opts">
+    ${q.opts.map(o=>`<div class="opt ${current[q.id]===o?'sel':''} ${/tidak yakin|tidak memungkinkan|sulit dipastikan|tidak relevan/i.test(o)?'unsure':''}" data-q="${q.id}" data-v="${o}">${o}</div>`).join('')}
+  </div></div>`;
+}
+
+function nextStep(){
+  if(stepIdx < STEPS.length-1){ stepIdx++; renderStep(); window.scrollTo(0,0); }
+  else { runAnalysis(); }
+}
+function prevStep(){ if(stepIdx>0){ stepIdx--; renderStep(); window.scrollTo(0,0); } }
+
+function runAnalysis(){
+  const result = analyzeCase(current);
+  document.getElementById('wizardArea').innerHTML = '';
+  document.getElementById('progress').innerHTML = '';
+  const statusClass = {hijau:'status-hijau',kuning:'status-kuning',oranye:'status-oranye',merah:'status-merah',abu:'status-abu'}[result.status];
+
+  const html = `
+  <div class="card">
+    <div class="status-badge ${statusClass}">${statusLabel(result.status)}</div>
+    <h2 style="font-size:1.15rem;margin-bottom:14px">Hasil Analisis</h2>
+
+    <div class="section-title">Konsep yang relevan</div>
+    ${result.relevantConcepts.length ? result.relevantConcepts.map(c=>`<div class="list-item"><b>${c}</b></div>`).join('') : '<div class="list-item">Tidak ada konsep khiyar spesifik yang teridentifikasi kuat dari parameter ini.</div>'}
+
+    <div class="section-title">Mengapa (jalur penalaran)</div>
+    ${result.reasoning.map((r,i)=>`<div class="reasoning-step"><span class="n">${String(i+1).padStart(2,'0')}</span><span>${r}</span></div>`).join('')}
+
+    <div class="section-title">Faktor yang masih perlu diperiksa</div>
+    ${result.uncertainties.length ? result.uncertainties.map(u=>`<div class="list-item">${u}</div>`).join('') : '<div class="list-item">Tidak ada ketidakpastian signifikan dari jawaban yang diberikan — namun tetap periksa rincian mazhab/sumber di bawah.</div>'}
+
+    <div class="section-title">Kemungkinan langkah</div>
+    ${result.possibleActions.map(a=>`<div class="list-item">${a}</div>`).join('') || '<div class="list-item">Belum ada langkah spesifik yang bisa disarankan dari parameter ini.</div>'}
+
+    <div class="section-title">Sumber & catatan rule yang aktif</div>
+    ${result.sources.length ? result.sources.map(s=>`<div class="list-item"><b>${s.nama}</b><br>${s.ringkas}<br><i style="color:var(--dimmer)">Sumber: ${s.sumber}</i></div>`).join('') : '<div class="list-item">Tidak ada rule spesifik yang aktif.</div>'}
+
+    <div class="disclaimer"><b>Kesimpulan sistem:</b> Berdasarkan parameter yang dimasukkan, hasil di atas adalah pemetaan awal ke konsep fikih muamalah yang relevan — bukan fatwa final. Perbandingan pendapat antar-mazhab untuk kasus ini belum tersedia sumbernya secara memadai pada versi tool ini, sehingga sengaja tidak ditampilkan agar tidak mengarang isi perbandingan.</div>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:1.05rem;margin-bottom:12px">Variabel yang Memengaruhi Hasil</h2>
+    <div class="varpanel" id="varpanel"></div>
+  </div>
+
+  <div class="tools-row">
+    <button class="btn-primary btn-sm" onclick="openWaConfirm()">💬 Konsultasi via WhatsApp</button>
+    <button class="btn-ghost btn-sm" onclick="resetAll()">↺ Ulangi Analisis</button>
+    <button class="btn-ghost btn-sm" onclick="copyResult()">📋 Salin Hasil</button>
+    <button class="btn-ghost btn-sm" onclick="window.print()">🖨️ Cetak</button>
+    <button class="btn-ghost btn-sm" onclick="openLearn('konsep')">📖 Pelajari Konsepnya</button>
+  </div>`;
+  document.getElementById('resultArea').innerHTML = html;
+  renderVarPanel();
+  window._lastResult = result;
+}
+
+const VAR_WHY = {
+  jenisTransaksi:'Jenis akad memengaruhi kerangka hukum yang berlaku (mis. jual beli biasa vs pesanan custom/istisna\').',
+  barangDiterima:'Banyak konsep khiyar terkait dengan status setelah barang diterima/risiko berpindah.',
+  kondisiBarang:'Menentukan kategori masalah: cacat tersembunyi, ketidaksesuaian spesifikasi, atau kerusakan pasca-terima — masing-masing punya kerangka analisis berbeda.',
+  cacatSudahAdaSebelum:'Waktu munculnya cacat adalah syarat inti khiyar \'aib — cacat harus sudah ada sebelum/saat risiko ada di tangan pembeli.',
+  buyerKnewBefore:'Pengetahuan pembeli sebelum akad umumnya dipandang sebagai penerimaan risiko, melemahkan dasar khiyar \'aib.',
+  buyerInspected:'Kesempatan memeriksa barang sebelum membeli relevan untuk menilai apakah cacat "tersembunyi" secara wajar.',
+  defectDisclosed:'Jika penjual sudah memberitahukan masalah, ini berkaitan dengan itikad baik dan kemungkinan diterimanya kondisi oleh pembeli.',
+  sudahDigunakan:'Penggunaan barang SETELAH mengetahui masalah bisa dipandang sebagai indikasi rida (menerima), yang melemahkan hak khiyar.',
+  sudahDiubah:'Perubahan fisik barang bisa memengaruhi kemungkinan pelaksanaan hak retur secara fisik.',
+  kemasanUtuh:'Kondisi fisik/kemasan sering jadi syarat praktis (bukan selalu syar\'i) untuk retur, terutama di kebijakan platform.',
+  adaJanjiRetur:'Janji eksplisit dari penjual berpotensi mengikat sebagai bagian dari kesepakatan (khiyar syarat), terlepas dari ada/tidaknya cacat.',
+  keinginan:'Membedakan hak yang mungkin ada dari solusi yang diinginkan pembeli — dua hal yang tidak selalu sama.',
+};
+
+function renderVarPanel(){
+  const panel = document.getElementById('varpanel');
+  const rows = Object.keys(VAR_WHY).filter(k=>current[k]!==undefined && current[k]!=='').map(k=>{
+    return `<div>
+      <div class="varrow" onclick="toggleWhy('${k}')"><span class="k">${k}</span><span class="v">${current[k]}</span></div>
+      <div class="varwhy" id="why-${k}">${VAR_WHY[k]||''}</div>
+    </div>`;
+  }).join('');
+  panel.innerHTML = rows;
+}
+function toggleWhy(k){ document.getElementById('why-'+k).classList.toggle('show'); }
+
+function resetAll(){ current = {}; stepIdx = 0; renderStep(); window.scrollTo(0,0); }
+
+function copyResult(){
+  const r = window._lastResult; if(!r) return;
+  const text = `HASIL ANALISIS KHIYAR\nStatus: ${statusLabel(r.status)}\n\nKonsep relevan:\n${r.relevantConcepts.join(', ')||'-'}\n\nJalur penalaran:\n${r.reasoning.map((x,i)=>(i+1)+'. '+x).join('\n')}\n\nPerlu diperiksa:\n${r.uncertainties.join('\n')||'-'}\n\nCatatan: bukan fatwa, hanya pemetaan awal.`;
+  navigator.clipboard.writeText(text).catch(()=>{});
+  alert('Hasil disalin ke clipboard.');
+}
+
+/* ============ MODAL: KASUS CONTOH & BELAJAR ============ */
+function openCases(){
+  const body = document.getElementById('modalBody');
+  body.innerHTML = `<span class="close" onclick="closeModal()">&times;</span>
+    <h2>Uji Kasus Contoh</h2>
+    <p>Pilih salah satu untuk langsung menjalankan simulasi.</p>
+    <div class="case-grid">${SAMPLE_CASES.map((c,i)=>`<div class="case-btn" onclick="runSample(${i})"><b>${c.nama}</b><span>${c.ket}</span></div>`).join('')}</div>`;
+  document.getElementById('modalBg').classList.add('show');
+}
+function runSample(i){
+  current = {...SAMPLE_CASES[i].data};
+  closeModal();
+  stepIdx = STEPS.length-1;
+  runAnalysis();
+  window.scrollTo(0,0);
+}
+function closeModal(){ document.getElementById('modalBg').classList.remove('show'); }
+
+function openLearn(section){
+  const body = document.getElementById('modalBody');
+  body.innerHTML = `<span class="close" onclick="closeModal()">&times;</span>
+    <h2>Pelajari Mengapa</h2>
+    <p>Penjelasan sederhana konsep-konsep yang dipakai tool ini.</p>
+    <h3>Apa itu khiyar?</h3>
+    <p>Khiyar secara bahasa berarti "pilihan". Dalam fikih muamalah, khiyar adalah hak salah satu pihak akad untuk meneruskan atau membatalkan transaksi dalam kondisi tertentu — bukan berarti akad otomatis batal, tapi ada pilihan yang tersedia.</p>
+    <h3>Apa itu khiyar 'aib?</h3>
+    <p>Khiyar karena cacat tersembunyi. Konsepnya: pembeli berhak atas barang yang bebas cacat sesuai harga yang disepakati. Kalau ditemukan cacat yang sudah ada sebelum akad dan pembeli tidak mengetahuinya, ia berpotensi punya pilihan untuk mengembalikan barang.</p>
+    <h3>Apa itu khiyar syarat?</h3>
+    <p>Hak yang muncul dari syarat/kesepakatan eksplisit — misalnya penjual berjanji "boleh dikembalikan dalam 7 hari". Janji ini pada dasarnya mengikat sebagai bagian dari akad.</p>
+    <h3>Mengapa pengetahuan pembeli penting?</h3>
+    <p>Kalau pembeli sudah tahu ada cacat SEBELUM membeli, ia dipandang menerima risiko itu sebagai bagian dari kesepakatan harga — sehingga dasar khiyar 'aib jadi lemah.</p>
+    <h3>Mengapa waktu munculnya cacat penting?</h3>
+    <p>Khiyar 'aib pada dasarnya bicara soal cacat yang SUDAH ADA sebelum/saat risiko berpindah ke pembeli — bukan kerusakan yang muncul belakangan akibat pemakaian atau kelalaian pembeli sendiri.</p>
+    <h3>Mengapa kondisi barang setelah diterima penting?</h3>
+    <p>Kalau barang sudah diubah, dipakai (terutama setelah tahu ada masalah), atau dijual lagi, ini bisa memengaruhi kemungkinan pelaksanaan hak retur secara fisik maupun dipandang sebagai indikasi menerima kondisi barang.</p>
+    <h3>Mengapa kebijakan marketplace ≠ hukum akad?</h3>
+    <p>Kebijakan retur sebuah platform (mis. "retur dalam 7 hari") adalah kebijakan layanan/bisnis, bukan otomatis sama dengan hukum akad dalam fikih. Keduanya bisa saling melengkapi, tapi tidak identik — platform bisa mengizinkan retur meski secara fikih belum tentu ada dasar khiyar, atau sebaliknya.</p>
+    <div class="disclaimer" style="margin-top:16px"><b>Catatan:</b> Penjelasan di atas disederhanakan untuk pemahaman awal. Detail syarat, pengecualian, dan perbedaan pendapat antar-mazhab tidak dicakup penuh di sini — dan sengaja tidak dikarang tanpa rujukan yang bisa dipertanggungjawabkan.</div>`;
+  document.getElementById('modalBg').classList.add('show');
+}
+document.getElementById('modalBg').addEventListener('click', (e)=>{ if(e.target.id==='modalBg') closeModal(); });
+
+/* ============ KONSULTASI WHATSAPP ============ */
+const WA_NUMBER = '6281356572588';
+const WA_GROUP_LINK = 'https://chat.whatsapp.com/BQErP8IRZkdIHwXY7KkIQA';
+
+function openWaConfirm(){
+  const body = document.getElementById('modalBody');
+  body.innerHTML = `<span class="close" onclick="closeModal()">&times;</span>
+    <h2>Sebelum dikirim ke WhatsApp</h2>
+    <p>Status hasil analisis dan <b>semua jawaban yang sudah dipilih</b> akan disertakan otomatis dalam pesan. Ada yang mau ditambahkan atau keterangan lain yang belum tercakup di checklist? (opsional)</p>
+    <textarea class="note" id="waNote" style="min-height:90px" placeholder="Contoh: ada bukti foto yang sudah saya siapkan, atau detail lain yang belum ada di form..."></textarea>
+    <div class="nav" style="margin-top:16px">
+      <button class="btn-ghost" onclick="closeModal()">Batal</button>
+      <button class="btn-primary" onclick="sendToWhatsApp()">Kirim ke WhatsApp →</button>
+    </div>`;
+  document.getElementById('modalBg').classList.add('show');
+}
+
+function buildWaMessage(){
+  const r = window._lastResult;
+  const noteEl = document.getElementById('waNote');
+  const note = noteEl ? noteEl.value.trim() : '';
+  let msg = `*Konsultasi Laboratorium Khiyar*\n\n`;
+  msg += `Status sistem: ${r ? statusLabel(r.status) : '(belum ada hasil)'}\n\n`;
+  msg += `*Jawaban yang sudah dipilih:*\n`;
+  STEPS.forEach(step=>{
+    step.questions.forEach(q=>{
+      if(current[q.id]!==undefined && current[q.id]!==''){
+        msg += `- ${q.text}: ${current[q.id]}\n`;
+      }
+    });
+  });
+  if(r && r.relevantConcepts.length){
+    msg += `\n*Konsep relevan menurut sistem:*\n${r.relevantConcepts.map(c=>'- '+c).join('\n')}\n`;
+  }
+  if(r && r.uncertainties.length){
+    msg += `\n*Masih perlu diperiksa:*\n${r.uncertainties.map(u=>'- '+u).join('\n')}\n`;
+  }
+  msg += `\n*Catatan tambahan dari pengguna:*\n${note ? note : '(tidak ada catatan tambahan)'}\n`;
+  msg += `\n_Dikirim dari tool Laboratorium Khiyar — hasil ini bukan fatwa, mohon dibantu ditinjau lebih lanjut._`;
+  return msg;
+}
+
+function sendToWhatsApp(){
+  const msg = buildWaMessage();
+  const url = 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(msg);
+  window.open(url, '_blank');
+  openWaSentInfo();
+}
+
+function openWaSentInfo(){
+  const body = document.getElementById('modalBody');
+  body.innerHTML = `<span class="close" onclick="closeModal()">&times;</span>
+    <h2>WhatsApp sudah dibuka ✅</h2>
+    <p>Pesan berisi hasil analisis, semua jawaban Anda, dan catatan tambahan sudah disiapkan lengkap di tab/aplikasi WhatsApp yang baru terbuka. <b>Tinggal tekan tombol kirim di sana</b> — situs web tidak diizinkan WhatsApp mengirim pesan secara otomatis tanpa Anda menekan kirim sendiri.</p>
+    <p>Halaman ini tetap terbuka seperti semula di tab asalnya, jadi Anda bisa kembali kapan saja.</p>
+    <div class="disclaimer" style="margin-bottom:16px">Kalau tab WhatsApp tidak muncul, kemungkinan pop-up diblokir browser — izinkan pop-up untuk situs ini, lalu tekan tombol "Konsultasi via WhatsApp" sekali lagi.</div>
+    <h3>Gabung grup diskusi</h3>
+    <p>Kalau ingin berdiskusi lebih lanjut atau melihat pembahasan kasus lain:</p>
+    <a href="${WA_GROUP_LINK}" target="_blank" style="display:inline-block;padding:11px 18px;background:var(--green);color:#12141B;border-radius:9px;font-weight:700;text-decoration:none;font-size:.88rem">Gabung Grup WhatsApp →</a>`;
+  document.getElementById('modalBg').classList.add('show');
+}
+
+renderStep();
+</script>
+</body>
+</html>

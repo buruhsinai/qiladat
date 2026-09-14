@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulator Kalender Industri 4-4-5 — Laboratorium Qiladat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#121C24;
+    --surface:#182530;
+    --surface-2:#1F2F3B;
+    --line:#2C4152;
+    --ink:#ECEFEE;
+    --muted:#8FA3AF;
+    --amber:#E5A439;
+    --teal:#52B8AA;
+    --red:#E1614E;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--font-body); line-height:1.55;
+    padding-bottom:80px;
+  }
+  .wrap{max-width:960px; margin:0 auto; padding:0 20px;}
+  h1,h2,h3{font-family:var(--font-display); font-weight:600; margin:0 0 12px;}
+  p{margin:0 0 14px; max-width:68ch; color:var(--ink);}
+  .muted{color:var(--muted);}
+  code, .mono{font-family:var(--font-mono);}
+  section{padding:56px 0; border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+
+  /* HERO */
+  .hero{padding-top:48px;}
+  .hero-tag{font-family:var(--font-mono); font-size:13px; color:var(--teal); margin-bottom:10px;}
+  .hero h1{font-size:clamp(28px,4.4vw,42px); max-width:16ch; line-height:1.15;}
+  .hero p.lead{font-size:17px; color:var(--muted); max-width:56ch;}
+
+  .compare{
+    display:grid; grid-template-columns:1fr; gap:18px; margin-top:32px;
+  }
+  .compare-row{display:flex; align-items:center; gap:14px;}
+  .compare-label{width:120px; flex-shrink:0; font-family:var(--font-mono); font-size:12px; color:var(--muted);}
+  .compare-bars{flex:1; display:flex; gap:2px; height:26px;}
+  .bar-masehi{background:var(--surface-2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:10px; color:var(--muted); overflow:hidden;}
+  .bar-industri{background:rgba(82,184,170,0.18); border:1px solid var(--teal); display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:10px; color:var(--teal);}
+  .hero-note{font-size:13px; color:var(--muted); margin-top:6px;}
+
+  /* SECTION HEADERS */
+  .sec-head{display:flex; align-items:baseline; gap:10px; margin-bottom:22px;}
+  .sec-num{font-family:var(--font-mono); font-size:13px; color:var(--amber);}
+
+  /* KONTEKS / KLASIFIKASI */
+  .split{display:grid; grid-template-columns:1fr; gap:20px;}
+  @media(min-width:720px){ .split{grid-template-columns:1fr 1fr;} }
+  .domain-card{background:var(--surface); border:1px solid var(--line); padding:20px;}
+  .domain-card .pct{font-family:var(--font-mono); font-size:28px; color:var(--teal);}
+  .domain-card.dim .pct{color:var(--muted);}
+
+  /* CONTROLS */
+  .panel{background:var(--surface); border:1px solid var(--line); padding:24px;}
+  .grid-ctl{display:grid; grid-template-columns:1fr; gap:18px;}
+  @media(min-width:640px){ .grid-ctl{grid-template-columns:1fr 1fr;} }
+  .field{display:flex; flex-direction:column; gap:6px;}
+  .field label{font-size:13px; color:var(--muted);}
+  .field .hint{font-size:11px; color:var(--muted); font-family:var(--font-mono);}
+  input[type=number], input[type=date], select{
+    background:var(--bg); border:1px solid var(--line); color:var(--ink);
+    padding:9px 10px; font-family:var(--font-mono); font-size:14px;
+  }
+  input[type=number]:focus, input[type=date]:focus, select:focus{outline:2px solid var(--teal); outline-offset:1px;}
+  .btn{
+    background:var(--teal); color:#0C1A18; border:none; padding:12px 22px;
+    font-family:var(--font-display); font-weight:600; font-size:15px; cursor:pointer;
+    margin-top:22px;
+  }
+  .btn:hover{background:#63c7b8;}
+  .btn.secondary{background:transparent; color:var(--ink); border:1px solid var(--line); margin-left:10px;}
+  .btn.secondary:hover{border-color:var(--teal); color:var(--teal);}
+
+  /* CHART */
+  .chart-wrap{background:var(--surface); border:1px solid var(--line); padding:20px; margin-top:24px;}
+  svg text{font-family:var(--font-mono); fill:var(--muted);}
+  .legend{display:flex; gap:18px; flex-wrap:wrap; margin-top:14px; font-size:12px; color:var(--muted);}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .dot{width:9px; height:9px; display:inline-block;}
+
+  .kpis{display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--line); margin-top:20px; border:1px solid var(--line);}
+  @media(min-width:640px){ .kpis{grid-template-columns:repeat(4,1fr);} }
+  .kpi{background:var(--surface); padding:16px;}
+  .kpi .val{font-family:var(--font-mono); font-size:22px;}
+  .kpi .lbl{font-size:12px; color:var(--muted); margin-top:2px;}
+  .kpi.warn .val{color:var(--red);}
+
+  /* TABLE */
+  .table-wrap{overflow-x:auto; margin-top:24px; border:1px solid var(--line);}
+  table{border-collapse:collapse; width:100%; font-size:13px;}
+  th, td{padding:8px 10px; text-align:left; border-bottom:1px solid var(--line); white-space:nowrap; font-family:var(--font-mono);}
+  th{background:var(--surface-2); color:var(--muted); font-weight:500; position:sticky; top:0;}
+  tr.long-week{background:rgba(229,164,57,0.08);}
+  tr.stockout{background:rgba(225,97,78,0.14);}
+  .badge{font-family:var(--font-mono); font-size:10px; padding:2px 6px; border:1px solid var(--line); color:var(--muted);}
+  .badge.long{color:var(--amber); border-color:var(--amber);}
+  .badge.out{color:var(--red); border-color:var(--red);}
+  .badge.promo{color:var(--teal); border-color:var(--teal);}
+
+  /* METHOD */
+  .formula{
+    background:var(--surface); border:1px solid var(--line); padding:18px 20px;
+    font-family:var(--font-mono); font-size:14px; color:var(--teal); margin:16px 0;
+  }
+  ol.steps{padding-left:20px;}
+  ol.steps li{margin-bottom:8px; color:var(--ink);}
+
+  ul.limits li{margin-bottom:10px;}
+  ul.limits{padding-left:20px; color:var(--ink);}
+
+  .ref-list{list-style:none; padding:0; margin:0;}
+  .ref-list li{padding:12px 0; border-bottom:1px solid var(--line);}
+  .ref-list li:last-child{border-bottom:none;}
+  .ref-list .src{font-family:var(--font-mono); font-size:12px; color:var(--muted);}
+
+  footer{padding:40px 0 20px; text-align:center;}
+  footer p{margin:0; font-size:12px; color:var(--muted); max-width:none;}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-tag">LABORATORIUM QILADAT — MANAJEMEN OPERASI</div>
+    <h1>Kenapa gudang, bukan bintang, yang butuh kalender sendiri</h1>
+    <p class="lead">1 tahun Masehi = 365,24 hari. Bulan panjangnya 28 sampai 31 hari — cocok untuk mengikuti Matahari, tapi menyulitkan orang yang harus membandingkan "penjualan minggu pertama" tiap bulan. Sistem 4-4-5 memecahkan masalah itu dengan membuang matahari dari perhitungan, dan hanya memakai pekan.</p>
+
+    <div class="compare">
+      <div class="compare-row">
+        <div class="compare-label">Bulan Masehi</div>
+        <div class="compare-bars" id="barsMasehi"></div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-label">Bulan Industri</div>
+        <div class="compare-bars" id="barsIndustri"></div>
+      </div>
+    </div>
+    <p class="hero-note">Baris atas: lebar bar mengikuti jumlah hari asli tiap bulan (28–31 hari). Baris bawah: setiap "bulan industri" dipaksa jadi 4 atau 5 pekan penuh — timpang di kalender alam, tapi rata di kalender kerja.</p>
+  </section>
+
+  <!-- KONTEKS / KLASIFIKASI -->
+  <section id="konteks">
+    <div class="sec-head"><span class="sec-num">01</span><h2>Ini termasuk ilmu apa?</h2></div>
+    <p>Pertanyaan yang layak diajukan sebelum membangun modelnya. Jawabannya bukan astronomi, meski memakai kata "kalender".</p>
+    <div class="split">
+      <div class="domain-card">
+        <div class="pct">~85–90%</div>
+        <h3 style="font-size:16px;">Manajemen Operasi &amp; Rantai Pasok</h3>
+        <p style="font-size:14px;">Pembagian 52 pekan × 7 hari = 364 hari adalah konvensi matematis yang dipilih agar setiap periode <em>bisa dibandingkan</em> — bukan turunan dari gerak benda langit. Ini juga dipakai dalam pelaporan keuangan (fiscal week), sehingga menyentuh Akuntansi/Finance juga.</p>
+      </div>
+      <div class="domain-card dim">
+        <div class="pct">~10–15%</div>
+        <h3 style="font-size:16px;">Astronomi / Ilmu Falak</h3>
+        <p style="font-size:14px;">Astronomi cuma masuk di satu titik: tahun matahari sebenarnya 365,24 hari, bukan 364. Selisih itu perlu dikoreksi — biasanya lewat "pekan ke-53" setiap 5–6 tahun. Di luar titik itu, tidak ada perhitungan posisi Matahari atau Bulan sama sekali.</p>
+      </div>
+    </div>
+    <p style="margin-top:18px;">Jadi tetap sah disebut "sistem penanggalan tersendiri" — punya aturan pembagian waktu yang independen — tapi rumahnya di rak Manajemen Operasi. Nama resminya <span class="mono">NRF 4-4-5 Retail Calendar</span>, dipakai perusahaan seperti Walmart, Nike, dan H&amp;M dalam laporan keuangan mereka (istilah "Fiscal Week 22" yang muncul di laporan tahunan berasal dari sini).</p>
+  </section>
+
+  <!-- EKSPLORASI -->
+  <section id="eksplorasi">
+    <div class="sec-head"><span class="sec-num">02</span><h2>Eksplorasi: geser variabelnya</h2></div>
+    <p>Simulasi ini menjawab satu pertanyaan operasional: <strong>kalau produksi dan permintaan berjalan per-pekan, apa yang terjadi pada stok gudang sepanjang tahun</strong> — termasuk saat ada pekan panjang (pekan ke-5), hari libur yang memotong produksi, dan lonjakan permintaan karena promo?</p>
+
+    <div class="panel">
+      <div class="grid-ctl">
+        <div class="field">
+          <label for="tglMulai">Tanggal mulai tahun fiskal</label>
+          <input type="date" id="tglMulai" value="2026-01-05">
+          <span class="hint">default: Senin pertama Januari</span>
+        </div>
+        <div class="field">
+          <label for="pola">Pola pekan per kuartal</label>
+          <select id="pola">
+            <option value="4-4-5" selected>4-4-5 (pekan panjang di akhir kuartal)</option>
+            <option value="4-5-4">4-5-4 (pekan panjang di tengah)</option>
+            <option value="5-4-4">5-4-4 (pekan panjang di awal)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="prod">Produksi / pekan (unit)</label>
+          <input type="number" id="prod" value="1000" min="0" step="50">
+        </div>
+        <div class="field">
+          <label for="jual">Permintaan / pekan (unit)</label>
+          <input type="number" id="jual" value="900" min="0" step="50">
+        </div>
+        <div class="field">
+          <label for="stokAwal">Stok awal gudang (unit)</label>
+          <input type="number" id="stokAwal" value="3000" min="0" step="100">
+        </div>
+        <div class="field">
+          <label for="leapWeek">Pekan ke-53 (koreksi tahun matahari)</label>
+          <select id="leapWeek">
+            <option value="0">Tidak — tahun 52 pekan</option>
+            <option value="1">Ya — tambahkan 1 pekan di akhir tahun</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="liburMinggu">Pekan libur (nomor pekan, 0 = nonaktif)</label>
+          <input type="number" id="liburMinggu" value="12" min="0" max="53">
+        </div>
+        <div class="field">
+          <label for="liburPct">Pengurangan produksi di pekan libur (%)</label>
+          <input type="number" id="liburPct" value="100" min="0" max="100">
+        </div>
+        <div class="field">
+          <label for="promoMinggu">Pekan promo (nomor pekan, 0 = nonaktif)</label>
+          <input type="number" id="promoMinggu" value="22" min="0" max="53">
+        </div>
+        <div class="field">
+          <label for="promoPct">Kenaikan permintaan di pekan promo (%)</label>
+          <input type="number" id="promoPct" value="40" min="0" max="300">
+        </div>
+      </div>
+      <button class="btn" onclick="jalankanSimulasi()">Jalankan simulasi</button>
+      <button class="btn secondary" onclick="unduhCSV()">Unduh tabel (CSV)</button>
+    </div>
+  </section>
+
+  <!-- PERHITUNGAN -->
+  <section id="perhitungan">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Perhitungan</h2></div>
+
+    <div class="kpis" id="kpis"></div>
+
+    <div class="chart-wrap">
+      <svg id="chart" viewBox="0 0 900 320" style="width:100%; height:auto;"></svg>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--teal);"></span>Stok normal</span>
+        <span><span class="dot" style="background:var(--amber);"></span>Pekan panjang (pekan ke-5)</span>
+        <span><span class="dot" style="background:var(--red);"></span>Stok habis (stockout)</span>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Pekan</th><th>Kuartal</th><th>Bln-Ind</th><th>Pekan-ke</th>
+            <th>Tanggal</th><th>Produksi</th><th>Permintaan</th><th>Stok Akhir</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tabelBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- METODE -->
+  <section id="metode">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Metode</h2></div>
+    <p>Model ini sengaja dibuat sederhana — satu persamaan neraca stok, dijalankan berulang per pekan:</p>
+    <div class="formula">stok[pekan] = stok[pekan−1] + produksi[pekan] − permintaan[pekan]</div>
+    <p>Langkah pembentukan kalendernya:</p>
+    <ol class="steps">
+      <li>Tentukan tanggal mulai tahun fiskal (konvensi umum: Senin pertama di bulan Januari).</li>
+      <li>Bagi 12 "bulan industri" ke dalam 4 kuartal, masing-masing berisi 3 bulan dengan pola pekan yang dipilih (4-4-5, 4-5-4, atau 5-4-4) — totalnya 13 pekan per kuartal, 52 pekan per tahun.</li>
+      <li>Jika opsi pekan ke-53 diaktifkan, tambahkan satu pekan ekstra di akhir tahun — ini koreksi manual untuk selisih 365,24 − 364 = 1,24 hari/tahun yang terkumpul setiap 5–6 tahun.</li>
+      <li>Untuk setiap pekan, hitung produksi dan permintaan dasar, lalu terapkan pengurangan (pekan libur) atau kenaikan (pekan promo) jika nomor pekan itu cocok dengan yang diatur di panel kontrol.</li>
+      <li>Jalankan persamaan neraca stok secara berurutan dari pekan 1 sampai pekan terakhir.</li>
+    </ol>
+  </section>
+
+  <!-- BATASAN -->
+  <section id="batasan">
+    <div class="sec-head"><span class="sec-num">05</span><h2>Batasan</h2></div>
+    <p>Supaya hasil simulasi ini tidak dipakai melampaui kegunaannya:</p>
+    <ul class="limits">
+      <li><strong>Produksi dan permintaan dianggap rata per pekan</strong> di luar pekan libur/promo yang diatur manual. Dunia nyata punya variasi mingguan yang jauh lebih acak (cuaca, hari kerja efektif, gangguan pasokan bahan baku).</li>
+      <li><strong>Lead time produksi tidak dimodelkan secara eksplisit.</strong> Simulasi ini mengasumsikan produksi pekan ini langsung menambah stok pekan ini — pada praktiknya ada jeda antara pesanan produksi dan barang jadi masuk gudang.</li>
+      <li><strong>Konvensi "Senin pertama Januari" bukan satu-satunya standar.</strong> Sebagian perusahaan memakai "hari terdekat ke 31 Desember/1 Januari", yang kadang jatuh di akhir Desember tahun sebelumnya.</li>
+      <li><strong>Hanya satu produk (SKU) yang disimulasikan.</strong> Gudang nyata mengelola ratusan/ribuan SKU dengan pola musiman berbeda-beda.</li>
+      <li><strong>Stockout di sini murni angka negatif</strong> — tidak memodelkan backorder, kehilangan penjualan, atau prioritas alokasi ke pelanggan tertentu.</li>
+    </ul>
+  </section>
+
+  <!-- REFERENSI -->
+  <section id="referensi">
+    <div class="sec-head"><span class="sec-num">06</span><h2>Referensi</h2></div>
+    <ul class="ref-list">
+      <li>Konsep dasar dan sebutan resmi <span class="mono">"NRF 4-4-5 Retail Calendar"</span>, dikembangkan National Retail Federation (AS) sejak dekade 1940-an sebagai standar pelaporan ritel.
+        <div class="src">Rujukan umum industri ritel &amp; supply chain</div>
+      </li>
+      <li>Praktik pelaporan keuangan berbasis "fiscal week" oleh perusahaan multinasional (mis. istilah "Fiscal Week 22" pada laporan tahunan) sebagai bukti bahwa sistem ini benar-benar dipakai, bukan sekadar target produksi internal.
+        <div class="src">Praktik umum laporan keuangan perusahaan ritel/manufaktur skala besar</div>
+      </li>
+      <li>Diskusi kerja internal proyek Qiladat/JAZMI — metode "Belajar → Memodelkan → Menguji → Baru Membuat Tool" yang membentuk struktur laboratorium (Level 0–5) yang dipakai pada halaman ini.
+        <div class="src">Dokumen kerja internal, 30 Agustus 2026</div>
+      </li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Simulator ini adalah alat bantu eksplorasi konsep, bukan sistem perencanaan produksi/gudang yang siap pakai untuk keputusan bisnis nyata.</p>
+  </footer>
+
+</div>
+
+<script>
+/* ============ HERO: perbandingan Masehi vs Industri ============ */
+(function(){
+  const namaBulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const hariMasehi = [31,28,31,30,31,30,31,31,30,31,30,31];
+  const totalMasehi = hariMasehi.reduce((a,b)=>a+b,0);
+  const barsM = document.getElementById('barsMasehi');
+  hariMasehi.forEach((h,i)=>{
+    const d = document.createElement('div');
+    d.className='bar-masehi';
+    d.style.flex = h;
+    d.textContent = namaBulan[i];
+    d.title = h+' hari';
+    barsM.appendChild(d);
+  });
+
+  // pola industri 4-4-5 dalam pekan, dikonversi ke "hari" (x7) supaya lebar sebanding
+  const polaIndustri = [4,4,5,4,4,5,4,4,5,4,4,5];
+  const barsI = document.getElementById('barsIndustri');
+  polaIndustri.forEach((w,i)=>{
+    const d = document.createElement('div');
+    d.className='bar-industri';
+    d.style.flex = w*7;
+    d.textContent = w+'pk';
+    d.title = (w*7)+' hari ('+w+' pekan)';
+    barsI.appendChild(d);
+  });
+})();
+
+/* ============ SIMULASI KALENDER 4-4-5 ============ */
+function buatPola(kode){
+  if(kode==='4-5-4') return [4,5,4];
+  if(kode==='5-4-4') return [5,4,4];
+  return [4,4,5];
+}
+
+function jalankanSimulasi(){
+  const tglMulaiInput = document.getElementById('tglMulai').value;
+  const pola = buatPola(document.getElementById('pola').value);
+  const prod = parseFloat(document.getElementById('prod').value)||0;
+  const jual = parseFloat(document.getElementById('jual').value)||0;
+  let stok = parseFloat(document.getElementById('stokAwal').value)||0;
+  const leap = document.getElementById('leapWeek').value === '1';
+  const liburMinggu = parseInt(document.getElementById('liburMinggu').value)||0;
+  const liburPct = parseFloat(document.getElementById('liburPct').value)||0;
+  const promoMinggu = parseInt(document.getElementById('promoMinggu').value)||0;
+  const promoPct = parseFloat(document.getElementById('promoPct').value)||0;
+
+  let tglSekarang = tglMulaiInput ? new Date(tglMulaiInput+'T00:00:00') : new Date();
+
+  const rows = [];
+  let weekGlobal = 0;
+  let stockoutCount = 0;
+  let minStock = stok;
+
+  for(let q=1; q<=4; q++){
+    for(let b=1; b<=3; b++){
+      const weeksInMonth = pola[b-1];
+      const monthGlobal = (q-1)*3+b;
+      for(let m=1; m<=weeksInMonth; m++){
+        weekGlobal++;
+        const isLong = (weeksInMonth===5 && m===5);
+        const tglAkhir = new Date(tglSekarang);
+        tglAkhir.setDate(tglSekarang.getDate()+6);
+
+        let produksiPekan = prod;
+        let permintaanPekan = jual;
+        let statusExtra = [];
+
+        if(liburMinggu>0 && weekGlobal===liburMinggu){
+          produksiPekan = produksiPekan * (1 - liburPct/100);
+          statusExtra.push('libur');
+        }
+        if(promoMinggu>0 && weekGlobal===promoMinggu){
+          permintaanPekan = permintaanPekan * (1 + promoPct/100);
+          statusExtra.push('promo');
+        }
+
+        stok = stok + produksiPekan - permintaanPekan;
+        if(stok < minStock) minStock = stok;
+        if(stok < 0) { stockoutCount++; statusExtra.push('stockout'); }
+        if(isLong) statusExtra.push('long');
+
+        rows.push({
+          week:weekGlobal, q, monthGlobal, m,
+          start:new Date(tglSekarang), end:tglAkhir,
+          produksi:produksiPekan, permintaan:permintaanPekan,
+          stok, statusExtra
+        });
+
+        tglSekarang.setDate(tglSekarang.getDate()+7);
+      }
+    }
+  }
+
+  if(leap){
+    weekGlobal++;
+    const tglAkhir = new Date(tglSekarang);
+    tglAkhir.setDate(tglSekarang.getDate()+6);
+    stok = stok + prod - jual;
+    if(stok < minStock) minStock = stok;
+    if(stok < 0) stockoutCount++;
+    rows.push({
+      week:weekGlobal, q:4, monthGlobal:12, m:'ekstra',
+      start:new Date(tglSekarang), end:tglAkhir,
+      produksi:prod, permintaan:jual, stok,
+      statusExtra: stok<0 ? ['stockout','leap'] : ['leap']
+    });
+  }
+
+  window._simRows = rows; // simpan untuk export CSV
+  renderKPI(rows, stockoutCount, minStock);
+  renderTabel(rows);
+  renderChart(rows);
+}
+
+function fmtTgl(d){
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  return dd+'/'+mm+'/'+d.getFullYear();
+}
+function fmtNum(n){ return Math.round(n).toLocaleString('id-ID'); }
+
+function renderKPI(rows, stockoutCount, minStock){
+  const finalStock = rows[rows.length-1].stok;
+  const kpis = document.getElementById('kpis');
+  kpis.innerHTML = `
+    <div class="kpi"><div class="val">${rows.length}</div><div class="lbl">total pekan disimulasikan</div></div>
+    <div class="kpi ${finalStock<0?'warn':''}"><div class="val">${fmtNum(finalStock)}</div><div class="lbl">stok akhir tahun (unit)</div></div>
+    <div class="kpi ${minStock<0?'warn':''}"><div class="val">${fmtNum(minStock)}</div><div class="lbl">titik stok terendah (unit)</div></div>
+    <div class="kpi ${stockoutCount>0?'warn':''}"><div class="val">${stockoutCount}</div><div class="lbl">pekan mengalami stockout</div></div>
+  `;
+}
+
+function renderTabel(rows){
+  const body = document.getElementById('tabelBody');
+  body.innerHTML = rows.map(r=>{
+    let cls = '';
+    if(r.statusExtra.includes('stockout')) cls='stockout';
+    else if(r.statusExtra.includes('long')) cls='long-week';
+    let badges = r.statusExtra.map(s=>{
+      if(s==='long') return '<span class="badge long">pekan ke-5</span>';
+      if(s==='stockout') return '<span class="badge out">stockout</span>';
+      if(s==='promo') return '<span class="badge promo">promo</span>';
+      if(s==='libur') return '<span class="badge out">libur</span>';
+      if(s==='leap') return '<span class="badge long">pekan ke-53</span>';
+      return '';
+    }).join(' ');
+    return `<tr class="${cls}">
+      <td>${r.week}</td><td>Q${r.q}</td><td>B${r.monthGlobal}</td><td>W${r.m}</td>
+      <td>${fmtTgl(r.start)}–${fmtTgl(r.end)}</td>
+      <td>${fmtNum(r.produksi)}</td><td>${fmtNum(r.permintaan)}</td>
+      <td>${fmtNum(r.stok)}</td><td>${badges}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderChart(rows){
+  const svg = document.getElementById('chart');
+  const W = 900, H = 320, padL = 55, padR = 20, padT = 20, padB = 30;
+  const innerW = W - padL - padR, innerH = H - padT - padB;
+
+  const stocks = rows.map(r=>r.stok);
+  let maxS = Math.max(...stocks, 0);
+  let minS = Math.min(...stocks, 0);
+  const range = (maxS - minS) || 1;
+  maxS += range*0.08; minS -= range*0.08;
+
+  const x = i => padL + (innerW * i/(rows.length-1));
+  const y = v => padT + innerH - ((v-minS)/(maxS-minS))*innerH;
+
+  let parts = [];
+
+  // grid horizontal + label
+  const steps = 5;
+  for(let s=0; s<=steps; s++){
+    const val = minS + (maxS-minS)*s/steps;
+    const yy = y(val);
+    parts.push(`<line x1="${padL}" y1="${yy}" x2="${W-padR}" y2="${yy}" stroke="#2C4152" stroke-width="1"/>`);
+    parts.push(`<text x="${padL-8}" y="${yy+4}" font-size="10" text-anchor="end">${fmtNum(val)}</text>`);
+  }
+
+  // zero baseline highlighted
+  if(minS < 0 && maxS > 0){
+    const yz = y(0);
+    parts.push(`<line x1="${padL}" y1="${yz}" x2="${W-padR}" y2="${yz}" stroke="#E1614E" stroke-width="1.5" stroke-dasharray="4,3"/>`);
+  }
+
+  // line path
+  let path = rows.map((r,i)=> (i===0?'M':'L') + x(i).toFixed(1) + ' ' + y(r.stok).toFixed(1)).join(' ');
+  parts.push(`<path d="${path}" fill="none" stroke="#52B8AA" stroke-width="2"/>`);
+
+  // points
+  rows.forEach((r,i)=>{
+    let color = '#52B8AA';
+    if(r.statusExtra.includes('stockout')) color = '#E1614E';
+    else if(r.statusExtra.includes('long') || r.statusExtra.includes('leap')) color = '#E5A439';
+    parts.push(`<circle cx="${x(i).toFixed(1)}" cy="${y(r.stok).toFixed(1)}" r="3" fill="${color}"/>`);
+  });
+
+  // x labels (every ~4 weeks)
+  rows.forEach((r,i)=>{
+    if(i % 4 === 0 || i===rows.length-1){
+      parts.push(`<text x="${x(i).toFixed(1)}" y="${H-8}" font-size="9" text-anchor="middle">W${r.week}</text>`);
+    }
+  });
+
+  svg.innerHTML = parts.join('');
+}
+
+function unduhCSV(){
+  const rows = window._simRows;
+  if(!rows){ jalankanSimulasi(); }
+  const data = window._simRows;
+  let csv = 'Pekan,Kuartal,BulanIndustri,PekanKe,TanggalMulai,TanggalSelesai,Produksi,Permintaan,StokAkhir,Status\n';
+  data.forEach(r=>{
+    csv += [r.week, 'Q'+r.q, 'B'+r.monthGlobal, r.m, fmtTgl(r.start), fmtTgl(r.end),
+            Math.round(r.produksi), Math.round(r.permintaan), Math.round(r.stok),
+            r.statusExtra.join('|')].join(',') + '\n';
+  });
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'simulasi-kalender-445.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// jalankan sekali di awal dengan nilai default
+jalankanSimulasi();
+</script>
+</body>
+</html>

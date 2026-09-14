@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klasifikasi Klaim Ilmiah — Alat Diagnostik Epistemologi</title>
+<style>
+  :root {
+    --kertas: #F5F5F0;
+    --kertas-gelap: #E8E8E2;
+    --tinta: #1A1F2E;
+    --tinta-muda: #3A4055;
+    --tinta-pudar: #7A8090;
+    --merah: #C0392B;
+    --merah-muda: #FDECEA;
+    --hijau: #2E7D5E;
+    --hijau-muda: #E8F5EF;
+    --kuning: #9A7A1A;
+    --kuning-muda: #FDF6E3;
+    --biru: #1A5276;
+    --biru-muda: #EAF2FB;
+    --abu: #95A5A6;
+    --border: #D0D0C8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--kertas);
+    color: var(--tinta);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* PROGRESS BAR */
+  .progress-wrap {
+    height: 3px;
+    background: var(--kertas-gelap);
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 50;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: var(--tinta);
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* HEADER KECIL */
+  .header-mini {
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--kertas);
+    z-index: 40;
+  }
+
+  .logo-teks {
+    font-family: Georgia, serif;
+    font-size: 0.9rem;
+    color: var(--tinta-pudar);
+    letter-spacing: 0.02em;
+  }
+
+  .langkah-info {
+    font-size: 0.78rem;
+    color: var(--tinta-pudar);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* AREA UTAMA */
+  .area-utama {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.5rem;
+  }
+
+  .kontainer {
+    width: 100%;
+    max-width: 580px;
+  }
+
+  /* LAYAR PEMBUKA */
+  .layar { display: none; }
+  .layar.aktif { display: block; }
+
+  /* PEMBUKA */
+  #layar-awal h1 {
+    font-family: Georgia, serif;
+    font-size: clamp(1.6rem, 5vw, 2.2rem);
+    font-weight: normal;
+    line-height: 1.3;
+    margin-bottom: 1rem;
+    color: var(--tinta);
+  }
+
+  #layar-awal p {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--tinta-muda);
+    margin-bottom: 1.5rem;
+    max-width: 52ch;
+  }
+
+  .input-klaim {
+    width: 100%;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    padding: 0.9rem 1rem;
+    font-size: 1rem;
+    font-family: Georgia, serif;
+    color: var(--tinta);
+    background: white;
+    resize: vertical;
+    min-height: 100px;
+    transition: border-color 0.2s;
+    line-height: 1.6;
+  }
+
+  .input-klaim:focus {
+    outline: none;
+    border-color: var(--tinta);
+  }
+
+  .input-klaim::placeholder { color: var(--abu); font-style: italic; }
+
+  .contoh-wrap {
+    margin: 0.75rem 0 1.25rem;
+  }
+
+  .contoh-label {
+    font-size: 0.73rem;
+    color: var(--tinta-pudar);
+    margin-bottom: 0.4rem;
+  }
+
+  .contoh-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .chip-contoh {
+    font-size: 0.73rem;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: white;
+    cursor: pointer;
+    color: var(--tinta-muda);
+    transition: all 0.15s;
+  }
+
+  .chip-contoh:hover {
+    border-color: var(--tinta);
+    background: var(--tinta);
+    color: var(--kertas);
+  }
+
+  /* TOMBOL */
+  .btn-utama {
+    display: inline-block;
+    padding: 0.7rem 1.6rem;
+    background: var(--tinta);
+    color: var(--kertas);
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    font-family: inherit;
+  }
+
+  .btn-utama:hover { opacity: 0.85; }
+  .btn-utama:disabled { opacity: 0.35; cursor: default; }
+
+  .btn-sekunder {
+    display: inline-block;
+    padding: 0.65rem 1.2rem;
+    background: transparent;
+    color: var(--tinta-muda);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+
+  .btn-sekunder:hover { border-color: var(--tinta); color: var(--tinta); }
+
+  /* LAYAR PERTANYAAN */
+  .pertanyaan-nomor {
+    font-size: 0.73rem;
+    color: var(--tinta-pudar);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .nomor-bulat {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--tinta);
+    color: var(--kertas);
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .klaim-echo {
+    font-size: 0.8rem;
+    color: var(--tinta-pudar);
+    font-style: italic;
+    padding: 0.6rem 0.9rem;
+    border-left: 2px solid var(--border);
+    margin-bottom: 1.75rem;
+    line-height: 1.5;
+  }
+
+  .pertanyaan-teks {
+    font-family: Georgia, serif;
+    font-size: clamp(1.1rem, 3vw, 1.35rem);
+    font-weight: normal;
+    line-height: 1.45;
+    margin-bottom: 0.75rem;
+    color: var(--tinta);
+  }
+
+  .pertanyaan-konteks {
+    font-size: 0.82rem;
+    color: var(--tinta-pudar);
+    line-height: 1.65;
+    margin-bottom: 1.75rem;
+    max-width: 52ch;
+  }
+
+  .opsi-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .opsi-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: white;
+  }
+
+  .opsi-item:hover {
+    border-color: var(--tinta-muda);
+    background: var(--kertas);
+  }
+
+  .opsi-item.dipilih {
+    border-color: var(--tinta);
+    background: var(--tinta);
+    color: var(--kertas);
+  }
+
+  .opsi-huruf {
+    width: 22px; height: 22px;
+    border-radius: 4px;
+    border: 1.5px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 600;
+    flex-shrink: 0;
+    color: var(--tinta-pudar);
+    transition: all 0.15s;
+  }
+
+  .opsi-item.dipilih .opsi-huruf {
+    border-color: rgba(255,255,255,0.4);
+    color: var(--kertas);
+  }
+
+  .opsi-teks {
+    font-size: 0.88rem;
+    line-height: 1.45;
+  }
+
+  .navigasi-bawah {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  /* LAYAR HASIL */
+  #layar-hasil {
+    animation: masuk 0.4s ease;
+  }
+
+  @keyframes masuk {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hasil-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hasil-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: var(--tinta-pudar);
+    margin-bottom: 0.5rem;
+  }
+
+  .hasil-kategori {
+    font-family: Georgia, serif;
+    font-size: clamp(1.5rem, 5vw, 2rem);
+    font-weight: normal;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+
+  .hasil-sub {
+    font-size: 0.88rem;
+    color: var(--tinta-muda);
+    line-height: 1.6;
+    max-width: 52ch;
+  }
+
+  /* METER SKOR */
+  .meter-wrap {
+    margin: 1.5rem 0;
+  }
+
+  .meter-label {
+    font-size: 0.75rem;
+    color: var(--tinta-pudar);
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .meter-bar-bg {
+    height: 8px;
+    background: var(--kertas-gelap);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.35rem;
+  }
+
+  .meter-bar-isi {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.8s ease;
+  }
+
+  /* DIMENSI SKOR */
+  .dimensi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+  }
+
+  .dimensi-kotak {
+    padding: 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: white;
+  }
+
+  .dimensi-nama {
+    font-size: 0.72rem;
+    color: var(--tinta-pudar);
+    margin-bottom: 0.35rem;
+  }
+
+  .dimensi-nilai {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--tinta);
+  }
+
+  .dimensi-nilai.tinggi { color: var(--hijau); }
+  .dimensi-nilai.rendah { color: var(--merah); }
+  .dimensi-nilai.sedang { color: var(--kuning); }
+
+  /* PENJELASAN */
+  .penjelasan-bagian {
+    margin: 1.5rem 0;
+    padding: 1.1rem 1.25rem;
+    border-radius: 6px;
+    border-left: 3px solid;
+  }
+
+  .penjelasan-bagian.baik {
+    background: var(--hijau-muda);
+    border-color: var(--hijau);
+  }
+
+  .penjelasan-bagian.hati-hati {
+    background: var(--kuning-muda);
+    border-color: var(--kuning);
+  }
+
+  .penjelasan-bagian.perhatian {
+    background: var(--merah-muda);
+    border-color: var(--merah);
+  }
+
+  .penjelasan-bagian.netral {
+    background: var(--biru-muda);
+    border-color: var(--biru);
+  }
+
+  .penjelasan-judul {
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .penjelasan-bagian.baik .penjelasan-judul { color: var(--hijau); }
+  .penjelasan-bagian.hati-hati .penjelasan-judul { color: var(--kuning); }
+  .penjelasan-bagian.perhatian .penjelasan-judul { color: var(--merah); }
+  .penjelasan-bagian.netral .penjelasan-judul { color: var(--biru); }
+
+  .penjelasan-teks {
+    font-size: 0.85rem;
+    line-height: 1.65;
+    color: var(--tinta-muda);
+  }
+
+  /* REKOMENDASI */
+  .rekomendasi-judul {
+    font-family: Georgia, serif;
+    font-size: 1rem;
+    margin: 1.5rem 0 0.75rem;
+    color: var(--tinta);
+  }
+
+  .rekomendasi-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .rekomendasi-list li {
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: var(--tinta-muda);
+    padding-left: 1.25rem;
+    position: relative;
+  }
+
+  .rekomendasi-list li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--tinta-pudar);
+  }
+
+  /* KLAIM ECHO DI HASIL */
+  .klaim-echo-hasil {
+    font-size: 0.82rem;
+    font-style: italic;
+    color: var(--tinta-pudar);
+    padding: 0.75rem 1rem;
+    background: var(--kertas-gelap);
+    border-radius: 5px;
+    margin-bottom: 1.5rem;
+    line-height: 1.55;
+  }
+
+  /* FOOTER HASIL */
+  .footer-hasil {
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .catatan-metodologi {
+    margin-top: 1.5rem;
+    font-size: 0.75rem;
+    color: var(--abu);
+    line-height: 1.6;
+    font-style: italic;
+  }
+
+  @media (max-width: 500px) {
+    .dimensi-grid { grid-template-columns: 1fr; }
+    .header-mini { padding: 1rem; }
+  }
+
+  @media print {
+    .progress-wrap, .header-mini, .footer-hasil { display: none !important; }
+    #layar-pertanyaan, #layar-awal { display: none !important; }
+    body { background: white; }
+    .area-utama { padding: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress-wrap">
+  <div class="progress-bar" id="progressBar"></div>
+</div>
+
+<div class="header-mini">
+  <div class="logo-teks">Klasifikasi Klaim Ilmiah</div>
+  <div class="langkah-info" id="langkahInfo">Diagnostik Epistemologi</div>
+</div>
+
+<div class="area-utama">
+  <div class="kontainer">
+
+    <!-- LAYAR AWAL -->
+    <div class="layar aktif" id="layar-awal">
+      <h1>Seberapa kuat fondasi sebuah klaim?</h1>
+      <p>Masukkan klaim ilmiah apa pun — teori yang sedang ramai dibahas, klaim dari buku, atau argumen yang Anda temui. Alat ini akan mengajukan tujuh pertanyaan diagnostik dan menghasilkan klasifikasi beserta rekomendasi.</p>
+      <textarea class="input-klaim" id="inputKlaim" placeholder="Contoh: &quot;Pola makan rendah karbohidrat lebih efektif dari pola makan rendah lemak untuk menurunkan berat badan&quot;"></textarea>
+      <div class="contoh-wrap">
+        <div class="contoh-label">Coba dengan contoh:</div>
+        <div class="contoh-list">
+          <span class="chip-contoh" data-teks="Gelombang gravitasi akan terdeteksi sebagai bukti relativitas umum Einstein">Gelombang gravitasi (1916)</span>
+          <span class="chip-contoh" data-teks="Materi terdiri dari partikel tak terbagi yang disebut atom">Atom Demokritos (~450 SM)</span>
+          <span class="chip-contoh" data-teks="Teori string menyatukan semua gaya fundamental alam semesta">Teori string (1968)</span>
+          <span class="chip-contoh" data-teks="Fusi nuklir dingin bisa terjadi pada suhu ruang melalui elektrolisis">Cold fusion (1989)</span>
+          <span class="chip-contoh" data-teks="Benua-benua dulunya menyatu dan bergerak terpisah selama jutaan tahun">Continental drift (1912)</span>
+        </div>
+      </div>
+      <button class="btn-utama" id="tombolMulai">Mulai diagnostik</button>
+    </div>
+
+    <!-- LAYAR PERTANYAAN (diisi JS) -->
+    <div class="layar" id="layar-pertanyaan">
+      <div class="pertanyaan-nomor">
+        <div class="nomor-bulat" id="nomorBulat">1</div>
+        <span id="nomorTeks">Pertanyaan 1 dari 7</span>
+      </div>
+      <div class="klaim-echo" id="klaimEcho"></div>
+      <div class="pertanyaan-teks" id="pertanyaanTeks"></div>
+      <div class="pertanyaan-konteks" id="pertanyaanKonteks"></div>
+      <div class="opsi-list" id="opsiList"></div>
+      <div class="navigasi-bawah">
+        <button class="btn-utama" id="tombolLanjut" disabled>Lanjut</button>
+        <button class="btn-sekunder" id="tombolKembali">Kembali</button>
+      </div>
+    </div>
+
+    <!-- LAYAR HASIL -->
+    <div class="layar" id="layar-hasil">
+      <div class="hasil-header">
+        <div class="hasil-label">Hasil Klasifikasi</div>
+        <div class="hasil-kategori" id="hasilKategori"></div>
+        <div class="hasil-sub" id="hasilSub"></div>
+      </div>
+
+      <div class="klaim-echo-hasil" id="klaimEchoHasil"></div>
+
+      <div class="meter-wrap">
+        <div class="meter-label">
+          <span>Kekuatan fondasi ilmiah</span>
+          <span id="skorAngka"></span>
+        </div>
+        <div class="meter-bar-bg">
+          <div class="meter-bar-isi" id="meterBar" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="dimensi-grid" id="dimensiGrid"></div>
+
+      <div id="penjelasanWrap"></div>
+
+      <div class="rekomendasi-judul">Rekomendasi</div>
+      <ul class="rekomendasi-list" id="rekomendasiList"></ul>
+
+      <div class="catatan-metodologi">
+        Klasifikasi ini dihasilkan berdasarkan jawaban Anda atas tujuh pertanyaan diagnostik yang mengukur: keberadaan prediksi terukur, fondasi matematis, kemampuan falsifikasi, keberadaan riset pasca-kemunculan, verifikasi independen, konsistensi internal, dan jarak teori-ke-bukti. Hasil ini adalah alat bantu berpikir, bukan keputusan final.
+      </div>
+
+      <div class="footer-hasil">
+        <button class="btn-utama" id="tombolUlang">Uji klaim lain</button>
+        <button class="btn-sekunder" id="tombolCetak">Cetak / Simpan PDF</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const PERTANYAAN = [
+  {
+    id: 'prediksi',
+    teks: 'Apakah klaim ini menghasilkan prediksi yang bisa diuji secara konkret?',
+    konteks: 'Prediksi yang baik bersifat spesifik dan kuantitatif — bukan sekadar "kemungkinan besar terjadi." Contoh prediksi kuat: "Jika teori ini benar, benda X harus ditemukan di koordinat Y dengan massa Z." Prediksi lemah: "Suatu hari nanti akan ada buktinya."',
+    opsi: [
+      { huruf: 'A', teks: 'Ya — ada prediksi spesifik dan terukur yang bisa dikonfirmasi atau dibantah', skor: { prediksi: 3, falsifiabilitas: 1 } },
+      { huruf: 'B', teks: 'Sebagian — ada prediksi tapi masih samar atau terlalu luas', skor: { prediksi: 1, falsifiabilitas: 0 } },
+      { huruf: 'C', teks: 'Tidak — klaim ini lebih bersifat deskriptif atau filosofis, tanpa prediksi terukur', skor: { prediksi: 0, falsifiabilitas: -1 } },
+    ]
+  },
+  {
+    id: 'matematika',
+    teks: 'Apakah klaim ini didukung oleh struktur matematis atau mekanisme yang presisi sejak awal diajukan?',
+    konteks: 'Persamaan matematis yang menghasilkan angka spesifik adalah tanda fondasi yang kuat. Berbeda dari analogi atau deskripsi verbal — yang bisa terdengar meyakinkan tapi tidak membuat prediksi presisi.',
+    opsi: [
+      { huruf: 'A', teks: 'Ya — ada persamaan, model, atau mekanisme presisi yang mendasarinya', skor: { matematika: 3, prediksi: 1 } },
+      { huruf: 'B', teks: 'Sebagian — ada kerangka konseptual tapi belum diformalkan secara matematis', skor: { matematika: 1 } },
+      { huruf: 'C', teks: 'Tidak — klaim ini bersifat verbal atau intuitif, tanpa formalisasi matematis', skor: { matematika: 0 } },
+    ]
+  },
+  {
+    id: 'falsifiabilitas',
+    teks: 'Apakah ada kondisi yang — jika terjadi — akan membuktikan klaim ini salah?',
+    konteks: 'Ini adalah uji Popper: teori yang baik harus bisa "dibunuh" oleh bukti. Jika tidak ada kondisi apapun yang bisa membuktikannya salah, klaim itu mungkin bukan sains — melainkan dogma. Contoh: "Aether ada, tapi tidak bisa dideteksi dengan instrumen apapun" adalah klaim yang tidak bisa difalsifikasi.',
+    opsi: [
+      { huruf: 'A', teks: 'Ya — ada hasil percobaan tertentu yang secara langsung akan membantah klaim ini', skor: { falsifiabilitas: 3 } },
+      { huruf: 'B', teks: 'Mungkin — secara prinsip bisa dibantah, tapi kondisinya sulit dirumuskan', skor: { falsifiabilitas: 1 } },
+      { huruf: 'C', teks: 'Tidak — klaim ini selalu punya cara untuk "menyelamatkan diri" dari bukti yang berlawanan', skor: { falsifiabilitas: -2 } },
+    ]
+  },
+  {
+    id: 'riset',
+    teks: 'Setelah klaim ini diajukan, apakah ada riset, eksperimen, atau pengujian yang aktif dilakukan oleh komunitas ilmiah?',
+    konteks: 'Teori yang valid biasanya memicu komunitas peneliti untuk mencoba memverifikasi, mereplikasi, atau mengembangkannya. Kekosongan riset selama puluhan tahun setelah sebuah klaim diajukan adalah tanda bahaya — terutama jika klaimnya besar.',
+    opsi: [
+      { huruf: 'A', teks: 'Ya — ada komunitas riset aktif yang menguji dan mengembangkan klaim ini', skor: { riset: 3 } },
+      { huruf: 'B', teks: 'Terbatas — ada beberapa upaya pengujian tapi tidak sistematik atau luas', skor: { riset: 1 } },
+      { huruf: 'C', teks: 'Tidak — klaim ini diabaikan, ditolak, atau tidak memicu riset apapun setelah diajukan', skor: { riset: 0 } },
+    ]
+  },
+  {
+    id: 'verifikasi',
+    teks: 'Apakah klaim ini bisa diverifikasi oleh pihak yang independen — bukan hanya oleh pihak yang mengajukannya?',
+    konteks: 'Verifikasi independen adalah fondasi kepercayaan ilmiah. Jika hanya satu laboratorium, satu lembaga, atau satu orang yang bisa "membuktikan" sesuatu, itu adalah tanda bahaya besar. Ilmu pengetahuan harus bisa direplikasi.',
+    opsi: [
+      { huruf: 'A', teks: 'Ya — sudah direplikasi oleh pihak independen dengan hasil konsisten', skor: { verifikasi: 3 } },
+      { huruf: 'B', teks: 'Sebagian — ada upaya replikasi tapi hasilnya tidak konsisten atau belum selesai', skor: { verifikasi: 1 } },
+      { huruf: 'C', teks: 'Tidak — hanya sumber asalnya yang bisa membuktikannya, atau belum ada upaya replikasi', skor: { verifikasi: 0 } },
+    ]
+  },
+  {
+    id: 'konsistensi',
+    teks: 'Apakah klaim ini konsisten dengan pengetahuan ilmiah yang sudah mapan di bidang terkait?',
+    konteks: 'Klaim yang bertentangan dengan fisika, kimia, atau biologi dasar membutuhkan bukti yang jauh lebih kuat dari biasanya. Ini bukan berarti klaim revolusioner selalu salah — tapi bebannya lebih berat.',
+    opsi: [
+      { huruf: 'A', teks: 'Ya — konsisten dengan atau merupakan perpanjangan dari teori yang sudah terbukti', skor: { konsistensi: 2 } },
+      { huruf: 'B', teks: 'Netral — berada di wilayah yang belum banyak dipetakan, tidak jelas konsisten atau tidak', skor: { konsistensi: 1 } },
+      { huruf: 'C', teks: 'Tidak — bertentangan dengan prinsip-prinsip ilmiah yang sudah sangat mapan', skor: { konsistensi: -1 } },
+    ]
+  },
+  {
+    id: 'gap',
+    teks: 'Berapa lama waktu antara klaim ini diajukan dan ada bukti atau pengujian yang serius?',
+    konteks: 'Berdasarkan sejarah sains: teori dengan fondasi kuat biasanya terbukti atau terbantah dalam rentang puluhan tahun (tergantung ketersediaan teknologi). Klaim yang "menggantung" tanpa pengujian selama lebih dari 80-100 tahun tanpa ada kemajuan apapun patut diwaspadai.',
+    opsi: [
+      { huruf: 'A', teks: 'Cepat (kurang dari 20 tahun) — sudah ada pengujian serius dan hasilnya jelas', skor: { gap: 3 } },
+      { huruf: 'B', teks: 'Sedang (20–80 tahun) — ada kemajuan bertahap, menunggu teknologi atau data', skor: { gap: 2 } },
+      { huruf: 'C', teks: 'Lama (lebih dari 80 tahun) — masih menggantung atau baru saja mulai diuji', skor: { gap: 1 } },
+      { huruf: 'D', teks: 'Tidak relevan / belum bisa ditentukan — klaim ini baru saja diajukan', skor: { gap: 1 } },
+    ]
+  }
+];
+
+const KATEGORI = [
+  {
+    min: 80, max: 100,
+    nama: 'Teori Ilmiah Kuat',
+    warna: '#2E7D5E',
+    warnaBar: '#2E7D5E',
+    warnaKelas: 'baik',
+    sub: 'Klaim ini memiliki fondasi epistemik yang kuat: prediksi terukur, mekanisme yang presisi, kemampuan falsifikasi, dan verifikasi independen.',
+    penjelasan: [
+      { kelas: 'baik', judul: 'Fondasi kuat', teks: 'Klaim ini memenuhi kriteria utama teori ilmiah yang sehat: ada prediksi spesifik, ada matematika atau mekanisme, bisa difalsifikasi, dan sudah diuji secara independen.' }
+    ],
+    rekomendasi: [
+      'Pelajari lebih dalam — ini adalah klaim yang layak dijadikan basis riset atau pengembangan lebih lanjut.',
+      'Periksa batas keberlakuannya: bahkan teori kuat memiliki domain di luar mana ia tidak berlaku.',
+      'Ikuti perkembangan pengujian terbaru — sains terus berkembang dan bahkan teori kuat bisa disempurnakan.'
+    ]
+  },
+  {
+    min: 55, max: 79,
+    nama: 'Teori yang Menjanjikan',
+    warna: '#1A5276',
+    warnaBar: '#2471A3',
+    warnaKelas: 'netral',
+    sub: 'Klaim ini memiliki beberapa fondasi yang solid, tapi masih ada dimensi yang belum terpenuhi — baik karena memang butuh waktu, atau karena fondasi dasarnya kurang kuat.',
+    penjelasan: [
+      { kelas: 'netral', judul: 'Perlu dikembangkan lebih lanjut', teks: 'Klaim ini punya potensi ilmiah yang nyata, tapi belum sepenuhnya memenuhi standar verifikasi ilmiah. Ini tidak berarti salah — banyak teori besar membutuhkan waktu puluhan tahun untuk terbukti.' }
+    ],
+    rekomendasi: [
+      'Pantau perkembangan riset: jika ada komunitas aktif yang mengujinya, ikuti kemajuannya.',
+      'Identifikasi dimensi mana yang paling lemah dan perhatikan apakah ada upaya untuk memperkuatnya.',
+      'Jangan jadikan ini fondasi keputusan besar sampai ada lebih banyak konfirmasi independen.'
+    ]
+  },
+  {
+    min: 35, max: 54,
+    nama: 'Spekulasi Terinformasi',
+    warna: '#9A7A1A',
+    warnaBar: '#D4AC0D',
+    warnaKelas: 'hati-hati',
+    sub: 'Klaim ini mungkin didasari intuisi yang menarik atau gagasan yang koheren, tapi belum memenuhi standar minimum untuk disebut teori ilmiah yang teruji.',
+    penjelasan: [
+      { kelas: 'hati-hati', judul: 'Hati-hati dalam penerapan', teks: 'Spekulasi terinformasi bisa menjadi awal yang baik dari sebuah teori ilmiah — tapi perlu lebih banyak formalisasi, pengujian, dan verifikasi sebelum bisa dijadikan basis tindakan atau keputusan penting.' }
+    ],
+    rekomendasi: [
+      'Catat sebagai hipotesis yang menarik, bukan kesimpulan — simpan di "buku catatan" tanpa mengalihkan jerih payah riset ke arah ini.',
+      'Identifikasi: apakah bisa dirumuskan prediksinya? Jika bisa, itu langkah pertama menuju pengujian.',
+      'Cari apakah ada preseden serupa dalam sejarah sains — apakah ada teori dengan pola yang sama yang kemudian terbukti benar atau salah?'
+    ]
+  },
+  {
+    min: 15, max: 34,
+    nama: 'Klaim Bermasalah',
+    warna: '#C0392B',
+    warnaBar: '#E74C3C',
+    warnaKelas: 'perhatian',
+    sub: 'Klaim ini memiliki beberapa ciri yang melemahkan kredibilitasnya secara epistemik — baik karena tidak bisa difalsifikasi, tidak ada riset pasca-kemunculan, atau bertentangan dengan pengetahuan mapan tanpa bukti kuat.',
+    penjelasan: [
+      { kelas: 'perhatian', judul: 'Tanda bahaya epistemik', teks: 'Klaim ini menunjukkan beberapa pola yang sering muncul pada klaim yang tidak sahih: tidak ada prediksi terukur, tidak bisa dibantah, atau tidak memicu riset apapun. Ini bukan otomatis salah — tapi beban pembuktiannya sangat besar.' }
+    ],
+    rekomendasi: [
+      'Jangan jadikan ini basis keputusan atau investasi riset sebelum ada bukti yang jauh lebih kuat.',
+      'Tanyakan: apakah ada kondisi yang bisa membuktikannya salah? Jika tidak ada, ini bukan sains.',
+      'Periksa apakah klaim ini menggunakan pola retrofitting — mengklaim "sudah terbukti" dengan mencocokkan data yang sudah ada setelah fakta.',
+      'Waspada terhadap argumen "nanti terbukti ratusan tahun lagi" — lihat sejarah: klaim yang valid biasanya terbukti dalam puluhan tahun, bukan berabad-abad.'
+    ]
+  },
+  {
+    min: 0, max: 14,
+    nama: 'Pseudosains atau Klaim Tidak Teruji',
+    warna: '#6C3483',
+    warnaBar: '#8E44AD',
+    warnaKelas: 'perhatian',
+    sub: 'Klaim ini tidak memenuhi kriteria dasar sebuah klaim ilmiah yang bisa diuji dan diverifikasi secara independen.',
+    penjelasan: [
+      { kelas: 'perhatian', judul: 'Tidak memenuhi standar minimum ilmiah', teks: 'Berdasarkan jawaban Anda, klaim ini tidak memiliki prediksi terukur, tidak bisa difalsifikasi, dan tidak memicu riset yang berarti. Klaim semacam ini lebih tepat ditempatkan di kategori filsafat, spekulasi, atau kepercayaan — bukan sains empiris.' }
+    ],
+    rekomendasi: [
+      'Tidak direkomendasikan untuk dijadikan basis riset ilmiah atau keputusan berbasis bukti.',
+      'Jika klaim ini terasa menarik secara intuitif, simpan sebagai catatan spekulatif — siapa tahu ada elemennya yang bisa diformalkan menjadi hipotesis yang bisa diuji.',
+      'Bedakan antara "saya tidak bisa membantahnya" dengan "itu benar" — ketidakmampuan membantah bukan bukti kebenaran.'
+    ]
+  }
+];
+
+// State
+let klaimTeks = '';
+let langkahSaat = 0;
+let jawaban = [];
+let skorDimensi = { prediksi: 0, matematika: 0, falsifiabilitas: 0, riset: 0, verifikasi: 0, konsistensi: 0, gap: 0 };
+let opsiDipilih = null;
+
+function hitungSkorTotal() {
+  const max = { prediksi: 4, matematika: 3, falsifiabilitas: 4, riset: 3, verifikasi: 3, konsistensi: 2, gap: 3 };
+  const totalMaks = Object.values(max).reduce((a, b) => a + b, 0);
+  const totalSkor = Object.entries(skorDimensi).reduce((total, [k, v]) => {
+    return total + Math.max(0, Math.min(v, max[k]));
+  }, 0);
+  return Math.round((totalSkor / totalMaks) * 100);
+}
+
+function tampilLayar(id) {
+  document.querySelectorAll('.layar').forEach(l => l.classList.remove('aktif'));
+  document.getElementById(id).classList.add('aktif');
+}
+
+function renderPertanyaan() {
+  const p = PERTANYAAN[langkahSaat];
+  const total = PERTANYAAN.length;
+
+  document.getElementById('progressBar').style.width = `${(langkahSaat / total) * 100}%`;
+  document.getElementById('langkahInfo').textContent = `Pertanyaan ${langkahSaat + 1} dari ${total}`;
+  document.getElementById('nomorBulat').textContent = langkahSaat + 1;
+  document.getElementById('nomorTeks').textContent = `Pertanyaan ${langkahSaat + 1} dari ${total}`;
+  document.getElementById('klaimEcho').textContent = `"${klaimTeks.length > 100 ? klaimTeks.substring(0, 100) + '…' : klaimTeks}"`;
+  document.getElementById('pertanyaanTeks').textContent = p.teks;
+  document.getElementById('pertanyaanKonteks').textContent = p.konteks;
+
+  const opsiEl = document.getElementById('opsiList');
+  opsiEl.innerHTML = '';
+  opsiDipilih = jawaban[langkahSaat] ?? null;
+
+  p.opsi.forEach((o, i) => {
+    const item = document.createElement('div');
+    item.className = `opsi-item${opsiDipilih === i ? ' dipilih' : ''}`;
+    item.innerHTML = `<div class="opsi-huruf">${o.huruf}</div><div class="opsi-teks">${o.teks}</div>`;
+    item.addEventListener('click', () => pilihOpsi(i));
+    opsiEl.appendChild(item);
+  });
+
+  document.getElementById('tombolLanjut').disabled = opsiDipilih === null;
+  document.getElementById('tombolKembali').style.display = langkahSaat === 0 ? 'none' : '';
+  tampilLayar('layar-pertanyaan');
+}
+
+function pilihOpsi(idx) {
+  opsiDipilih = idx;
+  document.querySelectorAll('.opsi-item').forEach((el, i) => {
+    el.classList.toggle('dipilih', i === idx);
+  });
+  document.getElementById('tombolLanjut').disabled = false;
+}
+
+function lanjut() {
+  if (opsiDipilih === null) return;
+
+  // Jika mengganti jawaban, kurangi skor lama dulu
+  if (jawaban[langkahSaat] !== undefined && jawaban[langkahSaat] !== opsiDipilih) {
+    const skorLama = PERTANYAAN[langkahSaat].opsi[jawaban[langkahSaat]].skor;
+    Object.entries(skorLama).forEach(([k, v]) => { skorDimensi[k] = (skorDimensi[k] || 0) - v; });
+  }
+
+  // Tambah skor baru jika belum pernah dijawab atau berubah
+  if (jawaban[langkahSaat] !== opsiDipilih) {
+    jawaban[langkahSaat] = opsiDipilih;
+    const skorBaru = PERTANYAAN[langkahSaat].opsi[opsiDipilih].skor;
+    Object.entries(skorBaru).forEach(([k, v]) => { skorDimensi[k] = (skorDimensi[k] || 0) + v; });
+  }
+
+  if (langkahSaat < PERTANYAAN.length - 1) {
+    langkahSaat++;
+    renderPertanyaan();
+  } else {
+    tampilHasil();
+  }
+}
+
+function kembali() {
+  if (langkahSaat > 0) {
+    langkahSaat--;
+    renderPertanyaan();
+  } else {
+    tampilLayar('layar-awal');
+  }
+}
+
+function tampilHasil() {
+  document.getElementById('progressBar').style.width = '100%';
+  document.getElementById('langkahInfo').textContent = 'Hasil Diagnostik';
+
+  const skor = hitungSkorTotal();
+  const kategori = KATEGORI.find(k => skor >= k.min && skor <= k.max) || KATEGORI[KATEGORI.length - 1];
+
+  document.getElementById('hasilKategori').textContent = kategori.nama;
+  document.getElementById('hasilKategori').style.color = kategori.warna;
+  document.getElementById('hasilSub').textContent = kategori.sub;
+  document.getElementById('klaimEchoHasil').textContent = `Klaim yang diuji: "${klaimTeks}"`;
+  document.getElementById('skorAngka').textContent = `${skor}/100`;
+
+  const bar = document.getElementById('meterBar');
+  bar.style.background = kategori.warnaBar;
+  setTimeout(() => { bar.style.width = `${skor}%`; }, 100);
+
+  // Dimensi
+  const dimensiLabel = {
+    prediksi: 'Prediksi terukur',
+    matematika: 'Fondasi matematis',
+    falsifiabilitas: 'Kemampuan falsifikasi',
+    riset: 'Ledakan riset pasca-klaim',
+    verifikasi: 'Verifikasi independen',
+    konsistensi: 'Konsistensi dengan sains mapan',
+    gap: 'Kecepatan pengujian'
+  };
+  const dimensiMaks = { prediksi: 4, matematika: 3, falsifiabilitas: 4, riset: 3, verifikasi: 3, konsistensi: 2, gap: 3 };
+
+  const grid = document.getElementById('dimensiGrid');
+  grid.innerHTML = '';
+  Object.entries(skorDimensi).forEach(([k, v]) => {
+    const maks = dimensiMaks[k];
+    const persen = Math.round((Math.max(0, Math.min(v, maks)) / maks) * 100);
+    const kelasNilai = persen >= 70 ? 'tinggi' : persen >= 35 ? 'sedang' : 'rendah';
+    const kotak = document.createElement('div');
+    kotak.className = 'dimensi-kotak';
+    kotak.innerHTML = `
+      <div class="dimensi-nama">${dimensiLabel[k]}</div>
+      <div class="dimensi-nilai ${kelasNilai}">${persen}%</div>
+    `;
+    grid.appendChild(kotak);
+  });
+
+  // Penjelasan
+  const penWrap = document.getElementById('penjelasanWrap');
+  penWrap.innerHTML = '';
+  kategori.penjelasan.forEach(p => {
+    const div = document.createElement('div');
+    div.className = `penjelasan-bagian ${p.kelas}`;
+    div.innerHTML = `<div class="penjelasan-judul">${p.judul}</div><div class="penjelasan-teks">${p.teks}</div>`;
+    penWrap.appendChild(div);
+  });
+
+  // Peringatan tambahan berdasarkan skor dimensi spesifik
+  if (skorDimensi.falsifiabilitas < 0) {
+    const div = document.createElement('div');
+    div.className = 'penjelasan-bagian perhatian';
+    div.innerHTML = `<div class="penjelasan-judul">Tidak bisa difalsifikasi</div><div class="penjelasan-teks">Ini adalah tanda bahaya epistemik yang paling serius. Klaim yang tidak bisa dibantah oleh kondisi apapun bukan merupakan klaim ilmiah — ia berada di luar domain sains. Bisa jadi ini adalah klaim metafisik, spiritual, atau filosofis yang valid dalam konteksnya sendiri, tapi tidak bisa diperlakukan sebagai sains empiris.</div>`;
+    penWrap.appendChild(div);
+  }
+  if (skorDimensi.riset === 0 && skorDimensi.prediksi >= 2) {
+    const div = document.createElement('div');
+    div.className = 'penjelasan-bagian hati-hati';
+    div.innerHTML = `<div class="penjelasan-judul">Ada prediksi tapi tidak ada riset</div><div class="penjelasan-teks">Kombinasi yang menarik perhatian: klaim ini punya prediksi yang cukup spesifik, tapi tidak memicu riset yang berarti. Ini bisa berarti klaim ini ditolak oleh komunitas ilmiah sebelum sempat diuji, atau ada hambatan teknis yang besar, atau pengujiannya sudah pernah dilakukan dan hasilnya negatif.</div>`;
+    penWrap.appendChild(div);
+  }
+
+  // Rekomendasi
+  const rekEl = document.getElementById('rekomendasiList');
+  rekEl.innerHTML = '';
+  kategori.rekomendasi.forEach(r => {
+    const li = document.createElement('li');
+    li.textContent = r;
+    rekEl.appendChild(li);
+  });
+
+  tampilLayar('layar-hasil');
+}
+
+function reset() {
+  klaimTeks = '';
+  langkahSaat = 0;
+  jawaban = [];
+  skorDimensi = { prediksi: 0, matematika: 0, falsifiabilitas: 0, riset: 0, verifikasi: 0, konsistensi: 0, gap: 0 };
+  opsiDipilih = null;
+  document.getElementById('inputKlaim').value = '';
+  document.getElementById('progressBar').style.width = '0%';
+  document.getElementById('langkahInfo').textContent = 'Diagnostik Epistemologi';
+  tampilLayar('layar-awal');
+}
+
+// Event listeners
+document.getElementById('tombolMulai').addEventListener('click', () => {
+  const val = document.getElementById('inputKlaim').value.trim();
+  if (!val) return;
+  klaimTeks = val;
+  langkahSaat = 0;
+  jawaban = [];
+  skorDimensi = { prediksi: 0, matematika: 0, falsifiabilitas: 0, riset: 0, verifikasi: 0, konsistensi: 0, gap: 0 };
+  renderPertanyaan();
+});
+
+document.getElementById('tombolLanjut').addEventListener('click', lanjut);
+document.getElementById('tombolKembali').addEventListener('click', kembali);
+document.getElementById('tombolUlang').addEventListener('click', reset);
+document.getElementById('tombolCetak').addEventListener('click', () => window.print());
+
+document.querySelectorAll('.chip-contoh').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.getElementById('inputKlaim').value = chip.dataset.teks;
+  });
+});
+
+document.getElementById('inputKlaim').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.ctrlKey) {
+    document.getElementById('tombolMulai').click();
+  }
+});
+</script>
+</body>
+</html>

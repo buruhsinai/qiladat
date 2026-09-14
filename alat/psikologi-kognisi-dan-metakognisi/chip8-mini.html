@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHIP-8 Mini — Membuka Kap Mesin Komputer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#10141A; --panel:#171D25; --panel-2:#1D2530;
+    --border:rgba(232,236,244,0.09); --border-strong:rgba(232,236,244,0.17);
+    --text:#ECEFF3; --muted:#8C97A6;
+    --gold:#E0A94D;
+    --true:#4FBF8A; --true-dim: 79,191,138;
+    --false:#7C8798; --false-dim: 124,135,152;
+    --warn:#E0A94D; --warn-dim: 224,169,77;
+    --lose:#D9677A; --lose-dim: 217,103,122;
+    --num:#5FA8D3; --num-dim: 95,168,211;
+    --ident:#C792EA; --ident-dim: 199,146,234;
+    --pixel:#8FE3B0;
+    --radius:4px;
+  }
+  *{box-sizing:border-box;}
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'Karla',sans-serif; font-size:16px; line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{ font-family:'Fraunces',serif; font-weight:500; letter-spacing:-0.01em; margin:0; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+  .wrap{ max-width:960px; margin:0 auto; padding:0 22px 80px; }
+  .rule{ height:1px; background:var(--border); margin:48px 0; }
+
+  header.top{ padding:56px 0 8px; }
+  header.top .kicker{ font-size:13px; color:var(--muted); margin:0 0 14px; }
+  header.top h1{ font-size:clamp(30px,5vw,42px); margin-bottom:10px; }
+  header.top p.lede{ color:var(--muted); max-width:62ch; font-size:16px; margin:0; }
+
+  section .section-head{ margin-bottom:6px; }
+  section h2{ font-size:clamp(22px,3.4vw,28px); }
+  section > p.desc{ color:var(--muted); max-width:66ch; margin:8px 0 20px; font-size:15px; }
+  .eyebrow-num{ font-family:'Fraunces',serif; font-style:italic; color:var(--gold); font-size:15px; margin:0 0 10px; }
+
+  .card{ background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:22px 24px; }
+
+  /* ---- contrast table ---- */
+  .contrast{ display:grid; grid-template-columns:1fr 1fr; gap:0; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin:22px 0; }
+  @media (max-width:620px){ .contrast{ grid-template-columns:1fr; } }
+  .contrast > div{ padding:20px 22px; }
+  .contrast .calc{ background:rgba(124,135,152,0.06); border-right:1px solid var(--border); }
+  @media (max-width:620px){ .contrast .calc{ border-right:none; border-bottom:1px solid var(--border); } }
+  .contrast .rules{ background:rgba(79,191,138,0.06); }
+  .contrast h4{ font-family:'Karla',sans-serif; font-size:12.5px; font-weight:700; margin:0 0 10px; color:var(--muted); }
+  .contrast .calc h4{ color:#AAB3C0; }
+  .contrast .rules h4{ color:var(--true); }
+  .contrast .flowline{ font-family:'JetBrains Mono',monospace; font-size:14px; color:var(--text); margin:0 0 12px; }
+  .contrast p{ font-size:14.5px; color:var(--text); margin:0; }
+
+  .pseudo{
+    font-family:'JetBrains Mono',monospace; font-size:14px; line-height:1.9;
+    background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
+    padding:18px 20px; margin:18px 0; color:#D7DEE8; white-space:pre-wrap;
+  }
+  .pseudo .kw{ color: var(--gold); }
+  .pseudo .neg{ color: var(--lose); }
+
+  .flow{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:20px 0; }
+  .flow .step{ font-size:13px; font-weight:600; padding:8px 13px; background:var(--panel-2); border:1px solid var(--border); border-radius:3px; }
+  .flow .arrow{ color:var(--muted); font-size:14px; }
+
+  dl.term{ margin:0; }
+  dl.term > div{ margin:18px 0; padding-left:16px; border-left:2px solid var(--border-strong); }
+  dl.term dt{ font-family:'Fraunces',serif; font-size:16.5px; color:var(--text); margin-bottom:4px; }
+  dl.term dd{ margin:0; color:var(--muted); font-size:14.5px; }
+  .concept-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 32px; }
+  @media (max-width:680px){ .concept-grid{ grid-template-columns:1fr; } }
+
+  /* ---- lab layout ---- */
+  .lab{ display:flex; flex-direction:column; gap:18px; }
+  .stage{ background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  .stage-head{ padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .stage-head .stage-num{ font-family:'Fraunces',serif; font-style:italic; color:var(--gold); font-size:14px; margin-right:8px; }
+  .stage-head h3{ font-size:16px; display:inline; }
+  .stage-body{ padding:20px 22px; }
+  .stage-note{ font-size:13px; color:var(--muted); margin:0 0 8px; }
+
+  /* preset grid */
+  .preset-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:6px; }
+  @media (max-width:640px){ .preset-grid{ grid-template-columns:1fr; } }
+  .preset-btn{ text-align:left; padding:11px 14px; background:var(--panel-2); border:1px solid var(--border); border-radius:3px; cursor:pointer; font-size:13.5px; color:var(--text); font-family:'Karla',sans-serif; }
+  .preset-btn:hover{ border-color:var(--gold); }
+  .preset-btn.active{ border-color:var(--gold); }
+  .preset-btn span{ display:block; font-size:12px; color:var(--muted); margin-top:2px; }
+
+  .rom-input{
+    width:100%; min-height:70px; background:var(--panel-2); border:1px solid var(--border-strong);
+    border-radius:3px; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:13px;
+    line-height:1.7; padding:12px 14px; resize:vertical; white-space:pre; overflow-x:auto;
+  }
+  .rom-input:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  .rom-actions{ display:flex; align-items:center; gap:12px; margin:12px 0 18px; flex-wrap:wrap; }
+  .btn{
+    font-family:'Karla',sans-serif; font-size:13.5px; font-weight:700; color:#10141A;
+    background:var(--gold); border:none; border-radius:3px; padding:9px 18px; cursor:pointer;
+  }
+  .btn:hover{ filter:brightness(1.08); }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; filter:none; }
+  .btn.secondary{
+    color:var(--text); background:transparent; border:1px solid var(--border-strong); font-weight:600;
+  }
+  .btn.secondary:hover{ border-color:var(--gold); }
+  .btn.danger{ background:transparent; border:1px solid rgba(var(--lose-dim),0.5); color:var(--lose); font-weight:600; }
+  .btn.danger:hover{ border-color:var(--lose); }
+  .file-label{
+    font-size:13px; color:var(--muted); border:1px dashed var(--border-strong); border-radius:3px;
+    padding:9px 14px; cursor:pointer;
+  }
+  .file-label:hover{ border-color:var(--gold); color:var(--text); }
+  .file-label input{ display:none; }
+
+  /* ---- machine panel: display + keypad + registers ---- */
+  .machine{ display:grid; grid-template-columns:auto 1fr; gap:26px; align-items:start; }
+  @media (max-width:760px){ .machine{ grid-template-columns:1fr; } }
+  .screen-col{ display:flex; flex-direction:column; gap:16px; align-items:center; }
+  .screen-frame{
+    background:#05070A; border:1px solid var(--border-strong); border-radius:3px; padding:10px;
+    display:inline-block;
+  }
+  #screen{ display:block; image-rendering:pixelated; background:#05070A; }
+  .screen-caption{ font-size:12px; color:var(--muted); text-align:center; max-width:280px; }
+
+  .keypad{ display:grid; grid-template-columns:repeat(4,44px); gap:6px; }
+  .keypad button{
+    width:44px; height:38px; background:var(--panel-2); border:1px solid var(--border); border-radius:3px;
+    color:var(--text); font-family:'JetBrains Mono',monospace; font-size:13px; cursor:pointer;
+  }
+  .keypad button:hover{ border-color:var(--gold); }
+  .keypad button.pressed{ background:rgba(var(--warn-dim),0.28); border-color:var(--gold); color:var(--gold); }
+
+  .run-controls{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+  .speed-row{ display:flex; align-items:center; gap:10px; font-size:13px; color:var(--muted); }
+  .speed-row input[type=range]{ width:140px; }
+  .status-pill{
+    font-family:'JetBrains Mono',monospace; font-size:12px; padding:4px 10px; border-radius:100px;
+    background:rgba(var(--false-dim),0.16); color:var(--false); border:1px solid transparent;
+  }
+  .status-pill.running{ background:rgba(var(--true-dim),0.16); color:var(--true); }
+  .status-pill.halted{ background:rgba(var(--lose-dim),0.16); color:var(--lose); }
+  .status-pill.waiting{ background:rgba(var(--warn-dim),0.2); color:var(--gold); }
+
+  /* ---- debugger ---- */
+  .debug-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:700px){ .debug-grid{ grid-template-columns:1fr; } }
+  .debug-block h4{ font-size:12px; font-weight:700; color:var(--muted); margin:0 0 8px; text-transform:none; }
+  .reg-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+  .reg-cell{
+    font-family:'JetBrains Mono',monospace; font-size:12px; background:var(--panel-2); border:1px solid var(--border);
+    border-radius:3px; padding:6px 8px;
+  }
+  .reg-cell .rl{ color:var(--muted); margin-right:4px; }
+  .reg-cell.changed{ border-color:var(--gold); }
+  .flags-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  .flag-chip{
+    font-family:'JetBrains Mono',monospace; font-size:12px; padding:4px 10px; border-radius:100px;
+    background:var(--panel-2); border:1px solid var(--border); color:var(--text);
+  }
+  .disasm-list{ font-family:'JetBrains Mono',monospace; font-size:12.5px; line-height:1.9; }
+  .disasm-list .row{ padding:2px 8px; border-radius:3px; color:var(--muted); white-space:pre; }
+  .disasm-list .row.current{ background:rgba(var(--warn-dim),0.16); color:var(--gold); }
+  .stack-list{ font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--text); }
+  .stack-list .empty{ color:var(--muted); font-style:italic; }
+  .error-box{ border:1px solid rgba(var(--lose-dim),0.5); background:rgba(var(--lose-dim),0.08); border-radius:var(--radius); padding:14px 16px; margin:14px 0 0; }
+  .error-stage{ font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:600; color:var(--lose); margin-bottom:6px; }
+  .error-msg{ font-size:14px; color:var(--text); }
+
+  ol.steps{ padding-left:20px; }
+  ol.steps li{ margin-bottom:10px; max-width:64ch; }
+  ol.steps li::marker{ color:var(--gold); font-family:'Fraunces',serif; }
+
+  table.semantics{ width:100%; border-collapse:collapse; margin:18px 0; font-size:14px; }
+  table.semantics th, table.semantics td{ text-align:left; padding:9px 12px; border-top:1px solid var(--border); }
+  table.semantics th{ color:var(--muted); font-size:12.5px; font-weight:700; }
+  table.semantics td.v{ font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--gold); }
+
+  table.opcodes{ width:100%; border-collapse:collapse; margin:14px 0; font-size:13px; }
+  table.opcodes th, table.opcodes td{ text-align:left; padding:7px 10px; border-top:1px solid var(--border); }
+  table.opcodes th{ color:var(--muted); font-size:12px; font-weight:700; }
+  table.opcodes td.op{ font-family:'JetBrains Mono',monospace; color:var(--gold); white-space:nowrap; }
+  table.opcodes td.mn{ font-family:'JetBrains Mono',monospace; color:var(--text); white-space:nowrap; }
+
+  .misconception{ display:grid; grid-template-columns:1fr 1fr; gap:0; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin:20px 0; }
+  @media (max-width:620px){ .misconception{ grid-template-columns:1fr; } }
+  .misconception > div{ padding:18px 20px; }
+  .misconception .lim{ background:rgba(var(--lose-dim),0.07); border-right:1px solid var(--border); }
+  @media (max-width:620px){ .misconception .lim{ border-right:none; border-bottom:1px solid var(--border); } }
+  .misconception h4{ font-size:12.5px; font-weight:700; color:var(--muted); margin:0 0 8px; }
+  .misconception p{ font-size:14.5px; margin:0; color:var(--text); }
+
+  .ref-list{ list-style:none; padding:0; margin:16px 0; }
+  .ref-list li{ padding:14px 0; border-top:1px solid var(--border); font-size:15px; color:var(--muted); }
+  .ref-list li:last-child{ border-bottom:1px solid var(--border); }
+  .ref-list .who{ color:var(--text); }
+
+  footer{ padding-top:46px; font-size:13px; color:var(--muted); max-width:66ch; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <p class="kicker">Laboratorium Qiladat / JAZMI — Proyek 3: Membuka Kap Mesin Komputer</p>
+    <h1>CHIP-8 Mini (Emulator &amp; Debugger)</h1>
+    <p class="lede">Bukan mesin sungguhan seperti PC atau konsol — CHIP-8 adalah komputer khayalan dari era 1970-an yang spesifikasinya kita ketahui persis. Kita bangun mesin virtualnya sendiri di peramban: memori, register, siklus fetch–decode–execute, sampai layar 64×32-nya.</p>
+  </header>
+
+  <div class="rule"></div>
+
+  <!-- ============ 1. KONSEP ============ -->
+  <section id="konsep">
+    <p class="eyebrow-num">1 — Konsep</p>
+    <h2>Emulator: menjalankan program untuk mesin yang tidak ada di depan Anda</h2>
+    <p class="desc">Proyek sebelumnya (Interpreter Mini, Rule Engine Mini) membaca bahasa buatan kita sendiri. Emulator berbeda: ia membaca bahasa mesin sungguhan — instruksi biner yang aslinya ditujukan untuk perangkat keras fisik — lalu meniru perangkat keras itu di dalam perangkat lunak, cukup persis sehingga program yang sama tidak bisa membedakan apakah ia berjalan di mesin asli atau di tiruannya.</p>
+
+    <div class="contrast">
+      <div class="calc">
+        <h4>INTERPRETER BAHASA BUATAN</h4>
+        <p class="flowline">bahasa kita rancang sendiri → bebas menentukan aturannya</p>
+        <p>Di Proyek 1 dan 2, kita yang menetapkan sintaksis (FACT, RULE, PRINT, dst). Kalau ada bagian yang tidak jelas, kita bebas mendefinisikan ulang — tidak ada "mesin asli" yang jadi rujukan kebenaran.</p>
+      </div>
+      <div class="rules">
+        <h4>EMULATOR CHIP-8</h4>
+        <p class="flowline">spesifikasi mesin sudah tetap → kita wajib patuh persis</p>
+        <p>CHIP-8 punya spesifikasi tertulis: berapa byte memori, berapa register, bagaimana setiap satu dari puluhan opcode wajib berperilaku. Kita tidak bisa "menyederhanakan" perilaku sebuah instruksi — kalau meleset dari spesifikasi, program CHIP-8 sungguhan tidak akan berjalan benar.</p>
+      </div>
+    </div>
+
+    <p>Inti sebuah emulator hanya satu siklus yang diulang jutaan kali per detik:</p>
+    <div class="flow">
+      <span class="step">FETCH</span><span class="arrow">→</span>
+      <span class="step">DECODE</span><span class="arrow">→</span>
+      <span class="step">EXECUTE</span><span class="arrow">→</span>
+      <span class="step">STATE BERUBAH</span><span class="arrow">→</span>
+      <span class="step">(ulangi)</span>
+    </div>
+    <div class="pseudo"><span class="kw">FETCH</span>: ambil 2 byte dari memori pada alamat PC (program counter)
+<span class="kw">DECODE</span>: pecah 2 byte itu jadi opcode — instruksi apa ini, register mana, alamat mana
+<span class="kw">EXECUTE</span>: jalankan efeknya — ubah register, memori, layar, atau PC itu sendiri
+<span class="neg">// lalu PC maju ke instruksi berikutnya, kecuali instruksi itu sendiri yang mengubah PC (lompat)</span></div>
+
+    <p style="margin-top:26px;">Delapan hal yang dipelajari lewat membangun satu emulator kecil:</p>
+    <div class="concept-grid">
+      <dl class="term">
+        <div><dt>Memori</dt><dd>4096 byte (4KB) ruang alamat tunggal — tempat program dan data hidup berdampingan. Program dimuat mulai alamat 0x200; 512 byte pertama secara historis dipakai interpreter asli sendiri (di sini: tempat font bawaan).</dd></div>
+        <div><dt>Register</dt><dd>16 register serbaguna 8-bit (V0–VF) untuk kerja sehari-hari, satu register alamat 16-bit (I) untuk menunjuk lokasi memori, dan program counter (PC) yang menunjuk instruksi berikutnya.</dd></div>
+        <div><dt>Stack</dt><dd>Tempat menyimpan alamat "jalan pulang" ketika CALL memanggil sub-rutin, supaya RET tahu ke mana harus kembali — persis seperti call stack di bahasa pemrograman biasa.</dd></div>
+        <div><dt>Opcode</dt><dd>Satu instruksi = 2 byte. Empat bit pertama biasanya menentukan "keluarga" instruksi (mis. 0x8 = operasi aritmatika register); bit-bit sisanya menentukan register/nilai/alamat yang dipakai.</dd></div>
+      </dl>
+      <dl class="term">
+        <div><dt>Timer</dt><dd>Dua register 8-bit (delay, sound) yang berkurang sendiri 60 kali per detik — dipakai program CHIP-8 untuk mengatur jeda waktu dan bunyi, independen dari kecepatan CPU.</dd></div>
+        <div><dt>Display</dt><dd>Layar monokrom 64×32 piksel. Menggambar dilakukan dengan operasi XOR per piksel (sprite ditumpuk ke layar, bukan ditimpa) — efek sampingnya sekaligus dipakai untuk mendeteksi tabrakan (collision).</dd></div>
+        <div><dt>Keypad</dt><dd>16 tombol heksadesimal (0–F) dari tata letak COSMAC VIP asli — bukan keyboard QWERTY. Emulator memetakan sebagian tuts keyboard modern ke 16 tombol ini.</dd></div>
+        <div><dt>Debugger</dt><dd>Lapisan tambahan di luar spesifikasi CHIP-8 itu sendiri: memperlihatkan isi register, memori, dan instruksi yang baru saja dijalankan — supaya siklus fetch-decode-execute yang biasanya tidak kasat mata bisa benar-benar diamati.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ 2. EKSPLORASI ============ -->
+  <section id="eksplorasi">
+    <p class="eyebrow-num">2 — Eksplorasi Interaktif</p>
+    <h2>Mesin virtualnya, sungguh berjalan</h2>
+    <p class="desc">Empat program contoh di bawah ditulis dan diverifikasi manual langsung dalam bentuk byte mentah (bahasa mesin CHIP-8) — bukan game yang diambil dari sumber lain, supaya jelas asal dan cara kerjanya. Anda juga bisa menempelkan byte heksadesimal Anda sendiri, atau mengunggah berkas ROM (.ch8) kalau punya.</p>
+
+    <div class="lab">
+
+      <!-- STAGE 1: ROM SOURCE -->
+      <div class="stage">
+        <div class="stage-head">
+          <div><span class="stage-num">01</span><h3>ROM — byte bahasa mesin</h3></div>
+          <button class="btn secondary" id="btnReset">Atur ulang</button>
+        </div>
+        <div class="stage-body">
+          <textarea id="romInput" class="rom-input" spellcheck="false" aria-label="Byte ROM heksadesimal"></textarea>
+          <div class="rom-actions">
+            <button class="btn" id="btnLoad">Muat ROM ▸</button>
+            <label class="file-label">Unggah berkas .ch8 / .bin<input type="file" id="fileInput" accept=".ch8,.bin,.rom"></label>
+            <span class="status-pill" id="loadStatus">belum dimuat</span>
+          </div>
+          <div class="preset-grid">
+            <button class="preset-btn active" data-p="font">Preset 1 — Uji Font<span>LD F,Vx · DRW · tunggu tombol · loop</span></button>
+            <button class="preset-btn" data-p="pixel">Preset 2 — Piksel Bergerak<span>I · DRW dua kali · timer DT sebagai jeda</span></button>
+            <button class="preset-btn" data-p="arith">Preset 3 — Uji Aritmatika<span>ADD/SUB/AND/OR/XOR/SHR — amati register</span></button>
+            <button class="preset-btn" data-p="blank">Preset 4 — Kosong<span>Program minimal — tulis byte Anda sendiri</span></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAGE 2: MACHINE (display + keypad) -->
+      <div class="stage">
+        <div class="stage-head"><div><span class="stage-num">02</span><h3>MESIN — layar, keypad, kendali eksekusi</h3></div></div>
+        <div class="stage-body">
+          <div class="run-controls">
+            <button class="btn" id="btnRun">Jalankan ▸</button>
+            <button class="btn secondary" id="btnPause">Jeda ⏸</button>
+            <button class="btn secondary" id="btnStep">Satu Langkah ⏵|</button>
+            <button class="btn danger" id="btnPowerOff">Matikan &amp; Muat Ulang</button>
+            <span class="status-pill" id="runStatus">berhenti</span>
+          </div>
+          <div class="speed-row">
+            <label for="speedSlider">Kecepatan (instruksi/frame):</label>
+            <input type="range" id="speedSlider" min="1" max="30" value="9">
+            <span id="speedLabel" class="mono">9</span>
+          </div>
+          <div class="machine">
+            <div class="screen-col">
+              <div class="screen-frame"><canvas id="screen" width="512" height="256"></canvas></div>
+              <p class="screen-caption">64×32 piksel, diperbesar 8×. Setiap kotak menyala = satu piksel bernilai 1 di memori layar.</p>
+              <div class="keypad" id="keypad"></div>
+              <p class="screen-caption">Tata letak keypad CHIP-8 asli (kiri) dipetakan ke keyboard (kanan): 1234/QWER/ASDF/ZXCV.</p>
+            </div>
+            <div id="debugPanel"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ 3. METODE ============ -->
+  <section id="metode">
+    <p class="eyebrow-num">3 — Metode</p>
+    <h2>Bagaimana siklus ini sungguh-sungguh berjalan</h2>
+    <p>Tiga fungsi murni menyusun seluruh mesin ini: <span class="mono">step()</span> menjalankan tepat satu siklus fetch-decode-execute, <span class="mono">setKey()</span> mengirim status tombol ke mesin (termasuk membangunkannya dari instruksi yang menunggu input), dan <span class="mono">tickTimers()</span> mengurangi kedua timer sekali setiap 1/60 detik, independen dari kecepatan CPU.</p>
+    <ol class="steps">
+      <li><b>Tahap FETCH — dua byte, satu opcode.</b> Setiap instruksi CHIP-8 selalu 2 byte, diambil dari <span class="mono">memori[PC]</span> dan <span class="mono">memori[PC+1]</span>, digabung jadi satu angka 16-bit.</li>
+      <li><b>Tahap DECODE — empat nibble punya peran tetap.</b> Opcode dipecah jadi empat digit heksadesimal (nibble): digit pertama biasanya menentukan keluarga instruksi, digit kedua & ketiga sering menunjuk nomor register (Vx, Vy), digit terakhir atau dua digit terakhir sering berupa nilai literal atau jumlah baris sprite.</li>
+      <li><b>Tahap EXECUTE — satu switch besar, satu efek per opcode.</b> Efeknya bisa berupa: mengubah register (mis. ADD), mengubah memori (mis. menyimpan digit BCD), mengubah layar (DRW, dengan aturan XOR + deteksi tabrakan lewat VF), atau mengubah PC itu sendiri (JP, CALL, RET, dan semua instruksi "skip" bersyarat).</li>
+      <li><b>PC maju otomatis, kecuali instruksi bilang lain.</b> Default setelah EXECUTE: PC += 2. Instruksi lompat (JP/CALL/RET) menimpa nilai itu secara eksplisit; instruksi "skip bersyarat" (mis. SE) menambah 4 alih-alih 2 kalau syaratnya benar.</li>
+      <li><b>UNKNOWN vs FALSE, versi emulator: opcode tak dikenal berhenti total.</b> Sama seperti prinsip di Rule Engine Mini — kalau ada opcode yang tidak cocok pola manapun (byte ROM rusak/salah, atau memang instruksi Super-CHIP yang tidak didukung mesin mini ini), mesin berhenti dengan galat eksplisit di panel debugger, bukan diam-diam melompati instruksi itu.</li>
+      <li><b>Fx0A (tunggu tombol) memblokir siklus, bukan menyibukkan CPU.</b> Ketika instruksi ini dieksekusi, PC sudah dimajukan tapi <span class="mono">step()</span> menolak berjalan lagi sampai <span class="mono">setKey()</span> mengirim sebuah tombol — meniru perilaku asli CHIP-8 yang benar-benar berhenti total menunggu input, bukan polling berulang.</li>
+    </ol>
+    <div class="pseudo">fungsi <span class="kw">step</span>(mesin):
+  jika mesin.berhenti <span class="kw">atau</span> mesin.menungguTombol: <span class="neg">kembalikan tanpa efek</span>
+  opcode = (memori[PC] &lt;&lt; 8) | memori[PC+1]
+  { keluarga, x, y, n, kk, nnn } = decode(opcode)
+  coba:
+      jalankan(keluarga, x, y, n, kk, nnn)   <span class="neg">// mengubah register/memori/layar/PC</span>
+  tangkap galat:
+      mesin.berhenti = benar; simpan alasan galat   <span class="neg">// tidak pernah diam-diam dilewati</span></div>
+
+    <p style="margin-top:14px;">Perbedaan dari emulator produksi (mis. untuk konsol sungguhan): emulator produksi harus meniru waktu (timing) siklus per siklus sangat presisi karena banyak game bergantung pada efek samping perangkat keras yang tidak terdokumentasi resmi. CHIP-8 jauh lebih toleran — spesifikasinya sendiri tidak pernah menetapkan kecepatan clock yang pasti, sehingga "kecepatan" di sini sengaja dibuat sebagai slider yang bisa diubah, bukan angka yang ditiru presisi dari mesin asli (karena mesin asli COSMAC VIP-nya sendiri tidak seragam kecepatannya di seluruh dunia).</p>
+
+    <table class="semantics">
+      <tr><th>Ketentuan</th><th>Keputusan versi mini ini</th></tr>
+      <tr><td>Ukuran memori</td><td class="v">4096 byte, ROM dimuat mulai 0x200</td></tr>
+      <tr><td>Font bawaan (digit 0–F)</td><td class="v">disimpan di 0x050, dirujuk lewat Fx29</td></tr>
+      <tr><td>8xy6 / 8xyE (shift)</td><td class="v">memakai Vy sebagai sumber (perilaku COSMAC VIP asli) — lihat Batasan</td></tr>
+      <tr><td>Fx55 / Fx65 (simpan/muat register)</td><td class="v">I ikut bertambah sesudahnya (perilaku asli) — lihat Batasan</td></tr>
+      <tr><td>Opcode tak dikenal</td><td class="v">galat eksplisit, mesin berhenti total</td></tr>
+      <tr><td>Tabrakan sprite (collision)</td><td class="v">VF=1 kalau ada piksel yang berubah dari 1 ke 0</td></tr>
+      <tr><td>Kecepatan CPU</td><td class="v">dapat diatur (slider), bukan meniru clock asli</td></tr>
+    </table>
+
+    <p class="stage-note" style="margin:18px 0 8px; font-size:14px; color:var(--text);">Tabel opcode yang didukung (identik dengan spesifikasi CHIP-8 standar, tanpa ekstensi Super-CHIP):</p>
+    <table class="opcodes">
+      <tr><th>Opcode</th><th>Mnemonik</th><th>Efek singkat</th></tr>
+      <tr><td class="op">00E0</td><td class="mn">CLS</td><td>Bersihkan layar</td></tr>
+      <tr><td class="op">00EE</td><td class="mn">RET</td><td>Kembali dari sub-rutin (pop stack)</td></tr>
+      <tr><td class="op">1nnn</td><td class="mn">JP addr</td><td>Lompat ke alamat nnn</td></tr>
+      <tr><td class="op">2nnn</td><td class="mn">CALL addr</td><td>Panggil sub-rutin di nnn (push PC)</td></tr>
+      <tr><td class="op">3xkk / 4xkk</td><td class="mn">SE / SNE Vx,byte</td><td>Lewati instruksi berikut jika (tidak) sama</td></tr>
+      <tr><td class="op">5xy0 / 9xy0</td><td class="mn">SE / SNE Vx,Vy</td><td>Lewati instruksi berikut jika (tidak) sama</td></tr>
+      <tr><td class="op">6xkk / 7xkk</td><td class="mn">LD / ADD Vx,byte</td><td>Isi / tambah register dengan nilai tetap</td></tr>
+      <tr><td class="op">8xy0..8xyE</td><td class="mn">LD/OR/AND/XOR/ADD/SUB/SHR/SUBN/SHL</td><td>Sembilan operasi antar-register, VF sebagai flag</td></tr>
+      <tr><td class="op">Annn</td><td class="mn">LD I,addr</td><td>Isi register alamat I</td></tr>
+      <tr><td class="op">Bnnn</td><td class="mn">JP V0,addr</td><td>Lompat ke nnn+V0</td></tr>
+      <tr><td class="op">Cxkk</td><td class="mn">RND Vx,byte</td><td>Angka acak AND kk</td></tr>
+      <tr><td class="op">Dxyn</td><td class="mn">DRW Vx,Vy,n</td><td>Gambar sprite n-baris dari alamat I, XOR ke layar</td></tr>
+      <tr><td class="op">Ex9E / ExA1</td><td class="mn">SKP / SKNP Vx</td><td>Lewati instruksi jika tombol Vx (tidak) ditekan</td></tr>
+      <tr><td class="op">Fx07 / Fx15 / Fx18</td><td class="mn">LD Vx,DT / LD DT,Vx / LD ST,Vx</td><td>Baca/isi timer delay &amp; sound</td></tr>
+      <tr><td class="op">Fx0A</td><td class="mn">LD Vx,K</td><td>Tunggu tombol (memblokir siklus)</td></tr>
+      <tr><td class="op">Fx1E / Fx29</td><td class="mn">ADD I,Vx / LD F,Vx</td><td>Tambah I / arahkan I ke sprite font digit</td></tr>
+      <tr><td class="op">Fx33</td><td class="mn">LD B,Vx</td><td>Simpan 3 digit desimal (BCD) Vx ke [I..I+2]</td></tr>
+      <tr><td class="op">Fx55 / Fx65</td><td class="mn">LD [I],Vx / LD Vx,[I]</td><td>Simpan/muat V0..Vx dari memori mulai I</td></tr>
+    </table>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ 4. BATASAN ============ -->
+  <section id="batasan">
+    <p class="eyebrow-num">4 — Batasan</p>
+    <h2>Apa yang belum dilakukan mesin ini</h2>
+    <div class="misconception">
+      <div class="lim">
+        <h4>BELUM ADA DI SINI</h4>
+        <p>Ekstensi Super-CHIP/XO-CHIP (layar 128×64, opcode tambahan), mode "quirk" yang bisa dipilih pengguna (banyak ROM dunia nyata mengasumsikan perilaku 8xy6/Fx55 yang berbeda dari yang dipilih di sini), presisi timing siklus-per-siklus meniru COSMAC VIP asli, penyimpanan/pemuatan status mesin (save state), dan validasi format berkas ROM (mesin ini memuat byte apa adanya, tidak memeriksa apakah berkas itu benar-benar ROM CHIP-8 yang sah).</p>
+      </div>
+      <div>
+        <h4>KENAPA ITU PENTING DIKETAHUI</h4>
+        <p>"Quirk" 8xy6/8xyE dan Fx55/Fx65 adalah sumber ketidakcocokan paling umum antar-emulator CHIP-8 di dunia nyata — sebagian ROM ditulis dengan asumsi Vy diabaikan (shift Vx sendiri) dan I tidak berubah, kebalikan dari pilihan versi mini ini yang mengikuti perilaku interpreter COSMAC VIP asli. Kalau ROM pihak ketiga terlihat berjalan salah, ini kemungkinan besar penyebabnya — bukan berarti implementasi opcode-nya salah.</p>
+      </div>
+    </div>
+    <p>Pipeline fetch → decode → execute yang sama akan relevan lagi kalau laboratorium ini naik kelas ke mesin yang lebih kompleks (CPU sederhana lain, atau bahkan Game Boy seperti disinggung dalam diskusi awal proyek). Tapi mengikuti prinsip Level 3 "Verifikasi" yang sudah disepakati: kenaikan kelas itu harus melalui studi spesifikasi mesin baru dan kasus uji manual lagi — bukan ditebak dari pola CHIP-8 di halaman ini.</p>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ 5. REFERENSI ============ -->
+  <section id="referensi">
+    <p class="eyebrow-num">5 — Referensi</p>
+    <h2>Sumber &amp; bacaan lanjutan</h2>
+    <ul class="ref-list">
+      <li><span class="who">Cowgod's CHIP-8 Technical Reference (v1.0).</span> Rujukan teknis paling sering dipakai komunitas pembuat emulator CHIP-8 — mendokumentasikan seluruh 35 opcode standar beserta perilaku registernya secara rinci.</li>
+      <li><span class="who">Wikipedia — "CHIP-8".</span> Ringkasan sejarah: dirancang oleh Joseph Weisbecker pertengahan 1970-an untuk komputer hobi COSMAC VIP, dimaksudkan sebagai bahasa antara (interpreted language) supaya game lebih mudah ditulis dibanding bahasa mesin RCA 1802 secara langsung.</li>
+      <li><span class="who">Mastering CHIP-8 — Matthew Mikolay.</span> Tulisan pendamping yang menjelaskan bagian-bagian spesifikasi yang ambigu atau sering disalahpahami (termasuk sumber "quirk" yang disinggung di bagian Batasan).</li>
+    </ul>
+    <p class="desc" style="margin-top:6px;">Halaman ini mengikuti struktur "Belajar → Eksplorasi → Metode → Batasan → Referensi" yang sama dengan Interpreter Mini dan Rule Engine Mini sebelumnya di laboratorium Qiladat/JAZMI — ketiganya sama-sama contoh bagaimana spesifikasi formal (tata bahasa, aturan bersyarat, arsitektur mesin) bisa dimodelkan jadi kode yang bisa diuji dan dijelaskan, bukan sekadar dijalankan.</p>
+  </section>
+
+  <footer>
+    Alat edukasi — dibangun untuk memperlihatkan cara kerja emulator sederhana (siklus fetch-decode-execute CHIP-8), bukan emulator konsol produksi maupun alat bermain game.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ============ CHIP-8 CORE ENGINE ============
+  var FONTSET = [
+    0xF0,0x90,0x90,0x90,0xF0, 0x20,0x60,0x20,0x20,0x70, 0xF0,0x10,0xF0,0x80,0xF0,
+    0xF0,0x10,0xF0,0x10,0xF0, 0x90,0x90,0xF0,0x10,0x10, 0xF0,0x80,0xF0,0x10,0xF0,
+    0xF0,0x80,0xF0,0x90,0xF0, 0xF0,0x10,0x20,0x40,0x40, 0xF0,0x90,0xF0,0x90,0xF0,
+    0xF0,0x90,0xF0,0x10,0xF0, 0xF0,0x90,0xF0,0x90,0x90, 0xE0,0x90,0xE0,0x90,0xE0,
+    0xF0,0x80,0x80,0x80,0xF0, 0xE0,0x90,0x90,0x90,0xE0, 0xF0,0x80,0xF0,0x80,0xF0,
+    0xF0,0x80,0xF0,0x80,0x80
+  ];
+  var FONT_ADDR = 0x050, ROM_START = 0x200, DISPLAY_W = 64, DISPLAY_H = 32;
+
+  function OpcodeError(message, opcode, pc){ this.message = message; this.opcode = opcode; this.pc = pc; this.stage = 'EXECUTE'; }
+  OpcodeError.prototype = Object.create(Error.prototype);
+
+  function createMachine(){
+    var m = {
+      mem: new Uint8Array(4096), V: new Uint8Array(16), I: 0, pc: ROM_START,
+      stack: [], dt: 0, st: 0, display: new Uint8Array(DISPLAY_W*DISPLAY_H),
+      keys: new Uint8Array(16), waitingForKey: -1, halted: false, haltReason: null,
+      cycles: 0, lastOp: null
+    };
+    for(var i=0;i<FONTSET.length;i++){ m.mem[FONT_ADDR+i] = FONTSET[i]; }
+    return m;
+  }
+
+  function loadRom(m, bytes){
+    for(var i=0;i<bytes.length && ROM_START+i<4096;i++){ m.mem[ROM_START+i] = bytes[i]; }
+  }
+
+  function hx(v,w){ return '0x' + v.toString(16).toUpperCase().padStart(w||2,'0'); }
+  function rn(n){ return 'V'+n.toString(16).toUpperCase(); }
+
+  function disassemble(opcode){
+    var n1=(opcode&0xF000)>>12, x=(opcode&0x0F00)>>8, y=(opcode&0x00F0)>>4, n=opcode&0x000F, kk=opcode&0x00FF, nnn=opcode&0x0FFF;
+    switch(n1){
+      case 0x0:
+        if(opcode===0x00E0) return 'CLS';
+        if(opcode===0x00EE) return 'RET';
+        return 'SYS '+hx(nnn,3)+' (diabaikan)';
+      case 0x1: return 'JP '+hx(nnn,3);
+      case 0x2: return 'CALL '+hx(nnn,3);
+      case 0x3: return 'SE '+rn(x)+', '+hx(kk);
+      case 0x4: return 'SNE '+rn(x)+', '+hx(kk);
+      case 0x5: return 'SE '+rn(x)+', '+rn(y);
+      case 0x6: return 'LD '+rn(x)+', '+hx(kk);
+      case 0x7: return 'ADD '+rn(x)+', '+hx(kk);
+      case 0x8:
+        switch(n){
+          case 0x0: return 'LD '+rn(x)+', '+rn(y);
+          case 0x1: return 'OR '+rn(x)+', '+rn(y);
+          case 0x2: return 'AND '+rn(x)+', '+rn(y);
+          case 0x3: return 'XOR '+rn(x)+', '+rn(y);
+          case 0x4: return 'ADD '+rn(x)+', '+rn(y)+' (VF=carry)';
+          case 0x5: return 'SUB '+rn(x)+', '+rn(y)+' (VF=!borrow)';
+          case 0x6: return 'SHR '+rn(x)+' {,'+rn(y)+'}';
+          case 0x7: return 'SUBN '+rn(x)+', '+rn(y);
+          case 0xE: return 'SHL '+rn(x)+' {,'+rn(y)+'}';
+          default: return '??? (8xy'+n.toString(16)+')';
+        }
+      case 0x9: return 'SNE '+rn(x)+', '+rn(y);
+      case 0xA: return 'LD I, '+hx(nnn,3);
+      case 0xB: return 'JP V0, '+hx(nnn,3);
+      case 0xC: return 'RND '+rn(x)+', '+hx(kk);
+      case 0xD: return 'DRW '+rn(x)+', '+rn(y)+', '+n;
+      case 0xE:
+        if(kk===0x9E) return 'SKP '+rn(x);
+        if(kk===0xA1) return 'SKNP '+rn(x);
+        return '??? (Ex'+kk.toString(16)+')';
+      case 0xF:
+        switch(kk){
+          case 0x07: return 'LD '+rn(x)+', DT';
+          case 0x0A: return 'LD '+rn(x)+', K';
+          case 0x15: return 'LD DT, '+rn(x);
+          case 0x18: return 'LD ST, '+rn(x);
+          case 0x1E: return 'ADD I, '+rn(x);
+          case 0x29: return 'LD F, '+rn(x);
+          case 0x33: return 'LD B, '+rn(x);
+          case 0x55: return 'LD [I], '+rn(x);
+          case 0x65: return 'LD '+rn(x)+', [I]';
+          default: return '??? (Fx'+kk.toString(16)+')';
+        }
+      default: return '???';
+    }
+  }
+
+  function step(m){
+    if(m.halted) return false;
+    if(m.waitingForKey!==-1) return false;
+    if(m.pc>4094){ m.halted=true; m.haltReason=new OpcodeError('Program counter keluar dari batas memori ('+hx(m.pc,3)+')',null,m.pc); return false; }
+
+    var opcode=(m.mem[m.pc]<<8)|m.mem[m.pc+1];
+    var startPc=m.pc;
+    var n1=(opcode&0xF000)>>12, x=(opcode&0x0F00)>>8, y=(opcode&0x00F0)>>4, n=opcode&0x000F, kk=opcode&0x00FF, nnn=opcode&0x0FFF;
+
+    function skipIf(cond){ m.pc += cond?4:2; }
+
+    try{
+      switch(n1){
+        case 0x0:
+          if(opcode===0x00E0){ m.display.fill(0); m.pc+=2; }
+          else if(opcode===0x00EE){
+            if(m.stack.length===0) throw new OpcodeError('RET dipanggil tapi stack kosong (tidak ada CALL yang menunggu)',opcode,startPc);
+            m.pc=m.stack.pop(); m.pc+=2;
+          } else { m.pc+=2; }
+          break;
+        case 0x1:
+          if(nnn===startPc){ m.halted=true; m.haltReason=null; }
+          m.pc=nnn;
+          break;
+        case 0x2:
+          if(m.stack.length>=16) throw new OpcodeError('Stack penuh (maksimum 16 tingkat) — kemungkinan rekursi CALL tak berhenti',opcode,startPc);
+          m.stack.push(m.pc); m.pc=nnn;
+          break;
+        case 0x3: skipIf(m.V[x]===kk); break;
+        case 0x4: skipIf(m.V[x]!==kk); break;
+        case 0x5:
+          if(n!==0) throw new OpcodeError('Opcode 5xy_ dengan n != 0 tidak dikenal',opcode,startPc);
+          skipIf(m.V[x]===m.V[y]); break;
+        case 0x6: m.V[x]=kk; m.pc+=2; break;
+        case 0x7: m.V[x]=(m.V[x]+kk)&0xFF; m.pc+=2; break;
+        case 0x8: {
+          switch(n){
+            case 0x0: m.V[x]=m.V[y]; break;
+            case 0x1: m.V[x]=m.V[x]|m.V[y]; break;
+            case 0x2: m.V[x]=m.V[x]&m.V[y]; break;
+            case 0x3: m.V[x]=m.V[x]^m.V[y]; break;
+            case 0x4: { var sum=m.V[x]+m.V[y]; m.V[x]=sum&0xFF; m.V[0xF]=sum>0xFF?1:0; break; }
+            case 0x5: { var vx5=m.V[x],vy5=m.V[y]; m.V[0xF]=vx5>=vy5?1:0; m.V[x]=(vx5-vy5)&0xFF; break; }
+            case 0x6: { var vy6=m.V[y]; m.V[0xF]=vy6&0x1; m.V[x]=vy6>>1; break; }
+            case 0x7: { var vx7=m.V[x],vy7=m.V[y]; m.V[0xF]=vy7>=vx7?1:0; m.V[x]=(vy7-vx7)&0xFF; break; }
+            case 0xE: { var vyE=m.V[y]; m.V[0xF]=(vyE&0x80)?1:0; m.V[x]=(vyE<<1)&0xFF; break; }
+            default: throw new OpcodeError('Opcode 8xy'+n.toString(16)+' tidak dikenal',opcode,startPc);
+          }
+          m.pc+=2; break;
+        }
+        case 0x9:
+          if(n!==0) throw new OpcodeError('Opcode 9xy_ dengan n != 0 tidak dikenal',opcode,startPc);
+          skipIf(m.V[x]!==m.V[y]); break;
+        case 0xA: m.I=nnn; m.pc+=2; break;
+        case 0xB: m.pc=(nnn+m.V[0])&0xFFF; break;
+        case 0xC: m.V[x]=Math.floor(Math.random()*256)&kk; m.pc+=2; break;
+        case 0xD: {
+          var vx=m.V[x]%DISPLAY_W, vy=m.V[y]%DISPLAY_H;
+          m.V[0xF]=0;
+          for(var row=0; row<n; row++){
+            if(m.I+row>=4096) throw new OpcodeError('DRW membaca sprite di luar batas memori',opcode,startPc);
+            var sb=m.mem[m.I+row];
+            for(var col=0; col<8; col++){
+              var bit=(sb>>(7-col))&1;
+              if(bit===0) continue;
+              var px=(vx+col)%DISPLAY_W, py=(vy+row)%DISPLAY_H, idx=py*DISPLAY_W+px;
+              if(m.display[idx]===1) m.V[0xF]=1;
+              m.display[idx]^=1;
+            }
+          }
+          m.pc+=2; break;
+        }
+        case 0xE:
+          if(kk===0x9E) skipIf(m.V[x]<16 && m.keys[m.V[x]]===1);
+          else if(kk===0xA1) skipIf(!(m.V[x]<16 && m.keys[m.V[x]]===1));
+          else throw new OpcodeError('Opcode Ex'+kk.toString(16)+' tidak dikenal',opcode,startPc);
+          break;
+        case 0xF: {
+          switch(kk){
+            case 0x07: m.V[x]=m.dt; m.pc+=2; break;
+            case 0x0A: m.waitingForKey=x; m.pc+=2; break;
+            case 0x15: m.dt=m.V[x]; m.pc+=2; break;
+            case 0x18: m.st=m.V[x]; m.pc+=2; break;
+            case 0x1E: m.I=(m.I+m.V[x])&0xFFF; m.pc+=2; break;
+            case 0x29: m.I=FONT_ADDR+(m.V[x]&0xF)*5; m.pc+=2; break;
+            case 0x33: {
+              var val=m.V[x];
+              if(m.I+2>=4096) throw new OpcodeError('LD B, Vx menulis di luar batas memori',opcode,startPc);
+              m.mem[m.I]=Math.floor(val/100); m.mem[m.I+1]=Math.floor(val/10)%10; m.mem[m.I+2]=val%10;
+              m.pc+=2; break;
+            }
+            case 0x55: {
+              if(m.I+x>=4096) throw new OpcodeError('LD [I], Vx menulis di luar batas memori',opcode,startPc);
+              for(var wi=0; wi<=x; wi++){ m.mem[m.I+wi]=m.V[wi]; }
+              m.I=(m.I+x+1)&0xFFF; m.pc+=2; break;
+            }
+            case 0x65: {
+              if(m.I+x>=4096) throw new OpcodeError('LD Vx, [I] membaca di luar batas memori',opcode,startPc);
+              for(var ri=0; ri<=x; ri++){ m.V[ri]=m.mem[m.I+ri]; }
+              m.I=(m.I+x+1)&0xFFF; m.pc+=2; break;
+            }
+            default: throw new OpcodeError('Opcode Fx'+kk.toString(16)+' tidak dikenal',opcode,startPc);
+          }
+          break;
+        }
+        default: throw new OpcodeError('Opcode tidak dikenal',opcode,startPc);
+      }
+    } catch(e){
+      m.halted=true; m.haltReason=e; m.lastOp={pc:startPc,opcode:opcode,mnemonic:disassemble(opcode)};
+      return false;
+    }
+    m.lastOp={pc:startPc,opcode:opcode,mnemonic:disassemble(opcode)};
+    m.cycles++;
+    return true;
+  }
+
+  function setKey(m, idx, down){
+    if(idx<0||idx>15) return;
+    m.keys[idx]=down?1:0;
+    if(down && m.waitingForKey!==-1){ m.V[m.waitingForKey]=idx; m.waitingForKey=-1; }
+  }
+  function tickTimers(m){ if(m.dt>0) m.dt--; if(m.st>0) m.st--; }
+
+  // ============ PRESETS (ROM sebagai byte, ditulis & diverifikasi manual) ============
+  var PRESETS = {
+    font: {
+      label: 'Uji Font',
+      bytes: [0x00,0xE0, 0x61,0x1C, 0x62,0x0D, 0x60,0x00, 0xF0,0x29, 0xD1,0x25, 0xF3,0x0A, 0x00,0xE0, 0x70,0x01, 0x30,0x0A, 0x12,0x08, 0x12,0x16],
+      note: 'Menampilkan digit 0–9 dari font bawaan satu per satu (LD F,Vx → DRW), berhenti menunggu tombol apa pun (LD Vx,K) sebelum lanjut ke digit berikutnya. Tekan tombol keypad mana saja untuk maju.'
+    },
+    pixel: {
+      label: 'Piksel Bergerak',
+      bytes: [0x12,0x04, 0x80,0x00, 0x60,0x00, 0x61,0x10, 0xA2,0x02, 0xD0,0x11, 0x6A,0x0A, 0xFA,0x15, 0xFA,0x07, 0x3A,0x00, 0x12,0x10, 0xD0,0x11, 0x70,0x01, 0x30,0x40, 0x12,0x08, 0x60,0x00, 0x12,0x08],
+      note: 'Satu piksel bergerak dari kiri ke kanan lalu membungkus kembali ke kiri. Memakai timer DT sebagai jeda antar-langkah (teknik umum di ROM CHIP-8 asli), dan menggambar dua kali (DRW, DRW) untuk menghapus posisi lama sebelum bergerak.'
+    },
+    arith: {
+      label: 'Uji Aritmatika',
+      bytes: [0x60,0x0A,0x61,0x03,0x80,0x14,0x61,0xFF,0x80,0x14,0x80,0x15,0x62,0x05,0x82,0x26,0x63,0x01,0x64,0x04,0x83,0x41,0x65,0x01,0x66,0x04,0x85,0x62,0x67,0x01,0x68,0x05,0x87,0x83,0x12,0x22],
+      note: 'Tidak menggambar apa pun — jalankan dengan "Satu Langkah" dan amati panel register di kanan berubah setiap instruksi: ADD (dengan carry), SUB (dengan borrow), SHR, OR, AND, XOR.'
+    },
+    blank: {
+      label: 'Kosong',
+      bytes: [0x12,0x00],
+      note: 'Program minimal: satu instruksi JP ke dirinya sendiri (berhenti seketika). Hapus ROM di kotak teks dan tulis byte Anda sendiri, lalu tekan "Muat ROM".'
+    }
+  };
+
+  function bytesToHexText(bytes){
+    var out=[];
+    for(var i=0;i<bytes.length;i++){ out.push(bytes[i].toString(16).toUpperCase().padStart(2,'0')); }
+    var lines=[];
+    for(var j=0;j<out.length;j+=16){ lines.push(out.slice(j,j+16).join(' ')); }
+    return lines.join('\n');
+  }
+  function parseHexText(text){
+    var clean = text.replace(/#.*$/gm,'').match(/[0-9a-fA-F]{2}/g);
+    if(!clean) return [];
+    return clean.map(function(h){ return parseInt(h,16); });
+  }
+
+  // ============ MACHINE + RUNTIME ============
+  var machine = createMachine();
+  var running = false;
+  var rafId = null;
+  var instrPerFrame = 9;
+  var prevV = new Uint8Array(16);
+
+  var romInput = document.getElementById('romInput');
+  var loadStatus = document.getElementById('loadStatus');
+  var runStatus = document.getElementById('runStatus');
+  var speedSlider = document.getElementById('speedSlider');
+  var speedLabel = document.getElementById('speedLabel');
+  var screen = document.getElementById('screen');
+  var ctx = screen.getContext('2d');
+  var SCALE = 8;
+
+  function loadPreset(key){
+    var p = PRESETS[key];
+    romInput.value = bytesToHexText(p.bytes) + '\n\n# ' + p.note;
+    document.querySelectorAll('.preset-btn').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-p')===key); });
+  }
+
+  function powerOn(bytes){
+    machine = createMachine();
+    loadRom(machine, bytes);
+    prevV = new Uint8Array(16);
+    loadStatus.textContent = bytes.length + ' byte dimuat di 0x200';
+    loadStatus.className = 'status-pill running';
+    renderAll();
+  }
+
+  function drawScreen(){
+    ctx.fillStyle = '#05070A';
+    ctx.fillRect(0,0,screen.width,screen.height);
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--pixel').trim() || '#8FE3B0';
+    for(var y=0;y<DISPLAY_H;y++){
+      for(var x=0;x<DISPLAY_W;x++){
+        if(machine.display[y*DISPLAY_W+x]){ ctx.fillRect(x*SCALE, y*SCALE, SCALE, SCALE); }
+      }
+    }
+  }
+
+  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function renderDebugger(){
+    var panel = document.getElementById('debugPanel');
+    var regCells = '';
+    for(var i=0;i<16;i++){
+      var changed = machine.V[i] !== prevV[i];
+      regCells += '<div class="reg-cell'+(changed?' changed':'')+'"><span class="rl">'+rn(i)+'</span>'+hx(machine.V[i])+'</div>';
+    }
+    prevV = machine.V.slice();
+
+    var disasmRows = '';
+    for(var d=-2; d<=2; d++){
+      var addr = machine.pc + d*2;
+      if(addr<0 || addr>4094) continue;
+      var op = (machine.mem[addr]<<8)|machine.mem[addr+1];
+      var isCur = d===0;
+      disasmRows += '<div class="row'+(isCur?' current':'')+'">'+hx(addr,3)+'  '+op.toString(16).toUpperCase().padStart(4,'0')+'  '+escapeHtml(disassemble(op))+'</div>';
+    }
+
+    var stackHtml = machine.stack.length
+      ? machine.stack.map(function(a,i){ return '<div>['+i+'] '+hx(a,3)+'</div>'; }).join('')
+      : '<div class="empty">(kosong)</div>';
+
+    var statusNote = '';
+    if(machine.halted && machine.haltReason){
+      statusNote = '<div class="error-box"><div class="error-stage">Berhenti — RULE ENGINE-nya CPU (opcode/eksekusi)'+(machine.haltReason.pc!==undefined && machine.haltReason.pc!==null?(' — PC '+hx(machine.haltReason.pc,3)):'')+'</div><div class="error-msg">'+escapeHtml(machine.haltReason.message)+'</div></div>';
+    } else if(machine.waitingForKey!==-1){
+      statusNote = '<div class="stage-note" style="margin-top:10px;">Menunggu tombol untuk mengisi V'+machine.waitingForKey.toString(16).toUpperCase()+' (instruksi LD Vx,K) — tekan salah satu tombol keypad.</div>';
+    }
+
+    panel.innerHTML =
+      '<div class="debug-grid">'+
+        '<div class="debug-block"><h4>REGISTER (V0–VF)</h4><div class="reg-grid">'+regCells+'</div>'+
+          '<div class="flags-row">'+
+            '<span class="flag-chip">I = '+hx(machine.I,3)+'</span>'+
+            '<span class="flag-chip">PC = '+hx(machine.pc,3)+'</span>'+
+            '<span class="flag-chip">DT = '+machine.dt+'</span>'+
+            '<span class="flag-chip">ST = '+machine.st+'</span>'+
+            '<span class="flag-chip">siklus = '+machine.cycles+'</span>'+
+          '</div>'+
+        '</div>'+
+        '<div class="debug-block"><h4>INSTRUKSI SEKITAR PC</h4><div class="disasm-list">'+disasmRows+'</div>'+
+          '<h4 style="margin-top:14px;">STACK</h4><div class="stack-list">'+stackHtml+'</div>'+
+        '</div>'+
+      '</div>'+ statusNote;
+  }
+
+  function updateRunStatusPill(){
+    runStatus.className = 'status-pill' + (machine.halted ? ' halted' : (machine.waitingForKey!==-1 ? ' waiting' : (running ? ' running' : '')));
+    runStatus.textContent = machine.halted ? 'berhenti (galat/selesai)' : (machine.waitingForKey!==-1 ? 'menunggu tombol' : (running ? 'berjalan' : 'jeda'));
+  }
+
+  function renderAll(){ drawScreen(); renderDebugger(); updateRunStatusPill(); }
+
+  var frameAccumulator = 0;
+  function frameLoop(ts){
+    if(!running) return;
+    for(var i=0;i<instrPerFrame;i++){
+      if(machine.halted || machine.waitingForKey!==-1) break;
+      step(machine);
+    }
+    tickTimers(machine);
+    renderAll();
+    if(machine.halted){ running=false; return; }
+    rafId = requestAnimationFrame(frameLoop);
+  }
+
+  function doRun(){ if(machine.halted) return; running=true; updateRunStatusPill(); rafId=requestAnimationFrame(frameLoop); }
+  function doPause(){ running=false; if(rafId) cancelAnimationFrame(rafId); updateRunStatusPill(); }
+  function doStep(){
+    running=false; if(rafId) cancelAnimationFrame(rafId);
+    if(!machine.halted && machine.waitingForKey===-1){ step(machine); }
+    renderAll();
+  }
+
+  // ============ KEYPAD ============
+  var KEYPAD_LAYOUT = [0x1,0x2,0x3,0xC, 0x4,0x5,0x6,0xD, 0x7,0x8,0x9,0xE, 0xA,0x0,0xB,0xF];
+  var KEYBOARD_MAP = { '1':0x1,'2':0x2,'3':0x3,'4':0xC, 'q':0x4,'w':0x5,'e':0x6,'r':0xD, 'a':0x7,'s':0x8,'d':0x9,'f':0xE, 'z':0xA,'x':0x0,'c':0xB,'v':0xF };
+
+  function buildKeypad(){
+    var pad = document.getElementById('keypad');
+    pad.innerHTML = '';
+    KEYPAD_LAYOUT.forEach(function(k){
+      var b = document.createElement('button');
+      b.textContent = k.toString(16).toUpperCase();
+      b.dataset.key = k;
+      b.addEventListener('mousedown', function(){ setKey(machine,k,true); b.classList.add('pressed'); renderAll(); });
+      b.addEventListener('mouseup', function(){ setKey(machine,k,false); b.classList.remove('pressed'); renderAll(); });
+      b.addEventListener('mouseleave', function(){ if(b.classList.contains('pressed')){ setKey(machine,k,false); b.classList.remove('pressed'); renderAll(); } });
+      b.addEventListener('touchstart', function(e){ e.preventDefault(); setKey(machine,k,true); b.classList.add('pressed'); renderAll(); });
+      b.addEventListener('touchend', function(e){ e.preventDefault(); setKey(machine,k,false); b.classList.remove('pressed'); renderAll(); });
+      pad.appendChild(b);
+    });
+  }
+  function keypadButtonFor(k){ return document.querySelector('.keypad button[data-key="'+k+'"]'); }
+
+  window.addEventListener('keydown', function(e){
+    var k = KEYBOARD_MAP[e.key.toLowerCase()];
+    if(k===undefined) return;
+    setKey(machine,k,true);
+    var btn = keypadButtonFor(k); if(btn) btn.classList.add('pressed');
+    renderAll();
+  });
+  window.addEventListener('keyup', function(e){
+    var k = KEYBOARD_MAP[e.key.toLowerCase()];
+    if(k===undefined) return;
+    setKey(machine,k,false);
+    var btn = keypadButtonFor(k); if(btn) btn.classList.remove('pressed');
+    renderAll();
+  });
+
+  // ============ WIRE UP UI ============
+  document.getElementById('btnLoad').addEventListener('click', function(){
+    doPause();
+    var bytes = parseHexText(romInput.value);
+    if(bytes.length===0){ loadStatus.textContent='tidak ada byte valid ditemukan'; loadStatus.className='status-pill halted'; return; }
+    powerOn(bytes);
+  });
+  document.getElementById('btnPowerOff').addEventListener('click', function(){
+    doPause();
+    powerOn(parseHexText(romInput.value));
+  });
+  document.getElementById('btnRun').addEventListener('click', doRun);
+  document.getElementById('btnPause').addEventListener('click', doPause);
+  document.getElementById('btnStep').addEventListener('click', doStep);
+  document.getElementById('btnReset').addEventListener('click', function(){
+    loadPreset('font');
+    doPause();
+    powerOn(PRESETS.font.bytes);
+  });
+  speedSlider.addEventListener('input', function(){ instrPerFrame = parseInt(speedSlider.value,10); speedLabel.textContent = instrPerFrame; });
+  document.querySelectorAll('.preset-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var key = btn.getAttribute('data-p');
+      loadPreset(key);
+      doPause();
+      powerOn(PRESETS[key].bytes);
+    });
+  });
+  document.getElementById('fileInput').addEventListener('change', function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      var bytes = new Uint8Array(ev.target.result);
+      romInput.value = bytesToHexText(bytes) + '\n\n# dimuat dari berkas: ' + file.name;
+      document.querySelectorAll('.preset-btn').forEach(function(b){ b.classList.remove('active'); });
+      doPause();
+      powerOn(Array.from(bytes));
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
+  // ============ INIT ============
+  buildKeypad();
+  loadPreset('font');
+  powerOn(PRESETS.font.bytes);
+
+})();
+</script>
+</body>
+</html>

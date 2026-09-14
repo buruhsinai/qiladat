@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peta Filsuf Dunia — JAZMI</title>
+<style>
+  :root{
+    --ocean:#16303d;
+    --ocean-line:#2a4d5e;
+    --land:#d8c9a0;
+    --land-stroke:#8a7550;
+    --paper:#f4efe3;
+    --ink:#2c2418;
+    --ink-soft:#5c5142;
+    --accent:#c1893a;
+    --accent-dark:#8f5f22;
+    --card:#fffdf8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    line-height:1.6;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:32px 20px 64px;}
+  header{text-align:center;margin-bottom:28px;}
+  h1{
+    font-family:Georgia,"Iowan Old Style","Palatino Linotype",serif;
+    font-size:clamp(24px,4vw,34px);
+    font-weight:normal;
+    margin:0 0 6px;
+    letter-spacing:0.3px;
+  }
+  header p{
+    color:var(--ink-soft);
+    font-size:14px;
+    margin:0;
+  }
+  .map-frame{
+    background:var(--ocean);
+    border-radius:6px;
+    padding:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.15);
+  }
+  svg{display:block;width:100%;height:auto;}
+  .legend{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+    gap:8px;
+    margin:16px 0 24px;
+  }
+  .regbtn{
+    text-align:left;
+    background:var(--card);
+    border:1px solid #d8cbb0;
+    border-radius:6px;
+    padding:10px 12px;
+    font-size:13px;
+    color:var(--ink);
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .regbtn:hover{border-color:var(--accent);}
+  .regbtn.active{border-color:var(--accent-dark);background:#f9efdb;font-weight:600;}
+  #panel{
+    background:var(--card);
+    border:1px solid #d8cbb0;
+    border-radius:8px;
+    padding:20px 24px;
+  }
+  #panel h2{
+    font-family:Georgia,"Iowan Old Style",serif;
+    font-weight:normal;
+    font-size:20px;
+    margin:0 0 14px;
+    border-bottom:1px solid #e2d5b8;
+    padding-bottom:10px;
+  }
+  .entry{padding:10px 0;border-top:1px solid #ece2ca;}
+  .entry:first-of-type{border-top:none;}
+  .entry .name{font-weight:600;font-size:14.5px;margin:0;}
+  .entry .name .disp{color:var(--accent-dark);font-weight:600;}
+  .entry .dates{font-size:12.5px;color:var(--ink-soft);margin:2px 0;}
+  .entry .note{font-size:12.5px;color:var(--ink-soft);margin:0;}
+  .footnote{font-size:12px;color:var(--ink-soft);margin-top:14px;}
+  .caption{font-size:12px;color:var(--ink-soft);text-align:center;margin:10px 0 0;}
+  footer{margin-top:36px;font-size:12px;color:var(--ink-soft);border-top:1px solid #d8cbb0;padding-top:16px;}
+  .marker{cursor:pointer;}
+  .marker circle{fill:var(--accent);stroke:#fff8ea;stroke-width:1.2;}
+  .marker.active circle{fill:var(--accent-dark);stroke:#fff;stroke-width:1.6;}
+  .marker:hover circle{fill:var(--accent-dark);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Peta filsuf dunia</h1>
+    <p>Proyeksi azimuthal equidistant berpusat Kutub Utara — bagian dari laboratorium alat JAZMI</p>
+  </header>
+
+  <div class="map-frame">
+    <svg id="map" viewBox="0 0 800 800"></svg>
+  </div>
+  <p class="caption">Daratan digambar sebagai poligon sederhana dari pengetahuan geografi umum, bukan data survei — bentuknya cukup dikenali tapi bukan kelas kartografi presisi. Peta dipotong di 60°LS (sifat bawaan proyeksi berpusat kutub).</p>
+
+  <div class="legend" id="regionBtns"></div>
+
+  <div id="panel"></div>
+
+  <footer>
+    Prototipe berdiri sendiri untuk proyek JAZMI — daftar 139 tokoh lintas 11 kawasan geografis, dikelompokkan berdasarkan asal wilayah, bukan aliran keyakinan. Tanggal yang ditandai warna (*) diperdebatkan atau tidak pasti di kalangan sejarawan.
+  </footer>
+</div>
+
+<script>
+/* ================= Proyeksi azimuthal equidistant, pusat Kutub Utara ================= */
+const CX = 400, CY = 400, RMAX = 340; // RMAX = jari-jari pada 60 derajat LS (colat 150)
+function project(lat, lon){
+  const colat = 90 - lat;
+  const r = colat * (RMAX / 150);
+  const theta = lon * Math.PI / 180;
+  return [CX + r * Math.sin(theta), CY - r * Math.cos(theta)];
+}
+function pathFromLatLon(points){
+  return points.map(p => project(p[0], p[1]).join(',')).join(' ');
+}
+
+/* ================= Poligon daratan (skematis, disusun manual dari pengetahuan geografi) ================= */
+const LAND = [
+  // Eurasia (termasuk Skandinavia, Rusia, Timur Tengah, Asia Selatan-Timur daratan utama)
+  [[71,-9],[68,15],[60,5],[55,8],[54,14],[50,0],[48,-4],[43,-9],[40,-9],[36,-6],[37,10],[38,15],[40,20],[37,23],[36,28],[41,29],[37,36],[33,35],[31,34],[29,34.5],[27,50],[24,55],[25,60],[24,68],[20,72],[8,77],[12,80],[22,89],[16,94],[10,98],[1,104],[3,101],[10,106],[16,108],[22,114],[31,121],[35,126],[40,124],[38,128],[43,132],[52,141],[60,163],[66,170],[68,178],[70,150],[75,120],[77,105],[77,80],[77,60],[73,55],[70,40],[71,20],[71,-9]],
+  // Afrika
+  [[31,32],[32,20],[35,12],[37,10],[35,-1],[35,-6],[28,-13],[21,-17],[15,-17],[8,-13],[5,-9],[4,-2],[6,3],[4,9],[0,9],[-5,12],[-10,13],[-15,12],[-18,15],[-22,14],[-28,16],[-34,18],[-34,21],[-33,27],[-30,31],[-26,33],[-20,35],[-16,40],[-10,40],[-4,39],[2,45],[8,49],[11,43],[13,42],[15,39],[19,38],[22,37],[27,34],[31,32]],
+  // Amerika Utara
+  [[70,-160],[66,-165],[60,-165],[58,-152],[55,-130],[52,-131],[48,-124],[42,-124],[36,-121],[32,-117],[28,-114],[23,-110],[20,-105],[16,-95],[15,-92],[13,-88],[9,-79],[9,-82],[13,-84],[18,-88],[21,-97],[25,-97],[27,-97],[29,-89],[26,-82],[25,-80],[27,-80],[31,-81],[35,-76],[38,-75],[41,-71],[44,-67],[47,-59],[49,-56],[52,-56],[55,-60],[58,-62],[60,-65],[65,-64],[67,-70],[70,-68],[73,-80],[75,-95],[72,-115],[70,-140],[70,-160]],
+  // Greenland
+  [[60,-45],[63,-51],[70,-53],[76,-68],[79,-68],[81,-55],[83,-35],[81,-25],[76,-20],[70,-22],[65,-38],[60,-45]],
+  // Amerika Selatan
+  [[12,-72],[11,-66],[10,-62],[8,-60],[5,-52],[2,-50],[-1,-48],[-4,-38],[-8,-35],[-13,-38],[-18,-39],[-23,-43],[-25,-47],[-28,-48],[-30,-50],[-34,-56],[-38,-58],[-42,-64],[-48,-66],[-52,-68],[-55,-68],[-54,-71],[-50,-74],[-45,-73],[-40,-73],[-33,-71],[-28,-71],[-23,-70],[-18,-70],[-12,-77],[-8,-81],[-4,-81],[0,-80],[4,-77],[8,-77],[12,-72]],
+  // Kepulauan Britania
+  [[58,-3],[57,-6],[54,-6],[51,-4],[50,-5],[51,-1],[53,1],[56,-2],[58,-3]],
+  [[55,-8],[54,-10],[52,-9],[52,-6],[54,-6],[55,-8]],
+  // Jepang
+  [[45,142],[43,145],[40,141],[36,140],[35,139],[33,131],[31,131],[33,130],[35,133],[38,139],[41,140],[43,141],[45,142]],
+  // Sri Lanka
+  [[10,80],[8,81],[6,81],[6,80],[7,79.7],[9,80],[10,80]],
+  // Madagaskar
+  [[-12,49],[-16,50],[-20,47],[-25,45],[-24,44],[-19,44],[-14,47],[-12,49]],
+  // Filipina (disederhanakan)
+  [[19,121],[16,120],[10,119],[6,122],[9,126],[14,122],[19,121]],
+  // Sumatra
+  [[5,96],[2,97],[-3,102],[-5,105],[-1,101],[3,98],[5,96]],
+  // Jawa
+  [[-6,106],[-7,108],[-8,113],[-8,114],[-7,112],[-6,106]],
+  // Kalimantan
+  [[4,109],[2,117],[-1,117],[-3,114],[-1,109],[4,109]],
+  // Sulawesi
+  [[1,120],[-1,121],[-5,120],[-3,123],[0,124],[1,120]],
+  // Papua
+  [[-2,131],[-5,141],[-9,142],[-8,138],[-4,132],[-2,131]],
+  // Selandia Baru (rujukan tambahan)
+  [[-34,173],[-38,178],[-41,175],[-46,167],[-44,171],[-40,174],[-34,173]],
+  // Australia (rujukan tambahan)
+  [[-11,132],[-13,142],[-17,146],[-24,153],[-32,153],[-38,145],[-35,138],[-32,115],[-25,113],[-21,114],[-18,122],[-14,127],[-11,132]]
+];
+
+/* ================= Garis lintang (graticule) ================= */
+function circleAtColat(colat){
+  const r = colat * (RMAX/150);
+  return `<circle cx="${CX}" cy="${CY}" r="${r}" fill="none" stroke="var(--ocean-line)" stroke-width="1"/>`;
+}
+
+/* ================= Data 11 kawasan filsafat ================= */
+const regions = [
+{k:'yr',n:'Yunani–Romawi (Mediterania kuno)',lat:40,lon:20,people:[
+['Thales','c.624–546 SM','Filsuf pertama Barat, meramalkan gerhana matahari',0,-624],
+['Anaximander','c.610–546 SM','Mengusulkan apeiron sebagai asal segala sesuatu',0,-610],
+['Pythagoras','c.570–495 SM','Filsafat angka dan harmoni, pendiri sekte Pythagorean',0,-570],
+['Heraclitus','c.535–475 SM','Segala sesuatu mengalir (panta rhei)',0,-535],
+['Parmenides','c.515–450 SM','Realitas itu tunggal dan tak berubah',0,-515],
+['Democritus','c.460–370 SM','Pencetus teori atom',0,-460],
+['Socrates','470–399 SM','Metode dialektik, dihukum mati di Athena',0,-470],
+['Plato','428–348 SM','Teori Forma/Ide, mendirikan Akademi',0,-428],
+['Aristotle','384–322 SM','Logika, etika, metafisika, guru Alexander Agung',0,-384],
+['Diogenes dari Sinope','c.412–323 SM','Pendiri gaya hidup Sinis (Cynic)',0,-412],
+['Epicurus','341–270 SM','Kesenangan sederhana sebagai tujuan hidup',0,-341],
+['Zeno dari Citium','334–262 SM','Pendiri Stoisisme',0,-334],
+['Pyrrho','c.360–270 SM','Pendiri skeptisisme Pyrrhonian',0,-360],
+['Cicero','106–43 SM','Menerjemahkan filsafat Yunani ke bahasa Latin',0,-106],
+['Seneca','4 SM–65 M','Stoisisme Romawi, penasihat Nero',0,-4],
+['Epictetus','c.50–135 M','Mantan budak, ajaran Stoa praktis',0,50],
+['Marcus Aurelius','121–180 M','Kaisar-filsuf, penulis Meditations',0,121],
+['Plotinus','204–270 M','Pendiri Neo-Platonisme',0,204]]},
+{k:'eb',n:'Eropa Barat (abad pertengahan–kontemporer)',lat:48,lon:5,people:[
+['Augustine','354–430','Menyatukan filsafat Yunani dengan teologi Kristen',0,354],
+['Boethius','c.477–524','Menulis Consolation of Philosophy di penjara',0,477],
+['Anselm','1033–1109','Argumen ontologis tentang eksistensi Tuhan',0,1033],
+['Peter Abelard','1079–1142','Dialektika skolastik, kisah cinta dengan Heloise',0,1079],
+['Thomas Aquinas','1225–1274','Mensintesis Aristoteles dengan teologi Katolik',0,1225],
+['Duns Scotus','c.1266–1308','Konsep haecceitas (keunikan individu)',0,1266],
+['William of Ockham','c.1287–1347','Pisau cukur Ockham',0,1287],
+['Niccolò Machiavelli','1469–1527','Filsafat politik realis, Il Principe',0,1469],
+['Francis Bacon','1561–1626','Metode ilmiah empiris',0,1561],
+['René Descartes','1596–1650','Cogito ergo sum, rasionalisme modern',0,1596],
+['Thomas Hobbes','1588–1679','Kontrak sosial, Leviathan',0,1588],
+['Baruch Spinoza','1632–1677','Panteisme rasionalis, Tuhan sama dengan Alam',0,1632],
+['John Locke','1632–1704','Tabula rasa, teori hak alami',0,1632],
+['Gottfried Leibniz','1646–1716','Konsep monad, kalkulus independen dari Newton',0,1646],
+['George Berkeley','1685–1753','Idealisme immaterialis, esse est percipi',0,1685],
+['David Hume','1711–1776','Skeptisisme empiris tentang sebab-akibat',0,1711],
+['Jean-Jacques Rousseau','1712–1778','Kontrak sosial dan manusia alami',0,1712],
+['Voltaire','1694–1778','Kritik agama dan despotisme, kebebasan berpikir',0,1694],
+['Immanuel Kant','1724–1804','Sintesis rasionalisme-empirisme, imperatif kategoris',0,1724],
+['Mary Wollstonecraft','1759–1797','Perintis filsafat feminis',0,1759],
+['Adam Smith','1723–1790','Filsafat moral dan ekonomi pasar',0,1723],
+['G.W.F. Hegel','1770–1831','Dialektika sejarah, idealisme absolut',0,1770],
+['Arthur Schopenhauer','1788–1860','Kehendak sebagai dasar realitas, pesimisme',0,1788],
+['Ludwig Feuerbach','1804–1872','Kritik agama sebagai proyeksi manusia',0,1804],
+['Søren Kierkegaard','1813–1855','Bapak eksistensialisme, lompatan iman',0,1813],
+['Karl Marx','1818–1883','Materialisme historis, kritik kapitalisme',0,1818],
+['John Stuart Mill','1806–1873','Utilitarianisme dan kebebasan individu',0,1806],
+['Friedrich Nietzsche','1844–1900','Kematian Tuhan, gagasan ubermensch',0,1844],
+['Edmund Husserl','1859–1938','Pendiri fenomenologi',0,1859],
+['Bertrand Russell','1872–1970','Logika analitik, Principia Mathematica',0,1872],
+['A.J. Ayer','1910–1989','Positivisme logis, verifikasionisme',0,1910],
+['Ludwig Wittgenstein','1889–1951','Batas bahasa adalah batas dunia',0,1889],
+['Martin Heidegger','1889–1976','Ontologi dalam Being and Time',0,1889],
+['Jean-Paul Sartre','1905–1980','Eksistensialisme, kebebasan radikal',0,1905],
+['Simone de Beauvoir','1908–1986','The Second Sex, feminisme eksistensialis',0,1908],
+['Albert Camus','1913–1960','Absurdisme, mitos Sisyphus',0,1913],
+['Hannah Arendt','1906–1975','Banalitas kejahatan, teori totalitarianisme',0,1906],
+['Karl Popper','1902–1994','Falsifikasi sebagai kriteria sains',0,1902],
+['Michel Foucault','1926–1984','Kuasa, pengetahuan, disiplin',0,1926],
+['Jacques Derrida','1930–2004','Dekonstruksi',0,1930]]},
+{k:'ret',n:'Rusia dan Eropa Timur',lat:55,lon:40,people:[
+['Leo Tolstoy','1828–1910','Anarko-pasifisme Kristen',0,1828],
+['Fyodor Dostoevsky','1821–1881','Novelis-filsuf, kebebasan dan penderitaan',0,1821],
+['Vladimir Solovyov','1853–1900','Filsafat kesatuan universal (Sophiology)',0,1853],
+['Nikolai Berdyaev','1874–1948','Eksistensialisme Kristen Rusia',0,1874],
+['Mikhail Bakhtin','1895–1975','Dialogisme dan polifoni',0,1895]]},
+{k:'di',n:'Dunia Islam (Arab–Persia–Andalusia)',lat:33,lon:45,people:[
+['Al-Kindi','c.801–873','Filsuf Arab pertama, menerjemahkan Yunani',0,801],
+['Al-Farabi','c.872–950','Guru Kedua setelah Aristoteles',0,872],
+['Al-Razi (Rhazes)','865–925','Filsuf-dokter, rasionalisme radikal',0,865],
+['Ibnu Sina (Avicenna)','980–1037','Metafisika dan kedokteran, Kitab al-Syifa',0,980],
+['Al-Ghazali','1058–1111','Kritik filsafat dalam Tahafut al-Falasifah',0,1058],
+['Ibnu Bajjah','c.1085–1138','Filsafat penyendiri (tadbir al-mutawahhid)',0,1085],
+['Ibnu Thufail','c.1105–1185','Novel filosofis Hayy ibn Yaqzan',0,1105],
+['Fakhr al-Din al-Razi','1149–1210','Teolog-filsuf, tafsir besar',0,1149],
+['Suhrawardi','1154–1191','Filsafat iluminasi (Hikmat al-Ishraq)',0,1154],
+['Ibnu Rusyd (Averroes)','1126–1198','Pembela filsafat, komentator Aristoteles',0,1126],
+['Ibnu Arabi','1165–1240','Wahdatul wujud, metafisika sufi',0,1165],
+['Nasir al-Din al-Tusi','1201–1274','Filsafat, astronomi, etika',0,1201],
+['Ibnu Khaldun','1332–1406','Bapak sosiologi dan historiografi, Muqaddimah',0,1332],
+['Mulla Sadra','1571–1636','Filsafat transenden Persia',0,1571]]},
+{k:'in',n:'India (anak benua)',lat:22,lon:79,people:[
+['Kapila','tanggal tak pasti (semi-legendaris)','Pendiri tradisi Samkhya',1,-700],
+['Buddha Gautama','c.563–483 SM','Empat Kebenaran Mulia, jalan tengah',1,-563],
+['Mahavira','c.599–527 SM','Penyempurna ajaran Jain, ahimsa',1,-599],
+['Chanakya','c.375–283 SM','Filsafat politik-strategis, Arthashastra',0,-375],
+['Patanjali','tanggal tak pasti, kisaran abad 2 SM–4 M','Penyusun Yoga Sutra',1,-100],
+['Nagarjuna','c.150–250 M','Filsafat Madhyamaka, konsep kekosongan (sunyata)',0,150],
+['Adi Shankara','c.788–820 M','Advaita Vedanta, non-dualisme',1,788],
+['Ramanuja','1017–1137','Vishishtadvaita, teisme kualifikasi',0,1017],
+['Madhvacharya','1238–1317','Dvaita Vedanta, dualisme',0,1238],
+['Rabindranath Tagore','1861–1941','Filsafat humanisme dan pendidikan',0,1861],
+['Swami Vivekananda','1863–1902','Memperkenalkan Vedanta ke Barat',0,1863],
+['Mahatma Gandhi','1869–1948','Ahimsa dan satyagraha',0,1869],
+['Sri Aurobindo','1872–1950','Evolusi spiritual integral',0,1872],
+['B.R. Ambedkar','1891–1956','Kritik sistem kasta, konstitusionalisme',0,1891],
+['Jiddu Krishnamurti','1895–1986','Kebebasan dari otoritas dan tradisi',0,1895]]},
+{k:'tk',n:'Tiongkok',lat:35,lon:105,people:[
+['Laozi','tanggal legendaris, keberadaan historis diperdebatkan','Tao Te Ching, filsafat Tao',1,-600],
+['Confucius','551–479 SM','Etika kekeluargaan dan tata sosial (Ren, Li)',0,-551],
+['Mozi','c.470–391 SM','Cinta universal (jian ai), anti-perang',0,-470],
+['Mencius','c.372–289 SM','Manusia pada dasarnya baik',0,-372],
+['Zhuangzi','c.369–286 SM','Relativisme dan spontanitas Tao',0,-369],
+['Xunzi','c.310–235 SM','Manusia pada dasarnya buruk, perlu ritual',0,-310],
+['Han Feizi','c.280–233 SM','Legalisme, hukum dan kekuasaan',0,-280],
+['Dong Zhongshu','179–104 SM','Konfusianisme negara Dinasti Han',0,-179],
+['Wang Chong','27–97 M','Kritik takhayul dan mitos, rasionalisme',0,27],
+['Huineng','638–713','Chan (Zen), pencerahan tiba-tiba',0,638],
+['Zhu Xi','1130–1200','Neo-Konfusianisme, sintesis li dan qi',0,1130],
+['Wang Yangming','1472–1529','Kesatuan pengetahuan dan tindakan',0,1472],
+['Feng Youlan','1895–1990','Sejarah filsafat Tiongkok modern',0,1895]]},
+{k:'jk',n:'Jepang dan Korea',lat:37,lon:128,people:[
+['Dogen','1200–1253','Pendiri Zen Soto Jepang',0,1200],
+['Yi Hwang (Toegye)','1501–1570','Neo-Konfusianisme Korea',0,1501],
+['Yi I (Yulgok)','1536–1584','Filsafat li-gi Korea',0,1536],
+['Kitaro Nishida','1870–1945','Pendiri Mazhab Kyoto, kekosongan mutlak',0,1870]]},
+{k:'ns',n:'Nusantara (Indonesia)',lat:-2,lon:118,people:[
+['Buya Hamka','1908–1981','Filsafat dan tafsir Islam Nusantara',0,1908],
+['Driyarkara','1913–1967','Filsuf humanisme Katolik Indonesia',0,1913],
+['Sutan Sjahrir','1909–1966','Sosialisme demokratis Indonesia',0,1909],
+['Ki Hajar Dewantara','1889–1959','Filsafat pendidikan Tut Wuri Handayani',0,1889],
+['Soedjatmoko','1922–1989','Pemikir pembangunan dan humanisme',0,1922],
+['Nurcholish Madjid','1939–2005','Pembaruan pemikiran Islam Indonesia',0,1939]]},
+{k:'af',n:'Afrika (sub-Sahara dan diaspora)',lat:5,lon:20,people:[
+['Zera Yacob','1599–1692','Filsuf Ethiopia, rasionalisme independen (Hatata)',0,1599],
+['Anton Wilhelm Amo','c.1703–1759','Lahir di Ghana, filsuf di universitas Jerman',0,1703],
+['Léopold Sédar Senghor','1906–2001','Négritude, filsafat identitas Afrika',0,1906],
+['Kwame Nkrumah','1909–1972','Consciencism, pan-Afrikanisme',0,1909],
+['Kwasi Wiredu','1931–2022','Filsafat analitik Afrika, kritik konseptual',0,1931],
+['John Mbiti','1931–2019','Filsafat dan agama tradisional Afrika',0,1931]]},
+{k:'au',n:'Amerika Utara',lat:40,lon:-95,people:[
+['Ralph Waldo Emerson','1803–1882','Transendentalisme, individualisme',0,1803],
+['Henry David Thoreau','1817–1862','Pembangkangan sipil, Walden',0,1817],
+['Charles Sanders Peirce','1839–1914','Pendiri pragmatisme',0,1839],
+['William James','1842–1910','Pragmatisme dan psikologi filosofis',0,1842],
+['John Dewey','1859–1952','Pragmatisme dan filsafat pendidikan',0,1859],
+['W.E.B. Du Bois','1868–1963','Filsafat ras, double consciousness',0,1868],
+['Ayn Rand','1905–1982','Objektivisme, individualisme radikal',0,1905],
+['John Rawls','1921–2002','Teori keadilan, veil of ignorance',0,1921],
+['Thomas Kuhn','1922–1996','Pergeseran paradigma dalam sains',0,1922],
+['Noam Chomsky','1928–','Linguistik dan kritik politik',0,1928],
+['Cornel West','1953–','Filsafat ras dan pragmatisme profetik',0,1953],
+['Daniel Dennett','1942–2024','Filsafat pikiran, ateisme naturalistik',0,1942],
+['Peter Singer','1946–','Etika utilitarian, hak hewan (asal Australia)',0,1946],
+['Sam Harris','1967–','Neurosains dan kritik agama',0,1967]]},
+{k:'al',n:'Amerika Latin',lat:-10,lon:-60,people:[
+['José Martí','1853–1895','Filsafat kemerdekaan Kuba',0,1853],
+['José Vasconcelos','1882–1959','Gagasan ras kosmik, filsafat Meksiko',0,1882],
+['Leopoldo Zea','1912–2004','Filsafat identitas Amerika Latin',0,1912],
+['Paulo Freire','1921–1997','Pedagogi kaum tertindas, Brasil',0,1921],
+['Enrique Dussel','1934–2023','Filsafat pembebasan (liberation philosophy)',0,1934]]}
+];
+
+/* ================= Render peta ================= */
+const svg = document.getElementById('map');
+let svgContent = `<defs></defs>`;
+// graticule
+[30,60,90,120,150].forEach(c => svgContent += circleAtColat(c));
+// meridian tiap 30 derajat
+for(let lon=0; lon<360; lon+=30){
+  const [x,y] = project(-60, lon > 180 ? lon-360 : lon);
+  svgContent += `<line x1="${CX}" y1="${CY}" x2="${x}" y2="${y}" stroke="var(--ocean-line)" stroke-width="1"/>`;
+}
+// kutub
+svgContent += `<circle cx="${CX}" cy="${CY}" r="3" fill="#e8dcc0"/>`;
+// daratan
+LAND.forEach(poly => {
+  svgContent += `<polygon points="${pathFromLatLon(poly)}" fill="var(--land)" stroke="var(--land-stroke)" stroke-width="1.2"/>`;
+});
+svg.innerHTML = svgContent;
+
+// marker kawasan filsafat (elemen terpisah supaya gampang dikelola lewat DOM)
+const markersG = document.createElementNS('http://www.w3.org/2000/svg','g');
+markersG.setAttribute('id','markers');
+svg.appendChild(markersG);
+
+const btnsDiv = document.getElementById('regionBtns');
+const panel = document.getElementById('panel');
+let activeKey = null;
+
+function renderPanel(r){
+  activeKey = r.k;
+  const sorted = [...r.people].sort((a,b)=>a[4]-b[4]);
+  const hasDisputed = sorted.some(p=>p[3]);
+  let html = `<h2>${r.n}</h2>`;
+  sorted.forEach(p=>{
+    html += `<div class="entry">
+      <p class="name">${p[0]}${p[3] ? ' <span class="disp">*</span>' : ''}</p>
+      <p class="dates">${p[1]}</p>
+      <p class="note">${p[2]}</p>
+    </div>`;
+  });
+  if(hasDisputed){
+    html += `<p class="footnote">* tanggal diperdebatkan atau tidak pasti di kalangan sejarawan</p>`;
+  }
+  panel.innerHTML = html;
+  document.querySelectorAll('.regbtn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.k === activeKey);
+  });
+  document.querySelectorAll('.marker').forEach(m=>{
+    m.classList.toggle('active', m.dataset.k === activeKey);
+  });
+}
+
+regions.forEach(r=>{
+  const [x,y] = project(r.lat, r.lon);
+  const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+  g.setAttribute('class','marker');
+  g.setAttribute('data-k', r.k);
+  g.innerHTML = `<circle cx="${x}" cy="${y}" r="7"></circle>`;
+  g.addEventListener('click', ()=>renderPanel(r));
+  markersG.appendChild(g);
+
+  const btn = document.createElement('button');
+  btn.className = 'regbtn';
+  btn.dataset.k = r.k;
+  btn.textContent = r.n;
+  btn.addEventListener('click', ()=>renderPanel(r));
+  btnsDiv.appendChild(btn);
+});
+
+renderPanel(regions[0]);
+</script>
+</body>
+</html>

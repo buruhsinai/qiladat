@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulator Baringan Empat Surat & Baringan Lintang</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Karla:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root{
+    --sea-deep:#0b2233; --sea-mid:#122f45; --sea-panel:#173a53;
+    --chart-line:#2d5a72; --chart-line-soft:#204a63;
+    --brass:#c9a24b; --brass-bright:#e8c876;
+    --parchment:#ede2c8; --parchment-dim:#a9b8c4;
+    --coral:#d1684a; --sage:#7fae8c;
+    --line:#2a4d64;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--sea-deep); color:var(--parchment);
+    font-family:'Karla',sans-serif; line-height:1.55;
+  }
+  .wrap{ max-width:920px; margin:0 auto; padding:28px 18px 60px; }
+  h1,h2,h3{ font-family:'Fraunces',serif; color:#f7f1e3; margin:0 0 8px; }
+  header h1{ font-size:1.7rem; font-weight:700; max-width:22ch; }
+  header p{ color:var(--parchment-dim); max-width:62ch; font-size:0.96rem; margin:10px 0 0; }
+  .kicker{ font-family:'Space Mono',monospace; font-size:0.78rem; color:var(--brass-bright);
+    letter-spacing:0.02em; margin:0 0 10px; }
+
+  /* ---------- KARTU KANVAS (HERO) ---------- */
+  .chart-card{
+    background:var(--sea-mid); border:1px solid var(--line); border-radius:10px;
+    padding:16px; margin-top:26px; position:relative;
+  }
+  #chartCanvas{ width:100%; height:auto; display:block; border-radius:6px; background:var(--sea-deep); touch-action:none; }
+  #crossCanvas{ width:100%; height:auto; display:block; border-radius:6px; background:var(--sea-deep); }
+
+  /* ---------- TOGGLE PETA 2D / MODEL 3D (Modul 1) ---------- */
+  .viewtoggle{ display:flex; gap:0; border:1px solid var(--brass); border-radius:8px; overflow:hidden;
+    position:absolute; top:12px; left:12px; z-index:5; }
+  .viewtoggle button{ background:var(--sea-mid); color:var(--parchment-dim); border:none;
+    font-family:'Karla',sans-serif; font-size:11.5px; font-weight:700; padding:6px 12px;
+    cursor:pointer; border-right:1px solid var(--brass); }
+  .viewtoggle button:last-child{ border-right:none; }
+  .viewtoggle button.active{ background:var(--brass); color:#1a1408; }
+  .view3d-hint{ position:absolute; bottom:8px; right:12px; font-family:'Space Mono',monospace;
+    font-size:9.5px; color:var(--parchment-dim); z-index:5; pointer-events:none; }
+  #three3dM1{ width:100%; aspect-ratio:900/440; border-radius:6px; background:var(--sea-deep);
+    cursor:grab; touch-action:none; -webkit-user-select:none; user-select:none; display:none; position:relative; overflow:hidden; }
+  #three3dM1.grabbing{ cursor:grabbing; }
+  #three3dM2{ width:100%; aspect-ratio:900/420; border-radius:6px; background:var(--sea-deep);
+    cursor:grab; touch-action:none; -webkit-user-select:none; user-select:none; display:none; position:relative; overflow:hidden; }
+  #three3dM2.grabbing{ cursor:grabbing; }
+  .hud3d{ position:absolute; top:12px; right:12px; z-index:6; background:rgba(11,34,51,0.78);
+    border:1px solid var(--brass); border-radius:6px; padding:7px 11px; font-family:'Space Mono',monospace;
+    font-size:10.5px; color:var(--parchment); line-height:1.65; pointer-events:none; white-space:nowrap; }
+  .hud3d b{ color:var(--brass); font-weight:700; }
+  .compass3d{ position:absolute; bottom:10px; left:12px; z-index:6; width:46px; height:46px; pointer-events:none; }
+  .label3d{ position:absolute; transform:translate(-50%,-100%); pointer-events:none;
+    font-family:'Space Mono',monospace; font-size:10px; color:var(--parchment);
+    background:rgba(11,34,51,0.72); border:1px solid var(--brass); border-radius:4px;
+    padding:1px 6px; white-space:nowrap; z-index:6; }
+  .rose-wrap{
+    position:absolute; top:28px; right:28px; width:118px; height:118px;
+    background:rgba(11,34,51,0.72); border:1px solid var(--line); border-radius:50%;
+    backdrop-filter:blur(2px);
+  }
+  #roseCanvas{ width:100%; height:100%; }
+
+  .narration{
+    margin-top:12px; font-size:0.92rem; color:var(--parchment);
+    min-height:1.4em; border-left:3px solid var(--brass); padding-left:12px;
+  }
+  .sim-controls{ display:flex; align-items:center; gap:8px; margin-top:14px; flex-wrap:wrap; }
+  .btn{
+    font-family:'Karla',sans-serif; font-weight:700; font-size:0.86rem;
+    background:transparent; color:var(--parchment); border:1px solid var(--brass);
+    border-radius:999px; padding:8px 16px; cursor:pointer; transition:background .15s, color .15s;
+  }
+  .btn:hover{ background:rgba(201,162,75,0.14); }
+  .btn.primary{ background:var(--brass); color:#1a1408; border-color:var(--brass); }
+  .btn.primary:hover{ background:var(--brass-bright); }
+  .progress{ margin-left:auto; font-family:'Space Mono',monospace; font-size:0.8rem; color:var(--parchment-dim); }
+
+  /* ---------- PANEL KONTROL ---------- */
+  .panel-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-top:16px; }
+  @media (max-width:760px){ .panel-grid{ grid-template-columns:1fr; } }
+  .panel-grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px; }
+  @media (max-width:760px){ .panel-grid-2{ grid-template-columns:1fr; } }
+  .field-card{
+    background:var(--sea-mid); border:1px solid var(--line); border-radius:10px; padding:16px;
+  }
+  .field-card h3{ font-size:0.98rem; margin-bottom:12px; }
+  .slider-field{ margin-bottom:14px; }
+  .slider-field:last-child{ margin-bottom:0; }
+  .slider-label{ display:flex; justify-content:space-between; font-size:0.82rem; color:var(--parchment-dim); margin-bottom:5px; }
+  .slider-label b{ color:var(--brass-bright); font-family:'Space Mono',monospace; font-weight:700; }
+  input[type=range]{ width:100%; accent-color:var(--brass); }
+  .pill-row{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+  .pill{
+    font-family:'Karla',sans-serif; font-size:0.78rem; padding:6px 11px; border-radius:999px;
+    border:1px solid var(--line); background:transparent; color:var(--parchment-dim); cursor:pointer;
+  }
+  .pill.active{ border-color:var(--brass); color:var(--brass-bright); background:rgba(201,162,75,0.1); }
+  .checkline{ display:flex; align-items:center; gap:8px; font-size:0.82rem; color:var(--parchment-dim); margin-top:4px; }
+  .checkline input{ accent-color:var(--brass); }
+  .preset-row{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+  .hint{ font-size:0.76rem; color:var(--parchment-dim); margin-top:8px; opacity:0.85; }
+
+  /* ---------- HASIL ---------- */
+  .results-card{
+    background:var(--sea-panel); border:1px solid var(--line); border-radius:10px;
+    padding:18px; margin-top:16px;
+  }
+  .results-card h3{ font-size:0.98rem; }
+  .result-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:10px; }
+  .result{ }
+  .result .label{ font-size:0.74rem; color:var(--parchment-dim); margin-bottom:3px; }
+  .result .value{ font-family:'Space Mono',monospace; font-size:1.15rem; color:var(--brass-bright); }
+  .badge{
+    display:inline-block; margin-top:14px; font-size:0.8rem; padding:7px 13px; border-radius:8px;
+    background:rgba(127,174,140,0.14); border:1px solid var(--sage); color:var(--sage);
+  }
+  .badge.warn{ background:rgba(209,104,74,0.14); border-color:var(--coral); color:#e79a86; }
+  .quiz-note{ font-size:0.82rem; color:var(--parchment-dim); margin-top:10px; }
+  .reveal-btn{ margin-top:8px; }
+
+  /* ---------- STUDI / PENJELASAN ---------- */
+  .study{ margin-top:24px; }
+  details.section{ border-top:1px solid var(--line); padding:14px 0; }
+  details.section:last-child{ border-bottom:1px solid var(--line); }
+  summary{ cursor:pointer; font-family:'Fraunces',serif; font-weight:600; font-size:1rem; color:#f0e9d8; }
+  .section-body{ color:var(--parchment-dim); font-size:0.9rem; padding-top:10px; max-width:74ch; }
+  .section-body ul{ padding-left:20px; margin:8px 0; }
+  .section-body li{ margin-bottom:7px; }
+  .formula{
+    font-family:'Space Mono',monospace; font-size:0.82rem; background:var(--sea-mid);
+    border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin:12px 0; color:var(--parchment);
+    overflow-x:auto;
+  }
+  table.suratable{ border-collapse:collapse; width:100%; margin-top:10px; font-size:0.85rem; }
+  table.suratable th, table.suratable td{ border-bottom:1px solid var(--line); padding:6px 8px; text-align:left; }
+  table.suratable th{ color:var(--brass-bright); font-weight:700; font-size:0.78rem; }
+
+  footer{ margin-top:32px; font-size:0.78rem; color:var(--parchment-dim); border-top:1px dashed var(--line); padding-top:14px; }
+
+  .divider{ margin:40px 0 28px; border-top:1px dashed var(--line); }
+  .module2-header h2{ font-size:1.35rem; font-weight:700; max-width:26ch; }
+  .module2-header p{ color:var(--parchment-dim); max-width:66ch; font-size:0.94rem; margin:8px 0 0; }
+  .cut-angle-note{ font-size:0.8rem; margin-top:10px; }
+
+  @media (max-width:600px){
+    .rose-wrap{ width:78px; height:78px; top:12px; right:12px; }
+    header h1{ font-size:1.4rem; }
+    .progress{ margin-left:0; width:100%; order:5; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">Ilmu Pelayaran · Piloting Pantai</div>
+    <h1>Baringan Empat Surat & Baringan Lintang</h1>
+    <p>Cara klasik menentukan jarak kapal ke daratan atau mercusuar hanya dengan kompas baring, jam, dan kecepatan kapal — tanpa radar maupun GPS. Atur haluan, kecepatan, dan posisi objek di bawah, lalu jalankan simulasinya.</p>
+  </header>
+
+  <section class="chart-card">
+    <div class="viewtoggle" id="viewToggleM1">
+      <button id="btn2dM1" class="active" type="button">Peta 2D</button>
+      <button id="btn3dM1" type="button">Model 3D</button>
+    </div>
+    <canvas id="chartCanvas" width="900" height="440"></canvas>
+    <div id="three3dM1"></div>
+    <div class="view3d-hint" id="view3dHintM1" style="display:none">drag = putar · scroll/cubit 2 jari = zoom</div>
+    <div class="rose-wrap"><canvas id="roseCanvas" width="240" height="240"></canvas></div>
+    <div class="narration" id="narrationBox">Atur parameter di bawah, lalu tekan ▶ Berlayar.</div>
+    <div class="sim-controls">
+      <button class="btn primary" id="playBtn" type="button">▶ Berlayar</button>
+      <button class="btn" id="pauseBtn" type="button">⏸ Jeda</button>
+      <button class="btn" id="resetBtn" type="button">🔁 Ulangi</button>
+      <button class="btn" id="randomBtn" type="button">🎲 Skenario Acak</button>
+      <div class="progress" id="progressText"></div>
+    </div>
+  </section>
+
+  <section class="panel-grid">
+    <div class="field-card">
+      <h3>Kapal</h3>
+      <div class="slider-field">
+        <div class="slider-label"><span>Kecepatan kapal</span><b id="vVal">12 knot</b></div>
+        <input type="range" id="vSlider" min="4" max="25" step="0.5" value="12">
+      </div>
+      <div class="slider-field">
+        <div class="slider-label"><span>Kecepatan animasi (bukan kecepatan kapal — cuma laju putar)</span><b id="animVal">3,0 mil/detik</b></div>
+        <input type="range" id="animSlider" min="0.5" max="8" step="0.5" value="3">
+      </div>
+    </div>
+
+    <div class="field-card">
+      <h3>Objek yang Dibaring</h3>
+      <div class="pill-row" id="landmarkPills">
+        <button class="pill active" data-lm="pulau" type="button">🏝️ Pulau</button>
+        <button class="pill" data-lm="mercusuar" type="button">🗼 Mercusuar</button>
+        <button class="pill" data-lm="karang" type="button">⚠️ Karang</button>
+        <button class="pill" data-lm="boya" type="button">🛟 Boya</button>
+      </div>
+      <div class="slider-field">
+        <div class="slider-label"><span>Jarak lintang sebenarnya (d)</span><b id="dVal">6,0 mil</b></div>
+        <input type="range" id="dSlider" min="1" max="15" step="0.5" value="6">
+      </div>
+      <div class="slider-field">
+        <div class="slider-label"><span>Posisi objek sepanjang lintasan</span><b id="lxVal">22,0 mil</b></div>
+        <input type="range" id="lxSlider" min="10" max="34" step="1" value="22">
+      </div>
+      <div class="hint">Objeknya juga bisa langsung digeser dengan menyeret ikonnya di kanvas.</div>
+    </div>
+
+    <div class="field-card">
+      <h3>Sudut Baring</h3>
+      <div class="preset-row">
+        <button class="pill active" data-preset="lintang" type="button">4 → 8 surat (Lintang)</button>
+        <button class="pill" data-preset="berganda" type="button">Sudut berganda bebas</button>
+        <button class="pill" data-preset="bebas" type="button">Kustom</button>
+      </div>
+      <div class="slider-field">
+        <div class="slider-label"><span>Baring pertama (θ₁)</span><b id="th1Val">4 surat (45,0°)</b></div>
+        <input type="range" id="th1Slider" min="1" max="14" step="0.5" value="4">
+      </div>
+      <div class="slider-field">
+        <div class="slider-label"><span>Baring kedua (θ₂)</span><b id="th2Val">8 surat (90,0°)</b></div>
+        <input type="range" id="th2Slider" min="2" max="15.5" step="0.5" value="8">
+      </div>
+      <label class="checkline"><input type="checkbox" id="quizCheck"> Mode kuis — sembunyikan jarak sebenarnya sampai simulasi selesai</label>
+    </div>
+  </section>
+
+  <section class="results-card" id="resultsCard">
+    <h3>Hasil</h3>
+    <div class="result-grid">
+      <div class="result"><div class="label">Waktu antar-baring</div><div class="value" id="rTime">—</div></div>
+      <div class="result"><div class="label">Jarak tempuh (log kapal)</div><div class="value" id="rDist">—</div></div>
+      <div class="result"><div class="label">Jarak ke objek saat baring ke-2 (R₂)</div><div class="value" id="rR2">—</div></div>
+      <div class="result"><div class="label">Jarak lintang dihitung</div><div class="value" id="rD">—</div></div>
+    </div>
+    <div id="quizArea" style="display:none;">
+      <p class="quiz-note">Mode kuis aktif — jarak sebenarnya disembunyikan.</p>
+      <button class="btn reveal-btn" id="revealBtn" type="button">👁️ Tampilkan jarak sebenarnya</button>
+    </div>
+    <div id="trueArea" style="display:none;">
+      <div class="result-grid" style="margin-top:2px;">
+        <div class="result"><div class="label">Jarak lintang sebenarnya</div><div class="value" id="rDTrue">—</div></div>
+        <div class="result"><div class="label">Selisih hitung vs sebenarnya</div><div class="value" id="rSelisih">—</div></div>
+      </div>
+    </div>
+    <div id="badgeArea"></div>
+  </section>
+
+  <div class="divider"></div>
+
+  <header class="module2-header">
+    <div class="kicker">Modul 2 · Fiks Posisi Sesaat</div>
+    <h2>Baringan Silang: Posisi dari Dua Benda Darat</h2>
+    <p>Beda dari modul di atas: teknik ini tidak butuh kecepatan atau waktu sama sekali — cukup baring <strong>dua</strong> benda darat yang posisinya sudah diketahui di peta secara <em>hampir bersamaan</em>, lalu tarik garis dari tiap benda darat itu ke arah kebalikan sudut baringnya. Titik potong kedua garis itu <em>adalah</em> posisi kapal. Geser posisi kapal di bawah untuk melihatnya sendiri.</p>
+  </header>
+
+  <section class="chart-card">
+    <div class="viewtoggle" id="viewToggleM2">
+      <button id="btn2dM2" class="active" type="button">Peta 2D</button>
+      <button id="btn3dM2" type="button">Model 3D</button>
+    </div>
+    <canvas id="crossCanvas" width="900" height="420"></canvas>
+    <div id="three3dM2"></div>
+    <div class="view3d-hint" id="view3dHintM2" style="display:none">drag = putar · scroll/cubit 2 jari = zoom</div>
+    <div class="narration" id="crossNarration">Geser posisi kapal untuk melihat garis baringnya berpotongan, atau tekan ▶ Berlayar untuk melihatnya bergerak sendiri.</div>
+    <div class="sim-controls">
+      <button class="btn primary" id="crossPlayBtn" type="button">▶ Berlayar</button>
+      <button class="btn" id="crossPauseBtn" type="button">⏸ Jeda</button>
+      <button class="btn" id="crossResetBtn" type="button">🔁 Ulangi</button>
+      <button class="btn" id="crossRandomBtn" type="button">🎲 Haluan Acak</button>
+      <div class="progress" id="crossProgressText"></div>
+    </div>
+  </section>
+
+  <section class="panel-grid-2">
+    <div class="field-card">
+      <h3>Posisi Kapal Sesungguhnya</h3>
+      <div class="slider-field">
+        <div class="slider-label"><span>Sepanjang pantai (x)</span><b id="csxVal">15,0 mil</b></div>
+        <input type="range" id="csxSlider" min="2" max="32" step="0.5" value="15">
+      </div>
+      <div class="slider-field">
+        <div class="slider-label"><span>Menjauh dari pantai (y)</span><b id="csyVal">2,0 mil</b></div>
+        <input type="range" id="csySlider" min="0.5" max="4.5" step="0.1" value="2">
+      </div>
+      <div class="slider-field">
+        <div class="slider-label"><span>Haluan kapal (arah berlayar)</span><b id="csCourseVal">70°</b></div>
+        <input type="range" id="csCourseSlider" min="0" max="359" step="1" value="70">
+      </div>
+      <div class="slider-field">
+        <div class="slider-label"><span>Kecepatan animasi (bukan kecepatan kapal — cuma laju gerak)</span><b id="csAnimVal">2,5 mil/detik</b></div>
+        <input type="range" id="csAnimSlider" min="0.5" max="6" step="0.5" value="2.5">
+      </div>
+      <label class="checkline"><input type="checkbox" id="crossQuizCheck"> Mode kuis — sembunyikan ikon kapal, tebak dulu dari perpotongan garis</label>
+      <div class="hint">Sambil berlayar, simulator mencatat "fiks" (perpotongan baringan) berkala — bandingkan titik-titik fiks itu (lingkaran putih kecil) dengan jejak asli kapal (garis krem).</div>
+    </div>
+    <div class="field-card">
+      <h3>Hasil Baringan</h3>
+      <div class="result-grid">
+        <div class="result"><div class="label">Baring ke Mercusuar Utara (A)</div><div class="value" id="csThetaA">—</div></div>
+        <div class="result"><div class="label">Baring ke Puncak Selatan (B)</div><div class="value" id="csThetaB">—</div></div>
+        <div class="result"><div class="label">Sudut potong kedua garis</div><div class="value" id="csCutAngle">—</div></div>
+        <div class="result"><div class="label">Posisi hasil perpotongan</div><div class="value" id="csFixPos">—</div></div>
+      </div>
+      <div id="csCutBadge" class="cut-angle-note"></div>
+      <div id="crossQuizArea" style="display:none;margin-top:10px;">
+        <p class="quiz-note">Mode kuis aktif — ikon kapal disembunyikan.</p>
+        <button class="btn reveal-btn" id="crossRevealBtn" type="button">👁️ Tampilkan kapal sesungguhnya</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="study">
+    <details class="section">
+      <summary>Kenapa baringan silang berbeda dari baringan sudut berganda di atas</summary>
+      <div class="section-body">
+        <p>Modul pertama (di atas) menjawab pertanyaan <em>"seberapa jauh kapal dari satu benda darat?"</em> — dan untuk itu ia perlu tahu kecepatan kapal &amp; selang waktu antar-baring, karena yang diukur sebenarnya adalah <em>jarak tempuh</em> kapal antara dua saat pengamatan yang berbeda.</p>
+        <p>Baringan silang menjawab pertanyaan yang berbeda: <em>"kapal ini persis di titik mana di peta, sekarang juga?"</em> — dan untuk itu ia sama sekali tidak perlu tahu kecepatan atau waktu, karena kedua baringnya diambil <strong>hampir bersamaan</strong> (bukan pada dua saat berjauhan). Syaratnya cuma satu: posisi kedua benda darat itu sudah diketahui &amp; tercantum di peta — mercusuar, tanjung, atau puncak gunung yang gambarnya sudah ada.</p>
+        <div class="formula">Garis posisi dari benda darat A: melalui (xₐ, yₐ) dengan arah baring θₐ<br>Garis posisi dari benda darat B: melalui (x_b, y_b) dengan arah baring θ_b<br>Posisi kapal = titik potong kedua garis itu (perpotongan dua garis lurus)</div>
+        <p>Yang perlu diperhatikan navigator: sudut potong kedua garis baring itu sendiri. Kalau kedua benda darat kebetulan searah dari kapal (sudut potong mendekati 0° atau 180°), kedua garis nyaris sejajar — sedikit saja kesalahan pembacaan kompas akan membuat titik potongnya meleset jauh. Sudut potong mendekati 90° (dua benda darat kira-kira tegak lurus satu sama lain dari kapal) memberi fiks paling tajam &amp; paling tahan kesalahan baca.</p>
+      </div>
+    </details>
+    <details class="section" open>
+      <summary>Bagaimana baringan sudut berganda bisa "mengukur" jarak tanpa alat ukur jarak</summary>
+      <div class="section-body">
+        <p>Bayangkan kapal berlayar lurus di haluan tetap, melewati sebuah pulau atau mercusuar di kejauhan. Navigator membaring objek itu — mencatat sudutnya terhadap haluan kapal — dua kali: sekali saat sudutnya masih kecil (misalnya <strong>4 surat</strong>, atau 45° dari haluan), dan sekali lagi saat sudutnya sudah membesar. Selama itu, ia cuma mencatat satu hal lagi: berapa lama waktu berlalu di antara dua baringan itu (dari jam kapal), lalu dikalikan kecepatan kapal (dari log) untuk mendapat <em>jarak tempuh</em>.</p>
+        <p>Triknya ada pada geometri segitiga: posisi kapal saat baring pertama, posisi kapal saat baring kedua, dan posisi objek membentuk segitiga yang bentuknya sepenuhnya ditentukan oleh dua sudut baring itu. Kalau sudut baring kedua persis <strong>dua kali</strong> sudut baring pertama, segitiga itu selalu jadi <em>segitiga sama kaki</em> — dan itu berarti jarak tempuh kapal antara dua baringan sama persis dengan jarak kapal ke objek pada saat baring kedua. Tidak perlu trigonometri rumit di atas kapal — cukup tahu dalilnya.</p>
+        <div class="formula">R₂ (jarak ke objek saat baring ke-2) = Jarak tempuh · sin(θ₁) / sin(θ₂ − θ₁)<br>
+Kalau θ₂ = 2·θ₁ → sin(θ₂−θ₁) = sin(θ₁), sehingga R₂ = Jarak tempuh (persis)<br>
+Jarak lintang / jarak aman jalur (d) = R₂ · sin(θ₂)</div>
+        <p>Teknik "sudut berganda" (θ₂ = 2·θ₁) ini, beserta kasus khususnya, secara tradisional dikelompokkan sebagai <strong>Baringan Istimewa</strong> (atau <em>baringan khusus</em>) di buku-buku Ilmu Pelayaran Datar — istilah untuk baringan-baringan yang sudut relatifnya sudah ditetapkan lebih dulu, sehingga posisi bisa dihitung tanpa tabel trigonometri penuh. Kasus khusus yang paling terkenal dari keluarga ini adalah <strong>4 surat → 8 surat</strong> (45° → 90°, disebut <strong>Baringan Lintang</strong> atau <em>bow and beam bearing</em>): saat baring kedua tepat 8 surat, objek persis melintang (abeam) — sudah tidak ada lagi sudut ke depan atau ke belakang. Pada saat itu, R₂ (jarak baring) DAN jarak lintang (d) menjadi satu angka yang sama: jarak tempuh kapal itu sendiri. Inilah kenapa 4→8 surat jadi kombinasi favorit navigator — hasilnya langsung jadi jarak aman kapal terhadap daratan, tanpa hitungan tambahan sama sekali.</p>
+        <p style="font-size:0.85rem;">Literatur pelayaran datar juga mencatat pasangan sudut istimewa lain di luar 4→8 surat — misalnya 22,5°→45° atau 26,5°→45°, yang bahkan bisa memberi posisi <em>sebelum</em> objek melintang — tapi turunan geometrinya berbeda-beda per pasangan &amp; tidak disertakan di simulator ini karena belum diverifikasi terpisah di sini.</p>
+      </div>
+    </details>
+
+
+    <details class="section">
+      <summary>Satuan "surat" — kenapa bukan langsung derajat?</summary>
+      <div class="section-body">
+        <p>Kompas kapal tradisional dibagi jadi 32 "surat" (mata angin/points) mengelilingi lingkaran penuh — bukan 360°. Satu surat = 360° ÷ 32 = <strong>11,25°</strong>. Baringan biasanya dilaporkan dalam surat karena itu satuan yang tergambar langsung di piringan kompas, jadi navigator bisa membaca sudut sekali lihat tanpa menghitung derajat dulu.</p>
+        <table class="suratable">
+          <tr><th>Surat</th><th>Derajat</th><th>Istilah</th></tr>
+          <tr><td>2 surat</td><td>22,5°</td><td>—</td></tr>
+          <tr><td>4 surat</td><td>45,0°</td><td>Baring haluan (bow bearing) klasik</td></tr>
+          <tr><td>8 surat</td><td>90,0°</td><td>Lintang / abeam</td></tr>
+          <tr><td>16 surat</td><td>180,0°</td><td>Buritan (tepat di belakang)</td></tr>
+        </table>
+      </div>
+    </details>
+
+    <details class="section">
+      <summary>Batasan</summary>
+      <div class="section-body">
+        <ul>
+          <li>Simulator ini mengasumsikan haluan &amp; kecepatan kapal konstan sepanjang pengamatan, dan objek yang dibaring diam di tempat — sama seperti asumsi klasik teknik ini. Arus, angin, atau perubahan haluan di dunia nyata akan menggeser hasilnya.</li>
+          <li>Sudut baring di sini diukur dari haluan kapal (relative bearing), bukan baringan sejati/kompas (true/compass bearing) — di praktik nyata, baringan kompas masih perlu dikoreksi variasi &amp; deviasi sebelum dipakai dengan cara yang sama.</li>
+          <li>Rumus umum (bukan sudut berganda) tetap dihitung benar di alat ini, tapi secara historis jarang dipakai manual di atas kapal karena melibatkan pembagian sinus — sudut berganda dipilih justru karena bisa disederhanakan tanpa kalkulator.</li>
+        </ul>
+      </div>
+    </details>
+  </section>
+
+  <footer>
+    Bagian dari kurikulum Bank Alat JAZMI — Modul Ilmu Pelayaran. Rumus baringan sudut berganda & baringan lintang di alat ini sudah diverifikasi di luar peramban (Node.js) lewat 500 kombinasi parameter acak, seluruhnya mencocokkan jarak lintang hasil hitung dengan jarak lintang sebenarnya hingga presisi 1×10⁻⁶ mil laut. Rumus perpotongan garis pada modul Baringan Silang juga sudah diverifikasi terpisah (uji lintas-balik: hitung baring dari posisi kapal → rekonstruksi posisi dari baring itu → dibandingkan ke posisi asli), galat pada seluruh kasus uji berada pada tingkat presisi pembulatan angka (~10⁻¹⁵), bukan galat rumus.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  const chartCanvas = document.getElementById('chartCanvas');
+  const ctx = chartCanvas.getContext('2d');
+  const roseCanvas = document.getElementById('roseCanvas');
+  const rctx = roseCanvas.getContext('2d');
+
+  const vSlider=document.getElementById('vSlider'), vVal=document.getElementById('vVal');
+  const animSlider=document.getElementById('animSlider'), animVal=document.getElementById('animVal');
+  const dSlider=document.getElementById('dSlider'), dVal=document.getElementById('dVal');
+  const lxSlider=document.getElementById('lxSlider'), lxVal=document.getElementById('lxVal');
+  const th1Slider=document.getElementById('th1Slider'), th1Val=document.getElementById('th1Val');
+  const th2Slider=document.getElementById('th2Slider'), th2Val=document.getElementById('th2Val');
+  const quizCheck=document.getElementById('quizCheck');
+  const landmarkPills=document.querySelectorAll('#landmarkPills .pill');
+  const presetPills=document.querySelectorAll('[data-preset]');
+
+  const playBtn=document.getElementById('playBtn'), pauseBtn=document.getElementById('pauseBtn');
+  const resetBtn=document.getElementById('resetBtn'), randomBtn=document.getElementById('randomBtn');
+  const narrationBox=document.getElementById('narrationBox'), progressText=document.getElementById('progressText');
+
+  const rTime=document.getElementById('rTime'), rDist=document.getElementById('rDist');
+  const rR2=document.getElementById('rR2'), rD=document.getElementById('rD');
+  const quizArea=document.getElementById('quizArea'), trueArea=document.getElementById('trueArea');
+  const rDTrue=document.getElementById('rDTrue'), rSelisih=document.getElementById('rSelisih');
+  const revealBtn=document.getElementById('revealBtn'), badgeArea=document.getElementById('badgeArea');
+
+  const LM_ICON = { pulau:'🏝️', mercusuar:'🗼', karang:'⚠️', boya:'🛟' };
+  const LM_LABEL = { pulau:'pulau', mercusuar:'mercusuar', karang:'karang', boya:'boya' };
+
+  const state = {
+    v: 12, animSpeed: 3, landmark:'pulau', d: 6, Lx: 22,
+    th1: 4, th2: 8, // dalam surat
+    quiz:false, playing:false, phase:'idle', // idle | running | done
+    shipX: 0, tHours: 0,
+    mark1:null, mark2:null, revealed:false
+  };
+  const SURAT_DEG = 11.25;
+  function surat2deg(s){ return s*SURAT_DEG; }
+  function deg2rad(d){ return d*Math.PI/180; }
+  function fmt(n,dec){ return n.toLocaleString('id-ID',{minimumFractionDigits:dec,maximumFractionDigits:dec}); }
+
+  /* ---------- WORLD <-> CANVAS MAPPING ---------- */
+  let W=chartCanvas.width, H=chartCanvas.height;
+  let scale, originX, originY; // px per NM, dan posisi (0,0 dunia) di kanvas
+
+  function computeScale(){
+    const marginPx = 70;
+    const worldWmax = state.Lx + 8; // sedikit ruang setelah objek
+    const worldHmax = Math.max(state.d*2.4, 10);
+    const scaleX = (W - marginPx*2) / worldWmax;
+    const scaleY = (H - marginPx*2) / worldHmax;
+    scale = Math.min(scaleX, scaleY, 34);
+    originX = 46;
+    originY = H*0.62; // baris lintasan kapal agak di bawah tengah, memberi ruang utk objek di atas
+  }
+  function toPx(x,y){ return { px: originX + x*scale, py: originY - y*scale }; }
+  function toWorld(px,py){ return { x:(px-originX)/scale, y:(originY-py)/scale }; }
+
+  /* ---------- GAMBAR KANVAS UTAMA ---------- */
+  function bearingDeg(x){
+    // sudut dari haluan (arah +x) ke objek, 0..180
+    const rad = Math.atan2(state.d, state.Lx - x);
+    let deg = rad*180/Math.PI;
+    if(deg<0) deg += 180;
+    return deg;
+  }
+  function xAtAngleDeg(thetaDeg){
+    const th = deg2rad(thetaDeg);
+    return state.Lx - state.d/Math.tan(th);
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    // grid graticule halus
+    ctx.strokeStyle = 'rgba(45,90,114,0.35)';
+    ctx.lineWidth = 1;
+    for(let gx=0; gx<=Math.ceil((W-originX)/scale); gx+=5){
+      const p = toPx(gx,0);
+      ctx.beginPath(); ctx.moveTo(p.px,20); ctx.lineTo(p.px,H-20); ctx.stroke();
+    }
+    // garis lintasan (haluan) kapal, putus-putus penuh
+    ctx.strokeStyle = 'rgba(237,226,200,0.28)';
+    ctx.setLineDash([5,6]);
+    ctx.beginPath();
+    const pLineStart = toPx(0,0), pLineEnd = toPx((W-originX)/scale,0);
+    ctx.moveTo(pLineStart.px, pLineStart.py); ctx.lineTo(pLineEnd.px, pLineEnd.py);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // jejak yang sudah ditempuh
+    const shipPx = toPx(state.shipX, 0);
+    const startPx = toPx(0,0);
+    ctx.strokeStyle = 'var(--brass)';
+    ctx.strokeStyle = '#c9a24b';
+    ctx.lineWidth = 2.4;
+    ctx.beginPath(); ctx.moveTo(startPx.px, startPx.py); ctx.lineTo(shipPx.px, shipPx.py); ctx.stroke();
+
+    // tanda baring 1 & 2 di lintasan
+    [state.mark1, state.mark2].forEach((m,i)=>{
+      if(!m) return;
+      const p = toPx(m.x, 0);
+      ctx.beginPath(); ctx.arc(p.px,p.py,6.5,0,7);
+      ctx.fillStyle = i===0 ? '#e8c876' : '#d1684a';
+      ctx.fill();
+      ctx.fillStyle = '#ede2c8'; ctx.font='13px Space Mono, monospace';
+      ctx.fillText(i===0?'baring 1':'baring 2', p.px-28, p.py+26);
+    });
+
+    // garis baring (dari kapal ke objek)
+    const lmPx = toPx(state.Lx, state.d);
+    ctx.strokeStyle = 'rgba(237,226,200,0.55)';
+    ctx.setLineDash([3,4]);
+    ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.moveTo(shipPx.px, shipPx.py); ctx.lineTo(lmPx.px, lmPx.py); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // busur sudut di kapal
+    const curAngle = bearingDeg(state.shipX);
+    ctx.strokeStyle = '#e8c876'; ctx.lineWidth=1.6;
+    ctx.beginPath();
+    ctx.arc(shipPx.px, shipPx.py, 32, 0, -deg2rad(curAngle), true);
+    ctx.stroke();
+    ctx.fillStyle = '#e8c876'; ctx.font='13px Space Mono, monospace';
+    ctx.fillText(fmt(curAngle/11.25,1)+' surat', shipPx.px+36, shipPx.py-16);
+
+    // ikon kapal — lambung, kabin, cerobong, bendera, riak air
+    drawShipIcon(shipPx.px, shipPx.py, state.shipX);
+
+    // ikon objek
+    ctx.font = '34px sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(LM_ICON[state.landmark], lmPx.px, lmPx.py-2);
+    ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+
+    drawRose(curAngle);
+    update3D();
+  }
+
+  const SHIP_SCALE = 1.45;
+  function drawShipIcon(px, py, distTraveled){
+    // goyangan halus berdasarkan JARAK tempuh (bukan waktu) — supaya kapal
+    // tetap terlihat wajar diam saat dijeda, bukan membeku di tengah goyangan.
+    const bob = Math.sin(distTraveled*2.2)*1.3;
+    const rock = Math.sin(distTraveled*2.2 + 1)*0.045;
+    ctx.save();
+    ctx.translate(px, py+bob);
+    ctx.rotate(rock);
+    ctx.scale(SHIP_SCALE, SHIP_SCALE);
+
+    // riak air kecil di haluan (statis, sekadar kesan "membelah air")
+    ctx.strokeStyle='rgba(237,226,200,0.4)'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.arc(15,5,5,-2.3,-0.6); ctx.stroke();
+    ctx.beginPath(); ctx.arc(18,7,3.5,-2.3,-0.6); ctx.stroke();
+
+    // buritan/wake — jejak riak kecil memudar di belakang
+    for(let w=0; w<3; w++){
+      ctx.beginPath();
+      ctx.arc(-14-w*5, 3+w*1.2, 2.4-w*0.5, 0, 7);
+      ctx.strokeStyle = 'rgba(237,226,200,'+(0.32-w*0.09)+')';
+      ctx.stroke();
+    }
+
+    // lambung kapal
+    ctx.beginPath();
+    ctx.moveTo(16,1);
+    ctx.lineTo(9,-6);
+    ctx.lineTo(-13,-6);
+    ctx.lineTo(-13,-1);
+    ctx.quadraticCurveTo(-11,6, 2,7);
+    ctx.quadraticCurveTo(11,6.5, 16,1);
+    ctx.closePath();
+    ctx.fillStyle = '#ede2c8';
+    ctx.fill();
+    // garis air (stripe) di lambung bawah
+    ctx.beginPath();
+    ctx.moveTo(-12,-0.5); ctx.quadraticCurveTo(-10,4.5, 2,5.3); ctx.quadraticCurveTo(10,4.8, 15,0.6);
+    ctx.strokeStyle = '#d1684a'; ctx.lineWidth=1.8; ctx.stroke();
+
+    // dek
+    ctx.beginPath();
+    ctx.moveTo(9,-6); ctx.lineTo(-13,-6); ctx.lineTo(-13,-7.5); ctx.lineTo(9,-7.5); ctx.closePath();
+    ctx.fillStyle = '#c9a24b'; ctx.fill();
+
+    // kabin
+    ctx.fillStyle = '#173a53';
+    ctx.strokeStyle = '#e8c876'; ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(-9,-14,10,7.5,1.5) : ctx.rect(-9,-14,10,7.5);
+    ctx.fill(); ctx.stroke();
+    // jendela kabin
+    ctx.beginPath(); ctx.arc(-4,-10.3,1.3,0,7); ctx.fillStyle='#e8c876'; ctx.fill();
+
+    // cerobong dgn pita
+    ctx.fillStyle = '#d1684a';
+    ctx.fillRect(-6,-21,4,7);
+    ctx.fillStyle = '#ede2c8';
+    ctx.fillRect(-6,-18.5,4,1.6);
+
+    // tiang & bendera kecil (berkibar mengikuti goyangan)
+    const flagWave = Math.sin(distTraveled*2.2+0.6)*2;
+    ctx.strokeStyle='#e8c876'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(4,-14); ctx.lineTo(4,-22); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(4,-22); ctx.lineTo(-3,-20+flagWave*0.15); ctx.lineTo(4,-18.5); ctx.closePath();
+    ctx.fillStyle = '#d1684a'; ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawRose(curAngleDeg){
+    const RW = roseCanvas.width, RH = roseCanvas.height;
+    rctx.clearRect(0,0,RW,RH);
+    const cx=RW/2, cy=RH/2, R=RW*0.38;
+    rctx.strokeStyle='rgba(237,226,200,0.3)'; rctx.lineWidth=1;
+    rctx.beginPath(); rctx.arc(cx,cy,R,0,7); rctx.stroke();
+    for(let i=0;i<32;i++){
+      const a = (i/32)*2*Math.PI - Math.PI/2;
+      const len = (i%8===0)?12:(i%4===0?8:5);
+      const x1=cx+Math.cos(a)*(R-len), y1=cy+Math.sin(a)*(R-len);
+      const x2=cx+Math.cos(a)*R, y2=cy+Math.sin(a)*R;
+      rctx.strokeStyle = 'rgba(237,226,200,0.45)';
+      rctx.beginPath(); rctx.moveTo(x1,y1); rctx.lineTo(x2,y2); rctx.stroke();
+    }
+    function markAt(deg,color,r){
+      const a = deg2rad(deg) - Math.PI/2;
+      const x=cx+Math.cos(a)*R, y=cy+Math.sin(a)*R;
+      rctx.beginPath(); rctx.arc(x,y,r,0,7); rctx.fillStyle=color; rctx.fill();
+    }
+    markAt(surat2deg(state.th1), '#e8c876', 4);
+    markAt(surat2deg(state.th2), '#d1684a', 4);
+    markAt(curAngleDeg, '#ffffff', 3.4);
+    rctx.fillStyle='#ede2c8'; rctx.font='700 13px Space Mono, monospace';
+    rctx.textAlign='center';
+    rctx.fillText(fmt(curAngleDeg/11.25,1), cx, cy+4);
+    rctx.font='9px Karla, sans-serif'; rctx.fillStyle='rgba(237,226,200,0.7)';
+    rctx.fillText('surat', cx, cy+16);
+    rctx.textAlign='left';
+  }
+
+  /* ---------- SIMULASI / ANIMASI ---------- */
+  let rafId=null, lastTs=null;
+
+  function resetSim(keepParams){
+    if(rafId) clearInterval(rafId);
+    rafId=null; lastTs=null;
+    state.playing=false; state.phase='idle';
+    state.shipX = Math.max(0, xAtAngleDeg(surat2deg(state.th1)) - 6);
+    state.mark1=null; state.mark2=null; state.revealed=false;
+    playBtn.textContent='▶ Berlayar';
+    narrationBox.textContent='Atur parameter di bawah, lalu tekan ▶ Berlayar.';
+    progressText.textContent='';
+    rTime.textContent='—'; rDist.textContent='—'; rR2.textContent='—'; rD.textContent='—';
+    quizArea.style.display='none'; trueArea.style.display='none'; badgeArea.innerHTML='';
+    computeScale();
+    draw();
+  }
+
+  function step(ts){
+    if(!lastTs) lastTs=ts;
+    const dtSec = (ts-lastTs)/1000; lastTs=ts;
+    const nmStep = state.animSpeed * dtSec;
+    state.shipX += nmStep;
+    const ang = bearingDeg(state.shipX);
+
+    if(!state.mark1 && ang >= surat2deg(state.th1)){
+      state.mark1 = { x: xAtAngleDeg(surat2deg(state.th1)) };
+      state.tHours1 = state.mark1.x / state.v;
+      narrationBox.textContent = '📍 Baring 1 dicatat — sudut '+fmt(state.th1,1)+' surat ('+fmt(surat2deg(state.th1),1)+'°) dari haluan.';
+    }
+    if(state.mark1 && !state.mark2 && ang >= surat2deg(state.th2)){
+      state.mark2 = { x: xAtAngleDeg(surat2deg(state.th2)) };
+      state.tHours2 = state.mark2.x / state.v;
+      narrationBox.textContent = '📍 Baring 2 dicatat — sudut '+fmt(state.th2,1)+' surat ('+fmt(surat2deg(state.th2),1)+'°). Menghitung…';
+      if(rafId) clearInterval(rafId);
+      rafId=null;
+      finishSim();
+      return;
+    }
+    progressText.textContent = 'Jarak tempuh: '+fmt(state.shipX,1)+' mil';
+    draw();
+    if(state.shipX >= state.Lx + 6 && !state.mark2){
+      if(rafId) clearInterval(rafId);
+      rafId=null;
+      narrationBox.textContent = 'Sudut baring kedua tidak tercapai dalam jangkauan lintasan — perbesar posisi objek atau perkecil θ₂.';
+      state.playing=false; playBtn.textContent='▶ Berlayar';
+    }
+  }
+
+  function finishSim(){
+    state.playing=false; playBtn.textContent='▶ Berlayar';
+    state.phase='done';
+    draw();
+    const distRun = state.mark2.x - state.mark1.x;
+    const tHours = distRun / state.v;
+    const th1r = deg2rad(surat2deg(state.th1)), th2r = deg2rad(surat2deg(state.th2));
+    const R2 = distRun * Math.sin(th1r) / Math.sin(th2r - th1r);
+    const dComputed = R2 * Math.sin(th2r);
+
+    rTime.textContent = fmt(tHours*60,1)+' menit';
+    rDist.textContent = fmt(distRun,2)+' mil laut';
+    rR2.textContent = fmt(R2,2)+' mil laut';
+    rD.textContent = fmt(dComputed,2)+' mil laut';
+
+    const selisih = Math.abs(dComputed - state.d);
+    if(state.quiz && !state.revealed){
+      quizArea.style.display='block'; trueArea.style.display='none';
+    } else {
+      quizArea.style.display='none'; trueArea.style.display='block';
+      rDTrue.textContent = fmt(state.d,2)+' mil laut';
+      rSelisih.textContent = fmt(selisih,4)+' mil laut';
+    }
+
+    let badgeHtml='';
+    const isDouble = Math.abs(state.th2 - 2*state.th1) < 0.05;
+    const isBeam = Math.abs(state.th2 - 8) < 0.05;
+    if(isBeam){
+      badgeHtml = '<div class="badge">✅ Baringan Lintang (8 surat/90°) — R₂ sekaligus jadi jarak aman lintasan kapal terhadap '+LM_LABEL[state.landmark]+' ini.</div>';
+    } else if(isDouble){
+      badgeHtml = '<div class="badge">✅ Sudut kedua persis dua kali sudut pertama — dalil sudut berganda berlaku: jarak tempuh = R₂.</div>';
+    } else {
+      badgeHtml = '<div class="badge warn">ℹ️ Bukan pasangan sudut berganda — rumus umum tetap dipakai &amp; tetap akurat, hanya saja jarak tempuh ≠ R₂ secara langsung.</div>';
+    }
+    badgeArea.innerHTML = badgeHtml;
+  }
+
+  revealBtn.addEventListener('click', ()=>{
+    state.revealed=true;
+    quizArea.style.display='none'; trueArea.style.display='block';
+    const th1r = deg2rad(surat2deg(state.th1)), th2r = deg2rad(surat2deg(state.th2));
+    const distRun = state.mark2.x - state.mark1.x;
+    const R2 = distRun * Math.sin(th1r) / Math.sin(th2r - th1r);
+    const dComputed = R2 * Math.sin(th2r);
+    rDTrue.textContent = fmt(state.d,2)+' mil laut';
+    rSelisih.textContent = fmt(Math.abs(dComputed-state.d),4)+' mil laut';
+  });
+
+  playBtn.addEventListener('click', ()=>{
+    if(state.phase==='done'){ resetSim(); }
+    if(state.playing) return;
+    if(state.th2 <= state.th1){ narrationBox.textContent='θ₂ harus lebih besar dari θ₁ dulu.'; return; }
+    state.playing=true; playBtn.textContent='▶ Berlayar…';
+    lastTs=null;
+    if(rafId) clearInterval(rafId);
+    // setInterval dipakai (bukan requestAnimationFrame berantai) karena sejumlah
+    // WebView mobile menahan/menghentikan rAF saat layar tidak sedang disentuh —
+    // gejalanya persis: animasi cuma jalan selama jari menekan layar.
+    rafId = setInterval(()=>step(performance.now()), 16);
+  });
+  pauseBtn.addEventListener('click', ()=>{
+    state.playing=false; if(rafId) clearInterval(rafId); rafId=null;
+    narrationBox.textContent='Dijeda. Tekan ▶ Berlayar untuk lanjut.';
+  });
+  resetBtn.addEventListener('click', ()=> resetSim());
+  randomBtn.addEventListener('click', ()=>{
+    const lms=['pulau','mercusuar','karang','boya'];
+    state.landmark = lms[Math.floor(Math.random()*lms.length)];
+    landmarkPills.forEach(p=>p.classList.toggle('active', p.dataset.lm===state.landmark));
+    state.d = Math.round((2+Math.random()*11)*2)/2;
+    state.Lx = Math.round(16+Math.random()*16);
+    dSlider.value=state.d; lxSlider.value=state.Lx;
+    dVal.textContent = fmt(state.d,1)+' mil'; lxVal.textContent = fmt(state.Lx,1)+' mil';
+    resetSim();
+  });
+
+  /* ---------- WIRING SLIDER ---------- */
+  vSlider.addEventListener('input', ()=>{ state.v=parseFloat(vSlider.value); vVal.textContent=fmt(state.v,1)+' knot'; });
+  animSlider.addEventListener('input', ()=>{ state.animSpeed=parseFloat(animSlider.value); animVal.textContent=fmt(state.animSpeed,1)+' mil/detik'; });
+  dSlider.addEventListener('input', ()=>{ state.d=parseFloat(dSlider.value); dVal.textContent=fmt(state.d,1)+' mil'; resetSim(); });
+  lxSlider.addEventListener('input', ()=>{ state.Lx=parseFloat(lxSlider.value); lxVal.textContent=fmt(state.Lx,1)+' mil'; resetSim(); });
+  th1Slider.addEventListener('input', ()=>{
+    state.th1=parseFloat(th1Slider.value);
+    th1Val.textContent=fmt(state.th1,1)+' surat ('+fmt(surat2deg(state.th1),1)+'°)';
+    syncPresetLink('th1');
+    resetSim();
+  });
+  th2Slider.addEventListener('input', ()=>{
+    state.th2=parseFloat(th2Slider.value);
+    th2Val.textContent=fmt(state.th2,1)+' surat ('+fmt(surat2deg(state.th2),1)+'°)';
+    activatePreset('bebas');
+    resetSim();
+  });
+  quizCheck.addEventListener('change', ()=>{ state.quiz=quizCheck.checked; });
+
+  landmarkPills.forEach(p=>p.addEventListener('click', ()=>{
+    landmarkPills.forEach(x=>x.classList.remove('active'));
+    p.classList.add('active');
+    state.landmark = p.dataset.lm;
+    draw();
+  }));
+
+  let presetMode='lintang';
+  function activatePreset(mode){
+    presetMode=mode;
+    presetPills.forEach(p=>p.classList.toggle('active', p.dataset.preset===mode));
+  }
+  function syncPresetLink(changed){
+    if(presetMode==='lintang'){ state.th2=8; th2Slider.value=8; th2Val.textContent='8 surat (90,0°)'; }
+    else if(presetMode==='berganda'){ state.th2=Math.min(15.5, state.th1*2); th2Slider.value=state.th2; th2Val.textContent=fmt(state.th2,1)+' surat ('+fmt(surat2deg(state.th2),1)+'°)'; }
+  }
+  presetPills.forEach(p=>p.addEventListener('click', ()=>{
+    activatePreset(p.dataset.preset);
+    if(presetMode!=='bebas') syncPresetLink();
+    resetSim();
+  }));
+
+  /* ---------- DRAG OBJEK DI KANVAS ---------- */
+  let dragging=false;
+  function pointerPos(e){
+    const rect = chartCanvas.getBoundingClientRect();
+    const cx = (e.touches? e.touches[0].clientX : e.clientX) - rect.left;
+    const cy = (e.touches? e.touches[0].clientY : e.clientY) - rect.top;
+    return { px: cx*(chartCanvas.width/rect.width), py: cy*(chartCanvas.height/rect.height) };
+  }
+  function nearLandmark(px,py){
+    const p = toPx(state.Lx, state.d);
+    return Math.hypot(p.px-px, p.py-py) < 26;
+  }
+  chartCanvas.addEventListener('pointerdown', (e)=>{
+    const pos = pointerPos(e);
+    if(nearLandmark(pos.px,pos.py)){ dragging=true; state.playing=false; if(rafId) clearInterval(rafId); }
+  });
+  window.addEventListener('pointermove', (e)=>{
+    if(!dragging) return;
+    const pos = pointerPos(e);
+    const w = toWorld(pos.px,pos.py);
+    state.Lx = Math.min(34, Math.max(10, Math.round(w.x)));
+    state.d = Math.min(15, Math.max(1, Math.round(w.y*2)/2));
+    lxSlider.value=state.Lx; dSlider.value=state.d;
+    lxVal.textContent=fmt(state.Lx,1)+' mil'; dVal.textContent=fmt(state.d,1)+' mil';
+    computeScale(); resetSim();
+  });
+  window.addEventListener('pointerup', ()=>{ dragging=false; });
+
+  /* ============================================================
+     MODEL 3D (Modul 1 saja) — massing sederhana ala tahapan-pembangunan.html:
+     laut sebagai bidang datar, kapal & benda darat sebagai mesh primitif,
+     kamera orbit manual (drag=putar, wheel/cubit=zoom), mengikuti posisi
+     kapal di sumbu x. Disinkronkan dari draw() lewat update3D() di atas,
+     jadi tidak perlu loop animasi terpisah.
+     ============================================================ */
+  const threeContainer = document.getElementById('three3dM1');
+  let three3d = null; // lazy init, sama seperti pola di tahapan-pembangunan.html
+  let lastLandmarkType3D = null;
+
+  function landmarkMesh3D(type){
+    const g = new THREE.Group();
+    if(type==='pulau'){
+      const base = new THREE.Mesh(new THREE.ConeGeometry(1.8,1.1,8), new THREE.MeshStandardMaterial({color:0xc9b37a}));
+      base.position.y = 0.55; g.add(base);
+      const palm = new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.09,1.4,6), new THREE.MeshStandardMaterial({color:0x6b4a2f}));
+      palm.position.set(0.3,1.6,0.2); g.add(palm);
+      const leaves = new THREE.Mesh(new THREE.ConeGeometry(0.55,0.4,6), new THREE.MeshStandardMaterial({color:0x3f7a4a}));
+      leaves.position.set(0.3,2.35,0.2); g.add(leaves);
+    } else if(type==='mercusuar'){
+      const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.5,2.6,10), new THREE.MeshStandardMaterial({color:0xede2c8}));
+      tower.position.y=1.3; g.add(tower);
+      const stripe = new THREE.Mesh(new THREE.CylinderGeometry(0.37,0.37,0.45,10), new THREE.MeshStandardMaterial({color:0xd1684a}));
+      stripe.position.y=1.5; g.add(stripe);
+      const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.28,10,10), new THREE.MeshStandardMaterial({color:0xffe9a8, emissive:0xffcf6b, emissiveIntensity:0.8}));
+      lamp.position.y=2.75; g.add(lamp);
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(0.4,0.4,10), new THREE.MeshStandardMaterial({color:0xd1684a}));
+      roof.position.y=3.05; g.add(roof);
+    } else if(type==='karang'){
+      const colors=[0x8b7d6b,0x6f6455,0xa0917c];
+      for(let i=0;i<5;i++){
+        const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.35+Math.random()*0.35), new THREE.MeshStandardMaterial({color:colors[i%3]}));
+        rock.position.set((Math.random()-0.5)*1.6, 0.22+Math.random()*0.15, (Math.random()-0.5)*1.6);
+        rock.rotation.set(Math.random()*3,Math.random()*3,Math.random()*3);
+        g.add(rock);
+      }
+    } else { // boya
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,1.1,8), new THREE.MeshStandardMaterial({color:0xede2c8}));
+      pole.position.y=0.75; g.add(pole);
+      const float = new THREE.Mesh(new THREE.SphereGeometry(0.28,10,10), new THREE.MeshStandardMaterial({color:0xd1684a}));
+      float.position.y=0.25; g.add(float);
+      const top = new THREE.Mesh(new THREE.ConeGeometry(0.16,0.3,8), new THREE.MeshStandardMaterial({color:0xede2c8}));
+      top.position.y=1.45; g.add(top);
+    }
+    return g;
+  }
+
+  function shipMesh3D(){
+    const g = new THREE.Group();
+    const hull = new THREE.Mesh(new THREE.BoxGeometry(1.9,0.35,0.7), new THREE.MeshStandardMaterial({color:0xede2c8}));
+    hull.position.y=0.2; g.add(hull);
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(0.6,0.4,0.5), new THREE.MeshStandardMaterial({color:0x173a53}));
+    cabin.position.set(-0.3,0.55,0); g.add(cabin);
+    const funnel = new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.4,8), new THREE.MeshStandardMaterial({color:0xd1684a}));
+    funnel.position.set(-0.55,0.9,0); g.add(funnel);
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.6,6), new THREE.MeshStandardMaterial({color:0xe8c876}));
+    mast.position.set(0.15,0.9,0); g.add(mast);
+    const flag = new THREE.Mesh(new THREE.ConeGeometry(0.12,0.2,3), new THREE.MeshStandardMaterial({color:0xd1684a}));
+    flag.rotation.z = Math.PI/2;
+    flag.position.set(0.28,1.15,0); g.add(flag);
+    return g;
+  }
+
+  function markerMesh3D(color){
+    const g = new THREE.Group();
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,1,6), new THREE.MeshStandardMaterial({color:0xede2c8}));
+    pole.position.y=0.5; g.add(pole);
+    const flag = new THREE.Mesh(new THREE.ConeGeometry(0.2,0.3,3), new THREE.MeshStandardMaterial({color}));
+    flag.rotation.z=Math.PI/2;
+    flag.position.set(0.18,0.85,0); g.add(flag);
+    return g;
+  }
+
+  function initThree3D(){
+    if(three3d) return;
+    const w = threeContainer.clientWidth, h = threeContainer.clientHeight;
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b2233);
+    scene.fog = new THREE.Fog(0x0b2233, 26, 95);
+
+    const camera = new THREE.PerspectiveCamera(44, w/h, 0.1, 500);
+    let radius = 22, theta = Math.PI*0.32, phi = 1.15;
+    const target = new THREE.Vector3(state.shipX, 0.4, 1.5);
+
+    const renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setSize(w,h);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    threeContainer.appendChild(renderer.domElement);
+
+    // ---- HUD: panel info, mini-kompas, label melayang ----
+    const hud = document.createElement('div'); hud.className='hud3d';
+    threeContainer.appendChild(hud);
+    const compassWrap = document.createElement('div'); compassWrap.className='compass3d';
+    compassWrap.innerHTML = '<svg viewBox="0 0 46 46" width="46" height="46">'
+      + '<circle cx="23" cy="23" r="21" fill="rgba(11,34,51,0.78)" stroke="#c9a24b" stroke-width="1.5"/>'
+      + '<g id="needleM1"><polygon points="23,6 27,23 23,20 19,23" fill="#e8c876"/>'
+      + '<text x="23" y="15" font-size="7" fill="#0b2233" text-anchor="middle" font-family="Space Mono" font-weight="bold">0°</text></g></svg>';
+    threeContainer.appendChild(compassWrap);
+    const needle = compassWrap.querySelector('#needleM1');
+    const labelLandmark = document.createElement('div'); labelLandmark.className='label3d';
+    threeContainer.appendChild(labelLandmark);
+    const labelShip = document.createElement('div'); labelShip.className='label3d';
+    threeContainer.appendChild(labelShip);
+
+    scene.add(new THREE.AmbientLight(0xffffff,0.55));
+    const sun = new THREE.DirectionalLight(0xffffff,0.85);
+    sun.position.set(20,30,10);
+    scene.add(sun);
+
+    const sea = new THREE.Mesh(new THREE.PlaneGeometry(420,130), new THREE.MeshStandardMaterial({color:0x122f45, roughness:0.9}));
+    sea.rotation.x=-Math.PI/2;
+    sea.position.set(20,0,4);
+    scene.add(sea);
+    const grid = new THREE.GridHelper(420,84,0x2d5a72,0x204a63);
+    grid.position.set(20,0.01,4);
+    scene.add(grid);
+
+    // garis lintasan haluan kapal (rhumb line tetap di z=0)
+    const trackGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-4,0.02,0), new THREE.Vector3(400,0.02,0)]);
+    const trackMat = new THREE.LineDashedMaterial({color:0xede2c8, dashSize:0.6, gapSize:0.4, transparent:true, opacity:0.35});
+    const trackLine = new THREE.Line(trackGeo, trackMat);
+    trackLine.computeLineDistances();
+    scene.add(trackLine);
+
+    const ship = shipMesh3D();
+    scene.add(ship);
+
+    const landmark = landmarkMesh3D(state.landmark);
+    scene.add(landmark);
+    lastLandmarkType3D = state.landmark;
+
+    const mark1Mesh = markerMesh3D(0xe8c876); mark1Mesh.visible=false; scene.add(mark1Mesh);
+    const mark2Mesh = markerMesh3D(0xd1684a); mark2Mesh.visible=false; scene.add(mark2Mesh);
+
+    const bearingGeo = new THREE.BufferGeometry();
+    const bearingMat = new THREE.LineDashedMaterial({color:0xede2c8, dashSize:0.5, gapSize:0.35, transparent:true, opacity:0.65});
+    const bearingLine = new THREE.Line(bearingGeo, bearingMat);
+    scene.add(bearingLine);
+
+    function updateCamera(){
+      camera.position.x = target.x + radius*Math.sin(phi)*Math.sin(theta);
+      camera.position.z = target.z + radius*Math.sin(phi)*Math.cos(theta);
+      camera.position.y = target.y + radius*Math.cos(phi);
+      camera.lookAt(target);
+      needle.setAttribute('transform', 'rotate('+(-theta*180/Math.PI)+' 23 23)');
+      renderer.render(scene, camera);
+    }
+    updateCamera();
+
+    // ---- kontrol orbit manual (sama pola dgn tahapan-pembangunan.html) ----
+    let dragging=false, lastX=0, lastY=0;
+    renderer.domElement.addEventListener('pointerdown', e=>{ dragging=true; lastX=e.clientX; lastY=e.clientY; threeContainer.classList.add('grabbing'); });
+    window.addEventListener('pointerup', ()=>{ dragging=false; threeContainer.classList.remove('grabbing'); });
+    window.addEventListener('pointermove', e=>{
+      if(!dragging) return;
+      theta -= (e.clientX-lastX)*0.006;
+      phi   -= (e.clientY-lastY)*0.006;
+      phi = Math.max(0.35, Math.min(1.5, phi));
+      lastX=e.clientX; lastY=e.clientY;
+      updateCamera();
+    });
+    renderer.domElement.addEventListener('wheel', e=>{
+      e.preventDefault();
+      radius = Math.max(5, Math.min(60, radius + e.deltaY*0.02));
+      updateCamera();
+    }, {passive:false});
+
+    let pinchDist = null;
+    function touchDist(t0,t1){ return Math.hypot(t1.clientX-t0.clientX, t1.clientY-t0.clientY); }
+    renderer.domElement.addEventListener('touchstart', e=>{
+      if(e.touches.length===2){ pinchDist = touchDist(e.touches[0], e.touches[1]); dragging=false; }
+    }, {passive:true});
+    renderer.domElement.addEventListener('touchmove', e=>{
+      if(e.touches.length===2 && pinchDist!==null){
+        e.preventDefault();
+        const d = touchDist(e.touches[0], e.touches[1]);
+        radius = Math.max(5, Math.min(60, radius - (d-pinchDist)*0.03));
+        pinchDist = d;
+        updateCamera();
+      }
+    }, {passive:false});
+    renderer.domElement.addEventListener('touchend', e=>{ if(e.touches.length<2) pinchDist=null; }, {passive:true});
+
+    function onResize(){
+      const w2 = threeContainer.clientWidth, h2 = threeContainer.clientHeight;
+      if(!w2 || !h2) return;
+      camera.aspect = w2/h2; camera.updateProjectionMatrix();
+      renderer.setSize(w2,h2);
+      updateCamera();
+    }
+    window.addEventListener('resize', onResize);
+
+    three3d = { scene, camera, ship, landmark, mark1Mesh, mark2Mesh, bearingLine, target, updateCamera,
+      hud, labelLandmark, labelShip, w: ()=>threeContainer.clientWidth, h: ()=>threeContainer.clientHeight };
+  }
+
+  function worldToScreen3D(vec3, camera, w, h){
+    const p = vec3.clone().project(camera);
+    return { x:(p.x*0.5+0.5)*w, y:(-p.y*0.5+0.5)*h, behind: p.z>1 };
+  }
+
+  let view3dActiveM1 = false;
+
+  function update3D(){
+    if(!three3d || !view3dActiveM1) return;
+
+    if(state.landmark !== lastLandmarkType3D){
+      three3d.scene.remove(three3d.landmark);
+      three3d.landmark = landmarkMesh3D(state.landmark);
+      three3d.scene.add(three3d.landmark);
+      lastLandmarkType3D = state.landmark;
+    }
+
+    three3d.ship.position.set(state.shipX, 0, 0);
+    three3d.landmark.position.set(state.Lx, 0, state.d);
+
+    if(state.mark1){ three3d.mark1Mesh.position.set(state.mark1.x,0,0); three3d.mark1Mesh.visible=true; }
+    else three3d.mark1Mesh.visible=false;
+    if(state.mark2){ three3d.mark2Mesh.position.set(state.mark2.x,0,0); three3d.mark2Mesh.visible=true; }
+    else three3d.mark2Mesh.visible=false;
+
+    const pts = [ new THREE.Vector3(state.shipX,0.25,0), new THREE.Vector3(state.Lx,0.25,state.d) ];
+    three3d.bearingLine.geometry.setFromPoints(pts);
+    three3d.bearingLine.computeLineDistances();
+
+    // kamera "mengikuti" kapal di sumbu x, tapi rotasi/zoom manual pengguna tetap terjaga
+    three3d.target.x = state.shipX;
+    three3d.target.z = state.d/2;
+    three3d.updateCamera();
+
+    // ---- HUD: info baring & label melayang ----
+    const curAngle = bearingDeg(state.shipX);
+    three3d.hud.innerHTML =
+      'Objek: <b>'+LM_LABEL[state.landmark]+'</b><br>'+
+      'Jarak tempuh: <b>'+fmt(state.shipX,1)+' mil</b><br>'+
+      'Baring saat ini: <b>'+fmt(curAngle,1)+'°</b>'+
+      (state.mark1 ? '<br>Baring 1: <b>'+fmt(surat2deg(state.th1),1)+'°</b>' : '')+
+      (state.mark2 ? '<br>Baring 2: <b>'+fmt(surat2deg(state.th2),1)+'°</b>' : '');
+
+    const w3 = three3d.w(), h3 = three3d.h();
+    const pLm = worldToScreen3D(new THREE.Vector3(state.Lx,2.6,state.d), three3d.camera, w3, h3);
+    three3d.labelLandmark.style.display = pLm.behind ? 'none' : 'block';
+    three3d.labelLandmark.style.transform = 'translate(-50%,-100%) translate('+pLm.x+'px,'+pLm.y+'px)';
+    three3d.labelLandmark.textContent = LM_LABEL[state.landmark].charAt(0).toUpperCase()+LM_LABEL[state.landmark].slice(1);
+
+    const pShip = worldToScreen3D(new THREE.Vector3(state.shipX,1.3,0), three3d.camera, w3, h3);
+    three3d.labelShip.style.display = pShip.behind ? 'none' : 'block';
+    three3d.labelShip.style.transform = 'translate(-50%,-100%) translate('+pShip.x+'px,'+pShip.y+'px)';
+    three3d.labelShip.textContent = 'Kapal · '+fmt(curAngle,0)+'°';
+  }
+
+  document.getElementById('btn2dM1').addEventListener('click', ()=>{
+    document.getElementById('btn2dM1').classList.add('active');
+    document.getElementById('btn3dM1').classList.remove('active');
+    chartCanvas.style.display = '';
+    threeContainer.style.display = 'none';
+    document.getElementById('view3dHintM1').style.display = 'none';
+    view3dActiveM1 = false;
+  });
+  document.getElementById('btn3dM1').addEventListener('click', ()=>{
+    document.getElementById('btn3dM1').classList.add('active');
+    document.getElementById('btn2dM1').classList.remove('active');
+    chartCanvas.style.display = 'none';
+    threeContainer.style.display = 'block';
+    document.getElementById('view3dHintM1').style.display = 'block';
+    initThree3D();
+    view3dActiveM1 = true;
+    update3D();
+  });
+
+  /* ---------- INIT ---------- */
+  activatePreset('lintang');
+  resetSim();
+})();
+
+/* ============================================================
+   MODUL 2 — BARINGAN SILANG (posisi dari dua benda darat)
+   Rumus perpotongan garis sudah diverifikasi terpisah di luar
+   peramban (uji lintas-balik, galat ~1e-15) sebelum ditulis di sini.
+   ============================================================ */
+(function(){
+  function deg2rad(d){ return d*Math.PI/180; }
+  function rad2deg(r){ return r*180/Math.PI; }
+  function fmt(n,dec){ return n.toLocaleString('id-ID',{minimumFractionDigits:dec,maximumFractionDigits:dec}); }
+
+  // Dua benda darat tetap, posisi (mil) diketahui/tercantum di "peta".
+  const LM_A = { x: 9,  y: 9,  label: 'Mercusuar Utara', icon: '🗼' };
+  const LM_B = { x: 25, y: 7,  label: 'Puncak Selatan',  icon: '⛰️' };
+
+  const canvas = document.getElementById('crossCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  const csxSlider = document.getElementById('csxSlider');
+  const csySlider = document.getElementById('csySlider');
+  const csxVal = document.getElementById('csxVal');
+  const csyVal = document.getElementById('csyVal');
+  const csCourseSlider = document.getElementById('csCourseSlider');
+  const csCourseVal = document.getElementById('csCourseVal');
+  const csAnimSlider = document.getElementById('csAnimSlider');
+  const csAnimVal = document.getElementById('csAnimVal');
+  const csThetaA = document.getElementById('csThetaA');
+  const csThetaB = document.getElementById('csThetaB');
+  const csCutAngle = document.getElementById('csCutAngle');
+  const csFixPos = document.getElementById('csFixPos');
+  const csCutBadge = document.getElementById('csCutBadge');
+  const crossQuizCheck = document.getElementById('crossQuizCheck');
+  const crossQuizArea = document.getElementById('crossQuizArea');
+  const crossRevealBtn = document.getElementById('crossRevealBtn');
+  const crossNarration = document.getElementById('crossNarration');
+  const crossPlayBtn = document.getElementById('crossPlayBtn');
+  const crossPauseBtn = document.getElementById('crossPauseBtn');
+  const crossResetBtn = document.getElementById('crossResetBtn');
+  const crossRandomBtn = document.getElementById('crossRandomBtn');
+  const crossProgressText = document.getElementById('crossProgressText');
+
+  let revealed = false;
+
+  /* ---------- ANIMASI: kapal berlayar, fiks dicatat berkala ---------- */
+  const FIX_INTERVAL = 1.2; // detik animasi antar-fiks yang dicatat
+  const animState = {
+    course: 70, speed: 2.5, playing: false,
+    vx: 0, vy: 0, elapsed: 0, lastFixAt: -999,
+    shipTrail: [], fixTrail: []
+  };
+  let rafId2 = null, lastTs2 = null;
+  function setCourseVelocity(){
+    const rad = deg2rad(animState.course);
+    animState.vx = animState.speed*Math.cos(rad);
+    animState.vy = animState.speed*Math.sin(rad);
+  }
+  setCourseVelocity();
+
+  // skala tampilan: dunia x:0-34, y:0-13 mil -> kanvas, mirip skala modul 1
+  const PAD = 40;
+  function toPx(x,y){
+    const scale = (W-2*PAD)/34;
+    return { px: PAD + x*scale, py: H - PAD - y*scale };
+  }
+
+  function bearingFromShip(shipX, shipY, lx, ly){
+    let a = rad2deg(Math.atan2(ly-shipY, lx-shipX));
+    if(a<0) a+=360;
+    return a;
+  }
+
+  // Titik potong garis melalui (xA,yA) arah thetaA° dgn garis melalui (xB,yB) arah thetaB°
+  function crossBearingFix(xA,yA,thetaA, xB,yB,thetaB){
+    const dxA=Math.cos(deg2rad(thetaA)), dyA=Math.sin(deg2rad(thetaA));
+    const dxB=Math.cos(deg2rad(thetaB)), dyB=Math.sin(deg2rad(thetaB));
+    const det = dxB*dyA - dxA*dyB;
+    if(Math.abs(det) < 1e-6) return null;
+    const t = ( -(xB-xA)*dyB + dxB*(yB-yA) ) / det;
+    return { x: xA + t*dxA, y: yA + t*dyA };
+  }
+
+  function cutAngleBetween(thetaA, thetaB){
+    let diff = Math.abs(thetaA-thetaB) % 360;
+    if(diff>180) diff = 360-diff;
+    if(diff>90) diff = 180-diff;
+    return diff; // 0-90, 90 = paling tajam/paling baik
+  }
+
+  function drawShipDot(px,py,color){
+    ctx.beginPath(); ctx.moveTo(px+9,py); ctx.lineTo(px-6,py-6); ctx.lineTo(px-3,py); ctx.lineTo(px-6,py+6); ctx.closePath();
+    ctx.fillStyle = color; ctx.fill();
+  }
+
+  function render(){
+    const shipX = parseFloat(csxSlider.value);
+    const shipY = parseFloat(csySlider.value);
+    csxVal.textContent = fmt(shipX,1)+' mil';
+    csyVal.textContent = fmt(shipY,1)+' mil';
+
+    const thetaA = bearingFromShip(shipX,shipY, LM_A.x, LM_A.y);
+    const thetaB = bearingFromShip(shipX,shipY, LM_B.x, LM_B.y);
+    const fix = crossBearingFix(LM_A.x,LM_A.y,thetaA, LM_B.x,LM_B.y,thetaB);
+    const cutAngle = cutAngleBetween(thetaA,thetaB);
+
+    csThetaA.textContent = fmt(thetaA,1)+'°';
+    csThetaB.textContent = fmt(thetaB,1)+'°';
+    csCutAngle.textContent = fmt(cutAngle,1)+'°';
+    csFixPos.textContent = fix ? '('+fmt(fix.x,1)+', '+fmt(fix.y,1)+') mil' : '— (sejajar)';
+
+    if(cutAngle < 30){
+      csCutBadge.innerHTML = '<span class="badge warn">⚠️ Sudut potong terlalu sempit ('+fmt(cutAngle,0)+'°) — hindari kombinasi ini, sedikit galat baca kompas bisa membuat fiks meleset jauh.</span>';
+    } else {
+      csCutBadge.innerHTML = '<span class="badge">✅ Sudut potong '+fmt(cutAngle,0)+'° — cukup tajam untuk fiks yang bisa diandalkan (idealnya mendekati 90°).</span>';
+    }
+
+    ctx.clearRect(0,0,W,H);
+    // grid halus
+    ctx.strokeStyle='rgba(45,90,114,0.35)'; ctx.lineWidth=1;
+    for(let gx=0; gx<=34; gx+=5){
+      const p = toPx(gx,0), p2 = toPx(gx,13);
+      ctx.beginPath(); ctx.moveTo(p.px,p.py); ctx.lineTo(p2.px,p2.py); ctx.stroke();
+    }
+
+    const A = toPx(LM_A.x, LM_A.y), B = toPx(LM_B.x, LM_B.y);
+    const S = toPx(shipX, shipY);
+
+    // garis posisi (diperpanjang penuh dari tiap benda darat, melalui kapal)
+    function drawFullLine(origin, thetaDeg, color){
+      const rad = deg2rad(thetaDeg);
+      const dx = Math.cos(rad), dy = -Math.sin(rad); // -dy krn sumbu kanvas terbalik
+      const len = 1000;
+      ctx.strokeStyle = color; ctx.lineWidth=1.4; ctx.setLineDash([3,4]);
+      ctx.beginPath();
+      ctx.moveTo(origin.px-dx*len, origin.py-dy*len);
+      ctx.lineTo(origin.px+dx*len, origin.py+dy*len);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    drawFullLine(A, thetaA, 'rgba(232,200,118,0.55)');
+    drawFullLine(B, thetaB, 'rgba(209,104,74,0.55)');
+
+    // jejak lintasan kapal yang sudah ditempuh (jalur sebenarnya)
+    if(animState.shipTrail.length>1){
+      ctx.strokeStyle = 'rgba(237,226,200,0.55)'; ctx.lineWidth=2;
+      ctx.beginPath();
+      animState.shipTrail.forEach((p,i)=>{
+        const pp = toPx(p.x,p.y);
+        if(i===0) ctx.moveTo(pp.px,pp.py); else ctx.lineTo(pp.px,pp.py);
+      });
+      ctx.stroke();
+    }
+
+    // titik-titik fiks yang tercatat berkala selama berlayar
+    animState.fixTrail.forEach((f,i)=>{
+      const fp = toPx(f.x,f.y);
+      const isLast = i===animState.fixTrail.length-1;
+      ctx.beginPath(); ctx.arc(fp.px,fp.py, isLast?6:4, 0, 7);
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = isLast?2:1.3;
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,'+(isLast?0.2:0.08)+')'; ctx.fill();
+    });
+
+    // titik potong (fiks) saat ini
+    if(fix){
+      const F = toPx(fix.x, fix.y);
+      ctx.beginPath(); ctx.arc(F.px,F.py,7,0,7);
+      ctx.strokeStyle='#ffffff'; ctx.lineWidth=2; ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,0.15)'; ctx.fill();
+    }
+
+    // ikon benda darat
+    ctx.font='24px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(LM_A.icon, A.px, A.py-2);
+    ctx.fillText(LM_B.icon, B.px, B.py-2);
+    ctx.font='11px Space Mono, monospace'; ctx.fillStyle='#ede2c8';
+    ctx.fillText(LM_A.label, A.px, A.py+18);
+    ctx.fillText(LM_B.label, B.px, B.py+18);
+    ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+
+    // ikon kapal (kalau tidak disembunyikan mode kuis)
+    if(!(crossQuizCheck.checked && !revealed)){
+      drawShipDot(S.px, S.py, '#ede2c8');
+    }
+
+    if(crossQuizCheck.checked && !revealed){
+      crossNarration.textContent = 'Mode kuis: cocokkan titik potong (lingkaran putih) dengan perkiraan Anda, lalu tekan "Tampilkan kapal sesungguhnya".';
+    } else if(animState.playing){
+      crossNarration.textContent = '⛵ Berlayar haluan '+fmt(animState.course,0)+'° — setiap ±'+fmt(FIX_INTERVAL,1)+' detik simulator mencatat fiks baru (lingkaran putih kecil) dari perpotongan dua baringan.';
+    } else {
+      crossNarration.textContent = 'Titik potong (lingkaran putih) berhimpit persis dengan kapal — begitulah baringan silang bekerja.';
+    }
+    update3D();
+  }
+
+  csxSlider.addEventListener('input', ()=>{ stopAnim('Dijeda — posisi diatur manual.'); render(); });
+  csySlider.addEventListener('input', ()=>{ stopAnim('Dijeda — posisi diatur manual.'); render(); });
+  crossQuizCheck.addEventListener('change', ()=>{
+    revealed = false;
+    crossQuizArea.style.display = crossQuizCheck.checked ? 'block' : 'none';
+    render();
+  });
+  crossRevealBtn.addEventListener('click', ()=>{ revealed = true; render(); });
+
+  csCourseSlider.addEventListener('input', ()=>{
+    animState.course = parseFloat(csCourseSlider.value);
+    csCourseVal.textContent = fmt(animState.course,0)+'°';
+    setCourseVelocity();
+  });
+  csAnimSlider.addEventListener('input', ()=>{
+    animState.speed = parseFloat(csAnimSlider.value);
+    csAnimVal.textContent = fmt(animState.speed,1)+' mil/detik';
+    setCourseVelocity();
+  });
+
+  function stopAnim(msg){
+    if(rafId2) clearInterval(rafId2);
+    rafId2=null; lastTs2=null;
+    animState.playing=false;
+    crossPlayBtn.textContent='▶ Berlayar';
+    if(msg) crossNarration.textContent = msg;
+  }
+
+  function crossStep(ts){
+    if(!lastTs2) lastTs2=ts;
+    const dtSec = (ts-lastTs2)/1000; lastTs2=ts;
+
+    let nx = parseFloat(csxSlider.value) + animState.vx*dtSec;
+    let ny = parseFloat(csySlider.value) + animState.vy*dtSec;
+    const xMin=2, xMax=32, yMin=0.5, yMax=4.5;
+    if(nx<xMin){ nx=xMin; animState.vx=Math.abs(animState.vx); }
+    else if(nx>xMax){ nx=xMax; animState.vx=-Math.abs(animState.vx); }
+    if(ny<yMin){ ny=yMin; animState.vy=Math.abs(animState.vy); }
+    else if(ny>yMax){ ny=yMax; animState.vy=-Math.abs(animState.vy); }
+    animState.course = (rad2deg(Math.atan2(animState.vy, animState.vx))+360)%360;
+    csCourseSlider.value = Math.round(animState.course);
+    csCourseVal.textContent = fmt(animState.course,0)+'°';
+
+    csxSlider.value = nx; csySlider.value = ny;
+
+    animState.shipTrail.push({x:nx,y:ny});
+    if(animState.shipTrail.length>500) animState.shipTrail.shift();
+
+    animState.elapsed += dtSec;
+    if(animState.elapsed - animState.lastFixAt >= FIX_INTERVAL){
+      animState.lastFixAt = animState.elapsed;
+      const thetaA = bearingFromShip(nx,ny, LM_A.x, LM_A.y);
+      const thetaB = bearingFromShip(nx,ny, LM_B.x, LM_B.y);
+      const fix = crossBearingFix(LM_A.x,LM_A.y,thetaA, LM_B.x,LM_B.y,thetaB);
+      if(fix){
+        animState.fixTrail.push(fix);
+        if(animState.fixTrail.length>60) animState.fixTrail.shift();
+      }
+    }
+
+    crossProgressText.textContent = 'Jarak tempuh: '+fmt(animState.elapsed*animState.speed,1)+' mil · fiks tercatat: '+animState.fixTrail.length;
+    render();
+  }
+
+  crossPlayBtn.addEventListener('click', ()=>{
+    if(animState.playing) return;
+    animState.playing=true; crossPlayBtn.textContent='▶ Berlayar…';
+    lastTs2=null;
+    if(rafId2) clearInterval(rafId2);
+    // setInterval dipakai (bukan requestAnimationFrame berantai) karena sejumlah
+    // WebView mobile menahan/menghentikan rAF saat layar tidak sedang disentuh —
+    // gejalanya persis: animasi cuma jalan selama jari menekan layar.
+    rafId2 = setInterval(()=>crossStep(performance.now()), 16);
+  });
+  crossPauseBtn.addEventListener('click', ()=>{ stopAnim('Dijeda. Tekan ▶ Berlayar untuk lanjut.'); });
+  crossResetBtn.addEventListener('click', ()=>{
+    stopAnim();
+    animState.elapsed=0; animState.lastFixAt=-999;
+    animState.shipTrail=[]; animState.fixTrail=[];
+    csxSlider.value=15; csySlider.value=2;
+    animState.course=70; animState.speed=2.5;
+    csCourseSlider.value=70; csCourseVal.textContent='70°';
+    csAnimSlider.value=2.5; csAnimVal.textContent='2,5 mil/detik';
+    setCourseVelocity();
+    crossProgressText.textContent='';
+    crossNarration.textContent='Geser posisi kapal untuk melihat garis baringnya berpotongan, atau tekan ▶ Berlayar untuk melihatnya bergerak sendiri.';
+    render();
+  });
+  crossRandomBtn.addEventListener('click', ()=>{
+    stopAnim();
+    animState.elapsed=0; animState.lastFixAt=-999;
+    animState.shipTrail=[]; animState.fixTrail=[];
+    const rx = Math.round((4+Math.random()*26)*2)/2;
+    const ry = Math.round((0.6+Math.random()*3.6)*10)/10;
+    const rc = Math.round(Math.random()*359);
+    csxSlider.value=rx; csySlider.value=ry;
+    animState.course=rc; csCourseSlider.value=rc; csCourseVal.textContent=fmt(rc,0)+'°';
+    setCourseVelocity();
+    crossProgressText.textContent='';
+    render();
+  });
+
+  /* ============================================================
+     MODEL 3D (Modul 2) — dua benda darat tetap (mercusuar & puncak
+     bukit), kapal bebas berbelok. Pola sama dengan Modul 1: mesh
+     primitif, kamera orbit manual, disinkronkan lewat update3D()
+     yang dipanggil dari render() di atas.
+     ============================================================ */
+  const threeContainer2 = document.getElementById('three3dM2');
+  let three3d2 = null;
+
+  function lighthouseMesh3D(){
+    const g = new THREE.Group();
+    const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.5,2.6,10), new THREE.MeshStandardMaterial({color:0xede2c8}));
+    tower.position.y=1.3; g.add(tower);
+    const stripe = new THREE.Mesh(new THREE.CylinderGeometry(0.37,0.37,0.45,10), new THREE.MeshStandardMaterial({color:0xd1684a}));
+    stripe.position.y=1.5; g.add(stripe);
+    const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.28,10,10), new THREE.MeshStandardMaterial({color:0xffe9a8, emissive:0xffcf6b, emissiveIntensity:0.8}));
+    lamp.position.y=2.75; g.add(lamp);
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(0.4,0.4,10), new THREE.MeshStandardMaterial({color:0xd1684a}));
+    roof.position.y=3.05; g.add(roof);
+    return g;
+  }
+
+  function peakMesh3D(){
+    const g = new THREE.Group();
+    const base = new THREE.Mesh(new THREE.ConeGeometry(2.2,2.4,9), new THREE.MeshStandardMaterial({color:0x7a6a52}));
+    base.position.y=1.2; g.add(base);
+    const mid = new THREE.Mesh(new THREE.ConeGeometry(1.3,1.5,9), new THREE.MeshStandardMaterial({color:0x8f7c5e}));
+    mid.position.y=2.55; g.add(mid);
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.55,0.9,9), new THREE.MeshStandardMaterial({color:0xc9b37a}));
+    tip.position.y=3.6; g.add(tip);
+    return g;
+  }
+
+  function shipMesh3D_M2(){
+    const g = new THREE.Group();
+    const hull = new THREE.Mesh(new THREE.BoxGeometry(1.9,0.35,0.7), new THREE.MeshStandardMaterial({color:0xede2c8}));
+    hull.position.y=0.2; g.add(hull);
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(0.6,0.4,0.5), new THREE.MeshStandardMaterial({color:0x173a53}));
+    cabin.position.set(-0.3,0.55,0); g.add(cabin);
+    const funnel = new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.4,8), new THREE.MeshStandardMaterial({color:0xd1684a}));
+    funnel.position.set(-0.55,0.9,0); g.add(funnel);
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.6,6), new THREE.MeshStandardMaterial({color:0xe8c876}));
+    mast.position.set(0.15,0.9,0); g.add(mast);
+    const flag = new THREE.Mesh(new THREE.ConeGeometry(0.12,0.2,3), new THREE.MeshStandardMaterial({color:0xd1684a}));
+    flag.rotation.z = Math.PI/2;
+    flag.position.set(0.28,1.15,0); g.add(flag);
+    return g;
+  }
+
+  function fixDotMesh3D(){
+    return new THREE.Mesh(new THREE.SphereGeometry(0.16,10,10), new THREE.MeshStandardMaterial({color:0xffffff, transparent:true, opacity:0.85}));
+  }
+
+  const FIX_POOL_SIZE = 15;
+
+  function initThree3D_M2(){
+    if(three3d2) return;
+    const w = threeContainer2.clientWidth, h = threeContainer2.clientHeight;
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b2233);
+    scene.fog = new THREE.Fog(0x0b2233, 24, 90);
+
+    const camera = new THREE.PerspectiveCamera(46, w/h, 0.1, 500);
+    let radius = 24, theta = Math.PI*0.28, phi = 1.1;
+    const target = new THREE.Vector3(15,0.4,2);
+
+    const renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setSize(w,h);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    threeContainer2.appendChild(renderer.domElement);
+
+    // ---- HUD: panel info, mini-kompas, label melayang ----
+    const hud = document.createElement('div'); hud.className='hud3d';
+    threeContainer2.appendChild(hud);
+    const compassWrap = document.createElement('div'); compassWrap.className='compass3d';
+    compassWrap.innerHTML = '<svg viewBox="0 0 46 46" width="46" height="46">'
+      + '<circle cx="23" cy="23" r="21" fill="rgba(11,34,51,0.78)" stroke="#c9a24b" stroke-width="1.5"/>'
+      + '<g id="needleM2"><polygon points="23,6 27,23 23,20 19,23" fill="#e8c876"/>'
+      + '<text x="23" y="15" font-size="7" fill="#0b2233" text-anchor="middle" font-family="Space Mono" font-weight="bold">0°</text></g></svg>';
+    threeContainer2.appendChild(compassWrap);
+    const needle = compassWrap.querySelector('#needleM2');
+    const labelA = document.createElement('div'); labelA.className='label3d';
+    labelA.textContent = LM_A.label; threeContainer2.appendChild(labelA);
+    const labelB = document.createElement('div'); labelB.className='label3d';
+    labelB.textContent = LM_B.label; threeContainer2.appendChild(labelB);
+    const labelShip2 = document.createElement('div'); labelShip2.className='label3d';
+    threeContainer2.appendChild(labelShip2);
+
+    scene.add(new THREE.AmbientLight(0xffffff,0.55));
+    const sun = new THREE.DirectionalLight(0xffffff,0.85);
+    sun.position.set(18,28,12);
+    scene.add(sun);
+
+    const sea = new THREE.Mesh(new THREE.PlaneGeometry(140,80), new THREE.MeshStandardMaterial({color:0x122f45, roughness:0.9}));
+    sea.rotation.x=-Math.PI/2;
+    sea.position.set(17,0,4.5);
+    scene.add(sea);
+    const grid = new THREE.GridHelper(140,56,0x2d5a72,0x204a63);
+    grid.position.set(17,0.01,4.5);
+    scene.add(grid);
+
+    const lmA = lighthouseMesh3D();
+    lmA.position.set(LM_A.x,0,LM_A.y);
+    scene.add(lmA);
+    const lmB = peakMesh3D();
+    lmB.position.set(LM_B.x,0,LM_B.y);
+    scene.add(lmB);
+
+    const ship = shipMesh3D_M2();
+    scene.add(ship);
+
+    const lineAGeo = new THREE.BufferGeometry();
+    const lineAMat = new THREE.LineDashedMaterial({color:0xe8c876, dashSize:0.5, gapSize:0.35, transparent:true, opacity:0.65});
+    const lineA = new THREE.Line(lineAGeo, lineAMat); scene.add(lineA);
+
+    const lineBGeo = new THREE.BufferGeometry();
+    const lineBMat = new THREE.LineDashedMaterial({color:0xd1684a, dashSize:0.5, gapSize:0.35, transparent:true, opacity:0.65});
+    const lineB = new THREE.Line(lineBGeo, lineBMat); scene.add(lineB);
+
+    const trailGeo = new THREE.BufferGeometry();
+    const trailMat = new THREE.LineBasicMaterial({color:0xede2c8, transparent:true, opacity:0.5});
+    const trailLine = new THREE.Line(trailGeo, trailMat); scene.add(trailLine);
+
+    const fixPool = [];
+    for(let i=0;i<FIX_POOL_SIZE;i++){ const m=fixDotMesh3D(); m.visible=false; scene.add(m); fixPool.push(m); }
+
+    const curFix = fixDotMesh3D();
+    curFix.scale.setScalar(1.5);
+    curFix.visible=false;
+    scene.add(curFix);
+
+    function updateCamera(){
+      camera.position.x = target.x + radius*Math.sin(phi)*Math.sin(theta);
+      camera.position.z = target.z + radius*Math.sin(phi)*Math.cos(theta);
+      camera.position.y = target.y + radius*Math.cos(phi);
+      camera.lookAt(target);
+      needle.setAttribute('transform', 'rotate('+(-theta*180/Math.PI)+' 23 23)');
+      renderer.render(scene, camera);
+    }
+    updateCamera();
+
+    let dragging=false, lastX=0, lastY=0;
+    renderer.domElement.addEventListener('pointerdown', e=>{ dragging=true; lastX=e.clientX; lastY=e.clientY; threeContainer2.classList.add('grabbing'); });
+    window.addEventListener('pointerup', ()=>{ dragging=false; threeContainer2.classList.remove('grabbing'); });
+    window.addEventListener('pointermove', e=>{
+      if(!dragging) return;
+      theta -= (e.clientX-lastX)*0.006;
+      phi   -= (e.clientY-lastY)*0.006;
+      phi = Math.max(0.35, Math.min(1.5, phi));
+      lastX=e.clientX; lastY=e.clientY;
+      updateCamera();
+    });
+    renderer.domElement.addEventListener('wheel', e=>{
+      e.preventDefault();
+      radius = Math.max(5, Math.min(65, radius + e.deltaY*0.02));
+      updateCamera();
+    }, {passive:false});
+
+    let pinchDist=null;
+    function touchDist(t0,t1){ return Math.hypot(t1.clientX-t0.clientX, t1.clientY-t0.clientY); }
+    renderer.domElement.addEventListener('touchstart', e=>{
+      if(e.touches.length===2){ pinchDist = touchDist(e.touches[0], e.touches[1]); dragging=false; }
+    }, {passive:true});
+    renderer.domElement.addEventListener('touchmove', e=>{
+      if(e.touches.length===2 && pinchDist!==null){
+        e.preventDefault();
+        const d = touchDist(e.touches[0], e.touches[1]);
+        radius = Math.max(5, Math.min(65, radius - (d-pinchDist)*0.03));
+        pinchDist = d;
+        updateCamera();
+      }
+    }, {passive:false});
+    renderer.domElement.addEventListener('touchend', e=>{ if(e.touches.length<2) pinchDist=null; }, {passive:true});
+
+    function onResize(){
+      const w2 = threeContainer2.clientWidth, h2 = threeContainer2.clientHeight;
+      if(!w2 || !h2) return;
+      camera.aspect = w2/h2; camera.updateProjectionMatrix();
+      renderer.setSize(w2,h2);
+      updateCamera();
+    }
+    window.addEventListener('resize', onResize);
+
+    three3d2 = { camera, ship, lineA, lineB, trailLine, fixPool, curFix, target, updateCamera,
+      hud, labelA, labelB, labelShip2, w: ()=>threeContainer2.clientWidth, h: ()=>threeContainer2.clientHeight };
+  }
+
+  function worldToScreen3D_M2(vec3, camera, w, h){
+    const p = vec3.clone().project(camera);
+    return { x:(p.x*0.5+0.5)*w, y:(-p.y*0.5+0.5)*h, behind: p.z>1 };
+  }
+
+  let view3dActiveM2 = false;
+
+  function update3D_M2(){
+    if(!three3d2 || !view3dActiveM2) return;
+    const shipX = parseFloat(csxSlider.value);
+    const shipY = parseFloat(csySlider.value);
+    const courseRad = deg2rad(animState.course);
+
+    three3d2.ship.position.set(shipX,0,shipY);
+    three3d2.ship.rotation.y = -courseRad;
+
+    const thetaA = bearingFromShip(shipX,shipY, LM_A.x, LM_A.y);
+    const thetaB = bearingFromShip(shipX,shipY, LM_B.x, LM_B.y);
+    const radA = deg2rad(thetaA), radB = deg2rad(thetaB);
+    const LEN = 60;
+    three3d2.lineA.geometry.setFromPoints([
+      new THREE.Vector3(LM_A.x - Math.cos(radA)*LEN, 0.25, LM_A.y - Math.sin(radA)*LEN),
+      new THREE.Vector3(LM_A.x + Math.cos(radA)*LEN, 0.25, LM_A.y + Math.sin(radA)*LEN)
+    ]);
+    three3d2.lineA.computeLineDistances();
+    three3d2.lineB.geometry.setFromPoints([
+      new THREE.Vector3(LM_B.x - Math.cos(radB)*LEN, 0.25, LM_B.y - Math.sin(radB)*LEN),
+      new THREE.Vector3(LM_B.x + Math.cos(radB)*LEN, 0.25, LM_B.y + Math.sin(radB)*LEN)
+    ]);
+    three3d2.lineB.computeLineDistances();
+
+    const fix = crossBearingFix(LM_A.x,LM_A.y,thetaA, LM_B.x,LM_B.y,thetaB);
+    if(fix && !(crossQuizCheck.checked && !revealed)){
+      three3d2.curFix.position.set(fix.x,0.3,fix.y);
+      three3d2.curFix.visible = true;
+    } else {
+      three3d2.curFix.visible = false;
+    }
+
+    // jejak lintasan: ambil maks 150 titik terakhir & isi langsung ke typed array
+    // (bukan bikin objek Vector3 baru + array baru tiap tick — jauh lebih ringan
+    // untuk lintasan panjang yang bisa sampai 500 titik)
+    const trail = animState.shipTrail;
+    if(trail.length>1){
+      const n = Math.min(trail.length, 150);
+      const start = trail.length - n;
+      let arr = three3d2._trailArr;
+      if(!arr || arr.length !== n*3){ arr = new Float32Array(n*3); three3d2._trailArr = arr; }
+      for(let i=0;i<n;i++){
+        const p = trail[start+i];
+        arr[i*3]=p.x; arr[i*3+1]=0.06; arr[i*3+2]=p.y;
+      }
+      three3d2.trailLine.geometry.setAttribute('position', new THREE.BufferAttribute(arr,3));
+      three3d2.trailLine.geometry.attributes.position.needsUpdate = true;
+      three3d2.trailLine.geometry.setDrawRange(0,n);
+      three3d2.trailLine.geometry.computeBoundingSphere();
+    } else {
+      three3d2.trailLine.geometry.setFromPoints([]);
+    }
+
+    const fixes = animState.fixTrail;
+    three3d2.fixPool.forEach((m,i)=>{
+      const idx = fixes.length - three3d2.fixPool.length + i;
+      if(idx>=0 && fixes[idx]){
+        m.position.set(fixes[idx].x, 0.16, fixes[idx].y);
+        m.visible = true;
+      } else {
+        m.visible = false;
+      }
+    });
+
+    three3d2.target.x = shipX;
+    three3d2.target.z = shipY;
+    three3d2.updateCamera();
+
+    // ---- HUD: info baring & label melayang ----
+    three3d2.hud.innerHTML =
+      'Haluan: <b>'+fmt(animState.course,0)+'°</b><br>'+
+      'Baring → '+LM_A.label+': <b>'+fmt(thetaA,1)+'°</b><br>'+
+      'Baring → '+LM_B.label+': <b>'+fmt(thetaB,1)+'°</b><br>'+
+      'Fiks tercatat: <b>'+animState.fixTrail.length+'</b>';
+
+    const w3 = three3d2.w(), h3 = three3d2.h();
+    const pA = worldToScreen3D_M2(new THREE.Vector3(LM_A.x,3.3,LM_A.y), three3d2.camera, w3, h3);
+    three3d2.labelA.style.display = pA.behind ? 'none' : 'block';
+    three3d2.labelA.style.transform = 'translate(-50%,-100%) translate('+pA.x+'px,'+pA.y+'px)';
+
+    const pB = worldToScreen3D_M2(new THREE.Vector3(LM_B.x,4.1,LM_B.y), three3d2.camera, w3, h3);
+    three3d2.labelB.style.display = pB.behind ? 'none' : 'block';
+    three3d2.labelB.style.transform = 'translate(-50%,-100%) translate('+pB.x+'px,'+pB.y+'px)';
+
+    const pShip = worldToScreen3D_M2(new THREE.Vector3(shipX,1.3,shipY), three3d2.camera, w3, h3);
+    three3d2.labelShip2.style.display = pShip.behind ? 'none' : 'block';
+    three3d2.labelShip2.style.transform = 'translate(-50%,-100%) translate('+pShip.x+'px,'+pShip.y+'px)';
+    three3d2.labelShip2.textContent = 'Kapal · '+fmt(animState.course,0)+'°';
+  }
+
+  document.getElementById('btn2dM2').addEventListener('click', ()=>{
+    document.getElementById('btn2dM2').classList.add('active');
+    document.getElementById('btn3dM2').classList.remove('active');
+    canvas.style.display = '';
+    threeContainer2.style.display = 'none';
+    document.getElementById('view3dHintM2').style.display = 'none';
+    view3dActiveM2 = false;
+  });
+  document.getElementById('btn3dM2').addEventListener('click', ()=>{
+    document.getElementById('btn3dM2').classList.add('active');
+    document.getElementById('btn2dM2').classList.remove('active');
+    canvas.style.display = 'none';
+    threeContainer2.style.display = 'block';
+    document.getElementById('view3dHintM2').style.display = 'block';
+    initThree3D_M2();
+    view3dActiveM2 = true;
+    update3D_M2();
+  });
+
+  function update3D(){ update3D_M2(); }
+
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tebak Suaranya!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fdf6e8; --card:#ffffff; --line:#f0e2c4;
+    --ink:#3a3226; --dim:#8a7c62;
+    --accent:#c9784f; --accent-soft:#f7e9df;
+    --good:#5a8a5a; --good-soft:#dff2df; --good-line:#8fc98f;
+    --bad:#b04a4a; --bad-soft:#fbdede; --bad-line:#dd9a9a;
+    --display:'Fredoka',sans-serif; --sans:'Quicksand',sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;}
+  .wrap{max-width:520px;margin:0 auto;padding:0 18px 70px;}
+
+  .hero{padding:36px 10px 18px;text-align:center;}
+  .hero h1{font-family:var(--display);font-weight:700;font-size:clamp(24px,6.5vw,32px);margin:0 0 8px;color:#8a4a2a;}
+  .hero p{color:var(--dim);font-size:14px;max-width:440px;margin:0 auto;}
+
+  .tab-nav{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:18px;}
+  .tab-btn{font-family:var(--display);font-weight:600;font-size:13px;background:#fff;border:2px solid var(--line);
+    color:var(--dim);padding:12px 3px;border-radius:12px;cursor:pointer;text-align:center;line-height:1.3;}
+  .tab-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  .card{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px 18px;margin-bottom:16px;}
+  .card p.desc{font-size:13.5px;color:var(--dim);margin:0 0 16px;}
+
+  .result-panel{background:var(--accent-soft);border-radius:14px;padding:14px;text-align:center;margin-bottom:16px;}
+  .compare-row{display:flex;justify-content:space-around;}
+  .compare-box .n{font-family:var(--display);font-weight:700;font-size:22px;color:#8a4a2a;}
+  .compare-box .l{font-size:10.5px;color:var(--dim);font-family:var(--mono);}
+
+  .play-btn{width:100%;font-family:var(--display);font-weight:700;font-size:16px;padding:16px;border-radius:14px;border:none;
+    cursor:pointer;background:var(--accent);color:#fff;box-shadow:0 5px 0 rgba(0,0,0,.08);}
+  .play-btn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.08);}
+
+  .eq-bars{display:flex;justify-content:center;gap:4px;height:24px;margin:12px 0 4px;align-items:flex-end;}
+  .eq-bars span{width:5px;background:var(--accent);border-radius:2px;height:6px;}
+  .eq-bars.playing span{animation:eqBounce .6s ease-in-out infinite;}
+  .eq-bars.playing span:nth-child(1){animation-delay:0s;}
+  .eq-bars.playing span:nth-child(2){animation-delay:.12s;}
+  .eq-bars.playing span:nth-child(3){animation-delay:.24s;}
+  .eq-bars.playing span:nth-child(4){animation-delay:.12s;}
+  .eq-bars.playing span:nth-child(5){animation-delay:0s;}
+  @keyframes eqBounce{0%,100%{height:6px;}50%{height:22px;}}
+
+  .grid-hewan{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0;}
+  .hewan-box{background:#fff;border:2px solid var(--line);border-radius:14px;padding:18px 8px;text-align:center;
+    font-family:var(--display);font-weight:600;font-size:15px;color:var(--ink);cursor:pointer;
+    transition:transform .1s, background .2s, border-color .2s, color .2s;}
+  .hewan-box:active{transform:scale(0.96);}
+  .hewan-box.correct{background:var(--good-soft);border-color:var(--good-line);color:var(--good);}
+  .hewan-box.wrong{background:var(--bad-soft);border-color:var(--bad-line);color:var(--bad);}
+
+  .feedback{text-align:center;font-family:var(--display);font-weight:600;font-size:13.5px;min-height:20px;color:var(--dim);margin-bottom:6px;}
+
+  .skip-btn{width:100%;background:none;border:2px dashed var(--line);color:var(--dim);font-family:var(--sans);
+    font-weight:600;font-size:12.5px;padding:10px;border-radius:12px;cursor:pointer;margin-top:2px;}
+
+  .note-card{background:var(--accent-soft);border-radius:14px;padding:14px 16px;font-size:12.5px;color:#6b4a30;margin-top:14px;}
+  .note-card strong{color:#4a2e18;}
+
+  footer{text-align:center;padding-top:26px;color:#b9ad94;font-size:11.5px;font-family:var(--mono);}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>🎧 Tebak Suaranya!</h1>
+    <p>Dengarkan suaranya, lalu <strong>cari namanya</strong> di antara kotak-kotak yang ada. Posisinya selalu berubah tiap ronde — jadi kamu harus benar-benar membaca, bukan menghafal tempat!</p>
+  </div>
+
+  <div class="tab-nav">
+    <button class="tab-btn active" data-tab="mudah">🟢 Mudah</button>
+    <button class="tab-btn" data-tab="sedang">🟡 Sedang</button>
+    <button class="tab-btn" data-tab="sulit">🔴 Sulit</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-mudah">
+    <div class="card">
+      <p class="desc">4 pilihan hewan. Level pemanasan yang pas buat mulai melatih telinga sekaligus membaca.</p>
+      <div class="result-panel">
+        <div class="compare-row">
+          <div class="compare-box"><div class="n" id="mudahSkorN">0</div><div class="l">⭐ SKOR</div></div>
+          <div class="compare-box"><div class="n" id="mudahBeruntunN">0</div><div class="l">🔥 BERUNTUN</div></div>
+        </div>
+      </div>
+      <button class="play-btn" onclick="mainkanTarget('mudah')">🔊 Dengar Suaranya!</button>
+      <div class="eq-bars" id="mudahEq"><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="grid-hewan" id="mudahGrid"></div>
+      <div class="feedback" id="mudahFeedback"></div>
+      <button class="skip-btn" onclick="acakUlang('mudah')">🔀 Ganti Hewan Lain</button>
+    </div>
+    <div class="note-card"><strong>Kenapa kotaknya selalu diacak?</strong> Supaya kamu benar-benar mendengarkan dengan teliti dan membaca nama hewannya — bukan menghafal "sapi selalu di kotak kiri atas". Dua kemampuan sekaligus terlatih: telinga dan mata!</div>
+  </div>
+
+  <div class="tab-panel" id="tab-sedang">
+    <div class="card">
+      <p class="desc">6 pilihan hewan. Suaranya makin beragam, kamu harus makin teliti membedakannya.</p>
+      <div class="result-panel">
+        <div class="compare-row">
+          <div class="compare-box"><div class="n" id="sedangSkorN">0</div><div class="l">⭐ SKOR</div></div>
+          <div class="compare-box"><div class="n" id="sedangBeruntunN">0</div><div class="l">🔥 BERUNTUN</div></div>
+        </div>
+      </div>
+      <button class="play-btn" onclick="mainkanTarget('sedang')">🔊 Dengar Suaranya!</button>
+      <div class="eq-bars" id="sedangEq"><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="grid-hewan" id="sedangGrid"></div>
+      <div class="feedback" id="sedangFeedback"></div>
+      <button class="skip-btn" onclick="acakUlang('sedang')">🔀 Ganti Hewan Lain</button>
+    </div>
+    <div class="note-card"><strong>Tips:</strong> Kalau ragu, tekan lagi "Dengar Suaranya" — mendengarkan berkali-kali itu wajar dan bagus untuk latihan, bukan curang!</div>
+  </div>
+
+  <div class="tab-panel" id="tab-sulit">
+    <div class="card">
+      <p class="desc">10 pilihan hewan — level penuh! Butuh telinga tajam dan bacaan cepat untuk menang di sini.</p>
+      <div class="result-panel">
+        <div class="compare-row">
+          <div class="compare-box"><div class="n" id="sulitSkorN">0</div><div class="l">⭐ SKOR</div></div>
+          <div class="compare-box"><div class="n" id="sulitBeruntunN">0</div><div class="l">🔥 BERUNTUN</div></div>
+        </div>
+      </div>
+      <button class="play-btn" onclick="mainkanTarget('sulit')">🔊 Dengar Suaranya!</button>
+      <div class="eq-bars" id="sulitEq"><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="grid-hewan" id="sulitGrid"></div>
+      <div class="feedback" id="sulitFeedback"></div>
+      <button class="skip-btn" onclick="acakUlang('sulit')">🔀 Ganti Hewan Lain</button>
+    </div>
+    <div class="note-card"><strong>Jagoan!</strong> Di level ini semua suara sengaja dibuat mirip satu sama lain di beberapa bagian — itu sebabnya membaca nama di kotak jauh lebih bisa diandalkan daripada sekadar menebak-nebak dari ingatan posisi.</div>
+  </div>
+
+  <footer>Laboratorium Dengar & Baca Anak — Bank Alat JAZMI/Qiladat</footer>
+</div>
+
+<script>
+  /* ============ TAB SWITCHING ============ */
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  /* ============ AUDIO ENGINE (Web Audio API — semua suara disintesis, tanpa file eksternal) ============ */
+  let audioCtx = null;
+  function getCtx(){
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  function noiseBurst(ctx, t0, duration, bpFreq, bpQ, peakGain){
+    const len = Math.max(1, Math.floor(ctx.sampleRate * duration));
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for(let i=0;i<data.length;i++) data[i] = Math.random()*2-1;
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const filt = ctx.createBiquadFilter(); filt.type='bandpass'; filt.frequency.value=bpFreq; filt.Q.value=bpQ;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.linearRampToValueAtTime(peakGain, t0+0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0+duration);
+    src.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
+    src.start(t0); src.stop(t0+duration+0.02);
+  }
+
+  function tone(ctx, opt){
+    const osc = ctx.createOscillator();
+    osc.type = opt.type;
+    osc.frequency.setValueAtTime(opt.freqPoints[0][1], opt.t0+opt.freqPoints[0][0]);
+    for(let i=1;i<opt.freqPoints.length;i++){
+      osc.frequency.linearRampToValueAtTime(opt.freqPoints[i][1], opt.t0+opt.freqPoints[i][0]);
+    }
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, opt.t0);
+    gain.gain.linearRampToValueAtTime(opt.peak, opt.t0+opt.attack);
+    gain.gain.linearRampToValueAtTime(opt.peak*0.7, opt.t0+opt.duration*0.75);
+    gain.gain.linearRampToValueAtTime(0.0001, opt.t0+opt.duration);
+    let node = osc;
+    if(opt.filterFreq){
+      const filt = ctx.createBiquadFilter();
+      filt.type = opt.filterType || 'lowpass';
+      filt.frequency.value = opt.filterFreq;
+      filt.Q.value = opt.filterQ || 1;
+      osc.connect(filt);
+      node = filt;
+    }
+    node.connect(gain); gain.connect(ctx.destination);
+    osc.start(opt.t0); osc.stop(opt.t0+opt.duration+0.03);
+  }
+
+  function toneWithVibrato(ctx, opt){
+    const osc = ctx.createOscillator();
+    osc.type = opt.type;
+    const period = 1/opt.vibRate, stepDur = period/2;
+    const centerAt = (tt) => opt.startFreq + (opt.endFreq-opt.startFreq)*(tt/opt.duration);
+    let t = 0, toggle = true;
+    osc.frequency.setValueAtTime(centerAt(0), opt.t0);
+    while(t < opt.duration){
+      t = Math.min(t+stepDur, opt.duration);
+      const c = centerAt(t);
+      const v = toggle ? c+opt.vibDepth : c-opt.vibDepth;
+      osc.frequency.linearRampToValueAtTime(Math.max(20,v), opt.t0+t);
+      toggle = !toggle;
+    }
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, opt.t0);
+    gain.gain.linearRampToValueAtTime(opt.peak, opt.t0+opt.attack);
+    if(opt.ampWobble){
+      const aperiod = 1/opt.ampWobble.rate, astep = aperiod/2;
+      let at = opt.attack, atoggle = true;
+      while(at < opt.duration-0.03){
+        at = Math.min(at+astep, opt.duration-0.03);
+        const v = atoggle ? Math.max(0.02, opt.peak-opt.ampWobble.depth) : opt.peak;
+        gain.gain.linearRampToValueAtTime(v, opt.t0+at);
+        atoggle = !atoggle;
+      }
+    } else {
+      gain.gain.linearRampToValueAtTime(opt.peak*0.75, opt.t0+opt.duration*0.75);
+    }
+    gain.gain.linearRampToValueAtTime(0.0001, opt.t0+opt.duration);
+
+    let node = osc;
+    if(opt.filterFreq){
+      const filt = ctx.createBiquadFilter();
+      filt.type = opt.filterType || 'bandpass';
+      filt.frequency.value = opt.filterFreq;
+      filt.Q.value = opt.filterQ || 1;
+      osc.connect(filt);
+      node = filt;
+    }
+    node.connect(gain); gain.connect(ctx.destination);
+    osc.start(opt.t0); osc.stop(opt.t0+opt.duration+0.03);
+  }
+
+  /* ============ POLA SUARA TIAP HEWAN ============ */
+  function playSapi(ctx){
+    const t0 = ctx.currentTime;
+    toneWithVibrato(ctx, {t0, duration:1.3, type:'sawtooth', startFreq:145, endFreq:120, vibRate:4.5, vibDepth:6, peak:0.28, attack:0.1, filterFreq:700, filterQ:1, filterType:'lowpass'});
+  }
+  function playKambing(ctx){
+    const t0 = ctx.currentTime;
+    toneWithVibrato(ctx, {t0, duration:0.65, type:'sawtooth', startFreq:310, endFreq:260, vibRate:11, vibDepth:35, peak:0.26, attack:0.05, filterFreq:900, filterQ:1.4, filterType:'bandpass'});
+  }
+  function playKatak(ctx){
+    const t0 = ctx.currentTime;
+    [0, 0.42].forEach(off => {
+      toneWithVibrato(ctx, {t0:t0+off, duration:0.3, type:'sawtooth', startFreq:140, endFreq:130, vibRate:18, vibDepth:22, peak:0.28, attack:0.02, filterFreq:400, filterQ:1.2, filterType:'lowpass'});
+    });
+  }
+  function playLebah(ctx){
+    const t0 = ctx.currentTime;
+    toneWithVibrato(ctx, {t0, duration:1.0, type:'triangle', startFreq:225, endFreq:245, vibRate:27, vibDepth:14, peak:0.24, attack:0.05, ampWobble:{rate:27, depth:0.08}, filterFreq:1200, filterQ:1, filterType:'lowpass'});
+  }
+  function playKuda(ctx){
+    const t0 = ctx.currentTime;
+    noiseBurst(ctx, t0, 0.15, 700, 1.5, 0.15);
+    toneWithVibrato(ctx, {t0:t0+0.05, duration:1.0, type:'sawtooth', startFreq:280, endFreq:200, vibRate:9, vibDepth:28, peak:0.26, attack:0.06, filterFreq:650, filterQ:0.9, filterType:'bandpass'});
+  }
+  function playAyam(ctx){
+    const t0 = ctx.currentTime;
+    tone(ctx, {t0, duration:1.15, type:'sawtooth',
+      freqPoints:[[0,350],[0.15,750],[0.25,600],[0.35,850],[0.55,500],[1.15,250]],
+      peak:0.26, attack:0.05, filterFreq:2500, filterQ:1, filterType:'lowpass'});
+  }
+  function playBebek(ctx){
+    const t0 = ctx.currentTime;
+    [0, 0.22, 0.44].forEach(off => {
+      tone(ctx, {t0:t0+off, duration:0.13, type:'square', freqPoints:[[0,700],[0.13,350]], peak:0.26, attack:0.01, filterFreq:700, filterQ:2, filterType:'bandpass'});
+    });
+  }
+  function playBurung(ctx){
+    const t0 = ctx.currentTime;
+    [0, 0.13, 0.26, 0.39].forEach(off => {
+      tone(ctx, {t0:t0+off, duration:0.07, type:'sine', freqPoints:[[0,1600],[0.07,2400]], peak:0.22, attack:0.005, filterFreq:0});
+    });
+  }
+  function playKucing(ctx){
+    const t0 = ctx.currentTime;
+    tone(ctx, {t0, duration:0.65, type:'triangle', freqPoints:[[0,500],[0.15,850],[0.5,380]], peak:0.26, attack:0.05, filterFreq:0});
+  }
+  function playAnjing(ctx){
+    const t0 = ctx.currentTime;
+    [0, 0.22].forEach(off => {
+      noiseBurst(ctx, t0+off, 0.09, 1400, 1.3, 0.22);
+      tone(ctx, {t0:t0+off, duration:0.1, type:'square', freqPoints:[[0,200],[0.1,120]], peak:0.22, attack:0.005, filterFreq:500, filterQ:1, filterType:'lowpass'});
+    });
+  }
+
+  const ANIMALS = {
+    sapi:    { label:'Sapi',        play: playSapi },
+    kambing: { label:'Kambing',     play: playKambing },
+    ayam:    { label:'Ayam Jantan', play: playAyam },
+    bebek:   { label:'Bebek',       play: playBebek },
+    anjing:  { label:'Anjing',      play: playAnjing },
+    kucing:  { label:'Kucing',      play: playKucing },
+    katak:   { label:'Katak',       play: playKatak },
+    lebah:   { label:'Lebah',       play: playLebah },
+    burung:  { label:'Burung',      play: playBurung },
+    kuda:    { label:'Kuda',        play: playKuda }
+  };
+
+  /* ============ LOGIKA PERMAINAN ============ */
+  const LEVELS = {
+    mudah:  { pool:['sapi','kucing','anjing','bebek'], target:null, order:[], score:0, streak:0, locked:false },
+    sedang: { pool:['sapi','kucing','anjing','bebek','ayam','kambing'], target:null, order:[], score:0, streak:0, locked:false },
+    sulit:  { pool:['sapi','kucing','anjing','bebek','ayam','kambing','katak','lebah','burung','kuda'], target:null, order:[], score:0, streak:0, locked:false }
+  };
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+
+  function newRound(level){
+    const st = LEVELS[level];
+    st.order = shuffle(st.pool);
+    st.target = st.pool[Math.floor(Math.random()*st.pool.length)];
+    st.locked = false;
+    renderGrid(level);
+    document.getElementById(level+'Feedback').textContent = '';
+  }
+
+  function renderGrid(level){
+    const st = LEVELS[level];
+    const grid = document.getElementById(level+'Grid');
+    grid.innerHTML = '';
+    st.order.forEach(id => {
+      const box = document.createElement('div');
+      box.className = 'hewan-box';
+      box.textContent = ANIMALS[id].label;
+      box.addEventListener('click', () => tebak(level, id, box));
+      grid.appendChild(box);
+    });
+  }
+
+  function tebak(level, id, boxEl){
+    const st = LEVELS[level];
+    if(st.locked) return;
+    if(id === st.target){
+      st.locked = true;
+      boxEl.classList.add('correct');
+      st.score++; st.streak++;
+      updateSkor(level);
+      document.getElementById(level+'Feedback').textContent = '✅ Benar! Itu suara ' + ANIMALS[id].label + '!';
+      spawnConfetti(boxEl);
+      setTimeout(() => { newRound(level); }, 1300);
+    } else {
+      st.streak = 0;
+      updateSkor(level);
+      boxEl.classList.add('wrong');
+      document.getElementById(level+'Feedback').textContent = '❌ Belum tepat, dengarkan lagi baik-baik~';
+      setTimeout(() => boxEl.classList.remove('wrong'), 500);
+    }
+  }
+
+  function updateSkor(level){
+    document.getElementById(level+'SkorN').textContent = LEVELS[level].score;
+    document.getElementById(level+'BeruntunN').textContent = LEVELS[level].streak;
+  }
+
+  function mainkanTarget(level){
+    const ctx = getCtx();
+    const st = LEVELS[level];
+    ANIMALS[st.target].play(ctx);
+    const eq = document.getElementById(level+'Eq');
+    eq.classList.add('playing');
+    setTimeout(() => eq.classList.remove('playing'), 1000);
+  }
+
+  function acakUlang(level){
+    newRound(level);
+  }
+
+  function spawnConfetti(originEl){
+    const rect = originEl.getBoundingClientRect();
+    const colors = ['#c9784f','#5a8a7c','#dab476','#9b6b8f','#6b8f9b'];
+    for(let i=0;i<14;i++){
+      const el = document.createElement('div');
+      el.style.position = 'fixed';
+      el.style.left = (rect.left + rect.width/2 + (Math.random()*80-40)) + 'px';
+      el.style.top = (rect.top + rect.height/2) + 'px';
+      el.style.width = '8px';
+      el.style.height = '8px';
+      el.style.borderRadius = '50%';
+      el.style.pointerEvents = 'none';
+      el.style.zIndex = '999';
+      el.style.background = colors[Math.floor(Math.random()*colors.length)];
+      const dur = (0.7+Math.random()*0.5);
+      el.style.transition = 'transform '+dur+'s ease-out, opacity '+dur+'s ease-out';
+      document.body.appendChild(el);
+      requestAnimationFrame(() => {
+        el.style.transform = 'translateY(' + (140+Math.random()*60) + 'px) scale(0.4)';
+        el.style.opacity = '0';
+      });
+      setTimeout(() => el.remove(), 1300);
+    }
+  }
+
+  /* ============ INIT ============ */
+  Object.keys(LEVELS).forEach(level => newRound(level));
+</script>
+
+</body>
+</html>

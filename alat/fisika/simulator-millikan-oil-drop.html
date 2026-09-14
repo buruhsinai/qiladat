@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Millikan Oil Drop Lab — Data, Seleksi, dan Hasil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0A12; --surface:#141320; --surface-2:#1C1A2C; --line:#2E2B42;
+    --ink:#EDEBF7; --muted:#928DAC; --amber:#E5A439; --teal:#3FBF95; --red:#E1614E; --blue:#5B9BD9;
+    --font-display:'Space Grotesk',sans-serif; --font-body:'IBM Plex Sans',sans-serif; --font-mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--font-body); line-height:1.55; padding-bottom:80px;}
+  .wrap{max-width:1000px; margin:0 auto; padding:0 20px;}
+  h1,h2,h3{font-family:var(--font-display); font-weight:600; margin:0 0 12px;}
+  p{margin:0 0 14px; max-width:72ch;}
+  .muted{color:var(--muted);}
+  .mono{font-family:var(--font-mono);}
+  section{padding:48px 0; border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+
+  .hero{padding-top:44px;}
+  .hero-tag{font-family:var(--font-mono); font-size:13px; color:var(--amber); margin-bottom:10px;}
+  .hero h1{font-size:clamp(24px,4vw,36px); max-width:24ch; line-height:1.2;}
+  .hero p.lead{font-size:17px; color:var(--muted); max-width:64ch;}
+
+  .sec-head{display:flex; align-items:baseline; gap:10px; margin-bottom:22px;}
+  .sec-num{font-family:var(--font-mono); font-size:13px; color:var(--amber);}
+
+  .panel{background:var(--surface); border:1px solid var(--line); padding:24px;}
+  .grid-ctl{display:grid; grid-template-columns:1fr; gap:18px;}
+  @media(min-width:640px){ .grid-ctl{grid-template-columns:repeat(2,1fr);} }
+  @media(min-width:900px){ .grid-ctl{grid-template-columns:repeat(3,1fr);} }
+  .field{display:flex; flex-direction:column; gap:6px;}
+  .field label{font-size:12.5px; color:var(--muted);}
+  input[type=range]{width:100%; accent-color:var(--amber);}
+  .range-val{font-family:var(--font-mono); color:var(--amber); font-size:13px;}
+  .btn{background:var(--amber); color:#241505; border:none; padding:12px 22px; font-family:var(--font-display); font-weight:600; font-size:14.5px; cursor:pointer; margin-top:18px;}
+  .btn:hover{background:#f0b967;}
+
+  .kpis{display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--line); margin-top:20px; border:1px solid var(--line);}
+  @media(min-width:640px){ .kpis{grid-template-columns:repeat(4,1fr);} }
+  .kpi{background:var(--surface); padding:14px;}
+  .kpi .val{font-family:var(--font-mono); font-size:16px;}
+  .kpi .lbl{font-size:11px; color:var(--muted); margin-top:2px;}
+
+  .chart-wrap{background:var(--surface); border:1px solid var(--line); padding:20px; margin-top:20px;}
+  svg text{font-family:var(--font-mono); fill:var(--muted);}
+  .legend{display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; font-size:11px; color:var(--muted);}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .dot{width:9px; height:9px; display:inline-block; border-radius:50%;}
+
+  .observer-grid{display:grid; grid-template-columns:1fr; gap:18px; margin-top:20px;}
+  @media(min-width:780px){ .observer-grid{grid-template-columns:1fr 1fr;} }
+  .observer-card{background:var(--surface); border:1px solid var(--line); padding:20px;}
+  .observer-card h3{font-size:16px; margin:0 0 6px;}
+  .observer-card .rule{font-size:12.5px; color:var(--muted); margin-bottom:14px; font-style:italic;}
+  .observer-card .eval{font-family:var(--font-mono); font-size:26px; color:var(--amber); margin:8px 0 4px;}
+  .observer-card .n{font-family:var(--font-mono); font-size:12px; color:var(--muted);}
+
+  .takeaway{background:var(--surface-2); border-left:3px solid var(--amber); padding:16px 18px; margin-top:20px; font-size:14px;}
+  .takeaway strong{color:var(--amber);}
+  .diagnosis{background:var(--surface-2); border-left:3px solid var(--red); padding:16px 18px; margin-top:14px; font-size:13.5px;}
+  .diagnosis strong{color:var(--red);}
+
+  .formula{background:var(--surface); border:1px solid var(--line); padding:16px 18px; font-family:var(--font-mono); font-size:12.5px; color:var(--amber); margin:14px 0; overflow-x:auto;}
+  ul.limits{padding-left:20px;}
+  ul.limits li{margin-bottom:10px; font-size:14px;}
+  .ref-list{list-style:none; padding:0; margin:0;}
+  .ref-list li{padding:12px 0; border-bottom:1px solid var(--line);}
+  .ref-list li:last-child{border-bottom:none;}
+  .ref-list .src{font-family:var(--font-mono); font-size:12px; color:var(--muted);}
+
+  footer{padding:40px 0 20px; text-align:center;}
+  footer p{margin:0; font-size:12px; color:var(--muted); max-width:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <section class="hero">
+    <div class="hero-tag">MILLIKAN OIL DROP LAB — DATA, SELEKSI, DAN HASIL</div>
+    <h1>Dua orang bisa memakai alat yang sama persis, data mentah yang sama persis, dan tetap sampai ke angka akhir yang berbeda</h1>
+    <p class="lead">Percobaan tetes minyak Millikan (1909) mengukur muatan listrik elektron dengan menyeimbangkan gaya gravitasi dan gaya listrik pada tetesan minyak bermuatan. Yang jarang diceritakan: catatan laboratorium Millikan sendiri (dibuka untuk sejarawan sains puluhan tahun kemudian) menunjukkan ia membuang sebagian pengamatan yang "tidak cocok" tanpa menyebutkannya di makalah terbit. Simulator ini membangun ulang situasi itu — satu set data mentah, dua metode seleksi, dua kesimpulan.</p>
+  </section>
+
+  <!-- PROTOKOL -->
+  <section id="protokol">
+    <div class="sec-head"><span class="sec-num">01</span><h2>Protokol</h2></div>
+    <div class="panel">
+      <div class="grid-ctl">
+        <div class="field">
+          <label>Ukuran tetesan (µm): <span class="range-val" id="v_ukuran"></span></label>
+          <input type="range" id="ukuran" min="0.3" max="3" step="0.1" value="1.0">
+        </div>
+        <div class="field">
+          <label>Tegangan listrik (V): <span class="range-val" id="v_tegangan"></span></label>
+          <input type="range" id="tegangan" min="100" max="600" step="10" value="350">
+        </div>
+        <div class="field">
+          <label>Jarak pelat (cm): <span class="range-val" id="v_jarak"></span></label>
+          <input type="range" id="jarak" min="0.5" max="2" step="0.1" value="1.0">
+        </div>
+        <div class="field">
+          <label>Waktu pengamatan per tetesan (detik): <span class="range-val" id="v_waktu"></span></label>
+          <input type="range" id="waktu" min="5" max="60" step="1" value="25">
+        </div>
+        <div class="field">
+          <label>Suhu yang diasumsikan pengamat (°C): <span class="range-val" id="v_suhu"></span></label>
+          <input type="range" id="suhu" min="15" max="30" step="1" value="23">
+          <span style="font-size:10.5px; font-family:monospace; color:var(--muted);">memengaruhi asumsi viskositas udara dalam perhitungan</span>
+        </div>
+        <div class="field">
+          <label>Jumlah tetesan diukur: <span class="range-val" id="v_jumlah"></span></label>
+          <input type="range" id="jumlah" min="15" max="80" step="5" value="40">
+        </div>
+      </div>
+      <button class="btn" onclick="generateData()">Jalankan pengamatan baru</button>
+    </div>
+    <div class="kpis" id="kpisProtokol"></div>
+  </section>
+
+  <!-- DATA MENTAH -->
+  <section id="datamentah">
+    <div class="sec-head"><span class="sec-num">02</span><h2>Data mentah (sebelum diseleksi siapa pun)</h2></div>
+    <p>Setiap titik adalah satu tetesan minyak, muatannya dihitung dari kesetimbangan gaya. Garis vertikal menandai kelipatan bulat muatan elementer (e, 2e, 3e, dst.) — kalau teori kuantisasi muatan benar, titik-titik seharusnya berkerumun di garis-garis itu.</p>
+    <div class="chart-wrap">
+      <svg id="chartMentah" viewBox="0 0 900 160" style="width:100%; height:auto;"></svg>
+    </div>
+  </section>
+
+  <!-- OBSERVER A vs B -->
+  <section id="observer">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Observer A vs Observer B</h2></div>
+    <div class="observer-grid">
+      <div class="observer-card">
+        <h3>Observer A</h3>
+        <div class="rule">Aturan: buang pengukuran HANYA jika waktu pengamatan tetesan itu terlalu singkat untuk dipercaya (&lt;60% dari target) — diputuskan sebelum tahu berapa hasil muatannya.</div>
+        <div class="eval" id="eA"></div>
+        <div class="n" id="nA"></div>
+        <div class="chart-wrap" style="margin-top:14px; padding:14px;">
+          <svg id="chartA" viewBox="0 0 400 100" style="width:100%; height:auto;"></svg>
+        </div>
+      </div>
+      <div class="observer-card">
+        <h3>Observer B</h3>
+        <div class="rule">Aturan: buang pengukuran yang hasilnya "tidak rapi" — meleset lebih dari 8% dari kelipatan bulat e terdekat — diputuskan SETELAH melihat hasil hitungnya.</div>
+        <div class="eval" id="eB"></div>
+        <div class="n" id="nB"></div>
+        <div class="chart-wrap" style="margin-top:14px; padding:14px;">
+          <svg id="chartB" viewBox="0 0 400 100" style="width:100%; height:auto;"></svg>
+        </div>
+      </div>
+    </div>
+    <div class="takeaway" id="takeaway"></div>
+  </section>
+
+  <!-- KENAPA BERBEDA -->
+  <section id="diagnosis-sec">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Kenapa nilai akhir mereka berbeda?</h2></div>
+    <div class="diagnosis" id="diagnosis"></div>
+    <p style="margin-top:16px;">Ini bukan cuma latihan statistik. Sejarawan sains Gerald Holton (1978) meneliti langsung buku catatan laboratorium Millikan dan menemukan catatan tangan seperti "publish this beauty" di sebelah data yang dipertahankan, dan komentar meragukan di sebelah data yang dibuang — sementara makalah terbitnya menyatakan seolah semua tetesan yang diukur dimasukkan ke analisis. Ia tetap mendapat nilai e yang sangat mendekati benar (dan Hadiah Nobel 1923) — tapi cara sampai ke sana ternyata jauh lebih berantakan daripada yang tersirat dari makalahnya.</p>
+  </section>
+
+  <section id="metode">
+    <div class="sec-head"><span class="sec-num">05</span><h2>Metode</h2></div>
+    <p>Muatan tetesan dihitung dari kesetimbangan gaya listrik dan gaya berat (dikoreksi apung udara):</p>
+    <div class="formula">qE = mg  →  q = mg·d / V,  dengan E = V/d</div>
+    <p>Massa tetesan diperoleh dari radiusnya (diestimasi lewat hukum Stokes pada kecepatan jatuh bebas), yang bergantung pada asumsi viskositas udara — inilah kenapa suhu yang diasumsikan pengamat memengaruhi hasil akhir secara sistematis, bukan cuma menambah noise acak. Simulator ini menghasilkan set data mentah dari muatan "sejati" berupa kelipatan bulat acak dari e = 1,602176634×10⁻¹⁹ C, ditambah derau pengukuran (dari kualitas protokol) dan bias sistematis (dari selisih suhu asumsi terhadap suhu ruangan sebenarnya, 23°C).</p>
+  </section>
+
+  <section id="batasan">
+    <div class="sec-head"><span class="sec-num">06</span><h2>Batasan</h2></div>
+    <ul class="limits">
+      <li><strong>Ini simulasi didaktik, bukan rekonstruksi historis presisi</strong> dari data Millikan yang sesungguhnya — pola perilaku "seleksi berbasis hasil vs seleksi berbasis prosedur" digeneralisasi untuk mengajarkan prinsipnya.</li>
+      <li><strong>Aturan Observer A dan B sengaja dibuat kontras tajam</strong> untuk memperjelas pelajarannya — seleksi data di dunia nyata jarang sehitam-putih ini, dan seleksi yang masuk akal (berbasis kriteria objektif yang ditetapkan di muka) memang bagian sah dari metode ilmiah.</li>
+      <li>Klik "Jalankan pengamatan baru" untuk melihat variasi acak lain dari protokol yang sama — pola umumnya (Observer B cenderung tampak lebih "presisi" tapi belum tentu lebih akurat) akan konsisten muncul.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <div class="sec-head"><span class="sec-num">07</span><h2>Referensi</h2></div>
+    <ul class="ref-list">
+      <li>R. A. Millikan, "On the Elementary Electrical Charge and the Avogadro Constant" (1913) — makalah asli percobaan tetes minyak.
+        <div class="src">Rujukan sejarah fisika eksperimental</div>
+      </li>
+      <li>Gerald Holton, "Subelectrons, Presuppositions, and the Millikan-Ehrenhaft Dispute" (1978) — analisis historis buku catatan laboratorium Millikan yang mengungkap praktik seleksi datanya.
+        <div class="src">Rujukan sejarah &amp; filsafat sains</div>
+      </li>
+      <li>Nilai muatan elementer CODATA: e = 1,602176634×10⁻¹⁹ C (nilai pasti sejak redefinisi SI 2019).
+        <div class="src">Rujukan konstanta fisika standar</div>
+      </li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Simulasi edukasi tentang metodologi ilmiah — data disimulasikan, bukan data historis Millikan yang sesungguhnya.</p>
+  </footer>
+
+</div>
+
+<script>
+const E_TRUE = 1.602176634e-19;
+let dataset = [];
+
+function gaussianRandom(){
+  let u=0,v=0;
+  while(u===0) u=Math.random();
+  while(v===0) v=Math.random();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+}
+
+function kualitasProtokol(ukuran, tegangan, jarak, waktu){
+  const skorUkuran = Math.exp(-((ukuran-1.0)**2)/(2*0.7*0.7));
+  const skorTegangan = Math.min(1, tegangan/400);
+  const skorJarak = Math.exp(-((jarak-1.0)**2)/(2*0.6*0.6));
+  const skorWaktu = Math.min(1, waktu/25);
+  return skorUkuran*skorTegangan*skorJarak*skorWaktu;
+}
+
+function generateData(){
+  const ukuran = parseFloat(document.getElementById('ukuran').value);
+  const tegangan = parseFloat(document.getElementById('tegangan').value);
+  const jarak = parseFloat(document.getElementById('jarak').value);
+  const waktu = parseFloat(document.getElementById('waktu').value);
+  const suhu = parseFloat(document.getElementById('suhu').value);
+  const jumlah = parseInt(document.getElementById('jumlah').value);
+
+  document.getElementById('v_ukuran').textContent = ukuran.toFixed(1)+' µm';
+  document.getElementById('v_tegangan').textContent = tegangan+' V';
+  document.getElementById('v_jarak').textContent = jarak.toFixed(1)+' cm';
+  document.getElementById('v_waktu').textContent = waktu+' s';
+  document.getElementById('v_suhu').textContent = suhu+'°C';
+  document.getElementById('v_jumlah').textContent = jumlah;
+
+  const kualitas = kualitasProtokol(ukuran, tegangan, jarak, waktu);
+  const sigmaRelatif = Math.max(0.02, Math.min(0.35, 0.05/kualitas));
+  const biasSistematis = (suhu-23)*0.006; // per derajat selisih asumsi suhu
+
+  dataset = [];
+  for(let i=0;i<jumlah;i++){
+    const n = 1+Math.floor(Math.random()*8);
+    const trueQ = n*E_TRUE;
+    const noise = gaussianRandom()*sigmaRelatif;
+    const qRaw = trueQ*(1+biasSistematis)*(1+noise);
+    const actualObsTime = waktu*(0.35+Math.random()*1.0);
+    dataset.push({i, n, qRaw, actualObsTime});
+  }
+
+  document.getElementById('kpisProtokol').innerHTML = `
+    <div class="kpi"><div class="val">${(kualitas*100).toFixed(0)}%</div><div class="lbl">skor kualitas protokol</div></div>
+    <div class="kpi"><div class="val">±${(sigmaRelatif*100).toFixed(1)}%</div><div class="lbl">derau acak per pengukuran</div></div>
+    <div class="kpi"><div class="val">${biasSistematis>=0?'+':''}${(biasSistematis*100).toFixed(1)}%</div><div class="lbl">bias sistematis (asumsi suhu)</div></div>
+    <div class="kpi"><div class="val">${jumlah}</div><div class="lbl">total tetesan diukur</div></div>
+  `;
+
+  hitungObserver();
+}
+
+function hitungObserver(){
+  const waktu = parseFloat(document.getElementById('waktu').value);
+
+  const keepA = dataset.filter(d=>d.actualObsTime >= 0.6*waktu);
+  const keepB = dataset.filter(d=>{
+    const nGuess = Math.round(d.qRaw/E_TRUE);
+    if(nGuess<1) return false;
+    const err = Math.abs(d.qRaw/E_TRUE - nGuess)/nGuess;
+    return err<=0.08;
+  });
+
+  function estimasiE(arr){
+    if(arr.length===0) return null;
+    const vals = arr.map(d=>{
+      const nGuess = Math.max(1,Math.round(d.qRaw/E_TRUE));
+      return d.qRaw/nGuess;
+    });
+    return vals.reduce((a,b)=>a+b,0)/vals.length;
+  }
+
+  const eA = estimasiE(keepA);
+  const eB = estimasiE(keepB);
+
+  document.getElementById('eA').textContent = eA? eA.toExponential(4)+' C' : '—';
+  document.getElementById('nA').textContent = `${keepA.length} dari ${dataset.length} tetesan dipertahankan`;
+  document.getElementById('eB').textContent = eB? eB.toExponential(4)+' C' : '—';
+  document.getElementById('nB').textContent = `${keepB.length} dari ${dataset.length} tetesan dipertahankan`;
+
+  const overlap = keepA.filter(a=>keepB.includes(a)).length;
+  const deltaPct = eA&&eB ? Math.abs(eA-eB)/E_TRUE*100 : 0;
+
+  document.getElementById('takeaway').innerHTML = `<strong>Ringkasan:</strong> dari ${dataset.length} tetesan yang sama, Observer A mempertahankan ${keepA.length} titik dan Observer B mempertahankan ${keepB.length} titik — hanya ${overlap} titik yang dipertahankan oleh KEDUANYA. Selisih taksiran e mereka: ${deltaPct.toFixed(2)}% dari nilai e sejati.`;
+
+  const errA = eA? Math.abs(eA-E_TRUE)/E_TRUE*100 : null;
+  const errB = eB? Math.abs(eB-E_TRUE)/E_TRUE*100 : null;
+  let diagText = `Nilai e sejati (CODATA) = ${E_TRUE.toExponential(6)} C. `;
+  if(errA!==null && errB!==null){
+    diagText += `Observer A meleset ${errA.toFixed(2)}% dari nilai sejati, Observer B meleset ${errB.toFixed(2)}%. `;
+    diagText += errB<errA
+      ? `Observer B kebetulan lebih dekat kali ini — tapi perhatikan: metodenya membuang data berdasarkan seberapa "rapi" hasilnya, yang secara struktural cenderung menghasilkan sebaran yang tampak lebih meyakinkan (varians lebih kecil) TANPA benar-benar menjamin lebih akurat. Coba klik "Jalankan pengamatan baru" beberapa kali — perhatikan bahwa Observer A yang lebih sering konsisten dekat nilai sejati dalam jangka panjang, justru karena kriterianya tidak bergantung pada hasil.`
+      : `Observer A lebih dekat ke nilai sejati kali ini — konsisten dengan kenapa kriteria seleksi yang ditetapkan SEBELUM melihat hasil (blind/pre-registered) umumnya dianggap metodologi yang lebih sehat: ia tidak bisa diam-diam "menyaring menuju jawaban yang diinginkan".`;
+  }
+  document.getElementById('diagnosis').innerHTML = `<strong>Analisis:</strong> ${diagText}`;
+
+  renderScatter('chartMentah', dataset, d=>true, 900, 160);
+  renderScatter('chartA', dataset, d=>keepA.includes(d), 400, 100);
+  renderScatter('chartB', dataset, d=>keepB.includes(d), 400, 100);
+}
+
+function renderScatter(svgId, data, keepFn, W, H){
+  const svg = document.getElementById(svgId);
+  const padL=20, padR=20, padT=16, padB=16;
+  const innerW=W-padL-padR, innerH=H-padT-padB;
+  const maxN=8;
+  const maxQ = maxN*E_TRUE*1.15;
+  const x = q => padL + innerW*(q/maxQ);
+
+  let parts=[];
+  for(let n=1;n<=maxN;n++){
+    const xx=x(n*E_TRUE);
+    parts.push(`<line x1="${xx.toFixed(1)}" y1="${padT}" x2="${xx.toFixed(1)}" y2="${H-padB}" stroke="#2E2B42" stroke-width="1" stroke-dasharray="3,3"/>`);
+  }
+  data.forEach(d=>{
+    const xx = x(d.qRaw);
+    const kept = keepFn(d);
+    const yy = padT + innerH*Math.random()*0.0 + innerH/2 + (Math.random()-0.5)*innerH*0.7;
+    parts.push(`<circle cx="${xx.toFixed(1)}" cy="${yy.toFixed(1)}" r="4" fill="${kept?'#3FBF95':'#E1614E'}" opacity="${kept?0.9:0.25}"/>`);
+  });
+  svg.innerHTML = parts.join('');
+}
+
+const UNIT = {ukuran:' µm', tegangan:' V', jarak:' cm', waktu:' s', suhu:'°C', jumlah:''};
+['ukuran','tegangan','jarak','waktu','suhu','jumlah'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', ()=>{
+    document.getElementById('v_'+id).textContent = document.getElementById(id).value+UNIT[id];
+  });
+});
+
+generateData();
+</script>
+</body>
+</html>

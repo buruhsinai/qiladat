@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulator Lelang — Vickrey, English, Dutch &amp; Winner's Curse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12151a; --bg-panel:#1a1e25; --bg-panel-2:#20242c; --line:#2c313b;
+    --text:#e9e6df; --text-dim:#9aa1ad;
+    --gold:#c9a24b; --gold-soft:#e3c988;
+    --ok:#4f9c94; --warn:#e3766a; --blue:#5b8fc9; --purple:#9b7fc9;
+    --font-display:"Fraunces",serif; --font-body:"Karla",sans-serif; --font-mono:"JetBrains Mono",monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px 80px;}
+  header.hero{padding:56px 20px 40px;text-align:center;border-bottom:1px solid var(--line);
+    background:radial-gradient(ellipse at 50% 0%, rgba(155,127,201,0.10), transparent 60%);}
+  .eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--purple);margin-bottom:14px;}
+  h1{font-family:var(--font-display);font-weight:600;font-size:clamp(26px,5vw,40px);margin:0 0 12px;}
+  .subtitle{color:var(--text-dim);font-size:15px;max-width:660px;margin:0 auto;}
+  section{padding:36px 0;border-bottom:1px solid var(--line);} section:last-of-type{border-bottom:none;}
+  h2{font-family:var(--font-display);font-weight:600;font-size:22px;color:var(--gold-soft);margin:0 0 6px;display:flex;align-items:baseline;gap:10px;}
+  h2 .num{font-family:var(--font-mono);font-size:13px;color:var(--text-dim);font-weight:400;}
+  h3{font-family:var(--font-display);font-weight:600;font-size:16.5px;color:var(--text);margin:22px 0 10px;}
+  p{font-size:15.5px;} p.dim{color:var(--text-dim);font-size:14px;}
+  ul{padding-left:20px;} li{margin-bottom:6px;font-size:14.5px;}
+
+  .panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:24px;margin-bottom:20px;}
+  .panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px;}
+  .panel-tag{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;padding:3px 9px;border-radius:20px;border:1px solid var(--line);}
+  .tag-blue{color:var(--blue);border-color:var(--blue);}
+  .tag-purple{color:var(--purple);border-color:var(--purple);}
+  .tag-gold{color:var(--gold-soft);border-color:var(--gold);}
+  .tag-warn{color:var(--warn);border-color:var(--warn);}
+
+  .controls-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:18px;}
+  .field label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--text-dim);margin-bottom:6px;font-family:var(--font-mono);text-transform:uppercase;}
+  .field label .val{color:var(--gold-soft);}
+  .field input[type=range]{width:100%;accent-color:var(--purple);}
+
+  .preset-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+  .preset-btn{background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text-dim);
+    padding:9px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);}
+  .preset-btn:hover{border-color:var(--purple);color:var(--purple);}
+
+  svg.chart{width:100%;height:auto;display:block;background:var(--bg-panel-2);border-radius:8px;border:1px solid var(--line);margin-top:6px;}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:12.5px;color:var(--text-dim);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .swatch{width:14px;height:14px;border-radius:3px;display:inline-block;}
+
+  .results{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px;}
+  .result-card{background:var(--bg-panel-2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;}
+  .result-card .l{font-family:var(--font-mono);font-size:10.5px;color:var(--text-dim);text-transform:uppercase;}
+  .result-card .v{font-family:var(--font-display);font-size:19px;color:var(--gold-soft);}
+  .result-card.eng .v{color:var(--blue);} .result-card.first .v{color:var(--purple);}
+  .result-card.naive .v{color:var(--warn);} .result-card.corr .v{color:var(--ok);}
+
+  .insight-box{margin-top:16px;background:var(--bg-panel-2);border:1px dashed var(--gold);border-radius:8px;padding:14px 18px;font-size:14px;color:var(--text);}
+  .insight-box b{color:var(--gold-soft);}
+
+  .table-wrap{max-height:280px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;margin-top:16px;}
+  table.data{width:100%;border-collapse:collapse;font-size:13px;}
+  table.data th{position:sticky;top:0;background:var(--bg-panel);font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;color:var(--text-dim);padding:8px;text-align:right;border-bottom:1px solid var(--line);}
+  table.data th:first-child,table.data td:first-child{text-align:left;padding-left:14px;}
+  table.data td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--line);color:var(--text-dim);}
+  table.data td.eng{color:var(--blue);} table.data td.first{color:var(--purple);}
+  table.data td.naive{color:var(--warn);} table.data td.corr{color:var(--ok);}
+  table.data tr.winner{background:rgba(201,162,75,0.08);}
+  table.data tr.winner td:first-child{color:var(--gold-soft);font-weight:700;}
+
+  .benefit-list{display:grid;gap:10px;}
+  .benefit-item{background:var(--bg-panel);border:1px solid var(--line);border-radius:8px;padding:14px 18px;}
+  .benefit-item .btitle{font-weight:700;color:var(--gold-soft);font-size:15px;margin-bottom:4px;}
+  .limit-item{background:var(--bg-panel);border:1px solid var(--line);border-left:3px solid var(--warn);
+    padding:12px 16px;border-radius:6px;margin-bottom:8px;font-size:14.5px;color:var(--text-dim);}
+  table.refs{width:100%;border-collapse:collapse;font-size:14px;}
+  table.refs td{padding:8px 4px;border-bottom:1px solid var(--line);color:var(--text-dim);vertical-align:top;}
+  table.refs td:first-child{color:var(--text);width:32%;font-weight:600;}
+  footer{text-align:center;padding:36px 20px 10px;color:var(--text-dim);font-size:12.5px;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="eyebrow">Teori Permainan · Desain Lelang</div>
+  <h1>Lelang: Vickrey, English, Dutch &amp; Winner's Curse</h1>
+  <p class="subtitle">Empat format lelang yang terlihat sangat berbeda ternyata bisa menghasilkan pendapatan rata-rata yang sama persis (Revenue Equivalence) — tapi begitu barangnya bernilai objektif sama untuk semua orang (bukan selera pribadi), pemenang lelang justru sering menjadi pihak yang paling rugi (Winner's Curse). Atur parameter, jalankan ribuan simulasi lelang, dan lihat sendiri kedua fenomena ini muncul dari angka.</p>
+</header>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <h2><span class="num">01</span> Belajar</h2>
+    <p><strong>Empat format lelang standar</strong> untuk satu barang:</p>
+    <ul>
+      <li><strong>English (naik terbuka)</strong> — harga terus naik, peserta gugur satu per satu, pemenang adalah yang bertahan terakhir dan membayar tepat di titik saingan terakhirnya menyerah — mendekati <em>nilai tertinggi kedua</em>.</li>
+      <li><strong>Dutch (turun terbuka)</strong> — lelang dimulai dari harga sangat tinggi lalu turun terus; siapa yang pertama berteriak "saya beli" langsung menang dan membayar harga saat itu.</li>
+      <li><strong>Sealed-bid harga pertama (First-Price)</strong> — semua peserta menulis tawaran tanpa tahu tawaran orang lain; tawaran tertinggi menang dan <em>membayar sejumlah tawarannya sendiri</em>.</li>
+      <li><strong>Sealed-bid harga kedua / Vickrey</strong> — sama seperti di atas, tapi pemenang hanya membayar <em>sejumlah tawaran tertinggi kedua</em>. Strategi dominannya sederhana dan elegan: tawar persis sejumlah valuasi asli Anda, tidak kurang tidak lebih — inilah yang membuat English dan Vickrey secara strategis setara.</li>
+    </ul>
+    <p><strong>Revenue Equivalence Theorem</strong> (Vickrey, 1961; disempurnakan Myerson &amp; Riley) membuktikan: jika peserta memiliki valuasi privat independen, netral risiko, dan simetris, keempat format ini menghasilkan <em>pendapatan rata-rata yang identik</em> bagi penjual — meski mekanismenya tampak sangat berbeda. First-price/Dutch memaksa peserta menawar di bawah valuasi asli mereka (bid shading) sebagai kompensasi strategis, dan penurunan tawaran ini secara matematis tepat mengimbangi selisih antara "bayar tawaran sendiri" vs "bayar tawaran kedua tertinggi".</p>
+    <p><strong>Winner's Curse</strong> muncul pada <em>lelang nilai bersama (common value)</em> — situasi di mana barangnya punya satu nilai objektif yang sama untuk semua orang (tambang minyak, obligasi, perusahaan yang diakuisisi), tapi tak seorang pun tahu persis nilainya; masing-masing peserta hanya punya <em>estimasi</em> yang meleset secara acak. Karena pemenang adalah peserta dengan estimasi <em>tertinggi</em>, dan estimasi tertinggi dari sekumpulan tebakan acak cenderung menjadi yang paling terlalu-optimis, pemenang secara sistematis membayar lebih dari nilai sebenarnya — makin banyak peserta, makin parah kutukannya. Solusinya bukan menghindari menang, tapi menawar di bawah estimasi sendiri sejak awal, sebesar bias yang bisa diprediksi secara matematis.</p>
+  </section>
+
+  <section id="pertanyaan">
+    <h2><span class="num">02</span> Pertanyaan Ilmiah</h2>
+    <p class="dim" style="font-style:italic;">Benarkah pendapatan rata-rata penjual sama persis di keempat format lelang, padahal aturan pembayarannya berbeda total — dan kalaupun rata-ratanya sama, seberapa besar variasi hasil dari satu lelang ke lelang berikutnya? Pada lelang nilai bersama, apakah peserta yang menawar apa adanya (sesuai estimasinya sendiri) benar-benar cenderung rugi secara sistematis, dan apakah kerugian itu makin parah seiring bertambahnya jumlah pesaing? Berapa besar tepatnya tawaran perlu dikoreksi ke bawah agar rata-rata untung-rugi kembali ke titik impas?</p>
+  </section>
+
+  <section id="eksplorasi">
+    <h2><span class="num">03</span> Eksplorasi &amp; Perhitungan</h2>
+
+    <div class="panel">
+      <div class="panel-head"><h3 style="margin:0;">A. Revenue Equivalence — Valuasi Privat</h3><span class="panel-tag tag-gold">Vickrey/English vs First-Price/Dutch</span></div>
+      <p class="dim">Setiap peserta punya valuasi pribadinya sendiri, ditarik acak seragam antara 0 dan Valuasi Maksimum. Simulator menjalankan ribuan lelang independen dan membandingkan rata-rata pendapatan penjual di kedua kelompok mekanisme.</p>
+      <div class="controls-row">
+        <div class="field"><label>Jumlah Peserta (N) <span class="val" id="vNa">5</span></label><input type="range" id="inNa" min="2" max="20" step="1" value="5"></div>
+        <div class="field"><label>Valuasi Maksimum (juta Rp) <span class="val" id="vVmax">100</span></label><input type="range" id="inVmax" min="20" max="300" step="10" value="100"></div>
+        <div class="field"><label>Jumlah Lelang Disimulasikan <span class="val" id="vMa">3000</span></label><input type="range" id="inMa" min="200" max="8000" step="200" value="3000"></div>
+      </div>
+      <svg class="chart" id="svgConverge" viewBox="0 0 620 260"></svg>
+      <div class="legend">
+        <span><span class="swatch" style="background:#5b8fc9"></span> Rata-rata Berjalan — Vickrey/English</span>
+        <span><span class="swatch" style="background:#9b7fc9"></span> Rata-rata Berjalan — First-Price/Dutch</span>
+        <span><span class="swatch" style="background:#e3c988"></span> Prediksi Teoritis: Vmax·(N−1)/(N+1)</span>
+      </div>
+      <div class="results" id="resultsA"></div>
+      <div class="insight-box" id="insightA"></div>
+      <h3>Rincian 12 Lelang Pertama</h3>
+      <div class="table-wrap">
+        <table class="data" id="tableA"></table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3 style="margin:0;">B. Winner's Curse — Lelang Nilai Bersama</h3><span class="panel-tag tag-warn">Format First-Price, nilai objektif sama untuk semua</span></div>
+      <p class="dim">Barang punya satu nilai sebenarnya (mis. estimasi cadangan minyak sebuah blok). Tiap peserta hanya melihat estimasi sendiri = nilai sebenarnya + noise acak. Bandingkan strategi tawar apa adanya (naif) vs tawar dengan koreksi bias.</p>
+      <div class="controls-row">
+        <div class="field"><label>Jumlah Peserta (N) <span class="val" id="vNb">5</span></label><input type="range" id="inNb" min="2" max="20" step="1" value="5"></div>
+        <div class="field"><label>Nilai Sebenarnya Barang (juta Rp) <span class="val" id="vV0">100</span></label><input type="range" id="inV0" min="20" max="300" step="10" value="100"></div>
+        <div class="field"><label>Noise Estimasi (± juta Rp) <span class="val" id="vNoise">30</span></label><input type="range" id="inNoise" min="2" max="80" step="2" value="30"></div>
+      </div>
+      <svg class="chart" id="svgCurse" viewBox="0 0 620 260"></svg>
+      <div class="legend">
+        <span><span class="swatch" style="background:#e3766a"></span> Profit Rata-rata — Tawar Naif (= estimasi sendiri)</span>
+        <span><span class="swatch" style="background:#4f9c94"></span> Profit Rata-rata — Tawar Terkoreksi</span>
+        <span><span class="swatch" style="background:#3a4150"></span> Titik Impas (Profit = 0)</span>
+      </div>
+      <div class="results" id="resultsB"></div>
+      <div class="insight-box" id="insightB"></div>
+      <h3>Contoh Satu Lelang — Estimasi Tiap Peserta</h3>
+      <div class="table-wrap">
+        <table class="data" id="tableB"></table>
+      </div>
+    </div>
+  </section>
+
+  <section id="manfaat">
+    <h2><span class="num">04</span> Manfaat &amp; Kegunaan</h2>
+    <div class="benefit-list">
+      <div class="benefit-item"><div class="btitle">Melengkapi seri teori permainan JAZMI</div>Setelah dilema tahanan dan duopoli Cournot/Bertrand, lelang menambah genre ketiga: teori permainan dengan informasi tidak lengkap (peserta tidak tahu valuasi/estimasi lawan) — kelas masalah yang jauh lebih dekat ke lelang lelang nyata (tender proyek, lelang aset sitaan, lelang spektrum frekuensi).</div>
+      <div class="benefit-item"><div class="btitle">Dasar kuantitatif untuk memilih format lelang</div>Menunjukkan kapan format lelang benar-benar tidak penting bagi pendapatan penjual (nilai privat, Revenue Equivalence berlaku) dan kapan justru sangat penting untuk desain lelang lembaga/pemerintah (nilai bersama, rawan Winner's Curse — perlu aturan tambahan seperti pengumuman informasi bersama).</div>
+      <div class="benefit-item"><div class="btitle">Edukasi pengambilan keputusan di bawah ketidakpastian</div>Memperagakan langsung mengapa "menang lelang" bukan otomatis berarti "membuat keputusan baik" — pelajaran yang relevan jauh di luar lelang formal, termasuk negosiasi akuisisi bisnis dan tawaran proyek tender.</div>
+      <div class="benefit-item"><div class="btitle">Latihan statistik order (order statistics)</div>Kedua fenomena di tool ini — Revenue Equivalence maupun Winner's Curse — sama-sama diturunkan dari sifat matematis nilai maksimum/kedua-tertinggi di antara sampel acak, sebuah cabang statistik yang jarang disentuh materi ekonomi pengantar.</div>
+    </div>
+  </section>
+
+  <section id="batasan">
+    <h2><span class="num">05</span> Batasan</h2>
+    <div class="limit-item">Panel A mengasumsikan peserta netral risiko dan valuasi ditarik seragam (uniform) — dengan peserta yang menghindari risiko (risk-averse), First-Price/Dutch justru bisa menghasilkan pendapatan rata-rata <em>lebih tinggi</em> dari Vickrey/English karena peserta cenderung menawar lebih agresif untuk mengurangi risiko kalah.</div>
+    <div class="limit-item">Panel B disederhanakan menjadi format First-Price saja untuk kejelasan demonstrasi — Winner's Curse sebenarnya juga muncul (dengan pola sedikit berbeda) pada English auction nilai bersama, dan literatur akademik penuh dengan varian format campuran nilai privat + nilai bersama sekaligus.</div>
+    <div class="limit-item">Noise estimasi disimulasikan sebagai distribusi seragam simetris di sekitar nilai sebenarnya — dunia nyata sering punya noise yang miring (skewed) atau bergantung pada kualitas informasi masing-masing peserta (mis. perusahaan dengan tim riset geologi lebih baik akan punya noise lebih kecil).</div>
+    <div class="limit-item">Koreksi bias pada Panel B memakai rumus koreksi konstan yang sama untuk semua peserta — dalam praktik, peserta yang benar-benar canggih (sophisticated bidder) menyesuaikan besar koreksi berdasarkan jumlah pesaing yang mereka <em>duga</em>, bukan jumlah pesaing yang pasti diketahui.</div>
+    <div class="limit-item">Simulator ini tidak memodelkan kolusi antarpeserta, informasi berkorelasi (mis. beberapa peserta berbagi sumber estimasi yang sama), atau biaya mengikuti lelang (biaya riset, biaya waktu) — semua faktor ini memengaruhi hasil lelang nyata di luar model dasar ini.</div>
+  </section>
+
+  <section id="referensi">
+    <h2><span class="num">06</span> Referensi</h2>
+    <table class="refs">
+      <tr><td>William Vickrey — "Counterspeculation, Auctions, and Competitive Sealed Tenders" (1961)</td><td>Sumber asli lelang harga-kedua &amp; kerangka awal Revenue Equivalence</td></tr>
+      <tr><td>Roger B. Myerson — "Optimal Auction Design" (1981)</td><td>Formalisasi rigor Revenue Equivalence Theorem</td></tr>
+      <tr><td>Paul Klemperer — <em>Auctions: Theory and Practice</em> (2004)</td><td>Rujukan standar penurunan strategi bid-shading &amp; penerapan lelang nyata</td></tr>
+      <tr><td>Richard Thaler — "Anomalies: The Winner's Curse" (1988)</td><td>Sumber populer rujukan istilah &amp; contoh empiris Winner's Curse</td></tr>
+      <tr><td>E. Capen, R. Clapp, W. Campbell — "Competitive Bidding in High-Risk Situations" (1971)</td><td>Studi kasus asli Winner's Curse pada lelang blok minyak lepas pantai</td></tr>
+    </table>
+  </section>
+
+</div>
+
+<footer>Simulator edukasi teori permainan &amp; desain lelang — bagian dari seri Alat JAZMI.</footer>
+
+<script>
+(function(){
+  const el = id => document.getElementById(id);
+  const state = { Na:5, Vmax:100, Ma:3000, Nb:5, V0:100, noise:30 };
+  const fmt = v => (+v).toLocaleString('id-ID', {maximumFractionDigits:2});
+
+  function bindSlider(inputId, valId, key){
+    el(inputId).addEventListener('input', ()=>{
+      state[key] = +el(inputId).value;
+      el(valId).textContent = el(inputId).value;
+      computeAll();
+    });
+  }
+  bindSlider('inNa','vNa','Na');
+  bindSlider('inVmax','vVmax','Vmax');
+  bindSlider('inMa','vMa','Ma');
+  bindSlider('inNb','vNb','Nb');
+  bindSlider('inV0','vV0','V0');
+  bindSlider('inNoise','vNoise','noise');
+
+  // ---------- Panel A: Revenue Equivalence ----------
+  function runRevenueEquivalence(N, Vmax, M){
+    let cumEnglish=0, cumFirst=0;
+    const seriesEnglish=[], seriesFirst=[];
+    const sampleRows=[];
+    const sampleEvery = Math.max(1, Math.floor(M/150));
+    for(let t=1;t<=M;t++){
+      const vals = Array.from({length:N},()=>Math.random()*Vmax);
+      vals.sort((a,b)=>b-a);
+      const v1=vals[0], v2=vals[1]!==undefined?vals[1]:0;
+      const priceEnglish = v2;
+      const priceFirst = v1*(N-1)/N;
+      cumEnglish += priceEnglish; cumFirst += priceFirst;
+      if(t % sampleEvery === 0 || t===M){
+        seriesEnglish.push(cumEnglish/t);
+        seriesFirst.push(cumFirst/t);
+      }
+      if(t<=12){ sampleRows.push({t, v1, v2, priceEnglish, priceFirst}); }
+    }
+    const theoretical = Vmax*(N-1)/(N+1);
+    return {avgEnglish:cumEnglish/M, avgFirst:cumFirst/M, theoretical, seriesEnglish, seriesFirst, sampleRows};
+  }
+
+  function renderConvergeChart(seriesEnglish, seriesFirst, theoretical, Vmax){
+    const W=620,H=260, padL=54,padR=20,padT=16,padB=32;
+    const plotW=W-padL-padR, plotH=H-padT-padB;
+    const n = seriesEnglish.length;
+    const maxVal = Vmax*1.05;
+    const sx = plotW/(n-1||1);
+    const sy = v => H-padB - (v/maxVal)*plotH;
+    function poly(arr,color){
+      const pts = arr.map((v,i)=>`${padL+i*sx},${sy(v)}`).join(' ');
+      return `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.2"/>`;
+    }
+    let svg='';
+    svg += `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-padB}" stroke="#3a4150" stroke-width="1"/>`;
+    svg += `<line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#3a4150" stroke-width="1"/>`;
+    svg += `<line x1="${padL}" y1="${sy(theoretical)}" x2="${W-padR}" y2="${sy(theoretical)}" stroke="#e3c988" stroke-width="1.5" stroke-dasharray="5,4"/>`;
+    svg += poly(seriesEnglish,'#5b8fc9');
+    svg += poly(seriesFirst,'#9b7fc9');
+    svg += `<text x="${W-padR}" y="${H-padB+18}" fill="#9aa1ad" font-size="11" text-anchor="end" font-family="JetBrains Mono, monospace">jumlah lelang tersimulasi →</text>`;
+    svg += `<text x="${padL-8}" y="${padT+4}" fill="#9aa1ad" font-size="11" text-anchor="end" font-family="JetBrains Mono, monospace">rata-rata pendapatan</text>`;
+    el('svgConverge').innerHTML = svg;
+  }
+
+  function renderTableA(rows, N){
+    const head = `<tr><th>Lelang #</th><th>Valuasi Tertinggi</th><th>Valuasi Kedua</th><th>Harga Vickrey/English</th><th>Harga First/Dutch</th></tr>`;
+    const body = rows.map(r=>`<tr>
+      <td>${r.t}</td>
+      <td>${fmt(r.v1)}</td>
+      <td>${fmt(r.v2)}</td>
+      <td class="eng">${fmt(r.priceEnglish)}</td>
+      <td class="first">${fmt(r.priceFirst)}</td>
+    </tr>`).join('');
+    el('tableA').innerHTML = head+body;
+  }
+
+  function computePanelA(){
+    const {Na, Vmax, Ma} = state;
+    const res = runRevenueEquivalence(Na, Vmax, Ma);
+    renderConvergeChart(res.seriesEnglish, res.seriesFirst, res.theoretical, Vmax);
+    renderTableA(res.sampleRows, Na);
+    const results = [
+      {l:'Rata-rata Vickrey/English', v:fmt(res.avgEnglish)+' jt', cls:'eng'},
+      {l:'Rata-rata First-Price/Dutch', v:fmt(res.avgFirst)+' jt', cls:'first'},
+      {l:'Prediksi Teoritis', v:fmt(res.theoretical)+' jt', cls:''},
+      {l:'Selisih Kedua Rata-rata', v:fmt(Math.abs(res.avgEnglish-res.avgFirst))+' jt', cls:''},
+    ];
+    el('resultsA').innerHTML = results.map(r=>`<div class="result-card ${r.cls}"><div class="l">${r.l}</div><div class="v">${r.v}</div></div>`).join('');
+    const selisihPersen = res.theoretical>0 ? Math.abs(res.avgEnglish-res.avgFirst)/res.theoretical*100 : 0;
+    let msg = `Setelah ${Ma.toLocaleString('id-ID')} lelang independen disimulasikan, rata-rata pendapatan Vickrey/English (<b>${fmt(res.avgEnglish)}</b>) dan First-Price/Dutch (<b>${fmt(res.avgFirst)}</b>) hanya berselisih ~${fmt(selisihPersen)}% — keduanya konvergen ke prediksi teoritis <b>${fmt(res.theoretical)}</b> (= Vmax·(N−1)/(N+1)), persis seperti diramalkan Revenue Equivalence Theorem. `;
+    msg += `Perhatikan tabel di bawah grafik: pada lelang perorangan, harga di kedua format nyaris tidak pernah sama persis — kesetaraan hanya muncul sebagai <em>rata-rata jangka panjang</em>, bukan hasil tiap transaksi. Coba geser N (jumlah peserta) — makin banyak peserta, prediksi teoritis makin mendekati Vmax karena persaingan menekan margin penjual ke bawah semakin ketat.`;
+    el('insightA').innerHTML = msg;
+  }
+
+  // ---------- Panel B: Winner's Curse ----------
+  function correctionAmount(N,noise){ return noise*(N-1)/(N+1); }
+
+  function runWinnerCurse(N, V, noise, M){
+    let sumNaive=0, sumCorr=0, negNaive=0, negCorr=0;
+    const c = correctionAmount(N,noise);
+    let sampleRows=null;
+    for(let t=1;t<=M;t++){
+      const signals = Array.from({length:N},()=>V + (Math.random()*2-1)*noise);
+      let maxIdx=0;
+      for(let i=1;i<N;i++) if(signals[i]>signals[maxIdx]) maxIdx=i;
+      const bidNaive = signals[maxIdx];
+      const profitNaive = V - bidNaive;
+      sumNaive += profitNaive; if(profitNaive<0) negNaive++;
+      const bidCorr = signals[maxIdx]-c;
+      const profitCorr = V - bidCorr;
+      sumCorr += profitCorr; if(profitCorr<0) negCorr++;
+      if(t===1){
+        sampleRows = signals.map((s,i)=>({i, s, bidNaive:s, bidCorr:s-c}))
+          .sort((a,b)=>b.s-a.s);
+      }
+    }
+    return {
+      avgProfitNaive:sumNaive/M, avgProfitCorr:sumCorr/M,
+      pctNegNaive:negNaive/M*100, pctNegCorr:negCorr/M*100,
+      correction:c, sampleRows
+    };
+  }
+
+  function renderCurseChart(V, noise, N){
+    const W=620,H=260, padL=54,padR=20,padT=16,padB=32;
+    const plotW=W-padL-padR, plotH=H-padT-padB;
+    const nMax=20;
+    const naiveVals=[], corrVals=[];
+    for(let n=2;n<=nMax;n++){ naiveVals.push(-noise*(n-1)/(n+1)); corrVals.push(0); }
+    const minV = Math.min(...naiveVals, 0)*1.15, maxV = Math.max(...naiveVals, 0, 5)*1.15;
+    const sx = n => padL + ((n-2)/(nMax-2))*plotW;
+    const sy = v => padT + (1-(v-minV)/(maxV-minV))*plotH;
+    let svg='';
+    svg += `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-padB}" stroke="#3a4150" stroke-width="1"/>`;
+    svg += `<line x1="${padL}" y1="${sy(0)}" x2="${W-padR}" y2="${sy(0)}" stroke="#3a4150" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+    let ptsNaive=[], ptsCorr=[];
+    for(let n=2;n<=nMax;n++){ ptsNaive.push(`${sx(n)},${sy(-noise*(n-1)/(n+1))}`); ptsCorr.push(`${sx(n)},${sy(0)}`); }
+    svg += `<polyline points="${ptsNaive.join(' ')}" fill="none" stroke="#e3766a" stroke-width="2.2"/>`;
+    svg += `<polyline points="${ptsCorr.join(' ')}" fill="none" stroke="#4f9c94" stroke-width="2.2"/>`;
+    // current N marker from Monte Carlo (verification against closed-form curve)
+    const mc = runWinnerCurse(N, V, noise, 1500);
+    svg += `<circle cx="${sx(N)}" cy="${sy(mc.avgProfitNaive)}" r="5" fill="#e3766a" stroke="#12151a" stroke-width="1.5"/>`;
+    svg += `<circle cx="${sx(N)}" cy="${sy(mc.avgProfitCorr)}" r="5" fill="#4f9c94" stroke="#12151a" stroke-width="1.5"/>`;
+    svg += `<text x="${padL}" y="${H-padB+18}" fill="#9aa1ad" font-size="11" font-family="JetBrains Mono, monospace">n=2</text>`;
+    svg += `<text x="${W-padR-24}" y="${H-padB+18}" fill="#9aa1ad" font-size="11" font-family="JetBrains Mono, monospace">n=20</text>`;
+    svg += `<text x="${padL-8}" y="${padT+4}" fill="#9aa1ad" font-size="11" text-anchor="end" font-family="JetBrains Mono, monospace">profit rata-rata</text>`;
+    el('svgCurse').innerHTML = svg;
+  }
+
+  function renderTableB(rows){
+    const head = `<tr><th>Peserta #</th><th>Estimasi (Sinyal)</th><th>Tawaran Naif</th><th>Tawaran Terkoreksi</th></tr>`;
+    const body = rows.map((r,rank)=>`<tr class="${rank===0?'winner':''}">
+      <td>${rank===0?'Peserta '+(r.i+1)+' — MENANG':'Peserta '+(r.i+1)}</td>
+      <td>${fmt(r.s)}</td>
+      <td class="naive">${fmt(r.bidNaive)}</td>
+      <td class="corr">${fmt(r.bidCorr)}</td>
+    </tr>`).join('');
+    el('tableB').innerHTML = head+body;
+  }
+
+  function computePanelB(){
+    const {Nb, V0, noise} = state;
+    const res = runWinnerCurse(Nb, V0, noise, 3000);
+    renderCurseChart(V0, noise, Nb);
+    renderTableB(res.sampleRows);
+    const results = [
+      {l:'Profit Rata-rata — Naif', v:fmt(res.avgProfitNaive)+' jt', cls:'naive'},
+      {l:'Profit Rata-rata — Terkoreksi', v:fmt(res.avgProfitCorr)+' jt', cls:'corr'},
+      {l:'% Lelang Rugi — Naif', v:fmt(res.pctNegNaive)+'%', cls:'naive'},
+      {l:'Besar Koreksi Bias', v:fmt(res.correction)+' jt', cls:''},
+    ];
+    el('resultsB').innerHTML = results.map(r=>`<div class="result-card ${r.cls}"><div class="l">${r.l}</div><div class="v">${r.v}</div></div>`).join('');
+    let msg = `Dengan ${Nb} peserta menawar apa adanya sesuai estimasi masing-masing, pemenang lelang rata-rata <b>rugi ${fmt(Math.abs(res.avgProfitNaive))} juta</b> (profit ${fmt(res.avgProfitNaive)} jt, ${fmt(res.pctNegNaive)}% dari seluruh lelang berakhir rugi) — inilah Winner's Curse: menang justru menandakan estimasi Anda paling berlebihan dibanding estimasi pesaing. `;
+    msg += `Begitu tawaran dikoreksi turun sebesar <b>${fmt(res.correction)} juta</b> (= noise·(N−1)/(N+1), bias rata-rata dari estimasi tertinggi di antara ${Nb} peserta), profit rata-rata kembali mendekati <b>titik impas (${fmt(res.avgProfitCorr)})</b> — pemenang tetap sama, tapi harga yang dibayar sudah jujur secara statistik. Coba naikkan N: kurva merah di grafik akan makin turun, sementara kurva hijau tetap datar di nol — kutukannya membesar seiring jumlah pesaing, tapi koreksinya juga ikut membesar secara presisi.`;
+    el('insightB').innerHTML = msg;
+  }
+
+  function computeAll(){
+    computePanelA();
+    computePanelB();
+  }
+
+  computeAll();
+})();
+</script>
+
+</body>
+</html>

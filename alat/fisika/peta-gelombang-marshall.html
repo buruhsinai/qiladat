@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peta Gelombang Kepulauan Marshall — JAZMI</title>
+<style>
+  :root{
+    --bg:#06141a;
+    --panel:#0d1f28;
+    --panel2:#122a35;
+    --coconut:#b89968;
+    --coconut-light:#d9bc8c;
+    --foam:#dff0ee;
+    --text:#e4eeee;
+    --text-soft:#8fa8ab;
+    --line:#1c3540;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;line-height:1.65;}
+  .wrap{max-width:920px;margin:0 auto;padding:36px 20px 70px;}
+  .eyebrow{color:var(--coconut-light);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}
+  h1{font-family:Georgia,"Iowan Old Style",serif;font-weight:normal;font-size:clamp(23px,4.3vw,33px);margin:0 0 10px;}
+  h2{font-family:Georgia,"Iowan Old Style",serif;font-weight:normal;font-size:20px;color:var(--coconut-light);margin:42px 0 12px;border-bottom:1px solid var(--line);padding-bottom:8px;}
+  p{color:var(--text-soft);font-size:15px;}
+  .lede{color:var(--text);font-size:15.5px;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:22px 24px;}
+  .tabrow{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+  .tabrow button{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:10px 18px;border-radius:6px;font-size:14px;cursor:pointer;}
+  .tabrow button.active{border-color:var(--coconut);background:#2a2113;color:var(--coconut-light);}
+  .field{margin:16px 0;}
+  .field label{display:block;font-size:13px;color:var(--text-soft);margin-bottom:8px;}
+  input[type=range]{width:100%;accent-color:var(--coconut);}
+  canvas{display:block;width:100%;height:auto;border-radius:6px;background:#06141a;}
+  .readout{background:#122a3555;border:1px solid var(--coconut);border-radius:8px;padding:14px 20px;margin-top:14px;font-size:13px;color:var(--text-soft);}
+  ul{color:var(--text-soft);font-size:14.5px;padding-left:20px;}
+  li{margin-bottom:6px;}
+  .refs li{font-size:13px;}
+  footer{margin-top:44px;font-size:12px;color:var(--text-soft);border-top:1px solid var(--line);padding-top:16px;}
+  .legend{display:flex;gap:16px;align-items:center;margin-top:10px;font-size:12px;color:var(--text-soft);flex-wrap:wrap;}
+  .legend .sw{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:middle;margin-right:5px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Laboratorium alat · JAZMI</p>
+    <h1>Peta gelombang Kepulauan Marshall</h1>
+    <p class="lede">Bonus dari seri navigasi kuno — tanpa benda langit sama sekali. Pelaut Kepulauan Marshall (Pasifik) membaca pola pantulan, pembiasan, dan difraksi gelombang laut di sekitar pulau, dirasakan lewat lambung kano, untuk mendeteksi pulau bahkan sebelum terlihat. Mereka menyimpan pengetahuan ini dalam <em>stick chart</em> — rangkaian bilah pelepah kelapa dan kerang, bukan peta geografis biasa.</p>
+  </header>
+
+  <h2>Belajar</h2>
+  <div class="panel">
+    <p>Kepulauan Marshall terdiri dari 29 atol karang tersebar di ±970.000 km² Pasifik. Karena jarak antar-pulau begitu jauh dan pulau-pulaunya rendah (sulit terlihat dari kejauhan), navigator Marshall mengembangkan cara mendeteksi pulau lewat gangguan yang ditimbulkannya pada gelombang laut — bisa dirasakan sampai 20–30 mil (≈32–48 km) dari pulau penyebabnya, jauh sebelum pulau itu sendiri kelihatan.</p>
+    <p>Mereka mengenali empat sistem gelombang utama (rilib, kaelib, bungdockerik, bundockeing) dan tiga fenomena fisika saat gelombang mengenai pulau: <strong>refraksi</strong> (gelombang membelok mengikuti kemiringan dasar laut yang makin dangkal), <strong>refleksi</strong> (sebagian energi gelombang dipantulkan balik, menciptakan "counter-swell"), dan <strong>difraksi</strong> (gelombang menyebar setelah melewati celah sempit antara dua pulau). Ketiganya menghasilkan pola gangguan yang khas dan bisa "dibaca" navigator terlatih.</p>
+    <p>Ada tiga jenis stick chart: <strong>mattang</strong> (bagan abstrak untuk melatih prinsip dasar, memakai pulau hipotetis), <strong>meddo</strong> (bagan sebagian wilayah nyata dengan posisi pulau sungguhan), dan <strong>rebbelib</strong> (bagan mencakup hampir seluruh kepulauan). Baru didokumentasikan pertama kali oleh misionaris L.H. Gulick tahun 1862 — dan pengetahuan ini secara tradisional dijaga ketat, hanya diturunkan ke keturunan atau murid terpilih.</p>
+  </div>
+
+  <h2>Eksplorasi</h2>
+  <div class="panel">
+    <div class="tabrow" id="modeRow">
+      <button data-m="mattang" class="active">Mattang — 1 pulau (latihan)</button>
+      <button data-m="meddo">Meddo — 2 pulau (celah)</button>
+    </div>
+
+    <canvas id="waveCanvas" width="600" height="400"></canvas>
+    <div class="legend">
+      <span><span class="sw" style="background:#06141a;border:1px solid #1c3540;"></span>tenang</span>
+      <span><span class="sw" style="background:#dff0ee;"></span>puncak gelombang / zona terganggu</span>
+    </div>
+
+    <div class="field">
+      <label>Arah datang gelombang — <span id="dirLabel"></span></label>
+      <input type="range" id="waveDir" min="0" max="360" value="0" step="1">
+    </div>
+    <div class="field">
+      <label>Panjang gelombang — <span id="wlLabel"></span></label>
+      <input type="range" id="wavelength" min="14" max="60" value="28" step="1">
+    </div>
+    <div class="field">
+      <label>Ukuran pulau — <span id="szLabel"></span></label>
+      <input type="range" id="islandSize" min="15" max="55" value="32" step="1">
+    </div>
+    <div class="field" id="gapField" style="display:none;">
+      <label>Jarak antar pulau — <span id="gapLabel"></span></label>
+      <input type="range" id="gapSize" min="20" max="220" value="80" step="2">
+    </div>
+
+    <div class="readout" id="readoutText"></div>
+  </div>
+
+  <h2>Metode</h2>
+  <div class="panel">
+    <p>Medan gelombang dihitung dari superposisi (interferensi) gelombang, bukan digambar manual:</p>
+    <ul>
+      <li>Di luar bayangan pulau: gelombang datang murni, amplitudo = cos(k·(x cos θ + y sin θ)), dengan k = 2π/panjang gelombang.</li>
+      <li>Bayangan geometris tiap pulau dihitung dari proyeksi posisi terhadap arah gelombang — pulau berjari-jari r menghasilkan pita bayangan selebar 2r di belakangnya, prinsip optik geometris standar untuk gelombang bidang mengenai penghalang bundar.</li>
+      <li>Di dalam bayangan: dipakai model dua-sumber Huygens — dua titik di tepi siluet pulau (tegak lurus arah datang gelombang) diperlakukan sebagai sumber gelombang sekunder yang menyebar melingkar, lalu dijumlahkan (interferensi) di setiap titik dalam bayangan. Inilah yang menghasilkan pola pita-pita gangguan (mirip pola celah-ganda) yang terlihat di balik tiap pulau.</li>
+      <li>Panjang gelombang memengaruhi seberapa jauh pola ini menyebar — gelombang lebih panjang menyebar lebih jauh mengisi bayangan (difraksi lebih kuat), gelombang lebih pendek meninggalkan bayangan lebih tajam/gelap — hubungan fisika yang benar dan bisa Anda uji langsung dengan menggeser slider panjang gelombang.</li>
+    </ul>
+  </div>
+
+  <h2>Batasan</h2>
+  <div class="panel">
+    <ul>
+      <li>Ini model dua-sumber Huygens yang disederhanakan (teori difraksi tepi-geometris) — bukan simulasi dinamika fluida penuh (yang perlu menyelesaikan persamaan gelombang air secara numerik). Prinsip fisikanya benar, tapi detail kuantitatif (amplitudo persis, redaman jarak) disederhanakan.</li>
+      <li>Efek refleksi ("counter-swell") yang dijelaskan di bagian Belajar <strong>tidak</strong> ikut dihitung dalam medan interferensi yang divisualisasikan — itu murni penjelasan konsep, karena memodelkan refleksi dengan benar butuh lapisan perhitungan terpisah yang tidak disertakan di sini demi kejelasan.</li>
+      <li>Skala jarak di simulator ini abstrak/skematik (satuan piksel), <strong>tidak dikalibrasi</strong> ke angka nyata "20–30 mil" yang disebut di bagian Belajar — keduanya jangan disamakan langsung.</li>
+      <li>Empat jenis gelombang bernama (rilib, kaelib, dst.) yang dikenali navigator Marshall punya karakter arah dan kekuatan berbeda-beda di dunia nyata; simulator ini memodelkan gelombang generik satu arah pada satu waktu, bukan interaksi keempat sistem gelombang sekaligus seperti pada stick chart mattang yang paling lengkap.</li>
+    </ul>
+  </div>
+
+  <h2>Referensi</h2>
+  <div class="panel refs">
+    <ul>
+      <li>Wikipedia — "Marshall Islands stick chart."</li>
+      <li>The Geography Hub — "The Marshall Islands' Stick Charts."</li>
+      <li>Penn Museum Expedition Magazine — "Marshall Islands Cartography."</li>
+      <li>World History Commons — "Marshall Islands stick chart."</li>
+      <li>Ascher, M. — "Models and Maps from the Marshall Islands: A Case of Ethnomathematics," <em>Historia Mathematica</em> 22, 1995.</li>
+    </ul>
+  </div>
+
+  <footer>
+    Prototipe berdiri sendiri untuk proyek JAZMI, mengikuti metode Belajar → Model → Uji → Tool. Medan gelombang dihitung dari interferensi sungguhan (model dua-sumber Huygens), bukan gambar statis.
+  </footer>
+</div>
+
+<script>
+const canvas = document.getElementById('waveCanvas');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+const CELL = 5;
+
+let mode = 'mattang';
+
+document.getElementById('modeRow').querySelectorAll('button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.getElementById('modeRow').querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    mode = b.dataset.m;
+    document.getElementById('gapField').style.display = mode==='meddo' ? 'block' : 'none';
+    render();
+  });
+});
+
+function getIslands(){
+  const size = parseFloat(document.getElementById('islandSize').value);
+  if(mode==='mattang'){
+    return [{x:W/2, y:H/2, r:size}];
+  } else {
+    const gap = parseFloat(document.getElementById('gapSize').value);
+    return [
+      {x:W/2 - gap/2 - size, y:H/2, r:size},
+      {x:W/2 + gap/2 + size, y:H/2, r:size}
+    ];
+  }
+}
+
+function colorFor(amp){
+  // amp roughly -2..2, map to dark navy (trough) .. foam white (crest)
+  const t = Math.max(0, Math.min(1, (amp+2)/4));
+  const r = Math.round(6 + t*(223-6));
+  const g = Math.round(20 + t*(240-20));
+  const b = Math.round(26 + t*(238-26));
+  return `rgb(${r},${g},${b})`;
+}
+
+function render(){
+  const dirDeg = parseFloat(document.getElementById('waveDir').value);
+  const wavelength = parseFloat(document.getElementById('wavelength').value);
+  document.getElementById('dirLabel').textContent = dirDeg.toFixed(0)+'°';
+  document.getElementById('wlLabel').textContent = wavelength.toFixed(0)+' (skematik)';
+  document.getElementById('szLabel').textContent = document.getElementById('islandSize').value+' (skematik)';
+  if(mode==='meddo'){
+    document.getElementById('gapLabel').textContent = document.getElementById('gapSize').value+' (skematik)';
+  }
+
+  const dir = dirDeg*Math.PI/180;
+  const dx = Math.cos(dir), dy = Math.sin(dir);
+  const px = -dy, py = dx; // perpendicular
+  const k = 2*Math.PI/wavelength;
+  const islands = getIslands();
+
+  // edge sources (2 per island)
+  const sources = [];
+  islands.forEach(isl=>{
+    sources.push({x: isl.x + isl.r*px, y: isl.y + isl.r*py, along: (isl.x+isl.r*px)*dx + (isl.y+isl.r*py)*dy});
+    sources.push({x: isl.x - isl.r*px, y: isl.y - isl.r*py, along: (isl.x-isl.r*px)*dx + (isl.y-isl.r*py)*dy});
+  });
+
+  ctx.clearRect(0,0,W,H);
+
+  for(let cx=0; cx<W; cx+=CELL){
+    for(let cy=0; cy<H; cy+=CELL){
+      const x = cx+CELL/2, y = cy+CELL/2;
+
+      // cek apakah titik ini di dalam pulau (gambar sebagai daratan)
+      let insideIsland = false;
+      for(const isl of islands){
+        if((x-isl.x)*(x-isl.x)+(y-isl.y)*(y-isl.y) < isl.r*isl.r){ insideIsland = true; break; }
+      }
+      if(insideIsland){
+        ctx.fillStyle = '#b89968';
+        ctx.fillRect(cx,cy,CELL,CELL);
+        continue;
+      }
+
+      // cek bayangan geometris tiap pulau
+      let inShadow = false;
+      for(const isl of islands){
+        const relx = x-isl.x, rely = y-isl.y;
+        const along = relx*dx + rely*dy;
+        const across = relx*px + rely*py;
+        if(along > 0 && Math.abs(across) < isl.r){ inShadow = true; break; }
+      }
+
+      let amp;
+      if(!inShadow){
+        amp = Math.cos(k*(x*dx + y*dy));
+      } else {
+        let sum = 0;
+        for(const s of sources){
+          const dist = Math.hypot(x-s.x, y-s.y) + 1;
+          sum += Math.cos(k*s.along - k*dist) / Math.sqrt(dist/20);
+        }
+        amp = sum;
+      }
+
+      ctx.fillStyle = colorFor(amp);
+      ctx.fillRect(cx,cy,CELL,CELL);
+    }
+  }
+
+  const readout = document.getElementById('readoutText');
+  if(mode==='meddo'){
+    const gap = parseFloat(document.getElementById('gapSize').value);
+    const wl = wavelength;
+    readout.textContent = gap < wl*2.5
+      ? 'Celah relatif sempit dibanding panjang gelombang — pola gangguan dari kedua pulau menyatu di celah, sulit dibedakan sebagai dua pulau terpisah (persis prinsip yang dibaca navigator Marshall untuk mendeteksi celah sempit antar-atol).'
+      : 'Celah relatif lebar dibanding panjang gelombang — bayangan kedua pulau lebih terpisah, masing-masing punya zona gangguan sendiri yang lebih mudah dibedakan.';
+  } else {
+    readout.textContent = 'Perhatikan pita-pita gangguan di balik pulau — makin panjang gelombangnya (geser slider), makin jauh pola ini menyebar mengisi bayangan.';
+  }
+}
+
+['waveDir','wavelength','islandSize','gapSize'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', render);
+});
+
+render();
+</script>
+</body>
+</html>

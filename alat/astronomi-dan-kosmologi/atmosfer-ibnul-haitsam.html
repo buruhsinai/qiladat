@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ketinggian Atmosfer — Metode Senja Ibnul Haitsam</title>
+<style>
+  :root{
+    --bg:#141210; --panel:#1c1916; --panel2:#211d19;
+    --gold:#c9a24b; --gold-soft:#8a7440; --text:#e8e0d0; --text-dim:#a89a80;
+    --line:#3a332a; --danger:#c25c4a; --ok:#6f9e6a; --blue:#6a91c2;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Georgia,'Times New Roman',serif;line-height:1.6;}
+  .container{max-width:900px;margin:0 auto;padding:24px 16px 60px;}
+  header{text-align:center;margin-bottom:26px;border-bottom:1px solid var(--line);padding-bottom:18px;}
+  header h1{font-size:1.4rem;color:var(--gold);margin:0 0 6px;}
+  header p{color:var(--text-dim);margin:0;font-size:0.9rem;font-style:italic;}
+  h2{color:var(--gold);font-size:1.08rem;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+  h2 .num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;
+    border:1px solid var(--gold-soft);border-radius:50%;font-size:0.78rem;color:var(--gold);flex-shrink:0;}
+  h3{color:var(--gold);font-size:0.95rem;margin:14px 0 8px;}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:16px;}
+  p{margin:0 0 9px;font-size:0.92rem;} p:last-child{margin-bottom:0;}
+  .dim{color:var(--text-dim);font-size:0.84rem;}
+  ul{margin:6px 0;padding-left:20px;} li{margin-bottom:5px;font-size:0.9rem;}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;flex-wrap:wrap;}
+  .row label{font-size:0.88rem;flex:1;min-width:190px;display:flex;justify-content:space-between;}
+  .row label span.val{color:var(--gold);font-weight:bold;}
+  input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:var(--line);outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+    background:var(--gold);cursor:pointer;border:2px solid var(--bg);}
+  svg.canvas{width:100%;height:auto;background:#0d0c0a;border-radius:8px;border:1px solid var(--line);}
+  .readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px;}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;}
+  .stat .label{font-size:0.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.4px;}
+  .stat .value{font-size:1.05rem;color:var(--gold);margin-top:2px;}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:0.87rem;}
+  th,td{padding:7px 6px;text-align:left;border-bottom:1px solid var(--line);}
+  th{color:var(--gold-soft);font-size:0.72rem;text-transform:uppercase;}
+  td.num{color:var(--gold);text-align:right;}
+  .formula{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:10px 14px;
+    font-family:'Courier New',monospace;font-size:0.84rem;margin:8px 0;overflow-x:auto;}
+  .flag{background:rgba(106,145,194,0.1);border:1px solid var(--blue);border-radius:8px;padding:10px 12px;
+    font-size:0.85rem;margin-bottom:8px;color:var(--blue);}
+  .flag.warn{background:rgba(194,92,74,0.1);border-color:var(--danger);color:var(--danger);}
+  .refs li{font-size:0.82rem;color:var(--text-dim);}
+  footer{text-align:center;color:var(--text-dim);font-size:0.76rem;margin-top:22px;}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Ketinggian Atmosfer: Metode Senja Ibnul Haitsam</h1>
+  <p>Mengukur langit dari geometri lama senja — tanpa roket, tanpa satelit</p>
+</header>
+
+<section id="belajar">
+  <h2><span class="num">1</span>Belajar</h2>
+  <p>Dalam <em>Kitab al-Manazir</em> (ditulis 1011-1021 M, sebagian besar saat beliau berstatus tahanan rumah), Ibnul Haitsam mengamati sesuatu yang sederhana tapi dalam: langit tidak langsung gelap total begitu Matahari terbenam — ada jeda (senja/twilight) sebelum benar-benar gelap. Ia menyimpulkan dengan tepat bahwa cahaya senja berasal dari sinar Matahari yang masih membiaskan/menyinari lapisan atas atmosfer, meski Matahari sendiri sudah tidak terlihat langsung.</p>
+  <p>Ia lalu mengukur secara sistematis: senja berakhir (langit benar-benar gelap) ketika Matahari berada <strong>19° di bawah horizon</strong>. Angka ini konsisten disebutkan di berbagai sumber sejarah sains independen. Dari sudut ini, dipadukan dengan geometri kelengkungan Bumi, ia mencoba menghitung berapa tinggi lapisan atmosfer yang masih bisa menangkap dan menyebarkan cahaya Matahari.</p>
+  <div class="flag warn">
+    <strong>Catatan kejujuran sejarah:</strong> Sumber-sumber yang saya temukan TIDAK sepakat soal angka hasil akhir yang beliau peroleh — satu sumber (MacTutor) menyebut sekitar 15 km, sumber lain menyebut 52.000 passuum (~79 km/49 mil). Saya uji sendiri secara matematis di bawah: angka 79 km ternyata sangat konsisten dengan metode geometris yang didokumentasikan, untuk rentang estimasi radius Bumi yang masuk akal — sedangkan angka 15 km hanya bisa dihasilkan jika radius Bumi diasumsikan ~1.079 km (jelas tidak masuk akal). Ada juga indikasi bahwa angka "52.000 passuum" sebenarnya berasal dari risalah terkait karya sarjana lain, Ibnu Mu'adz al-Jayyani, yang topiknya nyaris identik dan naskahnya bahkan pernah disatukan dalam satu manuskrip dengan karya Ibnul Haitsam — sehingga atribusi persis angka ini masih memerlukan kajian naskah primer lebih lanjut.
+  </div>
+</section>
+
+<section id="pertanyaan">
+  <h2><span class="num">2</span>Pertanyaan Ilmiah</h2>
+  <ul>
+    <li>Bagaimana sudut kedalaman Matahari di bawah horizon bisa diterjemahkan menjadi ketinggian fisik lapisan atmosfer?</li>
+    <li>Asumsi apa yang harus dipegang teguh (radius Bumi, sinar Matahari sejajar) agar geometri ini valid?</li>
+    <li>Seberapa sensitif hasilnya terhadap ketidakpastian pengukuran sudut senja?</li>
+  </ul>
+</section>
+
+<section id="simulator">
+  <h2><span class="num">3</span>Simulator</h2>
+  <div class="row">
+    <label>Sudut kedalaman senja (θ) <span class="val" id="v_theta">19°</span></label>
+    <input type="range" id="theta" min="6" max="24" step="0.5" value="19">
+  </div>
+  <p class="dim">Untuk perbandingan: definisi modern astronomi membagi senja jadi tiga tahap — senja sipil berakhir pada 6°, senja nautika 12°, senja astronomis 18° (nyaris identik dengan angka 19° Ibnul Haitsam, meski konsep fisikanya sedikit berbeda dari yang beliau pahami).</p>
+  <div class="row">
+    <label>Asumsi radius Bumi (km) <span class="val" id="v_R">6371</span></label>
+    <input type="range" id="R" min="3000" max="7000" step="50" value="6371">
+  </div>
+
+  <svg id="canvas" class="canvas" viewBox="0 0 700 400" xmlns="http://www.w3.org/2000/svg"></svg>
+
+  <div class="readout">
+    <div class="stat"><div class="label">Ketinggian atmosfer terhitung</div><div class="value" id="out_h">—</div></div>
+    <div class="stat"><div class="label">Jarak C ke titik P</div><div class="value" id="out_CP">—</div></div>
+  </div>
+</section>
+
+<section id="perbandingan">
+  <h2><span class="num">4</span>Perbandingan dengan Klaim Historis &amp; Sains Modern</h2>
+  <table>
+    <tr><th>Sumber</th><th>Klaim Ketinggian</th></tr>
+    <tr><td>MacTutor History of Mathematics</td><td>~15 km</td></tr>
+    <tr><td>New World Encyclopedia / sumber lain (52.000 passuum)</td><td>~79 km (49 mil)</td></tr>
+    <tr><td>Hasil hitung ulang saya (R=6371km, θ=19°)</td><td class="num" id="cmp_hitung">—</td></tr>
+    <tr><td>Pemahaman modern (lapisan mesosfer, tempat hamburan cahaya senja astronomis masih terjadi)</td><td>~80-100 km</td></tr>
+  </table>
+  <p class="dim" style="margin-top:10px;">Sains modern sebenarnya tidak mengenal "batas tegas" atmosfer — kerapatan udara meluruh perlahan (eksponensial) tanpa tepi jelas. Garis Karman (100 km) adalah kesepakatan hukum/administratif untuk menandai "batas luar angkasa", bukan batas fisik atmosfer yang sesungguhnya. Kedekatan hasil Ibnul Haitsam dengan angka modern ini, seperti dicatat salah satu sumber, sebagian bersifat kebetulan — karena pemahaman fisis di baliknya (pembiasan vs hamburan Rayleigh oleh molekul udara) berbeda dari sains atmosfer modern.</p>
+</section>
+
+<section id="metode">
+  <h2><span class="num">5</span>Metode &amp; Rumus</h2>
+  <p>Bayangkan Bumi sebagai lingkaran radius R berpusat di C. Sinar Matahari (dianggap sejajar karena jaraknya sangat jauh) menyinggung permukaan Bumi tepat di titik terminator T (batas siang-malam). Garis pandang horizon pengamat di titik O (berjarak sudut θ dari T, diukur dari pusat C) juga merupakan garis singgung lingkaran di titik O.</p>
+  <p>Kedua garis singgung ini (dari T dan dari O) berpotongan di titik P. Karena CT = CO = R dan kedua sudut di T dan O siku-siku, segitiga CTP dan COP kongruen — sudut TCP = sudut OCP = θ/2:</p>
+  <div class="formula">CP = R / cos(θ/2)
+Ketinggian atmosfer h = CP − R = R × (sec(θ/2) − 1)</div>
+  <p class="dim">Titik P adalah batas atas atmosfer yang secara geometris masih bisa "terlihat menyala" oleh pengamat di O sekaligus masih tersinari langsung oleh Matahari — persis definisi operasional ketinggian atmosfer dalam metode ini.</p>
+</section>
+
+<section id="batasan">
+  <h2><span class="num">6</span>Batasan</h2>
+  <ul>
+    <li>Model mengasumsikan atmosfer punya "tepi tegas" pada ketinggian h — kenyataannya kerapatan atmosfer meluruh gradual, tidak ada batas fisik yang jelas.</li>
+    <li>Bumi diasumsikan bola sempurna, mengabaikan sedikit kepepatan (oblateness) Bumi asli.</li>
+    <li>Sinar Matahari diasumsikan benar-benar sejajar (valid untuk keperluan ini karena jarak Bumi-Matahari sangat besar dibanding radius Bumi).</li>
+    <li>Angka historis "hasil asli" Ibnul Haitsam tidak bisa saya pastikan 100% tanpa akses naskah primer — bagian "Catatan kejujuran sejarah" di atas menjelaskan ketidaksepakatan sumber yang saya temukan.</li>
+  </ul>
+</section>
+
+<section id="referensi">
+  <h2><span class="num">7</span>Referensi</h2>
+  <ul class="refs">
+    <li>MacTutor History of Mathematics, biografi Ibn al-Haytham — menyebut estimasi ~15 km.</li>
+    <li>New World Encyclopedia &amp; Islam Wiki (Book of Optics) — menyebut 52.000 passuum (~79 km/49 mil).</li>
+    <li>A. Mark Smith, "The Latin Version of Ibn Mu'adh's Treatise on Twilight and the Rising of Clouds", Cambridge — konteks risalah terkait dan kemungkinan tumpang tindih atribusi.</li>
+    <li>Definisi senja sipil/nautika/astronomis modern — standar astronomi umum.</li>
+  </ul>
+</section>
+
+<footer>Bagian dari Laboratorium Sains &amp; Sejarah — Bank Ide Qiladat/JAZMI.</footer>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+
+  function hitung(){
+    const theta = parseFloat($('theta').value);
+    const R = parseFloat($('R').value);
+    $('v_theta').textContent = theta+'°';
+    $('v_R').textContent = R;
+
+    const half = (theta/2)*Math.PI/180;
+    const CP = R/Math.cos(half);
+    const h = CP-R;
+
+    $('out_h').textContent = h.toFixed(1)+' km';
+    $('out_CP').textContent = CP.toFixed(1)+' km';
+    $('cmp_hitung').textContent = h.toFixed(1)+' km';
+
+    drawDiagram(R, theta, h);
+  }
+
+  function drawDiagram(R, thetaDeg, h){
+    const cx=350, cy=350, dispR=150;
+    const scale = dispR/R;
+    const half = (thetaDeg/2)*Math.PI/180;
+    const thetaRad = thetaDeg*Math.PI/180;
+
+    // T di sudut 0 (atas), O di sudut theta (searah jarum jam dari T)
+    const Tx = cx, Ty = cy-dispR;
+    const Ox = cx + dispR*Math.sin(thetaRad), Oy = cy - dispR*Math.cos(thetaRad);
+
+    // P di sepanjang bisektor, jarak CP*scale dari C
+    const CPscaled = dispR/Math.cos(half);
+    const bisectorAngle = thetaRad/2;
+    const Px = cx + CPscaled*Math.sin(bisectorAngle), Py = cy - CPscaled*Math.cos(bisectorAngle);
+
+    let svg = `<rect x="0" y="0" width="700" height="400" fill="#0d0c0a"/>`;
+    svg += `<circle cx="${cx}" cy="${cy}" r="${dispR}" fill="none" stroke="#8a7440" stroke-width="2"/>`;
+    svg += `<circle cx="${cx}" cy="${cy}" r="3" fill="#8a7440"/>`;
+    svg += `<text x="${cx+8}" y="${cy+4}" fill="#8a7440" font-size="12" font-family="Georgia,serif">C</text>`;
+
+    svg += `<circle cx="${Tx}" cy="${Ty}" r="4" fill="#e8d05a"/>`;
+    svg += `<text x="${Tx-25}" y="${Ty-8}" fill="#e8d05a" font-size="12" font-family="Georgia,serif">T (terminator)</text>`;
+    svg += `<circle cx="${Ox}" cy="${Oy}" r="4" fill="#8fc9e8"/>`;
+    svg += `<text x="${Ox+8}" y="${Oy+4}" fill="#8fc9e8" font-size="12" font-family="Georgia,serif">O (pengamat)</text>`;
+    svg += `<circle cx="${Px}" cy="${Py}" r="5" fill="#c25c4a"/>`;
+    svg += `<text x="${Px+8}" y="${Py-8}" fill="#c25c4a" font-size="12" font-family="Georgia,serif">P (h=${h.toFixed(1)}km)</text>`;
+
+    // garis singgung dari T (tegak lurus CT, yaitu horizontal karena CT vertikal)
+    svg += `<line x1="${Tx-100}" y1="${Ty}" x2="${Px}" y2="${Py}" stroke="#e8956a" stroke-width="1.5"/>`;
+    // garis singgung dari O
+    const dirOx = Math.cos(thetaRad), dirOy = Math.sin(thetaRad);
+    svg += `<line x1="${Ox+dirOx*120}" y1="${Oy+dirOy*120}" x2="${Px}" y2="${Py}" stroke="#6f9e6a" stroke-width="1.5"/>`;
+
+    svg += `<line x1="${cx}" y1="${cy}" x2="${Tx}" y2="${Ty}" stroke="#3a332a" stroke-width="1" stroke-dasharray="3,3"/>`;
+    svg += `<line x1="${cx}" y1="${cy}" x2="${Ox}" y2="${Oy}" stroke="#3a332a" stroke-width="1" stroke-dasharray="3,3"/>`;
+    svg += `<line x1="${cx}" y1="${cy}" x2="${Px}" y2="${Py}" stroke="#3a332a" stroke-width="1" stroke-dasharray="3,3"/>`;
+
+    $('canvas').innerHTML = svg;
+  }
+
+  $('theta').addEventListener('input', hitung);
+  $('R').addEventListener('input', hitung);
+  hitung();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Limfatik: Jalan Pulang bagi Kebaikan Darah yang Belum Sempat Sampai</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Nunito:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FBFAF8; --panel:#FFFFFF; --panel-2:#F5F3EF;
+    --border:rgba(30,27,22,0.10); --border-strong:rgba(30,27,22,0.18);
+    --text:#211C16; --muted:#6B6357;
+    --blood:#C4453A; --blood-dim:196,69,58;
+    --lymph:#B8860B; --lymph-dim:184,134,11;
+    --vein:#2E5C8A; --vein-dim:46,92,138;
+    --true:#3F8F5F; --true-dim:63,143,95;
+    --warn:#C4453A;
+    --radius:6px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:'Fraunces',serif;font-weight:500;letter-spacing:-0.01em;margin:0;color:#171310;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:940px;margin:0 auto;padding:0 24px 90px;}
+  .rule{height:1px;background:var(--border);margin:46px 0;}
+  .eyebrow-num{font-family:'Fraunces',serif;font-style:italic;color:var(--lymph);font-size:15px;margin:0 0 10px;}
+  section h2{font-size:clamp(23px,3.6vw,30px);margin-bottom:12px;}
+  section > p.desc{color:var(--muted);max-width:70ch;margin:0 0 20px;font-size:15.5px;}
+  section p{max-width:72ch;}
+
+  header.top{padding:48px 0 8px;}
+  header.top .kicker{font-size:13px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:0 0 16px;}
+  header.top h1{font-size:clamp(28px,5vw,42px);margin-bottom:14px;max-width:20ch;}
+  header.top p.lede{color:var(--muted);max-width:66ch;font-size:17px;margin:0;}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;}
+  .badge{font-size:12px;font-weight:700;padding:5px 12px;border-radius:100px;border:1px solid var(--border-strong);color:var(--muted);}
+
+  .idea-box{
+    margin-top:26px;padding:20px 24px;background:linear-gradient(135deg, rgba(var(--lymph-dim),0.08), rgba(var(--vein-dim),0.05));
+    border:1px solid rgba(var(--lymph-dim),0.3);border-radius:var(--radius);
+  }
+  .idea-box p{margin:0;font-family:'Fraunces',serif;font-size:19px;font-style:italic;color:#171310;line-height:1.55;}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px;box-shadow:0 1px 2px rgba(30,27,22,0.03);}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  @media (max-width:700px){.grid-2{grid-template-columns:1fr;}}
+
+  .slider-row{margin:14px 0;}
+  .slider-row label{display:flex;justify-content:space-between;font-size:13.5px;font-weight:700;margin-bottom:7px;}
+  .slider-row label span.val{font-family:'JetBrains Mono',monospace;color:var(--lymph);}
+  input[type=range]{width:100%;accent-color:var(--lymph);}
+  .toggle-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .toggle-chip{padding:8px 14px;border-radius:100px;border:1px solid var(--border-strong);background:var(--panel-2);color:var(--muted);font-size:12.5px;font-weight:700;cursor:pointer;}
+  .toggle-chip.active{border-color:var(--lymph);color:var(--lymph);background:rgba(var(--lymph-dim),0.08);}
+
+  .result-box{margin-top:16px;background:var(--panel-2);border:1px solid var(--border);border-radius:4px;padding:16px 18px;display:flex;flex-wrap:wrap;gap:20px;}
+  .result-item .lbl{font-size:12px;color:var(--muted);margin-bottom:3px;font-weight:600;}
+  .result-item .num{font-family:'JetBrains Mono',monospace;font-size:21px;color:var(--lymph);font-weight:700;}
+  .result-item .num.warn{color:var(--blood);}
+  .formula-note{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--muted);margin-top:12px;line-height:1.7;}
+
+  .bar-row{display:flex;align-items:center;gap:10px;margin:8px 0;font-size:13px;}
+  .bar-row .lbl{width:150px;flex-shrink:0;color:var(--muted);font-weight:600;}
+  .bar-track{flex:1;height:12px;background:var(--panel-2);border-radius:6px;overflow:hidden;border:1px solid var(--border);}
+  .bar-fill{height:100%;border-radius:6px;transition:width .2s ease;}
+  .bar-num{width:56px;text-align:right;font-family:'JetBrains Mono',monospace;font-weight:700;}
+
+  .compare-box{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin:18px 0;}
+  @media (max-width:620px){.compare-box{grid-template-columns:1fr;}}
+  .compare-box > div{padding:18px 20px;}
+  .compare-box .old{background:rgba(196,69,58,0.05);border-right:1px solid var(--border);}
+  @media (max-width:620px){.compare-box .old{border-right:none;border-bottom:1px solid var(--border);}}
+  .compare-box .new{background:rgba(63,143,95,0.06);}
+  .compare-box h4{font-size:12.5px;font-weight:800;margin:0 0 8px;letter-spacing:.03em;}
+  .compare-box .old h4{color:var(--blood);}
+  .compare-box .new h4{color:var(--true);}
+  .compare-box p{font-size:14px;margin:0;color:var(--text);}
+
+  .stage-track{display:flex;gap:4px;margin:20px 0 6px;}
+  .stage-seg{flex:1;height:10px;border-radius:5px;background:var(--panel-2);border:1px solid var(--border);}
+  .stage-seg.on{background:var(--lymph);border-color:var(--lymph);}
+  .stage-card{margin-top:14px;padding:18px 20px;background:var(--panel-2);border-left:4px solid var(--lymph);border-radius:4px;}
+  .stage-card .stage-title{font-family:'Fraunces',serif;font-size:18px;margin-bottom:6px;}
+  .stage-card .stage-years{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--lymph);font-weight:700;margin-bottom:8px;}
+  .stage-card p{margin:0;font-size:14.5px;color:var(--text);}
+
+  .layer-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;}
+  @media (max-width:680px){.layer-grid{grid-template-columns:1fr;}}
+  .layer-cell{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:16px 18px;border-top:3px solid var(--vein);}
+  .layer-cell h4{font-size:15px;margin-bottom:6px;}
+  .layer-cell p{font-size:13.5px;color:var(--muted);margin:0;}
+
+  .callout{background:var(--panel-2);border:1px solid var(--border);border-left:3px solid var(--lymph);border-radius:4px;padding:16px 20px;font-size:14.5px;color:var(--text);margin-top:14px;}
+  .callout.warn-border{border-left-color:var(--blood);}
+  .callout.true-border{border-left-color:var(--true);}
+  .callout p{margin:0 0 10px;} .callout p:last-child{margin-bottom:0;}
+  .callout b{color:#171310;}
+
+  .ref-list{list-style:none;padding:0;margin:16px 0;}
+  .ref-list li{padding:13px 0;border-top:1px solid var(--border);font-size:14px;color:var(--muted);}
+  .ref-list li:last-child{border-bottom:1px solid var(--border);}
+  .ref-list .who{color:var(--text);font-weight:700;}
+  .related-links{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted);margin-top:10px;}
+
+  footer{padding-top:44px;font-size:13px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <p class="kicker">Laboratorium Qiladat / JAZMI — Fisiologi Modern</p>
+    <h1>Limfatik: Jalan Pulang bagi Kebaikan Darah yang Belum Sempat Sampai</h1>
+    <p class="lede">Kesimpulan yang pernah kita capai di proyek Darah–Ginjal–Limpa–Limfatik — bahwa saluran drainase ini bisa lebih dulu terkena dampak darah yang buruk, jauh sebelum ginjal, dan efeknya sering butuh bertahun-tahun sebelum benar-benar terasa fatal — kali ini dibongkar lebih dalam. Bukan cerita populer yang sudah sering dibahas, tapi lapisan-lapisan yang baru terungkap dalam dua dekade terakhir riset fisiologi.</p>
+    <div class="badge-row">
+      <span class="badge">Fisiologi Vaskular Modern</span>
+      <span class="badge">Glikokaliks &amp; Prinsip Starling</span>
+      <span class="badge">Limfatik Otak (2015)</span>
+      <span class="badge">Simulator Interaktif</span>
+    </div>
+    <div class="idea-box">
+      <p>"Limfatik adalah saluran yang membuat wilayah-wilayah yang tidak pernah tersentuh langsung oleh darah tetap kebagian kebaikannya."</p>
+    </div>
+  </header>
+
+  <div class="rule"></div>
+
+  <!-- LAPISAN 1 -->
+  <section id="lapisan1">
+    <p class="eyebrow-num">Lapisan 1</p>
+    <h2>Kenapa Ada Wilayah yang "Tak Tersentuh" Darah</h2>
+    <p class="desc">Ini fondasi dari semua yang akan dibahas di bawah — dan sering dilewatkan begitu saja: darah <b style="color:var(--text)">tidak pernah menyentuh sel tubuh Anda secara langsung</b>. Bahkan sel yang letaknya paling dekat dengan kapiler sekalipun menerima oksigen &amp; gizinya lewat satu perhentian wajib: cairan interstisial, lapisan cairan tipis yang membasahi setiap sel di seluruh tubuh.</p>
+    <p>Ahli fisiologi August Krogh (peraih Nobel 1920 untuk mekanisme regulasi kapiler) yang pertama menghitung ini secara kuantitatif: oksigen berdifusi dari kapiler ke sel hanya sejauh sekitar 100–200 mikrometer sebelum habis diserap di tengah jalan — dikenal sebagai <i>Krogh cylinder</i>. Di luar radius itu, sel harus menunggu kapiler lain, atau pasokannya memang tidak sampai secara memadai.</p>
+    <div class="callout">
+      <p>Konsekuensinya: cairan interstisial ini terus-menerus terisi oleh apa yang bocor keluar dari kapiler — bukan cuma oksigen &amp; gizi yang dipakai, tapi juga air &amp; sedikit protein yang <i>tidak</i> selalu terpakai sel. Kalau cairan ini terus menumpuk tanpa jalan keluar, jaringan akan membengkak dalam hitungan jam. <b>Limfatik adalah jalan keluarnya</b> — bukan pengganti darah, tapi penjaga supaya perhentian wajib itu tidak pernah banjir.</p>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- LAPISAN 2 -->
+  <section id="lapisan2">
+    <p class="eyebrow-num">Lapisan 2 — Simulator</p>
+    <h2>Revisi Prinsip Starling: "Diserap Balik di Ujung Vena" Itu Keliru</h2>
+    <p class="desc">Ini salah satu koreksi paling signifikan dalam fisiologi vaskular 15 tahun terakhir — dan masih jarang diajarkan dengan benar bahkan di sebagian buku teks. Levick &amp; Michel (2010) menunjukkan bahwa gambar klasik "kapiler menyaring di ujung arteri, lalu menyerap balik ~90% di ujung vena" itu <b style="color:var(--blood)">secara sistematis keliru</b> untuk sebagian besar jaringan tubuh.</p>
+
+    <div class="compare-box">
+      <div class="old">
+        <h4>MODEL LAMA (Starling klasik, ~1896)</h4>
+        <p>Kapiler menyaring cairan di ujung arteri (tekanan hidrostatik menang), lalu menyerapnya balik di ujung vena (tekanan osmotik plasma menang) — limfatik dianggap cuma membereskan sisa ~10%.</p>
+      </div>
+      <div class="new">
+        <h4>MODEL REVISI (Levick &amp; Michel, 2010)</h4>
+        <p>Lapisan glikokaliks di permukaan sel endotel-lah yang sesungguhnya berperan sebagai penyaring semi-permeabel. Begitu lapisan ini diperhitungkan, hampir tidak ada penyerapan balik yang bertahan di ujung vena — hampir <b style="color:var(--true)">seluruh</b> cairan yang tersaring harus pulang lewat limfatik.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="grid-2">
+        <div>
+          <div class="slider-row">
+            <label>Tekanan hidrostatik kapiler <span class="val" id="v-pc">25 mmHg</span></label>
+            <input type="range" id="in-pc" min="15" max="40" step="1" value="25">
+          </div>
+          <div class="slider-row">
+            <label>Keutuhan glikokaliks <span class="val" id="v-gly">90%</span></label>
+            <input type="range" id="in-gly" min="0" max="100" step="5" value="90">
+          </div>
+          <p class="formula-note">Glikokaliks bisa terkikis oleh hiperglikemia kronis, peradangan, atau sepsis — persis mekanisme yang menghubungkan "darah buruk" dengan limfatik yang lebih dulu kena beban, sebelum ginjal menunjukkan tanda apa pun.</p>
+        </div>
+        <div>
+          <div class="bar-row"><span class="lbl">Laju filtrasi cairan</span><div class="bar-track"><div class="bar-fill" id="bar-filt" style="background:var(--vein);"></div></div><span class="bar-num" id="num-filt">—</span></div>
+          <div class="bar-row"><span class="lbl">Protein ikut bocor</span><div class="bar-track"><div class="bar-fill" id="bar-prot" style="background:var(--blood);"></div></div><span class="bar-num" id="num-prot">—</span></div>
+          <div class="bar-row"><span class="lbl">Beban tambahan limfatik</span><div class="bar-track"><div class="bar-fill" id="bar-load" style="background:var(--lymph);"></div></div><span class="bar-num" id="num-load">—</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- LAPISAN 3 -->
+  <section id="lapisan3">
+    <p class="eyebrow-num">Lapisan 3</p>
+    <h2>Katup Mikroskopis: Masuk Boleh, Keluar Tidak</h2>
+    <p class="desc">Kenapa cairan bisa masuk ke limfatik terkecil tapi tidak bocor keluar lagi? Jawabannya ada di level sambungan antar-sel endotelnya sendiri — dua desain berbeda untuk dua tugas berbeda.</p>
+    <div class="layer-grid">
+      <div class="layer-cell">
+        <h4>Limfatik awal — sambungan "kancing" (button-like)</h4>
+        <p>Sel-sel endotelnya tumpang tindih longgar seperti sisik ikan, membentuk celah searah: cairan &amp; molekul besar bisa terdorong masuk saat tekanan interstisial naik, tapi katup mini ini menutup begitu tekanan berbalik arah.</p>
+      </div>
+      <div class="layer-cell">
+        <h4>Limfatik pengumpul — sambungan "resleting" (zipper-like)</h4>
+        <p>Begitu cairan masuk lebih dalam ke pembuluh pengumpul yang berotot, sambungan selnya berubah jadi rapat menerus seperti resleting — supaya cairan yang sudah masuk tidak bocor kembali ke jaringan sepanjang perjalanan pulang.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- LAPISAN 4 -->
+  <section id="lapisan4">
+    <p class="eyebrow-num">Lapisan 4 — Simulator</p>
+    <h2>Lymphangion: Ratusan "Jantung Kecil" Berantai</h2>
+    <p class="desc">Limfatik tidak punya satu pompa sentral seperti jantung. Sebagai gantinya, pembuluh pengumpul dibagi jadi segmen-segmen pendek bernama <i>lymphangion</i>, dipisahkan katup satu arah — dan tiap segmen punya kemampuan berdenyut sendiri, mirip sel pemacu jantung, digerakkan otot polos di dindingnya.</p>
+    <div class="card">
+      <div class="toggle-row">
+        <span class="toggle-chip active" data-age="off">Otot lymphangion normal</span>
+        <span class="toggle-chip" data-age="on">Kaku oleh AGE (gula darah tinggi kronis)</span>
+      </div>
+      <div class="slider-row">
+        <label>Beban cairan masuk (preload) <span class="val" id="v-pre">50%</span></label>
+        <input type="range" id="in-pre" min="0" max="100" step="5" value="50">
+      </div>
+      <div class="result-box">
+        <div class="result-item"><div class="lbl">Frekuensi denyut</div><div class="num" id="out-freq">—</div></div>
+        <div class="result-item"><div class="lbl">Efisiensi pemompaan</div><div class="num" id="out-eff">—</div></div>
+      </div>
+      <p class="formula-note">Sama seperti otot jantung (hukum Frank–Starling), lymphangion berdenyut lebih kuat &amp; lebih cepat saat regangannya bertambah — sampai satu titik optimum, lalu menurun lagi kalau beban terlalu penuh. AGE (advanced glycation end-products) dari gula darah tinggi kronis membuat dinding ototnya kaku, menggeser &amp; menumpulkan kurva ini — area riset yang masih aktif berkembang, belum semapan pengetahuan tentang nefropati diabetik.</p>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- LAPISAN 5 -->
+  <section id="lapisan5">
+    <p class="eyebrow-num">Lapisan 5</p>
+    <h2>Saklar Molekuler Tunggal di Balik Kelahiran Pembuluh Limfatik</h2>
+    <p>Selama perkembangan janin, pembuluh limfatik sesungguhnya bertunas dari pembuluh <i>vena</i> yang sudah ada — bukan tumbuh terpisah dari awal. Sebagian sel endotel vena "memilih" jadi sel limfatik lewat satu gen kunci: <b style="color:var(--text)">PROX1</b>. Begitu PROX1 aktif di sebuah sel, identitasnya berubah permanen dari pembuluh darah menjadi pembuluh limfatik, dipandu sinyal VEGF-C yang mengikat reseptor VEGFR-3 di permukaannya.</p>
+    <p>Penemuan jalur ini (kelompok Guillermo Oliver, akhir 1990-an) menjelaskan sesuatu yang sebelumnya membingungkan: kenapa pembuluh darah &amp; pembuluh limfatik begitu mirip strukturnya tapi begitu berbeda fungsinya — jawabannya karena keduanya memang berasal dari sumber yang sama, dipisahkan oleh satu saklar genetik.</p>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- LAPISAN 6 -->
+  <section id="lapisan6">
+    <p class="eyebrow-num">Lapisan 6</p>
+    <h2>Bukan Cuma Cairan: Peta Kekebalan &amp; Peta Kanker</h2>
+    <p>Setiap kali sel dendritik menangkap sesuatu yang asing di jaringan, ia bermigrasi lewat limfatik menuju kelenjar getah bening terdekat — dituntun sinyal kimia CCR7–CCL21 — untuk "melaporkan" temuan itu ke sel-sel imun lain. Kelenjar getah bening pada dasarnya adalah pos pemeriksaan di sepanjang jalan pulang cairan interstisial, bukan organ yang berdiri sendiri.</p>
+    <p>Sayangnya jalur yang sama ini juga jadi rute favorit sel kanker menyebar — itu sebabnya ahli bedah onkologi memeriksa <b style="color:var(--text)">kelenjar getah bening sentinel</b> (kelenjar pertama yang menerima drainase dari lokasi tumor) untuk menilai apakah kanker sudah mulai menyebar, jauh sebelum ia terdeteksi di organ jauh lewat aliran darah.</p>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- LAPISAN 7 -->
+  <section id="lapisan7">
+    <p class="eyebrow-num">Lapisan 7</p>
+    <h2>Lacteal: Ketika Limfatik Membawa Kebaikan Masuk, Bukan Cuma Pulang</h2>
+    <p>Di dalam setiap jonjot usus halus ada satu pembuluh limfatik khusus bernama <i>lacteal</i>. Berbeda dari nutrisi lain yang diserap langsung ke darah lalu disaring dulu oleh hati (lewat vena porta), lemak yang dikemas jadi partikel <i>chylomicron</i> justru terlalu besar untuk masuk kapiler darah — satu-satunya jalan masuknya adalah lacteal ini.</p>
+    <p>Cairan limfatik yang sarat lemak ini disebut <i>chyle</i>, berwarna putih susu, mengalir lewat <i>cisterna chyli</i> lalu naik ke duktus toraks sebelum akhirnya bermuara ke pembuluh darah vena besar di pangkal leher — jalur yang sengaja melewati sirkulasi umum dulu, <b style="color:var(--text)">melewati hati</b>, sebelum sampai ke seluruh tubuh.</p>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- LAPISAN 8 -->
+  <section id="lapisan8">
+    <p class="eyebrow-num">Lapisan 8 — Penemuan yang Membalik Dogma</p>
+    <h2>Limfatik di Otak? Dogma yang Baru Runtuh 2015</h2>
+    <p class="desc">Ini bagian paling mengejutkan dari seluruh halaman ini — dan salah satu alasan kuat kenapa "modern" pada topik ini benar-benar berarti sesuatu yang baru, bukan sekadar kemasan baru untuk fakta lama.</p>
+    <p>Selama lebih dari satu abad, otak dianggap satu-satunya organ tanpa pembuluh limfatik sama sekali — dijuluki organ "istimewa secara imun" karena "terisolasi" dari sistem drainase tubuh yang lain. Pada 2015, dua tim independen (Louveau dkk. di University of Virginia, dan Aspelund dkk. di Helsinki) membuktikan dogma itu keliru: ada pembuluh limfatik fungsional yang tersembunyi di meninges (selaput pembungkus otak), mengekspresikan penanda limfatik yang sama persis (PROX1, VEGFR-3) seperti limfatik di bagian tubuh lain.</p>
+    <p>Tiga tahun sebelumnya (2012), tim Maiken Nedergaard sudah menemukan mekanisme terkait: <b style="color:var(--text)">sistem glymfatik</b> — jalur pembersihan cairan di sepanjang ruang perivaskular otak, mengandalkan saluran air aquaporin-4 di kaki astrosit, paling aktif justru saat tidur. Sistem ini membersihkan sisa metabolisme otak, termasuk protein amiloid-beta yang menumpuk pada Alzheimer — dan cairan yang dibersihkannya bermuara ke limfatik meningeal yang baru ditemukan itu.</p>
+    <div class="callout true-border">
+      <p><b>Kenapa ini penting di luar laboratorium:</b> kalau otak ternyata punya jalur drainase sendiri yang bergantung pada tidur, itu memberi penjelasan mekanistik untuk sesuatu yang selama ini cuma diamati secara statistik — kenapa kurang tidur kronis dikaitkan dengan risiko demensia yang lebih tinggi. Riset terapi yang menyasar jalur ini (regenerasi limfatik meningeal, modulasi aquaporin-4) masih di tahap awal, tapi arahnya adalah salah satu yang paling aktif dikejar dalam neurologi modern saat ini.</p>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- LAPISAN 9 -->
+  <section id="lapisan9">
+    <p class="eyebrow-num">Lapisan 9 — Simulator Utama</p>
+    <h2>Dari Darah Buruk ke Kegagalan Bertahap: Dihitung dalam Tahun, Bukan Hari</h2>
+    <p class="desc">Ini yang paling menjawab pertanyaan awal kita: kenapa dampaknya jarang terasa fatal dalam waktu dekat. Sama seperti ginjal yang punya cadangan nefron sangat besar, limfatik juga punya cadangan fungsional besar — geser slidernya, dan lihat bagaimana kerusakan yang dimulai di level molekuler butuh bertahun-tahun sebelum benar-benar terlihat sebagai gejala.</p>
+    <div class="card">
+      <div class="slider-row">
+        <label>Lama paparan gula darah tinggi kronis <span class="val" id="v-years">10 tahun</span></label>
+        <input type="range" id="in-years" min="0" max="30" step="1" value="10">
+      </div>
+      <div class="stage-track" id="stageTrack"></div>
+      <div class="stage-card" id="stageCard"></div>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- BATASAN -->
+  <section id="batasan">
+    <p class="eyebrow-num">Batasan</p>
+    <h2>Yang Perlu Diketahui Sebelum Menganggap Ini Kesimpulan Final</h2>
+    <div class="callout warn-border">
+      <p>Simulator Lapisan 2 &amp; 4 memakai hubungan matematis yang disederhanakan untuk ilustrasi arah &amp; besaran relatif — bukan model kuantitatif tervalidasi klinis. Prinsip Starling yang direvisi sendiri punya pengecualian: ginjal (glomerulus) dan mukosa usus tetap menunjukkan penyerapan cairan yang lebih substansial di kondisi tertentu, berbeda dari sebagian besar jaringan lunak lain.</p>
+      <p>Simulator Lapisan 9 adalah kerangka konseptual bertahap, disusun dari pola umum yang konsisten dengan literatur — bukan garis waktu klinis yang bisa dipakai memprediksi kapan seseorang akan mengalami limfedema. Kecepatan kerusakan sesungguhnya sangat bervariasi antar-individu, tergantung genetik, kadar gula darah aktual, dan faktor lain yang tidak dimodelkan di sini.</p>
+      <p style="margin-bottom:0;">Disfungsi limfatik akibat diabetes adalah area riset yang jauh lebih muda &amp; belum semapan pengetahuan tentang nefropati diabetik — ditandai eksplisit di Lapisan 4 di atas, bukan disamarkan sebagai fakta yang sudah mapan.</p>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- REFERENSI -->
+  <section id="referensi">
+    <p class="eyebrow-num">Referensi</p>
+    <h2>Sumber</h2>
+    <ul class="ref-list">
+      <li><span class="who">Levick, J. R. &amp; Michel, C. C. (2010).</span> "Microvascular Fluid Exchange and the Revised Starling Principle." <i>Cardiovascular Research, 87</i>(2), 198–210.</li>
+      <li><span class="who">Louveau, A. dkk. (2015).</span> "Structural and Functional Features of Central Nervous System Lymphatic Vessels." <i>Nature, 523</i>, 337–341.</li>
+      <li><span class="who">Aspelund, A. dkk. (2015).</span> "A Dural Lymphatic Vascular System that Drains Brain Interstitial Fluid and Macromolecules." <i>Journal of Experimental Medicine, 212</i>(7), 991–999.</li>
+      <li><span class="who">Iliff, J. J. dkk. (2012).</span> "A Paravascular Pathway Facilitates CSF Flow Through the Brain Parenchyma." <i>Science Translational Medicine, 4</i>(147).</li>
+      <li><span class="who">Wigle, J. T. &amp; Oliver, G. (1999).</span> Peran PROX1 dalam penentuan identitas sel endotel limfatik dari asal vena.</li>
+      <li><span class="who">Krogh, A. (1920).</span> Nobel Fisiologi/Kedokteran — mekanisme regulasi motorik kapiler, dasar konsep jarak difusi jaringan.</li>
+    </ul>
+    <div class="related-links">
+      <span>→ Darah, Ginjal, Limpa &amp; Sistem Limfatik — proyek asal yang pertama menemukan pola ini</span>
+    </div>
+  </section>
+
+  <footer>Disusun sebagai bagian dari laboratorium Qiladat/JAZMI — pendalaman modern sistem limfatik, dari glikokaliks sampai limfatik otak.</footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+  function fmt(n,d){ if(d===undefined) d=0; return (Math.round(n*Math.pow(10,d))/Math.pow(10,d)).toLocaleString('id-ID'); }
+
+  /* ---------- LAPISAN 2: Starling / Glikokaliks ---------- */
+  var inPc = document.getElementById('in-pc'), inGly = document.getElementById('in-gly');
+  var vPc = document.getElementById('v-pc'), vGly = document.getElementById('v-gly');
+  var barFilt=document.getElementById('bar-filt'), numFilt=document.getElementById('num-filt');
+  var barProt=document.getElementById('bar-prot'), numProt=document.getElementById('num-prot');
+  var barLoad=document.getElementById('bar-load'), numLoad=document.getElementById('num-load');
+
+  function updateStarling(){
+    var pc = parseFloat(inPc.value), gly = parseFloat(inGly.value);
+    vPc.textContent = pc+' mmHg';
+    vGly.textContent = gly+'%';
+
+    var damage = (100-gly)/100;
+    var filt = Math.min(100, (pc/40*55) + damage*45);
+    var prot = Math.min(100, damage*100);
+    var load = Math.min(100, filt*0.6 + prot*0.4);
+
+    barFilt.style.width = filt+'%'; numFilt.textContent = fmt(filt)+'%';
+    barProt.style.width = prot+'%'; numProt.textContent = fmt(prot)+'%';
+    barLoad.style.width = load+'%'; numLoad.textContent = fmt(load)+'%';
+  }
+  inPc.addEventListener('input', updateStarling);
+  inGly.addEventListener('input', updateStarling);
+  updateStarling();
+
+  /* ---------- LAPISAN 4: Lymphangion ---------- */
+  var inPre = document.getElementById('in-pre'), vPre = document.getElementById('v-pre');
+  var outFreq = document.getElementById('out-freq'), outEff = document.getElementById('out-eff');
+  var ageOn = false;
+
+  function updateLymphangion(){
+    var pre = parseFloat(inPre.value)/100;
+    vPre.textContent = fmt(pre*100)+'%';
+    var stiffness = ageOn ? 0.45 : 1.0;
+    var freq = (18 * (1 - Math.pow(pre-0.6,2)/0.5)) * stiffness;
+    freq = Math.max(2, freq);
+    var eff = (100 * (1 - Math.pow(pre-0.55,2)/0.6)) * stiffness;
+    eff = Math.max(5, Math.min(100, eff));
+    outFreq.textContent = fmt(freq,1)+' /menit';
+    outEff.textContent = fmt(eff,0)+'%';
+    outFreq.className = 'num'+(ageOn?' warn':'');
+    outEff.className = 'num'+(ageOn?' warn':'');
+  }
+  inPre.addEventListener('input', updateLymphangion);
+  document.querySelectorAll('.toggle-chip[data-age]').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      document.querySelectorAll('.toggle-chip[data-age]').forEach(function(c){c.classList.remove('active');});
+      chip.classList.add('active');
+      ageOn = chip.getAttribute('data-age')==='on';
+      updateLymphangion();
+    });
+  });
+  updateLymphangion();
+
+  /* ---------- LAPISAN 9: Kaskade Tahun ---------- */
+  var STAGES = [
+    {min:0,max:2,title:'Kerusakan mikroskopis dimulai',note:'Glikokaliks mulai terkikis oleh gula darah berlebih. Tidak ada gejala sama sekali — bahkan tidak terdeteksi lewat tes darah rutin.'},
+    {min:2,max:6,title:'Beban tersembunyi bertambah',note:'Kebocoran protein ke cairan interstisial meningkat. Limfatik bekerja lebih keras dari biasanya untuk mengimbangi — masih sepenuhnya tanpa gejala yang disadari.'},
+    {min:6,max:12,title:'Otot pemompa mulai kaku',note:'AGE menumpuk di dinding lymphangion, frekuensi & kekuatan kontraksi menurun. Gejala pertama muncul, tapi samar: kesemutan sesekali, kaki terasa berat di penghujung hari.'},
+    {min:12,max:20,title:'Cadangan mulai terkuras',note:'Kapasitas cadangan limfatik yang tadinya sangat besar mulai habis. Bengkak ringan mulai terlihat secara intermiten, terutama sore hari.'},
+    {min:20,max:31,title:'Kegagalan bermakna klinis',note:'Limfedema menetap, drainase imun terganggu meningkatkan kerentanan infeksi kulit berulang. Inilah titik yang baru disadari sebagai "masalah" — padahal prosesnya sudah berjalan puluhan tahun.'}
+  ];
+  var inYears = document.getElementById('in-years'), vYears = document.getElementById('v-years');
+  var stageTrack = document.getElementById('stageTrack'), stageCard = document.getElementById('stageCard');
+
+  stageTrack.innerHTML = STAGES.map(function(s,i){ return '<div class="stage-seg" id="seg-'+i+'"></div>'; }).join('');
+
+  function updateStage(){
+    var y = parseFloat(inYears.value);
+    vYears.textContent = y+' tahun';
+    var idx = 0;
+    STAGES.forEach(function(s,i){ if(y>=s.min) idx=i; });
+    STAGES.forEach(function(s,i){
+      document.getElementById('seg-'+i).classList.toggle('on', i<=idx);
+    });
+    var s = STAGES[idx];
+    stageCard.innerHTML = '<div class="stage-title">'+s.title+'</div><div class="stage-years">Tahun ke-'+s.min+'–'+s.max+'</div><p>'+s.note+'</p>';
+  }
+  inYears.addEventListener('input', updateStage);
+  updateStage();
+
+})();
+</script>
+</body>
+</html>

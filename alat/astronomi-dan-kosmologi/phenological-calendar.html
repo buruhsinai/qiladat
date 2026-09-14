@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phenological Calendar — Kalender Fenologi Tanpa Angka</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root{
+    --bg:#F5F1E6; --bg-deep:#EAE2CC;
+    --ink:#20293A; --ink-soft:#5A6270;
+    --dawn:#2E3A59; --amber:#E08E45; --leaf:#4F7942;
+    --line:#d9d0b4;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.6;}
+  h1,h2,h3,.display{font-family:'Crimson Pro',serif;color:var(--ink);margin:0;}
+  .wrap{max-width:1100px;margin:0 auto;padding:40px 22px 90px;}
+
+  header.hero{padding-bottom:24px;border-bottom:1.5px solid var(--line);margin-bottom:30px;}
+  header.hero h1{font-size:2.1rem;font-weight:700;max-width:28ch;}
+  header.hero p{margin:10px 0 0;color:var(--ink-soft);max-width:72ch;font-size:1rem;}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+  .badge{font-size:0.78rem;padding:4px 10px;border-radius:20px;border:1px solid var(--line);color:var(--ink-soft);background:#fff;}
+
+  .toc{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:34px;}
+  .toc a{font-size:0.78rem;padding:5px 11px;border-radius:20px;border:1px solid var(--line);color:var(--ink-soft);text-decoration:none;background:#fff;}
+
+  section{margin-bottom:42px;scroll-margin-top:16px;}
+  section > h2{font-size:1.35rem;font-weight:700;margin-bottom:6px;display:flex;align-items:baseline;gap:10px;}
+  section > h2 .num{color:var(--leaf);font-size:1rem;font-family:'Inter',sans-serif;font-weight:700;}
+  section > .lead{color:var(--ink-soft);margin-bottom:16px;max-width:74ch;font-size:0.95rem;}
+
+  .card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:16px 18px;}
+  .card h3{font-size:1.02rem;margin-bottom:6px;}
+  .card p{margin:0;font-size:0.88rem;color:var(--ink-soft);}
+  .card .tag{display:inline-block;font-size:0.7rem;color:var(--leaf);border:1px solid var(--leaf);border-radius:20px;padding:1px 8px;margin-bottom:8px;}
+
+  .panel{background:#fff;border:1px solid var(--line);border-radius:10px;padding:20px 22px;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  @media (max-width:760px){.grid-2{grid-template-columns:1fr;}}
+
+  .field{margin-bottom:15px;}
+  .field label{display:flex;justify-content:space-between;font-size:0.85rem;color:var(--ink-soft);margin-bottom:6px;}
+  .field label .val{font-weight:700;font-variant-numeric:tabular-nums;color:var(--leaf);}
+  .field input[type=range]{width:100%;accent-color:var(--leaf);}
+  .field select, .field input[type=text], .field input[type=number]{
+    width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:4px;
+    background:#fff;font-family:'Inter',sans-serif;font-size:0.92rem;color:var(--ink);
+  }
+
+  .result-box{margin-top:8px;padding:16px 18px;border-radius:8px;color:#fff;background:var(--leaf);}
+  .result-box .big{font-family:'Crimson Pro',serif;font-size:1.5rem;font-weight:700;}
+  .result-box .small{font-size:0.8rem;opacity:0.85;margin-top:2px;}
+
+  .chart-wrap{background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px;margin-top:14px;}
+  svg.chart{width:100%;height:auto;}
+
+  .preset-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;}
+  .preset-card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px 16px;cursor:pointer;text-align:left;font-family:'Inter',sans-serif;}
+  .preset-card:hover{border-color:var(--leaf);}
+  .preset-card h3{font-size:0.98rem;margin-bottom:4px;color:var(--ink);font-family:'Crimson Pro',serif;font-weight:700;}
+  .preset-card p{margin:0;font-size:0.82rem;color:var(--ink-soft);}
+  .preset-card .region{display:inline-block;font-size:0.68rem;color:var(--amber);border:1px solid var(--amber);border-radius:20px;padding:1px 8px;margin-bottom:6px;}
+
+  .callout{background:#fff;border:1px solid var(--line);border-left:4px solid var(--ink-soft);border-radius:6px;padding:15px 18px;font-size:0.88rem;color:var(--ink-soft);margin-top:12px;}
+  .callout p{margin:0 0 6px;} .callout p:last-child{margin-bottom:0;}
+  .callout.method{border-left-color:var(--leaf);}
+  ol.ref-list{padding-left:20px;font-size:0.86rem;color:var(--ink-soft);}
+  ol.ref-list li{margin-bottom:6px;}
+  .related-links{display:flex;flex-direction:column;gap:6px;font-size:0.9rem;}
+
+  .pheno-form{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-bottom:14px;}
+  .pheno-form .field{margin-bottom:0;flex:1;min-width:130px;}
+  .pheno-form button{
+    padding:8px 16px;background:var(--leaf);color:#fff;border:none;border-radius:5px;
+    font-family:'Inter',sans-serif;font-weight:600;cursor:pointer;height:38px;
+  }
+  .wheel-row{display:grid;grid-template-columns:150px repeat(12,1fr);gap:2px;align-items:center;margin-bottom:4px;font-size:0.72rem;}
+  .wheel-row .mname{color:var(--ink-soft);text-align:right;padding-right:6px;display:flex;justify-content:flex-end;align-items:center;gap:4px;}
+  .wheel-cell{height:20px;border-radius:2px;background:var(--bg-deep);}
+  .wheel-header{display:grid;grid-template-columns:150px repeat(12,1fr);gap:2px;font-size:0.68rem;color:var(--ink-soft);margin-bottom:4px;}
+  .wheel-header div{text-align:center;}
+  .remove-btn{background:none;border:none;color:#b5432f;cursor:pointer;font-size:0.75rem;}
+  .wheel-empty{font-size:0.85rem;color:var(--ink-soft);font-style:italic;padding:8px 0;}
+
+  /* ===== Panel tambahan: Roda Melingkar 2D Radial & Model 3D ===== */
+  .wheel3d-panel{margin-top:22px;padding-top:20px;border-top:1.5px dashed var(--line);}
+  .wheel3d-head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+  .wheel3d-head h3{font-size:1.05rem;font-weight:700;}
+  .wheel3d-head .sub{font-size:0.85rem;color:var(--ink-soft);}
+
+  .wheel3d-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+  .play-btn{
+    display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--dawn);color:#fff;border:none;
+    border-radius:20px;font-family:'Inter',sans-serif;font-weight:600;font-size:0.82rem;cursor:pointer;
+  }
+  .play-btn:hover{background:var(--ink);}
+  .month-slider-wrap{flex:1;min-width:180px;display:flex;flex-direction:column;gap:4px;}
+  .month-slider-wrap label{font-size:0.8rem;color:var(--ink-soft);display:flex;justify-content:space-between;}
+  .month-slider-wrap label .mval{font-weight:700;color:var(--amber);font-family:'Crimson Pro',serif;}
+  .month-slider-wrap input[type=range]{width:100%;accent-color:var(--amber);}
+  .active-now{font-size:0.82rem;color:var(--ink-soft);min-width:160px;}
+  .active-now b{color:var(--leaf);}
+
+  .viewtoggle3d{display:flex;gap:0;border:1px solid var(--ink);border-radius:8px;overflow:hidden;position:absolute;top:10px;left:10px;z-index:5;}
+  .viewtoggle3d button{background:#fff;color:var(--ink);border:none;font-family:'Inter',sans-serif;font-size:0.75rem;font-weight:600;padding:6px 12px;cursor:pointer;border-right:1px solid var(--ink);}
+  .viewtoggle3d button:last-child{border-right:none;}
+  .viewtoggle3d button.active{background:var(--ink);color:#fff;}
+  .view3d-hint{position:absolute;bottom:6px;right:10px;font-size:0.68rem;color:var(--ink-soft);z-index:5;pointer-events:none;background:rgba(255,255,255,0.75);padding:2px 6px;border-radius:4px;}
+
+  .wheel3d-canvas{position:relative;background:var(--bg-deep);border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .wheel3d-canvas svg{width:100%;height:auto;display:block;}
+  #wheel3d-three{width:100%;height:420px;display:none;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;}
+  #wheel3d-three.grabbing{cursor:grabbing;}
+
+  .wheel3d-legend{display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:12px;font-size:0.82rem;color:var(--ink-soft);}
+  .wheel3d-legend span{display:inline-flex;align-items:center;gap:6px;cursor:pointer;}
+  .wheel3d-legend span:hover{color:var(--ink);}
+  .wheel3d-legend .dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none;}
+
+  .wheel3d-detail{display:none;align-items:center;gap:10px;margin-top:10px;padding:10px 14px;background:#fff;border:1px solid var(--leaf);border-radius:8px;font-size:0.86rem;}
+  .wheel3d-detail .dot{width:14px;height:14px;border-radius:50%;flex:none;}
+  .wheel3d-detail .range{color:var(--ink-soft);font-size:0.8rem;display:block;margin-top:2px;}
+  .wheel3d-detail .close-detail{margin-left:auto;background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:0.95rem;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <h1>Phenological Calendar — Kalender Fenologi</h1>
+    <p>Cara membaca waktu tanpa langit, tanpa jam, tanpa angka sama sekali — murni tanda kehidupan lokal: bunga mekar, burung datang, serangga muncul. Sangat lokal, sangat tua, dan dipakai lintas budaya di seluruh dunia jauh sebelum ada kalender astronomis.</p>
+    <div class="badge-row">
+      <span class="badge">Fenologi</span>
+      <span class="badge">Tanda Kehidupan</span>
+      <span class="badge">Growing Degree Days</span>
+      <span class="badge">Lintas Budaya</span>
+      <span class="badge">Simulator Interaktif</span>
+    </div>
+  </header>
+
+  <div class="toc">
+    <a href="#s01">01 Belajar</a>
+    <a href="#s02">02 Kalender Anda</a>
+    <a href="#s03">03 Mengapa Berulang</a>
+    <a href="#s04">04 Eksplorasi GDD</a>
+    <a href="#s05">05 Lintas Budaya</a>
+    <a href="#s06">06 Metode</a>
+    <a href="#s07">07 Batasan</a>
+    <a href="#s08">08 Referensi</a>
+  </div>
+
+  <!-- 01 -->
+  <section id="s01">
+    <h2><span class="num">01</span> Belajar: Tanda Kehidupan Tanpa Angka</h2>
+    <p class="lead">Fenologi adalah pengamatan waktu berulang lewat perilaku makhluk hidup — kapan pohon tertentu berbunga, burung migran tiba, atau serangga muncul — bukan lewat posisi Matahari/bintang atau hitungan hari. Ini salah satu sistem penanggalan tertua manusia, dan uniknya: setiap tempat punya kalender fenologinya sendiri, karena tandanya memang lokal.</p>
+    <div class="card-grid">
+      <div class="card"><span class="tag">Nusantara</span><h3>Pranata Mangsa, Jawa</h3><p>Kalender petani Jawa membagi setahun jadi 12 mangsa tak sama panjang, ditandai gejala seperti daun meranggas, kapuk randu berbuah, hingga padi berbunga.</p></div>
+      <div class="card"><span class="tag">Jepang</span><h3>72 Kō (Shichijūni Kō)</h3><p>Kalender tradisional Jepang memecah setahun jadi 72 "mikro-musim" ~5 hari, tiap satu dinamai satu peristiwa alam spesifik — sakura pertama mekar, kunang-kunang muncul, embun beku pertama.</p></div>
+      <div class="card"><span class="tag">Australia</span><h3>Musim D'harawal</h3><p>Bangsa Aborigin D'harawal (NSW) membaca enam musim dari perilaku hewan &amp; tumbuhan — mis. panggilan kawin quoll atau mekarnya wattle — bukan dari tanggal tetap.</p></div>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section id="s02">
+    <h2><span class="num">02</span> Susun Kalender Fenologi Anda</h2>
+    <p class="lead">Tambahkan tanda kehidupan yang Anda amati sendiri — murni pengamatan, tanpa angka atau perhitungan apa pun. Setiap tanda digambar sebagai pita di roda bulan di bawah, sehingga polanya (dan tumpang tindihnya dengan tanda lain) langsung terlihat.</p>
+    <div class="panel">
+      <div class="pheno-form">
+        <div class="field"><label>Nama tanda</label><input type="text" id="p-name" placeholder="mis. pohon flamboyan berbunga"></div>
+        <div class="field"><label>Bulan mulai</label><select id="p-start"></select></div>
+        <div class="field"><label>Bulan akhir</label><select id="p-end"></select></div>
+        <button onclick="addPheno()">+ Tambah</button>
+      </div>
+      <div class="wheel-header" id="wheel-header"></div>
+      <div id="wheel-out"></div>
+      <div class="callout"><p>Roda ini murni alat gambar — tak ada rumus astronomi maupun suhu di baliknya. Bandingkan dengan model di bagian 04 untuk melihat <em>mengapa</em> tanda semacam ini cenderung berulang pada rentang waktu yang mirip tiap tahun.</p></div>
+
+      <!-- ===== Panel tambahan: Roda Melingkar 2D Radial & Model 3D (tidak menggantikan roda pita di atas) ===== -->
+      <div class="wheel3d-panel">
+        <div class="wheel3d-head">
+          <h3>Roda Melingkar — Tampilan 2D Radial &amp; Model 3D</h3>
+          <span class="sub">Data sama persis dengan pita di atas, hanya digambar melingkar seperti "roda musim" sesungguhnya</span>
+        </div>
+        <div class="wheel3d-controls">
+          <button class="play-btn" id="w3d-play">▶ Putar Tahun</button>
+          <div class="month-slider-wrap">
+            <label>Bulan yang disorot <span class="mval" id="w3d-monthlabel">Jan</span></label>
+            <input type="range" id="w3d-month" min="0" max="11" step="1" value="0">
+          </div>
+          <div class="active-now" id="w3d-activenow">Aktif bulan ini: —</div>
+        </div>
+        <div class="wheel3d-canvas" id="wheel3d-canvas">
+          <div class="viewtoggle3d">
+            <button id="w3d-btn2d" class="active">Radial 2D</button>
+            <button id="w3d-btn3d">Model 3D</button>
+          </div>
+          <button id="w3d-resetcam" title="Kembalikan sudut & jarak kamera" style="position:absolute;top:10px;right:10px;z-index:5;display:none;background:#fff;border:1px solid var(--ink);border-radius:8px;padding:6px 10px;font-size:0.75rem;font-family:'Inter',sans-serif;font-weight:600;cursor:pointer;">↺ Reset Tampilan</button>
+          <div class="view3d-hint" id="w3d-hint" style="display:none">drag = putar · scroll/cubit 2 jari = zoom · klik pita = detail</div>
+          <svg id="wheel3d-svg" viewBox="0 0 400 400"></svg>
+          <div id="wheel3d-three"></div>
+        </div>
+        <div class="wheel3d-legend" id="wheel3d-legend"></div>
+        <div class="wheel3d-detail" id="wheel3d-detail"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section id="s03">
+    <h2><span class="num">03</span> Mengapa Tanda Ini Cenderung Berulang?</h2>
+    <p class="lead">Kalender fenologi tidak butuh instrumen apa pun karena tandanya memang nyata terjadi setiap tahun — tapi <em>mengapa</em> ia cenderung berulang di rentang waktu yang mirip? Jawaban sains di baliknya: akumulasi panas, bukan tanggal kalender itu sendiri.</p>
+    <div class="callout method">
+      <p>Banyak proses biologis — mekarnya kuncup bunga, menetasnya telur serangga, migrasi burung — dipicu bukan oleh satu tanggal ajaib, melainkan oleh <strong>jumlah kumulatif panas</strong> yang diterima organisme sejak titik acuan (mis. awal tahun atau akhir musim dingin). Model paling umum untuk ini disebut <strong>Growing Degree Days (GDD)</strong>: tiap hari yang suhunya di atas ambang tertentu menyumbang sejumlah "unit panas", dan begitu akumulasinya mencapai target spesies tersebut, tandanya muncul.</p>
+      <p>Karena suhu harian mengikuti pola musiman yang mirip tiap tahun (naik menuju puncak kemarau/musim panas, turun menuju musim hujan/dingin), akumulasi GDD pun mencapai target pada rentang waktu yang serupa tiap tahun — itulah sebabnya tanda fenologi terasa "teratur" padahal tak ada jam maupun kalender yang dipakai leluhur kita.</p>
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section id="s04">
+    <h2><span class="num">04</span> Eksplorasi Interaktif: Model GDD</h2>
+    <p class="lead">Atur suhu rata-rata, amplitudo musiman, suhu ambang aktif, dan target akumulasi panas — lihat kapan model memperkirakan tanda kehidupan tersebut muncul, dan bagaimana kurva akumulasinya sepanjang tahun.</p>
+    <div class="panel">
+      <div class="grid-2">
+        <div>
+          <div class="field">
+            <label>Suhu rata-rata tahunan (°C) <span class="val" id="v-tmean">27</span></label>
+            <input type="range" id="p-tmean" min="10" max="35" step="0.5" value="27">
+          </div>
+          <div class="field">
+            <label>Amplitudo musiman (°C) <span class="val" id="v-tamp">3</span></label>
+            <input type="range" id="p-tamp" min="0" max="15" step="0.5" value="3">
+          </div>
+          <div class="field">
+            <label>Suhu dasar / ambang aktif (°C) <span class="val" id="v-tbase">15</span></label>
+            <input type="range" id="p-tbase" min="0" max="25" step="0.5" value="15">
+          </div>
+          <div class="field">
+            <label>Target GDD kumulatif untuk tanda muncul <span class="val" id="v-gtarget">300</span></label>
+            <input type="range" id="p-gtarget" min="50" max="1500" step="10" value="300">
+          </div>
+        </div>
+        <div>
+          <div class="result-box">
+            <div class="small">Perkiraan hari tanda muncul (sejak 1 Jan)</div>
+            <div class="big" id="p-result">—</div>
+          </div>
+          <div class="chart-wrap">
+            <svg class="chart" id="svg-gdd" viewBox="0 0 420 190"></svg>
+          </div>
+        </div>
+      </div>
+      <div class="callout">
+        <p><strong>Batasan model ini:</strong> suhu di sini sinusoidal sederhana (bukan data cuaca riil), dan banyak tanda fenologi sesungguhnya juga dipengaruhi curah hujan, panjang siang, kelembapan — bukan suhu semata. Ini sekadar ilustrasi mengapa pola musiman cenderung berulang pada rentang waktu yang mirip tiap tahun, bukan alat prediksi presisi untuk spesies tertentu.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section id="s05">
+    <h2><span class="num">05</span> Galeri Lintas Budaya</h2>
+    <p class="lead">Klik salah satu untuk memuat beberapa tanda contoh dari kalender fenologi budaya tersebut ke roda di bagian 02. Ini contoh ilustratif yang disederhanakan (pembulatan ke bulan) — bukan reproduksi lengkap sistem aslinya.</p>
+    <div class="preset-grid" id="preset-grid"></div>
+  </section>
+
+  <!-- 06 -->
+  <section id="s06">
+    <h2><span class="num">06</span> Metode &amp; Rumus</h2>
+    <div class="callout method">
+      <p><strong>Roda kalender (bagian 02):</strong> murni alat gambar — setiap tanda yang Anda tambahkan digambar sebagai pita aktif pada bulan mulai–akhir yang Anda pilih (mendukung rentang yang membungkus akhir tahun, mis. Nov→Feb). Tidak ada perhitungan astronomi maupun suhu di baliknya.</p>
+      <p><strong>Model suhu harian:</strong> T(hari) = suhu-rata-rata + amplitudo × sin(2π×(hari−80)/365) — kurva sinus sederhana yang puncaknya disetel dekat pertengahan tahun, mendekati pola musiman khas daerah tropis/subtropis.</p>
+      <p><strong>Growing Degree Days (GDD):</strong> tiap hari, GDD-harian = maks(0, T(hari) − suhu-ambang). Nilai ini diakumulasikan hari demi hari; begitu akumulasinya melewati target yang Anda atur, itulah hari perkiraan tanda muncul. Ini versi sangat disederhanakan dari model GDD yang dipakai agronom &amp; ahli fenologi sungguhan (yang biasanya memakai data suhu min/maks harian riil, bukan kurva sinus).</p>
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section id="s07">
+    <h2><span class="num">07</span> Batasan</h2>
+    <div class="callout">
+      <p>Roda kalender di bagian 02 hanya alat visualisasi — presisinya sebatas resolusi bulanan, dan tidak memvalidasi apakah tanda yang Anda masukkan benar secara biologis. Model GDD di bagian 04 memakai suhu sinusoidal ideal, bukan data cuaca riil, dan mengabaikan faktor non-suhu (curah hujan, fotoperiode, kelembapan, variasi individu spesies) yang sering sama pentingnya. Contoh lintas budaya di bagian 05 dipadatkan ke resolusi bulanan dan hanya memuat sebagian kecil tanda dari tiap sistem — kalender aslinya jauh lebih kaya &amp; presisi, dan tanggal persisnya bisa bervariasi antar sumber, wilayah, serta dari tahun ke tahun karena memang sifatnya responsif terhadap kondisi alam, bukan patokan tanggal tetap.</p>
+    </div>
+  </section>
+
+  <!-- 08 -->
+  <section id="s08">
+    <h2><span class="num">08</span> Referensi &amp; Alat Terkait</h2>
+    <ol class="ref-list">
+      <li>Wikipedia bahasa Indonesia — "Pranata mangsa" (12 mangsa, Kasunanan Surakarta)</li>
+      <li>Bureau of Meteorology Australia — "D'harawal calendar" (Indigenous Weather Knowledge)</li>
+      <li>Nippon.com — "Japan's 72 Microseasons" (shichijūni kō)</li>
+      <li>Siida — "The Sámi Homeland's eight seasons"; University of Texas LAITS — "The Sami Concept of Time"</li>
+      <li>Konsep umum Growing Degree Days sebagaimana dipakai luas dalam agronomi &amp; entomologi terapan</li>
+    </ol>
+    <div class="callout" style="margin-top:14px">
+      <div class="related-links">
+        <span>→ Heliacal Rising — Laboratorium Kemunculan Fajar Bintang (heliacal-rising.html)</span>
+        <span>→ Seasonal Star Markers — Kompas Bintang &amp; Kalender Musim (seasonal-star-markers.html)</span>
+        <span>→ Kalender Alam — versi ringkas ketiga tool dalam satu tampilan tab (kalender-alam.html)</span>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const MONTHS_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+const MONTHS_SHORT3 = MONTHS_ID; // already 3-letter enough
+
+function el(tag,attrs){
+  const e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+/* ================= populate month selects ================= */
+['p-start','p-end'].forEach(id => {
+  const sel = document.getElementById(id);
+  MONTHS_ID.forEach((m,i) => {
+    const o = document.createElement('option'); o.value=i; o.textContent=m;
+    sel.appendChild(o);
+  });
+  if(id==='p-end') sel.value = 1;
+});
+
+/* ================= 02: wheel builder ================= */
+const PHENO_COLORS = ['#4F7942','#E08E45','#2E3A59','#8C4A22','#5F7A6B','#B08D3E','#7A4F92','#2E7D8C'];
+let PHENO_ENTRIES = [];
+
+function addPheno(){
+  const name = document.getElementById('p-name').value.trim();
+  if(!name) return;
+  const start = parseInt(document.getElementById('p-start').value,10);
+  const end = parseInt(document.getElementById('p-end').value,10);
+  PHENO_ENTRIES.push({name, start, end, color: PHENO_COLORS[PHENO_ENTRIES.length % PHENO_COLORS.length]});
+  document.getElementById('p-name').value='';
+  renderWheel();
+}
+function removePheno(idx){ PHENO_ENTRIES.splice(idx,1); renderWheel(); }
+
+function renderWheel(){
+  const header = document.getElementById('wheel-header');
+  header.innerHTML = '<div></div>' + MONTHS_ID.map(m=>`<div>${m}</div>`).join('');
+  const out = document.getElementById('wheel-out');
+  out.innerHTML = '';
+  if(PHENO_ENTRIES.length === 0){
+    out.innerHTML = '<div class="wheel-empty">Belum ada tanda ditambahkan — isi form di atas, atau pilih salah satu preset di bagian 05.</div>';
+    return;
+  }
+  PHENO_ENTRIES.forEach((entry, idx) => {
+    const row = document.createElement('div');
+    row.className = 'wheel-row';
+    let cellsHTML = '';
+    for(let m=0;m<12;m++){
+      let active;
+      if(entry.start<=entry.end) active = (m>=entry.start && m<=entry.end);
+      else active = (m>=entry.start || m<=entry.end);
+      cellsHTML += `<div class="wheel-cell" style="background:${active?entry.color:'#EAE2CC'}"></div>`;
+    }
+    row.innerHTML = `<div class="mname">${entry.name}<button class="remove-btn" onclick="removePheno(${idx})">✕</button></div>${cellsHTML}`;
+    out.appendChild(row);
+  });
+  // panel tambahan: sinkronkan roda radial 2D & model 3D setiap kali data pita berubah
+  renderRadial();
+  rebuildWheel3D();
+}
+
+function isEntryActiveInMonth(entry, m){
+  return entry.start<=entry.end ? (m>=entry.start && m<=entry.end) : (m>=entry.start || m<=entry.end);
+}
+
+/* ================= 04: GDD model ================= */
+function computeGDD(){
+  const tmean = parseFloat(document.getElementById('p-tmean').value);
+  const tamp = parseFloat(document.getElementById('p-tamp').value);
+  const tbase = parseFloat(document.getElementById('p-tbase').value);
+  const target = parseFloat(document.getElementById('p-gtarget').value);
+  document.getElementById('v-tmean').textContent = tmean.toFixed(1);
+  document.getElementById('v-tamp').textContent = tamp.toFixed(1);
+  document.getElementById('v-tbase').textContent = tbase.toFixed(1);
+  document.getElementById('v-gtarget').textContent = target;
+
+  let cum = 0; const series = []; let foundDay=null;
+  for(let d=1; d<=365; d++){
+    const T = tmean + tamp*Math.sin(2*Math.PI*(d-80)/365);
+    const gdd = Math.max(0, T-tbase);
+    cum += gdd;
+    series.push(cum);
+    if(foundDay===null && cum>=target) foundDay=d;
+  }
+
+  const resEl = document.getElementById('p-result');
+  if(foundDay!==null){
+    const dateObj = new Date(Date.UTC(2026,0,1));
+    dateObj.setUTCDate(dateObj.getUTCDate()+foundDay-1);
+    resEl.textContent = dateObj.toLocaleDateString('id-ID',{day:'numeric',month:'long'}) + ` (hari ke-${foundDay})`;
+  } else {
+    resEl.textContent = 'Tidak tercapai dalam 1 tahun';
+  }
+
+  const svg = document.getElementById('svg-gdd');
+  svg.innerHTML='';
+  const W=420,H=190,padL=40,padR=10,padT=12,padB=22;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  const maxV = Math.max(...series, target)*1.05;
+  const xFor = i => padL+(i/364)*plotW;
+  const yFor = v => padT+plotH-(v/maxV)*plotH;
+
+  svg.appendChild(el('line',{x1:padL,y1:padT,x2:padL,y2:padT+plotH,stroke:'#d9d0b4'}));
+  svg.appendChild(el('line',{x1:padL,y1:padT+plotH,x2:padL+plotW,y2:padT+plotH,stroke:'#d9d0b4'}));
+  const ty = yFor(target);
+  svg.appendChild(el('line',{x1:padL,y1:ty,x2:padL+plotW,y2:ty,stroke:'#E08E45','stroke-dasharray':'4,3'}));
+  const path = series.map((v,i)=>`${i===0?'M':'L'} ${xFor(i).toFixed(1)} ${yFor(v).toFixed(1)}`).join(' ');
+  svg.appendChild(el('path',{d:path, fill:'none', stroke:'#4F7942','stroke-width':2}));
+  if(foundDay!==null){
+    svg.appendChild(el('circle',{cx:xFor(foundDay-1), cy:yFor(series[foundDay-1]), r:4, fill:'#E08E45'}));
+  }
+  ['Jan','Apr','Jul','Okt'].forEach((lab,i)=>{
+    const t = el('text',{x:xFor(i*91), y:padT+plotH+14, 'font-size':8, fill:'#5A6270'});
+    t.textContent = lab; svg.appendChild(t);
+  });
+}
+['p-tmean','p-tamp','p-tbase','p-gtarget'].forEach(id => document.getElementById(id).addEventListener('input', computeGDD));
+
+/* ================= 05: cultural presets ================= */
+const CULTURE_PRESETS = [
+  {
+    label: "Pranata Mangsa — Jawa, Indonesia",
+    region: "Nusantara",
+    note: "Kalender petani Jawa, 12 mangsa tak sama panjang, dihitung dari peredaran semu Matahari sejak titik balik Juni.",
+    entries: [
+      {name:"Kasa — daun meranggas, kemarau mulai", start:5, end:6},
+      {name:"Kapat — kapuk randu berbuah, awal hujan", start:8, end:9},
+      {name:"Kapitu — puncak musim hujan", start:11, end:1},
+      {name:"Kasanga — padi berbunga", start:2, end:2}
+    ]
+  },
+  {
+    label: "72 Kō — Jepang",
+    region: "Asia Timur",
+    note: "72 mikro-musim ~5 hari, tiap satu dinamai satu peristiwa alam spesifik.",
+    entries: [
+      {name:"Sakura hajimete saku — sakura pertama mekar", start:2, end:2},
+      {name:"Kusaretaru kusa hotaru to naru — kunang-kunang muncul", start:5, end:5},
+      {name:"Kiku no hana hiraku — bunga krisan mekar", start:9, end:9},
+      {name:"Kuma ana ni komoru — beruang masuk sarang", start:11, end:11}
+    ]
+  },
+  {
+    label: "Musim D'harawal — Australia",
+    region: "Oseania",
+    note: "Enam musim bangsa Aborigin D'harawal (NSW), dibaca dari perilaku hewan & tumbuhan, bukan tanggal tetap.",
+    entries: [
+      {name:"Burran — kanguru jantan agresif, pantang daging", start:0, end:2},
+      {name:"Marrai'gang — lilly pilly matang", start:3, end:5},
+      {name:"Wiritjiribin — burung lyre bangun gundukan tari", start:7, end:7},
+      {name:"Parra'dowee — musim basah & hangat", start:10, end:11}
+    ]
+  },
+  {
+    label: "Delapan Musim Sámi — Arktik Skandinavia",
+    region: "Eropa Utara",
+    note: "Delapan musim masyarakat Sámi, mengikuti siklus hidup rusa kutub (reindeer), bukan kalender Gregorian.",
+    entries: [
+      {name:"Giđđa — salju mencair, migrasi rusa dimulai", start:3, end:4},
+      {name:"Miessemánnu — anak rusa lahir, siang tanpa akhir", start:5, end:5},
+      {name:"Čakčageassi — rusa jantan dipilih untuk dipotong", start:7, end:8},
+      {name:"Dálvi — malam kutub, rusa cari lumut di bawah salju", start:11, end:1}
+    ]
+  }
+];
+
+const presetGrid = document.getElementById('preset-grid');
+CULTURE_PRESETS.forEach(p => {
+  const card = document.createElement('div');
+  card.className = 'preset-card';
+  card.innerHTML = `<span class="region">${p.region}</span><h3>${p.label}</h3><p>${p.note}</p>`;
+  card.addEventListener('click', () => {
+    PHENO_ENTRIES = p.entries.map((e,i) => ({...e, color: PHENO_COLORS[i % PHENO_COLORS.length]}));
+    renderWheel();
+    document.getElementById('s02').scrollIntoView({behavior:'smooth'});
+  });
+  presetGrid.appendChild(card);
+});
+
+/* ===================================================================
+   PANEL TAMBAHAN: Roda Melingkar — 2D Radial (SVG) & Model 3D (Three.js)
+   Tidak mengganti roda pita di bagian 02 — murni tampilan alternatif
+   dari data PHENO_ENTRIES yang sama, plus animasi "putar tahun" yang
+   berjalan mulus (bukan lompat per-bulan) dan klik elemen untuk detail.
+   =================================================================== */
+let W3D_ANGLE = 0;        // sudut kontinu 0..360 (0deg = awal Jan, 360deg = akhir Des)
+let W3D_PLAYING = false;
+let W3D_LAST_TS = null;
+let W3D_SPEED = 30;        // derajat/detik -> satu putaran penuh (1 tahun) = 12 detik
+let W3D_SELECTED = null;   // index entry yang sedang dipilih (klik), atau null
+const W3D_FADE = 5;        // derajat transisi halus di batas bulan aktif/tidak aktif
+
+const W3D_MIN_R = 46, W3D_BAND = 24, W3D_GAP = 3; // radius dalam & tebal tiap pita entry (unit svg)
+
+function polarPt(cx, cy, r, angleDeg){
+  const a = (angleDeg - 90) * Math.PI / 180;
+  return { x: cx + r*Math.cos(a), y: cy + r*Math.sin(a) };
+}
+function monthAngleDeg(m){ return m*30; } // 0deg = atas (Jan), searah jarum jam, 30deg per bulan
+
+function describeAnnulusWedge(cx, cy, rInner, rOuter, aStartDeg, aEndDeg){
+  const p1 = polarPt(cx,cy,rOuter,aStartDeg), p2 = polarPt(cx,cy,rOuter,aEndDeg);
+  const p3 = polarPt(cx,cy,rInner,aEndDeg), p4 = polarPt(cx,cy,rInner,aStartDeg);
+  const large = (aEndDeg - aStartDeg) > 180 ? 1 : 0;
+  return `M ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} A ${rOuter} ${rOuter} 0 ${large} 1 ${p2.x.toFixed(2)} ${p2.y.toFixed(2)} `
+       + `L ${p3.x.toFixed(2)} ${p3.y.toFixed(2)} A ${rInner} ${rInner} 0 ${large} 0 ${p4.x.toFixed(2)} ${p4.y.toFixed(2)} Z`;
+}
+function entryAngleRange(entry){
+  const aStart = monthAngleDeg(entry.start);
+  const aEnd = entry.start<=entry.end ? monthAngleDeg(entry.end+1) : monthAngleDeg(entry.end+1+12);
+  return {aStart, aEnd};
+}
+// seberapa "aktif" sebuah entry pada sudut kontinu tertentu (0..1, dengan transisi halus di tepi)
+function activationAmount(aStart, aEnd, angle){
+  function seg(a){
+    if(a < aStart-W3D_FADE || a > aEnd+W3D_FADE) return 0;
+    if(a>=aStart && a<=aEnd) return 1;
+    if(a<aStart) return 1-(aStart-a)/W3D_FADE;
+    return 1-(a-aEnd)/W3D_FADE;
+  }
+  return Math.max(seg(angle), seg(angle+360));
+}
+function formatEntryRange(entry){
+  const base = `${MONTHS_ID[entry.start]} – ${MONTHS_ID[entry.end]}`;
+  return entry.start<=entry.end ? base : base + ' (melintasi akhir tahun)';
+}
+function toggleSelectEntry(i){
+  W3D_SELECTED = (W3D_SELECTED === i) ? null : i;
+  updateRadialFrame();
+  updateWheel3DFrame();
+  updateDetailPanel();
+}
+function updateDetailPanel(){
+  const panel = document.getElementById('wheel3d-detail');
+  const entry = (W3D_SELECTED!==null) ? PHENO_ENTRIES[W3D_SELECTED] : null;
+  if(!entry){ panel.style.display='none'; panel.innerHTML=''; return; }
+  panel.style.display='flex';
+  panel.innerHTML = `<span class="dot" style="background:${entry.color}"></span>`
+    + `<div><b>${entry.name}</b><span class="range">Rentang aktif: ${formatEntryRange(entry)}</span></div>`
+    + `<button class="close-detail" id="wheel3d-detail-close" title="Tutup">✕</button>`;
+  document.getElementById('wheel3d-detail-close').addEventListener('click', ()=>{
+    W3D_SELECTED = null; updateRadialFrame(); updateWheel3DFrame(); updateDetailPanel();
+  });
+}
+
+/* ---------------- 2D Radial (SVG): bangun struktur sekali, lalu update tiap frame ---------------- */
+let w2dGeom = {cx:0, cy:0, outerMax:0};
+let w2dEntryEls = [];      // {path, entry, index}
+let w2dMonthEls = [];      // {rect, text} — label bulan bergaya pil
+let w2dPointerLine=null, w2dPointerTip=null;
+let w2dLastMonthShown=-1;
+
+function buildRadialStructure(){
+  const svg = document.getElementById('wheel3d-svg');
+  const legend = document.getElementById('wheel3d-legend');
+  svg.innerHTML = '';
+  legend.innerHTML = '';
+  w2dEntryEls = [];
+  w2dMonthEls = [];
+  w2dLastMonthShown = -1;
+
+  const n = PHENO_ENTRIES.length;
+  const outerMax = W3D_MIN_R + Math.max(n,1)*(W3D_BAND+W3D_GAP);
+  const size = (outerMax + 50) * 2;
+  svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+  const cx = size/2, cy = size/2;
+  w2dGeom = {cx, cy, outerMax};
+
+  // lingkaran terluar tipis + 12 garis batas bulan
+  svg.appendChild(el('circle',{cx,cy,r:outerMax+4,fill:'none',stroke:'#d9d0b4','stroke-width':1}));
+  for(let m=0;m<12;m++){
+    const ang = monthAngleDeg(m);
+    const pOut = polarPt(cx,cy,outerMax+4,ang);
+    const pIn = polarPt(cx,cy,W3D_MIN_R-8,ang);
+    svg.appendChild(el('line',{x1:pIn.x,y1:pIn.y,x2:pOut.x,y2:pOut.y,stroke:'#d9d0b4','stroke-width':1}));
+  }
+  // label bulan bergaya "pil" — rapi, mudah dibaca meski menumpuk garis grid
+  for(let m=0;m<12;m++){
+    const pos = polarPt(cx,cy,outerMax+22,monthAngleDeg(m)+15);
+    const g = el('g',{});
+    const rect = el('rect',{x:pos.x-15,y:pos.y-10,width:30,height:19,rx:6,fill:'#fff',stroke:'#d9d0b4','stroke-width':1});
+    const t = el('text',{x:pos.x,y:pos.y+4,'font-size':10.5,'font-weight':600,fill:'#5A6270','text-anchor':'middle','font-family':'Inter,sans-serif'});
+    t.textContent = MONTHS_ID[m];
+    g.appendChild(rect); g.appendChild(t);
+    svg.appendChild(g);
+    w2dMonthEls.push({rect, text:t});
+  }
+
+  if(n === 0){
+    const t = el('text',{x:cx,y:cy,'font-size':12,fill:'#5A6270','text-anchor':'middle'});
+    t.textContent = 'Belum ada tanda';
+    svg.appendChild(t);
+  }
+
+  PHENO_ENTRIES.forEach((entry, i) => {
+    const rInner = W3D_MIN_R + i*(W3D_BAND+W3D_GAP);
+    const rOuter = rInner + W3D_BAND;
+    const {aStart, aEnd} = entryAngleRange(entry);
+    const path = el('path',{
+      d: describeAnnulusWedge(cx,cy,rInner,rOuter,aStart,aEnd),
+      fill: entry.color
+    });
+    path.style.cursor = 'pointer';
+    path.addEventListener('click', ()=> toggleSelectEntry(i));
+    svg.appendChild(path);
+    w2dEntryEls.push({path, entry, aStart, aEnd, index:i});
+
+    const legItem = document.createElement('span');
+    legItem.innerHTML = `<span class="dot" style="background:${entry.color}"></span>${entry.name}`;
+    legItem.addEventListener('click', ()=> toggleSelectEntry(i));
+    legend.appendChild(legItem);
+  });
+
+  // jarum penunjuk (dibuat sekali, posisinya diperbarui tiap frame lewat updateRadialFrame)
+  w2dPointerLine = el('line',{x1:cx,y1:cy,x2:cx,y2:cy,stroke:'var(--amber)','stroke-width':2.5});
+  w2dPointerTip = el('circle',{cx,cy,r:4,fill:'var(--amber)'});
+  svg.appendChild(w2dPointerLine);
+  svg.appendChild(w2dPointerTip);
+  svg.appendChild(el('circle',{cx,cy,r:6,fill:'var(--dawn)'}));
+
+  updateDetailPanel();
+}
+
+function updateRadialFrame(){
+  const {cx, cy, outerMax} = w2dGeom;
+  const angle = W3D_ANGLE;
+
+  w2dEntryEls.forEach(({path, aStart, aEnd, index}) => {
+    const act = activationAmount(aStart, aEnd, angle);
+    const breatheBoost = act > 0.6 ? 0.1*W3D_BREATHE*act : 0;
+    path.setAttribute('opacity', Math.min(1, 0.4 + 0.6*act + breatheBoost).toFixed(2));
+    if(index === W3D_SELECTED){
+      path.setAttribute('stroke', 'var(--dawn)');
+      path.setAttribute('stroke-width', 3);
+    } else if(act > 0.15){
+      path.setAttribute('stroke', 'var(--ink)');
+      path.setAttribute('stroke-width', (1.5*act).toFixed(2));
+    } else {
+      path.setAttribute('stroke', 'none');
+      path.setAttribute('stroke-width', 0);
+    }
+  });
+
+  const curMonth = Math.floor((((angle%360)+360)%360)/30);
+  if(curMonth !== w2dLastMonthShown){
+    w2dLastMonthShown = curMonth;
+    w2dMonthEls.forEach((mEl, m) => {
+      const isCur = (m === curMonth);
+      mEl.rect.setAttribute('fill', isCur ? 'var(--amber)' : '#fff');
+      mEl.rect.setAttribute('stroke', isCur ? 'var(--amber)' : '#d9d0b4');
+      mEl.text.setAttribute('fill', isCur ? '#fff' : '#5A6270');
+    });
+    document.getElementById('w3d-monthlabel').textContent = MONTHS_ID[curMonth];
+    document.getElementById('w3d-month').value = curMonth;
+    const activeNames = PHENO_ENTRIES.filter(e => isEntryActiveInMonth(e, curMonth)).map(e => e.name);
+    document.getElementById('w3d-activenow').innerHTML = activeNames.length
+      ? `Aktif bulan ini: <b>${activeNames.join(', ')}</b>`
+      : 'Aktif bulan ini: —';
+  }
+
+  if(w2dPointerLine){
+    const tip = polarPt(cx,cy,outerMax+14,angle);
+    w2dPointerLine.setAttribute('x2', tip.x); w2dPointerLine.setAttribute('y2', tip.y);
+    w2dPointerTip.setAttribute('cx', tip.x); w2dPointerTip.setAttribute('cy', tip.y);
+  }
+}
+
+/* ---------------- Model 3D (Three.js) — roda dibangun dari data yang sama ---------------- */
+let w3dScene=null, w3dCamera=null, w3dRenderer=null, w3dGroup=null, w3dPointerGroup=null, w3dEntryMeshes=[];
+let w3dRadius=16, w3dTheta=0.9, w3dPhi=0.75;
+let w3dUpdateCamera=null;
+let W3D_BREATHE = 0; // 0..1, denyut halus untuk efek "napas" pita yang aktif
+const W3D_MAX_H = 0.4; // tinggi maksimum pita saat aktif penuh (dianimasikan lewat scale.z, bukan rebuild geometri)
+const W3D_RADIUS_DEFAULT=16, W3D_THETA_DEFAULT=0.9, W3D_PHI_DEFAULT=0.75;
+
+function initWheel3D(){
+  if(w3dScene) return;
+  const container = document.getElementById('wheel3d-three');
+  const w = container.clientWidth, h = container.clientHeight;
+  w3dScene = new THREE.Scene();
+  w3dScene.background = new THREE.Color(0xEAE2CC);
+  w3dScene.fog = new THREE.Fog(0xEAE2CC, 24, 45);
+
+  w3dCamera = new THREE.PerspectiveCamera(40, w/h, 0.1, 500);
+  const target = new THREE.Vector3(0,0,0);
+
+  w3dRenderer = new THREE.WebGLRenderer({antialias:true});
+  w3dRenderer.setSize(w,h);
+  w3dRenderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  w3dRenderer.shadowMap.enabled = true;
+  w3dRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  container.appendChild(w3dRenderer.domElement);
+
+  // pencahayaan: langit-tanah lembut + matahari terarah yang melempar bayangan nyata
+  w3dScene.add(new THREE.HemisphereLight(0xfff3d6, 0x8a7c52, 0.65));
+  const sun = new THREE.DirectionalLight(0xfff6e6, 0.9);
+  sun.position.set(9, 16, 7);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(1024,1024);
+  sun.shadow.camera.left = -16; sun.shadow.camera.right = 16;
+  sun.shadow.camera.top = 16; sun.shadow.camera.bottom = -16;
+  sun.shadow.camera.near = 1; sun.shadow.camera.far = 45;
+  sun.shadow.bias = -0.002;
+  w3dScene.add(sun);
+  w3dScene.add(new THREE.AmbientLight(0xffffff, 0.2));
+
+  w3dGroup = new THREE.Group();
+  w3dScene.add(w3dGroup);
+  w3dPointerGroup = new THREE.Group();
+  w3dScene.add(w3dPointerGroup);
+
+  function updateCamera(){
+    w3dCamera.position.x = target.x + w3dRadius*Math.sin(w3dPhi)*Math.sin(w3dTheta);
+    w3dCamera.position.z = target.z + w3dRadius*Math.sin(w3dPhi)*Math.cos(w3dTheta);
+    w3dCamera.position.y = target.y + w3dRadius*Math.cos(w3dPhi);
+    w3dCamera.lookAt(target);
+  }
+  w3dUpdateCamera = updateCamera;
+  updateCamera();
+
+  let dragging=false, lastX=0, lastY=0, downPos=null;
+  w3dRenderer.domElement.addEventListener('pointerdown', e=>{ dragging=true; lastX=e.clientX; lastY=e.clientY; downPos={x:e.clientX,y:e.clientY}; container.classList.add('grabbing'); });
+  window.addEventListener('pointerup', ()=>{ dragging=false; container.classList.remove('grabbing'); });
+  window.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    w3dTheta -= (e.clientX-lastX)*0.006;
+    w3dPhi = Math.max(0.25, Math.min(1.45, w3dPhi - (e.clientY-lastY)*0.006));
+    lastX=e.clientX; lastY=e.clientY;
+    updateCamera();
+  });
+  w3dRenderer.domElement.addEventListener('wheel', e=>{
+    e.preventDefault();
+    w3dRadius = Math.max(6, Math.min(40, w3dRadius + e.deltaY*0.02));
+    updateCamera();
+  }, {passive:false});
+  let pinchDist=null;
+  const touchDist=(t0,t1)=>Math.hypot(t1.clientX-t0.clientX, t1.clientY-t0.clientY);
+  w3dRenderer.domElement.addEventListener('touchstart', e=>{
+    if(e.touches.length===2){ pinchDist=touchDist(e.touches[0],e.touches[1]); dragging=false; }
+  }, {passive:true});
+  w3dRenderer.domElement.addEventListener('touchmove', e=>{
+    if(e.touches.length===2 && pinchDist!==null){
+      e.preventDefault();
+      const d = touchDist(e.touches[0],e.touches[1]);
+      w3dRadius = Math.max(6, Math.min(40, w3dRadius - (d-pinchDist)*0.03));
+      pinchDist = d;
+      updateCamera();
+    }
+  }, {passive:false});
+  w3dRenderer.domElement.addEventListener('touchend', e=>{ if(e.touches.length<2) pinchDist=null; }, {passive:true});
+
+  // klik (bukan drag) utk memilih pita entry -> tampilkan panel detail
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+  w3dRenderer.domElement.addEventListener('pointerup', e=>{
+    if(!downPos) return;
+    const moved = Math.hypot(e.clientX-downPos.x, e.clientY-downPos.y);
+    if(moved > 4) return; // itu drag, bukan klik
+    const rect = w3dRenderer.domElement.getBoundingClientRect();
+    mouse.x = ((e.clientX-rect.left)/rect.width)*2-1;
+    mouse.y = -((e.clientY-rect.top)/rect.height)*2+1;
+    raycaster.setFromCamera(mouse, w3dCamera);
+    const hits = raycaster.intersectObjects(w3dGroup.children).filter(h=>h.object.userData.entryIndex!==undefined);
+    if(hits.length) toggleSelectEntry(hits[0].object.userData.entryIndex);
+  });
+
+  window.addEventListener('resize', ()=>{
+    if(document.getElementById('wheel3d-three').style.display==='none') return;
+    const w2=container.clientWidth, h2=container.clientHeight;
+    w3dCamera.aspect=w2/h2; w3dCamera.updateProjectionMatrix();
+    w3dRenderer.setSize(w2,h2);
+  });
+
+  function loop(){ requestAnimationFrame(loop); w3dRenderer.render(w3dScene, w3dCamera); }
+  loop();
+}
+
+function clearGroup(group){
+  while(group.children.length){
+    const m = group.children.pop();
+    if(m.geometry) m.geometry.dispose();
+    if(m.material) m.material.dispose();
+  }
+}
+
+function makeTextSprite(text){
+  const cvs = document.createElement('canvas'); cvs.width=160; cvs.height=80;
+  const ctx = cvs.getContext('2d');
+  // latar pil putih supaya label tetap terbaca di atas pita warna apa pun
+  ctx.fillStyle = 'rgba(255,255,255,0.92)';
+  ctx.strokeStyle = '#d9d0b4'; ctx.lineWidth = 3;
+  const rw=140, rh=56, rx=(cvs.width-rw)/2, ry=(cvs.height-rh)/2, rr=16;
+  ctx.beginPath();
+  ctx.moveTo(rx+rr,ry); ctx.arcTo(rx+rw,ry,rx+rw,ry+rh,rr); ctx.arcTo(rx+rw,ry+rh,rx,ry+rh,rr);
+  ctx.arcTo(rx,ry+rh,rx,ry,rr); ctx.arcTo(rx,ry,rx+rw,ry,rr); ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  ctx.font = '600 34px Inter, sans-serif';
+  ctx.fillStyle = '#20293A';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, cvs.width/2, cvs.height/2+2);
+  const tex = new THREE.CanvasTexture(cvs);
+  const mat = new THREE.SpriteMaterial({map:tex, transparent:true});
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(1.7, 0.85, 1);
+  return sprite;
+}
+
+// bangun geometri roda 3D SEKALI per perubahan data (tinggi tetap = W3D_MAX_H,
+// keaktifan bulan dianimasikan lewat scale.z tiap frame — jauh lebih mulus
+// daripada membangun ulang ExtrudeGeometry tiap tik animasi.
+function rebuildWheel3D(){
+  if(!w3dGroup) return; // belum diinisialisasi (user belum membuka tab Model 3D) — dibangun saat initWheel3D()
+  clearGroup(w3dGroup);
+  clearGroup(w3dPointerGroup);
+  w3dEntryMeshes = [];
+  const n = PHENO_ENTRIES.length;
+  const SCALE = 0.05; // konversi unit svg -> unit dunia three.js
+  const minR = W3D_MIN_R*SCALE, band = W3D_BAND*SCALE, gap = W3D_GAP*SCALE;
+  const outerMax = minR + Math.max(n,1)*(band+gap);
+
+  // alas roda (piringan datar) — menerima bayangan dari pita di atasnya
+  const base = new THREE.Mesh(
+    new THREE.CylinderGeometry(outerMax+0.6, outerMax+0.6, 0.12, 48),
+    new THREE.MeshStandardMaterial({color:0xF5F1E6})
+  );
+  base.position.y = -0.06;
+  base.receiveShadow = true;
+  w3dGroup.add(base);
+
+  // 12 garis batas bulan + label bergaya pil
+  for(let m=0;m<12;m++){
+    const ang = monthAngleDeg(m) * Math.PI/180;
+    const geo = new THREE.BoxGeometry(0.015, 0.05, outerMax+0.6);
+    const mat = new THREE.MeshStandardMaterial({color:0xd9d0b4});
+    const line = new THREE.Mesh(geo, mat);
+    line.position.set(0, 0.02, 0);
+    line.rotation.y = ang;
+    w3dGroup.add(line);
+    const lbl = makeTextSprite(MONTHS_ID[m]);
+    const la = ang + (15*Math.PI/180);
+    lbl.position.set((outerMax+1.3)*Math.sin(la), 0.4, (outerMax+1.3)*Math.cos(la));
+    w3dGroup.add(lbl);
+  }
+
+  // pita tiap entry (annulus wedge diekstrusi, tinggi tetap — dianimasikan via scale.z)
+  PHENO_ENTRIES.forEach((entry,i)=>{
+    const rInner = minR + i*(band+gap);
+    const rOuter = rInner + band;
+    const {aStart, aEnd} = entryAngleRange(entry);
+    const a0 = aStart*Math.PI/180, a1 = aEnd*Math.PI/180;
+
+    const shape = new THREE.Shape();
+    shape.absarc(0,0,rOuter,a0,a1,false);
+    shape.lineTo(rInner*Math.cos(a1), rInner*Math.sin(a1));
+    shape.absarc(0,0,rInner,a1,a0,true);
+    shape.lineTo(rOuter*Math.cos(a0), rOuter*Math.sin(a0));
+    shape.closePath();
+
+    const geo = new THREE.ExtrudeGeometry(shape, {depth:W3D_MAX_H, bevelEnabled:false});
+    const color = new THREE.Color(entry.color);
+    const mat = new THREE.MeshStandardMaterial({color});
+    mat.emissive = new THREE.Color(0,0,0);
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.rotation.x = -Math.PI/2;
+    mesh.position.y = 0;
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    mesh.userData.entryIndex = i;
+    w3dGroup.add(mesh);
+
+    // label nama melayang — muncul & memudar tepat saat jarum penunjuk melintasi pita ini
+    const nameText = entry.name.length > 20 ? entry.name.slice(0,19)+'…' : entry.name;
+    const nameSprite = makeTextSprite(nameText);
+    nameSprite.material.opacity = 0;
+    nameSprite.scale.set(2.6, 1.05, 1);
+    const midAng = ((aStart+aEnd)/2) * Math.PI/180;
+    const midR = (rInner+rOuter)/2;
+    nameSprite.position.set(midR*Math.sin(midAng), 0.55, midR*Math.cos(midAng));
+    w3dGroup.add(nameSprite);
+
+    w3dEntryMeshes.push({mesh, nameSprite, entry, aStart, aEnd, index:i});
+  });
+
+  // jarum penunjuk bulan (kontinu, tidak snap per-bulan)
+  const pGeo = new THREE.BoxGeometry(0.06, 0.05, outerMax+0.9);
+  const pMat = new THREE.MeshStandardMaterial({color:0xE08E45});
+  const pointer = new THREE.Mesh(pGeo, pMat);
+  pointer.position.set(0, 0.5, -(outerMax+0.9)/2);
+  pointer.castShadow = true;
+  w3dPointerGroup.add(pointer);
+  const tipGeo = new THREE.ConeGeometry(0.14, 0.3, 8);
+  const tip = new THREE.Mesh(tipGeo, pMat);
+  tip.rotation.x = -Math.PI/2;
+  tip.position.set(0, 0.5, -(outerMax+0.9));
+  tip.castShadow = true;
+  w3dPointerGroup.add(tip);
+}
+
+// dipanggil tiap frame animasi (atau tiap kali sudut/pilihan berubah) — TIDAK membangun ulang geometri
+function updateWheel3DFrame(){
+  if(!w3dGroup) return;
+  const angle = W3D_ANGLE;
+  w3dEntryMeshes.forEach(({mesh, nameSprite, aStart, aEnd, index}) => {
+    const act = activationAmount(aStart, aEnd, angle);
+    const selected = (index === W3D_SELECTED);
+    const breatheBoost = act > 0.6 ? 0.18*W3D_BREATHE*act : 0; // "napas" halus hanya saat benar-benar aktif
+    // tinggi pita mengikuti keaktifan (0.28x saat tak aktif, penuh saat aktif) — mulus krn di-lerp tiap frame
+    mesh.scale.z = 0.28 + 0.72*act + breatheBoost*0.15;
+    mesh.material.emissiveIntensity = selected ? 1.4 : (0.15 + 0.6*act + breatheBoost);
+    if(!mesh.material.emissive) mesh.material.emissive = new THREE.Color(0,0,0);
+    mesh.material.emissive.set(selected ? 0xffffff : mesh.material.color.getHex());
+    mesh.scale.x = mesh.scale.y = selected ? 1.03 : 1;
+
+    // label nama melayang: memudar masuk begitu jarum menyentuh, memudar keluar begitu lewat
+    if(nameSprite){
+      nameSprite.material.opacity = act;
+      nameSprite.visible = act > 0.03;
+      nameSprite.position.y = 0.55 + 0.72*act + 0.08*W3D_BREATHE*act; // naik sedikit + ikut "mengambang"
+    }
+  });
+  if(w3dPointerGroup) w3dPointerGroup.rotation.y = angle * Math.PI/180;
+}
+
+/* ---------------- entry point yg dipanggil renderWheel() saat data pita berubah ---------------- */
+function renderRadial(){
+  buildRadialStructure();
+  updateRadialFrame();
+}
+
+/* ---------------- animasi kontinu: satu rAF loop yg menggerakkan 2D & 3D bersamaan ---------------- */
+function animTick(ts){
+  if(W3D_PLAYING){
+    if(W3D_LAST_TS===null) W3D_LAST_TS = ts;
+    const dt = (ts - W3D_LAST_TS)/1000;
+    W3D_LAST_TS = ts;
+    W3D_ANGLE = (W3D_ANGLE + W3D_SPEED*dt) % 360;
+  } else {
+    W3D_LAST_TS = null;
+  }
+  W3D_BREATHE = 0.5 + 0.5*Math.sin(ts/650); // denyut halus ~2 detik, jalan terus meski animasi dijeda
+  updateRadialFrame();
+  updateWheel3DFrame();
+  requestAnimationFrame(animTick);
+}
+requestAnimationFrame(animTick);
+
+/* ---------------- kontrol UI: play/pause, slider, toggle tampilan ---------------- */
+document.getElementById('w3d-month').addEventListener('input', e=>{
+  stopPlaying();
+  W3D_ANGLE = parseInt(e.target.value,10) * 30;
+  updateRadialFrame();
+  updateWheel3DFrame();
+});
+
+function stopPlaying(){
+  W3D_PLAYING = false;
+  document.getElementById('w3d-play').textContent = '▶ Putar Tahun';
+}
+document.getElementById('w3d-play').addEventListener('click', ()=>{
+  if(W3D_PLAYING){ stopPlaying(); return; }
+  W3D_PLAYING = true;
+  document.getElementById('w3d-play').textContent = '⏸ Berhenti';
+});
+
+document.getElementById('w3d-btn2d').addEventListener('click', ()=>{
+  document.getElementById('w3d-btn2d').classList.add('active');
+  document.getElementById('w3d-btn3d').classList.remove('active');
+  document.getElementById('wheel3d-svg').style.display = '';
+  document.getElementById('wheel3d-three').style.display = 'none';
+  document.getElementById('w3d-hint').style.display = 'none';
+  document.getElementById('w3d-resetcam').style.display = 'none';
+});
+document.getElementById('w3d-btn3d').addEventListener('click', ()=>{
+  document.getElementById('w3d-btn3d').classList.add('active');
+  document.getElementById('w3d-btn2d').classList.remove('active');
+  document.getElementById('wheel3d-svg').style.display = 'none';
+  document.getElementById('wheel3d-three').style.display = 'block';
+  document.getElementById('w3d-hint').style.display = 'block';
+  document.getElementById('w3d-resetcam').style.display = 'block';
+  initWheel3D();
+  rebuildWheel3D();
+  updateWheel3DFrame();
+});
+document.getElementById('w3d-resetcam').addEventListener('click', ()=>{
+  w3dRadius = W3D_RADIUS_DEFAULT; w3dTheta = W3D_THETA_DEFAULT; w3dPhi = W3D_PHI_DEFAULT;
+  if(w3dUpdateCamera) w3dUpdateCamera();
+});
+
+/* init */
+renderWheel();
+computeGDD();
+</script>
+</body>
+</html>

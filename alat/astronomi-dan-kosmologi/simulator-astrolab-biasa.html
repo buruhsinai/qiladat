@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulator Astrolab — Alat JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12151a; --bg-panel:#1a1e25; --bg-panel-2:#20242c; --line:#2c313b;
+    --text:#e9e6df; --text-dim:#9aa1ad;
+    --gold:#c9a24b; --gold-soft:#e3c988;
+    --ok:#4f9c94; --warn:#e3766a; --blue:#5b8fc9;
+    --font-display:"Fraunces",serif; --font-body:"Karla",sans-serif; --font-mono:"JetBrains Mono",monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 20px 80px;}
+  header.hero{padding:56px 20px 40px;text-align:center;border-bottom:1px solid var(--line);
+    background:radial-gradient(ellipse at 50% 0%, rgba(201,162,75,0.08), transparent 60%);}
+  .eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;}
+  h1{font-family:var(--font-display);font-weight:600;font-size:clamp(26px,5vw,40px);margin:0 0 12px;}
+  .subtitle{color:var(--text-dim);font-size:15px;max-width:680px;margin:0 auto;}
+  section{padding:36px 0;border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  h2{font-family:var(--font-display);font-weight:600;font-size:22px;color:var(--gold-soft);margin:0 0 6px;display:flex;align-items:baseline;gap:10px;}
+  h2 .num{font-family:var(--font-mono);font-size:13px;color:var(--text-dim);font-weight:400;}
+  p{font-size:15.5px;} p.dim{color:var(--text-dim);font-size:14px;}
+  ul{padding-left:20px;} li{margin-bottom:6px;font-size:14.5px;}
+
+  .global-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:10px;
+    background:var(--bg-panel); border:1px solid var(--line); border-radius:10px; padding:16px;}
+  .global-row .field label{display:block;font-size:11px;color:var(--text-dim);margin-bottom:5px;font-family:var(--font-mono);text-transform:uppercase;}
+  .global-row .field input{width:100%;background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);
+    padding:7px 8px;border-radius:6px;font-family:var(--font-mono);font-size:13px;}
+
+  .cat-block{margin-bottom:8px;}
+  .cat-title{font-family:var(--font-mono);font-size:11.5px;color:var(--blue);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px;}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;}
+  .tab-btn{background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text-dim);
+    padding:8px 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+  .tab-btn.active{border-color:var(--gold);color:var(--gold-soft);background:rgba(201,162,75,0.08);}
+  .tab-btn:hover{border-color:var(--gold);}
+
+  .panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:22px;margin-top:16px;}
+  .controls-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px;}
+  .field2 label{display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-dim);margin-bottom:6px;font-family:var(--font-mono);text-transform:uppercase;}
+  .field2 label .val{color:var(--gold-soft);}
+  .field2 input, .field2 select{width:100%;background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);
+    padding:8px 9px;border-radius:6px;font-family:var(--font-mono);font-size:13px;}
+  .field2 input[type=range]{padding:0;accent-color:var(--gold);}
+
+  .results{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px;}
+  .result-card{background:var(--bg-panel-2);border:1px solid var(--line);border-radius:8px;padding:11px 13px;}
+  .result-card .l{font-family:var(--font-mono);font-size:10.5px;color:var(--text-dim);text-transform:uppercase;}
+  .result-card .v{font-family:var(--font-display);font-size:18px;color:var(--gold-soft);}
+  .result-card .v.warn{color:var(--warn);}
+  .result-card .v.ok{color:var(--ok);}
+
+  svg.gauge{width:100%;max-width:260px;display:block;background:#f6efe0;border-radius:8px;border:1px solid var(--line);margin:0 auto;}
+  table.simple{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:12px;}
+  table.simple th{text-align:left;color:var(--text-dim);font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;padding:6px 8px;border-bottom:1px solid var(--line);}
+  table.simple td{padding:8px;border-bottom:1px solid var(--line);}
+  .note-box{margin-top:14px;background:var(--bg-panel-2);border:1px dashed var(--gold);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--text-dim);}
+
+  .use-note{background:var(--bg-panel);border:1px solid var(--line);border-left:3px solid var(--text-dim);border-radius:6px;padding:12px 16px;margin-bottom:8px;font-size:14px;color:var(--text-dim);}
+  .use-note b{color:var(--text);}
+
+  .benefit-list{display:grid;gap:10px;}
+  .benefit-item{background:var(--bg-panel);border:1px solid var(--line);border-radius:8px;padding:14px 18px;}
+  .benefit-item .btitle{font-weight:700;color:var(--gold-soft);font-size:15px;margin-bottom:4px;}
+  .limit-item{background:var(--bg-panel);border:1px solid var(--line);border-left:3px solid var(--warn);
+    padding:12px 16px;border-radius:6px;margin-bottom:8px;font-size:14.5px;color:var(--text-dim);}
+  table.refs{width:100%;border-collapse:collapse;font-size:14px;}
+  table.refs td{padding:8px 4px;border-bottom:1px solid var(--line);color:var(--text-dim);vertical-align:top;}
+  table.refs td:first-child{color:var(--text);width:32%;font-weight:600;}
+  footer{text-align:center;padding:36px 20px 10px;color:var(--text-dim);font-size:12.5px;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="eyebrow">JAZMI · Alat · Ilmu Falak</div>
+  <h1>Simulator Astrolab</h1>
+  <p class="subtitle">Bukan generator — murni simulator, dan diusahakan sekomprehensif mungkin: menghimpun hampir 30 kegunaan nyata astrolab planispheric klasik, masing-masing dengan parameter yang bisa dicoba langsung.</p>
+</header>
+
+<div class="wrap">
+
+  <section id="global">
+    <h2><span class="num">01</span> Parameter Global (dipakai di banyak tab)</h2>
+    <div class="global-row">
+      <div class="field"><label>Tanggal</label><input type="date" id="gDate"></div>
+      <div class="field"><label>Jam Lokal</label><input type="number" id="gTime" step="0.1" value="12"></div>
+      <div class="field"><label>Lintang (°)</label><input type="number" id="gLat" step="0.01" value="-6.2"></div>
+      <div class="field"><label>Bujur (°)</label><input type="number" id="gLon" step="0.01" value="106.8"></div>
+      <div class="field"><label>Zona (bujur standar °)</label><input type="number" id="gZone" step="1" value="105"></div>
+    </div>
+    <p class="dim">Nilai di atas jadi bawaan (default) semua tab di bawah — masing-masing tab boleh Anda ubah sendiri lagi secara terpisah.</p>
+  </section>
+
+  <section id="simulator">
+    <h2><span class="num">02</span> Simulator per Kategori</h2>
+    <div id="categoryTabs"></div>
+    <div class="panel" id="tabContent"></div>
+  </section>
+
+  <section id="belumjelas">
+    <h2><span class="num">03</span> Kegunaan yang Belum Disimulasikan</h2>
+    <p class="dim">Ini juga kegunaan nyata astrolab secara historis — disebutkan saja tanpa simulasi karena alasan yang dijelaskan masing-masing.</p>
+    <div class="use-note"><b>Astrologi horoskop (rumah-rumah/houses)</b> — historis memang salah satu fungsi astrolab Barat/sebagian dunia Islam, tapi ramalan nasib berdasar posisi bintang bukan bagian sains falak yang sahih &amp; berada di luar semangat proyek ini — sengaja tidak disimulasikan.</div>
+    <div class="use-note"><b>Posisi &amp; fase Bulan</b> — gerak Bulan jauh lebih rumit daripada Matahari (banyak suku koreksi), kami belum punya formula presisi-rendah yang cukup kami yakini untuk disajikan di sini.</div>
+    <div class="use-note"><b>Navigasi laut presisi (astrolab pelaut)</b> — mencakup isu stabilisasi instrumen di kapal bergoyang, di luar cakupan simulasi berbasis geometri langit semata.</div>
+    <div class="use-note"><b>Penentuan bujur lewat jarak Bulan-bintang</b> — metode historis yang rumit &amp; terkenal kurang akurat sebelum era kronometer, tidak kami rekonstruksi di sini.</div>
+  </section>
+
+  <section id="manfaat">
+    <h2><span class="num">04</span> Manfaat &amp; Kegunaan</h2>
+    <div class="benefit-list">
+      <div class="benefit-item"><div class="btitle">Peta kelengkapan satu instrumen</div>Menunjukkan betapa astrolab layak dijuluki "kalkulator analog" ilmu falak klasik — puluhan kebutuhan hitung terselesaikan lewat satu piringan &amp; satu prinsip geometri.</div>
+      <div class="benefit-item"><div class="btitle">Bahan verifikasi silang lintas alat JAZMI</div>Banyak hasil di sini bisa dicocokkan dengan Simulator Rubu' Mujayyab &amp; Pembanding Zīj — dua instrumen historis berbeda menyelesaikan masalah yang sama, jawabannya seharusnya konsisten.</div>
+      <div class="benefit-item"><div class="btitle">Kejujuran cakupan</div>Bagian "belum disimulasikan" menunjukkan bahwa "kegunaan sangat banyak" tidak berarti "semua mudah direkonstruksi dengan yakin" — sebagian butuh riset lanjutan.</div>
+    </div>
+  </section>
+
+  <section id="batasan">
+    <h2><span class="num">05</span> Batasan</h2>
+    <div class="limit-item">Posisi Matahari memakai formula presisi-rendah (~0,01°) — cukup untuk edukasi, bukan ephemeris presisi tinggi.</div>
+    <div class="limit-item">Koordinat bintang memakai input manual RA/Dek (bukan katalog presisi bawaan) — akurasi bergantung data yang dimasukkan pengguna.</div>
+    <div class="limit-item">Kriteria sudut waktu shalat mengikuti konvensi umum Indonesia (Isya -18°, Subuh -20°) — negara/mazhab lain bisa berbeda.</div>
+    <div class="limit-item">Klasifikasi 7 Klima memakai batas historis perkiraan (berdasarkan panjang siang titik balik musim panas) — batas persis sedikit bervariasi antar naskah geografi klasik.</div>
+  </section>
+
+  <section id="referensi">
+    <h2><span class="num">06</span> Referensi</h2>
+    <table class="refs">
+      <tr><td>Chaucer</td><td>A Treatise on the Astrolabe — daftar operasi klasik astrolab dalam bahasa Inggris Pertengahan</td></tr>
+      <tr><td>James E. Morrison</td><td>The Astrolabe — rujukan modern lengkap fungsi &amp; konstruksi</td></tr>
+      <tr><td>Jean Meeus</td><td>Astronomical Algorithms — formula posisi Matahari &amp; waktu presisi-rendah</td></tr>
+      <tr><td>Geografi Klasik Yunani-Islam</td><td>Konsep 7 Klima (Iklim) berbasis panjang siang</td></tr>
+    </table>
+  </section>
+
+</div>
+
+<footer>Bagian dari Bank Alat JAZMI — Laboratorium Ilmu Falak. Pasangan dari Generator Astrolab Biasa.</footer>
+
+<script>
+(function(){
+  const el = id => document.getElementById(id);
+  const toRad=d=>d*Math.PI/180, toDeg=r=>r*180/Math.PI;
+
+  /* ================= ASTRO CORE ================= */
+  function solarLambda(date){
+    const j2000 = new Date(Date.UTC(2000,0,1,12,0,0));
+    const n = (date - j2000)/86400000;
+    const L = (280.460 + 0.9856474*n) % 360;
+    const g = toRad((357.528 + 0.9856003*n) % 360);
+    let lam = L + 1.915*Math.sin(g) + 0.020*Math.sin(2*g);
+    return ((lam%360)+360)%360;
+  }
+  function decFromLam(lamDeg){ const eps=23.4366; const lam=toRad(lamDeg), e=toRad(eps); return toDeg(Math.asin(Math.sin(e)*Math.sin(lam))); }
+  function raFromLam(lamDeg){ const eps=23.4366; const lam=toRad(lamDeg), e=toRad(eps); return ((toDeg(Math.atan2(Math.cos(e)*Math.sin(lam), Math.cos(lam)))%360)+360)%360; }
+  function dayOfYear(date){ const start=new Date(Date.UTC(date.getUTCFullYear(),0,0)); return Math.floor((date-start)/86400000); }
+  function eotMinutes(doy){ const B=toRad(360/365*(doy-81)); return 9.87*Math.sin(2*B)-7.53*Math.cos(B)-1.5*Math.sin(B); }
+  function hourAngleFromAltitude(altDeg,decDeg,latDeg){
+    const alt=toRad(altDeg),dec=toRad(decDeg),lat=toRad(latDeg);
+    let cosH=(Math.sin(alt)-Math.sin(lat)*Math.sin(dec))/(Math.cos(lat)*Math.cos(dec));
+    cosH=Math.max(-1,Math.min(1,cosH));
+    return toDeg(Math.acos(cosH));
+  }
+  function clockTimeFromH(Hsigned,doy,lon,zone){ const eotH=eotMinutes(doy)/60; return 12+Hsigned/15-eotH+(zone-lon)/15; }
+  function hm(t){ t=((t%24)+24)%24; let h=Math.floor(t), m=Math.round((t-h)*60); if(m===60){m=0;h=(h+1)%24;} return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0'); }
+  function altAzFromH(Hdeg,decDeg,latDeg){
+    const H=toRad(Hdeg),dec=toRad(decDeg),lat=toRad(latDeg);
+    const alt=Math.asin(Math.sin(dec)*Math.sin(lat)+Math.cos(dec)*Math.cos(lat)*Math.cos(H));
+    const cosAz=(Math.sin(dec)-Math.sin(alt)*Math.sin(lat))/(Math.cos(alt)*Math.cos(lat));
+    let az=toDeg(Math.acos(Math.max(-1,Math.min(1,cosAz))));
+    if(Math.sin(H)>0) az=360-az;
+    return {alt:toDeg(alt), az};
+  }
+  function qiblaAzimuth(lat,lon){
+    const mLat=toRad(21.4225), mLon=toRad(39.8262);
+    const phi1=toRad(lat), lam1=toRad(lon);
+    const dLon=mLon-lam1;
+    const y=Math.sin(dLon)*Math.cos(mLat);
+    const x=Math.cos(phi1)*Math.sin(mLat)-Math.sin(phi1)*Math.cos(mLat)*Math.cos(dLon);
+    return (toDeg(Math.atan2(y,x))+360)%360;
+  }
+  function gmstDeg(date){
+    const jd=date.getTime()/86400000+2440587.5;
+    const T=(jd-2451545.0)/36525;
+    let g=280.46061837+360.98564736629*(jd-2451545.0)+0.000387933*T*T-T*T*T/38710000;
+    return ((g%360)+360)%360;
+  }
+  function dayLengthHours(dec,lat){
+    let cosH0=-Math.tan(toRad(lat))*Math.tan(toRad(dec));
+    cosH0=Math.max(-1,Math.min(1,cosH0));
+    return 2*toDeg(Math.acos(cosH0))/15;
+  }
+
+  /* ================= GAUGE (visual altitude sederhana) ================= */
+  function drawAltGauge(svgEl, altDeg, azDeg){
+    const cx=130,cy=115,R=95;
+    let s = `<path d="M${cx-R},${cy} A${R},${R} 0 0 1 ${cx+R},${cy}" fill="none" stroke="#3d2c17" stroke-width="1.5"/>`;
+    s += `<line x1="${cx-R}" y1="${cy}" x2="${cx+R}" y2="${cy}" stroke="#3d2c17" stroke-width="1"/>`;
+    for(let a=0;a<=90;a+=15){
+      const rad=toRad(180-a*180/90);
+      const x1=cx+R*Math.cos(toRad(180-a*2)), y1=cy-0; // unused fallback
+    }
+    for(let a=0;a<=90;a+=30){
+      const t=toRad(a);
+      const x=cx-R*Math.cos(t), y=cy-R*Math.sin(t);
+      s += `<text x="${x}" y="${y-4}" font-size="8" fill="#9c8459" text-anchor="middle">${a}°</text>`;
+    }
+    if(altDeg>=0){
+      const t=toRad(Math.min(90,altDeg));
+      const nx=cx-R*Math.cos(t), ny=cy-R*Math.sin(t);
+      s += `<line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="#c9463f" stroke-width="2"/>`;
+      s += `<circle cx="${nx.toFixed(1)}" cy="${ny.toFixed(1)}" r="3" fill="#c9463f"/>`;
+    } else {
+      s += `<text x="${cx}" y="${cy+18}" font-size="9" fill="#c9463f" text-anchor="middle">(di bawah ufuk: ${altDeg.toFixed(1)}°)</text>`;
+    }
+    s += `<circle cx="${cx}" cy="${cy}" r="2.5" fill="#3d2c17"/>`;
+    if(azDeg!==undefined){
+      s += `<text x="${cx}" y="${cy+30}" font-size="9" fill="#3d2c17" text-anchor="middle">Az ${azDeg.toFixed(1)}°</text>`;
+    }
+    svgEl.innerHTML = s;
+  }
+
+  function readGlobal(){
+    return {
+      date: new Date(el('gDate').value+'T00:00:00Z'),
+      time: parseFloat(el('gTime').value),
+      lat: parseFloat(el('gLat').value),
+      lon: parseFloat(el('gLon').value),
+      zone: parseFloat(el('gZone').value),
+    };
+  }
+
+  /* ================= KATEGORI & TAB ================= */
+  const CATEGORIES = [
+    { id:'waktu', label:'Waktu', tabs:[
+      {id:'t1', label:'Waktu dari Tinggi Matahari'},
+      {id:'t2', label:'Waktu dari Tinggi Bintang'},
+      {id:'t3', label:'Terbit & Terbenam Matahari'},
+      {id:'t4', label:'Panjang Siang & Malam'},
+      {id:'t5', label:'Awal/Akhir Senja'},
+      {id:'t6', label:'Jam Tak Sama → Jam Sama'},
+      {id:'t7', label:'Persamaan Waktu (Equation of Time)'},
+    ]},
+    { id:'koordinat', label:'Koordinat Langit', tabs:[
+      {id:'k1', label:'Deklinasi Matahari'},
+      {id:'k2', label:'Asensiorekta Matahari'},
+      {id:'k3', label:'Tanggal dari Posisi Zodiak'},
+      {id:'k4', label:'Horizon ↔ Ekuator (Matahari)'},
+      {id:'k5', label:'Horizon ↔ Ekuator (Bintang)'},
+      {id:'k6', label:'Tinggi Kulminasi'},
+      {id:'k7', label:'Uji Sirkumpolar'},
+    ]},
+    { id:'geografi', label:'Geografi', tabs:[
+      {id:'g1', label:'Lintang dari Tinggi Kutub'},
+      {id:'g2', label:'Lintang dari Kulminasi Matahari'},
+      {id:'g3', label:'Klasifikasi 7 Klima'},
+    ]},
+    { id:'trig', label:'Trigonometri & Survei', tabs:[
+      {id:'r1', label:'Jaib & Jaib Tamam'},
+      {id:'r2', label:'Kotak Bayangan: Tinggi Objek'},
+      {id:'r3', label:'Kotak Bayangan: Jarak Objek'},
+    ]},
+    { id:'falak', label:'Falak Ibadah', tabs:[
+      {id:'f1', label:'Arah Kiblat'},
+      {id:'f2', label:'Rashdul Qiblat Global'},
+      {id:'f3', label:'Rashdul Qiblat Harian'},
+      {id:'f4', label:'Waktu Shalat Lengkap'},
+      {id:'f5', label:'Azimuth Terbit/Terbenam (verifikasi mihrab)'},
+    ]},
+    { id:'bintang', label:'Bintang & Malam', tabs:[
+      {id:'b1', label:'Azimuth Terbit/Terbenam Bintang'},
+      {id:'b2', label:'Waktu Kulminasi Bintang'},
+    ]},
+  ];
+
+  let activeCat = 'waktu';
+  let activeTab = 't1';
+
+  function renderCategoryTabs(){
+    el('categoryTabs').innerHTML = CATEGORIES.map(c=>`
+      <div class="cat-block">
+        <div class="cat-title">${c.label}</div>
+        <div class="tabs">${c.tabs.map(t=>`<button class="tab-btn ${t.id===activeTab?'active':''}" data-tab="${t.id}" data-cat="${c.id}">${t.label}</button>`).join('')}</div>
+      </div>`).join('');
+    document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click', ()=>{
+      activeTab=b.dataset.tab; activeCat=b.dataset.cat; renderCategoryTabs(); renderTab();
+    }));
+  }
+
+  function fieldsHTML(fields){
+    return `<div class="controls-row">` + fields.map(f=>`
+      <div class="field2"><label>${f.label}</label><input type="${f.type||'number'}" id="${f.id}" ${f.step?'step='+f.step:''} value="${f.value}"></div>
+    `).join('') + `</div>`;
+  }
+  function resultsHTML(cards){
+    return `<div class="results">` + cards.map(c=>`<div class="result-card"><div class="l">${c.l}</div><div class="v ${c.cls||''}" id="${c.id}">–</div></div>`).join('') + `</div>`;
+  }
+
+  function renderTab(){
+    const c = el('tabContent');
+    const G = readGlobal();
+
+    if(activeTab==='t1'){
+      c.innerHTML = fieldsHTML([
+        {id:'t1_date',label:'Tanggal',type:'date',value:G.date.toISOString().slice(0,10)},
+        {id:'t1_time',label:'Jam Lokal',value:G.time,step:0.1},
+        {id:'t1_lat',label:'Lintang',value:G.lat,step:0.01},
+        {id:'t1_lon',label:'Bujur',value:G.lon,step:0.01},
+        {id:'t1_zone',label:'Zona',value:G.zone},
+      ]) + `<svg class="gauge" id="t1_svg" viewBox="0 0 260 160"></svg>` + resultsHTML([
+        {id:'t1_dec',l:'Deklinasi'},{id:'t1_alt',l:'Tinggi Matahari'},{id:'t1_az',l:'Azimuth'}
+      ]);
+      const ids=['t1_date','t1_time','t1_lat','t1_lon','t1_zone'];
+      function upd(){
+        const d=new Date(el('t1_date').value+'T00:00:00Z'); const jam=+el('t1_time').value;
+        const lat=+el('t1_lat').value, lon=+el('t1_lon').value, zone=+el('t1_zone').value;
+        const doy=dayOfYear(d);
+        const lam=solarLambda(new Date(d.getTime()+jam*3600000));
+        const dec=decFromLam(lam);
+        const eot=eotMinutes(doy);
+        const trueSolar=jam+eot/60-(zone-lon)/15;
+        const H=15*(trueSolar-12);
+        const {alt,az}=altAzFromH(H,dec,lat);
+        el('t1_dec').textContent=dec.toFixed(2)+'°';
+        el('t1_alt').textContent=alt.toFixed(2)+'°';
+        el('t1_az').textContent=az.toFixed(2)+'°';
+        drawAltGauge(el('t1_svg'), alt, az);
+      }
+      ids.forEach(id=>el(id).addEventListener('input',upd)); upd();
+    }
+
+    else if(activeTab==='t2'){
+      c.innerHTML = fieldsHTML([
+        {id:'t2_ra',label:'RA Bintang (°)',value:279.23,step:0.1},
+        {id:'t2_dec',label:'Dek Bintang (°)',value:38.78,step:0.1},
+        {id:'t2_date',label:'Tanggal',type:'date',value:G.date.toISOString().slice(0,10)},
+        {id:'t2_time',label:'Jam UTC',value:14,step:0.1},
+        {id:'t2_lat',label:'Lintang',value:G.lat,step:0.01},
+        {id:'t2_lon',label:'Bujur',value:G.lon,step:0.01},
+      ]) + `<p class="dim">Contoh default: Vega. Ganti RA/Dek untuk bintang lain.</p><svg class="gauge" id="t2_svg" viewBox="0 0 260 160"></svg>` +
+      resultsHTML([{id:'t2_alt',l:'Tinggi'},{id:'t2_az',l:'Azimuth'}]);
+      const ids=['t2_ra','t2_dec','t2_date','t2_time','t2_lat','t2_lon'];
+      function upd(){
+        const ra=+el('t2_ra').value, dec=+el('t2_dec').value;
+        const d=new Date(el('t2_date').value+'T00:00:00Z'); const jam=+el('t2_time').value;
+        const dt=new Date(d.getTime()+jam*3600000);
+        const lat=+el('t2_lat').value, lon=+el('t2_lon').value;
+        const lst=(gmstDeg(dt)+lon+360)%360;
+        let H=lst-ra; H=((H+180)%360+360)%360-180;
+        const {alt,az}=altAzFromH(H,dec,lat);
+        el('t2_alt').textContent=alt.toFixed(2)+'°'; el('t2_az').textContent=az.toFixed(2)+'°';
+        drawAltGauge(el('t2_svg'), alt, az);
+      }
+      ids.forEach(id=>el(id).addEventListener('input',upd)); upd();
+    }
+
+    else if(activeTab==='t3'){
+      c.innerHTML = fieldsHTML([
+        {id:'t3_date',label:'Tanggal',type:'date',value:G.date.toISOString().slice(0,10)},
+        {id:'t3_lat',label:'Lintang',value:G.lat,step:0.01},
+        {id:'t3_lon',label:'Bujur',value:G.lon,step:0.01},
+        {id:'t3_zone',label:'Zona',value:G.zone},
+      ]) + resultsHTML([{id:'t3_terbit',l:'Terbit'},{id:'t3_terbenam',l:'Terbenam'}]);
+      function upd(){
+        const d=new Date(el('t3_date').value+'T12:00:00Z'); const doy=dayOfYear(d);
+        const lat=+el('t3_lat').value, lon=+el('t3_lon').value, zone=+el('t3_zone').value;
+        const dec=decFromLam(solarLambda(d));
+        const H0=hourAngleFromAltitude(-1,dec,lat);
+        el('t3_terbit').textContent=hm(clockTimeFromH(-H0,doy,lon,zone));
+        el('t3_terbenam').textContent=hm(clockTimeFromH(H0,doy,lon,zone));
+      }
+      ['t3_date','t3_lat','t3_lon','t3_zone'].forEach(id=>el(id).addEventListener('input',upd)); upd();
+    }
+
+    else if(activeTab==='t4'){
+      c.innerHTML = fieldsHTML([
+        {id:'t4_date',label:'Tanggal',type:'date',value:G.date.toISOString().slice(0,10)},
+        {id:'t4_lat',label:'Lintang',value:G.lat,step:0.01},
+      ]) + resultsHTML([{id:'t4_siang',l:'Panjang Siang'},{id:'t4_malam',l:'Panjang Malam'}]);
+      function upd(){
+        const d=new Date(el('t4_date').value+'T12:00:00Z'); const lat=+el('t4_lat').value;
+        const dec=decFromLam(solarLambda(d));
+        const siang=dayLengthHours(dec,lat);
+        el('t4_siang').textContent=siang.toFixed(2)+' jam'; el('t4_malam').textContent=(24-siang).toFixed(2)+' jam';
+      }
+      ['t4_date','t4_lat'].forEach(id=>el(id).addEventListener('input',upd)); upd();
+    }
+
+    else if(activeTab==='t5'){
+      c.innerHTML = fieldsHTML([
+        {id:'t5_date',label:'Tanggal',type:'date',value:G.date.toISOString().slice(0,10)},
+        {id:'t5_lat',label:'Lintang',value:G.lat,step:0.01},
+        {id:'t5_lon',label:'Bujur',value:G.lon,step:0.01},
+        {id:'t5_zone',label:'Zona',value:G.zone},
+      ]) + resultsHTML([{id:'t5_subuh',l:'Awal Senja (Subuh, -20°)'},{id:'t5_isya',l:'Akhir Senja (Isya, -18°)'}]);
+      function upd(){
+        const d=new Date(el('t5_date').value+'T12:00:00Z'); const doy=dayOfYear(d);
+        const lat=+el('t5_lat').value, lon=+el('t5_lon').value, zone=+el('t5_zone').value;
+        const dec=decFromLam(solarLambda(d));
+        const Hs=hourAngleFromAltitude(-20,dec,lat), Hi=hourAngleFromAltitude(-18,dec,lat);
+        el('t5_subuh').textContent=hm(clockTimeFromH(-Hs,doy,lon,zone));
+        el('t5_isya').textContent=hm(clockTimeFromH(Hi,doy,lon,zone));
+      }
+      ['t5_date','t5_lat','t5_lon','t5_zone'].forEach(id=>el(id).addEventListener('input',upd)); upd();
+    }
+
+    else if(activeTab==='t6'){
+      c.innerHTML = fieldsHTML([
+        {id:'t6_date',label:'Tanggal',type:'date',value:G.date.toISOString().slice(0,10)},
+        {id:'t6_lat',label:'Lintang',value:G.lat,step:0.01},
+        {id:'t6_jamtak',label:'Jam Tak Sama ke- (1-12, siang)',value:6,step:1},
+      ]) + resultsHTML([{id:'t6_durasi',l:'Durasi 1 Jam Tak Sama'},{id:'t6_setara',l:'Setara Jam Sama (dari terbit)'}]);
+      function upd(){
+        const d=new Date(el('t6_date').value+'T12:00:00Z'); const lat=+el('t6_lat').value; const n=+el('t6_jamtak').value;
+        const dec=decFromLam(solarLambda(d));
+        const siang=dayLengthHours(dec,lat);
+        const durasi=siang/12;
+        el('t6_durasi').textContent=durasi.toFixed(3)+' jam';
+        el('t6_setara').textContent=(durasi*(n-1)).toFixed(2)+' jam setelah terbit';
+      }
+      ['t6_date','t6_lat','t6_jamtak'].forEach(id=>el(id).addEventListener('input',upd)); upd();
+    }
+
+    else if(activeTab==='t7'){
+      c.innerHTML = fieldsHTML([
+        {id:'t7_date',label:'Tanggal',type:'date',value:G.date.toISOString().slice(0,10)},
+      ]) + resultsHTML([{id:'t7_eot',l:'Persamaan Waktu (EoT)'}]) +
+      `<div class="note-box">EoT positif berarti Matahari sejati mendahului jam rata-rata (waktu istiwa lebih cepat); negatif berarti tertinggal. Nilainya berulang tiap tahun, berkisar ±16 menit.</div>`;
+      function upd(){
+        const d=new Date(el('t7_date').value+'T12:00:00Z');
+        const eot=eotMinutes(dayOfYear(d));
+        el('t7_eot').textContent=(eot>=0?'+':'')+eot.toFixed(2)+' menit';
+      }
+      el('t7_date').addEventListener('input',upd); upd();
+    }
+
+    else if(activeTab==='k1'){
+      c.innerHTML = fieldsHTML([{id:'k1_date',label:'Tanggal',type:'date',value:G.date.toISOString().slice(0,10)}]) +
+        resultsHTML([{id:'k1_dec',l:'Deklinasi Matahari'}]);
+      function upd(){ const d=new Date(el('k1_date').value+'T12:00:00Z'); el('k1_dec').textContent=decFromLam(solarLambda(d)).toFixed(3)+'°'; }
+      el('k1_date').addEventListener('input',upd); upd();
+    }
+
+    else if(activeTab==='k2'){
+      c.innerHTML = fieldsHTML([{id:'k2_date',label:'Tanggal',type:'date',value:G.date.toISOString().slice(0,10)}]) +
+        resultsHTML([{id:'k2_ra',l:'Asensiorekta Matahari'}]);
+      function upd(){ const d=new Date(el('k2_date').value+'T12:00:00Z'); el('k2_ra').textContent=raFromLam(solarLambda(d)).toFixed(3)+'°'; }
+      el('k2_date').addEventListener('input',upd); upd();
+    }
+
+    else if(activeTab==='k3'){
+      c.innerHTML = fieldsHTML([{id:'k3_lam',label:'Bujur Ekliptika (°) target',value:90,step:0.1}]) +
+        resultsHTML([{id:'k3_date',l:'Perkiraan Tanggal Terdekat'}]);
+      function upd(){
+        const target=+el('k3_lam').value;
+        const year=new Date().getUTCFullYear();
+        let best=null,bestDiff=999;
+        for(let doy=1;doy<=366;doy++){
+          const d=new Date(Date.UTC(year,0,doy,12,0,0));
+          const lam=solarLambda(d);
+          let diff=Math.abs(((lam-target+540)%360)-180);
+          if(diff<bestDiff){bestDiff=diff;best=d;}
+        }
+        el('k3_date').textContent=best.toISOString().slice(0,10);
+      }
+      el('k3_lam').addEventListener('input',upd); upd();
+    }
+
+    else if(activeTab==='k4'){
+      c.innerHTML = fieldsHTML([
+        {id:'k4_date',label:'Tanggal',type:'date',value:G.date.toISOString().slice(0,10)},
+        {id:'k4_time',label:'Jam Lokal',value:G.time,step:0.1},
+        {id:'k4_lat',label:'Lintang',value:G.lat,step:0.01},
+        {id:'k4_lon',label:'Bujur',value:G.lon,step:0.01},
+        {id:'k4_zone',label:'Zona',value:G.zone},
+      ]) + resultsHTML([{id:'k4_dec',l:'Deklinasi'},{id:'k4_ra',l:'Asensiorekta'},{id:'k4_alt',l:'Tinggi'},{id:'k4_az',l:'Azimuth'}]);
+      function upd(){
+        const d=new Date(el('k4_date').value+'T00:00:00Z'); const jam=+el('k4_time').value;
+        const lat=+el('k4_lat').value, lon=+el('k4_lon').value, zone=+el('k4_zone').value;
+        const doy=dayOfYear(d);
+        const lam=solarLambda(new Date(d.getTime()+jam*3600000));
+        const dec=decFromLam(lam), ra=raFromLam(lam);
+        const eot=eotMinutes(doy);
+        const trueSolar=jam+eot/60-(zone-lon)/15;
+        const H=15*(trueSolar-12);
+        const {alt,az}=altAzFromH(H,dec,lat);
+        el('k4_dec').textContent=dec.toFixed(2)+'°'; el('k4_ra').textContent=ra.toFixed(2)+'°';
+        el('k4_alt').textContent=alt.toFixed(2)+'°'; el('k4_az').textContent=az.toFixed(2)+'°';
+      }
+      ['k4_date','k4_time','k4_lat','k4_lon','k4_zone'].forEach(id=>el(id).addEventListener('input',upd)); upd();
+    }
+
+    else if(activeTab==='k5'){
+      c.innerHTML = fieldsHTML([
+        {id:'k5_ra',label:'RA (°)',value:88.79,step:0.1},
+        {id:'k5_dec',label:'Dek (°)',value:7.41,step:0.1},
+        {id:'k5_date',label:'Tanggal',type:'date',value:G.date.toISOString().slice(0,10)},
+        {id:'k5_time',label:'Jam UTC',value:15,step:0.1},
+        {id:'k5_lat',label:'Lintang',value:G.lat,step:0.01},
+        {id:'k5_lon',label:'Bujur',value:G.lon,step:0.01},
+      ]) + `<p class="dim">Contoh default: Betelgeuse.</p>` + resultsHTML([{id:'k5_alt',l:'Tinggi'},{id:'k5_az',l:'Azimuth'}]);
+      function upd(){
+        const ra=+el('k5_ra').value, dec=+el('k5_dec').value;
+        const d=new Date(el('k5_date').value+'T00:00:00Z'); const jam=+el('k5_time').value;
+        const dt=new Date(d.getTime()+jam*3600000);
+        const lat=+el('k5_lat').value, lon=+el('k5_lon').value;
+        const lst=(gmstDeg(dt)+lon+360)%360; let H=lst-ra; H=((H+180)%360+360)%360-180;
+        const {alt,az}=altAzFromH(H,dec,lat);
+        el('k5_alt').textContent=alt.toFixed(2)+'°'; el('k5_az').textContent=az.toFixed(2)+'°';
+      }
+      ['k5_ra','k5_dec','k5_date','k5_time','k5_lat','k5_lon'].forEach(id=>el(id).addEventListener('input',upd)); upd();
+    }
+
+    else if(activeTab==='k6'){
+      c.innerHTML = fieldsHTML([
+        {id:'k6_dec',label:'Deklinasi Benda (°)',value:0,step:0.1},
+        {id:'k6_lat',label:'Lintang',value:G.lat,step:0.01},
+      ]) + resultsHTML([{id:'k6_alt',l:'Tinggi Kulminasi'},{id:'k6_arah',l:'Arah (Utara/Selatan Zenith)'}]);
+      function upd(){
+        const dec=+el('k6_dec').value, lat=+el('k6_lat').value;
+        const alt=90-Math.abs(lat-dec);
+        el('k6_alt').textContent=alt.toFixed(2)+'°';
+        el('k6_arah').textContent = (lat>=dec) ? 'ke arah Selatan zenith' : 'ke arah Utara zenith';
+      }
+      ['k6_dec','k6_lat'].forEach(id=>el(id).addEventListener('input',upd)); upd();
+    }
+
+    else if(activeTab==='k7'){
+      c.innerHTML = fieldsHTML([
+        {id:'k7_dec',label:'Deklinasi Benda (°)',value:80,step:0.1},
+        {id:'k7_lat',label:'Lintang',value:G.lat,step:0.01},
+      ]) + resultsHTML([{id:'k7_hasil',l:'Status'}]);
+      function upd(){
+        const dec=+el('k7_dec').value, lat=+el('k7_lat').value;
+        const sameHemisphere = (dec>0)===(lat>0) && dec!==0 && lat!==0;
+        const circ = sameHemisphere && Math.abs(dec) > 90-Math.abs(lat);
+        const never = sameHemisphere && Math.abs(dec) > 90-Math.abs(lat) === false && false;
+        const r = el('k7_hasil');
+        r.textContent = circ ? 'SIRKUMPOLAR (tidak pernah terbenam)' : 'terbit & terbenam normal';
+        r.className = 'v '+(circ?'ok':'');
+      }
+      ['k7_dec','k7_lat'].forEach(id=>el(id).addEventListener('input',upd)); upd();
+    }
+
+    else if(activeTab==='g1'){
+      c.innerHTML = fieldsHTML([{id:'g1_alt',label:'Tinggi Bintang Kutub Terukur (°)',value:6.2,step:0.1}]) +
+        resultsHTML([{id:'g1_lat',l:'Perkiraan Lintang'}]) +
+        `<div class="note-box">Berlaku untuk belahan Bumi Utara memakai Bintang Kutub (Polaris) — tinggi Polaris di atas ufuk kurang-lebih sama dengan garis lintang pengamat.</div>`;
+      function upd(){ el('g1_lat').textContent = (+el('g1_alt').value).toFixed(2)+'° LU (perkiraan)'; }
+      el('g1_alt').addEventListener('input',upd); upd();
+    }
+
+    else if(activeTab==='g2'){
+      c.innerHTML = fieldsHTML([
+        {id:'g2_alt',label:'Tinggi Matahari saat Kulminasi (°)',value:75,step:0.1},
+        {id:'g2_date',label:'Tanggal',type:'date',value:G.date.toISOString().slice(0,10)},
+        {id:'g2_arah',label:'Bayangan tengah hari mengarah ke (1=Utara,-1=Selatan)',value:1,step:2},
+      ]) + resultsHTML([{id:'g2_lat',l:'Perkiraan Lintang'}]);
+      function upd(){
+        const alt=+el('g2_alt').value, d=new Date(el('g2_date').value+'T12:00:00Z'), arah=+el('g2_arah').value;
+        const dec=decFromLam(solarLambda(d));
+        const lat = dec + arah*(90-alt);
+        el('g2_lat').textContent = lat.toFixed(2)+'°';
+      }
+      ['g2_alt','g2_date','g2_arah'].forEach(id=>el(id).addEventListener('input',upd)); upd();
+    }
+
+    else if(activeTab==='g3'){
+      c.innerHTML = fieldsHTML([{id:'g3_lat',label:'Lintang',value:G.lat,step:0.01}]) +
+        `<table class="simple" id="g3_table"></table>`;
+      const klimaBounds = [
+        {klima:1, maxDay:12.75}, {klima:2, maxDay:13.25}, {klima:3, maxDay:13.75},
+        {klima:4, maxDay:14.25}, {klima:5, maxDay:14.75}, {klima:6, maxDay:15.25}, {klima:7, maxDay:15.75},
+      ];
+      function upd(){
+        const lat=Math.abs(+el('g3_lat').value);
+        const decSolstice=23.4366;
+        const daylen=dayLengthHours(decSolstice,lat);
+        let klima='di luar 7 klima klasik (lebih ekstrem)';
+        for(const kb of klimaBounds){ if(daylen<=kb.maxDay){ klima='Klima ke-'+kb.klima; break; } }
+        el('g3_table').innerHTML = `<tr><th>Panjang siang titik balik musim panas</th><td>${daylen.toFixed(2)} jam</td></tr>
+          <tr><th>Klasifikasi Klima Klasik</th><td>${klima}</td></tr>`;
+      }
+      el('g3_lat').addEventListener('input',upd); upd();
+    }
+
+    else if(activeTab==='r1'){
+      c.innerHTML = fieldsHTML([{id:'r1_ang',label:'Sudut (°)',value:35,step:1}]) +
+        resultsHTML([{id:'r1_sin',l:'Sinus × 60'},{id:'r1_cos',l:'Kosinus × 60'}]);
+      function upd(){ const a=+el('r1_ang').value; el('r1_sin').textContent=(60*Math.sin(toRad(a))).toFixed(2); el('r1_cos').textContent=(60*Math.cos(toRad(a))).toFixed(2); }
+      el('r1_ang').addEventListener('input',upd); upd();
+    }
+
+    else if(activeTab==='r2'){
+      c.innerHTML = fieldsHTML([
+        {id:'r2_jarak',label:'Jarak ke Objek (m)',value:20,step:0.5},
+        {id:'r2_sudut',label:'Sudut Bidik (°)',value:35,step:1},
+        {id:'r2_mata',label:'Tinggi Mata Pengamat (m)',value:1.6,step:0.1},
+      ]) + resultsHTML([{id:'r2_tinggi',l:'Tinggi Objek'}]);
+      function upd(){
+        const jarak=+el('r2_jarak').value, sudut=+el('r2_sudut').value, mata=+el('r2_mata').value;
+        el('r2_tinggi').textContent=(jarak*Math.tan(toRad(sudut))+mata).toFixed(2)+' m';
+      }
+      ['r2_jarak','r2_sudut','r2_mata'].forEach(id=>el(id).addEventListener('input',upd)); upd();
+    }
+
+    else if(activeTab==='r3'){
+      c.innerHTML = fieldsHTML([
+        {id:'r3_tinggi',label:'Tinggi Objek Diketahui (m)',value:15,step:0.5},
+        {id:'r3_sudut',label:'Sudut Bidik (°)',value:35,step:1},
+        {id:'r3_mata',label:'Tinggi Mata Pengamat (m)',value:1.6,step:0.1},
+      ]) + resultsHTML([{id:'r3_jarak',l:'Jarak ke Objek'}]);
+      function upd(){
+        const tinggi=+el('r3_tinggi').value, sudut=+el('r3_sudut').value, mata=+el('r3_mata').value;
+        el('r3_jarak').textContent=((tinggi-mata)/Math.tan(toRad(sudut))).toFixed(2)+' m';
+      }
+      ['r3_tinggi','r3_sudut','r3_mata'].forEach(id=>el(id).addEventListener('input',upd)); upd();
+    }
+
+    else if(activeTab==='f1'){
+      c.innerHTML = fieldsHTML([{id:'f1_lat',label:'Lintang',value:G.lat,step:0.01},{id:'f1_lon',label:'Bujur',value:G.lon,step:0.01}]) +
+        resultsHTML([{id:'f1_az',l:'Azimuth Kiblat'}]);
+      function upd(){ el('f1_az').textContent=qiblaAzimuth(+el('f1_lat').value,+el('f1_lon').value).toFixed(2)+'°'; }
+      ['f1_lat','f1_lon'].forEach(id=>el(id).addEventListener('input',upd)); upd();
+    }
+
+    else if(activeTab==='f2'){
+      c.innerHTML = fieldsHTML([{id:'f2_year',label:'Tahun',value:2026},{id:'f2_zone',label:'Zona Anda (jam dari UTC)',value:7,step:0.5}]) +
+        `<table class="simple" id="f2_table"></table>`;
+      function upd(){
+        const year=+el('f2_year').value, zoneOffset=+el('f2_zone').value;
+        const target=21.4225;
+        const ranges=[[Date.UTC(year,4,20),Date.UTC(year,5,5)],[Date.UTC(year,6,5),Date.UTC(year,6,25)]];
+        const rows=ranges.map(([start,end])=>{
+          let best=null,bestDiff=999;
+          for(let t=start;t<=end;t+=86400000){
+            const d=new Date(t+12*3600000);
+            const dec=decFromLam(solarLambda(d));
+            const diff=Math.abs(dec-target);
+            if(diff<bestDiff){bestDiff=diff;best=d;}
+          }
+          const meccaLon=39.8262; const doy=dayOfYear(best); const eot=eotMinutes(doy);
+          const utcHour=12-meccaLon/15-eot/60;
+          return {date:best.toISOString().slice(0,10), time:hm(utcHour+zoneOffset)};
+        });
+        el('f2_table').innerHTML='<tr><th>Tanggal</th><th>Jam Lokal</th></tr>'+rows.map(r=>`<tr><td>${r.date}</td><td>${r.time}</td></tr>`).join('');
+      }
+      ['f2_year','f2_zone'].forEach(id=>el(id).addEventListener('input',upd)); upd();
+    }
+
+    else if(activeTab==='f3'){
+      c.innerHTML = fieldsHTML([
+        {id:'f3_date',label:'Tanggal',type:'date',value:G.date.toISOString().slice(0,10)},
+        {id:'f3_lat',label:'Lintang',value:G.lat,step:0.01},
+        {id:'f3_lon',label:'Bujur',value:G.lon,step:0.01},
+        {id:'f3_zone',label:'Zona',value:G.zone},
+      ]) + resultsHTML([{id:'f3_azq',l:'Azimuth Kiblat'},{id:'f3_jam',l:'Jam Rashdul Qiblat Harian'}]) +
+      `<div class="note-box">Ini metode HARIAN (beda dari Rashdul Qiblat Global 2×/tahun) — mencari kapan azimuth Matahari sama dengan azimuth kiblat pada tanggal tersebut, dihitung mundur dari azimuth ke sudut waktu.</div>`;
+      function upd(){
+        const d=new Date(el('f3_date').value+'T12:00:00Z'); const doy=dayOfYear(d);
+        const lat=+el('f3_lat').value, lon=+el('f3_lon').value, zone=+el('f3_zone').value;
+        const dec=decFromLam(solarLambda(d));
+        const azQ=qiblaAzimuth(lat,lon);
+        el('f3_azq').textContent=azQ.toFixed(2)+'°';
+        // cari H dengan pencarian numerik agar azimuth(H)=azQ
+        let best=null,bestDiff=999;
+        for(let Hx=-180;Hx<=180;Hx+=0.25){
+          const {az}=altAzFromH(Hx,dec,lat);
+          const diff=Math.abs(((az-azQ+540)%360)-180);
+          if(diff<bestDiff){bestDiff=diff;best=Hx;}
+        }
+        if(bestDiff<3){
+          el('f3_jam').textContent=hm(clockTimeFromH(best,doy,lon,zone));
+        } else {
+          el('f3_jam').textContent='Tidak tercapai hari ini (Matahari tak melewati azimuth ini)';
+        }
+      }
+      ['f3_date','f3_lat','f3_lon','f3_zone'].forEach(id=>el(id).addEventListener('input',upd)); upd();
+    }
+
+    else if(activeTab==='f4'){
+      c.innerHTML = fieldsHTML([
+        {id:'f4_date',label:'Tanggal',type:'date',value:G.date.toISOString().slice(0,10)},
+        {id:'f4_lat',label:'Lintang',value:G.lat,step:0.01},
+        {id:'f4_lon',label:'Bujur',value:G.lon,step:0.01},
+        {id:'f4_zone',label:'Zona',value:G.zone},
+      ]) + `<table class="simple" id="f4_table"></table>`;
+      function upd(){
+        const d=new Date(el('f4_date').value+'T12:00:00Z'); const doy=dayOfYear(d);
+        const lat=+el('f4_lat').value, lon=+el('f4_lon').value, zone=+el('f4_zone').value;
+        const dec=decFromLam(solarLambda(d));
+        const altNoon=90-Math.abs(lat-dec);
+        const zillNoon=altNoon>0?1/Math.tan(toRad(altNoon)):0;
+        const altAshar=toDeg(Math.atan(1/(zillNoon+1)));
+        const rows=[
+          {name:'Imsak',alt:-21.5,sign:-1},{name:'Subuh',alt:-20,sign:-1},{name:'Syuruq',alt:-1,sign:-1},
+          {name:'Zuhur',alt:altNoon,sign:0},{name:'Ashar',alt:altAshar,sign:1},
+          {name:'Maghrib',alt:-1,sign:1},{name:'Isya',alt:-18,sign:1},
+        ];
+        el('f4_table').innerHTML='<tr><th>Waktu</th><th>Tinggi Matahari</th><th>Jam</th></tr>'+rows.map(r=>{
+          const H=r.sign===0?0:r.sign*hourAngleFromAltitude(r.alt,dec,lat);
+          return `<tr><td>${r.name}</td><td>${r.alt.toFixed(2)}°</td><td>${hm(clockTimeFromH(H,doy,lon,zone))}</td></tr>`;
+        }).join('');
+      }
+      ['f4_date','f4_lat','f4_lon','f4_zone'].forEach(id=>el(id).addEventListener('input',upd)); upd();
+    }
+
+    else if(activeTab==='f5'){
+      c.innerHTML = fieldsHTML([{id:'f5_date',label:'Tanggal',type:'date',value:G.date.toISOString().slice(0,10)},{id:'f5_lat',label:'Lintang',value:G.lat,step:0.01}]) +
+        resultsHTML([{id:'f5_terbit',l:'Azimuth Terbit'},{id:'f5_terbenam',l:'Azimuth Terbenam'}]) +
+        `<div class="note-box">Berguna untuk verifikasi historis: bila arah mihrab sebuah masjid tua diketahui, azimuth terbit/terbenam Matahari pada hari-hari tertentu bisa membantu menelusuri metode penentuan arah yang mungkin dipakai dulu.</div>`;
+      function upd(){
+        const d=new Date(el('f5_date').value+'T12:00:00Z'); const lat=+el('f5_lat').value;
+        const dec=decFromLam(solarLambda(d));
+        const cosAz=Math.sin(toRad(dec))/Math.cos(toRad(lat));
+        const az=toDeg(Math.acos(Math.max(-1,Math.min(1,cosAz))));
+        el('f5_terbit').textContent=az.toFixed(2)+'°'; el('f5_terbenam').textContent=(360-az).toFixed(2)+'°';
+      }
+      ['f5_date','f5_lat'].forEach(id=>el(id).addEventListener('input',upd)); upd();
+    }
+
+    else if(activeTab==='b1'){
+      c.innerHTML = fieldsHTML([
+        {id:'b1_dec',label:'Deklinasi Bintang (°)',value:38.78,step:0.1},
+        {id:'b1_lat',label:'Lintang',value:G.lat,step:0.01},
+      ]) + resultsHTML([{id:'b1_terbit',l:'Azimuth Terbit'},{id:'b1_terbenam',l:'Azimuth Terbenam'}]);
+      function upd(){
+        const dec=+el('b1_dec').value, lat=+el('b1_lat').value;
+        const cosAz=Math.sin(toRad(dec))/Math.cos(toRad(lat));
+        if(Math.abs(cosAz)>1){ el('b1_terbit').textContent='Sirkumpolar / tak pernah terbit'; el('b1_terbenam').textContent='—'; return; }
+        const az=toDeg(Math.acos(cosAz));
+        el('b1_terbit').textContent=az.toFixed(2)+'°'; el('b1_terbenam').textContent=(360-az).toFixed(2)+'°';
+      }
+      ['b1_dec','b1_lat'].forEach(id=>el(id).addEventListener('input',upd)); upd();
+    }
+
+    else if(activeTab==='b2'){
+      c.innerHTML = fieldsHTML([
+        {id:'b2_ra',label:'RA Bintang (°)',value:279.23,step:0.1},
+        {id:'b2_date',label:'Tanggal',type:'date',value:G.date.toISOString().slice(0,10)},
+        {id:'b2_lon',label:'Bujur',value:G.lon,step:0.01},
+        {id:'b2_zone',label:'Zona',value:G.zone},
+      ]) + resultsHTML([{id:'b2_jam',l:'Jam Kulminasi (Lokal)'}]) +
+        `<div class="note-box">Kulminasi terjadi saat sudut waktu bintang H=0, yaitu saat Waktu Sidereal Lokal = RA bintang.</div>`;
+      function upd(){
+        const ra=+el('b2_ra').value; const d=new Date(el('b2_date').value+'T00:00:00Z');
+        const lon=+el('b2_lon').value, zone=+el('b2_zone').value;
+        // cari jam UTC dimana LST=ra, scan per 0.01 jam
+        let best=null,bestDiff=999;
+        for(let h=0; h<24; h+=0.05){
+          const dt=new Date(d.getTime()+h*3600000);
+          const lst=(gmstDeg(dt)+lon+360)%360;
+          const diff=Math.abs(((lst-ra+540)%360)-180);
+          if(diff<bestDiff){bestDiff=diff;best=h;}
+        }
+        // konversi UTC ke lokal pakai zona sederhana (bukan istiwa, ini waktu sipil)
+        const localH = best + zone/15;
+        el('b2_jam').textContent = hm(localH);
+      }
+      ['b2_ra','b2_date','b2_lon','b2_zone'].forEach(id=>el(id).addEventListener('input',upd)); upd();
+    }
+  }
+
+  el('gDate').value = new Date().toISOString().slice(0,10);
+  ['gDate','gTime','gLat','gLon','gZone'].forEach(id=>el(id).addEventListener('input', renderTab));
+  renderCategoryTabs();
+  renderTab();
+})();
+</script>
+
+</body>
+</html>

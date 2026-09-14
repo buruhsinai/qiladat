@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peluruhan Radioaktif — JAZMI</title>
+<style>
+body{margin:0;background:#0a0c14;color:#e6e8f0;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;line-height:1.6;}
+.wrap{max-width:620px;margin:0 auto;padding:32px 20px 60px;}
+h1{font-family:Georgia,serif;font-weight:normal;font-size:24px;margin:0 0 8px;}
+p{color:#8b92ab;font-size:14px;}
+input[type=range]{width:100%;accent-color:#5ac9e0;}
+.val{font-size:20px;color:#8fe0f0;font-weight:600;margin:12px 0 4px;}
+.grid{display:grid;grid-template-columns:repeat(20,1fr);gap:3px;margin:14px 0;}
+.atom{aspect-ratio:1;border-radius:50%;background:#a888e0;transition:background 0.2s,opacity 0.2s;}
+.atom.decayed{background:#242840;opacity:0.3;}
+.note{font-size:12px;color:#8b92ab;margin-top:14px;border-top:1px solid #242840;padding-top:12px;}
+</style></head>
+<body><div class="wrap">
+<p style="color:#8fe0f0;font-size:11px;letter-spacing:1px;text-transform:uppercase;">JAZMI · sambungan Tunneling Kuantum</p>
+<h1>Peluruhan radioaktif</h1>
+<p>Peluruhan alfa yang disebut di simulator tunneling sebelumnya sifatnya acak per-atom, tapi jumlah totalnya sangat bisa diprediksi — inilah kenapa "waktu paruh" masuk akal meski peluruhan tiap atom murni kebetulan.</p>
+<input type="range" id="tSlider" min="0" max="5" value="0" step="0.05">
+<p class="val" id="out"></p>
+<div class="grid" id="grid"></div>
+<p class="note">N(t) = N₀ × (1/2)^(t/t½). 400 atom digambar, tiap titik "meluruh" ditandai acak begitu waktu melewati porsi hidupnya — bukan animasi waktu-nyata, tapi snapshot pada waktu yang Anda pilih.</p>
+</div>
+<script>
+const N0=400;
+const grid=document.getElementById('grid');
+const seeds=[];
+for(let i=0;i<N0;i++){ grid.appendChild(document.createElement('div')).className='atom'; seeds.push(Math.random()); }
+const atoms=[...grid.children];
+const s=document.getElementById('tSlider');
+function u(){
+  const t=parseFloat(s.value);
+  const fracRemain=Math.pow(0.5,t);
+  document.getElementById('out').textContent='t = '+t.toFixed(2)+'× waktu-paruh  →  '+Math.round(fracRemain*N0)+' dari '+N0+' atom tersisa ('+(fracRemain*100).toFixed(1)+'%)';
+  atoms.forEach((a,i)=>{
+    const decayFraction = 1-fracRemain;
+    a.className = seeds[i] < decayFraction ? 'atom decayed' : 'atom';
+  });
+}
+s.addEventListener('input',u); u();
+</script>
+</body></html>

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Menghitung Mundur ke Hijrah — Laboratorium JAZMI</title>
+<style>
+  :root{
+    --bg:#0a1512; --bg2:#0f1e19; --card:#122420; --card2:#16302a; --line:#1f3d34;
+    --emerald:#22c98a; --emerald-dim:#0e6b4f; --gold:#e0b354; --text:#e9f3ee;
+    --muted:#8fada0; --danger:#e07a5f; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:'Georgia','Iowan Old Style',serif; line-height:1.65;}
+  .sans{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;}
+  header{padding:34px 20px 24px; text-align:center; background:radial-gradient(ellipse at top, #113b2e 0%, var(--bg) 70%); border-bottom:1px solid var(--line);}
+  header .kicker{font-family:-apple-system,sans-serif; letter-spacing:.14em; text-transform:uppercase; font-size:12px; color:var(--gold); margin-bottom:10px;}
+  header h1{font-size:1.5rem; margin:0 0 10px; font-weight:600; line-height:1.35;}
+  header p{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px; max-width:640px; margin:0 auto;}
+  nav.tabs{position:sticky; top:0; z-index:10; display:flex; overflow-x:auto; gap:6px; padding:10px 14px; background:rgba(10,21,18,.96); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); font-family:-apple-system,sans-serif; -webkit-overflow-scrolling:touch;}
+  nav.tabs a{flex:0 0 auto; padding:7px 13px; border-radius:999px; font-size:12.5px; color:var(--muted); text-decoration:none; border:1px solid var(--line); white-space:nowrap;}
+  nav.tabs a:hover{color:var(--emerald); border-color:var(--emerald-dim);}
+  main{max-width:780px; margin:0 auto; padding:8px 18px 60px;}
+  section{padding:32px 0; border-bottom:1px solid var(--line);}
+  section:last-child{border-bottom:none;}
+  h2{font-size:1.12rem; color:var(--emerald); margin:0 0 6px; display:flex; align-items:center; gap:8px;}
+  h2 .num{font-family:-apple-system,sans-serif; font-size:11px; background:var(--emerald-dim); color:#dff7ec; padding:2px 8px; border-radius:6px;}
+  h3{color:var(--gold); font-size:1rem; margin:20px 0 8px;}
+  p{margin:0 0 14px; font-size:15.5px;}
+  .lead{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px; margin:14px 0;}
+  .qbox{background:var(--card2); border-left:3px solid var(--gold); border-radius:8px; padding:14px 16px; margin:16px 0; font-style:italic; color:#f0e6cc; font-size:14.5px;}
+  ul{padding-left:20px; margin:10px 0;} li{margin-bottom:7px; font-size:15px;}
+  .sourceline{font-family:-apple-system,sans-serif; font-size:11.5px; color:var(--muted); margin-top:6px; padding-top:6px; border-top:1px dashed var(--line);}
+  .warn{background:#241407; border:1px solid #5c3a12; border-radius:10px; padding:14px 16px; margin:14px 0; font-family:-apple-system,sans-serif; font-size:13.5px; color:#f0d3a8;}
+  .warn b{color:var(--gold);}
+  .insight{background:#0e2a20; border-left:3px solid var(--emerald); border-radius:8px; padding:14px 16px; margin:14px 0; font-family:-apple-system,sans-serif; font-size:14px; color:#dff7ec;}
+  .insight .lbl{color:var(--emerald); font-size:11px; text-transform:uppercase; letter-spacing:.08em; display:block; margin-bottom:6px; font-weight:700;}
+
+  .timeline-card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin:14px 0;}
+  .timeline-item{display:flex; align-items:center; gap:10px; margin-bottom:8px; font-family:-apple-system,sans-serif; font-size:13px;}
+  .timeline-dot{width:10px; height:10px; border-radius:50%; background:var(--gold); flex:0 0 auto;}
+  .timeline-year{color:var(--gold); font-weight:700; flex:0 0 60px;}
+  .timeline-text{color:var(--text);}
+
+  .choice-grid{display:grid; grid-template-columns:1fr; gap:8px; margin:12px 0;}
+  .choice-item{font-family:-apple-system,sans-serif; background:var(--card); border:1.5px solid var(--line); border-radius:10px; padding:10px 12px; cursor:pointer; font-size:13.5px;}
+  .choice-item.active{border-color:var(--emerald); background:#0e2a20;}
+  .choice-item .ctitle{font-weight:700; color:var(--text); margin-bottom:2px;}
+  .choice-item .csub{color:var(--muted); font-size:12px;}
+  .choice-item.active .ctitle{color:var(--emerald);}
+
+  .result-box{font-family:-apple-system,sans-serif; background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:14px; margin-top:12px; text-align:center;}
+  .result-box .rnum{font-size:1.8rem; color:var(--gold); font-weight:800;}
+  .result-box .rlabel{font-size:12.5px; color:var(--muted); margin-top:4px;}
+
+  .calc{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px;}
+  .calc label{font-family:-apple-system,sans-serif; font-size:13px; color:var(--muted); display:block; margin-bottom:6px;}
+  .calc input[type=range]{width:100%; accent-color:var(--emerald);}
+  .calc .val{font-family:-apple-system,sans-serif; color:var(--gold); font-weight:700;}
+  .toggle-row{display:flex; align-items:center; gap:10px; font-family:-apple-system,sans-serif; font-size:13.5px; margin:12px 0;}
+  .toggle-row input{accent-color:var(--emerald); width:18px; height:18px;}
+  button.tool-btn{font-family:-apple-system,sans-serif; background:var(--emerald-dim); color:#e9fff5; border:none; padding:11px 18px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; margin-top:10px;}
+  button.tool-btn:active{opacity:.8;}
+
+  .stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; font-family:-apple-system,sans-serif;}
+  .stat-card{background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:12px;}
+  .stat-card .slabel{font-size:11px; color:var(--muted); text-transform:uppercase;}
+  .stat-card .sval{font-size:17px; color:var(--emerald); font-weight:700; margin-top:4px;}
+  .stat-card .ssub{font-size:11.5px; color:var(--muted); margin-top:2px;}
+
+  .strip{display:flex; flex-wrap:wrap; gap:2px; margin-top:10px;}
+  .strip .sq{width:12px; height:12px; border-radius:2px;}
+  .strip .sq.d29{background:var(--emerald);}
+  .strip .sq.d30{background:var(--gold);}
+  .strip-legend{font-family:-apple-system,sans-serif; font-size:11px; color:var(--muted); margin-top:6px; display:flex; gap:14px;}
+  .strip-legend span{display:inline-flex; align-items:center; gap:5px;}
+  .strip-legend i{width:10px; height:10px; border-radius:2px; display:inline-block;}
+
+  .mismatch-line{font-family:-apple-system,sans-serif; text-align:center; margin-top:14px; padding:10px; background:#0e2a20; border-radius:8px; color:var(--gold); font-size:13.5px;}
+  .refs{font-family:-apple-system,sans-serif; font-size:12.5px; color:var(--muted);} .refs li{margin-bottom:8px;}
+  footer{text-align:center; padding:30px 20px; color:var(--muted); font-family:-apple-system,sans-serif; font-size:12px;}
+  @media(max-width:420px){ .stat-grid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kicker">Laboratorium JAZMI · Sains &amp; Sejarah</div>
+  <h1>Menghitung Mundur ke Hijrah<br>Bagaimana Zaman Umar Menetapkan Kalender Tanpa Alat Modern</h1>
+  <p>Level 1–5: Belajar → Model → Verifikasi → Eksplorasi. Bukan cuma "Umar menetapkan kalender Hijriah" — tapi apa yang benar-benar diperdebatkan, dan apa yang terjadi kalau pilihan-pilihan itu berbeda.</p>
+</header>
+
+<nav class="tabs">
+  <a href="#belajar">Belajar</a>
+  <a href="#pertanyaan">Pertanyaan Ilmiah</a>
+  <a href="#musyawarah">Musyawarah</a>
+  <a href="#muharram">Kenapa Muharram</a>
+  <a href="#rukyat">Keterbatasan Alat</a>
+  <a href="#eksplorasi1">Andaikan Epoch Lain</a>
+  <a href="#eksplorasi2">Simulasi Rukyat</a>
+  <a href="#batasan">Batasan</a>
+  <a href="#referensi">Referensi</a>
+</nav>
+
+<main>
+
+  <section id="belajar">
+    <h2><span class="num">01</span>Belajar</h2>
+    <p>Persoalannya dimulai dari hal yang sangat sepele: sepucuk surat tanpa tahun. Menurut riwayat yang disampaikan lewat jalur Maimun bin Mahran, ada dokumen bertanggal "Sya'ban" yang sampai ke meja Umar bin Khattab tanpa keterangan tahun — dan Umar bertanya, "Sya'ban yang mana? Yang sudah lewat, atau yang akan datang?" Dari kebingungan sekecil itu, lahirlah kebutuhan mendesak akan sebuah sistem penanggalan yang seragam untuk wilayah kekuasaan Islam yang sudah meluas.</p>
+    <p>Yang menarik untuk disimulasikan bukan hasil akhirnya (yang sudah kita pakai sampai sekarang), tapi <strong>ruang keputusan yang sebenarnya terbuka saat itu</strong> — titik awal mana yang dipilih, bulan mana yang jadi awal tahun, dan bagaimana cara menghitung panjang setiap bulan tanpa teleskop maupun rumus astronomi presisi.</p>
+    <div class="qbox">"Kalender bukan fakta alam yang ditemukan — ia keputusan manusia tentang titik mana yang layak dijadikan nol, dibangun di atas alat ukur yang mereka punya saat itu: mata telanjang dan langit senja."</div>
+  </section>
+
+  <section id="pertanyaan">
+    <h2><span class="num">02</span>Pertanyaan Ilmiah</h2>
+    <ul>
+      <li>Titik peristiwa mana saja yang sempat diusulkan sebagai "tahun 0"? Kenapa hijrah yang akhirnya dipilih, bukan yang lain?</li>
+      <li>Kalau hijrah yang dipilih sebagai peristiwa, kenapa tahunnya dimulai dari Muharram — padahal hijrah sendiri terjadi di bulan Rabi'ul Awwal?</li>
+      <li>Dengan alat apa mereka menentukan kapan satu bulan berakhir dan bulan baru dimulai, tanpa teleskop atau tabel astronomi?</li>
+      <li>Apa yang terjadi kalau hilal tidak terlihat karena mendung — apakah bulannya dianggap belum berakhir, atau tetap dianggap berganti?</li>
+      <li>Kalau titik awal atau metode hitungnya diganti, seberapa besar hasilnya bisa berbeda dari yang kita pakai sekarang?</li>
+    </ul>
+  </section>
+
+  <section id="musyawarah">
+    <h2><span class="num">03</span>Musyawarah: Empat Usulan Titik Awal</h2>
+    <p>Riwayat Al-Hakim menyebutkan musyawarah ini terjadi sekitar tahun 17 H (ada juga yang mencatat 16 H), tahun keempat kekhalifahan Umar. Umar membuka forum dengan pertanyaan sederhana: hari apa yang paling layak dijadikan patokan penanggalan? Beberapa nama besar mengajukan pandangan berbeda.</p>
+
+    <div class="timeline-card">
+      <div class="timeline-item"><span class="timeline-dot"></span><span class="timeline-year">Usulan 1</span><span class="timeline-text">Tahun kelahiran Nabi Muhammad ﷺ (peristiwa "Tahun Gajah") — dianggap usulan yang cukup rasional, tapi tidak dipilih.</span></div>
+      <div class="timeline-item"><span class="timeline-dot"></span><span class="timeline-year">Usulan 2</span><span class="timeline-text">Tahun pengangkatan sebagai Rasul / turunnya wahyu pertama.</span></div>
+      <div class="timeline-item"><span class="timeline-dot"></span><span class="timeline-year">Usulan 3</span><span class="timeline-text">Tahun wafatnya Rasulullah ﷺ.</span></div>
+      <div class="timeline-item"><span class="timeline-dot" style="background:var(--emerald);"></span><span class="timeline-year">Terpilih</span><span class="timeline-text"><strong>Hijrah Nabi ﷺ dari Makkah ke Madinah</strong> — diusulkan Ali bin Abi Thalib ("sejak hari pertama Rasulullah berhijrah, meninggalkan tanah kemusyrikan"), disepakati mayoritas sahabat.</span></div>
+    </div>
+
+    <p>Alasan hijrah dipilih: peristiwa ini dianggap titik balik paling monumental — bukan sekadar tanggal lahir atau wafat seseorang, tapi saat umat Islam mulai membangun masyarakat mandiri dengan sistem pemerintahan sendiri di Madinah. Ia menandai lahirnya sebuah peradaban, bukan cuma biografi satu orang.</p>
+    <div class="sourceline">Sumber: riwayat Al-Hakim &amp; Ibnu Abi Khaitsamah (dikutip berbagai kanal NU Online, BAZNAS, Kemenag) — lihat Referensi.</div>
+  </section>
+
+  <section id="muharram">
+    <h2><span class="num">04</span>Kenapa Muharram, Bukan Rabi'ul Awwal?</h2>
+    <p>Ini bagian yang sering terlewat: hijrah sendiri secara harfiah terjadi pada bulan <strong>Rabi'ul Awwal</strong>. Tapi tahun Hijriah dimulai dari <strong>Muharram</strong> — empat bulan lebih awal. Ada dua alasan yang tercatat:</p>
+    <ul>
+      <li>Muharram sudah menjadi awal siklus tahun dalam tradisi kalender masyarakat Arab jauh sebelum Islam datang — jadi mengikuti pola yang sudah dikenal, bukan pola baru yang asing.</li>
+      <li>Muharram adalah bulan yang datang setelah <strong>Baiat Aqabah</strong> (perjanjian yang menjadi pemicu langsung terjadinya hijrah), yang berlangsung di bulan Dzulhijjah — sehingga Muharram secara alami menjadi "awal babak baru" begitu proses menuju hijrah dimulai, bukan saat hijrah-nya sendiri selesai dilaksanakan.</li>
+    </ul>
+    <p class="lead">Perannya di sini disebut melibatkan tiga sahabat sekaligus: Umar, Utsman bin Affan, dan Ali bin Abi Thalib.</p>
+  </section>
+
+  <section id="rukyat">
+    <h2><span class="num">05</span>Keterbatasan Alat: Rukyatul Hilal</h2>
+    <p>Sekarang bagian yang paling relevan untuk simulasi: <strong>bagaimana mereka tahu satu bulan sudah berakhir?</strong> Tidak ada teleskop, tidak ada tabel astronomi presisi seperti sekarang. Yang dipakai adalah <em>rukyatul hilal</em> — mengamati bulan sabit termuda dengan mata telanjang di ufuk barat, tepat setelah matahari benar-benar tenggelam (karena hanya pada momen itu hilal yang sangat tipis bisa terlihat).</p>
+    <ul>
+      <li>Pengamatan dilakukan pada malam ke-29 bulan berjalan. Kalau hilal terlihat, esok adalah tanggal 1 bulan baru.</li>
+      <li>Kalau tidak terlihat — entah karena memang belum waktunya, atau karena langit mendung — bulan yang berjalan digenapkan menjadi 30 hari (disebut <em>istikmal</em>), berdasarkan tuntunan hadits: "genapkan bilangan Sya'ban menjadi tiga puluh hari" bila terhalang mendung.</li>
+      <li>Karena bergantung pengamatan lokal, hasilnya bisa berbeda antar wilayah. Riwayat dari Kuraib menyebutkan penduduk Syam melihat hilal Ramadhan pada malam Jumat, sementara Ibnu Abbas di Madinah baru melihatnya malam Sabtu — dan keduanya sama-sama sah mengikuti hasil pengamatan wilayah masing-masing.</li>
+    </ul>
+    <div class="sourceline">Sumber: hadits riwayat Ahmad &amp; Abu Daud (rukyat), hadits Kuraib tentang perbedaan rukyat Syam-Madinah — dirangkum dari NU Online &amp; Persis.or.id.</div>
+  </section>
+
+  <section id="eksplorasi1">
+    <h2><span class="num">06</span>Eksplorasi 1: Andaikan Titik Awalnya Berbeda</h2>
+    <p class="lead">Pilih titik awal alternatif dan bulan awal alternatif — lihat bagaimana penomoran tahun peristiwa musyawarah (yang aslinya disebut "Tahun 17 H") akan berubah kalau pilihan lain yang dimenangkan.</p>
+
+    <h3>Titik Awal (Epoch)</h3>
+    <div class="choice-grid" id="epochChoices"></div>
+
+    <h3>Bulan Awal Tahun</h3>
+    <div class="choice-grid" id="monthChoices"></div>
+
+    <div class="result-box">
+      <div class="rnum" id="epochResult">Tahun 17 H</div>
+      <div class="rlabel" id="epochResultSub">Berdasarkan pilihan Anda di atas</div>
+    </div>
+    <div class="sourceline">Perkiraan tahun Masehi dipakai sebagai jangkar kasar (kelahiran ≈570 M, pengangkatan Rasul ≈610 M/13 tahun sebelum hijrah, hijrah=622 M, wafat=632 M) — bukan tanggal presisi hari/bulan.</div>
+  </section>
+
+  <section id="eksplorasi2">
+    <h2><span class="num">07</span>Eksplorasi 2: Simulasi Rukyat Lintas Tahun</h2>
+    <p>Ini simulasi inti: mensimulasikan bertahun-tahun rukyatul hilal, membandingkan tiga pendekatan — (1) rukyat yang bisa gagal karena mendung, (2) pola tetap berselang-seling 30-29 (andaikan mereka punya cara pasti tanpa pengamatan), dan (3) hitungan astronomis "sejati" berdasarkan rata-rata panjang bulan sinodis (29,53059 hari) sebagai pembanding.</p>
+
+    <div class="calc">
+      <label>Jumlah tahun disimulasikan: <span class="val" id="yearsVal">10</span> tahun</label>
+      <input type="range" id="yearsRange" min="1" max="30" step="1" value="10">
+      <label style="margin-top:14px;">Probabilitas langit mendung saat pengamatan: <span class="val" id="cloudVal">20%</span></label>
+      <input type="range" id="cloudRange" min="0" max="80" step="5" value="20">
+      <div class="toggle-row">
+        <input type="checkbox" id="twoLocToggle" checked>
+        <label for="twoLocToggle" style="margin:0;">Bandingkan dua lokasi pengamatan (Madinah &amp; Syam), seperti kisah Kuraib</label>
+      </div>
+      <button class="tool-btn" onclick="runSimulation()">🌙 Jalankan Simulasi</button>
+    </div>
+
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="mismatch-line" id="mismatchLine"></div>
+
+    <div class="timeline-card">
+      <p class="lead" style="margin-bottom:6px;">Garis waktu 36 bulan pertama (Madinah, versi rukyat):</p>
+      <div class="strip" id="stripMadinah"></div>
+      <div class="strip-legend">
+        <span><i style="background:var(--emerald);"></i>29 hari</span>
+        <span><i style="background:var(--gold);"></i>30 hari (termasuk istikmal akibat mendung)</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="batasan">
+    <h2><span class="num">08</span>Batasan</h2>
+    <ul>
+      <li>Bagian "Andaikan Titik Awal" memakai jangkar tahun Masehi perkiraan kasar (bukan tanggal presisi), sekadar untuk menunjukkan skala pergeseran penomoran — bukan rekonstruksi kalender historis yang akurat.</li>
+      <li>Simulasi rukyat menyederhanakan realitas astronomis: panjang bulan sinodis sesungguhnya sedikit berubah-ubah (bukan konstan 29,53059 hari), posisi geografis memengaruhi visibilitas hilal dengan cara yang jauh lebih kompleks daripada satu angka probabilitas mendung, dan istikmal dalam sejarah nyata tidak selalu berarti "gagal lihat karena mendung" — bisa juga karena hilal memang belum cukup tinggi untuk terlihat.</li>
+      <li>"Pola tetap 30-29 berselang-seling" adalah skenario andaikan yang disederhanakan untuk perbandingan — bukan reproduksi persis kalender tabular Hijriah (yang punya aturan tahun kabisat 11 dari 30 tahun) yang baru berkembang belakangan.</li>
+      <li>Ini bukan pengganti kajian ilmu falak/fikih hisab-rukyat yang sesungguhnya — hanya simulasi edukatif untuk merasakan skala ketidakpastian yang dihadapi generasi sahabat.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <h2><span class="num">09</span>Referensi</h2>
+    <ul class="refs">
+      <li>NU Online Jatim — "Sejarah Awal Mula Penetapan Tahun Hijriyah" (musyawarah 17 H, peran Umar/Utsman/Ali, rujukan Al-Asqalani).</li>
+      <li>Medcom.id — "Sejarah 1 Muharam Ditetapkan Sebagai Tahun Baru Islam" (riwayat Al-Hakim, usulan Ali bin Abi Thalib).</li>
+      <li>BAZNAS — "Khalifah Umar bin Khattab dan Sejarah Penetapan Kalender Hijriah".</li>
+      <li>Pakistan Indonesia — "Sejarah Penetapan Tahun Hijriah" (peran Utsman, Ali, Abdurrahman bin Auf dalam musyawarah).</li>
+      <li>NU Online — "Penentuan Awal Bulan Qamariyah Perspektif NU" (dasar rukyat, hadits Rib'i bin Hirasy).</li>
+      <li>Persis.or.id — "Problematika Kriteria Imkanur Rukyatil Hilal" (hadits Kuraib tentang perbedaan rukyat Syam-Madinah).</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  Laboratorium JAZMI — Jalinan Zamrud Islamiah · Belajar → Model → Uji → Tool<br>
+  Versi pengembangan awal. Silakan diperiksa ulang, dikoreksi, dan didiskusikan lebih lanjut.
+</footer>
+
+<script>
+/* ================= EKSPLORASI 1: EPOCH & BULAN AWAL ================= */
+const EPOCHS = [
+  {id:'lahir', title:'Tahun Kelahiran Nabi ﷺ', sub:'≈570 M, peristiwa Tahun Gajah', yearM:570},
+  {id:'wahyu', title:'Tahun Pengangkatan sebagai Rasul', sub:'≈610 M, turunnya wahyu pertama (≈13 tahun sebelum hijrah)', yearM:610},
+  {id:'hijrah', title:'Tahun Hijrah ke Madinah', sub:'622 M — pilihan yang sesungguhnya dipakai', yearM:622},
+  {id:'wafat', title:'Tahun Wafatnya Nabi ﷺ', sub:'632 M', yearM:632}
+];
+const MONTHS_START = [
+  {id:'muharram', title:'Muharram', sub:'Pilihan yang sesungguhnya dipakai — awal siklus tahun tradisi Arab'},
+  {id:'rabiul', title:"Rabi'ul Awwal", sub:'Bulan hijrah itu sendiri secara harfiah terjadi'},
+  {id:'dzulhijjah', title:'Dzulhijjah', sub:'Bulan terjadinya Baiat Aqabah, pemicu hijrah'}
+];
+let chosenEpoch = 'hijrah';
+let chosenMonth = 'muharram';
+
+const REF_EVENT_YEAR_M = 638; // musyawarah terjadi ~tahun 17 H ~638 M
+const REF_H = 17;
+
+function buildChoices(container, list, groupVar, onPick){
+  list.forEach(item=>{
+    const el = document.createElement('div');
+    el.className = 'choice-item' + (item.id===groupVar.get() ? ' active':'');
+    el.innerHTML = `<div class="ctitle">${item.title}</div><div class="csub">${item.sub}</div>`;
+    el.addEventListener('click', ()=>{
+      [...container.children].forEach(c=>c.classList.remove('active'));
+      el.classList.add('active');
+      groupVar.set(item.id);
+      onPick();
+    });
+    container.appendChild(el);
+  });
+}
+buildChoices(document.getElementById('epochChoices'), EPOCHS, {get:()=>chosenEpoch, set:v=>chosenEpoch=v}, updateEpochResult);
+buildChoices(document.getElementById('monthChoices'), MONTHS_START, {get:()=>chosenMonth, set:v=>chosenMonth=v}, updateEpochResult);
+
+function updateEpochResult(){
+  const epoch = EPOCHS.find(e=>e.id===chosenEpoch);
+  const monthShiftMonths = chosenMonth==='muharram' ? 0 : (chosenMonth==='dzulhijjah' ? -1 : 4); // kasar: Dzulhijjah 1 bulan sebelum Muharram, Rabi'ul Awwal 4 bulan setelah Muharram
+  const yearsSinceEpoch = REF_EVENT_YEAR_M - epoch.yearM;
+  // konversi kasar: 1 tahun Hijriah qamariyah ≈ 354.37 hari vs 1 tahun Masehi ≈365.25 hari
+  const approxHijriYears = Math.round(yearsSinceEpoch * (365.25/354.37));
+  document.getElementById('epochResult').textContent = 'Tahun ' + approxHijriYears + ' H (perkiraan)';
+  let note = `Kalau titik awalnya "${epoch.title}" dan bulan awalnya "${MONTHS_START.find(m=>m.id===chosenMonth).title}", musyawarah yang aslinya tercatat sebagai Tahun 17 H akan bergeser jadi sekitar Tahun ${approxHijriYears} H — `;
+  note += chosenEpoch==='hijrah' ? 'ini mendekati angka asli karena memang inilah yang sesungguhnya dipilih.' : `selisih ≈${Math.abs(approxHijriYears-REF_H)} tahun dari penomoran asli, karena jarak waktu antara "${epoch.title}" dan hijrah itu sendiri.`;
+  document.getElementById('epochResultSub').textContent = note;
+}
+updateEpochResult();
+
+/* ================= EKSPLORASI 2: SIMULASI RUKYAT ================= */
+const SYNODIC = 29.53059;
+const yearsRange = document.getElementById('yearsRange');
+const yearsVal = document.getElementById('yearsVal');
+const cloudRange = document.getElementById('cloudRange');
+const cloudVal = document.getElementById('cloudVal');
+yearsRange.addEventListener('input', ()=> yearsVal.textContent = yearsRange.value);
+cloudRange.addEventListener('input', ()=> cloudVal.textContent = cloudRange.value + '%');
+
+function trueMonthLengths(nMonths){
+  // ideal astronomical rounding model based on cumulative synodic days
+  let cumulative = 0;
+  const lengths = [];
+  for(let i=0;i<nMonths;i++){
+    const idealEnd = cumulative + SYNODIC;
+    const len = Math.round(idealEnd) - Math.round(cumulative);
+    lengths.push(len);
+    cumulative = idealEnd;
+  }
+  return lengths;
+}
+
+function simulateObservation(trueLengths, cloudProb){
+  // if true length is 29 and clouds roll true -> forced istikmal to 30
+  return trueLengths.map(len=>{
+    if(len===29 && Math.random() < cloudProb) return 30;
+    return len;
+  });
+}
+
+function runSimulation(){
+  const years = parseInt(yearsRange.value);
+  const nMonths = years * 12;
+  const cloudProb = parseInt(cloudRange.value) / 100;
+  const twoLoc = document.getElementById('twoLocToggle').checked;
+
+  const trueLens = trueMonthLengths(nMonths);
+  const madinahObs = simulateObservation(trueLens, cloudProb);
+  const syamObs = twoLoc ? simulateObservation(trueLens, cloudProb) : null;
+
+  const totalTrue = trueLens.reduce((a,b)=>a+b,0);
+  const totalMadinah = madinahObs.reduce((a,b)=>a+b,0);
+  const fixedPattern = trueLens.map((_,i)=> i%2===0 ? 30 : 29);
+  const totalFixed = fixedPattern.reduce((a,b)=>a+b,0);
+
+  let mismatchCount = 0;
+  if(twoLoc){
+    for(let i=0;i<nMonths;i++){ if(madinahObs[i] !== syamObs[i]) mismatchCount++; }
+  }
+
+  const statGrid = document.getElementById('statGrid');
+  statGrid.innerHTML = `
+    <div class="stat-card"><div class="slabel">Total Hari (Rukyat Madinah)</div><div class="sval">${totalMadinah.toLocaleString('id-ID')} hari</div><div class="ssub">${nMonths} bulan disimulasikan</div></div>
+    <div class="stat-card"><div class="slabel">Total Hari (Pola Tetap 30-29)</div><div class="sval">${totalFixed.toLocaleString('id-ID')} hari</div><div class="ssub">andaikan tanpa pengamatan</div></div>
+    <div class="stat-card"><div class="slabel">Total Hari (Astronomis Ideal)</div><div class="sval">${totalTrue.toLocaleString('id-ID')} hari</div><div class="ssub">rata-rata sinodis 29,53059</div></div>
+    <div class="stat-card"><div class="slabel">Selisih Rukyat vs Ideal</div><div class="sval">+${(totalMadinah-totalTrue)} hari</div><div class="ssub">akibat istikmal saat mendung</div></div>
+  `;
+
+  document.getElementById('mismatchLine').textContent = twoLoc
+    ? `Dalam ${nMonths} bulan simulasi, Madinah dan Syam berbeda hasil rukyat pada ${mismatchCount} bulan (${((mismatchCount/nMonths)*100).toFixed(1)}%) — persis seperti yang dialami Kuraib dan Ibnu Abbas.`
+    : `Aktifkan perbandingan dua lokasi untuk melihat potensi perbedaan hasil rukyat seperti kisah Kuraib.`;
+
+  const strip = document.getElementById('stripMadinah');
+  strip.innerHTML = '';
+  madinahObs.slice(0,36).forEach(len=>{
+    const sq = document.createElement('div');
+    sq.className = 'sq ' + (len===29 ? 'd29':'d30');
+    strip.appendChild(sq);
+  });
+}
+runSimulation();
+</script>
+
+</body>
+</html>

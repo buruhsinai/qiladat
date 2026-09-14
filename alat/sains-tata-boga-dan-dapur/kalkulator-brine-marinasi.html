@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator Brine/Marinasi — JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --emerald-deep:#0F3D2E; --emerald-mid:#1D5C43; --ivory:#FAF6ED; --ivory-soft:#F1EADA;
+    --ink:#1C2B24; --gold:#B8934A; --gold-soft:#E7D2A0; --line:rgba(15,61,46,0.14);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--ivory);color:var(--ink);font-family:'Karla',sans-serif;line-height:1.65;}
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;color:var(--emerald-deep);letter-spacing:-0.01em;}
+  .wrap{max-width:800px;margin:0 auto;padding:0 24px;}
+
+  .versi-awal{background:var(--emerald-deep);color:var(--ivory);padding:14px 24px;}
+  .versi-awal .wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap;max-width:800px;}
+  .versi-awal .badge{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;background:var(--gold);color:var(--emerald-deep);padding:4px 9px;border-radius:2px;flex-shrink:0;}
+  .versi-awal p{margin:0;font-size:14px;color:rgba(250,246,237,0.92);flex:1;min-width:220px;}
+  .versi-awal a.wa-inline{color:var(--gold-soft);font-weight:700;text-decoration:underline;white-space:nowrap;}
+
+  .crumb{padding:20px 24px 0;max-width:800px;margin:0 auto;font-size:13px;letter-spacing:0.04em;text-transform:uppercase;color:var(--emerald-mid);opacity:0.75;}
+  .crumb span{color:var(--ink);opacity:0.4;margin:0 6px;}
+
+  .hero{padding:32px 0 24px;}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:14px;}
+  .eyebrow::before{content:"";width:18px;height:1px;background:var(--gold);display:inline-block;}
+  .hero h1{font-size:clamp(24px,4.5vw,34px);margin:0 0 12px;line-height:1.2;}
+  .hero p.lede{font-size:16px;color:var(--emerald-deep);opacity:0.85;max-width:60ch;margin:0;}
+
+  section{padding:32px 0;border-top:1px solid var(--line);}
+  section:first-of-type{border-top:none;}
+  .label{font-size:12px;letter-spacing:0.09em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:10px;}
+  section h2{font-size:20px;margin:0 0 14px;}
+  section p{margin:0 0 12px;font-size:15px;}
+  ul.plain{margin:0 0 12px;padding-left:20px;}
+  ul.plain li{margin-bottom:8px;font-size:15px;}
+  code.formula{display:block;background:var(--ivory-soft);padding:12px 14px;border-radius:3px;font-family:monospace;font-size:13.5px;margin:10px 0;color:var(--emerald-deep);overflow-x:auto;}
+
+  .kartu{background:var(--emerald-deep);color:var(--ivory);border-radius:4px;padding:26px;margin-bottom:18px;}
+  .kartu h3{color:var(--ivory);margin:0 0 18px;font-size:17px;}
+
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:13px;margin-bottom:6px;color:var(--gold-soft);}
+  .field input, .field select{width:100%;padding:10px 12px;border-radius:3px;border:1px solid rgba(231,210,160,0.35);background:rgba(250,246,237,0.06);color:var(--ivory);font-family:'Karla',sans-serif;font-size:14.5px;}
+  .field .hint{font-size:12px;color:rgba(250,246,237,0.55);margin-top:5px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media (max-width:560px){.grid2{grid-template-columns:1fr;}}
+  .check-inline{display:flex;align-items:center;gap:8px;font-size:13.5px;color:rgba(250,246,237,0.85);margin-bottom:14px;}
+  .check-inline input{width:auto;}
+
+  button.hitung{width:100%;padding:13px;border:none;border-radius:3px;background:var(--gold);color:var(--emerald-deep);font-family:'Karla',sans-serif;font-weight:700;font-size:14.5px;cursor:pointer;margin-top:4px;}
+  button.hitung:hover{background:var(--gold-soft);}
+
+  .hasil{margin-top:20px;padding-top:18px;border-top:1px solid rgba(231,210,160,0.22);display:none;}
+  .hasil.tampil{display:block;}
+  .baris-hasil{display:flex;justify-content:space-between;font-size:14.5px;padding:7px 0;border-bottom:1px solid rgba(231,210,160,0.15);}
+  .baris-hasil:last-child{border-bottom:none;}
+
+  .hasil-waktu-utama{font-family:'Fraunces',serif;font-size:24px;text-align:center;margin:6px 0 4px;}
+  .hasil-waktu-ket{text-align:center;font-size:13px;color:rgba(250,246,237,0.65);margin-bottom:12px;}
+  .zona-flag{display:inline-block;padding:2px 9px;border-radius:2px;font-size:11.5px;font-weight:700;margin-top:8px;}
+  .zona-flag.andal{background:rgba(123,174,143,0.22);color:#7BAE8F;}
+  .zona-flag.hatihati{background:rgba(199,123,91,0.22);color:#C77B5B;}
+
+  .rentang-box{background:var(--ivory-soft);border-radius:4px;padding:16px 18px;margin:14px 0;font-size:14px;}
+  .rentang-box .baris-r{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);}
+  .rentang-box .baris-r:last-child{border-bottom:none;}
+
+  .langkah{border-left:2px solid var(--gold-soft);padding-left:16px;margin-bottom:14px;}
+  .langkah .no{font-family:'Fraunces',serif;color:var(--gold);font-size:13px;margin-bottom:3px;}
+
+  .verifikasi-box{background:var(--ivory-soft);border-radius:4px;padding:16px 18px;margin:14px 0;font-size:13.5px;}
+  .verifikasi-box .baris-cek{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);}
+  .verifikasi-box .baris-cek:last-child{border-bottom:none;}
+
+  .batasan-item{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start;}
+  .batasan-item .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:8px;flex-shrink:0;}
+  .disclaimer-box{background:var(--ivory-soft);border-left:3px solid var(--gold);padding:14px 16px;border-radius:2px;font-size:14px;margin-top:14px;}
+
+  .konsultasi{margin-top:8px;padding:20px;border:1px dashed var(--line);border-radius:4px;text-align:center;}
+  .konsultasi p{font-size:14px;margin-bottom:12px;color:var(--emerald-deep);}
+  .btn-konsul{display:inline-block;padding:10px 22px;border-radius:3px;background:var(--emerald-mid);color:var(--ivory);font-family:'Karla',sans-serif;font-weight:600;font-size:14px;cursor:pointer;text-decoration:none;}
+
+  footer{padding:24px 24px 50px;font-size:13px;color:var(--emerald-mid);opacity:0.7;max-width:800px;margin:0 auto;}
+</style>
+</head>
+<body>
+
+<div class="versi-awal">
+  <div class="wrap">
+    <span class="badge">Versi Awal</span>
+    <p>Estimasi waktu di alat ini adalah pendekatan berbasis prinsip difusi, dikalibrasi ke pedoman dapur yang umum dipakai — bukan hasil pengukuran laboratorium presisi.</p>
+    <a class="wa-inline" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20diskusi%20terkait%20Kalkulator%20Brine%2FMarinasi%20JAZMI." target="_blank" rel="noopener">Diskusikan via WhatsApp →</a>
+  </div>
+</div>
+
+<div class="crumb">JAZMI <span>/</span> Alat <span>/</span> Brine & Marinasi</div>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">Alat — Sains Tata Boga</div>
+    <h1>Kalkulator Brine/Marinasi</h1>
+    <p class="lede">Menghitung persentase garam-air untuk larutan rendaman, dan memperkirakan lama perendaman berdasarkan ketebalan bahan — bukan sekadar "rendam semalaman".</p>
+  </div>
+
+  <section id="belajar" style="border-top:none;padding-top:0;">
+    <div class="label">01 — Belajar</div>
+    <h2>Kenapa waktu perendaman naik jauh lebih cepat dari ketebalan?</h2>
+    <p>Garam masuk ke daging/ikan lewat proses <strong>difusi</strong> — bergerak dari larutan pekat di luar menuju bagian dalam yang belum asin. Prinsip difusi ini punya konsekuensi yang sering tidak disadari: waktu yang dibutuhkan garam menembus separuh ketebalan bahan naik <strong>sebanding dengan kuadrat ketebalan</strong>, bukan linear.</p>
+    <p>Artinya: potongan yang 2x lebih tebal butuh waktu kira-kira <strong>4x lebih lama</strong> untuk terendam merata sampai ke tengah — bukan cuma 2x. Ini alasan kenapa fillet ikan tipis cukup 20-30 menit, sementara ayam utuh butuh semalaman, bukan sekadar "beda 2-3 jam".</p>
+    <p>Persentase garam-air sendiri memakai logika yang sama dengan persentase baker — bedanya di sini <strong>air adalah basis 100%</strong>, bukan tepung, karena yang sedang diukur adalah kekuatan larutan, bukan adonan.</p>
+  </section>
+
+  <section id="kalkulator">
+    <div class="label">02 — Eksplorasi</div>
+
+    <div class="kartu">
+      <h3>1. Hitung Larutan Brine</h3>
+      <div class="grid2">
+        <div class="field">
+          <label for="volumeAir">Jumlah air (liter)</label>
+          <input type="number" id="volumeAir" placeholder="Contoh: 1" min="0" step="0.1">
+        </div>
+        <div class="field">
+          <label for="kekuatanBrine">Kekuatan larutan</label>
+          <select id="kekuatanBrine" onchange="onKekuatanChange()">
+            <option value="3">Ringan — 3% (rendam lama, rasa halus)</option>
+            <option value="6" selected>Sedang — 6% (paling umum dipakai)</option>
+            <option value="10">Kuat — 10% (rendam cepat)</option>
+            <option value="custom">Kustom</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" id="fieldCustomPersen" style="display:none;">
+        <label for="persenCustom">Persentase garam kustom (%)</label>
+        <input type="number" id="persenCustom" min="0.5" max="20" step="0.5" value="6">
+      </div>
+      <div class="check-inline">
+        <input type="checkbox" id="pakaiGula" onchange="toggleGula()">
+        <label for="pakaiGula">Tambahkan gula (default: separuh dari berat garam)</label>
+      </div>
+      <div class="field" id="fieldGula" style="display:none;">
+        <label for="rasioGula">Gula, sebagai persentase dari berat garam (%)</label>
+        <input type="number" id="rasioGula" value="50" min="0" max="200">
+      </div>
+      <button class="hitung" onclick="hitungBrine()">Hitung Larutan</button>
+      <div class="hasil" id="hasilBrine"></div>
+    </div>
+
+    <div class="kartu">
+      <h3>2. Estimasi Waktu Perendaman</h3>
+      <div class="grid2">
+        <div class="field">
+          <label for="tebalBahan">Ketebalan bahan (cm)</label>
+          <input type="number" id="tebalBahan" placeholder="Contoh: 2.5" min="0.2" step="0.1">
+          <div class="hint">Ukur bagian paling tebal. Untuk bahan bulat/utuh, ukur diameternya.</div>
+        </div>
+        <div class="field">
+          <label for="kekuatanWaktu">Kekuatan larutan yang dipakai</label>
+          <select id="kekuatanWaktu">
+            <option value="3">Ringan — 3%</option>
+            <option value="6" selected>Sedang — 6%</option>
+            <option value="10">Kuat — 10%</option>
+          </select>
+        </div>
+      </div>
+      <button class="hitung" onclick="hitungWaktu()">Estimasi Waktu</button>
+      <div class="hasil" id="hasilWaktu"></div>
+    </div>
+  </section>
+
+  <section id="metode">
+    <div class="label">03 — Metode</div>
+    <h2>Bagaimana alat ini menghitung</h2>
+    <div class="langkah">
+      <div class="no">Langkah 1</div>
+      <p>Berat garam dihitung sebagai persentase dari berat air (1 liter air ≈ 1000 gram).</p>
+      <code class="formula">berat_garam = berat_air × (persen_garam / 100)</code>
+    </div>
+    <div class="langkah">
+      <div class="no">Langkah 2</div>
+      <p>Waktu perendaman diperkirakan berdasarkan kuadrat ketebalan, dikalibrasi terhadap pedoman dapur yang umum untuk potongan tipis hingga sedang.</p>
+      <code class="formula">waktu_jam = k × ketebalan_cm² × (10 / persen_garam)</code>
+    </div>
+
+    <h2 style="margin-top:24px;">Verifikasi</h2>
+    <p>Formula ini diuji terhadap beberapa patokan yang umum dipakai di dapur sebelum dipasang di alat:</p>
+    <div class="verifikasi-box">
+      <div class="baris-cek"><span>Fillet ikan tipis (1cm), brine kuat 10%</span><strong>Hasil: 24 menit — patokan umum: 15-30 menit ✓</strong></div>
+      <div class="baris-cek"><span>Dada ayam (2,5cm), brine sedang 6%</span><strong>Hasil: 4,2 jam — patokan umum: 1-4 jam (mendekati batas atas)</strong></div>
+      <div class="baris-cek"><span>Potongan besar (5cm), brine sedang 6%</span><strong>Hasil: 16,7 jam — patokan umum: 8-16 jam (mendekati batas atas)</strong></div>
+      <div class="baris-cek"><span>Ayam utuh (~9cm), brine sedang 6%</span><strong>Hasil formula: 54 jam — patokan umum: 8-24 jam ✗ MELESET JAUH</strong></div>
+    </div>
+    <p>Temuan ini penting: formula kuadratik cukup akurat untuk fillet sampai potongan ayam (kira-kira sampai 5-6 cm), tapi <strong>meleset jauh untuk unggas utuh</strong> — bentuknya tidak lagi seperti lempeng datar sederhana yang diasumsikan model difusi ini, dan ada faktor lain (tulang, rongga, sirkulasi larutan) yang tidak ditangkap rumus sederhana. Karena itu, alat ini membatasi tampilan rumus sampai ketebalan 6 cm, dan di atas itu menampilkan pedoman praktis dari pengalaman dapur, bukan hasil formula.</p>
+  </section>
+
+  <section id="batasan">
+    <div class="label">04 — Batasan</div>
+    <h2>Yang perlu diperhatikan</h2>
+    <div class="batasan-item"><div class="dot"></div><p>Formula waktu hanya diandalkan untuk ketebalan sampai sekitar 6 cm (fillet, dada ayam, potongan sedang). Untuk unggas utuh/potongan besar, gunakan pedoman praktis yang ditampilkan, bukan angka formula.</p></div>
+    <div class="batasan-item"><div class="dot"></div><p>Konstanta kalibrasi (k) diperoleh dari penyesuaian terhadap pedoman dapur yang umum dipakai, bukan dari pengukuran koefisien difusi garam yang presisi secara ilmiah — anggap hasilnya sebagai perkiraan yang wajar, bukan angka pasti.</p></div>
+    <div class="batasan-item"><div class="dot"></div><p>Jenis daging/ikan (kepadatan, kandungan lemak, ada/tidaknya kulit) memengaruhi kecepatan difusi nyata dan tidak dimodelkan di sini.</p></div>
+    <div class="batasan-item"><div class="dot"></div><p><strong>Keamanan pangan</strong>: perendaman lebih dari 1-2 jam sebaiknya dilakukan di lemari es (bukan suhu ruang), untuk mencegah pertumbuhan bakteri.</p></div>
+    <div class="disclaimer-box">Alat ini membantu perhitungan berdasarkan prinsip difusi yang disederhanakan. Anggap hasil waktu sebagai titik awal yang bisa disesuaikan dengan pengalaman dan preferensi rasa Anda sendiri.</div>
+  </section>
+
+  <section id="konsultasi">
+    <div class="konsultasi">
+      <p>Mau menganalisis resep marinasi tradisional dan mengubahnya jadi rasio yang bisa diskalakan?</p>
+      <a class="btn-konsul" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20diskusi%20terkait%20Kalkulator%20Brine%2FMarinasi%20JAZMI." target="_blank" rel="noopener">Diskusikan via WhatsApp</a>
+    </div>
+  </section>
+
+  <footer>
+    <p>Bagian dari Laboratorium Alat JAZMI. Prototipe berdiri sendiri — belum terhubung ke Beranda atau modul lain.</p>
+  </footer>
+</div>
+
+<script>
+const K_KALIBRASI = 0.4; // dari titik acuan: fillet 1cm @ 10% = 0.4 jam
+const PERSEN_REFERENSI = 10;
+const BATAS_ANDAL_CM = 6;
+
+const PEDOMAN_BESAR = [
+  {maks:8, teks:'8–16 jam (biasanya semalaman di lemari es)'},
+  {maks:12, teks:'12–24 jam'},
+  {maks:Infinity, teks:'24–48 jam, tergantung ukuran (mis. kalkun besar)'}
+];
+
+function onKekuatanChange(){
+  document.getElementById('fieldCustomPersen').style.display =
+    document.getElementById('kekuatanBrine').value === 'custom' ? 'block' : 'none';
+}
+function toggleGula(){
+  document.getElementById('fieldGula').style.display = document.getElementById('pakaiGula').checked ? 'block' : 'none';
+}
+
+function hitungBrine(){
+  const volumeAir = parseFloat(document.getElementById('volumeAir').value);
+  if (isNaN(volumeAir) || volumeAir<=0){ alert('Masukkan jumlah air yang valid.'); return; }
+
+  let persen = document.getElementById('kekuatanBrine').value;
+  persen = persen === 'custom' ? parseFloat(document.getElementById('persenCustom').value) : parseFloat(persen);
+
+  const beratAir = volumeAir * 1000; // gram
+  const beratGaram = beratAir * persen / 100;
+
+  let html = `
+    <div class="baris-hasil"><span>Air</span><span>${beratAir.toLocaleString('id-ID')} g (${volumeAir} L)</span></div>
+    <div class="baris-hasil"><span>Garam (${persen}%)</span><span>${beratGaram.toLocaleString('id-ID', {maximumFractionDigits:1})} g</span></div>
+  `;
+
+  if (document.getElementById('pakaiGula').checked){
+    const rasioGula = parseFloat(document.getElementById('rasioGula').value) || 0;
+    const beratGula = beratGaram * rasioGula / 100;
+    html += `<div class="baris-hasil"><span>Gula (${rasioGula}% dari garam)</span><span>${beratGula.toLocaleString('id-ID', {maximumFractionDigits:1})} g</span></div>`;
+  }
+
+  const box = document.getElementById('hasilBrine');
+  box.innerHTML = html;
+  box.classList.add('tampil');
+}
+
+function hitungWaktu(){
+  const tebal = parseFloat(document.getElementById('tebalBahan').value);
+  const persen = parseFloat(document.getElementById('kekuatanWaktu').value);
+  if (isNaN(tebal) || tebal<=0){ alert('Masukkan ketebalan yang valid.'); return; }
+
+  const box = document.getElementById('hasilWaktu');
+
+  if (tebal <= BATAS_ANDAL_CM){
+    const jam = K_KALIBRASI * Math.pow(tebal, 2) * (PERSEN_REFERENSI / persen);
+    let tampilan;
+    if (jam < 1) tampilan = `${Math.round(jam*60)} menit`;
+    else tampilan = `${jam.toFixed(1)} jam`;
+
+    box.innerHTML = `
+      <div class="hasil-waktu-utama">${tampilan}</div>
+      <div class="hasil-waktu-ket">Perkiraan untuk ketebalan ${tebal} cm pada larutan ${persen}%</div>
+      <div style="text-align:center;"><span class="zona-flag andal">Zona formula andal (≤ 6 cm)</span></div>
+    `;
+  } else {
+    const pedoman = PEDOMAN_BESAR.find(p => tebal <= p.maks);
+    box.innerHTML = `
+      <div class="hasil-waktu-utama">${pedoman.teks}</div>
+      <div class="hasil-waktu-ket">Ketebalan ${tebal} cm — di luar zona andal formula (&gt;6 cm)</div>
+      <div style="text-align:center;"><span class="zona-flag hatihati">Pedoman praktis, bukan hasil formula</span></div>
+    `;
+  }
+  box.classList.add('tampil');
+}
+</script>
+
+</body>
+</html>

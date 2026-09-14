@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tally Stick & Quipu — Laboratorium JAZMI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&display=swap');
+:root{
+  --bg:#EDE3D0; --panel:#FBF6EA; --panel-border:#d9c8a6;
+  --wood:#8B5E34; --wood-dark:#5A3D22; --cord-red:#A83A2C; --cord-indigo:#3A4F6B; --cord-cream:#D8C49A;
+  --ink:#2B2013; --ink-soft:#6b5c42; --accent:#C08A3E;
+  --line:rgba(43,32,19,.15); --line-strong:rgba(43,32,19,.3);
+}
+*{box-sizing:border-box;} html,body{margin:0;padding:0;}
+body{ background:var(--bg); color:var(--ink); font-family:'Karla',sans-serif; }
+.wrap{max-width:920px; margin:0 auto; padding:20px 14px 44px;}
+.eyebrow{font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); margin:0 0 4px;}
+h1{font-family:'Fraunces',serif; font-weight:700; font-size:clamp(24px,5.5vw,34px); margin:0 0 6px;}
+.sub{font-size:13.5px; color:var(--ink-soft); max-width:70ch; line-height:1.55;}
+
+.intro{ background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:16px 18px; margin-top:16px; }
+.intro h2{ font-family:'Fraunces',serif; font-size:17px; margin:0 0 8px; color:var(--wood-dark); }
+.intro p{ font-size:13px; line-height:1.65; margin:0 0 8px; }
+
+.partlabel{ font-family:'Fraunces',serif; font-size:21px; margin:30px 0 4px; color:var(--wood-dark); }
+.partsub{ font-size:12.5px; color:var(--ink-soft); margin-bottom:12px; max-width:70ch; line-height:1.5; }
+
+.controls{ background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:16px; }
+.row{ display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end; margin-bottom:10px; }
+.field{ display:flex; flex-direction:column; gap:4px; }
+.field label{ font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); display:flex; justify-content:space-between; }
+.field label .val{ color:var(--accent); font-weight:700; text-transform:none; letter-spacing:0; }
+.field input[type=number]{ width:110px; background:#fff; border:1px solid var(--line-strong); color:var(--ink); border-radius:4px; padding:6px 8px; font-family:'Karla',sans-serif; font-size:13px; }
+input[type=range]{ width:150px; accent-color:var(--accent); }
+button{
+  font-family:'Karla',sans-serif; font-weight:700; font-size:12px;
+  background:var(--accent); color:#241c05; border:none; border-radius:999px; padding:8px 14px; cursor:pointer;
+}
+button.ghost{ background:transparent; color:var(--ink); border:1px solid var(--line-strong); font-weight:500; }
+button:hover{ filter:brightness(1.08); }
+
+.stage{ background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:14px; margin-top:12px; }
+svg.dia{ width:100%; height:auto; display:block; }
+
+.cordlist{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+.cordrow{ display:flex; gap:8px; align-items:center; background:#fff; border:1px solid var(--panel-border); border-radius:6px; padding:8px 10px; flex-wrap:wrap; }
+.cordrow input[type=number]{ width:90px; }
+.swatch-btn{ width:20px; height:20px; border-radius:50%; border:2px solid #0002; cursor:pointer; }
+.swatch-btn.sel{ border-color:var(--ink); }
+
+.section p{ font-size:13px; line-height:1.65; color:var(--ink); max-width:74ch; }
+.case{ background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:14px 16px; margin-top:10px; }
+.case h3{ font-family:'Fraunces',serif; font-size:15px; margin:0 0 6px; color:var(--wood-dark); }
+.tag-debated{ display:inline-block; background:rgba(168,58,44,.12); border:1px solid var(--cord-red); color:var(--cord-red); font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:3px; margin-left:6px; }
+
+footer{margin-top:26px; padding-top:14px; border-top:1px solid var(--line); font-size:11.5px; color:var(--ink-soft); line-height:1.6;}
+footer b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">JAZMI · Laboratorium Sejarah Aksara & Angka · Level 4</p>
+  <h1>Tally Stick &amp; Quipu</h1>
+  <p class="sub">Dua sistem pencatatan bukan-tulisan dari dua benua berbeda — sama-sama mampu
+  menyimpan angka dengan akurat tanpa satu huruf pun, dan sama-sama memunculkan pertanyaan yang sama:
+  di titik mana sistem seperti ini berubah jadi <i>tulisan</i>?</p>
+
+  <div class="intro">
+    <h2>Belajar dulu</h2>
+    <p><b>Tally stick</b> — takik/goresan pada kayu atau tulang untuk mencatat jumlah, utang, atau
+    transaksi. Yang paling terdokumentasi: sistem <i>Exchequer</i> Kerajaan Inggris (dipakai hingga
+    1826!), di mana tongkat dibelah memanjang jadi dua — <i>stock</i> (dipegang kreditur) dan
+    <i>foil</i> (dipegang debitur) — dan hanya pasangan asli yang polanya akan pas persis kalau
+    disatukan kembali, semacam segel anti-pemalsuan purba.</p>
+    <p><b>Quipu</b> — tali simpul suku Inca (dan pendahulunya di Andes), dipakai untuk sensus, pajak,
+    dan catatan administratif kekaisaran yang membentang ribuan kilometer tanpa aksara tertulis.
+    Sistemnya jauh lebih canggih dari sekadar simpul acak: posisi simpul di sepanjang tali menandai
+    nilai tempat (satuan, puluhan, ratusan — persis seperti sistem desimal kita), dan jenis simpulnya
+    berbeda-beda tergantung posisi.</p>
+  </div>
+
+  <p class="partlabel">Bagian 1 — Tally Stick</p>
+  <p class="partsub">Masukkan angka untuk melihat takikannya secara otomatis, atau bangun sendiri
+  takik demi takik di mode bebas.</p>
+  <div class="controls">
+    <div class="row">
+      <div class="field">
+        <label>Angka (0–9999)</label>
+        <input type="number" id="tallyNum" value="1247" min="0" max="9999">
+      </div>
+      <button id="tallyGenBtn">Buat Takikan</button>
+      <button class="ghost" id="tallySplitBtn">Belah jadi Stock &amp; Foil</button>
+    </div>
+  </div>
+  <div class="stage"><svg class="dia" id="tallySvg" viewBox="0 0 800 180" xmlns="http://www.w3.org/2000/svg"></svg></div>
+
+  <div class="controls" style="margin-top:12px;">
+    <div class="row">
+      <span style="font-size:12px; color:var(--ink-soft);">Mode bebas — tambah takik:</span>
+      <button class="ghost" data-add="1">+ Satuan</button>
+      <button class="ghost" data-add="10">+ Puluhan</button>
+      <button class="ghost" data-add="100">+ Ratusan</button>
+      <button class="ghost" data-add="1000">+ Ribuan</button>
+      <button class="ghost" id="tallyResetBtn">↺ Kosongkan</button>
+    </div>
+    <div style="font-size:13px;">Total takikan bebas: <b id="freeTotalOut" style="color:var(--accent);">0</b></div>
+  </div>
+  <div class="stage"><svg class="dia" id="tallyFreeSvg" viewBox="0 0 800 180" xmlns="http://www.w3.org/2000/svg"></svg></div>
+
+  <p class="partlabel">Bagian 2 — Quipu</p>
+  <p class="partsub">Tambah beberapa tali gantung, isi angkanya masing-masing — simpul dan posisinya
+  mengikuti sistem asli yang diuraikan L. Leland Locke (1912): simpul angka-8 untuk digit 1 di posisi
+  satuan, simpul panjang untuk digit 2-9 di posisi satuan, dan kelompok simpul tunggal untuk digit di
+  posisi puluhan/ratusan ke atas — dengan posisi kosong berarti nol (khipu punya konsep nol nilai
+  tempat, sama seperti Babel, Maya, dan India — ditemukan secara independen).</p>
+  <div class="controls">
+    <div class="row">
+      <button id="cordAddBtn">+ Tambah Tali</button>
+      <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; margin-left:8px;">
+        <input type="checkbox" id="summaryToggle"> Tampilkan Tali Ringkasan (jumlah semua tali)
+      </label>
+    </div>
+    <div class="cordlist" id="cordList"></div>
+  </div>
+  <div class="stage"><svg class="dia" id="quipuSvg" viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg"></svg></div>
+
+  <p class="partlabel">Bagian 3 — Apakah Ini Proto-Aksara?</p>
+  <p class="partsub">Ini tambahan di luar dua simulator di atas: bagaimana sistem pencatatan angka
+  seperti ini berhubungan dengan lahirnya tulisan sungguhan.</p>
+
+  <div class="case">
+    <h3>Kasus 1 — Token Tanah Liat Mesopotamia → Cuneiform</h3>
+    <p>Arkeolog Denise Schmandt-Besserat mengusulkan (berdasar analisis ribuan artefak) bahwa
+    aksara cuneiform Sumeria lahir dari evolusi sistem token tanah liat kecil berbagai bentuk, yang
+    dipakai sejak ~8000 SM untuk menghitung barang dagangan (satu bentuk untuk sekarung gandum,
+    bentuk lain untuk seekor domba, dst.). Token-token ini lalu dibungkus dalam amplop tanah liat
+    tertutup sebagai bukti transaksi — tapi karena isinya tak terlihat dari luar, orang mulai
+    mencetak bentuk token itu di permukaan amplop sebelum menutupnya. Titik baliknya: begitu cetakan
+    di luar sudah cukup untuk mewakili isinya, tokennya sendiri jadi tak perlu lagi — dan tanda-tanda
+    cetakan itulah yang berkembang jadi piktograf, lalu aksara cuneiform (~3200 SM). Ini teori yang
+    berpengaruh, meski beberapa detailnya masih didiskusikan sesama arkeolog.</p>
+  </div>
+
+  <div class="case">
+    <h3>Kasus 2 — Khipu Naratif dari Collata, Peru <span class="tag-debated">Diperdebatkan, riset aktif</span></h3>
+    <p>Kebanyakan khipu yang sudah diteliti jelas berisi data numerik (sensus, pajak). Tapi tahun
+    2017, antropolog Sabine Hyland meneliti dua "papan khipu" dari desa San Juan de Collata, Peru —
+    yang menurut tradisi lisan setempat menyimpan pesan terkait pemberontakan era kolonial, bukan
+    angka. Susunan simpul, warna benang, dan arah pintalannya menunjukkan pola yang lebih konsisten
+    dengan kode fonetik/silabis daripada pencatatan angka biasa — kalau benar, ini akan jadi bukti
+    bahwa sebagian khipu memang berfungsi sebagai <i>tulisan</i> sungguhan, bukan cuma kalkulator
+    tali. Tapi ini masih riset yang sedang berjalan, belum ada dekripsi penuh yang disepakati luas
+    komunitas ilmiah — beda dengan Kasus 1 yang sudah jadi teori arus utama.</p>
+  </div>
+
+  <div class="case">
+    <h3>Kontras: Tally Stick Tidak Pernah "Naik Kelas" Jadi Tulisan</h3>
+    <p>Berbeda dari dua kasus di atas, tally stick Eropa tidak berkembang jadi sistem tulisan —
+    ia tetap alat angka murni selama ribuan tahun, hidup berdampingan dengan aksara alfabet yang
+    sudah ada duluan (Latin, dst.), bukan mendahuluinya. Kontras ini justru menarik: token Mesopotamia
+    lahir SEBELUM ada tulisan di sana sehingga punya "ruang" untuk berevolusi jadi tulisan, sementara
+    tally stick Eropa lahir DI TENGAH masyarakat yang sudah melek aksara, jadi tak pernah punya
+    tekanan yang sama untuk berkembang lebih jauh.</p>
+  </div>
+
+  <footer>
+    <b>Batasan:</b> Sistem notasi tally stick di simulator ini disederhanakan ke basis-10 murni demi
+    kejelasan pedagogis — sistem Exchequer asli memakai satuan non-desimal (£-s-d) dengan ukuran
+    takik yang sedikit bervariasi antar sumber sejarah. Sistem angka Quipu (simpul panjang/angka-8/
+    kelompok simpul tunggal, nilai tempat berbasis posisi) mengikuti pemahaman Locke (1912) yang
+    sudah diterima luas untuk khipu numerik — tapi makna warna benang, arah pintalan, dan jenis
+    perlekatan tali (yang mungkin membawa informasi tambahan di luar angka) masih area riset aktif,
+    tidak saya klaim terpecahkan di sini. Kasus 2 di Bagian 3 sengaja saya tandai eksplisit sebagai
+    riset yang belum jadi konsensus, berbeda dari Kasus 1 yang sudah teori arus utama.
+  </footer>
+</div>
+
+<script>
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs){const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); return e;}
+
+// ===================== TALLY STICK =====================
+function digitsOf(n){
+  n=Math.max(0,Math.min(9999,Math.floor(n)));
+  return { th:Math.floor(n/1000)%10, hu:Math.floor(n/100)%10, te:Math.floor(n/10)%10, un:n%10 };
+}
+const NOTCH_W={1:4,10:9,100:16,1000:26};
+const NOTCH_LABEL={1:'satuan',10:'puluhan',100:'ratusan',1000:'ribuan'};
+
+function drawStick(svgId, counts, splitMode){
+  const svg=document.getElementById(svgId); svg.innerHTML='';
+  const y0=70, y1=110, xStart=40, xEnd=760;
+  svg.appendChild(el('rect',{x:xStart,y:y0,width:xEnd-xStart,height:y1-y0,rx:6,fill:'var(--wood)',stroke:'var(--wood-dark)','stroke-width':2}));
+
+  let x=xStart+16;
+  [1000,100,10,1].forEach(size=>{
+    const count=counts[size]||0;
+    for(let i=0;i<count;i++){
+      const w=NOTCH_W[size];
+      svg.appendChild(el('polygon',{
+        points:`${x},${y0} ${x+w/2},${(y0+y1)/2} ${x+w},${y0} ${x+w},${y1} ${x},${y1}`,
+        fill:'var(--bg)'
+      }));
+      x+=w+6;
+    }
+    if(count>0){
+      const lbl=el('text',{x:x-3,y:y1+16,fill:'var(--ink-soft)','font-size':9,'text-anchor':'end'}); lbl.textContent=NOTCH_LABEL[size]; svg.appendChild(lbl);
+      x+=14;
+    }
+  });
+
+  if(splitMode){
+    svg.appendChild(el('line',{x1:xStart,y1:(y0+y1)/2,x2:xEnd,y2:(y0+y1)/2,stroke:'#2b2013','stroke-width':1.5,'stroke-dasharray':'4 3'}));
+    const t1=el('text',{x:xEnd-4,y:y0-6,fill:'var(--ink-soft)','font-size':10,'text-anchor':'end'}); t1.textContent='STOCK (dipegang kreditur)'; svg.appendChild(t1);
+    const t2=el('text',{x:xEnd-4,y:y1+34,fill:'var(--ink-soft)','font-size':10,'text-anchor':'end'}); t2.textContent='FOIL (dipegang debitur)'; svg.appendChild(t2);
+  }
+}
+
+let splitOn=false;
+document.getElementById('tallyGenBtn').addEventListener('click', renderTallyGen);
+document.getElementById('tallySplitBtn').addEventListener('click', ()=>{ splitOn=!splitOn; renderTallyGen(); });
+function renderTallyGen(){
+  const n=parseInt(document.getElementById('tallyNum').value)||0;
+  const d=digitsOf(n);
+  drawStick('tallySvg', {1000:d.th,100:d.hu,10:d.te,1:d.un}, splitOn);
+}
+renderTallyGen();
+
+let freeCounts={1000:0,100:0,10:0,1:0};
+document.querySelectorAll('[data-add]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const v=parseInt(btn.dataset.add);
+    if(freeCounts[v]<9) freeCounts[v]++;
+    renderFree();
+  });
+});
+document.getElementById('tallyResetBtn').addEventListener('click', ()=>{ freeCounts={1000:0,100:0,10:0,1:0}; renderFree(); });
+function renderFree(){
+  const total=freeCounts[1000]*1000+freeCounts[100]*100+freeCounts[10]*10+freeCounts[1];
+  document.getElementById('freeTotalOut').textContent=total;
+  drawStick('tallyFreeSvg', freeCounts, false);
+}
+renderFree();
+
+// ===================== QUIPU =====================
+const CORD_COLORS=['#A83A2C','#3A4F6B','#8B5E34','#5A6B3A','#4a4038'];
+let cords=[{value:1247,color:CORD_COLORS[0]},{value:308,color:CORD_COLORS[1]}];
+
+function quipuDigits(n){
+  n=Math.max(0,Math.min(9999,Math.floor(n)));
+  const s=String(n).padStart(4,'0');
+  return s.split('').map(Number); // [thousands,hundreds,tens,units]
+}
+
+function drawCord(svg, x, digits, color, label, topY, bottomY){
+  const g=el('g',{});
+  svg.appendChild(el('line',{x1:x,y1:topY,x2:x,y2:bottomY,stroke:color,'stroke-width':2.5}));
+  const places=['ribuan','ratusan','puluhan','satuan'];
+  const nSlots=4;
+  const slotH=(bottomY-topY)/nSlots;
+  digits.forEach((d,i)=>{
+    const isUnits = (i===nSlots-1);
+    const cy=topY+slotH*i+slotH*0.6;
+    if(d===0) return; // gap = zero
+    if(isUnits){
+      if(d===1){
+        // figure-8 knot symbol
+        svg.appendChild(el('circle',{cx:x-3,cy:cy,r:3.2,fill:'none',stroke:color,'stroke-width':1.6}));
+        svg.appendChild(el('circle',{cx:x+3,cy:cy,r:3.2,fill:'none',stroke:color,'stroke-width':1.6}));
+      } else {
+        // long knot: elongated coil
+        svg.appendChild(el('rect',{x:x-3,y:cy-d*1.1,width:6,height:d*2.2,rx:3,fill:'none',stroke:color,'stroke-width':1.6}));
+      }
+    } else {
+      // cluster of single knots
+      for(let k=0;k<d;k++){
+        svg.appendChild(el('circle',{cx:x,cy:topY+slotH*i+8+k*7,r:2.6,fill:color}));
+      }
+    }
+  });
+  const lbl=el('text',{x:x,y:bottomY+16,fill:'var(--ink-soft)','font-size':10,'text-anchor':'middle'}); lbl.textContent=label; svg.appendChild(lbl);
+}
+
+function renderQuipu(){
+  const svg=document.getElementById('quipuSvg'); svg.innerHTML='';
+  const mainY=30, bottomY=310;
+  const showSummary=document.getElementById('summaryToggle').checked;
+  const allCords = showSummary ? cords.concat([{value:cords.reduce((a,c)=>a+c.value,0), color:'#2b2013', summary:true}]) : cords;
+  const n=allCords.length;
+  const xStart=60, xEnd=740;
+  svg.appendChild(el('line',{x1:xStart-20,y1:mainY,x2:xEnd+20,y2:mainY,stroke:'var(--wood-dark)','stroke-width':4}));
+  allCords.forEach((c,i)=>{
+    const x = n>1 ? xStart+(xEnd-xStart)*i/(n-1) : (xStart+xEnd)/2;
+    const digits=quipuDigits(c.value);
+    const label=(c.summary?'RINGKASAN = ':'')+c.value;
+    drawCord(svg, x, digits, c.color, label, mainY+10, c.summary?280:bottomY-20);
+  });
+}
+
+function renderCordList(){
+  const list=document.getElementById('cordList'); list.innerHTML='';
+  cords.forEach((c,idx)=>{
+    const row=document.createElement('div'); row.className='cordrow';
+    row.innerHTML=`<span style="font-size:11px; color:var(--ink-soft);">Tali ${idx+1}</span>
+      <input type="number" value="${c.value}" min="0" max="9999" data-idx="${idx}" class="cval">
+      <span style="display:flex; gap:4px;">${CORD_COLORS.map(col=>`<span class="swatch-btn ${col===c.color?'sel':''}" style="background:${col}" data-idx="${idx}" data-color="${col}"></span>`).join('')}</span>
+      <button class="ghost" data-remove="${idx}" style="padding:4px 10px;">Hapus</button>`;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('.cval').forEach(inp=>{
+    inp.addEventListener('input', (e)=>{ cords[e.target.dataset.idx].value=parseInt(e.target.value)||0; renderQuipu(); });
+  });
+  list.querySelectorAll('.swatch-btn').forEach(sw=>{
+    sw.addEventListener('click', (e)=>{ cords[e.target.dataset.idx].color=e.target.dataset.color; renderCordList(); renderQuipu(); });
+  });
+  list.querySelectorAll('[data-remove]').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{ cords.splice(parseInt(e.target.dataset.remove),1); renderCordList(); renderQuipu(); });
+  });
+}
+document.getElementById('cordAddBtn').addEventListener('click', ()=>{
+  if(cords.length>=5) return;
+  cords.push({value:100, color:CORD_COLORS[cords.length%CORD_COLORS.length]});
+  renderCordList(); renderQuipu();
+});
+document.getElementById('summaryToggle').addEventListener('change', renderQuipu);
+
+renderCordList();
+renderQuipu();
+</script>
+</body>
+</html>

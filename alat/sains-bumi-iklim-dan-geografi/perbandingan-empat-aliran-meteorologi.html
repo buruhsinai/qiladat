@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Empat Aliran Meteorologi — Satu Atmosfer, Empat Pertanyaan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root{
+    --bg:#10141A; --panel:#171D25; --panel-2:#1D2530;
+    --border:rgba(232,236,244,0.09); --border-strong:rgba(232,236,244,0.17);
+    --text:#ECEFF3; --muted:#8C97A6;
+    --gold:#E0A94D; --gold-dim:224,169,77;
+    --cyan:#4FC7D9; --cyan-dim:79,199,217;
+    --true:#4FBF8A; --true-dim:79,191,138;
+    --warn:#D9677A; --warn-dim:217,103,122;
+    --violet:#9C82E0;
+    --radius:4px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(79,199,217,0.06), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 0%, rgba(224,169,77,0.05), transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:'Karla',sans-serif;font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:'Fraunces',serif;font-weight:500;letter-spacing:-0.01em;margin:0;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 26px 80px;}
+  .rule{height:1px;background:var(--border);margin:44px 0;}
+  .eyebrow-num{font-family:'Fraunces',serif;font-style:italic;color:var(--cyan);font-size:15px;margin:0 0 10px;}
+  section h2{font-size:clamp(22px,3.4vw,28px);margin-bottom:10px;}
+  section > p.desc{color:var(--muted);max-width:70ch;margin:0 0 20px;font-size:15px;}
+
+  header.top{padding:44px 0 6px;}
+  header.top .kicker{font-size:13px;color:var(--muted);margin:0 0 14px;}
+  header.top h1{font-size:clamp(28px,5vw,40px);margin-bottom:12px;max-width:24ch;}
+  header.top p.lede{color:var(--muted);max-width:68ch;font-size:16px;margin:0;}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
+  .badge{font-size:12px;padding:4px 11px;border-radius:100px;border:1px solid var(--border-strong);color:var(--muted);}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;}
+
+  .slider-row{ margin:14px 0; }
+  .slider-row label{ display:flex; justify-content:space-between; font-size:13.5px; font-weight:600; color:var(--text); margin-bottom:7px; }
+  .slider-row label span.val{ font-family:'JetBrains Mono',monospace; color:var(--gold); }
+  input[type=range]{ width:100%; accent-color:var(--gold); }
+  .toggle-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .toggle-chip{padding:7px 14px;border-radius:100px;border:1px solid var(--border-strong);background:var(--panel-2);color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer;}
+  .toggle-chip.active{border-color:var(--gold);color:var(--gold);}
+
+  .control-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 28px;}
+  @media (max-width:640px){.control-grid{grid-template-columns:1fr;}}
+
+  .branch-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px;}
+  @media (max-width:820px){.branch-grid{grid-template-columns:1fr;}}
+  .branch-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;border-top:3px solid var(--muted);}
+  .branch-card.b-dinamik{border-top-color:var(--warn);}
+  .branch-card.b-sinoptik{border-top-color:var(--cyan);}
+  .branch-card.b-fisis{border-top-color:var(--violet);}
+  .branch-card.b-numerik{border-top-color:var(--gold);}
+  .branch-card h4{font-size:15px;margin-bottom:2px;}
+  .branch-card .q{font-size:12.5px;color:var(--muted);margin-bottom:12px;font-style:italic;}
+  .branch-svg{background:var(--panel-2);border:1px solid var(--border);border-radius:3px;padding:8px;}
+  .branch-svg svg{width:100%;height:auto;display:block;}
+  .branch-result{margin-top:10px;font-size:13.5px;color:var(--text);}
+  .branch-result b{color:var(--gold);font-family:'JetBrains Mono',monospace;}
+  .branch-result.b-warn b{color:var(--warn);}
+  .bar-row{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);margin:4px 0;}
+  .bar-track{flex:1;height:8px;background:var(--border-strong);border-radius:4px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:4px;}
+
+  .problem-list{counter-reset:prob;margin-top:18px;}
+  .problem-item{position:relative;padding:16px 0 16px 46px;border-top:1px solid var(--border);}
+  .problem-item:first-child{border-top:none;}
+  .problem-item::before{
+    counter-increment:prob;content:counter(prob);
+    position:absolute;left:0;top:16px;width:28px;height:28px;border-radius:50%;
+    background:var(--panel-2);border:1px solid var(--border-strong);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Fraunces',serif;font-size:13px;color:var(--gold);
+  }
+  .problem-item .q{font-size:15px;color:var(--text);margin-bottom:6px;}
+  .problem-item .a{font-size:13.5px;color:var(--muted);}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:100px;margin-right:5px;margin-bottom:4px;}
+  .tag.dinamik{background:rgba(217,103,122,0.15);color:var(--warn);}
+  .tag.sinoptik{background:rgba(79,199,217,0.15);color:var(--cyan);}
+  .tag.fisis{background:rgba(156,130,224,0.15);color:var(--violet);}
+  .tag.numerik{background:rgba(224,169,77,0.15);color:var(--gold);}
+
+  .formula-note{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted); margin-top:12px; line-height:1.7; }
+
+  .callout{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--cyan);border-radius:3px;padding:15px 18px;font-size:14px;color:var(--muted);margin-top:12px;}
+  .callout.warn-border{border-left-color:var(--warn);}
+  .callout p{margin:0 0 8px;} .callout p:last-child{margin-bottom:0;}
+  .callout b{color:var(--text);}
+
+  .ref-list{list-style:none;padding:0;margin:16px 0;}
+  .ref-list li{padding:12px 0;border-top:1px solid var(--border);font-size:14px;color:var(--muted);}
+  .ref-list li:last-child{border-bottom:1px solid var(--border);}
+  .ref-list .who{color:var(--text);}
+  .related-links{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted);margin-top:10px;}
+
+  footer{padding-top:40px;font-size:13px;color:var(--muted);}
+
+  /* ---- Panel 3D gabungan (tambahan, tidak menggantikan kartu 2D di atas) ---- */
+  .panel3d-card{margin-top:18px;border-top:3px solid var(--violet);}
+  .panel3d-card h4{font-size:16px;margin-bottom:4px;color:var(--text);}
+  .panel3d-card .desc3d{font-size:12.5px;color:var(--muted);margin:0 0 14px;max-width:76ch;}
+  .panel3d-canvas{width:100%;height:420px;border-radius:3px;border:1px solid var(--border);background:#0b1016;position:relative;cursor:grab;touch-action:none;overflow:hidden;}
+  .panel3d-canvas.grabbing{cursor:grabbing;}
+  .panel3d-canvas canvas{display:block;}
+  .panel3d-hint{position:absolute;bottom:6px;right:10px;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--muted);pointer-events:none;z-index:2;}
+  .panel3d-legend{display:flex;flex-wrap:wrap;gap:9px 18px;font-size:12px;color:var(--muted);margin-top:13px;}
+  .panel3d-legend span{display:inline-flex;align-items:center;gap:6px;}
+  .sw3d{width:11px;height:11px;border-radius:2px;display:inline-block;flex:0 0 auto;}
+  .panel3d-readout{display:grid;grid-template-columns:1fr 1fr;gap:7px 26px;font-size:13px;color:var(--text);margin-top:14px;padding-top:12px;border-top:1px solid var(--border);}
+  @media (max-width:640px){.panel3d-readout{grid-template-columns:1fr;}}
+  .panel3d-readout b{font-family:'JetBrains Mono',monospace;color:var(--gold);}
+
+  /* ---- Tab pemilih model 3D ---- */
+  .panel3d-tabs{display:flex;gap:6px;margin:2px 0 16px;flex-wrap:wrap;}
+  .panel3d-tab{padding:8px 15px;border-radius:100px;border:1px solid var(--border-strong);background:var(--panel-2);color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer;font-family:'Karla',sans-serif;}
+  .panel3d-tab.active{border-color:var(--violet);color:var(--violet);background:rgba(156,130,224,0.1);}
+  .panel3d-pane{display:none;}
+  .panel3d-pane.active{display:block;}
+
+  .three-head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+  .three-head h5{font-size:13.5px;color:var(--text);font-family:'Karla',sans-serif;font-weight:700;}
+  .three-hint{font-size:11px;color:var(--muted);}
+  #three3dWrap{position:relative;border-radius:3px;overflow:hidden;border:1px solid var(--border);}
+  #three3d{width:100%;height:420px;display:block;background:#0b0e13;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;}
+  #three3d.grabbing{cursor:grabbing;}
+  #threeStatus{position:absolute;top:10px;left:10px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.75;color:var(--text);background:rgba(16,20,26,0.72);border:1px solid var(--border-strong);border-radius:3px;padding:8px 11px;pointer-events:none;}
+  #threeStatus b{color:var(--gold);}
+  #threeStatus .warnv{color:var(--warn);}
+  #threeStatus .okv{color:var(--true);}
+  .three-legend{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:12px;font-size:12px;color:var(--muted);}
+  .three-legend span{display:inline-flex;align-items:center;gap:6px;}
+  .three-legend i{width:10px;height:10px;border-radius:2px;display:inline-block;flex:0 0 auto;}
+
+  /* ---- Tab 3: Jaringan Radar Regional ---- */
+  .net-canvas{width:100%;height:440px;border-radius:3px;border:1px solid var(--border);background:#0c1420;position:relative;cursor:grab;touch-action:none;overflow:hidden;}
+  .net-canvas.grabbing{cursor:grabbing;}
+  .net-canvas canvas{display:block;}
+  .net-hint{position:absolute;bottom:6px;right:10px;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--muted);pointer-events:none;z-index:2;}
+  .net-status{position:absolute;top:10px;left:10px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.8;color:var(--text);background:rgba(16,20,26,0.72);border:1px solid var(--border-strong);border-radius:3px;padding:8px 11px;pointer-events:none;max-width:220px;}
+  .net-status b{color:var(--gold);}
+  .net-status .warnv{color:var(--warn);}
+  .net-status .okv{color:var(--true);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <p class="kicker">Laboratorium Qiladat / JAZMI — Perbandingan Empat Aliran Meteorologi</p>
+    <h1>Satu Atmosfer, Empat Pertanyaan Berbeda</h1>
+    <p class="lede">Dinamik, Sinoptik, Fisis, dan Numerik bukan empat cara mengukur hal yang sama — masing-masing menjawab pertanyaan yang benar-benar berbeda tentang atmosfer yang sama persis. Halaman ini tidak menggabungkan keempat proyek sebelumnya, melainkan menaruhnya berdampingan: satu skenario badai yang sama, digeser dari satu panel kontrol, dibaca lewat empat kacamata sekaligus.</p>
+    <div class="badge-row">
+      <span class="badge" style="border-color:var(--warn);color:var(--warn)">Dinamik</span>
+      <span class="badge" style="border-color:var(--cyan);color:var(--cyan)">Sinoptik</span>
+      <span class="badge" style="border-color:var(--violet);color:var(--violet)">Fisis</span>
+      <span class="badge" style="border-color:var(--gold);color:var(--gold)">Numerik</span>
+    </div>
+  </header>
+
+  <div class="rule"></div>
+
+  <!-- 1 -->
+  <section id="konsep">
+    <p class="eyebrow-num">1 — Konsep</p>
+    <h2>Bukan Empat Alat untuk Satu Tugas — Empat Tugas yang Berbeda</h2>
+    <p class="desc">Kalau keempatnya dianggap "cara mengukur cuaca", wajar kalau bingung kenapa harus ada empat. Tapi masing-masing sebenarnya menjawab pertanyaan yang tidak bisa dijawab tiga lainnya: Dinamik menjawab <i>kenapa</i> angin bergerak begitu di satu titik lewat hukum fisika. Sinoptik menjawab <i>seperti apa bentuknya</i> secara keseluruhan lewat peta. Fisis menjawab <i>seberapa banyak</i> air yang sebenarnya turun dari sinyal yang terukur. Numerik menjawab <i>bisakah dipercaya</i> kalau dihitung maju ke depan. Empat pertanyaan itu independen satu sama lain — makanya empat cabang ilmu, bukan satu cabang dengan empat nama.</p>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 2 -->
+  <section id="simulator">
+    <p class="eyebrow-num">2 — Simulator Gabungan</p>
+    <h2>Satu Badai, Empat Cara Membacanya</h2>
+    <p class="desc">Semua kartu di bawah memakai rumus <em>persis sama</em> seperti di halaman masing-masing (tidak disederhanakan ulang) — geser satu panel kontrol ini, dan keempatnya bergerak bersamaan dari satu skenario yang sama.</p>
+
+    <div class="card">
+      <div class="toggle-row">
+        <span class="toggle-chip active" data-hemi="N">Belahan Bumi Utara</span>
+        <span class="toggle-chip" data-hemi="S">Belahan Bumi Selatan</span>
+        <span class="toggle-chip active" data-sys="L" style="margin-left:14px;">Sistem Rendah (L)</span>
+        <span class="toggle-chip" data-sys="H">Sistem Tinggi (H)</span>
+      </div>
+      <div class="control-grid">
+        <div class="slider-row">
+          <label>Lintang pengamat φ <span class="val" id="v-lat">45°</span></label>
+          <input type="range" id="in-lat" min="5" max="80" step="1" value="45">
+        </div>
+        <div class="slider-row">
+          <label>Kedalaman sistem ΔP <span class="val" id="v-dp">24 hPa</span></label>
+          <input type="range" id="in-dp" min="4" max="70" step="2" value="24">
+        </div>
+        <div class="slider-row">
+          <label>Jarak titik dari pusat sistem (r) <span class="val" id="v-r">90 km</span></label>
+          <input type="range" id="in-r" min="20" max="230" step="5" value="90">
+        </div>
+        <div class="slider-row">
+          <label>Reflektivitas radar di titik itu (Z) <span class="val" id="v-z">35 dBZ</span></label>
+          <input type="range" id="in-z" min="0" max="65" step="1" value="35">
+        </div>
+        <div class="slider-row">
+          <label>Langkah waktu model Δt <span class="val" id="v-dt">300 detik</span></label>
+          <input type="range" id="in-dt" min="10" max="900" step="10" value="300">
+        </div>
+        <div class="slider-row">
+          <label>Resolusi grid model Δx <span class="val" id="v-dx">150 km</span></label>
+          <input type="range" id="in-dx" min="10" max="300" step="5" value="150">
+        </div>
+      </div>
+      <p class="formula-note">Sistem tekanan dimodelkan radial seperti di halaman Sinoptik — gradien lokal di titik r itulah yang menjadi masukan bagi kartu Dinamik. Z &amp; parameter model Numerik adalah bacaan &amp; pengaturan independen di titik/momen yang sama.</p>
+    </div>
+
+    <div class="branch-grid">
+      <div class="branch-card b-dinamik">
+        <h4 style="color:var(--warn)">Dinamik</h4>
+        <p class="q">"Ke arah mana &amp; sekencang apa angin bertiup, tepat di titik ini?"</p>
+        <div class="branch-svg"><svg id="svg-dinamik" viewBox="0 0 260 190"></svg></div>
+        <div class="branch-result" id="res-dinamik">—</div>
+      </div>
+
+      <div class="branch-card b-sinoptik">
+        <h4 style="color:var(--cyan)">Sinoptik</h4>
+        <p class="q">"Seperti apa bentuk keseluruhan sistemnya, dan di mana titik ini berada di dalamnya?"</p>
+        <div class="branch-svg"><svg id="svg-sinoptik" viewBox="0 0 260 190"></svg></div>
+        <div class="branch-result" id="res-sinoptik">—</div>
+      </div>
+
+      <div class="branch-card b-fisis">
+        <h4 style="color:var(--violet)">Fisis</h4>
+        <p class="q">"Radar menunjukkan segitu — sebenarnya seberapa deras hujannya?"</p>
+        <div id="res-fisis-bars"></div>
+        <div class="branch-result" id="res-fisis">—</div>
+      </div>
+
+      <div class="branch-card b-numerik">
+        <h4 style="color:var(--gold)">Numerik</h4>
+        <p class="q">"Kalau ini dihitung maju lewat komputer, hasilnya bisa dipercaya?"</p>
+        <div class="branch-svg"><svg id="svg-numerik" viewBox="0 0 260 190"></svg></div>
+        <div class="branch-result" id="res-numerik">—</div>
+      </div>
+    </div>
+
+    <div class="card panel3d-card">
+      <h4>Model 3D Gabungan</h4>
+      <p class="desc3d">Satu skenario &amp; panel kontrol yang sama, dibaca lewat tiga gaya visualisasi berbeda — pilih salah satu lewat tab di bawah. Ketiganya digerakkan oleh rumus &amp; state persis sama seperti empat kartu 2D di atas, bukan simulasi baru.</p>
+
+      <div class="panel3d-tabs">
+        <button type="button" class="panel3d-tab active" data-pane="skematik">Model Skematik</button>
+        <button type="button" class="panel3d-tab" data-pane="lanskap">Visualisasi Lanskap</button>
+        <button type="button" class="panel3d-tab" data-pane="jaringan">Jaringan Radar</button>
+      </div>
+
+      <div class="panel3d-pane active" id="pane-skematik">
+        <p class="desc3d">Permukaan mewakili medan tekanan (Sinoptik), panah mewakili angin geostropik tepat di titik observasi (Dinamik), silinder biru mewakili taksiran curah hujan Marshall–Palmer di titik yang sama (Fisis), dan warna+kerapatan grid dasar mewakili resolusi &amp; status kestabilan CFL model (Numerik).</p>
+        <div class="panel3d-canvas" id="three3dCombined">
+          <div class="panel3d-hint">drag = putar · scroll/cubit 2 jari = zoom</div>
+        </div>
+        <div class="panel3d-legend">
+          <span><i class="sw3d" style="background:var(--cyan)"></i>Permukaan — sistem tekanan rendah</span>
+          <span><i class="sw3d" style="background:var(--warn)"></i>Permukaan — sistem tekanan tinggi</span>
+          <span><i class="sw3d" style="background:var(--gold)"></i>Vektor angin geostropik</span>
+          <span><i class="sw3d" style="background:var(--warn)"></i>Angin di luar batas wajar (&gt;100 m/s)</span>
+          <span><i class="sw3d" style="background:#4FA0D9"></i>Kolom taksiran curah hujan</span>
+          <span><i class="sw3d" style="background:var(--true)"></i>Grid stabil (Courant ≤ 1)</span>
+          <span><i class="sw3d" style="background:var(--warn)"></i>Grid tidak stabil (Courant &gt; 1)</span>
+        </div>
+        <div class="panel3d-readout" id="three3dReadout"></div>
+      </div>
+
+      <div class="panel3d-pane" id="pane-lanskap">
+        <div class="three-head">
+          <h5>Adegan lapangan</h5>
+          <span class="three-hint mono">drag = putar · scroll/cubit dua jari = zoom</span>
+        </div>
+        <p class="desc3d">Gumpalan awan yang berputar &amp; membesar sesuai kedalaman sistem tekanan (Sinoptik), tiang pengamat dengan kain penunjuk arah angin (Dinamik), hujan yang jatuh sesuai taksiran dari reflektivitas radar (Fisis), dan tanah yang mulai bergetar kalau syarat kestabilan model dilanggar (Numerik).</p>
+        <div id="three3dWrap">
+          <div id="three3d"></div>
+          <div id="threeStatus"></div>
+        </div>
+        <div class="three-legend">
+          <span><i style="background:#9aa6b0"></i>Gumpalan awan = sistem tekanan (makin gelap &amp; besar = makin dalam)</span>
+          <span><i style="background:var(--gold)"></i>Kain penunjuk arah &amp; kekuatan angin di tiang pengamat</span>
+          <span><i style="background:var(--warn)"></i>Panah tipis PGF</span>
+          <span><i style="background:var(--cyan)"></i>Panah tipis Coriolis</span>
+          <span><i style="background:#8fc7d9"></i>Garis hujan jatuh (warna ≈ palet radar)</span>
+          <span><i style="background:#3a4a2c"></i>Tanah lembap/gelap = di bawah sistem yang lebih kuat</span>
+          <span><i style="background:var(--warn)"></i>Tanah bergetar = model tidak stabil (C &gt; 1)</span>
+        </div>
+      </div>
+
+      <div class="panel3d-pane" id="pane-jaringan">
+        <div class="three-head">
+          <h5>Pandangan regional — mengapa satu titik ukur tidak cukup</h5>
+          <span class="three-hint mono">drag = putar · scroll/cubit dua jari = zoom</span>
+        </div>
+        <p class="desc3d">Dua model di atas menunjukkan pembacaan tepat di satu titik. Tapi di praktik operasional, titik itu sendiri tidak pernah diukur oleh satu alat — beberapa stasiun radar di sekitarnya sama-sama "melihat" titik yang sama dari jarak &amp; sudut berbeda, lalu hasilnya digabung (fusi data). Kamera di sini sengaja ditarik jauh ke belakang untuk memperlihatkan skala jaringan itu: jangkauan tiap radar (≈230 km, sama seperti batas atas slider r di panel kontrol), radar mana saja yang menjangkau titik ini, dan seberapa jauh taksiran hujannya bisa berbeda-beda antar radar padahal membaca sistem cuaca yang sama.</p>
+        <div class="net-canvas" id="three3dNetwork">
+          <div class="net-hint">drag = putar · scroll/cubit 2 jari = zoom</div>
+        </div>
+        <div class="three-legend">
+          <span><i style="background:var(--violet)"></i>Menara radar (titik pengukuran)</span>
+          <span><i style="background:var(--true)"></i>Cincin jangkauan — radar ini menjangkau titik pengamatan</span>
+          <span><i style="background:var(--muted)"></i>Cincin jangkauan — di luar jangkauan titik pengamatan</span>
+          <span><i style="background:var(--gold)"></i>Tautan data (pulsa) ke titik pengamatan, makin terang = makin dekat/kuat</span>
+          <span><i style="background:var(--cyan)"></i>Piringan sistem tekanan (Sinoptik), berputar sesuai belahan bumi &amp; jenis sistem</span>
+          <span><i style="background:#ECEFF3"></i>Titik pengamatan (sama seperti dua model sebelumnya)</span>
+        </div>
+        <div class="panel3d-readout" id="three3dNetworkReadout"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 3 -->
+  <section id="persoalan">
+    <p class="eyebrow-num">3 — Tujuh Persoalan Lapangan</p>
+    <h2>Pertanyaan yang Sama, Empat Jawaban Berbeda</h2>
+    <p class="desc">Empat yang pertama persis ditunjukkan simulator di atas. Tiga terakhir sengaja butuh lebih dari satu aliran sekaligus — begitulah forecasting operasional bekerja di lapangan.</p>
+    <div class="problem-list">
+      <div class="problem-item">
+        <p class="q">Ke arah mana &amp; sekencang apa angin akan bertiup, tepat di satu titik, sekarang juga?</p>
+        <p class="a"><span class="tag dinamik">Dinamik</span>Dihitung langsung dari keseimbangan gaya gradien tekanan &amp; gaya Coriolis di titik itu — jawabannya berupa satu vektor, bukan gambar.</p>
+      </div>
+      <div class="problem-item">
+        <p class="q">Sistem cuaca apa yang sedang mendekat, dan bagaimana bentuknya secara keseluruhan?</p>
+        <p class="a"><span class="tag sinoptik">Sinoptik</span>Dibaca dari pola isobar di peta yang disusun dari banyak stasiun serentak — jawabannya berupa bentuk, bukan angka tunggal.</p>
+      </div>
+      <div class="problem-item">
+        <p class="q">Radar menunjukkan reflektivitas sekian dBZ di suatu titik — seberapa deras hujan yang sebenarnya turun di sana?</p>
+        <p class="a"><span class="tag fisis">Fisis</span>Diterjemahkan lewat hubungan Z-R — dan seperti simulator di atas menunjukkan, jawabannya bisa berbeda beberapa kali lipat tergantung jenis hujan yang diasumsikan.</p>
+      </div>
+      <div class="problem-item">
+        <p class="q">Bisakah ramalan komputer untuk beberapa hari ke depan ini dipercaya?</p>
+        <p class="a"><span class="tag numerik">Numerik</span>Bergantung pada apakah langkah waktu &amp; resolusi grid model memenuhi syarat kestabilan CFL untuk gelombang tercepat yang mungkin muncul di dalamnya.</p>
+      </div>
+      <div class="problem-item">
+        <p class="q">Titik terang ekstrem di radar itu — hujan sangat deras biasa, atau kemungkinan hujan es?</p>
+        <p class="a"><span class="tag fisis">Fisis</span>Bukan sekadar baca angka R yang lebih besar — di atas ambang tertentu, asumsi "tetes air bulat" di balik hubungan Z-R itu sendiri sudah runtuh, jadi pertanyaannya berubah total.</p>
+      </div>
+      <div class="problem-item">
+        <p class="q">Kenapa ramalan resmi bisa berubah drastis dari kemarin ke hari ini, padahal sistemnya "sama"?</p>
+        <p class="a"><span class="tag numerik">Numerik</span><span class="tag sinoptik">Sinoptik</span>Kondisi awal model diperbarui tiap kali ada data observasi baru — sedikit koreksi pada peta sinoptik hari ini bisa membesar signifikan setelah dihitung maju berhari-hari, konsekuensi langsung dari sensitivitas kondisi awal yang sama seperti dibahas di halaman Numerik.</p>
+      </div>
+      <div class="problem-item">
+        <p class="q">Apakah aman menerbangkan pesawat, atau perlu peringatan dini banjir bandang malam ini?</p>
+        <p class="a"><span class="tag sinoptik">Sinoptik</span><span class="tag fisis">Fisis</span><span class="tag dinamik">Dinamik</span><span class="tag numerik">Numerik</span>Butuh keempatnya sekaligus: di mana &amp; seberapa besar sistemnya (Sinoptik), seberapa deras hujan sesungguhnya (Fisis), ke arah mana angin membawanya secara lokal (Dinamik), dan apakah proyeksi beberapa jam ke depan masih bisa dipercaya (Numerik). Inilah kenapa layanan cuaca operasional selalu memakai keempatnya bersamaan, tak pernah cuma satu.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 4 -->
+  <section id="rumus">
+    <p class="eyebrow-num">4 — Ringkasan Rumus</p>
+    <div class="callout">
+      <p><b style="color:var(--warn)">Dinamik:</b> V<sub>g</sub> = (1/ρf)·(∂P/∂n), f = 2Ω·sin(φ) — angin geostropik dari keseimbangan gaya gradien tekanan &amp; Coriolis.</p>
+      <p><b style="color:var(--cyan)">Sinoptik:</b> P(r) = P<sub>lingkungan</sub> ± ΔP·e<sup>−r/L</sup> — model tekanan radial yang jadi sumber gradien lokal bagi kartu Dinamik di atas.</p>
+      <p><b style="color:var(--violet)">Fisis:</b> Z = A·R<sup>b</sup> → R = (Z<sub>lin</sub>/A)<sup>1/b</sup> — hubungan reflektivitas-curah hujan, berbeda konstanta A,b per jenis hujan.</p>
+      <p style="margin-bottom:0;"><b style="color:var(--gold)">Numerik:</b> C = c·Δt/Δx, stabil jika C ≤ 1 (syarat CFL) — menentukan apakah langkah komputasi model aman dipakai.</p>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 5 -->
+  <section id="batasan">
+    <p class="eyebrow-num">5 — Batasan</p>
+    <div class="callout warn-border">
+      <p>Menyambungkan kartu Dinamik ke gradien yang diturunkan dari model radial Sinoptik itu sendiri sudah sebuah penyederhanaan — di dunia nyata, angin geostropik dihitung dari peta tekanan hasil observasi asli, bukan dari rumus sintetis serapi lingkaran-lingkaran konsentris ini.</p>
+      <p>Reflektivitas (Z) &amp; parameter model Numerik (Δt, Δx) sengaja diperlakukan sebagai <b style="color:var(--text)">bacaan/pengaturan independen</b> pada skenario yang sama — bukan diturunkan dari ΔP seperti Dinamik &amp; Sinoptik, karena keduanya memang secara fisik tidak otomatis mengikuti kedalaman satu sistem tekanan.</p>
+      <p style="margin-bottom:0;">Tujuan halaman ini bukan mengganti empat halaman sebelumnya, melainkan menaruhnya berdampingan. Untuk detail metode, batasan, &amp; sejarah tiap aliran secara penuh, kembali ke halaman masing-masing lewat tautan di bawah.</p>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 6 -->
+  <section id="referensi">
+    <p class="eyebrow-num">6 — Referensi &amp; Terkait</p>
+    <div class="related-links">
+      <span>→ Meteorologi Dinamik — Kenapa Angin Tak Mengalir Lurus ke Tekanan Rendah</span>
+      <span>→ Meteorologi Sinoptik — Membaca Peta yang Mendahului Cuaca</span>
+      <span>→ Meteorologi Fisis — Satu Reflektivitas, Banyak Taksiran Hujan</span>
+      <span>→ Meteorologi Numerik (NWP) — Kenapa Ramalan Richardson Meledak, dan ENIAC Tidak</span>
+      <span>→ Dari Klimatologi ke Meteorologi — Titik Balik Kecepatan Informasi</span>
+    </div>
+  </section>
+
+  <footer>Disusun sebagai bagian dari laboratorium Qiladat/JAZMI — perbandingan langsung empat aliran meteorologi yang sudah dibangun, memakai rumus yang sama persis dari tiap halaman aslinya.</footer>
+
+</div>
+
+<script>
+/* ===================================================================
+   PANEL TAMBAHAN — Visualisasi 3D (lanskap), memakai state yang sama
+   persis dengan simulator 2D di atas lewat window.updateThreeViz().
+   Ditulis sebagai skrip terpisah, tidak mengubah logika simulator asli.
+   =================================================================== */
+(function(){
+  "use strict";
+  if(typeof THREE==='undefined') return;
+  var container = document.getElementById('three3d');
+  if(!container) return;
+
+  var SCALE_KM = 0.15;      // km -> unit dunia 3D
+  var THETA = -0.6;         // sudut titik pengamat, sama dgn "titik ini" di svg-sinoptik
+  var L_SYS_3D = 70;        // km, sama dgn L_SYS di simulator utama
+  var TERRAIN_HALF = 70;
+  var CLOUD_HEIGHT = 22;
+  var MAX_DP = 70;          // hPa, sama dgn batas atas slider ΔP
+
+  var scene, camera, renderer, target;
+  var radius=95, theta=0.55, phi=1.05;
+  var terrainMesh, baseZ, poleGroup, windsock, arrowPGF, arrowCor, cloudGroup;
+  var rainStreaks=[], rainOffsets=[];
+  var initialized=false, currentState=null, rotDir=1, groundNeedsReset=false;
+  var clock = new THREE.Clock();
+
+  function lerpColor(c0,c1,t){
+    t=Math.max(0,Math.min(1,t));
+    var r=Math.round(c0[0]+(c1[0]-c0[0])*t);
+    var g=Math.round(c0[1]+(c1[1]-c0[1])*t);
+    var b=Math.round(c0[2]+(c1[2]-c0[2])*t);
+    return (r<<16)|(g<<8)|b;
+  }
+  function dbzColor(z){
+    var stops=[[0,[0x8f,0xc7,0xd9]],[15,[0x4f,0xbf,0x8a]],[30,[0xe0,0xa9,0x4d]],[45,[0xd9,0x67,0x7a]],[65,[0x9c,0x82,0xe0]]];
+    z=Math.max(0,Math.min(65,z));
+    for(var i=0;i<stops.length-1;i++){
+      if(z>=stops[i][0] && z<=stops[i+1][0]){
+        var t=(z-stops[i][0])/(stops[i+1][0]-stops[i][0]);
+        return lerpColor(stops[i][1], stops[i+1][1], t);
+      }
+    }
+    return 0x9C82E0;
+  }
+  function terrainHeight(wx,wz){
+    return 1.4*Math.sin(wx*0.09)*Math.cos(wz*0.11) + 0.7*Math.sin(wx*0.04+1.1)*Math.sin(wz*0.06-0.4) + 0.35*Math.sin((wx+wz)*0.15);
+  }
+
+  function initScene(){
+    if(initialized) return;
+    var w=container.clientWidth, h=container.clientHeight;
+    if(!w || !h) return; /* pane tab masih tersembunyi — tunda sampai terlihat */
+    initialized = true;
+
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x2b3846);
+    scene.fog = new THREE.Fog(0x2b3846, 70, 210);
+
+    camera = new THREE.PerspectiveCamera(42, w/h, 0.1, 1000);
+    target = new THREE.Vector3(0,6,0);
+
+    renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setSize(w,h);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    container.appendChild(renderer.domElement);
+
+    scene.add(new THREE.HemisphereLight(0x9fb4c9, 0x3a4a33, 0.9));
+    var sun = new THREE.DirectionalLight(0xfff1d8, 0.85);
+    sun.position.set(50,60,20);
+    scene.add(sun);
+
+    /* ---- tanah bergelombang alami ---- */
+    var geo = new THREE.PlaneGeometry(TERRAIN_HALF*2, TERRAIN_HALF*2, 56, 56);
+    var pos = geo.attributes.position;
+    baseZ = new Float32Array(pos.count);
+    var colorsArr = new Float32Array(pos.count*3);
+    for(var i=0;i<pos.count;i++){
+      var lx=pos.getX(i), ly=pos.getY(i);
+      var wx=lx, wz=-ly;
+      var hgt = terrainHeight(wx,wz);
+      baseZ[i]=hgt;
+      pos.setZ(i,hgt);
+      colorsArr[i*3]=0.3; colorsArr[i*3+1]=0.4; colorsArr[i*3+2]=0.25;
+    }
+    geo.setAttribute('color', new THREE.BufferAttribute(colorsArr,3));
+    pos.needsUpdate = true;
+    geo.computeVertexNormals();
+    var mat = new THREE.MeshStandardMaterial({vertexColors:true, roughness:1, metalness:0});
+    terrainMesh = new THREE.Mesh(geo, mat);
+    terrainMesh.rotation.x = -Math.PI/2;
+    scene.add(terrainMesh);
+
+    /* ---- gumpalan awan (sistem tekanan) ---- */
+    cloudGroup = new THREE.Group();
+    cloudGroup.position.set(0, CLOUD_HEIGHT, 0);
+    scene.add(cloudGroup);
+
+    /* ---- tiang pengamat ---- */
+    poleGroup = new THREE.Group();
+    var poleMat = new THREE.MeshStandardMaterial({color:0x8a8f96, roughness:0.6});
+    var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.14,0.14,3.2,8), poleMat);
+    pole.position.y = 1.6;
+    poleGroup.add(pole);
+    var box = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.35,0.5), new THREE.MeshStandardMaterial({color:0xECEFF3, roughness:0.4}));
+    box.position.y = 3.35;
+    poleGroup.add(box);
+    scene.add(poleGroup);
+
+    /* ---- kain penunjuk arah angin (windsock) ---- */
+    var sockGeo = new THREE.ConeGeometry(0.42, 2.6, 12, 1, true);
+    sockGeo.rotateZ(Math.PI/2);
+    sockGeo.translate(1.3,0,0);
+    windsock = new THREE.Mesh(sockGeo, new THREE.MeshStandardMaterial({color:0xE0A94D, side:THREE.DoubleSide, roughness:0.8}));
+    windsock.position.y = 3.15;
+    poleGroup.add(windsock);
+
+    /* ---- panah tipis PGF & Coriolis (aksen skematik, halus) ---- */
+    arrowPGF = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,3.15,0), 2.6, 0xD9677A, 0.6, 0.3);
+    arrowCor = new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,3.15,0), 2.6, 0x4FC7D9, 0.6, 0.3);
+    arrowPGF.line.material.transparent = true; arrowPGF.line.material.opacity = 0.75;
+    arrowCor.line.material.transparent = true; arrowCor.line.material.opacity = 0.75;
+    poleGroup.add(arrowPGF, arrowCor);
+
+    /* ---- kolam hujan: garis-garis tipis yang jatuh ---- */
+    var streakGeo = new THREE.CylinderGeometry(0.03,0.03,1.1,5);
+    for(var s=0;s<40;s++){
+      var m = new THREE.Mesh(streakGeo, new THREE.MeshBasicMaterial({color:0x8fc7d9, transparent:true, opacity:0.7}));
+      m.visible = false;
+      rainOffsets.push({ox:(Math.random()-0.5)*4.5, oz:(Math.random()-0.5)*4.5, y: CLOUD_HEIGHT-Math.random()*10, speed: 16+Math.random()*6});
+      scene.add(m);
+      rainStreaks.push(m);
+    }
+
+    function updateCamera(){
+      camera.position.x = target.x + radius*Math.sin(phi)*Math.sin(theta);
+      camera.position.z = target.z + radius*Math.sin(phi)*Math.cos(theta);
+      camera.position.y = target.y + radius*Math.cos(phi);
+      camera.lookAt(target);
+    }
+    updateCamera();
+
+    /* ---- kontrol orbit manual: drag=putar, wheel/cubit=zoom ---- */
+    var dragging=false, lastX=0, lastY=0;
+    renderer.domElement.addEventListener('pointerdown', function(e){ dragging=true; lastX=e.clientX; lastY=e.clientY; container.classList.add('grabbing'); });
+    window.addEventListener('pointerup', function(){ dragging=false; container.classList.remove('grabbing'); });
+    window.addEventListener('pointermove', function(e){
+      if(!dragging) return;
+      theta -= (e.clientX-lastX)*0.006;
+      phi   -= (e.clientY-lastY)*0.006;
+      phi = Math.max(0.35, Math.min(1.5, phi));
+      lastX=e.clientX; lastY=e.clientY;
+      updateCamera();
+    });
+    renderer.domElement.addEventListener('wheel', function(e){
+      e.preventDefault();
+      radius = Math.max(30, Math.min(180, radius + e.deltaY*0.05));
+      updateCamera();
+    }, {passive:false});
+    var pinchDist=null;
+    function touchDist(t0,t1){ return Math.hypot(t1.clientX-t0.clientX, t1.clientY-t0.clientY); }
+    renderer.domElement.addEventListener('touchstart', function(e){
+      if(e.touches.length===2){ pinchDist=touchDist(e.touches[0],e.touches[1]); dragging=false; }
+    }, {passive:true});
+    renderer.domElement.addEventListener('touchmove', function(e){
+      if(e.touches.length===2 && pinchDist!==null){
+        e.preventDefault();
+        var d=touchDist(e.touches[0],e.touches[1]);
+        radius = Math.max(30, Math.min(180, radius - (d-pinchDist)*0.12));
+        pinchDist=d;
+        updateCamera();
+      }
+    }, {passive:false});
+    renderer.domElement.addEventListener('touchend', function(e){ if(e.touches.length<2) pinchDist=null; }, {passive:true});
+
+    window.addEventListener('resize', function(){
+      var w2=container.clientWidth, h2=container.clientHeight;
+      if(!w2||!h2) return;
+      camera.aspect=w2/h2; camera.updateProjectionMatrix();
+      renderer.setSize(w2,h2);
+    });
+
+    function loop(){
+      requestAnimationFrame(loop);
+      if(container.offsetParent===null) return; /* tab tersembunyi — jangan render, hemat baterai */
+      var dt = Math.min(0.05, clock.getDelta());
+      if(cloudGroup) cloudGroup.rotation.y += dt*0.12*rotDir;
+      animateRain(dt);
+      animateGround();
+      renderer.render(scene,camera);
+    }
+    loop();
+  }
+
+  function buildClouds(sysType, intensity){
+    while(cloudGroup.children.length){ cloudGroup.remove(cloudGroup.children[0]); }
+    var n = sysType==='L' ? Math.round(8+intensity*8) : Math.max(3, Math.round(6-intensity*3));
+    var scaleBase = 0.75 + intensity*1.35;
+    var col = sysType==='L'
+      ? lerpColor([0xba,0xc4,0xce],[0x3a,0x40,0x48], intensity)
+      : lerpColor([0xff,0xff,0xff],[0xe2,0xe7,0xee], intensity*0.6);
+    var geo = new THREE.IcosahedronGeometry(1,1);
+    for(var i=0;i<n;i++){
+      var t = i/n;
+      var ang = t*Math.PI*2*2.3;
+      var rad = (2+t*11)*scaleBase;
+      var x = rad*Math.cos(ang), z = rad*Math.sin(ang);
+      var y = Math.sin(t*11)*1.6;
+      var size = Math.max(0.4, (1.7-t*0.7)*scaleBase);
+      var mat = new THREE.MeshStandardMaterial({color:col, flatShading:true, roughness:1, transparent:true, opacity:0.94});
+      var mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(x,y,z);
+      mesh.scale.setScalar(size);
+      cloudGroup.add(mesh);
+    }
+  }
+
+  function updateGroundColor(delta){
+    var pos = terrainMesh.geometry.attributes.position;
+    var colorAttr = terrainMesh.geometry.attributes.color;
+    var intensity = Math.min(1, Math.abs(delta)/MAX_DP);
+    var grassDark=[0x35,0x4a,0x2c], grassLight=[0x7a,0x9c,0x4f], stormWet=[0x30,0x36,0x3e];
+    for(var i=0;i<pos.count;i++){
+      var lx=pos.getX(i), ly=pos.getY(i);
+      var wx=lx, wz=-ly;
+      var distKm = Math.sqrt(wx*wx+wz*wz)/SCALE_KM;
+      var wetness = intensity*Math.exp(-distKm/L_SYS_3D);
+      var t1 = Math.max(0, Math.min(1, (baseZ[i]+2.2)/4.4));
+      var baseHex = lerpColor(grassDark, grassLight, t1);
+      var br=(baseHex>>16)&255, bg=(baseHex>>8)&255, bb=baseHex&255;
+      var finalHex = lerpColor([br,bg,bb], stormWet, wetness);
+      colorAttr.setXYZ(i, ((finalHex>>16)&255)/255, ((finalHex>>8)&255)/255, (finalHex&255)/255);
+    }
+    colorAttr.needsUpdate = true;
+  }
+
+  function animateRain(dt){
+    if(!currentState) return;
+    var activeCount = Math.round(Math.min(40, currentState.rainIntensity*40));
+    var col = dbzColor(currentState.z);
+    var wd = currentState.windDir || {x:0,z:0};
+    for(var i=0;i<rainStreaks.length;i++){
+      var m = rainStreaks[i], off = rainOffsets[i];
+      if(i>=activeCount){ m.visible=false; continue; }
+      m.visible = true;
+      m.material.color.setHex(col);
+      off.y -= off.speed*dt;
+      if(off.y < currentState.poleGroundY){ off.y = CLOUD_HEIGHT - Math.random()*6; }
+      var fallFrac = (CLOUD_HEIGHT-off.y)/CLOUD_HEIGHT;
+      m.position.set(currentState.poleX+off.ox+wd.x*fallFrac*2, off.y, currentState.poleZ+off.oz+wd.z*fallFrac*2);
+    }
+  }
+
+  function animateGround(){
+    if(!currentState || !terrainMesh) return;
+    var pos = terrainMesh.geometry.attributes.position;
+    if(currentState.stable){
+      if(groundNeedsReset){
+        for(var j=0;j<pos.count;j++) pos.setZ(j, baseZ[j]);
+        pos.needsUpdate = true;
+        terrainMesh.geometry.computeVertexNormals();
+        groundNeedsReset = false;
+      }
+      return;
+    }
+    groundNeedsReset = true;
+    var amp = Math.min(3.2, Math.max(0, (currentState.C-1)*2.2));
+    var t = clock.elapsedTime;
+    for(var i=0;i<pos.count;i++){
+      pos.setZ(i, baseZ[i] + amp*Math.sin(t*9 + i*0.7));
+    }
+    pos.needsUpdate = true;
+    terrainMesh.geometry.computeVertexNormals();
+  }
+
+  function applyState(state){
+    var poleXkm = state.r*Math.cos(THETA), poleZkm = state.r*Math.sin(THETA);
+    var poleX = poleXkm*SCALE_KM, poleZ = poleZkm*SCALE_KM;
+    var poleGroundY = terrainHeight(poleX, poleZ);
+    poleGroup.position.set(poleX, poleGroundY, poleZ);
+
+    var urLen = Math.sqrt(poleX*poleX+poleZ*poleZ) || 1;
+    var ur = {x:poleX/urLen, z:poleZ/urLen};
+    var pgfDir = state.sysType==='L' ? {x:-ur.x,z:-ur.z} : {x:ur.x,z:ur.z};
+    var ccw = (state.hemi==='N') === (state.sysType==='L');
+    var windDir = ccw ? {x:-pgfDir.z, z:pgfDir.x} : {x:pgfDir.z, z:-pgfDir.x};
+    var corDir = {x:-pgfDir.x, z:-pgfDir.z};
+    rotDir = ccw ? 1 : -1;
+
+    arrowPGF.setDirection(new THREE.Vector3(pgfDir.x,0,pgfDir.z).normalize());
+    arrowCor.setDirection(new THREE.Vector3(corDir.x,0,corDir.z).normalize());
+
+    var windLen = state.unreal ? 3.2 : Math.max(0.9, Math.min(3.2, 0.9+state.vg*0.045));
+    var windAngle = Math.atan2(windDir.z, windDir.x);
+    windsock.rotation.y = -windAngle;
+    windsock.scale.set(windLen/2.6, 1, 1);
+    windsock.material.color.setHex(state.unreal?0xD9677A:0xE0A94D);
+
+    var intensity = Math.min(1, Math.abs(state.delta)/MAX_DP);
+    buildClouds(state.sysType, intensity);
+    updateGroundColor(state.delta);
+
+    currentState = {
+      poleX:poleX, poleZ:poleZ, poleGroundY:poleGroundY,
+      windDir:windDir, z:state.z,
+      rainIntensity: Math.max(0, Math.min(1, (state.rMax-2)/40)),
+      stable:state.stable, C:state.C
+    };
+
+    var statusEl = document.getElementById('threeStatus');
+    if(statusEl){
+      statusEl.innerHTML =
+        'φ='+state.lat+'° · r='+state.r+' km · ΔP='+Math.round(Math.abs(state.delta))+' hPa<br>'+
+        'V<sub>g</sub>='+state.vg.toFixed(1)+' m/s<br>'+
+        'Hujan ≈ '+state.rMin.toFixed(1)+'–'+state.rMax.toFixed(1)+' mm/j<br>'+
+        'Model: <span class="'+(state.stable?'okv':'warnv')+'">'+(state.stable?'STABIL':'MELEDAK')+'</span> (C='+state.C.toFixed(2)+')';
+    }
+  }
+
+  window.updateThreeViz = function(state){
+    window.__lastLandscapeState = state;
+    initScene();
+    if(!initialized) return; /* masih tersembunyi, tunggu tab dibuka */
+    applyState(state);
+  };
+})();
+</script>
+<script>
+/* ===================================================================
+   PANEL TAMBAHAN — Jaringan Radar Regional (tab 3), kamera zoom-out
+   jauh melihat beberapa stasiun radar sekaligus di sekitar sistem
+   tekanan yang sama, memakai state yang sama lewat
+   window.updateRadarNetwork(). Skrip terpisah, tidak mengubah logika
+   simulator asli maupun dua model 3D lainnya.
+   =================================================================== */
+(function(){
+  "use strict";
+  if(typeof THREE==='undefined') return;
+  var container = document.getElementById('three3dNetwork');
+  if(!container) return;
+
+  var THETA = -0.6;          // sudut titik pengamat, sama dgn model lain
+  var RANGE_KM = 230;        // jangkauan operasional 1 radar, = batas atas slider r
+  var L_SYS_NET = 70;        // km, sama dgn L_SYS di simulator utama
+  var MAX_DP = 70;           // hPa, sama dgn batas atas slider ΔP
+  var TERRAIN_HALF = 600;    // km, cakupan peta regional
+
+  var STATIONS = [
+    {name:'Radar 1', ang: 15,  rKm: 180},
+    {name:'Radar 2', ang: 95,  rKm: 235},
+    {name:'Radar 3', ang: 170, rKm: 150},
+    {name:'Radar 4', ang: 250, rKm: 210},
+    {name:'Radar 5', ang: 320, rKm: 195}
+  ];
+
+  var scene, camera, renderer, target;
+  var radius=560, theta=0.7, phi=0.95;
+  var initialized=false, currentState=null;
+  var stormGroup, stormDisc, armA, armB, obsMarker, obsPole;
+  var stationMeshes=[], rangeRings=[], linkLines=[], linkPulses=[];
+  var clock = new THREE.Clock();
+
+  function fmt(n,d){ if(d===undefined) d=1; if(!isFinite(n)) return '—'; return (Math.round(n*Math.pow(10,d))/Math.pow(10,d)).toLocaleString('id-ID'); }
+  function rFromDbz(dbz,A,b){ return Math.pow(Math.pow(10,dbz/10)/A, 1/b); }
+
+  function circlePoints(rKm, segs){
+    var pts=[];
+    for(var i=0;i<=segs;i++){
+      var a = (i/segs)*Math.PI*2;
+      pts.push(new THREE.Vector3(rKm*Math.cos(a), 0, rKm*Math.sin(a)));
+    }
+    return pts;
+  }
+
+  function initScene(){
+    if(initialized) return;
+    var w=container.clientWidth, h=container.clientHeight;
+    if(!w || !h) return; /* pane tab masih tersembunyi — tunda sampai terlihat */
+    initialized = true;
+
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0c1420);
+    scene.fog = new THREE.Fog(0x0c1420, 500, 2200);
+
+    camera = new THREE.PerspectiveCamera(40, w/h, 1, 5000);
+    target = new THREE.Vector3(0,0,0);
+
+    renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setSize(w,h);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    container.appendChild(renderer.domElement);
+
+    scene.add(new THREE.AmbientLight(0xffffff,0.7));
+    var sun = new THREE.DirectionalLight(0xffffff,0.55);
+    sun.position.set(300,500,200);
+    scene.add(sun);
+
+    /* ---- peta dasar regional: bidang datar + cincin skala jarak ---- */
+    var baseGeo = new THREE.PlaneGeometry(TERRAIN_HALF*2, TERRAIN_HALF*2, 1, 1);
+    var baseMat = new THREE.MeshStandardMaterial({color:0x141d29, roughness:1, metalness:0});
+    var baseMesh = new THREE.Mesh(baseGeo, baseMat);
+    baseMesh.rotation.x = -Math.PI/2;
+    scene.add(baseMesh);
+
+    [150,300,450].forEach(function(rr){
+      var pts = circlePoints(rr,64);
+      var geo = new THREE.BufferGeometry().setFromPoints(pts);
+      var mat = new THREE.LineBasicMaterial({color:0x2c3a4a, transparent:true, opacity:0.6});
+      scene.add(new THREE.LineLoop(geo, mat));
+    });
+
+    /* ---- sistem tekanan (Sinoptik), dilihat dari atas & jauh ---- */
+    stormGroup = new THREE.Group();
+    stormGroup.position.y = 3;
+    scene.add(stormGroup);
+    var discGeo = new THREE.CircleGeometry(L_SYS_NET*2.6, 48);
+    var discMat = new THREE.MeshBasicMaterial({color:0x4FC7D9, transparent:true, opacity:0.28, side:THREE.DoubleSide});
+    stormDisc = new THREE.Mesh(discGeo, discMat);
+    stormDisc.rotation.x = -Math.PI/2;
+    stormGroup.add(stormDisc);
+    var armGeo = new THREE.TorusGeometry(L_SYS_NET*1.6, 3, 6, 40, Math.PI*1.15);
+    var armMat = new THREE.MeshBasicMaterial({color:0x4FC7D9, transparent:true, opacity:0.55});
+    armA = new THREE.Mesh(armGeo, armMat);
+    armA.rotation.x = Math.PI/2;
+    stormGroup.add(armA);
+    armB = new THREE.Mesh(armGeo, armMat.clone());
+    armB.rotation.x = Math.PI/2;
+    armB.rotation.z = Math.PI;
+    stormGroup.add(armB);
+
+    /* ---- titik pengamatan (sama seperti 2 model lain) ---- */
+    obsMarker = new THREE.Mesh(new THREE.SphereGeometry(6,16,16), new THREE.MeshStandardMaterial({color:0xECEFF3}));
+    scene.add(obsMarker);
+    var poleGeo = new THREE.CylinderGeometry(1.1,1.1,40,6);
+    obsPole = new THREE.Mesh(poleGeo, new THREE.MeshBasicMaterial({color:0xECEFF3, transparent:true, opacity:0.5}));
+    scene.add(obsPole);
+
+    /* ---- stasiun radar: menara + piringan berputar + cincin jangkauan ---- */
+    STATIONS.forEach(function(st){
+      var a = st.ang*Math.PI/180;
+      var x = st.rKm*Math.cos(a), z = st.rKm*Math.sin(a);
+      var group = new THREE.Group();
+      group.position.set(x,0,z);
+      var poleMat = new THREE.MeshStandardMaterial({color:0x8a8f96, roughness:0.6});
+      var tower = new THREE.Mesh(new THREE.CylinderGeometry(1.6,2.2,22,8), poleMat);
+      tower.position.y = 11;
+      group.add(tower);
+      var dish = new THREE.Mesh(new THREE.ConeGeometry(6,4,16,1,true), new THREE.MeshStandardMaterial({color:0x9C82E0, side:THREE.DoubleSide, roughness:0.5}));
+      dish.rotation.x = Math.PI/2*0.6;
+      dish.position.y = 24;
+      group.add(dish);
+      scene.add(group);
+
+      var ringPts = circlePoints(RANGE_KM,72);
+      var ringGeo = new THREE.BufferGeometry().setFromPoints(ringPts);
+      var ringMat = new THREE.LineBasicMaterial({color:0x4FBF8A, transparent:true, opacity:0.5});
+      var ring = new THREE.LineLoop(ringGeo, ringMat);
+      ring.position.set(x,1,z);
+      scene.add(ring);
+
+      var lineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x,14,z), new THREE.Vector3(0,14,0)]);
+      var lineMat = new THREE.LineBasicMaterial({color:0xE0A94D, transparent:true, opacity:0});
+      var line = new THREE.Line(lineGeo, lineMat);
+      scene.add(line);
+
+      var pulse = new THREE.Mesh(new THREE.SphereGeometry(3,10,10), new THREE.MeshBasicMaterial({color:0xE0A94D, transparent:true, opacity:0}));
+      scene.add(pulse);
+
+      stationMeshes.push({dish:dish, x:x, z:z, name:st.name});
+      rangeRings.push(ring);
+      linkLines.push(line);
+      linkPulses.push({mesh:pulse, x:x, z:z, phase:Math.random()});
+    });
+
+    function updateCamera(){
+      camera.position.x = target.x + radius*Math.sin(phi)*Math.sin(theta);
+      camera.position.z = target.z + radius*Math.sin(phi)*Math.cos(theta);
+      camera.position.y = target.y + radius*Math.cos(phi);
+      camera.lookAt(target);
+    }
+    updateCamera();
+
+    /* ---- kontrol orbit manual: drag=putar, wheel/cubit=zoom (default lebih jauh) ---- */
+    var dragging=false, lastX=0, lastY=0;
+    renderer.domElement.addEventListener('pointerdown', function(e){ dragging=true; lastX=e.clientX; lastY=e.clientY; container.classList.add('grabbing'); });
+    window.addEventListener('pointerup', function(){ dragging=false; container.classList.remove('grabbing'); });
+    window.addEventListener('pointermove', function(e){
+      if(!dragging) return;
+      theta -= (e.clientX-lastX)*0.006;
+      phi   -= (e.clientY-lastY)*0.006;
+      phi = Math.max(0.3, Math.min(1.5, phi));
+      lastX=e.clientX; lastY=e.clientY;
+      updateCamera();
+    });
+    renderer.domElement.addEventListener('wheel', function(e){
+      e.preventDefault();
+      radius = Math.max(220, Math.min(1400, radius + e.deltaY*0.6));
+      updateCamera();
+    }, {passive:false});
+    var pinchDist=null;
+    function touchDist(t0,t1){ return Math.hypot(t1.clientX-t0.clientX, t1.clientY-t0.clientY); }
+    renderer.domElement.addEventListener('touchstart', function(e){
+      if(e.touches.length===2){ pinchDist=touchDist(e.touches[0],e.touches[1]); dragging=false; }
+    }, {passive:true});
+    renderer.domElement.addEventListener('touchmove', function(e){
+      if(e.touches.length===2 && pinchDist!==null){
+        e.preventDefault();
+        var d=touchDist(e.touches[0],e.touches[1]);
+        radius = Math.max(220, Math.min(1400, radius - (d-pinchDist)*1.1));
+        pinchDist=d;
+        updateCamera();
+      }
+    }, {passive:false});
+    renderer.domElement.addEventListener('touchend', function(e){ if(e.touches.length<2) pinchDist=null; }, {passive:true});
+
+    window.addEventListener('resize', function(){
+      var w2=container.clientWidth, h2=container.clientHeight;
+      if(!w2||!h2) return;
+      camera.aspect=w2/h2; camera.updateProjectionMatrix();
+      renderer.setSize(w2,h2);
+    });
+
+    function loop(){
+      requestAnimationFrame(loop);
+      if(container.offsetParent===null) return; /* tab tersembunyi — jangan render, hemat baterai */
+      var dt = Math.min(0.05, clock.getDelta());
+      if(stormGroup && currentState) stormGroup.rotation.y += dt*0.1*currentState.rotDir;
+      stationMeshes.forEach(function(s){ s.dish.rotation.y += dt*0.6; });
+      var t = clock.elapsedTime;
+      linkPulses.forEach(function(p, i){
+        if(!currentState || !currentState.covered[i]){ p.mesh.material.opacity = 0; return; }
+        var frac = (t*0.35 + p.phase) % 1;
+        p.mesh.position.set(p.x + (currentState.obsX-p.x)*frac, 14, p.z + (currentState.obsZ-p.z)*frac);
+        p.mesh.material.opacity = 0.85 * currentState.weight[i];
+      });
+      renderer.render(scene, camera);
+    }
+    loop();
+  }
+
+  function applyState(state){
+    var obsXkm = state.r*Math.cos(THETA), obsZkm = state.r*Math.sin(THETA);
+    obsMarker.position.set(obsXkm, 8, obsZkm);
+    obsPole.position.set(obsXkm, 20, obsZkm);
+
+    var intensity = Math.min(1, Math.abs(state.delta)/MAX_DP);
+    var surfColor = state.sysType==='L' ? 0x4FC7D9 : 0xD9677A;
+    stormDisc.material.color.setHex(surfColor);
+    stormDisc.material.opacity = 0.16 + intensity*0.32;
+    stormDisc.scale.setScalar(0.6+intensity*0.9);
+    armA.material.color.setHex(surfColor); armB.material.color.setHex(surfColor);
+    armA.material.opacity = armB.material.opacity = 0.3+intensity*0.5;
+    armA.scale.setScalar(0.6+intensity*0.9); armB.scale.setScalar(0.6+intensity*0.9);
+    var ccw = (state.hemi==='N') === (state.sysType==='L');
+    var rotDir = ccw ? 1 : -1;
+
+    /* ---- radar mana saja yang menjangkau titik ini, & taksiran hujan tiap radar ---- */
+    var covered=[], weight=[], estimates=[], nearestIdx=-1, nearestDist=Infinity;
+    stationMeshes.forEach(function(s,i){
+      var dx=obsXkm-s.x, dz=obsZkm-s.z, dist=Math.sqrt(dx*dx+dz*dz);
+      var inRange = dist<=RANGE_KM;
+      covered.push(inRange);
+      weight.push(inRange ? Math.max(0.12, 1-dist/RANGE_KM) : 0);
+      rangeRings[i].material.color.setHex(inRange?0x4FBF8A:0x5a6472);
+      rangeRings[i].material.opacity = inRange?0.7:0.28;
+      linkLines[i].material.opacity = inRange ? 0.18+weight[i]*0.35 : 0;
+      linkLines[i].material.color.setHex(0xE0A94D);
+      if(inRange){
+        var pseudoOffset = Math.sin(i*13.7+state.z*0.3)*(dist/RANGE_KM)*6;
+        var apparentZ = Math.max(0, Math.min(65, state.z+pseudoOffset));
+        estimates.push(rFromDbz(apparentZ,200,1.6));
+      }
+      if(dist<nearestDist){ nearestDist=dist; nearestIdx=i; }
+    });
+
+    var fused = 0, wsum=0;
+    stationMeshes.forEach(function(s,i){
+      if(!covered[i]) return;
+      var pseudoOffset = Math.sin(i*13.7+state.z*0.3)*( (Math.sqrt(Math.pow(obsXkm-s.x,2)+Math.pow(obsZkm-s.z,2)))/RANGE_KM)*6;
+      var apparentZ = Math.max(0, Math.min(65, state.z+pseudoOffset));
+      var rEst = rFromDbz(apparentZ,200,1.6);
+      fused += rEst*weight[i];
+      wsum += weight[i];
+    });
+    fused = wsum>0 ? fused/wsum : 0;
+    var spread = estimates.length ? (Math.max.apply(null,estimates)-Math.min.apply(null,estimates)) : 0;
+    var nCovered = covered.filter(Boolean).length;
+
+    currentState = {obsX:obsXkm, obsZ:obsZkm, covered:covered, weight:weight, rotDir:rotDir};
+
+    var statusEl = document.getElementById('three3dNetworkReadout');
+    if(statusEl){
+      statusEl.innerHTML =
+        '<div>Radar yang menjangkau titik ini <b>'+nCovered+' dari '+STATIONS.length+'</b></div>'+
+        '<div>Radar terdekat <b>'+(nearestIdx>=0?stationMeshes[nearestIdx].name:'—')+' ('+fmt(nearestDist,0)+' km)</b></div>'+
+        '<div>Hujan fusi multi-radar <b>'+fmt(fused,1)+' mm/jam</b></div>'+
+        '<div>Selisih antar radar (ketidakpastian) <b style="color:'+(spread>3?'var(--warn)':'var(--true)')+'">±'+fmt(spread/2,1)+' mm/jam</b></div>';
+    }
+  }
+
+  window.updateRadarNetwork = function(state){
+    window.__lastNetworkState = state;
+    initScene();
+    if(!initialized) return; /* masih tersembunyi, tunggu tab dibuka */
+    applyState(state);
+  };
+})();
+</script>
+<script>
+(function(){
+  "use strict";
+  var OMEGA = 7.2921159e-5;
+  var RHO = 1.225;
+  var P_FAR = 1016;
+  var L_SYS = 70;
+  var C_WAVE = 340;
+
+  var hemi = 'N', sysType = 'L';
+
+  function fmt(n,d){ if(d===undefined) d=1; if(!isFinite(n)) return '—'; return (Math.round(n*Math.pow(10,d))/Math.pow(10,d)).toLocaleString('id-ID'); }
+  function svgEl(tag, attrs){
+    var e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for(var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function arrow(svg, cx, cy, dx, dy, color, label, len){
+    var x2 = cx+dx*len, y2 = cy+dy*len;
+    svg.appendChild(svgEl('line',{x1:cx,y1:cy,x2:x2,y2:y2,stroke:color,'stroke-width':2.2}));
+    var ang = Math.atan2(y2-cy,x2-cx);
+    var a1x = x2-7*Math.cos(ang-0.4), a1y = y2-7*Math.sin(ang-0.4);
+    var a2x = x2-7*Math.cos(ang+0.4), a2y = y2-7*Math.sin(ang+0.4);
+    svg.appendChild(svgEl('polygon',{points:x2+','+y2+' '+a1x+','+a1y+' '+a2x+','+a2y, fill:color}));
+    if(label){
+      var lx = cx+dx*(len+16), ly = cy+dy*(len+16);
+      var t = svgEl('text',{x:lx,y:ly,'text-anchor':'middle','font-size':9.5,fill:color,'font-weight':'700'});
+      t.textContent = label; svg.appendChild(t);
+    }
+  }
+
+  /* ===================================================================
+     MODEL 3D GABUNGAN (Three.js) — tambahan, tidak menggantikan 4 kartu
+     SVG 2D di atas. Permukaan = medan tekanan (Sinoptik), panah = angin
+     geostropik (Dinamik), silinder = taksiran hujan (Fisis), grid dasar
+     = resolusi & status CFL (Numerik). Satu skenario, satu scene.
+     =================================================================== */
+  var PLANE_SIZE_KM = 480;   // cakupan horizontal (r maks slider = 230km)
+  var HEIGHT_SCALE   = 1.8;  // hPa -> unit tinggi (dilebih-lebihkan agar terlihat)
+  var three3D = null;
+
+  function initThree3D(){
+    if(three3D || typeof THREE === 'undefined') return;
+    var container = document.getElementById('three3dCombined');
+    if(!container) return;
+    var w = container.clientWidth, h = container.clientHeight || 420;
+    var scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b1016);
+
+    var camera = new THREE.PerspectiveCamera(42, w/h, 0.1, 3000);
+    var target = new THREE.Vector3(0,0,0);
+    var radius = 430, theta = Math.PI*0.28, phi = 1.02;
+
+    var renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setSize(w,h);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    container.appendChild(renderer.domElement);
+
+    scene.add(new THREE.AmbientLight(0xffffff,0.75));
+    var sun = new THREE.DirectionalLight(0xffffff,0.55);
+    sun.position.set(200,320,120);
+    scene.add(sun);
+
+    var obsMarker = new THREE.Mesh(new THREE.SphereGeometry(4.5,16,16), new THREE.MeshStandardMaterial({color:0xECEFF3}));
+    scene.add(obsMarker);
+
+    function updateCamera(){
+      camera.position.x = target.x + radius*Math.sin(phi)*Math.sin(theta);
+      camera.position.z = target.z + radius*Math.sin(phi)*Math.cos(theta);
+      camera.position.y = target.y + radius*Math.cos(phi);
+      camera.lookAt(target);
+    }
+    updateCamera();
+
+    var dragging=false, lastX=0, lastY=0;
+    renderer.domElement.addEventListener('pointerdown', function(e){ dragging=true; lastX=e.clientX; lastY=e.clientY; container.classList.add('grabbing'); });
+    window.addEventListener('pointerup', function(){ dragging=false; container.classList.remove('grabbing'); });
+    window.addEventListener('pointermove', function(e){
+      if(!dragging) return;
+      theta -= (e.clientX-lastX)*0.006;
+      phi   -= (e.clientY-lastY)*0.006;
+      phi = Math.max(0.28, Math.min(1.45, phi));
+      lastX=e.clientX; lastY=e.clientY;
+      updateCamera();
+    });
+    renderer.domElement.addEventListener('wheel', function(e){
+      e.preventDefault();
+      radius = Math.max(120, Math.min(900, radius + e.deltaY*0.35));
+      updateCamera();
+    }, {passive:false});
+
+    var pinchDist = null;
+    function touchDist(t0,t1){ return Math.hypot(t1.clientX-t0.clientX, t1.clientY-t0.clientY); }
+    renderer.domElement.addEventListener('touchstart', function(e){
+      if(e.touches.length===2){ pinchDist = touchDist(e.touches[0], e.touches[1]); dragging=false; }
+    }, {passive:true});
+    renderer.domElement.addEventListener('touchmove', function(e){
+      if(e.touches.length===2 && pinchDist!==null){
+        e.preventDefault();
+        var d = touchDist(e.touches[0], e.touches[1]);
+        radius = Math.max(120, Math.min(900, radius - (d-pinchDist)*0.6));
+        pinchDist = d;
+        updateCamera();
+      }
+    }, {passive:false});
+    renderer.domElement.addEventListener('touchend', function(e){
+      if(e.touches.length<2) pinchDist = null;
+    }, {passive:true});
+
+    function onResize(){
+      var w2 = container.clientWidth, h2 = container.clientHeight;
+      if(!w2||!h2) return;
+      camera.aspect = w2/h2; camera.updateProjectionMatrix();
+      renderer.setSize(w2,h2);
+    }
+    window.addEventListener('resize', onResize);
+
+    function loop(){
+      requestAnimationFrame(loop);
+      if(container.offsetParent===null) return; /* tab tersembunyi — jangan render, hemat baterai */
+      renderer.render(scene, camera);
+    }
+    loop();
+
+    three3D = {scene:scene, obsMarker:obsMarker, grid:null, pressureMesh:null, windArrow:null, rainMesh:null};
+  }
+
+  function rebuild3DGrid(dxKm, stable){
+    var scene = three3D.scene;
+    if(three3D.grid) scene.remove(three3D.grid);
+    var divisions = Math.max(4, Math.min(80, Math.round(PLANE_SIZE_KM/Math.max(dxKm,5))));
+    var color = stable ? 0x4FBF8A : 0xD9677A;
+    var g = new THREE.GridHelper(PLANE_SIZE_KM, divisions, color, color);
+    g.material.transparent = true;
+    g.material.opacity = 0.55;
+    scene.add(g);
+    three3D.grid = g;
+  }
+
+  function update3DScene(p){
+    if(!three3D) return;
+    var scene = three3D.scene;
+
+    /* ---- permukaan tekanan (Sinoptik) ---- */
+    if(three3D.pressureMesh){
+      scene.remove(three3D.pressureMesh);
+      three3D.pressureMesh.geometry.dispose();
+      three3D.pressureMesh.material.dispose();
+    }
+    var segs = 56;
+    var geo = new THREE.PlaneGeometry(PLANE_SIZE_KM, PLANE_SIZE_KM, segs, segs);
+    var posAttr = geo.attributes.position;
+    for(var i=0;i<posAttr.count;i++){
+      var x = posAttr.getX(i), y = posAttr.getY(i);
+      var rr = Math.sqrt(x*x+y*y);
+      posAttr.setZ(i, p.delta*Math.exp(-rr/L_SYS)*HEIGHT_SCALE);
+    }
+    geo.computeVertexNormals();
+    var surfColor = p.sysType==='L' ? 0x4FC7D9 : 0xD9677A;
+    var mat = new THREE.MeshStandardMaterial({color:surfColor, transparent:true, opacity:0.82, side:THREE.DoubleSide, metalness:0.1, roughness:0.6});
+    var mesh = new THREE.Mesh(geo, mat);
+    mesh.rotation.x = -Math.PI/2;
+    scene.add(mesh);
+    three3D.pressureMesh = mesh;
+
+    /* ---- titik observasi, di sumbu-x sejauh r km dari pusat sistem ---- */
+    var obsX = p.r, obsZ = 0;
+    var obsY = p.delta*Math.exp(-p.r/L_SYS)*HEIGHT_SCALE;
+    three3D.obsMarker.position.set(obsX, obsY+2, obsZ);
+
+    /* ---- vektor angin geostropik (Dinamik) ---- */
+    if(three3D.windArrow) scene.remove(three3D.windArrow);
+    var ccw = (p.hemi==='N')===(p.sysType==='L');
+    var dir = ccw ? new THREE.Vector3(0,0,1) : new THREE.Vector3(0,0,-1);
+    var lenArrow = Math.min(150, 22+Math.abs(p.vg)*3);
+    var arrowColor = p.unreal ? 0xD9677A : 0xE0A94D;
+    var arrowHelper = new THREE.ArrowHelper(dir, new THREE.Vector3(obsX,obsY+7,obsZ), lenArrow, arrowColor, lenArrow*0.22, lenArrow*0.14);
+    scene.add(arrowHelper);
+    three3D.windArrow = arrowHelper;
+
+    /* ---- kolom taksiran curah hujan (Fisis, hubungan Marshall–Palmer) ---- */
+    if(three3D.rainMesh){
+      scene.remove(three3D.rainMesh);
+      three3D.rainMesh.geometry.dispose();
+      three3D.rainMesh.material.dispose();
+    }
+    var rainH = Math.min(260, 8 + p.R*3.4);
+    var rainGeo = new THREE.CylinderGeometry(7,7,rainH,20);
+    var rainMat = new THREE.MeshStandardMaterial({color:0x4FA0D9, transparent:true, opacity:0.55});
+    var rainMesh = new THREE.Mesh(rainGeo, rainMat);
+    rainMesh.position.set(obsX+20, obsY+rainH/2, obsZ);
+    scene.add(rainMesh);
+    three3D.rainMesh = rainMesh;
+
+    /* ---- grid dasar: kerapatan & warna sesuai Δx & status CFL (Numerik) ---- */
+    rebuild3DGrid(p.dxKm, p.stable);
+
+    /* ---- ringkasan angka ---- */
+    var readout = document.getElementById('three3dReadout');
+    if(readout){
+      readout.innerHTML =
+        '<div>Kedalaman sistem di titik ini <b>'+fmt(p.delta,0)+' hPa</b></div>'+
+        '<div>Angin geostropik <b>'+fmt(p.vg,1)+' m/s</b></div>'+
+        '<div>Hujan taksiran (Marshall–Palmer) <b>'+fmt(p.R,1)+' mm/jam</b></div>'+
+        '<div>Grid Δx = '+p.dxKm+' km — <b style="color:'+(p.stable?'var(--true)':'var(--warn)')+'">'+(p.stable?'STABIL':'MELEDAK')+'</b></div>';
+    }
+  }
+
+  var els = {};
+  ['lat','dp','r','z','dt','dx'].forEach(function(k){
+    els['in'+k] = document.getElementById('in-'+k);
+    els['v'+k] = document.getElementById('v-'+k);
+  });
+
+  function gradAt(r, delta){ return Math.abs(delta)/L_SYS * Math.exp(-r/L_SYS); }
+  function pressureAt(r, delta){ return P_FAR + delta*Math.exp(-r/L_SYS); }
+
+  var FISIS_RELS = [
+    {name:'Marshall–Palmer', A:200, b:1.6, color:'#4FC7D9'},
+    {name:'Konvektif kuat', A:300, b:1.4, color:'#E0A94D'},
+    {name:'Tropis', A:250, b:1.2, color:'#D9677A'}
+  ];
+  function rFromDbz(dbz,A,b){ return Math.pow(Math.pow(10,dbz/10)/A, 1/b); }
+
+  function update(){
+    var lat = parseFloat(els.inlat.value);
+    var dp = parseFloat(els.indp.value);
+    var r = parseFloat(els.inr.value);
+    var z = parseFloat(els.inz.value);
+    var dt = parseFloat(els.indt.value);
+    var dxKm = parseFloat(els.indx.value);
+
+    els.vlat.textContent = lat+'°';
+    els.vdp.textContent = dp+' hPa';
+    els.vr.textContent = r+' km';
+    els.vz.textContent = z+' dBZ';
+    els.vdt.textContent = dt+' detik';
+    els.vdx.textContent = dxKm+' km';
+
+    var delta = sysType==='L' ? -dp : dp;
+
+    /* ---- DINAMIK ---- */
+    var gradLocal_hpa_per_km = gradAt(r, delta);
+    var grad_hpa_per_100km = gradLocal_hpa_per_km*100;
+    var f = 2*OMEGA*Math.sin(lat*Math.PI/180);
+    var dPdn = grad_hpa_per_100km*0.001;
+    var vg = (1/(RHO*f))*dPdn;
+    var unreal = vg>100;
+    document.getElementById('res-dinamik').innerHTML =
+      'Gradien lokal di r='+r+'km: <b>'+fmt(grad_hpa_per_100km,2)+' hPa/100km</b><br>Angin geostropik: <b>'+fmt(vg,1)+' m/s</b> ('+fmt(vg*3.6,0)+' km/j)';
+    document.getElementById('res-dinamik').className = 'branch-result' + (unreal?' b-warn':'');
+    drawDinamik(delta, r, vg, unreal);
+
+    /* ---- SINOPTIK ---- */
+    var pc = P_FAR+delta;
+    document.getElementById('res-sinoptik').innerHTML =
+      'Tekanan pusat: <b>'+fmt(pc,0)+' hPa</b><br>Tekanan di titik ini: <b>'+fmt(pressureAt(r,delta),0)+' hPa</b>';
+    drawSinoptik(delta, r);
+
+    /* ---- FISIS ---- */
+    var results = FISIS_RELS.map(function(rl){ return {rl:rl, R: rFromDbz(z,rl.A,rl.b)}; });
+    var rMin = Math.min.apply(null, results.map(function(x){return x.R;}));
+    var rMax = Math.max.apply(null, results.map(function(x){return x.R;}));
+    document.getElementById('res-fisis').innerHTML =
+      'Rentang taksiran: <b>'+fmt(rMin,1)+'–'+fmt(rMax,1)+' mm/jam</b><br>Rasio tertinggi/terendah: <b>'+fmt(rMax/rMin,1)+'×</b>';
+    var barsHtml = results.map(function(x){
+      var pct = Math.min(100, (x.R/Math.max(rMax,0.01))*100);
+      return '<div class="bar-row"><span style="width:92px;">'+x.rl.name+'</span><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+x.rl.color+';"></div></div><span class="mono">'+fmt(x.R,1)+'</span></div>';
+    }).join('');
+    document.getElementById('res-fisis-bars').innerHTML = barsHtml;
+
+    /* ---- NUMERIK ---- */
+    var dx = dxKm*1000;
+    var C = C_WAVE*dt/dx;
+    var stable = C<=1;
+    document.getElementById('res-numerik').innerHTML =
+      'Bilangan Courant: <b>'+fmt(C,2)+'</b><br>Status: <b>'+(stable?'STABIL':'MELEDAK')+'</b>';
+    document.getElementById('res-numerik').className = 'branch-result' + (stable?'':' b-warn');
+    drawNumerik(C, stable);
+
+    /* ---- Model 3D gabungan (tab "Model Skematik"): pakai variabel yang sama di atas ---- */
+    initThree3D();
+    update3DScene({
+      delta:delta, sysType:sysType, hemi:hemi, r:r, vg:vg, unreal:unreal,
+      R: results[0].R, stable:stable, dxKm:dxKm
+    });
+
+    /* ---- Visualisasi 3D gabungan (tab "Visualisasi Lanskap"): state yang sama ---- */
+    if(window.updateThreeViz) window.updateThreeViz({
+      lat:lat, delta:delta, r:r, z:z, dxKm:dxKm,
+      hemi:hemi, sysType:sysType,
+      gradLocal_hpa_per_km:gradLocal_hpa_per_km, vg:vg, unreal:unreal,
+      rainResults:results, rMin:rMin, rMax:rMax,
+      C:C, stable:stable
+    });
+
+    /* ---- Jaringan Radar Regional (tab "Jaringan Radar"): state yang sama ---- */
+    if(window.updateRadarNetwork) window.updateRadarNetwork({
+      r:r, z:z, sysType:sysType, hemi:hemi, delta:delta, stable:stable, C:C
+    });
+  }
+
+  function drawDinamik(delta, r, vg, unreal){
+    var svg = document.getElementById('svg-dinamik');
+    svg.innerHTML='';
+    var W=260,H=190,cx=130,cy=100;
+    for(var i=0;i<4;i++){
+      var y=30+i*35;
+      svg.appendChild(svgEl('line',{x1:15,y1:y,x2:245,y2:y,stroke:'rgba(232,236,244,0.14)','stroke-width':1}));
+    }
+    var ht=svgEl('text',{x:15,y:20,'font-size':9.5,fill:'#D9677A','font-weight':'700'}); ht.textContent = sysType==='L'?'TEKANAN TINGGI':'TEKANAN RENDAH'; svg.appendChild(ht);
+    var lt=svgEl('text',{x:15,y:180,'font-size':9.5,fill:'#4FC7D9','font-weight':'700'}); lt.textContent = sysType==='L'?'TEKANAN RENDAH':'TEKANAN TINGGI'; svg.appendChild(lt);
+    var pgf = {x:0,y: sysType==='L'?1:-1};
+    var wind = hemi==='N' ? {x:-pgf.y,y:pgf.x} : {x:pgf.y,y:-pgf.x};
+    var cor = {x:-pgf.x,y:-pgf.y};
+    arrow(svg,cx,cy,pgf.x,pgf.y,'#D9677A','PGF',42);
+    arrow(svg,cx,cy,cor.x,cor.y,'#4FC7D9','Cor',42);
+    arrow(svg,cx,cy,wind.x,wind.y,'#E0A94D', unreal?'Angin!':'Angin',52);
+    svg.appendChild(svgEl('circle',{cx:cx,cy:cy,r:3,fill:'#ECEFF3'}));
+  }
+
+  function drawSinoptik(delta, r){
+    var svg = document.getElementById('svg-sinoptik');
+    svg.innerHTML='';
+    var W=260,H=190,cx=130,cy=100,maxR=80,scale=maxR/230;
+    var color = sysType==='L' ? '#4FC7D9' : '#D9677A';
+    for(var i=1;i<=4;i++){
+      svg.appendChild(svgEl('circle',{cx:cx,cy:cy,r:i*(maxR/4),fill:'none',stroke:color,'stroke-width':1,'stroke-opacity':0.4}));
+    }
+    svg.appendChild(svgEl('circle',{cx:cx,cy:cy,r:6,fill:color}));
+    var ctag=svgEl('text',{x:cx,y:cy+3,'text-anchor':'middle','font-size':9,'font-weight':'700',fill:'#10141A'}); ctag.textContent=sysType; svg.appendChild(ctag);
+
+    var theta = -0.6;
+    var sr = Math.min(r*scale, maxR-4);
+    var sx = cx+sr*Math.cos(theta), sy = cy+sr*Math.sin(theta);
+    var ccw = (hemi==='N')===(sysType==='L');
+    var tang = ccw ? {x:Math.sin(theta),y:-Math.cos(theta)} : {x:-Math.sin(theta),y:Math.cos(theta)};
+    svg.appendChild(svgEl('line',{x1:cx,y1:cy,x2:sx,y2:sy,stroke:'rgba(232,236,244,0.3)','stroke-width':1,'stroke-dasharray':'2,2'}));
+    svg.appendChild(svgEl('circle',{cx:sx,cy:sy,r:4,fill:'#ECEFF3'}));
+    var glocal = gradAt(r, delta);
+    var alen = Math.min(30, 8+glocal*300);
+    arrow(svg,sx,sy,tang.x,tang.y,'#E0A94D',null,alen);
+    var lbl = svgEl('text',{x:sx,y:sy-10,'text-anchor':'middle','font-size':9,fill:'#ECEFF3'}); lbl.textContent='titik ini'; svg.appendChild(lbl);
+  }
+
+  function drawNumerik(C, stable){
+    var svg = document.getElementById('svg-numerik');
+    svg.innerHTML='';
+    var W=260,H=190,padL=32,padB=22,padT=10,padR=8;
+    var plotW=W-padL-padR, plotH=H-padT-padB;
+    var logMin=-3, logMax=3, steps=10;
+    for(var lv=logMin; lv<=logMax; lv+=2){
+      var y=padT+plotH-((lv-logMin)/(logMax-logMin))*plotH;
+      svg.appendChild(svgEl('line',{x1:padL,y1:y,x2:W-padR,y2:y,stroke:'rgba(232,236,244,0.08)','stroke-width':1}));
+    }
+    var pts=[];
+    for(var s=0;s<=steps;s++){
+      var amp = stable ? 1 : Math.pow(C,s);
+      var logAmp = Math.log(Math.max(amp,1e-9))/Math.LN10;
+      var clipped = Math.max(logMin, Math.min(logMax, logAmp));
+      var x = padL+(s/steps)*plotW;
+      var y = padT+plotH-((clipped-logMin)/(logMax-logMin))*plotH;
+      pts.push(x+','+y);
+    }
+    svg.appendChild(svgEl('polyline',{points:pts.join(' '),fill:'none',stroke:stable?'#4FBF8A':'#D9677A','stroke-width':2.2}));
+    svg.appendChild(svgEl('line',{x1:padL,y1:padT,x2:padL,y2:padT+plotH,stroke:'rgba(232,236,244,0.25)','stroke-width':1}));
+    svg.appendChild(svgEl('line',{x1:padL,y1:padT+plotH,x2:W-padR,y2:padT+plotH,stroke:'rgba(232,236,244,0.25)','stroke-width':1}));
+  }
+
+  Object.keys(els).forEach(function(k){
+    if(k.indexOf('in')===0) els[k].addEventListener('input', update);
+  });
+  document.querySelectorAll('.toggle-chip[data-hemi]').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      document.querySelectorAll('.toggle-chip[data-hemi]').forEach(function(c){c.classList.remove('active');});
+      chip.classList.add('active'); hemi = chip.getAttribute('data-hemi'); update();
+    });
+  });
+  document.querySelectorAll('.toggle-chip[data-sys]').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      document.querySelectorAll('.toggle-chip[data-sys]').forEach(function(c){c.classList.remove('active');});
+      chip.classList.add('active'); sysType = chip.getAttribute('data-sys'); update();
+    });
+  });
+
+  /* ---- Tab pemilih model 3D: Skematik vs Visualisasi Lanskap vs Jaringan Radar ---- */
+  document.querySelectorAll('.panel3d-tab').forEach(function(tab){
+    tab.addEventListener('click', function(){
+      document.querySelectorAll('.panel3d-tab').forEach(function(t){t.classList.remove('active');});
+      document.querySelectorAll('.panel3d-pane').forEach(function(p){p.classList.remove('active');});
+      tab.classList.add('active');
+      var pane = document.getElementById('pane-'+tab.getAttribute('data-pane'));
+      if(pane) pane.classList.add('active');
+      /* pane baru terlihat -> ukurannya baru valid sekarang, coba (re)inisialisasi/segarkan */
+      if(tab.getAttribute('data-pane')==='lanskap' && window.updateThreeViz && window.__lastLandscapeState){
+        window.updateThreeViz(window.__lastLandscapeState);
+      }
+      if(tab.getAttribute('data-pane')==='jaringan' && window.updateRadarNetwork && window.__lastNetworkState){
+        window.updateRadarNetwork(window.__lastNetworkState);
+      }
+    });
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>

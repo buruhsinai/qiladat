@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulasi Sirkulasi Ekonomi: Zakat & Sistem Pajak</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --bg:#12141c; --bg-panel:#1b1f2b; --bg-panel-2:#20263a;
+  --line:#333a4f; --text:#eee7d6; --text-dim:#a9a6ac;
+  --gold:#c9a15a; --gold-soft:#8a713c; --teal:#5a9c92; --blue:#6f9bd1; --red:#c07a6e; --radius:10px;
+}
+*{box-sizing:border-box;}
+body{ margin:0; background:var(--bg); color:var(--text); font-family:'Karla',sans-serif; line-height:1.6; }
+h1,h2,h3{ font-family:'Fraunces',serif; font-weight:600; margin:0 0 0.5em; }
+.mono{ font-family:'JetBrains Mono', monospace; }
+.wrap{ max-width:880px; margin:0 auto; padding:0 20px; }
+.hero{ padding:48px 0 30px; border-bottom:1px solid var(--line); text-align:center; }
+.hero .eyebrow{ text-transform:uppercase; font-size:0.7rem; letter-spacing:2.5px; color:var(--gold); margin-bottom:12px; }
+.hero h1{ font-size:clamp(1.4rem,4.4vw,2.1rem); color:#fff; }
+.hero p.tag{ color:var(--text-dim); max-width:600px; margin:10px auto 0; font-size:0.94rem; }
+.hero .catatan{ margin-top:16px; font-size:0.8rem; color:var(--text-dim); background:var(--bg-panel-2); display:inline-block; padding:8px 16px; border-radius:20px; border:1px solid var(--line); }
+section{ padding:36px 0; border-bottom:1px solid var(--line); }
+section:last-of-type{ border-bottom:none; }
+.kicker{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+.kicker .num{ font-family:'Fraunces',serif; color:var(--gold); font-size:0.85rem; border:1px solid var(--gold-soft); border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.kicker h2{ font-size:1.2rem; margin:0; color:#fff; }
+p{ color:var(--text); } p.dim{ color:var(--text-dim); font-size:0.9rem; }
+.panel{ background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-top:16px; }
+.subgrid{ display:grid; grid-template-columns:1fr; gap:14px; margin-top:14px; }
+.subcard{ background:var(--bg-panel-2); border:1px solid var(--line); border-radius:8px; padding:14px 16px; }
+.subcard h4{ font-size:0.92rem; color:#fff; margin-bottom:6px; }
+.subcard p{ font-size:0.86rem; color:var(--text-dim); margin:0; }
+ul{ padding-left:20px; } ul.batas li{ margin-bottom:10px; } li{margin-bottom:6px;}
+.refs li{ margin-bottom:10px; font-size:0.9rem; color:var(--text-dim); }
+.formula{ font-family:'Fraunces',serif; font-style:italic; background:var(--bg-panel-2); border-radius:8px; padding:14px 18px; margin:14px 0; overflow-x:auto; color:#f4eede; }
+.consult{ background:linear-gradient(135deg,var(--bg-panel-2),var(--bg-panel)); border:1px solid var(--gold-soft); border-radius:var(--radius); padding:22px; text-align:center; }
+.consult a.wa{ display:inline-block; margin-top:14px; background:var(--teal); color:#12141c; text-decoration:none; font-weight:700; padding:12px 26px; border-radius:30px; }
+footer{ text-align:center; padding:26px 0; color:var(--text-dim); font-size:0.8rem; }
+
+label{ display:block; font-size:0.82rem; color:var(--text-dim); margin:14px 0 6px; }
+label:first-of-type{ margin-top:0; }
+input[type=number]{ width:100%; background:#0e1017; border:1px solid var(--line); color:var(--text); padding:10px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:0.95rem; }
+input[type=range]{ width:100%; accent-color:var(--gold); }
+input:focus{ outline:none; border-color:var(--gold); }
+.slider-row{ display:flex; justify-content:space-between; font-size:0.74rem; color:var(--text-dim); margin-top:4px; }
+
+.hasil-card{ background:var(--bg-panel-2); border:1px solid var(--line); border-radius:8px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:6px; }
+.hasil-card .lbl{ font-size:0.82rem; color:var(--text-dim); }
+.hasil-card .val{ font-family:'JetBrains Mono',monospace; font-size:1rem; color:var(--gold); text-align:right; }
+.hasil-grid{ display:grid; grid-template-columns:1fr; gap:8px; }
+
+.tab-row{ display:flex; gap:8px; margin-top:8px; }
+.tab-btn{ flex:1; background:var(--bg-panel-2); border:1px solid var(--line); color:var(--text-dim); padding:8px; border-radius:8px; font-size:0.78rem; font-weight:700; cursor:pointer; }
+.tab-btn.active{ background:var(--gold); color:#12141c; border-color:var(--gold); }
+
+.legend-row{ display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; font-size:0.76rem; color:var(--text-dim); }
+.legend-row span.sw{ display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Sains Ekonomi &amp; Kebijakan Publik</div>
+    <h1>Simulasi Sirkulasi Ekonomi: Zakat &amp; Sistem Pajak</h1>
+    <p class="tag">Andaikata kewajiban harta dalam Islam diterapkan maksimal — bagaimana pola sirkulasinya, dan bagaimana perbandingannya secara mekanis dengan sistem pajak modern? Geser variabelnya, lihat sendiri polanya.</p>
+    <div class="catatan">Disajikan untuk perbandingan mekanisme secara netral — bukan penilaian mana yang lebih unggul.</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <div class="kicker"><div class="num">1</div><h2>Belajar: Logika Sirkulasi Zakat</h2></div>
+
+    <p>Prinsip dasar zakat: diambil dari <strong>yang berlebih</strong>. Secara teknis diwujudkan lewat <strong>nisab</strong> — ambang batas kepemilikan (setara 85 gram emas untuk zakat maal) di bawah mana seseorang tidak wajib berzakat sama sekali. Ini berbeda mendasar dari pajak penghasilan progresif: begitu kekayaan melewati nisab, <strong>seluruh</strong> jumlah zakatnya kena tarif flat 2,5% — bukan cuma bagian yang melebihi ambang batas seperti skema pajak berjenjang.</p>
+
+    <div class="subgrid">
+      <div class="subcard">
+        <h4>🪙 Penggerak uang &amp; komoditas pokok</h4>
+        <p>Zakat maal (emas, perak, uang, surat berharga) dan zakat tijarah (barang dagangan) sengaja menyasar harta yang <em>disimpan diam</em> — uang yang ditimbun tidak berputar di ekonomi justru "tergerus" 2,5%/tahun. Ini mendorong pemilik harta memutar hartanya (investasi, berdagang) daripada menimbunnya.</p>
+      </div>
+      <div class="subcard">
+        <h4>🐐 Penggerak barang &amp; ternak</h4>
+        <p>Anjuran memberi makan orang berpuasa di Ramadan dan penyembelihan kurban punya pola berbeda: keduanya menggerakkan <em>barang fisik musiman</em> — permintaan bahan pangan &amp; ternak melonjak pada waktu tertentu, menghidupkan mata rantai peternak-pedagang-konsumen secara berkala setiap tahun.</p>
+      </div>
+      <div class="subcard">
+        <h4>👥 Delapan asnaf (penerima zakat)</h4>
+        <p>Fakir, miskin, amil (pengelola zakat), mualaf, riqab (memerdekakan budak — konteks historis), gharimin (orang berutang), fisabilillah, dan ibnu sabil (musafir kehabisan bekal). Delapan kategori ini eksplisit disebutkan dalam Al-Qur'an (At-Taubah: 60) — bukan daftar terbuka yang bisa diperluas bebas.</p>
+      </div>
+      <div class="subcard">
+        <h4>🏛️ Warisan tanpa ahli waris &amp; Baitul Mal</h4>
+        <p>Dalam fikih klasik, harta orang yang wafat tanpa ahli waris sama sekali diserahkan ke <strong>Baitul Mal</strong> (kas/bendahara umum umat) — bukan dibiarkan terlantar atau jadi rebutan. Baitul Mal berfungsi mirip kas negara modern, menampung zakat, harta tanpa pemilik, dan sumber lain untuk kebutuhan publik.</p>
+      </div>
+    </div>
+
+    <p style="margin-top:20px;">Hipotesis yang menarik untuk diuji secara matematis: apakah pola "penerima zakat hari ini berpotensi jadi pembayar zakat di masa depan" menciptakan semacam <strong>siklus yang menyempitkan jurang kekayaan</strong> dari waktu ke waktu — dibanding tanpa redistribusi sama sekali, atau dibanding skema pajak-dan-belanja-publik konvensional? Alat C di bawah mencoba mensimulasikannya secara sederhana.</p>
+  </section>
+  <section id="alat-a">
+    <div class="kicker"><div class="num">2</div><h2>Alat A: Kalkulator Zakat</h2></div>
+    <div class="panel">
+      <label>Harga emas saat ini (Rp/gram) — perbarui sesuai harga hari ini</label>
+      <input type="number" id="harga-emas" value="2600000" step="1000">
+      <div class="hasil-card" style="margin-top:10px;"><span class="lbl">Nisab zakat maal (85 gram)</span><span class="val" id="nisab-rp">—</span></div>
+
+      <label style="margin-top:18px;">Total harta zakatable (uang, emas, perak, saham, dll — Rp)</label>
+      <input type="number" id="harta-maal" value="150000000" step="1000000">
+      <div class="hasil-card"><span class="lbl">Status &amp; zakat maal (2,5%)</span><span class="val" id="hasil-maal">—</span></div>
+
+      <label style="margin-top:18px;">Hasil pertanian musim ini (Rp) &amp; jenis pengairan</label>
+      <input type="number" id="hasil-tani" value="50000000" step="1000000">
+      <div class="tab-row" id="tab-irigasi">
+        <button class="tab-btn active" data-jenis="irigasi" onclick="pilihIrigasi('irigasi')">Berpengairan (5%)</button>
+        <button class="tab-btn" data-jenis="tadah" onclick="pilihIrigasi('tadah')">Tadah hujan (10%)</button>
+      </div>
+      <div class="hasil-card"><span class="lbl">Zakat pertanian</span><span class="val" id="hasil-tani-out">—</span></div>
+
+      <label style="margin-top:18px;">Jumlah jiwa dalam keluarga (zakat fitrah, ±2,5 kg beras/jiwa)</label>
+      <input type="number" id="jumlah-jiwa" value="4" min="1">
+      <label>Harga beras per kg (Rp)</label>
+      <input type="number" id="harga-beras" value="14000" step="500">
+      <div class="hasil-card"><span class="lbl">Total zakat fitrah keluarga</span><span class="val" id="hasil-fitrah">—</span></div>
+    </div>
+  </section>
+
+  <section id="alat-b">
+    <div class="kicker"><div class="num">3</div><h2>Alat B: Perbandingan Potongan</h2></div>
+    <p class="dim">Bukan untuk menilai mana lebih baik — sekadar menyandingkan mekanisme nyata secara berdampingan. Sumber tarif Indonesia (PPh 21, UU HPP) dan Singapura (IRAS, Tahun Pajak 2026) dicantumkan di bagian Referensi.</p>
+    <div class="panel">
+      <label>Penghasilan/kekayaan tahunan untuk disimulasikan (Rp)</label>
+      <input type="number" id="input-banding" value="400000000" step="1000000">
+
+      <div class="hasil-grid" id="grid-banding" style="margin-top:16px;"></div>
+      <p class="dim" style="margin-top:10px;" id="catatan-banding"></p>
+    </div>
+  </section>
+
+  <section id="alat-c">
+    <div class="kicker"><div class="num">4</div><h2>Alat C: Simulasi Sirkulasi Multi-Tahun</h2></div>
+    <p class="dim">Model mainan (toy model) yang disederhanakan — <strong>bukan</strong> prediksi ekonomi riil. Tujuannya semata memperlihatkan perbedaan <em>mekanisme</em>: redistribusi tersasar ke yang miskin (ala zakat) vs redistribusi merata lewat layanan publik (ala pajak umum) vs tanpa redistribusi sama sekali.</p>
+    <div class="panel">
+      <label>Tingkat ketimpangan awal populasi (skew)</label>
+      <input type="range" id="slider-skew" min="0.2" max="3" step="0.1" value="1.5">
+      <div class="slider-row"><span id="label-skew">—</span><span id="label-gini-awal">—</span></div>
+
+      <label>Pertumbuhan ekonomi tahunan</label>
+      <input type="range" id="slider-growth" min="0" max="10" step="0.5" value="3">
+      <div class="slider-row"><span id="label-growth">3% / tahun</span><span></span></div>
+
+      <label>Jumlah tahun simulasi</label>
+      <input type="range" id="slider-tahun" min="5" max="50" step="1" value="25">
+      <div class="slider-row"><span id="label-tahun">25 tahun</span><span></span></div>
+
+      <label>Tarif zakat (default fikih: 2,5%)</label>
+      <input type="range" id="slider-zakat-rate" min="1" max="10" step="0.5" value="2.5">
+      <div class="slider-row"><span id="label-zakat-rate">2.5%</span><span></span></div>
+
+      <label>Nisab (kelipatan rata-rata kekayaan awal populasi)</label>
+      <input type="range" id="slider-nisab" min="0.2" max="2" step="0.1" value="0.7">
+      <div class="slider-row"><span id="label-nisab">0.7×</span><span></span></div>
+
+      <svg id="chart-svg" viewBox="0 0 400 220" style="width:100%; margin-top:20px; background:var(--bg-panel-2); border-radius:8px;"></svg>
+      <div class="legend-row" id="legend-chart"></div>
+
+      <div class="hasil-grid" id="ringkasan-c" style="margin-top:14px;"></div>
+    </div>
+  </section>
+
+  <section id="metode">
+    <div class="kicker"><div class="num">5</div><h2>Metode</h2></div>
+    <p>Ketimpangan diukur dengan <strong>koefisien Gini</strong> (0 = benar-benar merata, mendekati 1 = sangat timpang), dihitung ulang tiap tahun simulasi untuk tiga skenario yang berjalan paralel dari populasi awal yang identik:</p>
+    <div class="formula">Gini = (2 × Σ(i × wᵢ)) / (n × Σw) − (n+1)/n &nbsp;(wᵢ diurutkan menaik)</div>
+    <ul>
+      <li><strong>Tanpa redistribusi:</strong> kekayaan tumbuh sesuai laju pertumbuhan saja, tidak ada pemotongan apa pun.</li>
+      <li><strong>Zakat:</strong> rumah tangga di atas nisab membayar tarif zakat dari <em>total</em> kekayaannya (bukan cuma kelebihannya), dana terkumpul dibagi rata ke rumah tangga di bawah garis kemiskinan (disederhanakan mewakili asnaf fakir-miskin).</li>
+      <li><strong>Pajak progresif:</strong> tarif berjenjang (skala relatif terhadap rata-rata populasi, membentuk kurva sama seperti PPh 21) dikenakan tiap tahun, dana terkumpul dibagi <em>rata ke seluruh populasi</em> — merepresentasikan belanja publik yang manfaatnya tidak eksklusif untuk yang miskin saja.</li>
+    </ul>
+  </section>
+
+  <section id="batasan">
+    <div class="kicker"><div class="num">6</div><h2>Batasan — Mohon Dibaca Sebelum Menyimpulkan Apa Pun</h2></div>
+    <ul class="batas">
+      <li><strong>Alat C adalah model mainan pedagogis</strong>, bukan riset ekonometrik. Ekonomi riil punya jauh lebih banyak variabel (inflasi, guncangan eksternal, perilaku konsumsi, kepatuhan pembayaran zakat/pajak yang tidak pernah 100%, dll.) yang sama sekali tidak dimodelkan di sini.</li>
+      <li>Zakat sesungguhnya bersifat <em>stock</em> (dihitung dari harta yang mengendap satu tahun penuh/haul), sedangkan pajak penghasilan bersifat <em>flow</em> (dari penghasilan tahun berjalan). Simulasi ini menyederhanakan keduanya beroperasi pada satu angka "kekayaan tahunan" yang sama demi bisa dibandingkan — ini simplifikasi yang disengaja, bukan representasi akurat masing-masing sistem.</li>
+      <li><strong>Penting soal skenario pajak:</strong> hasil "pajak" di Alat C mengasumsikan seluruh dana pajak dibagi <em>rata ke setiap orang</em> — sebuah penyederhanaan kuat yang mendekati skema semacam bantuan tunai universal, <strong>bukan</strong> gambaran realistis belanja pemerintah sesungguhnya (yang sebagian besar mengalir ke infrastruktur, gaji aparatur, pertahanan, cicilan utang, dll — bukan dibagi tunai rata ke warga). Karena asumsi ini, skenario pajak di simulasi bisa terlihat jauh lebih menyamaratakan daripada praktik pajak riil di negara manapun. Ini bukan bukti "pajak lebih unggul" — melainkan menunjukkan bahwa <em>siapa yang akhirnya menerima manfaat redistribusi</em> jauh lebih menentukan hasil ketimpangan daripada nama sistemnya.</li>
+      <li>Ada perbedaan fikih (mazhab) soal rincian nisab, harta zakatable, dan siapa yang tergolong "kaya" — kalkulator Alat A memakai pendapat yang umum dipakai, bukan satu-satunya pendapat yang sah.</li>
+      <li>Perbandingan Alat B menyandingkan angka Rupiah dan Dolar Singapura <strong>tanpa konversi kurs/daya beli</strong> — sengaja dibiarkan dalam mata uang masing-masing supaya tidak menyesatkan dengan kesan "lebih murah/mahal" yang sebenarnya perlu konteks paritas daya beli.</li>
+      <li>Kepatuhan pembayaran (baik zakat maupun pajak) dalam praktiknya tidak pernah 100% — simulasi ini mengasumsikan kepatuhan sempurna, yang tidak realistis di dunia nyata manapun.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <div class="kicker"><div class="num">7</div><h2>Referensi</h2></div>
+    <ul class="refs">
+      <li>QS. At-Taubah: 60 — dasar delapan golongan penerima zakat (asnaf).</li>
+      <li>Kementerian Keuangan RI (KPPN) &amp; UU HPP — tarif PPh 21 progresif 5 lapisan (5%–35%) &amp; PTKP, berlaku tahun pajak 2026.</li>
+      <li>Inland Revenue Authority of Singapore (IRAS) — tarif pajak penghasilan orang pribadi progresif Tahun Pajak 2026 (0%–24%).</li>
+      <li>Konsep Baitul Mal &amp; warisan tanpa ahli waris — fikih waris klasik (mazhab-mazhab menyepakati prinsip umum, berbeda pada sebagian rincian teknis).</li>
+    </ul>
+  </section>
+
+  <section id="konsultasi">
+    <div class="consult">
+      <h3 style="color:#fff;">Ingin variabel lain ditambahkan?</h3>
+      <p class="dim">Alat ini masih pengembangan versi awal, dibuat untuk mendorong diskusi terbuka — bukan kesimpulan tertutup. Silakan hubungi kami untuk masukan.</p>
+      <a class="wa" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20bertanya%20seputar%20Simulasi%20Zakat%20%26%20Sistem%20Pajak." target="_blank">Hubungi via WhatsApp</a>
+    </div>
+  </section>
+
+<script>
+function fmtRp(n){ return 'Rp' + Math.round(n).toLocaleString('id-ID'); }
+function fmtSgd(n){ return 'S$' + Math.round(n).toLocaleString('en-SG'); }
+
+/* ===== ALAT A: KALKULATOR ZAKAT ===== */
+let jenisIrigasi = 'irigasi';
+function pilihIrigasi(j){
+  jenisIrigasi = j;
+  document.querySelectorAll('#tab-irigasi .tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.jenis===j));
+  hitungA();
+}
+
+function hitungA(){
+  const hargaEmas = parseFloat(document.getElementById('harga-emas').value) || 0;
+  const nisab = hargaEmas * 85;
+  document.getElementById('nisab-rp').textContent = fmtRp(nisab);
+
+  const hartaMaal = parseFloat(document.getElementById('harta-maal').value) || 0;
+  if(hartaMaal >= nisab){
+    document.getElementById('hasil-maal').textContent = 'Wajib — ' + fmtRp(hartaMaal*0.025);
+  } else {
+    document.getElementById('hasil-maal').textContent = 'Belum wajib (di bawah nisab)';
+  }
+
+  const hasilTani = parseFloat(document.getElementById('hasil-tani').value) || 0;
+  const tarifTani = jenisIrigasi==='irigasi' ? 0.05 : 0.10;
+  document.getElementById('hasil-tani-out').textContent = fmtRp(hasilTani*tarifTani) + ' (' + (tarifTani*100) + '%)';
+
+  const jiwa = parseFloat(document.getElementById('jumlah-jiwa').value) || 0;
+  const hargaBeras = parseFloat(document.getElementById('harga-beras').value) || 0;
+  document.getElementById('hasil-fitrah').textContent = fmtRp(jiwa*2.5*hargaBeras);
+}
+['harga-emas','harta-maal','hasil-tani','jumlah-jiwa','harga-beras'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', hitungA);
+});
+
+/* ===== ALAT B: PERBANDINGAN POTONGAN ===== */
+function hitungPajakBracket(income, brackets){
+  let sisa = income, pajak = 0, bawah = 0;
+  for(const b of brackets){
+    if(sisa<=0) break;
+    const lebar = b.batas - bawah;
+    const kena = Math.min(sisa, lebar);
+    pajak += kena * b.tarif;
+    sisa -= kena;
+    bawah = b.batas;
+  }
+  return pajak;
+}
+const ID_BRACKETS = [
+  {batas:60e6, tarif:0.05},{batas:250e6, tarif:0.15},{batas:500e6, tarif:0.25},
+  {batas:5000e6, tarif:0.30},{batas:Infinity, tarif:0.35}
+];
+const SG_BRACKETS = [
+  {batas:20000,tarif:0},{batas:30000,tarif:0.02},{batas:40000,tarif:0.035},{batas:80000,tarif:0.07},
+  {batas:120000,tarif:0.115},{batas:160000,tarif:0.15},{batas:200000,tarif:0.18},{batas:240000,tarif:0.19},
+  {batas:280000,tarif:0.195},{batas:320000,tarif:0.20},{batas:500000,tarif:0.22},{batas:1000000,tarif:0.23},
+  {batas:Infinity,tarif:0.24}
+];
+const PTKP = 54e6;
+
+function hitungB(){
+  const jumlah = parseFloat(document.getElementById('input-banding').value) || 0;
+  const hargaEmas = parseFloat(document.getElementById('harga-emas').value) || 2600000;
+  const nisab = hargaEmas*85;
+
+  const zakat = jumlah>=nisab ? jumlah*0.025 : 0;
+  const pkp = Math.max(0, jumlah - PTKP);
+  const pajakId = hitungPajakBracket(pkp, ID_BRACKETS);
+  const pajakSg = hitungPajakBracket(jumlah, SG_BRACKETS);
+
+  const grid = document.getElementById('grid-banding');
+  grid.innerHTML = `
+    <div class="hasil-card"><span class="lbl">Zakat maal (2,5% flat di atas nisab)</span><span class="val">${fmtRp(zakat)} → 8 asnaf tersasar</span></div>
+    <div class="hasil-card"><span class="lbl">PPh 21 Indonesia (progresif, PTKP Rp54jt)</span><span class="val">${fmtRp(pajakId)} → kas negara umum</span></div>
+    <div class="hasil-card"><span class="lbl">Pajak Singapura (progresif, angka sama diperlakukan sbg SGD)</span><span class="val">${fmtSgd(pajakSg)} → kas negara umum</span></div>
+  `;
+  document.getElementById('catatan-banding').textContent = 'Baris Singapura memakai angka input yang sama tapi diperlakukan sebagai SGD (bukan hasil konversi kurs) — semata menunjukkan bentuk kurva tarifnya, lihat Batasan.';
+}
+document.getElementById('input-banding').addEventListener('input', hitungB);
+
+/* ===== ALAT C: SIMULASI MULTI-TAHUN ===== */
+function hitungGini(wealths){
+  const w = [...wealths].sort((a,b)=>a-b);
+  const n = w.length;
+  const total = w.reduce((a,b)=>a+b,0);
+  if(total===0) return 0;
+  let sumWeighted = 0;
+  for(let i=0;i<n;i++) sumWeighted += (i+1)*w[i];
+  return (2*sumWeighted)/(n*total) - (n+1)/n;
+}
+function buatPopulasi(n, skew){
+  const w = [];
+  for(let i=1;i<=n;i++) w.push(Math.pow(i, skew) * 10);
+  return w;
+}
+function buatBracketRelatif(avg){
+  return [
+    {batas:avg*0.5, tarif:0.05},{batas:avg*2, tarif:0.15},{batas:avg*5, tarif:0.25},
+    {batas:avg*20, tarif:0.30},{batas:Infinity, tarif:0.35}
+  ];
+}
+
+function simulasikan(populasiAwal, tahun, growth, mode, nisabMult, zakatRate){
+  let w = [...populasiAwal];
+  const historiGini = [hitungGini(w)];
+
+  for(let t=0;t<tahun;t++){
+    w = w.map(x=>x*(1+growth));
+    const avgSaatIni = w.reduce((a,b)=>a+b,0)/w.length;
+    const nisab = avgSaatIni * nisabMult;
+    const batasMiskin = avgSaatIni * 0.4;
+
+    if(mode==='zakat'){
+      let kolam = 0;
+      w = w.map(x=>{ if(x>nisab){ kolam += x*zakatRate; return x*(1-zakatRate); } return x; });
+      const penerima = w.map((x,i)=>({x,i})).filter(o=>o.x<batasMiskin);
+      if(penerima.length>0){ const bagian = kolam/penerima.length; penerima.forEach(o=> w[o.i]+=bagian); }
+    } else if(mode==='pajak'){
+      const brackets = buatBracketRelatif(avgSaatIni);
+      let kolam = 0;
+      w = w.map(x=>{ const p = hitungPajakBracket(x, brackets); kolam += p; return x-p; });
+      const bagian = kolam/w.length;
+      w = w.map(x=>x+bagian);
+    }
+    historiGini.push(hitungGini(w));
+  }
+  return { wAkhir:w, historiGini };
+}
+
+function jalankanC(){
+  const skew = parseFloat(document.getElementById('slider-skew').value);
+  const growth = parseFloat(document.getElementById('slider-growth').value)/100;
+  const tahun = parseInt(document.getElementById('slider-tahun').value);
+  const zakatRate = parseFloat(document.getElementById('slider-zakat-rate').value)/100;
+  const nisabMult = parseFloat(document.getElementById('slider-nisab').value);
+
+  document.getElementById('label-skew').textContent = 'Skew: ' + skew.toFixed(1);
+  document.getElementById('label-growth').textContent = growth*100 + '% / tahun';
+  document.getElementById('label-tahun').textContent = tahun + ' tahun';
+  document.getElementById('label-zakat-rate').textContent = (zakatRate*100).toFixed(1) + '%';
+  document.getElementById('label-nisab').textContent = nisabMult.toFixed(1) + '×';
+
+  const populasiAwal = buatPopulasi(40, skew);
+  document.getElementById('label-gini-awal').textContent = 'Gini awal: ' + hitungGini(populasiAwal).toFixed(3);
+
+  const hasilTanpa = simulasikan(populasiAwal, tahun, growth, 'tanpa', nisabMult, zakatRate);
+  const hasilZakat = simulasikan(populasiAwal, tahun, growth, 'zakat', nisabMult, zakatRate);
+  const hasilPajak = simulasikan(populasiAwal, tahun, growth, 'pajak', nisabMult, zakatRate);
+
+  gambarChart([
+    {data:hasilTanpa.historiGini, warna:'#c07a6e', nama:'Tanpa redistribusi'},
+    {data:hasilZakat.historiGini, warna:'#c9a15a', nama:'Zakat (tersasar ke miskin)'},
+    {data:hasilPajak.historiGini, warna:'#6f9bd1', nama:'Pajak progresif (merata)'}
+  ], tahun);
+
+  document.getElementById('ringkasan-c').innerHTML = `
+    <div class="hasil-card"><span class="lbl">Gini akhir — Tanpa redistribusi</span><span class="val" style="color:#c07a6e">${hasilTanpa.historiGini.at(-1).toFixed(3)}</span></div>
+    <div class="hasil-card"><span class="lbl">Gini akhir — Zakat</span><span class="val" style="color:var(--gold)">${hasilZakat.historiGini.at(-1).toFixed(3)}</span></div>
+    <div class="hasil-card"><span class="lbl">Gini akhir — Pajak progresif</span><span class="val" style="color:var(--blue)">${hasilPajak.historiGini.at(-1).toFixed(3)}</span></div>
+  `;
+}
+
+function gambarChart(seriesList, tahun){
+  const svg = document.getElementById('chart-svg');
+  const W=400,H=220,padL=34,padR=10,padT=14,padB=24;
+  const maxY = 1;
+  let paths = '';
+  seriesList.forEach(s=>{
+    const pts = s.data.map((v,i)=>{
+      const x = padL + (i/tahun)*(W-padL-padR);
+      const y = padT + (1-v/maxY)*(H-padT-padB);
+      return x.toFixed(1)+','+y.toFixed(1);
+    }).join(' ');
+    paths += `<polyline points="${pts}" fill="none" stroke="${s.warna}" stroke-width="2.2"/>`;
+  });
+  let sumbu = `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-padB}" stroke="#453a42"/><line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#453a42"/>`;
+  [0,0.25,0.5,0.75,1].forEach(v=>{
+    const y = padT + (1-v)*(H-padT-padB);
+    sumbu += `<text x="${padL-6}" y="${y+3}" font-size="8" fill="#a9a6ac" text-anchor="end">${v}</text>`;
+  });
+  sumbu += `<text x="${padL}" y="${H-4}" font-size="8" fill="#a9a6ac">0</text><text x="${W-padR}" y="${H-4}" font-size="8" fill="#a9a6ac" text-anchor="end">${tahun} th</text>`;
+  svg.innerHTML = sumbu + paths;
+
+  document.getElementById('legend-chart').innerHTML = seriesList.map(s=>
+    `<div><span class="sw" style="background:${s.warna}"></span>${s.nama}</div>`
+  ).join('');
+}
+
+['slider-skew','slider-growth','slider-tahun','slider-zakat-rate','slider-nisab'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', jalankanC);
+});
+
+hitungA();
+hitungB();
+jalankanC();
+</script>
+
+</div>
+<footer>Prototipe alat sains ekonomi &amp; kebijakan publik · belum masuk struktur menu utama · disajikan untuk diskusi terbuka.</footer>
+</body>
+</html>

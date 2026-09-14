@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skala Desibel — JAZMI</title>
+<style>
+body{margin:0;background:#0a0b12;color:#e6e6f0;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;line-height:1.6;}
+.wrap{max-width:600px;margin:0 auto;padding:32px 20px 60px;}
+h1{font-family:Georgia,serif;font-weight:normal;font-size:24px;margin:0 0 8px;}
+p{color:#9494ac;font-size:14px;}
+input[type=range]{width:100%;accent-color:#d9b25a;}
+.val{font-size:20px;color:#eecc80;font-weight:600;margin:12px 0 4px;}
+.sub{font-size:13px;color:#8f8fa8;}
+.note{font-size:12.5px;color:#8f8fa8;margin-top:16px;border-top:1px solid #262838;padding-top:12px;}
+.btnrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.btnrow button{background:#1a1c2b;border:1px solid #262838;color:#e6e6f0;padding:6px 10px;border-radius:12px;font-size:11.5px;cursor:pointer;}
+</style></head>
+<body><div class="wrap">
+<p style="color:#eecc80;font-size:11px;letter-spacing:1px;text-transform:uppercase;">JAZMI</p>
+<h1>Skala desibel (dB)</h1>
+<p>Desibel itu logaritmik, sama seperti skala luminositas bintang — naik 10 dB bukan berarti suara jadi 10% lebih keras, tapi <strong>10 kali lipat</strong> energinya.</p>
+<input type="range" id="dbSlider" min="0" max="130" value="60" step="1">
+<p class="val" id="out"></p>
+<p class="sub" id="ratio"></p>
+<div class="btnrow" id="btns"></div>
+<p class="note">Intensitas relatif = 10^(dB/10). Ambang sakit telinga ≈120-130 dB; paparan lama di atas ≈85 dB berisiko merusak pendengaran.</p>
+</div>
+<script>
+const refs=[{n:'Bisikan',d:20},{n:'Percakapan normal',d:60},{n:'Lalu lintas jalan raya',d:80},{n:'Konser musik',d:110},{n:'Mesin jet lepas landas',d:130}];
+const s=document.getElementById('dbSlider');
+function u(){
+  const db=parseInt(s.value);
+  const ratio=Math.pow(10,db/10);
+  document.getElementById('out').textContent=db+' dB';
+  document.getElementById('ratio').textContent='Intensitas relatif terhadap ambang dengar: '+ratio.toLocaleString('id-ID')+'×';
+}
+s.addEventListener('input',u); u();
+const b=document.getElementById('btns');
+refs.forEach(r=>{
+  const btn=document.createElement('button');
+  btn.textContent=r.n+' ('+r.d+'dB)';
+  btn.onclick=()=>{s.value=r.d;u();};
+  b.appendChild(btn);
+});
+</script>
+</body></html>

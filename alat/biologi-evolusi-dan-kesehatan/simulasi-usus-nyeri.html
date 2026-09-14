@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulasi Fisiologi Regenerasi Usus</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            padding: 20px;
+            color: #1e293b;
+        }
+        .container { max-width: 700px; margin: 0 auto; }
+        h1 { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+        .subtitle { font-size: 13px; color: #64748b; margin-bottom: 24px; }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        h3 { font-size: 14px; font-weight: 600; margin-bottom: 16px; color: #1e293b; }
+        
+        .control-group { margin-bottom: 16px; }
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e2e8f0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+        }
+        
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 8px;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .btn small {
+            display: block;
+            font-size: 10px;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .metric {
+            text-align: center;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .metric-label {
+            font-size: 11px;
+            color: #64748b;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            color: white;
+        }
+        
+        .timeline-event {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+        .timeline-event.current {
+            background: #3b82f6;
+            color: white;
+        }
+        .timeline-event.past {
+            background: #f1f5f9;
+            color: #475569;
+        }
+        
+        .info-box {
+            background: #eff6ff;
+            border-left: 3px solid #3b82f6;
+            padding: 12px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 16px;
+            font-size: 12px;
+            color: #475569;
+        }
+        
+        table {
+            width: 100%;
+            font-size: 12px;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px 8px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        th {
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .text-center { text-align: center; }
+        .text-red { color: #ef4444; }
+        .text-green { color: #22c55e; }
+        
+        .explanation {
+            font-size: 13px;
+            line-height: 1.7;
+            color: #334155;
+        }
+        .explanation p { margin-bottom: 12px; }
+        .explanation strong { color: #3b82f6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Simulasi Fisiologi: Pendekatan Struktural vs Respons Nyeri</h1>
+        <p class="subtitle">Mengapa "penyakit sejuta umat" sering salah sasaran — fokus pada regenerasi jaringan, bukan penghilangan gejala</p>
+
+        <!-- Control Panel -->
+        <div class="card">
+            <h3>Parameter Simulasi</h3>
+            
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Tingkat Kerusakan Awal</span>
+                    <span id="severityVal" style="color: #3b82f6; font-weight: 500;">Sedang</span>
+                </div>
+                <input type="range" id="severity" min="1" max="5" value="3">
+                <div class="range-labels"><span>Ringan</span><span>Berat</span></div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Usia Pasien</span>
+                    <span id="ageVal" style="color: #3b82f6; font-weight: 500;">45 tahun</span>
+                </div>
+                <input type="range" id="age" min="20" max="80" value="45">
+            </div>
+
+            <div class="control-group">
+                <label style="font-size: 12px; display: block; margin-bottom: 8px;">Pendekatan Terapi</label>
+                <div class="button-group">
+                    <button class="btn" id="btnPain" onclick="setApproach('pain')">
+                        Fokus Nyeri
+                        <small>(Respons Saraf)</small>
+                    </button>
+                    <button class="btn active" id="btnStruct" onclick="setApproach('structure')">
+                        Fokus Struktur
+                        <small>(Regenerasi Jaringan)</small>
+                    </button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Hari Terapi</span>
+                    <span id="dayVal" style="color: #3b82f6; font-weight: 500;">Hari ke-0</span>
+                </div>
+                <input type="range" id="daySlider" min="0" max="70" value="0">
+                <div class="range-labels"><span>Mulai</span><span>10 hari</span><span>7 pekan</span></div>
+            </div>
+        </div>
+
+        <!-- Visualization -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="margin: 0;">Visualisasi Kondisi Usus</h3>
+                <span id="statusBadge" class="status-badge" style="background: #ef4444;">Kerusakan Signifikan</span>
+            </div>
+            
+            <svg viewBox="0 0 660 220" style="width: 100%; height: auto; display: block;">
+                <rect x="0" y="0" width="660" height="220" fill="transparent"/>
+                
+                <!-- Gut Wall - Outer -->
+                <path id="gutOuter" d="M 30 110 Q 165 50 330 110 Q 495 170 630 110" 
+                      stroke="#8b5cf6" stroke-width="8" fill="none" stroke-linecap="round"/>
+                
+                <!-- Gut Wall - Inner -->
+                <path id="gutInner" d="M 30 110 Q 165 60 330 110 Q 495 160 630 110" 
+                      stroke="#a78bfa" stroke-width="4" fill="none" stroke-linecap="round"/>
+                
+                <!-- Villi Group -->
+                <g id="villiGroup"></g>
+                
+                <!-- Mucus Layer -->
+                <path id="mucusLayer" d="M 30 105 Q 165 45 330 105 Q 495 165 630 105" 
+                      stroke="#14b8a6" stroke-width="0" fill="none" stroke-linecap="round" opacity="0.6"/>
+                
+                <!-- Inflammation -->
+                <g id="inflammation"></g>
+                
+                <!-- Labels -->
+                <text x="30" y="200" font-size="11" fill="#64748b">Usus Halus</text>
+                <text x="330" y="200" font-size="11" fill="#64748b" text-anchor="middle">Area Kerusakan</text>
+                <text x="630" y="200" font-size="11" fill="#64748b" text-anchor="end">Usus Besar</text>
+                
+                <!-- Legend -->
+                <circle cx="40" cy="25" r="6" fill="#8b5cf6"/>
+                <text x="52" y="29" font-size="10" fill="#334155">Lapisan Otot</text>
+                <circle cx="150" cy="25" r="6" fill="#a78bfa"/>
+                <text x="162" y="29" font-size="10" fill="#334155">Epitel</text>
+                <circle cx="240" cy="25" r="6" fill="#14b8a6"/>
+                <text x="252" y="29" font-size="10" fill="#334155">Lendir Pelindung</text>
+                <circle cx="360" cy="25" r="6" fill="#ef4444"/>
+                <text x="372" y="29" font-size="10" fill="#334155">Inflamasi</text>
+            </svg>
+
+            <div class="metrics">
+                <div class="metric">
+                    <div id="metricIntegrity" class="metric-value" style="color: #ef4444;">35%</div>
+                    <div class="metric-label">Integritas Jaringan</div>
+                </div>
+                <div class="metric">
+                    <div id="metricMucus" class="metric-value" style="color: #6b7280;">0%</div>
+                    <div class="metric-label">Lapisan Pelindung</div>
+                </div>
+                <div class="metric">
+                    <div id="metricInflammation" class="metric-value" style="color: #ef4444;">Tinggi</div>
+                    <div class="metric-label">Tingkat Inflamasi</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="card">
+            <h3>Timeline Respons Fisiologis</h3>
+            <div id="timelineEvents"></div>
+        </div>
+
+        <!-- Explanation -->
+        <div class="card">
+            <h3>Mekanisme Fisiologis</h3>
+            <div class="explanation">
+                <p>
+                    <strong>Paradigma yang Sering Keliru:</strong> Banyak pendekatan pengobatan hanya menargetkan <em>respons saraf</em> — menekan sinyal nyeri tanpa mengatasi penyebab struktural. Ini seperti mematikan alarm kebakaran sambil membiarkan api terus menyala.
+                </p>
+                <p>
+                    <strong>Realitas Regenerasi:</strong> Jaringan epitel usus memerlukan <strong>bahan baku spesifik</strong> yang tubuh tidak dapat sintesis cepat — terutama pada kondisi stres kronis atau usia lanjut. Tanpa suplai ini, sel-sel baru "lahir" dalam keadaan tidak sempurna.
+                </p>
+                <p>
+                    <strong>Tanda Awal yang Teraba:</strong> Sekitar hari ke-2, pasien sering melaporkan sensasi "lapisan" di area leher. Ini bukan terbatas di leher — melainkan <strong>seluruh saluran pencernaan</strong> sedang membentuk pelindung baru, dengan leher sebagai area paling sensitif merasakan perubahan.
+                </p>
+                <div class="info-box">
+                    <strong>Catatan Klinis:</strong> Durasi optimal bervariasi — 10 hari untuk kasus ringan, hingga 7 pekan untuk kerusakan berulang. Pasien dengan penyakit ko-morbid (terutama yang mandiri dari usus) memerlukan evaluasi tambahan.
+                </div>
+            </div>
+        </div>
+
+        <!-- Comparison Table -->
+        <div class="card">
+            <h3>Perbandingan Pendekatan</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Aspek</th>
+                        <th class="text-center text-red">Fokus Nyeri</th>
+                        <th class="text-center text-green">Fokus Struktur</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Target Terapi</td>
+                        <td class="text-center">Reseptor saraf</td>
+                        <td class="text-center">Integritas epitel</td>
+                    </tr>
+                    <tr>
+                        <td>Kecepatan Efek</td>
+                        <td class="text-center text-green">Cepat (jam)</td>
+                        <td class="text-center" style="color: #f59e0b;">Bertahap (hari-minggu)</td>
+                    </tr>
+                    <tr>
+                        <td>Durasi Sembuh</td>
+                        <td class="text-center text-red">Rekuren/repeating</td>
+                        <td class="text-center text-green">Sustained</td>
+                    </tr>
+                    <tr>
+                        <td>Mekanisme</td>
+                        <td class="text-center">Inhibisi sinyal</td>
+                        <td class="text-center">Regenerasi jaringan</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let currentApproach = 'structure';
+        let currentDay = 0;
+        let severity = 3;
+        let age = 45;
+
+        const severitySlider = document.getElementById('severity');
+        const ageSlider = document.getElementById('age');
+        const daySlider = document.getElementById('daySlider');
+
+        function updateSeverity() {
+            severity = parseInt(severitySlider.value);
+            const labels = ['Sangat Ringan', 'Ringan', 'Sedang', 'Berat', 'Sangat Berat'];
+            document.getElementById('severityVal').textContent = labels[severity - 1];
+            updateVisualization();
+        }
+
+        function updateAge() {
+            age = parseInt(ageSlider.value);
+            document.getElementById('ageVal').textContent = age + ' tahun';
+            updateVisualization();
+        }
+
+        function updateDay() {
+            currentDay = parseInt(daySlider.value);
+            document.getElementById('dayVal').textContent = 'Hari ke-' + currentDay;
+            updateVisualization();
+        }
+
+        function setApproach(approach) {
+            currentApproach = approach;
+            document.getElementById('btnPain').classList.toggle('active', approach === 'pain');
+            document.getElementById('btnStruct').classList.toggle('active', approach === 'structure');
+            updateVisualization();
+        }
+
+        function calculateMetrics() {
+            let baseIntegrity = 100 - (severity * 12);
+            const ageFactor = Math.max(0.5, 1 - ((age - 30) / 100));
+            
+            let integrity, mucus, inflammation;
+            
+            if (currentApproach === 'pain') {
+                inflammation = Math.max(10, 80 - (currentDay * 15));
+                integrity = baseIntegrity + (currentDay * 0.2);
+                mucus = Math.min(15, currentDay * 1);
+            } else {
+                const effectiveDays = currentDay * ageFactor;
+                inflammation = Math.max(5, 80 - (effectiveDays * 8));
+                const maxIntegrity = 95 - (severity * 3);
+                integrity = Math.min(maxIntegrity, baseIntegrity + (effectiveDays * 1.5));
+                mucus = Math.min(95, effectiveDays * 2.5);
+                if (currentDay >= 2) {
+                    mucus = Math.min(95, 20 + (effectiveDays * 2.2));
+                }
+            }
+            
+            return { integrity: Math.round(integrity), mucus: Math.round(mucus), inflammation: Math.round(inflammation) };
+        }
+
+        function updateVisualization() {
+            const metrics = calculateMetrics();
+            
+            document.getElementById('metricIntegrity').textContent = metrics.integrity + '%';
+            document.getElementById('metricIntegrity').style.color = metrics.integrity > 70 ? '#22c55e' : metrics.integrity > 40 ? '#f59e0b' : '#ef4444';
+            
+            document.getElementById('metricMucus').textContent = metrics.mucus + '%';
+            document.getElementById('metricMucus').style.color = metrics.mucus > 50 ? '#22c55e' : metrics.mucus > 20 ? '#f59e0b' : '#6b7280';
+            
+            let inflamText = 'Sangat Tinggi';
+            if (metrics.inflammation < 10) inflamText = 'Minimal';
+            else if (metrics.inflammation < 30) inflamText = 'Rendah';
+            else if (metrics.inflammation < 50) inflamText = 'Sedang';
+            else if (metrics.inflammation < 70) inflamText = 'Tinggi';
+            
+            document.getElementById('metricInflammation').textContent = inflamText;
+            document.getElementById('metricInflammation').style.color = metrics.inflammation < 30 ? '#22c55e' : metrics.inflammation < 60 ? '#f59e0b' : '#ef4444';
+            
+            const badge = document.getElementById('statusBadge');
+            if (metrics.integrity > 80 && metrics.mucus > 60) {
+                badge.textContent = 'Optimal';
+                badge.style.background = '#22c55e';
+            } else if (metrics.integrity > 50) {
+                badge.textContent = 'Membaik';
+                badge.style.background = '#3b82f6';
+            } else {
+                badge.textContent = 'Perlu Perhatian';
+                badge.style.background = '#ef4444';
+            }
+            
+            updateSVG(metrics);
+            updateTimeline();
+        }
+
+        function updateSVG(metrics) {
+            const villiGroup = document.getElementById('villiGroup');
+            const inflammation = document.getElementById('inflammation');
+            const mucusLayer = document.getElementById('mucusLayer');
+            
+            villiGroup.innerHTML = '';
+            inflammation.innerHTML = '';
+            
+            const positions = [60, 110, 160, 210, 260, 310, 360, 410, 460, 510, 560, 610];
+            
+            positions.forEach((x, i) => {
+                const t = i / 11;
+                const y = 110 + 60 * Math.sin(t * Math.PI) * (t < 0.5 ? -1 : 1);
+                const villusHeight = 15 * (metrics.integrity / 100);
+                const isDamaged = i % severity === 0 && metrics.integrity < 60;
+                
+                const villus = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                villus.setAttribute('x1', x);
+                villus.setAttribute('y1', y);
+                villus.setAttribute('x2', x);
+                villus.setAttribute('y2', y + (t < 0.5 ? -villusHeight : villusHeight));
+                villus.setAttribute('stroke', isDamaged ? '#ef4444' : '#a78bfa');
+                villus.setAttribute('stroke-width', isDamaged ? '2' : '3');
+                villus.setAttribute('stroke-linecap', 'round');
+                villiGroup.appendChild(villus);
+                
+                if (metrics.inflammation > 40 && i % 2 === 0) {
+                    const inflam = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    inflam.setAttribute('cx', x + (Math.random() * 10 - 5));
+                    inflam.setAttribute('cy', y + (t < 0.5 ? -villusHeight - 5 : villusHeight + 5));
+                    inflam.setAttribute('r', 3 + (metrics.inflammation / 20));
+                    inflam.setAttribute('fill', '#ef4444');
+                    inflam.setAttribute('opacity', '0.5');
+                    inflammation.appendChild(inflam);
+                }
+            });
+            
+            const mucusWidth = 2 + (metrics.mucus / 20);
+            mucusLayer.setAttribute('stroke-width', mucusWidth);
+            mucusLayer.setAttribute('opacity', metrics.mucus / 100);
+        }
+
+        function updateTimeline() {
+      

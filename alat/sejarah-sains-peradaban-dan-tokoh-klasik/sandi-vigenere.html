@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sandi Vigenère & Pembongkarnya — JAZMI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --bg:#12141c; --bg-panel:#1b1f2b; --bg-panel-2:#20263a;
+  --line:#333a4f; --text:#eee7d6; --text-dim:#a9a6ac;
+  --gold:#c9a15a; --gold-soft:#8a713c; --teal:#5a9c92; --radius:10px;
+}
+*{box-sizing:border-box;}
+body{ margin:0; background:var(--bg); color:var(--text); font-family:'Karla',sans-serif; line-height:1.6; }
+h1,h2,h3{ font-family:'Fraunces',serif; font-weight:600; margin:0 0 0.5em; }
+.mono{ font-family:'JetBrains Mono', monospace; }
+.wrap{ max-width:840px; margin:0 auto; padding:0 20px; }
+.hero{ padding:48px 0 30px; border-bottom:1px solid var(--line); text-align:center; }
+.hero .eyebrow{ text-transform:uppercase; font-size:0.7rem; letter-spacing:2.5px; color:var(--gold); margin-bottom:12px; }
+.hero h1{ font-size:clamp(1.5rem,4.6vw,2.2rem); color:#fff; }
+.hero p.tag{ color:var(--text-dim); max-width:580px; margin:10px auto 0; font-size:0.94rem; }
+section{ padding:36px 0; border-bottom:1px solid var(--line); }
+section:last-of-type{ border-bottom:none; }
+.kicker{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+.kicker .num{ font-family:'Fraunces',serif; color:var(--gold); font-size:0.85rem; border:1px solid var(--gold-soft); border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.kicker h2{ font-size:1.2rem; margin:0; color:#fff; }
+p{ color:var(--text); } p.dim{ color:var(--text-dim); font-size:0.9rem; }
+.panel{ background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-top:16px; }
+
+.tab-row{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+.tab-btn{ background:var(--bg-panel-2); border:1px solid var(--line); color:var(--text-dim); padding:9px 14px; border-radius:8px; font-weight:700; font-size:0.85rem; cursor:pointer; }
+.tab-btn.active{ background:var(--gold); color:#12141c; border-color:var(--gold); }
+.tab-panel{ display:none; } .tab-panel.active{ display:block; }
+
+label{ display:block; font-size:0.82rem; color:var(--text-dim); margin:14px 0 6px; }
+label:first-of-type{ margin-top:0; }
+textarea, input[type=text]{
+  width:100%; background:#0e1017; border:1px solid var(--line); color:var(--text);
+  padding:11px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:0.95rem;
+}
+textarea{ min-height:90px; resize:vertical; }
+input:focus, textarea:focus{ outline:none; border-color:var(--gold); }
+
+.btn{ margin-top:14px; width:100%; background:var(--gold); color:#12141c; border:none; padding:12px; border-radius:8px; font-weight:700; font-size:0.92rem; cursor:pointer; }
+.btn.secondary{ background:var(--teal); }
+
+.result-box{ margin-top:16px; padding:16px; background:var(--bg-panel-2); border:1px solid var(--gold-soft); border-radius:var(--radius); }
+.result-box .lbl{ font-size:0.78rem; color:var(--text-dim); margin-bottom:4px; }
+.result-box .out{ font-family:'JetBrains Mono',monospace; font-size:0.95rem; word-break:break-word; color:var(--gold); white-space:pre-wrap; }
+
+.step{ margin-top:16px; padding:14px 16px; background:var(--bg-panel-2); border-left:2px solid var(--teal); border-radius:6px; }
+.step .stitle{ font-weight:700; font-size:0.85rem; color:#fff; margin-bottom:6px; }
+.step .sbody{ font-size:0.85rem; color:var(--text-dim); }
+
+table.ic{ width:100%; border-collapse:collapse; margin-top:10px; font-family:'JetBrains Mono',monospace; font-size:0.82rem; }
+table.ic td, table.ic th{ padding:6px 8px; border:1px solid var(--line); text-align:center; }
+table.ic th{ color:var(--gold); }
+table.ic tr.terbaik td{ background:rgba(201,161,90,0.15); color:#fff; font-weight:700; }
+
+.formula{ font-family:'Fraunces',serif; font-style:italic; background:var(--bg-panel-2); border-radius:8px; padding:14px 18px; margin:14px 0; overflow-x:auto; color:#f4eede; }
+ul{ padding-left:20px; } ul.batas li{ margin-bottom:10px; }
+.refs li{ margin-bottom:10px; font-size:0.9rem; color:var(--text-dim); }
+.consult{ background:linear-gradient(135deg,var(--bg-panel-2),var(--bg-panel)); border:1px solid var(--gold-soft); border-radius:var(--radius); padding:22px; text-align:center; }
+.consult a.wa{ display:inline-block; margin-top:14px; background:var(--teal); color:#0e1017; text-decoration:none; font-weight:700; padding:12px 26px; border-radius:30px; }
+footer{ text-align:center; padding:26px 0; color:var(--text-dim); font-size:0.8rem; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">JAZMI · Sains &amp; Sejarah Kriptografi</div>
+    <h1>Sandi Vigenère &amp; Pembongkarnya</h1>
+    <p class="tag">Sandi yang dijuluki "le chiffre indéchiffrable" — tak terpecahkan — selama 300 tahun. Coba sendiri kenapa metode al-Kindi tidak langsung mempan di sini, lalu lihat bagaimana akhirnya sandi ini tetap tumbang.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <div class="kicker"><div class="num">1</div><h2>Belajar</h2></div>
+    <p>Di alat sebelumnya (Kriptografi Al-Kindi), sandi geser tumbang karena tiap huruf plainteks selalu berubah jadi huruf yang <em>sama</em> di teks tersandi — polanya konsisten, sehingga statistik huruf bahasa tetap terlihat, hanya "bergeser".</p>
+    <p><strong>Vigenère</strong> (dipopulerkan Blaise de Vigenère, 1553; idenya berakar dari usulan Leon Battista Alberti tahun 1467) mematahkan itu: memakai kata kunci yang berulang, setiap huruf plainteks digeser dengan jumlah <em>berbeda-beda</em> tergantung posisinya. Huruf "a" yang sama di plainteks bisa menjadi huruf tersandi yang berbeda-beda tergantung huruf kunci mana yang sedang aktif. Statistik huruf tunggal jadi kabur — metode al-Kindi versi sederhana tidak langsung mempan.</p>
+    <p>Butuh dua terobosan lagi untuk membongkarnya:</p>
+    <ul>
+      <li><strong>Friedrich Kasiski (1863)</strong> menyadari: kalau ada potongan kata yang sama muncul berulang di plainteks, dan jaraknya kebetulan kelipatan panjang kunci, potongan itu akan tersandi identik juga di ciphertext. Jarak antar-pengulangan itu memberi petunjuk soal panjang kunci.</li>
+      <li><strong>William Friedman (1920-an)</strong> menyempurnakan dengan <em>Index of Coincidence</em> — ukuran statistik yang lebih tahan gangguan untuk menebak panjang kunci, dan itulah yang dipakai alat di bawah ini untuk mendeteksi otomatis.</li>
+    </ul>
+    <p class="dim">Begitu panjang kunci diketahui, ciphertext dipecah jadi beberapa "kolom" — dan tiap kolom ternyata disandikan dengan sandi geser biasa. Analisis frekuensi al-Kindi dipakai lagi, kali ini per kolom, bukan ke seluruh teks.</p>
+  </section>
+
+  <section id="alat">
+    <div class="kicker"><div class="num">2</div><h2>Alat</h2></div>
+    <div class="panel">
+      <div class="tab-row">
+        <button class="tab-btn active" onclick="gantiTab('enkripsi')">Sandikan dengan Kunci</button>
+        <button class="tab-btn" onclick="gantiTab('bongkar')">Bongkar Otomatis</button>
+      </div>
+
+      <div class="tab-panel active" id="tab-enkripsi">
+        <label>Teks asli</label>
+        <textarea id="teks-asli">Ilmu pengetahuan adalah cahaya yang menerangi kegelapan sedangkan kebodohan adalah kegelapan yang menutupi cahaya kebenaran</textarea>
+        <label>Kata kunci</label>
+        <input type="text" id="kunci-input" value="ilmu">
+        <button class="btn" onclick="prosesEnkripsi()">Sandikan</button>
+        <div class="result-box">
+          <div class="lbl">Hasil tersandi:</div>
+          <div class="out" id="hasil-sandi">—</div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-bongkar">
+        <label>Tempel teks tersandi Vigenère (tanpa tahu kuncinya)</label>
+        <textarea id="teks-cipher" placeholder="Tempel ciphertext hasil sandi Vigenère..."></textarea>
+        <button class="btn secondary" onclick="bongkarVigenereUI()">🔍 Bongkar (Kasiski + Index of Coincidence)</button>
+
+        <div id="langkah-area"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="metode">
+    <div class="kicker"><div class="num">3</div><h2>Metode</h2></div>
+    <p>Rumus dasar Vigenère, huruf ke-i plainteks digeser oleh huruf kunci ke-(i mod panjang kunci):</p>
+    <div class="formula">C[i] = (P[i] + K[i mod L]) mod 26</div>
+    <p>Index of Coincidence mengukur peluang dua huruf acak dari teks yang sama ternyata identik:</p>
+    <div class="formula">IC = Σ fᵢ(fᵢ−1) / [N(N−1)]</div>
+    <p class="dim">Teks bahasa alami (termasuk Indonesia, dengan huruf "a" yang sangat dominan) punya IC jauh di atas teks acak. Panjang kunci yang benar akan memecah ciphertext jadi kolom-kolom yang masing-masing "kembali" berperilaku seperti sandi geser tunggal — sehingga IC rata-rata per kolom melonjak naik dibanding panjang kunci yang salah.</p>
+  </section>
+
+  <section id="batasan">
+    <div class="kicker"><div class="num">4</div><h2>Batasan</h2></div>
+    <ul class="batas">
+      <li>Deteksi otomatis diuji untuk panjang kunci 1–12 huruf — kunci lebih panjang dari itu tidak akan terdeteksi.</li>
+      <li>Butuh ciphertext yang cukup panjang (idealnya beberapa ratus huruf) — teks pendek membuat statistik IC dan analisis frekuensi tidak stabil.</li>
+      <li>Sama seperti alat Al-Kindi sebelumnya, tabel rujukan yang dipakai adalah frekuensi huruf bahasa Indonesia baku — teks dengan gaya sangat khusus bisa menurunkan akurasi.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <div class="kicker"><div class="num">5</div><h2>Referensi</h2></div>
+    <ul class="refs">
+      <li>Blaise de Vigenère, <em>Traicté des Chiffres</em> (1586) — publikasi yang mempopulerkan sandi ini, meski idenya berakar dari Alberti (1467) dan Trithemius.</li>
+      <li>Friedrich Kasiski, <em>Die Geheimschriften und die Dechiffrir-kunst</em> (1863) — metode analisis jarak pengulangan untuk menebak panjang kunci.</li>
+      <li>William F. Friedman, <em>The Index of Coincidence and Its Applications in Cryptography</em> (1922) — penyempurnaan statistik yang dipakai alat ini untuk deteksi otomatis.</li>
+      <li>Simon Singh, <em>The Code Book</em> — konteks sejarah lengkap dari al-Kindi hingga Vigenère dibongkar.</li>
+    </ul>
+  </section>
+
+  <section id="konsultasi">
+    <div class="consult">
+      <h3 style="color:#fff;">Ingin lanjut ke Enigma?</h3>
+      <p class="dim">Alat ini masih pengembangan versi awal. Silakan hubungi kami untuk usulan pengembangan lanjutan.</p>
+      <a class="wa" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20bertanya%20seputar%20Sandi%20Vigenere%20JAZMI." target="_blank">Hubungi via WhatsApp</a>
+    </div>
+  </section>
+
+</div>
+<footer>JAZMI — Laboratorium Pengetahuan Digital · Prototipe, belum masuk struktur menu utama.</footer>
+
+<script>
+const FREK_ID = {a:22.72,b:3.10,c:0.32,d:4.54,e:8.68,f:0.13,g:0.98,h:2.70,i:6.00,j:0.68,k:5.52,l:2.53,m:4.14,n:8.79,o:1.20,p:3.16,q:0.01,r:5.27,s:4.70,t:4.85,u:4.94,v:0.02,w:0.39,x:0.01,y:1.63,z:0.01};
+
+function gantiTab(nama){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+nama).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function hurufSaja(t){ return t.toLowerCase().replace(/[^a-z]/g,''); }
+
+function vigenere(teks, kunci, arah){
+  kunci = kunci.toLowerCase().replace(/[^a-z]/g,'');
+  if(!kunci) kunci = 'a';
+  let out=''; let ki=0;
+  for(const ch of teks){
+    const lower = ch.toLowerCase();
+    if(lower>='a' && lower<='z'){
+      const shift = kunci.charCodeAt(ki % kunci.length)-97;
+      const kode = lower.charCodeAt(0)-97;
+      const baru = ((kode + arah*shift)%26+26)%26;
+      const c = String.fromCharCode(baru+97);
+      out += (ch===lower) ? c : c.toUpperCase();
+      ki++;
+    } else out += ch;
+  }
+  return out;
+}
+
+function geser(teks, k){
+  return teks.split('').map(ch=> (ch>='a'&&ch<='z') ? String.fromCharCode(((ch.charCodeAt(0)-97+k)%26+26)%26+97) : ch).join('');
+}
+
+function hitungFrekuensi(t){
+  const h={}; let tot=0;
+  for(const ch of t){ if(ch>='a'&&ch<='z'){ h[ch]=(h[ch]||0)+1; tot++; } }
+  return {h, tot};
+}
+
+function chiSquared(t){
+  const {h, tot} = hitungFrekuensi(t);
+  if(tot===0) return Infinity;
+  let chi=0;
+  for(const x in FREK_ID){ const obs=(h[x]||0)/tot*100; chi += Math.pow(obs-FREK_ID[x],2)/FREK_ID[x]; }
+  return chi;
+}
+
+function indexOfCoincidence(s){
+  const hitung={};
+  for(const ch of s) hitung[ch]=(hitung[ch]||0)+1;
+  const N = s.length;
+  if(N<2) return 0;
+  let sum=0;
+  for(const h in hitung) sum += hitung[h]*(hitung[h]-1);
+  return sum/(N*(N-1));
+}
+
+function ujiPanjangKunci(cipherteks, maxL){
+  const s = hurufSaja(cipherteks);
+  const hasil = [];
+  for(let L=1; L<=maxL; L++){
+    let totalIC=0;
+    for(let c=0;c<L;c++){
+      let kolom='';
+      for(let i=c;i<s.length;i+=L) kolom+=s[i];
+      totalIC += indexOfCoincidence(kolom);
+    }
+    hasil.push({L, avgIC: totalIC/L});
+  }
+  return hasil;
+}
+
+function bongkarKunci(cipherteks, L){
+  const s = hurufSaja(cipherteks);
+  let kunci = '';
+  for(let c=0;c<L;c++){
+    let kolom=''; for(let i=c;i<s.length;i+=L) kolom+=s[i];
+    let terbaik=0, chiTerbaik=Infinity;
+    for(let k=0;k<26;k++){ const kand=geser(kolom,-k); const chi=chiSquared(kand); if(chi<chiTerbaik){chiTerbaik=chi; terbaik=k;} }
+    kunci += String.fromCharCode(terbaik+97);
+  }
+  return kunci;
+}
+
+function prosesEnkripsi(){
+  const teks = document.getElementById('teks-asli').value;
+  const kunci = document.getElementById('kunci-input').value || 'a';
+  document.getElementById('hasil-sandi').textContent = vigenere(teks, kunci, 1);
+}
+
+function bongkarVigenereUI(){
+  const cipherteks = document.getElementById('teks-cipher').value;
+  const area = document.getElementById('langkah-area');
+  area.innerHTML = '';
+  if(hurufSaja(cipherteks).length < 20){
+    area.innerHTML = '<div class="step"><div class="stitle">Teks terlalu pendek</div><div class="sbody">Butuh setidaknya sekitar 20 huruf agar analisis statistik cukup stabil.</div></div>';
+    return;
+  }
+
+  const maxL = 12;
+  const hasilIC = ujiPanjangKunci(cipherteks, maxL);
+
+  let tabelHtml = '<table class="ic"><tr><th>Panjang kunci</th>' + hasilIC.map(r=>'<th>'+r.L+'</th>').join('') + '</tr><tr><th>Rata-rata IC</th>' + hasilIC.map(r=>'<td>'+r.avgIC.toFixed(3)+'</td>').join('') + '</tr></table>';
+
+  const terbaik = hasilIC.slice(1).sort((a,b)=> b.avgIC-a.avgIC)[0];
+
+  const langkah1 = document.createElement('div');
+  langkah1.className = 'step';
+  langkah1.innerHTML = '<div class="stitle">Langkah 1 — Index of Coincidence per panjang kunci</div><div class="sbody">Panjang kunci dengan IC rata-rata tertinggi (selain L=1) adalah yang paling mungkin benar.</div>' + tabelHtml;
+  area.appendChild(langkah1);
+
+  const kunciTerbongkar = bongkarKunci(cipherteks, terbaik.L);
+  const hasilDekripsi = vigenere(cipherteks, kunciTerbongkar, -1);
+
+  const langkah2 = document.createElement('div');
+  langkah2.className = 'step';
+  langkah2.innerHTML = '<div class="stitle">Langkah 2 — Panjang kunci terpilih: ' + terbaik.L + ' huruf (IC=' + terbaik.avgIC.toFixed(3) + ')</div>'
+    + '<div class="sbody">Ciphertext dipecah jadi ' + terbaik.L + ' kolom, tiap kolom dibongkar dengan analisis frekuensi al-Kindi (chi-squared) seperti pada sandi geser biasa.</div>';
+  area.appendChild(langkah2);
+
+  const hasilBox = document.createElement('div');
+  hasilBox.className = 'result-box';
+  hasilBox.innerHTML = '<div class="lbl">Kunci yang berhasil dipulihkan:</div><div class="out" style="font-size:1.3rem; margin-bottom:10px;">' + kunciTerbongkar.toUpperCase() + '</div>'
+    + '<div class="lbl">Teks terbongkar:</div><div class="out">' + hasilDekripsi + '</div>';
+  area.appendChild(hasilBox);
+}
+
+prosesEnkripsi();
+</script>
+
+</body>
+</html>

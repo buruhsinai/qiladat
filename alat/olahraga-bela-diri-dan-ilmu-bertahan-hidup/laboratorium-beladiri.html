@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratorium Beladiri — JAZMI / Qiladat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root{
+    --sand: #F3EEE4;
+    --sand-deep: #E8DFCF;
+    --ink: #1C1512;
+    --ink-soft: #4B4038;
+    --maroon: #7A2426;
+    --maroon-deep: #4A1316;
+    --gold: #B4863E;
+    --foam: #FFFFFF;
+    --line: rgba(28,21,18,0.14);
+    --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --font-body: 'Karla', -apple-system, 'Segoe UI', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0; background:var(--sand); color:var(--ink); font-family:var(--font-body); line-height:1.6;}
+  ::selection{background:var(--gold); color:var(--foam);}
+  a{color:var(--maroon-deep);}
+  .wrap{max-width:760px; margin:0 auto; padding:0 24px;}
+
+  /* ---------- HERO ---------- */
+  .hero{position:relative; background:linear-gradient(180deg, var(--maroon-deep) 0%, var(--maroon) 100%); color:var(--sand); padding:90px 24px 130px; overflow:hidden;}
+  .hero .wrap{max-width:760px;}
+  .hero-eyebrow{font-size:0.85rem; letter-spacing:0.03em; opacity:0.78; margin-bottom:14px;}
+  .hero h1{font-family:var(--font-display); font-weight:600; font-size:clamp(2.4rem, 6vw, 3.6rem); line-height:1.06; margin:0 0 20px;}
+  .hero p.lede{font-size:1.08rem; max-width:54ch; opacity:0.94; color:var(--sand);}
+  .wave{position:absolute; left:0; right:0; bottom:-2px; height:64px;}
+  .wave svg{width:100%; height:100%; display:block;}
+
+  section{padding:64px 0;}
+  section + section{border-top:1px solid var(--line);}
+  .kicker{font-weight:600; font-size:0.78rem; color:var(--maroon-deep); letter-spacing:0.02em; margin-bottom:10px;}
+  h2{font-family:var(--font-display); font-weight:600; font-size:clamp(1.6rem, 4vw, 2.1rem); margin:0 0 18px; line-height:1.15;}
+  h3{font-family:var(--font-display); font-weight:600; font-size:1.28rem; margin:0 0 10px;}
+  p{margin:0 0 16px; color:var(--ink-soft);}
+  .lead-text{font-size:1.05rem; color:var(--ink);}
+
+  /* ---------- TIMELINE ---------- */
+  .timeline{list-style:none; margin:32px 0 0; padding:0; border-left:2px solid var(--sand-deep);}
+  .timeline li{position:relative; padding:2px 0 30px 28px;}
+  .timeline li::before{content:""; position:absolute; left:-7px; top:6px; width:12px; height:12px; border-radius:50%; background:var(--maroon); border:2px solid var(--sand);}
+  .timeline .era{font-family:var(--font-display); font-weight:600; color:var(--gold); font-size:0.95rem; margin-bottom:4px;}
+  .timeline p{margin:0; font-size:0.97rem;}
+
+  /* ---------- MAP ---------- */
+  .mapwrap{position:relative; background:var(--foam); border:1px solid var(--line); border-radius:4px; overflow:hidden; max-width:620px; margin:28px auto 0;}
+  .map-stage{position:relative; width:100%;}
+  .map-stage svg{display:block; width:100%; height:auto;}
+  .sea{fill:rgba(122,36,38,0.07);}
+  .landmass{fill:var(--sand-deep); stroke:rgba(28,21,18,0.35); stroke-width:0.3; stroke-linejoin:round;}
+  .distring{fill:none; stroke:rgba(28,21,18,0.22); stroke-width:0.15; stroke-dasharray:0.6 0.6;}
+  .distring.outer{fill:none; stroke:rgba(28,21,18,0.4); stroke-width:0.35; stroke-dasharray:none;}
+  .radial{stroke:rgba(28,21,18,0.16); stroke-width:0.12;}
+  .center-pin{fill:var(--maroon); stroke:var(--foam); stroke-width:0.5;}
+  .map-label.center-label{font-style:italic; color:var(--maroon-deep);}
+  .pin{cursor:pointer;}
+  .pin circle{fill:var(--gold); stroke:var(--foam); stroke-width:0.6; transition:r 0.12s;}
+  .pin:hover circle, .pin.active circle{fill:var(--maroon);}
+  .map-labels{position:absolute; inset:0; pointer-events:none;}
+  .map-label{
+    position:absolute; transform:translate(-50%,-165%);
+    font-size:clamp(9px, 1.35vw, 12.5px); font-weight:600; color:var(--ink);
+    white-space:nowrap; line-height:1; cursor:pointer; pointer-events:auto;
+    text-shadow:0 1px 0 var(--foam), 0 -1px 0 var(--foam), 1px 0 0 var(--foam), -1px 0 0 var(--foam), 0 0 5px rgba(255,255,255,0.85);
+  }
+  .map-label:hover, .map-label.active{color:var(--maroon);}
+  .map-info{padding:16px 20px; border-top:1px dashed var(--line);}
+  .map-info h3{margin-bottom:6px;}
+  .map-info .era-tag{display:inline-block; font-size:0.75rem; font-weight:700; color:var(--maroon-deep); background:rgba(122,36,38,0.09); padding:3px 9px; border-radius:20px; margin-bottom:8px;}
+
+  .list-toggle-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:20px;}
+  .btn-toggle-list{font-family:var(--font-body); font-size:0.85rem; font-weight:600; padding:8px 14px; border-radius:20px; border:1px dashed var(--line); background:transparent; color:var(--ink-soft); cursor:pointer;}
+  .btn-toggle-list:hover{border-color:var(--maroon); color:var(--maroon-deep);}
+  .btn-toggle-list.open{background:var(--sand-deep); border-style:solid; border-color:var(--line); color:var(--ink);}
+  .collapsible{display:none; margin-top:24px; padding-top:22px; border-top:1px dashed var(--line);}
+  .collapsible.open{display:block;}
+  .collapsible h3{font-size:1.05rem; margin-bottom:8px;}
+
+  /* ---------- WORLD GRID ---------- */
+  .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(210px,1fr)); gap:16px; margin-top:28px;}
+  .grid .card{background:var(--foam); border:1px solid var(--line); border-radius:4px; padding:18px 18px 20px;}
+  .grid .card .region{font-size:0.74rem; font-weight:700; letter-spacing:0.03em; color:var(--maroon-deep); text-transform:uppercase; margin-bottom:6px;}
+  .grid .card h4{font-family:var(--font-display); font-size:1.05rem; margin:0 0 8px; font-weight:600;}
+  .grid .card p{font-size:0.9rem; margin:0;}
+
+  /* ---------- NOTE ---------- */
+  .note{background:var(--sand-deep); border-radius:2px; border-left:3px solid var(--maroon); padding:16px 20px; margin:22px 0; font-size:0.94rem; color:var(--ink-soft);}
+  .note strong{color:var(--ink);}
+
+  /* ---------- LAB CARD ---------- */
+  .lab{background:var(--foam); border:1px solid var(--line); border-radius:4px; padding:30px 28px; margin:28px 0;}
+  .lab-tag{display:inline-block; font-size:0.72rem; font-weight:700; letter-spacing:0.03em; color:var(--maroon-deep); background:rgba(122,36,38,0.09); padding:4px 10px; border-radius:20px; margin-bottom:14px;}
+  .lab h3{margin-bottom:6px;}
+  .lab .lab-desc{font-size:0.93rem; margin-bottom:22px;}
+
+  .controls{display:grid; gap:20px; margin-bottom:22px;}
+  .control label{display:flex; justify-content:space-between; align-items:baseline; font-size:0.9rem; font-weight:600; color:var(--ink); margin-bottom:6px;}
+  .control label .val{font-family:var(--font-display); color:var(--maroon-deep); font-weight:600;}
+  input[type=range]{width:100%; -webkit-appearance:none; height:5px; border-radius:3px; background:var(--sand-deep); outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:var(--maroon); border:3px solid var(--foam); box-shadow:0 0 0 1px var(--maroon); cursor:pointer;}
+  input[type=range]::-moz-range-thumb{width:18px; height:18px; border-radius:50%; background:var(--maroon); border:3px solid var(--foam); box-shadow:0 0 0 1px var(--maroon); cursor:pointer;}
+
+  .seg{display:flex; gap:8px; flex-wrap:wrap;}
+  .seg button{font-family:var(--font-body); font-size:0.85rem; font-weight:600; padding:7px 14px; border-radius:20px; border:1px solid var(--line); background:var(--sand); color:var(--ink-soft); cursor:pointer;}
+  .seg button.active{background:var(--maroon); border-color:var(--maroon); color:var(--foam);}
+
+  .readout{display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:14px; background:var(--sand); border-radius:4px; padding:18px 20px;}
+  .readout .item .n{font-family:var(--font-display); font-size:1.5rem; font-weight:600; color:var(--maroon-deep); line-height:1.15;}
+  .readout .item .l{font-size:0.78rem; color:var(--ink-soft);}
+
+  .method{font-size:0.86rem; color:var(--ink-soft); margin-top:18px; border-top:1px dashed var(--line); padding-top:16px;}
+  .method code{font-family:'Courier New', monospace; background:var(--sand); padding:1px 5px; border-radius:3px; font-size:0.84rem;}
+
+  /* ---------- COMPARISON TOGGLE ---------- */
+  .toggle-panel{margin-top:18px;}
+  .cmp-table{width:100%; border-collapse:collapse; margin-top:16px; font-size:0.9rem;}
+  .cmp-table th, .cmp-table td{text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top;}
+  .cmp-table th{font-family:var(--font-display); font-weight:600; color:var(--maroon-deep); font-size:0.95rem;}
+  .cmp-table td.k{font-weight:600; color:var(--ink); width:34%;}
+
+  .limits ul, .ref ul{padding-left:20px; margin:0;}
+  .limits li, .ref li{margin-bottom:10px; color:var(--ink-soft); font-size:0.95rem;}
+
+  footer{padding:40px 24px 60px; text-align:center; color:var(--ink-soft); font-size:0.85rem;}
+
+  /* ---------- ANIMASI GERAK (2D + 3D) ---------- */
+  .anim-stage{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:6px;}
+  .anim-panel{background:var(--sand); border:1px solid var(--line); border-radius:4px; overflow:hidden; display:flex; flex-direction:column;}
+  .anim-panel-label{font-size:0.76rem; font-weight:600; color:var(--ink-soft); padding:8px 12px; border-bottom:1px dashed var(--line); display:flex; justify-content:space-between; gap:8px;}
+  .anim-hint{font-weight:400; opacity:0.75; font-style:italic;}
+  #fig2d{width:100%; aspect-ratio:5/6; display:block; background:var(--foam);}
+  #fig3d{width:100%; aspect-ratio:5/6; background:var(--foam); cursor:grab; touch-action:none; -webkit-user-select:none; user-select:none;}
+  #fig3d.grabbing{cursor:grabbing;}
+  .anim-controls{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:18px; background:var(--sand); border-radius:4px; padding:12px 16px;}
+  .anim-playbtn{font-family:var(--font-body); font-weight:700; font-size:0.85rem; padding:7px 14px; border-radius:20px; border:1px solid var(--maroon); background:var(--maroon); color:var(--foam); cursor:pointer; flex:0 0 auto;}
+  .anim-controls input[type=range]{flex:1 1 120px; min-width:80px;}
+  .anim-speed-label{font-size:0.78rem; color:var(--ink-soft); flex:0 0 auto;}
+
+  @media (max-width:600px){
+    .hero{padding:64px 20px 100px;}
+    section{padding:48px 0;}
+    .lab{padding:24px 18px;}
+    .cmp-table{font-size:0.82rem;}
+    .anim-stage{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="hero-eyebrow">Laboratorium Sains — Modul Beladiri</div>
+    <h1>Laboratorium Beladiri</h1>
+    <p class="lede">Dari gulat di lembah Sungai Nil sampai ring tinju modern: beladiri dilihat lewat sejarahnya, ragam budayanya di seluruh dunia, fisika benturan di baliknya — dengan bagian khusus membedah Tinju dan Muay Thai berdampingan. Geser parameternya, lihat angkanya berubah.</p>
+  </div>
+  <div class="wave">
+    <svg viewBox="0 0 1440 80" preserveAspectRatio="none"><path d="M0,40 C240,80 480,0 720,30 C960,60 1200,10 1440,45 L1440,80 L0,80 Z" fill="#F3EEE4"></path></svg>
+  </div>
+</div>
+
+<!-- ============ PETA ============ -->
+<section id="peta">
+  <div class="wrap">
+    <div class="kicker">Belajar — Sejarah &amp; Peradaban</div>
+    <h2>Jejak beladiri di seluruh dunia</h2>
+    <p class="lead-text">Hampir setiap peradaban besar mengembangkan sistem bertarungnya sendiri — untuk perang, pertahanan diri, dan belakangan olahraga bertanding. Peta proyeksi <em>Azimuthal Equidistant</em> berikut menghitung posisi tiap titik langsung dari koordinat lintang/bujur aslinya, sehingga arah dan jarak sudutnya dari titik pusat akurat — hanya garis pantai benuanya yang disederhanakan, bukan data GIS presisi. Pindah tab, lalu klik sebuah titik untuk melihat ringkasannya.</p>
+
+    <div class="seg" id="segPetaTab">
+      <button class="active" data-tab="sejarah">Sejarah</button>
+      <button data-tab="bangsa">Beladiri per Bangsa</button>
+    </div>
+
+    <div class="mapwrap">
+      <div class="map-stage">
+        <svg viewBox="0 0 100 100" id="mapsvg" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="map-labels" id="maplabels"></div>
+      </div>
+      <div class="map-info" id="mapinfo"><p>Pilih sebuah titik pada peta di atas.</p></div>
+    </div>
+
+    <div class="list-toggle-row">
+      <button class="btn-toggle-list" id="toggleListSejarah" data-target="listSejarah" data-closed="Lihat sebagai daftar — Sejarah" data-open="Sembunyikan daftar — Sejarah">Lihat sebagai daftar — Sejarah</button>
+      <button class="btn-toggle-list" id="toggleListBangsa" data-target="listBangsa" data-closed="Lihat sebagai daftar — per Bangsa" data-open="Sembunyikan daftar — per Bangsa">Lihat sebagai daftar — per Bangsa</button>
+    </div>
+
+    <div class="collapsible" id="listSejarah">
+      <h3>Beladiri sebagai jejak peradaban — daftar lengkap</h3>
+      <ul class="timeline">
+        <li>
+          <div class="era">± 3000 SM, Mesir &amp; Mesopotamia</div>
+          <p>Relief dinding makam di Beni Hassan (Mesir) menggambarkan ratusan pasangan pegulat dalam posisi teknik yang berbeda-beda — salah satu dokumentasi visual tertua tentang sistem gulat yang sudah terstruktur.</p>
+        </li>
+        <li>
+          <div class="era">648 SM, Yunani Kuno</div>
+          <p>Pankration — gabungan gulat dan pukulan dengan aturan sangat minim — resmi dipertandingkan di Olimpiade kuno, dianggap sebagai salah satu cikal bakal konsep "beladiri campuran".</p>
+        </li>
+        <li>
+          <div class="era">Abad ke-5–6 M, Tiongkok</div>
+          <p>Tradisi seni bela diri Shaolin mulai berkembang di lingkungan biara, memadukan latihan fisik dengan disiplin spiritual — salah satu akar dari rumpun besar kung fu/wushu.</p>
+        </li>
+        <li>
+          <div class="era">Abad ke-6–16 M, Nusantara</div>
+          <p>Silat berkembang sebagai rumpun beladiri lintas suku di kawasan Melayu-Nusantara (termasuk Minangkabau, Jawa, Sunda, Melayu), dengan gaya yang sangat beragam antarwilayah dan sering menyatu dengan tarian serta musik pengiring.</p>
+        </li>
+        <li>
+          <div class="era">Abad ke-12–19 M, Jepang</div>
+          <p>Berbagai aliran jujutsu berkembang di kalangan samurai untuk pertarungan jarak dekat tanpa senjata utama; pada akhir abad ke-19, Jigoro Kano menyaring dan mensistematisasi teknik-teknik ini menjadi judo sebagai olahraga modern.</p>
+        </li>
+        <li>
+          <div class="era">Abad ke-16–19 M, Brasil</div>
+          <p>Capoeira berkembang di kalangan masyarakat keturunan Afrika di Brasil, memadukan gerakan bertarung dengan musik dan tarian — sebagian sejarawan mencatat penyamaran ini sebagai strategi bertahan pada masa ketika praktik bertarung terbuka dilarang.</p>
+        </li>
+        <li>
+          <div class="era">Abad ke-20 M</div>
+          <p>Berbagai beladiri tradisional mulai distandardisasi menjadi olahraga bertanding modern dengan aturan tertulis, kelas berat, dan federasi internasional — dari karate, taekwondo, hingga tinju dan Muay Thai yang dibahas lebih dalam di bagian khusus.</p>
+        </li>
+      </ul>
+      <div class="note"><strong>Catatan status:</strong> Urutan kemunculan dan klaim "tertua" antarbeladiri sering diperdebatkan sejarawan karena keterbatasan catatan tertulis di banyak tradisi lisan — ditandai <strong>BELUM DISEPAKATI SEPENUHNYA</strong>, bukan fakta tunggal yang final.</div>
+    </div>
+
+    <div class="collapsible" id="listBangsa">
+      <h3>Ragam beladiri lintas peradaban — daftar lengkap</h3>
+      <p>Setiap sistem beladiri membawa jejak lingkungan dan nilai budaya tempatnya lahir — medan perang, senjata yang tersedia, bahkan filosofi hidup masyarakatnya.</p>
+      <div class="grid">
+        <div class="card">
+          <div class="region">Nusantara</div>
+          <h4>Silat</h4>
+          <p>Rumpun beladiri yang sangat beragam antarwilayah, sering menyatu dengan seni pertunjukan, musik, dan nilai adat setempat.</p>
+        </div>
+        <div class="card">
+          <div class="region">Asia Timur</div>
+          <h4>Kung Fu / Wushu</h4>
+          <p>Ribuan aliran dengan filosofi gerak berbeda-beda, dari yang meniru gerakan hewan hingga yang menekankan tenaga dalam.</p>
+        </div>
+        <div class="card">
+          <div class="region">Jepang</div>
+          <h4>Judo &amp; Jujutsu</h4>
+          <p>Berfokus pada bantingan, kuncian, dan memanfaatkan momentum lawan alih-alih kekuatan otot mentah.</p>
+        </div>
+        <div class="card">
+          <div class="region">Brasil</div>
+          <h4>Capoeira &amp; BJJ</h4>
+          <p>Capoeira memadukan tarian dan pertarungan berirama musik; Brazilian Jiu-Jitsu berkembang dari judo menjadi sistem gulat-kuncian di lantai yang sangat berpengaruh di beladiri campuran modern.</p>
+        </div>
+        <div class="card">
+          <div class="region">Korea</div>
+          <h4>Taekwondo</h4>
+          <p>Dikenal luas karena teknik tendangannya yang bervariasi dan bertenaga, dengan jangkauan gerak kaki yang menjadi ciri khas.</p>
+        </div>
+        <div class="card">
+          <div class="region">Thailand</div>
+          <h4>Muay Thai</h4>
+          <p>"Seni delapan anggota tubuh" — dibahas lebih dalam pada bagian khusus di bawah.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FISIKA BENTURAN PUKULAN ============ -->
+<section id="pukulan">
+  <div class="wrap">
+    <div class="kicker">Model Komputasional — Fisika</div>
+    <h2>Fisika di balik sebuah pukulan</h2>
+    <p class="lead-text">Sebuah pukulan pada dasarnya adalah peristiwa perpindahan momentum dalam waktu yang sangat singkat. Semakin besar massa yang bergerak, semakin tinggi kecepatannya, dan semakin singkat waktu kontaknya saat mengenai target — semakin besar pula gaya rata-rata yang dirasakan.</p>
+
+    <div class="lab">
+      <span class="lab-tag">PERHITUNGAN</span>
+      <h3>Kalkulator Energi &amp; Gaya Pukulan</h3>
+      <p class="lab-desc">Berdasarkan hukum kekekalan momentum <code>F = Δp / Δt = m·v / t</code> dan energi kinetik <code>Ek = ½·m·v²</code>.</p>
+
+      <div class="controls">
+        <div class="control">
+          <label>Massa efektif (kepalan + lengan + transfer badan) <span class="val" id="valMp">5.5 kg</span></label>
+          <input type="range" id="rMp" min="3" max="9" value="5.5" step="0.1">
+        </div>
+        <div class="control">
+          <label>Kecepatan pukulan saat kena <span class="val" id="valVp">9 m/dtk</span></label>
+          <input type="range" id="rVp" min="4" max="20" value="9" step="0.5">
+        </div>
+        <div class="control">
+          <label>Waktu kontak (durasi benturan) <span class="val" id="valTp">15 md</span></label>
+          <input type="range" id="rTp" min="5" max="30" value="15" step="1">
+        </div>
+      </div>
+
+      <div class="readout">
+        <div class="item"><div class="n" id="outMomentum">—</div><div class="l">momentum (kg·m/dtk)</div></div>
+        <div class="item"><div class="n" id="outForce">—</div><div class="l">gaya rata-rata (Newton)</div></div>
+        <div class="item"><div class="n" id="outEnergy">—</div><div class="l">energi kinetik (Joule)</div></div>
+      </div>
+
+      <div class="method"><code>Δp</code> = perubahan momentum saat kepalan berhenti mendadak di target, <code>Δt</code> = waktu kontak. Waktu kontak lebih singkat (pukulan "menembus"/snap) menghasilkan gaya puncak lebih tinggi walau energi totalnya sama — inilah alasan teknik pemukulan (bukan sekadar kekuatan otot) sangat berpengaruh pada efektivitas pukulan.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BIOMEKANIKA TENDANGAN ============ -->
+<section id="tendangan">
+  <div class="wrap">
+    <div class="kicker">Model Komputasional — Biomekanika</div>
+    <h2>Tendangan sebagai gerakan rotasi</h2>
+    <p class="lead-text">Berbeda dari pukulan yang umumnya gerak linear, tendangan terutama adalah gerak rotasi di sekitar sendi panggul: tungkai berayun seperti sebuah pengungkit. Semakin panjang tungkai dan semakin cepat putarannya, semakin tinggi kecepatan linear di ujung kaki/tulang kering saat mengenai target.</p>
+
+    <div class="lab">
+      <span class="lab-tag">PERHITUNGAN</span>
+      <h3>Kalkulator Kecepatan &amp; Energi Tendangan</h3>
+      <p class="lab-desc">Berdasarkan hubungan kecepatan linear-rotasi <code>v = ω · r</code>, lalu energi kinetik <code>Ek = ½·m·v²</code> di titik benturan.</p>
+
+      <div class="controls">
+        <div class="control">
+          <label>Panjang tungkai efektif (pinggul ke titik kena) <span class="val" id="valR">0.85 m</span></label>
+          <input type="range" id="rR" min="0.6" max="1.05" value="0.85" step="0.01">
+        </div>
+        <div class="control">
+          <label>Kecepatan sudut putaran pinggul <span class="val" id="valOmega">9 rad/dtk</span></label>
+          <input type="range" id="rOmega" min="4" max="16" value="9" step="0.2">
+        </div>
+        <div class="control">
+          <label>Massa efektif tungkai yang berayun <span class="val" id="valMk">7 kg</span></label>
+          <input type="range" id="rMk" min="4" max="13" value="7" step="0.2">
+        </div>
+      </div>
+
+      <div class="readout">
+        <div class="item"><div class="n" id="outVk">—</div><div class="l">kecepatan linear ujung tungkai (m/dtk)</div></div>
+        <div class="item"><div class="n" id="outEk">—</div><div class="l">energi kinetik saat kena (Joule)</div></div>
+        <div class="item"><div class="n" id="outBandingPukulan">—</div><div class="l">dibanding energi pukulan di atas</div></div>
+      </div>
+
+      <div class="method">Tendangan umumnya melibatkan massa efektif lebih besar (seluruh tungkai) dibanding pukulan (lengan saja), sehingga cenderung menghasilkan energi benturan lebih tinggi — tetapi lintasannya lebih panjang dan lebih mudah dibaca lawan, sedangkan pukulan lebih cepat sampai ke target meski energinya sering lebih kecil.</div>
+    </div>
+
+    <div class="note"><strong>Batasan kedua model fisika di atas:</strong> Ini model orde-besaran yang disederhanakan untuk keperluan belajar — mengabaikan elastisitas jaringan target, sudut benturan, serta perbedaan besar antarindividu dalam kekuatan dan teknik. Bukan pengganti pengukuran dengan sensor gaya (force plate) atau motion capture yang dipakai riset olahraga sungguhan.</div>
+  </div>
+</section>
+
+<!-- ============ ANIMASI GERAK: 2D + 3D ============ -->
+<section id="animasi-gerak">
+  <div class="wrap">
+    <div class="kicker">Visualisasi — Gerak &amp; Ruang</div>
+    <h2>Menyaksikan pukulan &amp; tendangan bergerak</h2>
+    <p class="lead-text">Kalkulator di atas memakai angka; bagian ini memakai gerak. Panel 2D menampilkan pandangan samping (bidang sagital) — sudut pandang klasik untuk menganalisis pukulan/tendangan. Panel 3D di sampingnya digerakkan oleh <em>sudut sendi yang sama persis</em>, hanya ditambah rotasi pinggul/bahu yang tak mungkin terlihat dari samping — termasuk detail putaran pinggul yang jadi sumber tenaga pukulan cross &amp; tendangan melingkar.</p>
+
+    <div class="lab anim-lab">
+      <span class="lab-tag">ANIMASI</span>
+      <h3>Panel 2D &amp; 3D berjalan bersamaan</h3>
+      <p class="lab-desc">Pilih tekniknya. Bentuk figur 3D memakai balok-balok sederhana, gaya yang sama seperti model massing pada gambar kerja tahapan pembangunan.</p>
+
+      <div class="seg" id="segTeknik">
+        <button class="active" data-teknik="pukulan">Pukulan — Jab-Cross</button>
+        <button data-teknik="tendangan">Tendangan — Roundhouse</button>
+      </div>
+
+      <div class="anim-stage">
+        <div class="anim-panel">
+          <div class="anim-panel-label"><span>2D — pandangan samping</span></div>
+          <svg id="fig2d" viewBox="0 0 200 240" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+        <div class="anim-panel">
+          <div class="anim-panel-label"><span>3D — pose yang sama</span><span class="anim-hint">seret = putar</span></div>
+          <div id="fig3d"></div>
+        </div>
+      </div>
+
+      <div class="anim-controls">
+        <button class="anim-playbtn" id="animPlayBtn">⏸ Jeda</button>
+        <input type="range" id="animScrub" min="0" max="1000" value="0" aria-label="Posisi dalam siklus gerakan">
+        <span class="anim-speed-label">Kecepatan <span id="valAnimSpeed">1.0×</span></span>
+        <input type="range" id="animSpeed" min="25" max="200" value="100" step="25" aria-label="Kecepatan animasi">
+      </div>
+      <div class="method">Pose dibentuk dari sudut sendi (bahu, siku, pinggul, lutut, plus rotasi tubuh) yang dipakai bersama oleh kedua panel — bukan dua animasi yang dibuat terpisah lalu diselaraskan kasar. Ini model kualitatif untuk memahami urutan &amp; koordinasi gerak, bukan hasil motion-capture atlet sungguhan; proporsi tungkai dan besar sudutnya disederhanakan.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TINJU & MUAY THAI ============ -->
+<section id="tinju-muaythai">
+  <div class="wrap">
+    <div class="kicker">Studi Khusus</div>
+    <h2>Tinju &amp; Muay Thai, berdampingan</h2>
+    <p class="lead-text">Dua olahraga tarung yang sama-sama lahir dari tradisi panjang, tetapi berkembang menjadi filosofi menyerang yang sangat berbeda: satu membatasi diri pada kepalan tangan, satu lagi merangkul delapan titik tubuh sebagai senjata.</p>
+
+    <ul class="timeline">
+      <li>
+        <div class="era">± 1500 SM, Kreta Minoa</div>
+        <p>Fresko "Boxing Boys" dari situs Akrotiri/Kreta menggambarkan anak muda bertinju dengan pelindung tangan — salah satu penggambaran tinju tertua yang masih bertahan.</p>
+      </li>
+      <li>
+        <div class="era">688 SM, Yunani Kuno</div>
+        <p>Pygmachia (tinju) resmi masuk Olimpiade kuno; petarung Romawi kemudian mengembangkan versi lebih brutal memakai caestus, sarung tangan berlapis logam.</p>
+      </li>
+      <li>
+        <div class="era">1743 M, Inggris</div>
+        <p>Jack Broughton menyusun London Prize Ring Rules, aturan tertulis pertama yang membatasi tinju modern — termasuk melarang memukul lawan yang sudah jatuh.</p>
+      </li>
+      <li>
+        <div class="era">1867 M, Inggris</div>
+        <p>Marquess of Queensberry Rules memperkenalkan wajib sarung tangan empuk, ronde berdurasi tetap, dan hitungan sepuluh detik — kerangka aturan yang menjadi dasar tinju modern hingga kini.</p>
+      </li>
+      <li>
+        <div class="era">Era Kerajaan Ayutthaya, Siam (kini Thailand)</div>
+        <p>Muay Boran (pertarungan tangan kosong tradisional Siam) berkembang sebagai keterampilan militer sekaligus hiburan rakyat, memakai kepalan, siku, lutut, dan tulang kering.</p>
+      </li>
+      <li>
+        <div class="era">1774 M, Siam</div>
+        <p>Menurut catatan legenda populer yang diwariskan turun-temurun (statusnya <strong>PERLU DITELUSURI LEBIH LANJUT</strong> secara historiografis), petarung Siam bernama Nai Khanom Tom dikisahkan mengalahkan beruntun petarung-petarung Burma di hadapan raja Burma, memperkuat status Muay Boran sebagai kebanggaan nasional.</p>
+      </li>
+      <li>
+        <div class="era">1920-an–1930-an M, Thailand</div>
+        <p>Muay Boran dimodernisasi menjadi Muay Thai: ring bertali menggantikan arena terbuka, sarung tangan gaya Queensberry menggantikan lilitan tali, dan aturan ronde tertulis mulai diberlakukan — sambil tetap mempertahankan siku dan lutut sebagai senjata sah, berbeda dari tinju Barat.</p>
+      </li>
+      <li>
+        <div class="era">Abad ke-20–21 M</div>
+        <p>Kedua olahraga berkembang menjadi industri global dengan federasi, kelas berat, dan liga profesional masing-masing — Muay Thai juga menjadi salah satu fondasi teknik pukulan-siku-lutut dalam beladiri campuran (MMA) modern.</p>
+      </li>
+    </ul>
+
+    <div class="lab">
+      <span class="lab-tag">PERBANDINGAN</span>
+      <h3>Senjata Tubuh &amp; Bidang Sasaran</h3>
+      <p class="lab-desc">Pilih salah satu untuk melihat ringkasan karakteristiknya.</p>
+      <div class="seg" id="segCabang">
+        <button class="active" data-cabang="tinju">Tinju</button>
+        <button data-cabang="muaythai">Muay Thai</button>
+      </div>
+
+      <div class="toggle-panel">
+        <table class="cmp-table">
+          <tbody id="cmpBody"></tbody>
+        </table>
+      </div>
+      <div class="method" id="cmpNote"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VERIFIKASI ============ -->
+<section id="verifikasi">
+  <div class="wrap">
+    <div class="kicker">Verifikasi — Level 3</div>
+    <h2>Menguji model terhadap dunia nyata</h2>
+    <p class="lead-text">Sebelum kalkulator di atas dianggap layak dipakai, setiap model perlu diuji terhadap kasus yang hasilnya sudah diketahui. Prinsipnya: kalau hasil model berbeda dari rujukan nyata, jangan langsung "diperbaiki" angkanya — cari dulu alasannya.</p>
+
+    <div class="lab">
+      <span class="lab-tag">UJI 1 — Gaya Pukulan</span>
+      <h3>Gaya puncak pukulan lurus terlatih vs prediksi F = m·v/t</h3>
+      <p><strong>Rujukan dunia nyata:</strong> studi biomekanika tinju yang memakai sensor gaya pada petarung terlatih melaporkan gaya puncak pukulan lurus rata-rata di kisaran sekitar 3.400 N, dengan rentang mencapai lebih dari 4.700 N pada petinju kelas berat.</p>
+      <p><strong>Input default kalkulator:</strong> massa efektif 5,5 kg, kecepatan 9 m/dtk, waktu kontak 15 md.</p>
+      <p><strong>Prediksi model:</strong> F = 5,5 × 9 / 0,015 ≈ 3.300 N — selisih sekitar 3% dari rata-rata yang dilaporkan riset tersebut.</p>
+      <p><strong>Kesimpulan:</strong> kombinasi parameter default cukup realistis untuk mengestimasi gaya pukulan lurus petarung terlatih, meski nilai massa efektif dan waktu kontak sesungguhnya bervariasi antarindividu dan antarteknik.</p>
+    </div>
+
+    <div class="lab">
+      <span class="lab-tag">UJI 2 — Energi Tendangan</span>
+      <h3>Tendangan vs pukulan: siapa yang benar-benar lebih dahsyat?</h3>
+      <p><strong>Rujukan dunia nyata:</strong> berbagai studi biomekanika tendangan (taekwondo maupun Muay Thai, memakai sensor dampak) melaporkan gaya puncak tendangan berputar yang bisa melampaui gaya pukulan — tetapi rentang angkanya sangat lebar tergantung jenis tendangan, target, dan metode pengukuran.</p>
+      <p><strong>Prediksi model:</strong> pada nilai baku, energi kinetik tendangan yang dihasilkan kalkulator berorde sama dengan energi pukulan tinju pada bagian sebelumnya — bukan selalu jauh lebih besar seperti anggapan populer.</p>
+      <p><strong>Kesimpulan:</strong> dibanding Uji 1, verifikasi tendangan ini bersifat kecocokan orde-besaran, bukan kecocokan angka presisi — ditandai <strong>PERLU DITELITI LEBIH LANJUT</strong> karena rentang literatur sangat lebar tergantung metode pengukuran yang dipakai tiap studi.</p>
+    </div>
+
+    <div class="lab">
+      <span class="lab-tag">UJI 3 — Refleks Menyelam</span>
+      <h3>Penurunan detak jantung vs literatur fisiologi</h3>
+      <p><strong>Rujukan dunia nyata:</strong> literatur fisiologi dasar melaporkan mammalian dive reflex dapat menurunkan detak jantung manusia sekitar 10–25%, dengan penurunan lebih besar pada penyelam terlatih.</p>
+      <p><strong>Prediksi model:</strong> pada nilai baku (suhu 28°C, tingkat pemula), model menghasilkan penurunan ≈ 11% — berada di ujung bawah rentang literatur, sesuai dengan pengaturan "pemula" dan air yang tidak terlalu dingin.</p>
+      <p><strong>Kesimpulan:</strong> arah dan rentang prediksi konsisten dengan literatur umum, tetapi model ini tetap kualitatif-ilustratif dan tidak dikalibrasi terhadap data pengukuran individu manapun.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ REFERENSI ============ -->
+<section id="referensi">
+  <div class="wrap">
+    <div class="kicker">Referensi</div>
+    <h2>Sumber &amp; bacaan lanjutan</h2>
+    <div class="ref">
+      <ul>
+        <li>Sejarah gulat kuno: relief makam Beni Hassan, Mesir; pankration dalam catatan Olimpiade kuno Yunani.</li>
+        <li>Sejarah tinju: fresko tinju Kreta Minoa, London Prize Ring Rules (1743), Marquess of Queensberry Rules (1867).</li>
+        <li>Sejarah Muay Thai/Muay Boran: catatan tradisi kerajaan Ayutthaya dan proses modernisasi Muay Thai awal abad ke-20.</li>
+        <li>Fisika benturan &amp; biomekanika pukulan/tendangan: prinsip momentum dan energi kinetik dasar sebagaimana diajarkan dalam fisika pengantar dan biomekanika olahraga.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Laboratorium Beladiri — bagian dari proyek Qiladat/JAZMI. Model &amp; kalkulator di halaman ini bersifat edukatif dan bisa terus dikurasi seiring riset lanjutan.
+</footer>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  // ---------- PUKULAN ----------
+  const rMp = $('rMp'), rVp = $('rVp'), rTp = $('rTp');
+  let lastPunchEnergy = 0;
+  function updatePunch(){
+    const m = +rMp.value, v = +rVp.value, tms = +rTp.value;
+    $('valMp').textContent = m.toFixed(1) + ' kg';
+    $('valVp').textContent = v.toFixed(1) + ' m/dtk';
+    $('valTp').textContent = tms + ' md';
+
+    const t = tms / 1000;
+    const p = m * v;
+    const F = p / t;
+    const E = 0.5 * m * v * v;
+    lastPunchEnergy = E;
+
+    $('outMomentum').textContent = p.toFixed(1) + ' kg·m/dtk';
+    $('outForce').textContent = F.toFixed(0) + ' N';
+    $('outEnergy').textContent = E.toFixed(0) + ' J';
+    updateKickCompare();
+  }
+  [rMp, rVp, rTp].forEach(el => el.addEventListener('input', updatePunch));
+
+  // ---------- TENDANGAN ----------
+  const rR = $('rR'), rOmega = $('rOmega'), rMk = $('rMk');
+  function updateKick(){
+    const r = +rR.value, w = +rOmega.value, m = +rMk.value;
+    $('valR').textContent = r.toFixed(2) + ' m';
+    $('valOmega').textContent = w.toFixed(1) + ' rad/dtk';
+    $('valMk').textContent = m.toFixed(1) + ' kg';
+
+    const v = w * r;
+    const E = 0.5 * m * v * v;
+
+    $('outVk').textContent = v.toFixed(1) + ' m/dtk';
+    $('outEk').textContent = E.toFixed(0) + ' J';
+    updateKickCompare(E);
+  }
+  [rR, rOmega, rMk].forEach(el => el.addEventListener('input', updateKick));
+
+  function updateKickCompare(){
+    const r = +rR.value, w = +rOmega.value, m = +rMk.value;
+    const v = w * r;
+    const Ek = 0.5 * m * v * v;
+    const ratio = lastPunchEnergy > 0 ? (Ek / lastPunchEnergy) : 0;
+    $('outBandingPukulan').textContent = ratio.toFixed(1) + '×';
+  }
+
+  updatePunch();
+  updateKick();
+
+  // ---------- TINJU vs MUAY THAI TOGGLE ----------
+  const cmpData = {
+    tinju: {
+      note: 'Tinju modern mengikuti kerangka Marquess of Queensberry Rules (1867): hanya kepalan tangan bersarung yang sah, dengan bidang sasaran terbatas pada kepala dan tubuh bagian depan/samping di atas pinggang.',
+      rows: [
+        ['Senjata tubuh sah', 'Kepalan tangan (kedua tangan)'],
+        ['Bidang sasaran', 'Kepala &amp; tubuh depan/samping, di atas garis pinggang'],
+        ['Clinch/rangkulan', 'Dianggap jeda — wasit segera memisahkan petarung'],
+        ['Alat pelindung khas', 'Sarung tangan empuk gaya Queensberry, pelindung mulut'],
+        ['Durasi umum', '3 menit/ronde, jumlah ronde bervariasi menurut level']
+      ]
+    },
+    muaythai: {
+      note: '"Seni delapan anggota tubuh" (mat mai muay thai) merujuk pada delapan titik kontak: dua kepalan, dua siku, dua lutut, dan dua tulang kering — jauh lebih luas dibanding tinju Barat.',
+      rows: [
+        ['Senjata tubuh sah', 'Kepalan, siku, lutut, tulang kering (delapan titik)'],
+        ['Bidang sasaran', 'Kepala, tubuh, dan tungkai (termasuk tendangan ke paha luar)'],
+        ['Clinch/rangkulan', 'Bagian sah dari pertarungan — dipakai untuk melontarkan serangan lutut/siku dari jarak dekat'],
+        ['Alat pelindung khas', 'Sarung tangan, kadang pelindung tulang kering di level latihan/amatir'],
+        ['Durasi umum', '3 menit/ronde, biasanya 5 ronde di level profesional']
+      ]
+    }
+  };
+  function renderCmp(key){
+    const d = cmpData[key];
+    $('cmpBody').innerHTML = d.rows.map(r => `<tr><td class="k">${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+    $('cmpNote').innerHTML = d.note;
+  }
+  const segCabang = $('segCabang');
+  segCabang.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      segCabang.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      renderCmp(btn.dataset.cabang);
+    });
+  });
+  renderCmp('tinju');
+
+  // ---------- ANIMASI GERAK: DATA POSE BERSAMA (2D + 3D) ----------
+  // Konvensi sudut sagital (sx/hx), dipakai identik oleh render 2D & 3D:
+  //   0° = anggota gerak tergantung lurus ke bawah
+  //   +90° = terangkat lurus ke depan (arah hadap tubuh)
+  //   -90° = terangkat lurus ke belakang
+  // sz/hz = abduksi lateral (mengangkat ke samping/depan-atas) — HANYA terlihat di panel 3D.
+  // ex/kx = tekukan siku/lutut (menambah sudut, menekuk anggota gerak bawahnya).
+  // torsoRotY/hipsRotY = rotasi tubuh atas & pinggul mengelilingi sumbu vertikal — HANYA di panel 3D.
+  const POSE = {
+    guard: {
+      torsoRotY:0, hipsRotY:0,
+      armL:{sx:100, sz:14, ex:108}, armR:{sx:94, sz:10, ex:114},
+      legL:{hx:18, hz:0, kx:18}, legR:{hx:-14, hz:0, kx:24}
+    },
+    jab: {
+      torsoRotY:-12, hipsRotY:-6,
+      armL:{sx:92, sz:0, ex:8}, armR:{sx:96, sz:10, ex:112},
+      legL:{hx:18, hz:0, kx:14}, legR:{hx:-14, hz:0, kx:22}
+    },
+    cross: {
+      torsoRotY:38, hipsRotY:22,
+      armL:{sx:100, sz:12, ex:104}, armR:{sx:94, sz:0, ex:6},
+      legL:{hx:14, hz:0, kx:16}, legR:{hx:-8, hz:8, kx:18}
+    },
+    chamber: {
+      torsoRotY:-16, hipsRotY:46,
+      armL:{sx:96, sz:16, ex:100}, armR:{sx:88, sz:8, ex:118},
+      legL:{hx:6, hz:0, kx:14}, legR:{hx:-18, hz:72, kx:112}
+    },
+    kickExtend: {
+      torsoRotY:58, hipsRotY:96,
+      armL:{sx:90, sz:20, ex:96}, armR:{sx:70, sz:0, ex:60},
+      legL:{hx:2, hz:16, kx:8}, legR:{hx:-4, hz:64, kx:14}
+    }
+  };
+  const TEKNIK = {
+    pukulan:{
+      label:'Pukulan — Jab-Cross', durasi:1900,
+      kf:[ {t:0.00,p:'guard'}, {t:0.16,p:'jab'}, {t:0.34,p:'guard'}, {t:0.50,p:'cross'}, {t:0.68,p:'guard'}, {t:1.00,p:'guard'} ]
+    },
+    tendangan:{
+      label:'Tendangan — Roundhouse', durasi:2100,
+      kf:[ {t:0.00,p:'guard'}, {t:0.28,p:'chamber'}, {t:0.50,p:'kickExtend'}, {t:0.72,p:'chamber'}, {t:1.00,p:'guard'} ]
+    }
+  };
+  function easeInOutQuad(x){ return x<0.5 ? 2*x*x : 1-Math.pow(-2*x+2,2)/2; }
+  function lerp(a,b,t){ return a+(b-a)*t; }
+  function lerpLimb(a,b,t){
+    const out={};
+    for(const k in a){ out[k]=lerp(a[k],b[k],t); }
+    return out;
+  }
+  function lerpPose(a,b,t){
+    const e=easeInOutQuad(t);
+    return {
+      torsoRotY:lerp(a.torsoRotY,b.torsoRotY,e), hipsRotY:lerp(a.hipsRotY,b.hipsRotY,e),
+      armL:lerpLimb(a.armL,b.armL,e), armR:lerpLimb(a.armR,b.armR,e),
+      legL:lerpLimb(a.legL,b.legL,e), legR:lerpLimb(a.legR,b.legR,e)
+    };
+  }
+  function getPose(teknikKey, frac){
+    const seq = TEKNIK[teknikKey].kf;
+    frac = ((frac % 1) + 1) % 1;
+    for(let i=0;i<seq.length-1;i++){
+      const a=seq[i], b=seq[i+1];
+      if(frac>=a.t && frac<=b.t){
+        const span = (b.t-a.t) || 1;
+        const local = (frac-a.t)/span;
+        return lerpPose(POSE[a.p], POSE[b.p], local);
+      }
+    }
+    return POSE[seq[seq.length-1].p];
+  }
+
+  // ---------- RENDER 2D (SVG, pandangan samping) ----------
+  const svg2d = document.getElementById('fig2d');
+  const SVGNS='http://www.w3.org/2000/svg';
+  const HIP2D={x:80,y:150}, SH2D={x:80,y:92}, UP_LEN=34, LO_LEN=34, UA_LEN=26, FA_LEN=24, HEAD_R=13;
+  function mkEl(tag, attrs){
+    const el=document.createElementNS(SVGNS, tag);
+    for(const k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+  const fig2dParts = {};
+  (function build2D(){
+    svg2d.innerHTML='';
+    svg2d.appendChild(mkEl('line',{id:'g2-floor',x1:10,y1:222,x2:190,y2:222,stroke:'var(--line)','stroke-width':2}));
+    svg2d.appendChild(mkEl('line',{id:'g2-torso',stroke:'var(--ink)','stroke-width':7,'stroke-linecap':'round'}));
+    fig2dParts.torso = svg2d.lastChild;
+    svg2d.appendChild(mkEl('circle',{id:'g2-head', r:HEAD_R, fill:'var(--maroon)'}));
+    fig2dParts.head = svg2d.lastChild;
+    ['legR','legL','armR','armL'].forEach(name=>{
+      const isLeg = name.startsWith('leg');
+      const color = name.endsWith('L') ? 'var(--maroon-deep)' : 'var(--gold)';
+      const wUp = isLeg?9:6.5, wLo = isLeg?7.5:5.5;
+      const upEl = mkEl('line',{stroke:color,'stroke-width':wUp,'stroke-linecap':'round'});
+      const loEl = mkEl('line',{stroke:color,'stroke-width':wLo,'stroke-linecap':'round'});
+      svg2d.appendChild(upEl); svg2d.appendChild(loEl);
+      fig2dParts[name] = {up:upEl, lo:loEl};
+    });
+  })();
+  function seg2D(pivot, angDeg, len){
+    const r = angDeg*Math.PI/180;
+    return { x: pivot.x + Math.sin(r)*len, y: pivot.y + Math.cos(r)*len };
+  }
+  function setPose2D(pose){
+    fig2dParts.torso.setAttribute('x1',HIP2D.x); fig2dParts.torso.setAttribute('y1',HIP2D.y);
+    fig2dParts.torso.setAttribute('x2',SH2D.x); fig2dParts.torso.setAttribute('y2',SH2D.y);
+    fig2dParts.head.setAttribute('cx',SH2D.x); fig2dParts.head.setAttribute('cy',SH2D.y-HEAD_R-3);
+
+    [['armL',SH2D,UA_LEN,FA_LEN],['armR',SH2D,UA_LEN,FA_LEN],['legL',HIP2D,UP_LEN,LO_LEN],['legR',HIP2D,UP_LEN,LO_LEN]].forEach(([name,pivot,lenUp,lenLo])=>{
+      const j = pose[name];
+      const sagAngle = name.startsWith('arm') ? j.sx : j.hx;
+      const bend = name.startsWith('arm') ? j.ex : j.kx;
+      const mid = seg2D(pivot, sagAngle, lenUp);
+      const end = seg2D(mid, sagAngle+bend, lenLo);
+      fig2dParts[name].up.setAttribute('x1',pivot.x); fig2dParts[name].up.setAttribute('y1',pivot.y);
+      fig2dParts[name].up.setAttribute('x2',mid.x); fig2dParts[name].up.setAttribute('y2',mid.y);
+      fig2dParts[name].lo.setAttribute('x1',mid.x); fig2dParts[name].lo.setAttribute('y1',mid.y);
+      fig2dParts[name].lo.setAttribute('x2',end.x); fig2dParts[name].lo.setAttribute('y2',end.y);
+    });
+  }
+
+  // ---------- RENDER 3D (Three.js, balok sederhana gaya "tahapan-pembangunan") ----------
+  let three3d = null;
+  function initFig3D(){
+    const container = document.getElementById('fig3d');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xfffffe);
+    const camera = new THREE.PerspectiveCamera(38, container.clientWidth/container.clientHeight, 0.5, 400);
+    const renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+    const dir = new THREE.DirectionalLight(0xffffff, 0.7); dir.position.set(30,50,40); scene.add(dir);
+    const floorGeo = new THREE.PlaneGeometry(60,60);
+    const floorMat = new THREE.MeshStandardMaterial({color:0xE8DFCF, side:THREE.DoubleSide});
+    const floor = new THREE.Mesh(floorGeo, floorMat); floor.rotation.x = -Math.PI/2; floor.position.y=0; scene.add(floor);
+
+    const MAROON=0x7A2426, MAROON_DEEP=0x4A1316, GOLD=0xB4863E, INK=0x1C1512;
+    const HIP_Y=16, SH_HALF=3.4, HIP_HALF=2.4, TORSO_H=9, HEAD_R=2.3;
+    function box(w,h,d,color){ return new THREE.Mesh(new THREE.BoxGeometry(w,h,d), new THREE.MeshStandardMaterial({color})); }
+
+    const root = new THREE.Group(); root.position.y = 0; scene.add(root);
+
+    // pinggul + kaki (rotasi via hipsRotY)
+    const hipsPivot = new THREE.Group(); hipsPivot.position.set(0,HIP_Y,0); root.add(hipsPivot);
+    const pelvis = box(6,3.4,4,INK); pelvis.position.y=1.2; hipsPivot.add(pelvis);
+    function makeLeg(color, side){
+      const hipJ = new THREE.Group(); hipJ.position.set(side*HIP_HALF, 0, 0); hipsPivot.add(hipJ);
+      const thigh = box(2.4,8,2.4,color); thigh.position.y=-4; hipJ.add(thigh);
+      const kneeJ = new THREE.Group(); kneeJ.position.set(0,-8,0); hipJ.add(kneeJ);
+      const shin = box(2.1,8,2.1,color); shin.position.y=-4; kneeJ.add(shin);
+      const foot = box(2.1,1.4,3.6,color); foot.position.set(0,-8-0.7,1.1); kneeJ.add(foot);
+      return {hipJ, kneeJ};
+    }
+    const legL = makeLeg(MAROON_DEEP, -1);
+    const legR = makeLeg(GOLD, 1);
+
+    // tubuh atas + lengan (rotasi via torsoRotY), pivot di ketinggian pinggul juga
+    const upperBody = new THREE.Group(); upperBody.position.set(0,HIP_Y,0); root.add(upperBody);
+    const torso = box(6.6,TORSO_H,4,INK); torso.position.y = TORSO_H/2; upperBody.add(torso);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(HEAD_R,16,12), new THREE.MeshStandardMaterial({color:MAROON}));
+    head.position.y = TORSO_H + HEAD_R + 0.6; upperBody.add(head);
+    function makeArm(color, side){
+      const shJ = new THREE.Group(); shJ.position.set(side*(SH_HALF+0.3), TORSO_H-0.6, 0); upperBody.add(shJ);
+      const ua = box(1.9,6.5,1.9,color); ua.position.y=-3.25; shJ.add(ua);
+      const elJ = new THREE.Group(); elJ.position.set(0,-6.5,0); shJ.add(elJ);
+      const fa = box(1.6,6,1.6,color); fa.position.y=-3; elJ.add(fa);
+      const fist = box(1.9,1.9,1.9,color); fist.position.y=-6.2; elJ.add(fist);
+      return {shJ, elJ};
+    }
+    const armL = makeArm(MAROON_DEEP, -1);
+    const armR = makeArm(GOLD, 1);
+
+    const D2R = Math.PI/180;
+    function setPose3D(pose){
+      upperBody.rotation.y = pose.torsoRotY*D2R;
+      hipsPivot.rotation.y = pose.hipsRotY*D2R;
+      armL.shJ.rotation.z = pose.armL.sx*D2R; armL.shJ.rotation.x = pose.armL.sz*D2R; armL.elJ.rotation.z = pose.armL.ex*D2R;
+      armR.shJ.rotation.z = pose.armR.sx*D2R; armR.shJ.rotation.x = -pose.armR.sz*D2R; armR.elJ.rotation.z = pose.armR.ex*D2R;
+      legL.hipJ.rotation.z = pose.legL.hx*D2R; legL.hipJ.rotation.x = pose.legL.hz*D2R; legL.kneeJ.rotation.z = pose.legL.kx*D2R;
+      legR.hipJ.rotation.z = pose.legR.hx*D2R; legR.hipJ.rotation.x = -pose.legR.hz*D2R; legR.kneeJ.rotation.z = pose.legR.kx*D2R;
+    }
+
+    let theta=0.9, phi=1.15, radius=62; const target=new THREE.Vector3(0,14,0);
+    function updateCam(){
+      camera.position.x = target.x + radius*Math.sin(phi)*Math.sin(theta);
+      camera.position.z = target.z + radius*Math.sin(phi)*Math.cos(theta);
+      camera.position.y = target.y + radius*Math.cos(phi);
+      camera.lookAt(target);
+    }
+    updateCam();
+    let dragging=false,lastX=0,lastY=0;
+    renderer.domElement.addEventListener('pointerdown', e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;container.classList.add('grabbing');});
+    window.addEventListener('pointerup', ()=>{dragging=false;container.classList.remove('grabbing');});
+    window.addEventListener('pointermove', e=>{
+      if(!dragging) return;
+      theta -= (e.clientX-lastX)*0.008; phi -= (e.clientY-lastY)*0.008;
+      phi = Math.max(0.35, Math.min(1.5, phi));
+      lastX=e.clientX; lastY=e.clientY; updateCam();
+    });
+    renderer.domElement.addEventListener('wheel', e=>{ e.preventDefault(); radius=Math.max(30,Math.min(140,radius+e.deltaY*0.05)); updateCam(); }, {passive:false});
+    let pinchDist=null;
+    const touchDist=(a,b)=>Math.hypot(b.clientX-a.clientX,b.clientY-a.clientY);
+    renderer.domElement.addEventListener('touchstart', e=>{ if(e.touches.length===2){ pinchDist=touchDist(e.touches[0],e.touches[1]); dragging=false; } }, {passive:true});
+    renderer.domElement.addEventListener('touchmove', e=>{
+      if(e.touches.length===2 && pinchDist!==null){
+        e.preventDefault();
+        const d=touchDist(e.touches[0],e.touches[1]);
+        radius=Math.max(30,Math.min(140,radius-(d-pinchDist)*0.1));
+        pinchDist=d; updateCam();
+      }
+    }, {passive:false});
+    renderer.domElement.addEventListener('touchend', e=>{ if(e.touches.length<2) pinchDist=null; }, {passive:true});
+
+    function onResize(){
+      const w=container.clientWidth, h=container.clientHeight;
+      if(!w||!h) return;
+      camera.aspect=w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h);
+    }
+    window.addEventListener('resize', onResize);
+
+    three3d = { renderer, scene, camera, setPose3D, render:()=>renderer.render(scene,camera) };
+  }
+
+  // ---------- LOOP ANIMASI BERSAMA ----------
+  (function initAnimasi(){
+    let teknikAktif = 'pukulan';
+    let playing = true, speed = 1.0, manualFrac = 0, usingManual = false;
+    let startTime = null;
+
+    function applyPose(frac){
+      const pose = getPose(teknikAktif, frac);
+      setPose2D(pose);
+      if(three3d){ three3d.setPose3D(pose); three3d.render(); }
+      document.getElementById('animScrub').value = Math.round(frac*1000);
+    }
+
+    setPose2D(getPose('pukulan',0));
+
+    // init 3D lazily supaya tidak membebani saat scroll pertama kali
+    let started3D = false;
+    function ensure3D(){
+      if(started3D) return;
+      started3D = true;
+      initFig3D();
+      applyPose(usingManual ? manualFrac : 0);
+    }
+    const io = new IntersectionObserver(entries=>{
+      entries.forEach(en=>{ if(en.isIntersecting) ensure3D(); });
+    }, {threshold:0.1});
+    io.observe(document.getElementById('fig3d'));
+
+    function loop(ts){
+      requestAnimationFrame(loop);
+      if(usingManual) return;
+      if(!playing) return;
+      if(startTime===null) startTime = ts;
+      const durasi = TEKNIK[teknikAktif].durasi / speed;
+      const frac = ((ts-startTime)%durasi)/durasi;
+      applyPose(frac);
+    }
+    requestAnimationFrame(loop);
+
+    document.getElementById('segTeknik').querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.getElementById('segTeknik').querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        teknikAktif = btn.dataset.teknik;
+        startTime = null; usingManual=false;
+        applyPose(0);
+      });
+    });
+
+    const playBtn = document.getElementById('animPlayBtn');
+    playBtn.addEventListener('click', ()=>{
+      playing = !playing;
+      playBtn.textContent = playing ? '⏸ Jeda' : '▶ Putar';
+      if(playing){ usingManual=false; startTime=null; }
+    });
+
+    const scrub = document.getElementById('animScrub');
+    scrub.addEventListener('input', ()=>{
+      usingManual = true; playing = false; playBtn.textContent='▶ Putar';
+      manualFrac = (+scrub.value)/1000;
+      applyPose(manualFrac);
+    });
+
+    const speedInput = document.getElementById('animSpeed');
+    speedInput.addEventListener('input', ()=>{
+      speed = (+speedInput.value)/100;
+      document.getElementById('valAnimSpeed').textContent = speed.toFixed(2).replace(/0$/,'').replace(/\.$/,'') + '×';
+      startTime = null;
+    });
+  })();
+
+  // ---------- PETA DUNIA (Azimuthal Equidistant, rumus Snyder) ----------
+  const MAP_CENTER = {lat:21.4225, lon:39.8262, name:'Makkah al-Mukarramah'};
+  function aeqdProject(latDeg, lonDeg){
+    const R = 47;
+    const toRad = d => d*Math.PI/180;
+    const phi0 = toRad(MAP_CENTER.lat), lam0 = toRad(MAP_CENTER.lon);
+    const phi = toRad(latDeg), lam = toRad(lonDeg);
+    const dlam = lam - lam0;
+    let cosc = Math.sin(phi0)*Math.sin(phi) + Math.cos(phi0)*Math.cos(phi)*Math.cos(dlam);
+    cosc = Math.max(-1, Math.min(1, cosc));
+    const c = Math.acos(cosc);
+    if(c < 1e-6) return {x:50, y:50};
+    const k = c / Math.sin(c);
+    const X = k * Math.cos(phi) * Math.sin(dlam);
+    const Y = k * (Math.cos(phi0)*Math.sin(phi) - Math.sin(phi0)*Math.cos(phi)*Math.cos(dlam));
+    const scale = R / Math.PI;
+    return { x: 50 + X*scale, y: 50 - Y*scale };
+  }
+  const CONTINENTS = {
+    afrika: [[35,-6],[37,10],[32,32],[12,43],[2,45],[-4,40],[-26,33],[-34,20],[-29,17],[-17,12],[4,9],[6,-3],[15,-17],[21,-17],[31,-9],[35,-6]],
+    eurasia: [[37,-9],[43,-2],[51,-5],[58,6],[60,10],[70,25],[77,60],[77,100],[70,140],[60,163],[50,157],[43,132],[35,127],[22,113],[10,106],[6,100],[8,80],[17,73],[24,67],[25,57],[30,49],[37,36],[36,23],[37,-9]],
+    nusantara_land: [[5,95],[6,99],[1,104],[-3,106],[-6,106],[-8,114],[-8,119],[-2,120],[1,117],[4,109],[5,98],[5,95]],
+    australia: [[-11,131],[-12,136],[-16,145],[-24,153],[-33,151],[-38,145],[-35,137],[-32,126],[-25,114],[-20,114],[-14,126],[-11,131]],
+    amerika_utara: [[49,-123],[60,-140],[70,-155],[70,-128],[68,-95],[63,-80],[50,-56],[45,-60],[35,-76],[26,-80],[26,-97],[18,-95],[16,-92],[20,-105],[32,-117],[49,-123]],
+    amerika_selatan: [[12,-72],[11,-64],[5,-52],[-3,-44],[-13,-39],[-23,-43],[-34,-58],[-52,-68],[-54,-70],[-45,-73],[-33,-71],[-18,-70],[-5,-81],[4,-77],[12,-72]],
+  };
+
+  const PETA_SEJARAH = [
+    {id:'benihassan', name:'Beni Hassan, Mesir', lat:27.7, lon:30.8, era:'± 3000 SM', desc:'Relief makam Beni Hassan menggambarkan ratusan pasangan pegulat dalam berbagai teknik — dokumentasi visual tertua tentang sistem gulat yang sudah terstruktur.'},
+    {id:'olympiapankration', name:'Olympia, Yunani Kuno', lat:37.64, lon:21.63, era:'648 SM', desc:'Pankration — gabungan gulat dan pukulan dengan aturan sangat minim — resmi dipertandingkan di Olimpiade kuno.'},
+    {id:'shaolin', name:'Kuil Shaolin, Tiongkok', lat:34.5, lon:112.9, era:'Abad ke-5–6 M', desc:'Tradisi seni bela diri Shaolin berkembang di lingkungan biara, memadukan latihan fisik dengan disiplin spiritual.'},
+    {id:'nusantarasilat', name:'Nusantara', lat:-2, lon:118, era:'Abad ke-6–16 M', desc:'Silat berkembang sebagai rumpun beladiri lintas suku, sering menyatu dengan tarian dan musik pengiring.'},
+    {id:'japanjudo', name:'Jepang', lat:35.7, lon:139.7, era:'Abad ke-12–19 M', desc:'Jujutsu berkembang di kalangan samurai; akhir abad ke-19 Jigoro Kano menyaringnya menjadi judo modern.'},
+    {id:'brazilcapoeira', name:'Brasil', lat:-14, lon:-51, era:'Abad ke-16–19 M', desc:'Capoeira berkembang di kalangan masyarakat keturunan Afrika, memadukan gerak bertarung dengan musik dan tarian.'},
+    {id:'ayutthaya', name:'Ayutthaya, Siam', lat:14.35, lon:100.58, era:'Era Kerajaan Ayutthaya', desc:'Muay Boran berkembang sebagai keterampilan militer sekaligus hiburan rakyat, cikal bakal Muay Thai modern.'},
+    {id:'londonqueensberry', name:'London, Inggris', lat:51.5, lon:-0.1, era:'1867 M', desc:'Marquess of Queensberry Rules menetapkan kerangka aturan tinju modern yang masih dipakai hingga kini.'},
+  ];
+
+  const PETA_BANGSA = [
+    {id:'nusantara', name:'Nusantara — Silat', lat:-2, lon:118, era:'Rumpun beladiri', desc:'Rumpun beladiri yang sangat beragam antarwilayah, sering menyatu dengan seni pertunjukan, musik, dan nilai adat setempat.'},
+    {id:'tiongkok', name:'Tiongkok — Kung Fu / Wushu', lat:35, lon:105, era:'Ribuan aliran', desc:'Ribuan aliran dengan filosofi gerak berbeda-beda, dari yang meniru gerakan hewan hingga yang menekankan tenaga dalam.'},
+    {id:'jepang', name:'Jepang — Judo &amp; Jujutsu', lat:36, lon:138, era:'Modernisasi akhir abad ke-19', desc:'Berfokus pada bantingan, kuncian, dan memanfaatkan momentum lawan alih-alih kekuatan otot mentah.'},
+    {id:'brasil', name:'Brasil — Capoeira &amp; BJJ', lat:-14, lon:-51, era:'Abad ke-16 M – kini', desc:'Capoeira memadukan tarian dan pertarungan berirama musik; BJJ berkembang dari judo menjadi sistem gulat-kuncian lantai yang berpengaruh di beladiri campuran modern.'},
+    {id:'korea', name:'Korea — Taekwondo', lat:36.5, lon:127.8, era:'Standardisasi abad ke-20', desc:'Dikenal luas karena teknik tendangannya yang bervariasi dan bertenaga, dengan jangkauan gerak kaki sebagai ciri khas.'},
+    {id:'thailand', name:'Thailand — Muay Thai', lat:15, lon:101, era:'Era Ayutthaya – kini', desc:'"Seni delapan anggota tubuh" — kepalan, siku, lutut, dan tulang kering sebagai senjata sah.'},
+    {id:'inggris', name:'Inggris — Tinju Modern', lat:52, lon:-1.5, era:'Sejak 1867 M', desc:'Kerangka aturan Queensberry menjadikan tinju bersarung tangan dengan ronde tertulis sebagai standar dunia.'},
+    {id:'mesir', name:'Mesir — Gulat Tradisional', lat:26.8, lon:30.8, era:'Tradisi ribuan tahun', desc:'Salah satu tradisi gulat tertua yang terdokumentasi, dengan jejak berlanjut pada praktik gulat tradisional di Mesir dan Nubia hingga kini.'},
+  ];
+
+  (function initPeta(){
+    const svg = document.getElementById('mapsvg');
+    if(!svg) return;
+    const svgns = 'http://www.w3.org/2000/svg';
+    const labelsBox = document.getElementById('maplabels');
+    const infoBox = document.getElementById('mapinfo');
+    const R = 47;
+
+    let bg = `<circle class="sea" cx="50" cy="50" r="${R}"/>`;
+    [30,60,90,120,150,180].forEach(deg=>{
+      const r = R*(deg/180);
+      bg += `<circle class="distring${deg===180?' outer':''}" cx="50" cy="50" r="${r.toFixed(2)}"/>`;
+    });
+    for(let b=0;b<360;b+=30){
+      const rad = b*Math.PI/180;
+      const x2 = 50 + R*Math.sin(rad), y2 = 50 - R*Math.cos(rad);
+      bg += `<line class="radial" x1="50" y1="50" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}"/>`;
+    }
+    Object.values(CONTINENTS).forEach(pts=>{
+      const proj = pts.map(([la,lo])=>{ const q=aeqdProject(la,lo); return q.x.toFixed(2)+','+q.y.toFixed(2); }).join(' ');
+      bg += `<polygon class="landmass" points="${proj}"/>`;
+    });
+    const c0 = aeqdProject(MAP_CENTER.lat, MAP_CENTER.lon);
+    bg += `<circle class="center-pin" cx="${c0.x.toFixed(2)}" cy="${c0.y.toFixed(2)}" r="1.3"/>`;
+    svg.innerHTML = bg;
+
+    const centerLabel = document.createElement('div');
+    centerLabel.className = 'map-label center-label';
+    centerLabel.style.left = c0.x + '%';
+    centerLabel.style.top = c0.y + '%';
+    centerLabel.textContent = '◎ ' + MAP_CENTER.name;
+    labelsBox.appendChild(centerLabel);
+
+    function renderTab(tab){
+      svg.querySelectorAll('.pin').forEach(p=>p.remove());
+      labelsBox.querySelectorAll('.map-label:not(.center-label)').forEach(l=>l.remove());
+      const data = tab === 'sejarah' ? PETA_SEJARAH : PETA_BANGSA;
+      data.forEach(pt=>{
+        const q = aeqdProject(pt.lat, pt.lon);
+        const g = document.createElementNS(svgns,'g');
+        g.setAttribute('class','pin'); g.dataset.id = pt.id;
+        g.innerHTML = `<circle cx="${q.x.toFixed(2)}" cy="${q.y.toFixed(2)}" r="1.1"/>`;
+        g.addEventListener('click', ()=>selectPoint(pt));
+        svg.appendChild(g);
+
+        const label = document.createElement('div');
+        label.className = 'map-label';
+        label.dataset.id = pt.id;
+        label.style.left = q.x + '%';
+        label.style.top = q.y + '%';
+        label.textContent = pt.name;
+        label.addEventListener('click', ()=>selectPoint(pt));
+        labelsBox.appendChild(label);
+      });
+      infoBox.innerHTML = '<p>Pilih sebuah titik pada peta di atas.</p>';
+    }
+
+    function selectPoint(pt){
+      svg.querySelectorAll('.pin').forEach(p=>p.classList.toggle('active', p.dataset.id===pt.id));
+      labelsBox.querySelectorAll('.map-label').forEach(l=>l.classList.toggle('active', l.dataset.id===pt.id));
+      infoBox.innerHTML = `<span class="era-tag">${pt.era}</span><h3>${pt.name}</h3><p>${pt.desc}</p>`;
+    }
+
+    const segTab = document.getElementById('segPetaTab');
+    segTab.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        segTab.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        renderTab(btn.dataset.tab);
+      });
+    });
+
+    renderTab('sejarah');
+  })();
+
+  // ---------- TOGGLE DAFTAR (Sejarah / per Bangsa) ----------
+  document.querySelectorAll('.btn-toggle-list').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const target = document.getElementById(btn.dataset.target);
+      const isOpen = target.classList.toggle('open');
+      btn.classList.toggle('open', isOpen);
+      btn.textContent = isOpen ? btn.dataset.open : btn.dataset.closed;
+    });
+  });
+</script>
+
+</body>
+</html>

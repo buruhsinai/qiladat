@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kenapa Selalu Kaca? — Laboratorium JAZMI</title>
+<style>
+  :root{
+    --bg:#0a1512; --bg2:#0f1e19; --card:#122420; --card2:#16302a; --line:#1f3d34;
+    --emerald:#22c98a; --emerald-dim:#0e6b4f; --gold:#e0b354; --text:#e9f3ee;
+    --muted:#8fada0; --danger:#e07a5f; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:'Georgia','Iowan Old Style',serif; line-height:1.65;}
+  .sans{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;}
+  header{padding:34px 20px 24px; text-align:center; background:radial-gradient(ellipse at top, #113b2e 0%, var(--bg) 70%); border-bottom:1px solid var(--line);}
+  header .kicker{font-family:-apple-system,sans-serif; letter-spacing:.14em; text-transform:uppercase; font-size:12px; color:var(--gold); margin-bottom:10px;}
+  header h1{font-size:1.4rem; margin:0 0 10px; font-weight:600; line-height:1.35;}
+  header p{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px; max-width:640px; margin:0 auto;}
+  nav.tabs{position:sticky; top:0; z-index:10; display:flex; overflow-x:auto; gap:6px; padding:10px 14px; background:rgba(10,21,18,.96); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); font-family:-apple-system,sans-serif; -webkit-overflow-scrolling:touch;}
+  nav.tabs a{flex:0 0 auto; padding:7px 13px; border-radius:999px; font-size:12.5px; color:var(--muted); text-decoration:none; border:1px solid var(--line); white-space:nowrap;}
+  main{max-width:780px; margin:0 auto; padding:8px 18px 60px;}
+  section{padding:32px 0; border-bottom:1px solid var(--line);}
+  section:last-child{border-bottom:none;}
+  h2{font-size:1.1rem; color:var(--emerald); margin:0 0 6px; display:flex; align-items:center; gap:8px;}
+  h2 .num{font-family:-apple-system,sans-serif; font-size:11px; background:var(--emerald-dim); color:#dff7ec; padding:2px 8px; border-radius:6px;}
+  h3{color:var(--gold); font-size:1rem; margin:20px 0 8px;}
+  p{margin:0 0 14px; font-size:15.5px;}
+  .lead{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px; margin:14px 0;}
+  .qbox{background:var(--card2); border-left:3px solid var(--gold); border-radius:8px; padding:14px 16px; margin:16px 0; font-style:italic; color:#f0e6cc; font-size:14.5px;}
+  ul{padding-left:20px; margin:10px 0;} li{margin-bottom:7px; font-size:15px;}
+  .sourceline{font-family:-apple-system,sans-serif; font-size:11.5px; color:var(--muted); margin-top:6px; padding-top:6px; border-top:1px dashed var(--line);}
+  .warn{background:#241407; border:1px solid #5c3a12; border-radius:10px; padding:14px 16px; margin:14px 0; font-family:-apple-system,sans-serif; font-size:13.5px; color:#f0d3a8;}
+  .warn b{color:var(--gold);}
+  .insight{background:#0e2a20; border-left:3px solid var(--emerald); border-radius:8px; padding:14px 16px; margin:14px 0; font-family:-apple-system,sans-serif; font-size:14px; color:#dff7ec;}
+  .insight .lbl{color:var(--emerald); font-size:11px; text-transform:uppercase; letter-spacing:.08em; display:block; margin-bottom:6px; font-weight:700;}
+
+  .thread-grid{display:flex; flex-direction:column; gap:10px;}
+  .thread-card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px;}
+  .thread-card .tag{font-family:-apple-system,sans-serif; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--gold); margin-bottom:4px; display:block;}
+  .thread-card h4{margin:0 0 8px; font-size:1.02rem;}
+  .thread-card p{font-size:14px; margin-bottom:0;}
+
+  /* material simulator */
+  .material-sim{font-family:-apple-system,sans-serif; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px;}
+  .material-row{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;}
+  .material-btn{flex:1; min-width:70px; text-align:center; padding:10px 6px; border-radius:9px; border:1.5px solid var(--line); background:var(--card2); font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer;}
+  .material-btn.active{background:#0e2a20; color:var(--emerald); border-color:var(--emerald);}
+  .criteria-list{display:flex; flex-direction:column; gap:8px; margin-top:10px;}
+  .criteria-row{display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px; background:var(--bg2);}
+  .criteria-icon{width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; flex:0 0 auto;}
+  .criteria-icon.pass{background:#0e2a20; color:var(--emerald);}
+  .criteria-icon.fail{background:#3a1414; color:var(--danger);}
+  .criteria-text{font-size:12.5px;}
+  .material-verdict{margin-top:12px; padding:12px; border-radius:8px; text-align:center; font-size:13.5px; font-weight:700;}
+
+  /* vacuum simulator */
+  .vac-sim{font-family:-apple-system,sans-serif; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px;}
+  .vac-sim label{font-size:13px; color:var(--muted); display:block; margin-bottom:6px;}
+  .vac-sim input[type=range]{width:100%; accent-color:var(--emerald); margin-bottom:14px;}
+  .val{color:var(--gold); font-weight:700;}
+  .tube-viz{background:var(--bg2); border-radius:10px; border:1px solid var(--line); padding:8px;}
+  .tube-viz svg{width:100%; height:auto;}
+
+  .timeline-card{font-family:-apple-system,sans-serif; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin:14px 0;}
+  .timeline-card input[type=range]{width:100%; accent-color:var(--gold); margin-bottom:14px;}
+  .timeline-entry{display:flex; gap:10px; padding:8px 0; border-bottom:1px dashed var(--line); font-size:13px;}
+  .timeline-entry:last-child{border-bottom:none;}
+  .timeline-year{flex:0 0 55px; font-weight:700;}
+  .timeline-fade{opacity:0.25;}
+  .thread-A{color:#e0b354;} .thread-B{color:#22c98a;} .thread-C{color:#7fa8d8;}
+
+  .expand-grid{display:flex; flex-direction:column; gap:8px;}
+  .expand-card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; font-family:-apple-system,sans-serif; font-size:13px;}
+  .expand-card b{color:var(--gold);}
+
+  .refs{font-family:-apple-system,sans-serif; font-size:12.5px; color:var(--muted);} .refs li{margin-bottom:8px;}
+  footer{text-align:center; padding:30px 20px; color:var(--muted); font-family:-apple-system,sans-serif; font-size:12px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kicker">Laboratorium JAZMI · Sains &amp; Sejarah Material · Prekuel "Botol-Botol Listrik"</div>
+  <h1>Kenapa Selalu Kaca? Jejak Tiga Jalur Sebelum Tabung Elektronik</h1>
+  <p>Level 1–5. Menjawab pertanyaan yang jarang ditanyakan: kenapa orang-orang dulu memilih kaca untuk bereksperimen dengan listrik — dan ternyata jawabannya bukan satu jalur, tapi tiga jalur yang berjalan sendiri-sendiri.</p>
+</header>
+
+<nav class="tabs">
+  <a href="#belajar">Belajar</a>
+  <a href="#pertanyaan">Pertanyaan Ilmiah</a>
+  <a href="#jalurA">Jalur A: Guci Leyden</a>
+  <a href="#jalurB">Jalur B: Tabung Geissler</a>
+  <a href="#simulator1">Simulator Pemilihan Material</a>
+  <a href="#simulator2">Simulator Kualitas Vakum</a>
+  <a href="#timeline">Garis Waktu Tiga Jalur</a>
+  <a href="#ekspansi">Ekspansi ke Bidang Lain</a>
+  <a href="#batasan">Batasan</a>
+  <a href="#referensi">Referensi</a>
+</nav>
+
+<main>
+
+  <section id="belajar">
+    <h2><span class="num">01</span>Belajar</h2>
+    <p>Dugaan Anda benar untuk dicurigai: <strong>tidak ada momen "aha" tunggal</strong> di mana seseorang melihat percobaan Benjamin Franklin lalu tiba-tiba berpikir "coba masukkan ke botol". Yang sebenarnya terjadi jauh lebih menarik — ada <strong>tiga jalur riset yang berjalan sendiri-sendiri</strong>, di negara dan dekade berbeda, semuanya kebetulan memakai kaca, dan baru berabad-abad kemudian bertemu jadi tabung elektronik.</p>
+    <p>Bahkan lebih mengejutkan: guci penyimpan listrik pertama (Leyden jar) sudah ada tahun <strong>1745</strong> — tujuh tahun <em>sebelum</em> Franklin menerbangkan layang-layangnya (1752)! Franklin bukan orang yang "memulai" ide kaca — dia justru salah satu <em>pengguna</em> teknologi kaca yang sudah ada duluan.</p>
+    <div class="qbox">"Pertanyaannya bukan 'kenapa mereka berpikir ke arah kaca', tapi 'kaca sudah ada di mana-mana di laboratorium mereka — pertanyaan sebenarnya adalah kenapa tidak ada bahan lain yang jadi pilihan'."</div>
+  </section>
+
+  <section id="pertanyaan">
+    <h2><span class="num">02</span>Pertanyaan Ilmiah</h2>
+    <ul>
+      <li>Jalur riset apa saja yang independen satu sama lain, tapi sama-sama berujung ke kaca?</li>
+      <li>Kenapa Leyden jar — wadah listrik pertama dalam sejarah — justru berawal dari sebuah botol obat?</li>
+      <li>Apa peran tukang kaca (bukan cuma ilmuwan) dalam lahirnya tabung vakum?</li>
+      <li>Sifat fisik apa yang membuat kaca lolos sebagai satu-satunya kandidat, dibanding kayu, logam, keramik, atau kertas?</li>
+      <li>Bagaimana kualitas pompa vakum yang terus membaik mengubah apa yang bisa diamati di dalam tabung?</li>
+    </ul>
+  </section>
+
+  <section id="jalurA">
+    <h2><span class="num">03</span>Jalur A: Guci Leyden — Lahir dari Kecelakaan Botol Obat</h2>
+    <p>Oktober 1745, seorang pendeta-ilmuwan Jerman bernama <strong>Ewald Georg von Kleist</strong> sedang mencoba menangkap "cairan listrik" ke dalam sebotol alkohol — memakai <em>botol obat kecil</em> biasa (apothecary's phial), dengan paku ditusukkan lewat gabus penutupnya. Ia menyambungkan paku itu ke mesin gesek listrik. Tidak ada yang tampak terjadi — tapi begitu ia menyentuh paku itu, ia tersengat kejut yang luar biasa kuat.</p>
+    <p>Independen di Belanda, <strong>Pieter van Musschenbroek</strong> di Universitas Leiden menemukan hal serupa awal 1746 — dari sinilah nama "Leyden jar" berasal. Franklin sendiri kelak memakai guci Leyden dalam eksperimen layang-layangnya (1752) — <strong>ia pengguna, bukan penemu ide "botol + listrik"</strong>.</p>
+    <div class="insight">
+      <span class="lbl">Kenapa botol obat, bukan sengaja dirancang?</span>
+      Von Kleist memang tidak sedang mencoba "menciptakan alat penyimpan listrik" — ia memakai botol kaca karena itulah wadah standar yang tersedia di meja kerjanya, sama seperti alat lab kimia/farmasi lain di masanya. Kaca sudah jadi bahan wadah default jauh sebelum listrik jadi topik penelitian.
+    </div>
+    <div class="sourceline">Sumber: Wikipedia (Leyden jar), EBSCO Research Starters, Britannica, ETHW.org.</div>
+  </section>
+
+  <section id="jalurB">
+    <h2><span class="num">04</span>Jalur B: Tabung Geissler — Saat Tukang Kaca Bertemu Fisikawan</h2>
+    <p>Satu abad kemudian dan jalur sama sekali berbeda: tahun 1857 di Bonn, Jerman, fisikawan <strong>Julius Plücker</strong> bekerja sama dengan <strong>Heinrich Geissler</strong> — yang jabatannya bukan ilmuwan, melainkan <strong>tukang tiup kaca (glassblower) profesional</strong>. Geissler baru saja menyempurnakan pompa vakum merkuri, mampu menyedot udara jauh lebih baik dari sebelumnya.</p>
+    <p>Gabungan keduanya — kemampuan Geissler membentuk kaca jadi tabung tersegel presisi, dan pertanyaan Plücker soal apa yang terjadi kalau listrik dialirkan lewat ruang nyaris hampa — melahirkan <strong>Tabung Geissler</strong>: cahaya neon-fluoresen indah yang disebut Plücker sendiri "incomparably beautiful". Belakangan, <strong>William Crookes</strong> memakai pompa yang lebih baik lagi (dibuat asistennya, Charles Gimingham, 1876) untuk menyedot udara lebih habis lagi — dan dari situ ditemukan <em>sinar katode</em>, yang tahun 1897 terbukti J.J. Thomson sebagai partikel baru: elektron.</p>
+    <div class="insight">
+      <span class="lbl">Peran krusial yang sering terlewat</span>
+      Terobosan ini bukan cuma soal ide fisika — <strong>tanpa keahlian tukang kaca profesional membuat segel udara-tertutup presisi, tidak ada eksperimen yang bisa dijalankan sama sekali</strong>. Kaca bukan dipilih karena "cocok secara teori" — kaca dipilih karena sudah ada industri pengrajin kaca matang yang bisa mewujudkan apa pun bentuk yang dibutuhkan fisikawan.
+    </div>
+    <div class="sourceline">Sumber: Wikipedia (Geissler tube, Crookes tube), SPARK Museum of Electrical Invention, ChemTeam Cathode Ray Tube History.</div>
+  </section>
+
+  <section id="simulator1">
+    <h2><span class="num">05</span>Simulator: Kenapa Kaca "Menang" Lewat Eliminasi</h2>
+    <p class="lead">Pilih bahan, lihat apakah ia lolos semua syarat yang dibutuhkan eksperimen listrik-vakum abad ke-18/19.</p>
+    <div class="material-sim">
+      <div class="material-row" id="materialRow"></div>
+      <div class="criteria-list" id="criteriaList"></div>
+      <div class="material-verdict" id="materialVerdict"></div>
+    </div>
+  </section>
+
+  <section id="simulator2">
+    <h2><span class="num">06</span>Simulator: Kualitas Vakum Mengubah Segalanya</h2>
+    <p class="lead">Geser kualitas pompa vakum dari yang paling awal (Geissler, 1857) ke yang paling baik (Crookes, 1870-an) — lihat bagaimana yang terlihat di dalam tabung berubah drastis.</p>
+    <div class="vac-sim">
+      <label>Kualitas Vakum: <span class="val" id="vacVal">Geissler (awal)</span></label>
+      <input type="range" id="vacRange" min="0" max="100" step="1" value="20">
+      <div class="tube-viz">
+        <svg id="vacSVG" viewBox="0 0 380 140" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="readout-line" id="vacReadout" style="margin-top:10px; padding:10px; border-radius:8px; background:var(--bg2); text-align:center; font-size:13px;"></div>
+    </div>
+  </section>
+
+  <section id="timeline">
+    <h2><span class="num">07</span>Garis Waktu Tiga Jalur (Berjalan Sendiri-Sendiri)</h2>
+    <div class="timeline-card">
+      <label>Tahun: <span class="val" id="yearVal3">1900</span></label>
+      <input type="range" id="yearRange3" min="1740" max="1910" step="2" value="1900">
+      <div id="timelineList3"></div>
+    </div>
+  </section>
+
+  <section id="ekspansi">
+    <h2><span class="num">08</span>Ekspansi: Pola yang Sama di Bidang Lain</h2>
+    <p class="lead">Pola "kerajinan yang sudah matang duluan menentukan ke mana sains berikutnya bisa melangkah" ini bukan cuma soal kaca &amp; listrik — ini pola berulang dalam sejarah teknologi:</p>
+    <div class="expand-grid">
+      <div class="expand-card"><b>Percetakan Gutenberg (~1440)</b> — mesin cetaknya sendiri sebenarnya adaptasi dari mesin pemeras anggur/minyak zaitun yang sudah dipakai berabad-abad; yang baru cuma huruf logam lepasnya.</div>
+      <div class="expand-card"><b>Teleskop (1608)</b> — lahir dari kerajinan pengasah lensa kacamata yang sudah matang di Belanda, bukan dari teori optik baru.</div>
+      <div class="expand-card"><b>Mesin uap Newcomen (1712)</b> — memakai keahlian tukang besi/logam tambang yang sudah terlatih membuat silinder presisi untuk pompa air manual sebelumnya.</div>
+      <div class="expand-card"><b>Fotografi awal (1830-an)</b> — bergantung penuh pada industri optik lensa &amp; kimia perak yang sudah berkembang untuk keperluan lain (lukisan, farmasi).</div>
+    </div>
+    <p style="margin-top:12px;">Pola umumnya: <strong>terobosan besar jarang lahir dari kekosongan — ia lahir saat pertanyaan ilmiah baru bertemu kerajinan/industri lama yang kebetulan sudah punya alat yang tepat.</strong></p>
+  </section>
+
+  <section id="batasan">
+    <h2><span class="num">09</span>Batasan</h2>
+    <ul>
+      <li>Tiga jalur ini disederhanakan sebagai narasi linear untuk kejelasan — realitasnya banyak eksperimen paralel/tumpang tindih lain terjadi di periode yang sama, tidak semuanya tercatat di sini.</li>
+      <li>Simulator pemilihan material adalah penilaian kualitatif berdasar sifat fisik umum bahan — bukan pengujian laboratorium sungguhan tiap kandidat material di kondisi abad ke-18/19.</li>
+      <li>Bagian "Ekspansi" adalah pola umum yang diamati lintas sejarah teknologi — bukan klaim bahwa semua inovasi mengikuti pola ini tanpa kecuali.</li>
+      <li>Ini pelengkap/prekuel dari tool "Botol-Botol Listrik" — untuk fisika triode &amp; flip-flop, rujuk tool tersebut.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <h2><span class="num">10</span>Referensi</h2>
+    <ul class="refs">
+      <li>Wikipedia — Leyden jar, Ewald Georg von Kleist, Geissler tube, Crookes tube, Heinrich Geißler.</li>
+      <li>EBSCO Research Starters — "Invention of the Leyden Jar".</li>
+      <li>Britannica — "Leyden jar", "Electromagnetism: Invention of the Leyden Jar".</li>
+      <li>ETHW.org (Engineering and Technology History Wiki) — "Leyden jar".</li>
+      <li>SPARK Museum of Electrical Invention — "Incomparably Beautiful", "Geissler, Crookes and the CRT".</li>
+      <li>ChemTeam — "Cathode Ray Tube History".</li>
+      <li>KathyLovesPhysics.com — "The Origin of the Cathode Ray Tube".</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  Laboratorium JAZMI — Jalinan Zamrud Islamiah · Belajar → Model → Uji → Tool<br>
+  Prekuel dari "Botol-Botol Listrik". Versi pengembangan awal.
+</footer>
+
+<script>
+/* ================= SIMULATOR 1: MATERIAL ================= */
+const MATERIALS = {
+  "Kaca": {tembus:true, isolator:true, presisi:true, tahanPanas:true, kedap:true},
+  "Kayu": {tembus:false, isolator:true, presisi:false, tahanPanas:false, kedap:false},
+  "Logam": {tembus:false, isolator:false, presisi:true, tahanPanas:true, kedap:true},
+  "Keramik": {tembus:false, isolator:true, presisi:false, tahanPanas:true, kedap:true},
+  "Kertas/Kain": {tembus:false, isolator:true, presisi:false, tahanPanas:false, kedap:false}
+};
+const CRITERIA = [
+  {key:'tembus', label:'Tembus pandang (bisa diamati dari luar)'},
+  {key:'isolator', label:'Isolator listrik (tidak menghantar)'},
+  {key:'presisi', label:'Bisa dibentuk presisi jadi tabung/segel'},
+  {key:'tahanPanas', label:'Tahan panas (untuk filamen/pembakaran)'},
+  {key:'kedap', label:'Bisa disegel benar-benar kedap udara'}
+];
+let currentMaterial = 'Kaca';
+const materialRow = document.getElementById('materialRow');
+Object.keys(MATERIALS).forEach(m=>{
+  const btn = document.createElement('div');
+  btn.className = 'material-btn' + (m===currentMaterial?' active':'');
+  btn.textContent = m;
+  btn.addEventListener('click', ()=>{
+    currentMaterial = m;
+    [...materialRow.children].forEach(c=>c.classList.remove('active'));
+    btn.classList.add('active');
+    updateMaterialSim();
+  });
+  materialRow.appendChild(btn);
+});
+function updateMaterialSim(){
+  const props = MATERIALS[currentMaterial];
+  const listEl = document.getElementById('criteriaList');
+  listEl.innerHTML = '';
+  let passCount = 0;
+  CRITERIA.forEach(c=>{
+    const pass = props[c.key];
+    if(pass) passCount++;
+    const row = document.createElement('div');
+    row.className = 'criteria-row';
+    row.innerHTML = `<div class="criteria-icon ${pass?'pass':'fail'}">${pass?'✓':'✕'}</div><div class="criteria-text">${c.label}</div>`;
+    listEl.appendChild(row);
+  });
+  const verdict = document.getElementById('materialVerdict');
+  if(passCount===5){
+    verdict.style.background = '#0e2a20'; verdict.style.color='#22c98a';
+    verdict.textContent = `${currentMaterial}: lolos SEMUA syarat — inilah kenapa kaca jadi satu-satunya pilihan wajar.`;
+  } else {
+    verdict.style.background = '#3a1414'; verdict.style.color='#e07a5f';
+    verdict.textContent = `${currentMaterial}: hanya lolos ${passCount}/5 syarat — gagal dipakai untuk eksperimen vakum/listrik terkendali.`;
+  }
+}
+updateMaterialSim();
+
+/* ================= SIMULATOR 2: VAKUM ================= */
+const vacRange = document.getElementById('vacRange');
+const vacVal = document.getElementById('vacVal');
+function updateVacuum(){
+  const v = parseInt(vacRange.value);
+  let label, desc, glowColor, darkSpaceFrac;
+  if(v<25){ label='Udara Biasa (belum divakum)'; desc='Tidak ada aliran listrik terlihat — udara terlalu rapat, elektron tidak bisa bergerak jauh.'; glowColor='none'; darkSpaceFrac=0; }
+  else if(v<55){ label='Geissler (1857, vakum sedang)'; desc='Cahaya fluoresen memenuhi hampir seluruh tabung — "incomparably beautiful" kata Plücker.'; glowColor='#a855c9'; darkSpaceFrac=0.15; }
+  else if(v<80){ label='Hittorf (1869, vakum lebih baik)'; desc='Mulai muncul "ruang gelap" di dekat katode — cahaya makin terdorong ke ujung tabung.'; glowColor='#7a3fa8'; darkSpaceFrac=0.5; }
+  else { label='Crookes (1870-an, vakum tinggi)'; desc='Hampir seluruh tabung gelap — hanya ujung jauh yang berpendar hijau. Inilah sinar katode murni, cikal bakal penemuan elektron (1897).'; glowColor='#2a5a2a'; darkSpaceFrac=0.9; }
+  vacVal.textContent = label;
+
+  const W=380,H=140;
+  let html = `<rect x="20" y="40" width="340" height="60" rx="30" fill="#050a08" stroke="#3a5a50" stroke-width="2"/>`;
+  html += `<rect x="25" y="55" width="14" height="30" fill="#7a5a3a"/>`;
+  html += `<text x="32" y="105" font-size="9" fill="#8fada0" text-anchor="middle" font-family="sans-serif">katode</text>`;
+  const darkEnd = 40 + darkSpaceFrac*300;
+  if(glowColor!=='none'){
+    html += `<rect x="${darkEnd}" y="45" width="${360-darkEnd}" height="50" fill="${glowColor}" opacity="0.55"/>`;
+  }
+  html += `<rect x="325" y="55" width="14" height="30" fill="#7fa8d8"/>`;
+  html += `<text x="332" y="105" font-size="9" fill="#8fada0" text-anchor="middle" font-family="sans-serif">anode</text>`;
+  document.getElementById('vacSVG').innerHTML = html;
+  document.getElementById('vacReadout').textContent = desc;
+}
+vacRange.addEventListener('input', updateVacuum);
+updateVacuum();
+
+/* ================= TIMELINE TIGA JALUR ================= */
+const TIMELINE3 = [
+  {year:1745, thread:'A', text:"Von Kleist menemukan guci Leyden dari botol obat — tanpa sengaja."},
+  {year:1746, thread:'A', text:"Musschenbroek menemukan hal serupa independen di Leiden."},
+  {year:1752, thread:'A', text:"Franklin memakai guci Leyden dalam eksperimen layang-layang."},
+  {year:1855, thread:'B', text:"Geissler menyempurnakan pompa vakum merkuri."},
+  {year:1857, thread:'B', text:"Geissler & Plücker menciptakan tabung Geissler."},
+  {year:1858, thread:'B', text:"Plücker menunjukkan cahaya tabung bisa dibelokkan magnet."},
+  {year:1868, thread:'C', text:"Frederick Guthrie mengamati emisi termionik pada bola logam panas."},
+  {year:1869, thread:'B', text:"Hittorf memakai vakum lebih baik, menemukan 'ruang gelap'."},
+  {year:1876, thread:'B', text:"Gimingham (asisten Crookes) membuat pompa vakum jauh lebih baik."},
+  {year:1878, thread:'B', text:"Crookes meneliti sinar katode secara sistematis."},
+  {year:1880, thread:'C', text:"Edison mengamati 'efek Edison' saat mengembangkan bola lampu."},
+  {year:1897, thread:'B', text:"J.J. Thomson membuktikan sinar katode adalah partikel baru: elektron."},
+  {year:1904, thread:'C', text:"Fleming menciptakan dioda vakum pertama, memakai efek Edison."},
+  {year:1906, thread:'C', text:"De Forest menambah grid, lahir triode — tiga jalur akhirnya bertemu."}
+];
+const yearRange3 = document.getElementById('yearRange3');
+const yearVal3 = document.getElementById('yearVal3');
+function updateTimeline3(){
+  const y = parseInt(yearRange3.value);
+  yearVal3.textContent = y;
+  const listEl = document.getElementById('timelineList3');
+  listEl.innerHTML = '';
+  TIMELINE3.forEach(item=>{
+    const div = document.createElement('div');
+    div.className = 'timeline-entry' + (item.year>y ? ' timeline-fade' : '');
+    div.innerHTML = `<div class="timeline-year thread-${item.thread}">${item.year}</div><div>${item.text}</div>`;
+    listEl.appendChild(div);
+  });
+}
+yearRange3.addEventListener('input', updateTimeline3);
+updateTimeline3();
+</script>
+
+</body>
+</html>

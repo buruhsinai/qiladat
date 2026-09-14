@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Navigasi Bintang Kutub — JAZMI</title>
+<style>
+  :root{
+    --bg:#0a0e1a;
+    --panel:#111529;
+    --panel2:#171c33;
+    --star:#e8ecf5;
+    --gold:#e0c060;
+    --cyan:#6fd4c8;
+    --text:#e2e6ef;
+    --text-soft:#8b93ac;
+    --line:#252b47;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;line-height:1.65;position:relative;}
+  .starfield{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.5;}
+  .wrap{max-width:920px;margin:0 auto;padding:36px 20px 70px;position:relative;z-index:1;}
+  .eyebrow{color:var(--gold);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}
+  h1{font-family:Georgia,"Iowan Old Style",serif;font-weight:normal;font-size:clamp(23px,4.3vw,33px);margin:0 0 10px;}
+  h2{font-family:Georgia,"Iowan Old Style",serif;font-weight:normal;font-size:20px;color:var(--cyan);margin:42px 0 12px;border-bottom:1px solid var(--line);padding-bottom:8px;}
+  p{color:var(--text-soft);font-size:15px;}
+  .lede{color:var(--text);font-size:15.5px;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:22px 24px;}
+  .tabrow{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+  .tabrow button{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:10px 18px;border-radius:6px;font-size:14px;cursor:pointer;}
+  .tabrow button.active{border-color:var(--gold);background:#332c14;color:var(--gold);}
+  .field{margin:16px 0;}
+  .field label{display:block;font-size:13px;color:var(--text-soft);margin-bottom:8px;}
+  input[type=range]{width:100%;accent-color:var(--cyan);}
+  svg{display:block;width:100%;height:auto;}
+  .readout{background:#141b0c22;border:1px solid var(--gold);border-radius:8px;padding:16px 20px;margin-top:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;}
+  .readout .item .label{font-size:11px;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.5px;}
+  .readout .item .value{font-size:19px;color:var(--gold);font-weight:600;}
+  ul{color:var(--text-soft);font-size:14.5px;padding-left:20px;}
+  li{margin-bottom:6px;}
+  .refs li{font-size:13px;}
+  footer{margin-top:44px;font-size:12px;color:var(--text-soft);border-top:1px solid var(--line);padding-top:16px;}
+  .panelgrp{display:none;}
+  .panelgrp.active{display:block;}
+</style>
+</head>
+<body>
+<svg class="starfield" id="starfieldSvg"></svg>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Laboratorium alat · JAZMI</p>
+    <h1>Navigasi bintang kutub</h1>
+    <p class="lede">Dua teknik penentu arah dari bintang — bukan matahari, dan mekanismenya benar-benar beda dari alat sebelumnya: satu pakai koreksi sudut jam (Polaris di belahan utara), satu lagi murni geometri perpanjangan garis tanpa hitungan sama sekali (Salib Selatan di belahan selatan, karena tidak ada bintang kutub terang di sana).</p>
+  </header>
+
+  <h2>Belajar</h2>
+  <div class="panel">
+    <h3 style="color:var(--text);font-size:15px;margin-top:0;">1. Polaris (belahan utara)</h3>
+    <p>Polaris kebetulan terletak sangat dekat sumbu rotasi Bumi bagian utara, sehingga altitude-nya di atas cakrawala kira-kira sama dengan lintang pengamat — di ekuator altitude-nya 0°, di Kutub Utara altitude-nya 90°. Tapi Polaris tidak persis di titik kutub langit; jaraknya sekitar 0,75° dari titik itu, dan ia berputar dalam lingkaran kecil mengelilinginya sekali sehari (mengikuti rotasi Bumi). Karena itu, altitude Polaris yang teramati berosilasi sedikit di atas dan di bawah lintang sebenarnya, tergantung posisinya dalam lingkaran kecil itu — inilah yang disebut "koreksi Polaris" dalam tabel navigasi klasik.</p>
+    <h3 style="color:var(--text);font-size:15px;">2. Salib Selatan (belahan selatan)</h3>
+    <p>Tidak ada bintang terang dekat Kutub Selatan langit, jadi pelaut belahan selatan memakai cara yang sama sekali berbeda: geometri, bukan pengukuran altitude. Rasi Salib Selatan (Crux) punya sumbu panjang (dari Gacrux ke Acrux); perpanjang garis itu sekitar 4,5 kali panjangnya, dan Anda akan tiba dekat Kutub Selatan langit. Sebagai pengecekan silang, dua "bintang penunjuk" (Alpha dan Beta Centauri) juga bisa dipakai: tarik garis tegak lurus dari titik tengah keduanya, dan garis itu akan berpotongan dengan perpanjangan sumbu Salib Selatan tepat di dekat titik kutub yang sama. Metode ini bekerja kapan pun malam itu — Salib Selatan berputar mengelilingi kutub sepanjang malam, tapi arah sumbunya selalu menunjuk ke titik yang sama.</p>
+  </div>
+
+  <h2>Eksplorasi</h2>
+  <div class="panel">
+    <div class="tabrow" id="tabRow">
+      <button data-tab="polaris" class="active">Metode Polaris</button>
+      <button data-tab="crux">Metode Salib Selatan</button>
+    </div>
+
+    <div class="panelgrp active" id="panel-polaris">
+      <svg id="polarisSvg" viewBox="0 0 400 300" role="img" aria-label="Simulator metode Polaris"></svg>
+      <div class="field">
+        <label>Altitude Polaris teramati — <span id="altLabel"></span></label>
+        <input type="range" id="obsAlt" min="0" max="70" value="35" step="0.1">
+      </div>
+      <div class="field">
+        <label>Sudut jam Polaris dalam lingkaran hariannya — <span id="haLabel"></span></label>
+        <input type="range" id="hourAngle" min="0" max="360" value="0" step="1">
+      </div>
+      <div class="readout">
+        <div class="item"><div class="label">Koreksi Polaris</div><div class="value" id="corrOut"></div></div>
+        <div class="item"><div class="label">Lintang sebenarnya</div><div class="value" id="latOut"></div></div>
+      </div>
+    </div>
+
+    <div class="panelgrp" id="panel-crux">
+      <svg id="cruxSvg" viewBox="0 0 400 400" role="img" aria-label="Simulator metode Salib Selatan"></svg>
+      <div class="field">
+        <label>Rotasi Salib Selatan malam ini — <span id="rotLabel"></span></label>
+        <input type="range" id="cruxRot" min="0" max="360" value="20" step="1">
+      </div>
+      <div class="readout">
+        <div class="item"><div class="label">Metode 1: perpanjangan sumbu 4,5×</div><div class="value" id="method1Out">Menunjuk kutub</div></div>
+        <div class="item"><div class="label">Metode 2: bisektor bintang penunjuk</div><div class="value" id="method2Out">Menunjuk kutub</div></div>
+      </div>
+      <p style="font-size:12.5px;color:var(--text-soft);margin-top:8px;">Geser rotasinya — kedua garis akan selalu berpotongan dekat titik kutub selatan langit yang sama (titik cyan tetap), berapa pun jam malamnya. Itulah yang membuat metode ini andal tanpa perlu tahu waktu sama sekali.</p>
+    </div>
+  </div>
+
+  <h2>Metode</h2>
+  <div class="panel">
+    <p><strong>Polaris:</strong> koreksi = 0,75° × cos(sudut jam Polaris), lalu lintang = altitude teramati − koreksi. Sudut jam 0° berarti Polaris persis di atas titik kutub (koreksi maksimum positif, altitude teramati sedikit lebih tinggi dari lintang sebenarnya), 180° berarti persis di bawah titik kutub (koreksi maksimum negatif), 90°/270° berarti di samping kutub (koreksi mendekati nol).</p>
+    <p><strong>Salib Selatan:</strong> murni konstruksi geometris — tidak ada rumus trigonometri yang dihitung pengguna di lapangan. Simulator menggambar ulang posisi lima bintang (Crux + dua penunjuk) pada sudut rotasi yang dipilih, lalu menghitung ulang titik potong dua garis metode itu secara otomatis untuk membuktikan bahwa hasilnya konsisten pada sudut rotasi berapa pun.</p>
+  </div>
+
+  <h2>Batasan</h2>
+  <div class="panel">
+    <ul>
+      <li>Jarak Polaris ke kutub langit sebenarnya (≈0,75°) perlahan berubah karena presesi sumbu Bumi — angka ini akurat untuk sekitar masa kini, bukan untuk masa lampau atau masa depan jauh (misalnya era Elizabethan, jaraknya lebih dari 3°, seperti dicatat sumber yang saya baca).</li>
+      <li>Model koreksi Polaris di sini disederhanakan jadi fungsi kosinus murni terhadap "sudut jam" — navigasi profesional sungguhan memakai tabel koreksi (mis. Pub. 249) yang juga memperhitungkan lintang pengamat dan bulan dalam tahun secara lebih rinci.</li>
+      <li>Metode Salib Selatan diketahui akurat sampai sekitar 1° dari kutub sebenarnya, bukan presisi sempurna — simulator menampilkan konstruksi geometrisnya dengan benar, tapi tidak memodelkan margin kesalahan pengukuran manusia di lapangan (menaksir "4,5 kali panjang" dengan mata).</li>
+      <li>Kedua metode mengasumsikan cakrawala yang jelas terlihat dan langit cerah — kondisi laut nyata (ombak, awan, kabut) bisa mempersulit keduanya.</li>
+    </ul>
+  </div>
+
+  <h2>Referensi</h2>
+  <div class="panel refs">
+    <ul>
+      <li>Te Ara Encyclopedia of New Zealand — "Navigating by the Southern Cross."</li>
+      <li>EarthSky — "The Southern Cross is your guide to due south."</li>
+      <li>Constellation Guide — "The Southern Cross."</li>
+      <li>Astro Navigation Demystified — "Latitude From Polaris" &amp; "The Southern Cross."</li>
+      <li>Siranah — "Latitude by Polaris - Celestial Navigation."</li>
+      <li>ArXiv 2206.07491 — "Polaris: The Mathematics of Navigation and the Shape of the Earth."</li>
+    </ul>
+  </div>
+
+  <footer>
+    Prototipe berdiri sendiri untuk proyek JAZMI, mengikuti metode Belajar → Model → Uji → Tool. Koreksi Polaris dan geometri Salib Selatan dihitung/digambar langsung, bukan skenario yang di-hardcode.
+  </footer>
+</div>
+
+<script>
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs){
+  const e = document.createElementNS(NS, tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+// starfield background decoration
+const sf = document.getElementById('starfieldSvg');
+sf.setAttribute('viewBox','0 0 1000 1000');
+sf.setAttribute('preserveAspectRatio','xMidYMid slice');
+for(let i=0;i<80;i++){
+  const x=Math.random()*1000, y=Math.random()*1000, r=Math.random()*1.4+0.3;
+  sf.appendChild(el('circle',{cx:x,cy:y,r:r,fill:'#e8ecf5',opacity:(Math.random()*0.6+0.2).toFixed(2)}));
+}
+
+// ===== TABS =====
+document.getElementById('tabRow').querySelectorAll('button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.getElementById('tabRow').querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.querySelectorAll('.panelgrp').forEach(p=>p.classList.remove('active'));
+    document.getElementById('panel-'+b.dataset.tab).classList.add('active');
+  });
+});
+
+// ===== MODE 1: POLARIS =====
+const POLARIS_OFFSET = 0.75; // derajat dari kutub langit sebenarnya
+const polarisSvg = document.getElementById('polarisSvg');
+
+function buildPolarisScene(){
+  polarisSvg.innerHTML='';
+  polarisSvg.appendChild(el('rect',{x:0,y:0,width:400,height:300,fill:'#111529'}));
+  // horizon
+  polarisSvg.appendChild(el('rect',{x:0,y:260,width:400,height:40,fill:'#171c33'}));
+  polarisSvg.appendChild(el('line',{x1:0,y1:260,x2:400,y2:260,stroke:'#252b47','stroke-width':1}));
+  // celestial pole marker (fixed point)
+  polarisSvg.appendChild(el('g',{id:'polDynamic'}));
+}
+buildPolarisScene();
+
+function updatePolaris(){
+  const obsAlt = parseFloat(document.getElementById('obsAlt').value);
+  const ha = parseFloat(document.getElementById('hourAngle').value);
+  document.getElementById('altLabel').textContent = obsAlt.toFixed(1)+'°';
+  document.getElementById('haLabel').textContent = ha.toFixed(0)+'°';
+
+  const correction = POLARIS_OFFSET * Math.cos(ha*Math.PI/180);
+  const trueLat = obsAlt - correction;
+  document.getElementById('corrOut').textContent = (correction>=0?'+':'')+correction.toFixed(2)+'°';
+  document.getElementById('latOut').textContent = trueLat.toFixed(2)+'°';
+
+  const dyn = document.getElementById('polDynamic');
+  dyn.innerHTML='';
+  // scale: altitude 0-70 deg mapped to y 260(horizon) .. 20(top)
+  const altToY = (a)=> 260 - (a/70)*240;
+  const poleY = altToY(trueLat);
+  const poleX = 200;
+  // celestial pole (fixed reference dot)
+  dyn.appendChild(el('line',{x1:0,y1:poleY,x2:400,y2:poleY,stroke:'#8b93ac33','stroke-width':1,'stroke-dasharray':'4,3'}));
+  dyn.appendChild(el('circle',{cx:poleX,cy:poleY,r:3,fill:'#6fd4c8'}));
+  const poleLbl = el('text',{x:poleX+10,y:poleY+4,'font-size':10,fill:'#6fd4c8'});
+  poleLbl.textContent = 'kutub langit sejati';
+  dyn.appendChild(poleLbl);
+  // polaris tiny circle around pole (radius proportional to POLARIS_OFFSET in same scale)
+  const rPx = (POLARIS_OFFSET/70)*240;
+  dyn.appendChild(el('circle',{cx:poleX,cy:poleY,r:rPx,fill:'none',stroke:'#e0c06055','stroke-width':1}));
+  const polX = poleX + rPx*Math.sin(ha*Math.PI/180)*0; // horizontal drift not shown, keep vertical model simple
+  const polY = poleY - rPx*Math.cos(ha*Math.PI/180);
+  dyn.appendChild(el('circle',{cx:poleX,cy:polY,r:5,fill:'#e0c060'}));
+  const polLbl = el('text',{x:poleX+10,y:polY+4,'font-size':10,fill:'#e0c060'});
+  polLbl.textContent = 'Polaris';
+  dyn.appendChild(polLbl);
+  // observed altitude marker
+  const obsY = altToY(obsAlt);
+  dyn.appendChild(el('line',{x1:20,y1:260,x2:20,y2:obsY,stroke:'#e2e6ef','stroke-width':1.5}));
+  dyn.appendChild(el('line',{x1:15,y1:obsY,x2:25,y2:obsY,stroke:'#e2e6ef','stroke-width':1.5}));
+  const obsLbl = el('text',{x:28,y:obsY+4,'font-size':10,fill:'#e2e6ef'});
+  obsLbl.textContent = 'altitude teramati';
+  dyn.appendChild(obsLbl);
+}
+['obsAlt','hourAngle'].forEach(id=>document.getElementById(id).addEventListener('input', updatePolaris));
+
+// ===== MODE 2: SOUTHERN CROSS =====
+const cruxSvg = document.getElementById('cruxSvg');
+const CCX=200, CCY=200; // titik kutub selatan langit sejati (pusat rotasi tetap)
+const AXIS_LEN = 24;               // jarak Gacrux-Acrux
+const R_CENTER = 4.5 * AXIS_LEN;   // jarak pusat sumbu Crux ke kutub (108px)
+const ARM_LEN = 15;                // setengah lebar palang Crux
+const POINTER_R = R_CENTER + 22;   // jarak bintang penunjuk ke kutub
+const POINTER_ANGLE_OFFSET = 32;   // offset sudut penunjuk relatif ke Crux
+const POINTER_SEP_ANGLE = 12;      // pemisahan sudut antar dua bintang penunjuk
+
+function polarPt(radius, angleDeg){
+  const a = angleDeg*Math.PI/180;
+  return [CCX + radius*Math.sin(a), CCY - radius*Math.cos(a)];
+}
+
+function buildCruxScene(){
+  cruxSvg.innerHTML='';
+  cruxSvg.appendChild(el('rect',{x:0,y:0,width:400,height:400,fill:'#111529'}));
+  cruxSvg.appendChild(el('circle',{cx:CCX,cy:CCY,r:5,fill:'#6fd4c8'}));
+  const scpLbl = el('text',{x:CCX+10,y:CCY+4,'font-size':10,fill:'#6fd4c8'});
+  scpLbl.textContent = 'kutub selatan langit (sejati)';
+  cruxSvg.appendChild(scpLbl);
+  cruxSvg.appendChild(el('g',{id:'cruxDynamic'}));
+}
+buildCruxScene();
+
+function updateCrux(){
+  const rotDeg = parseFloat(document.getElementById('cruxRot').value);
+  document.getElementById('rotLabel').textContent = rotDeg.toFixed(0)+'°';
+
+  const dyn = document.getElementById('cruxDynamic');
+  dyn.innerHTML='';
+
+  // Gacrux (lebih jauh dari kutub) dan Acrux (lebih dekat kutub), keduanya di garis radial yang sama
+  const [gx,gy] = polarPt(R_CENTER + AXIS_LEN/2, rotDeg);
+  const [ax,ay] = polarPt(R_CENTER - AXIS_LEN/2, rotDeg);
+  // palang crux, tegak lurus sumbu, di titik tengah sumbu
+  const [a1x,a1y] = polarPt(Math.hypot(R_CENTER, ARM_LEN), rotDeg - (Math.atan2(ARM_LEN,R_CENTER)*180/Math.PI));
+  const [a2x,a2y] = polarPt(Math.hypot(R_CENTER, ARM_LEN), rotDeg + (Math.atan2(ARM_LEN,R_CENTER)*180/Math.PI));
+  // bintang penunjuk, radius sama satu sama lain (supaya bisektornya lewat tepat di kutub)
+  const [alx,aly] = polarPt(POINTER_R, rotDeg + POINTER_ANGLE_OFFSET - POINTER_SEP_ANGLE/2);
+  const [blx,bly] = polarPt(POINTER_R, rotDeg + POINTER_ANGLE_OFFSET + POINTER_SEP_ANGLE/2);
+
+  // gambar crux
+  dyn.appendChild(el('line',{x1:gx,y1:gy,x2:ax,y2:ay,stroke:'#e2e6ef','stroke-width':1.5}));
+  dyn.appendChild(el('line',{x1:a1x,y1:a1y,x2:a2x,y2:a2y,stroke:'#e2e6ef','stroke-width':1}));
+  [[gx,gy,'Gacrux'],[ax,ay,'Acrux'],[a1x,a1y,''],[a2x,a2y,'']].forEach(([x,y,lbl])=>{
+    dyn.appendChild(el('circle',{cx:x,cy:y,r:4,fill:'#e2e6ef'}));
+    if(lbl){
+      const t = el('text',{x:x+7,y:y+3,'font-size':9,fill:'#8b93ac'});
+      t.textContent = lbl;
+      dyn.appendChild(t);
+    }
+  });
+  // pointer stars
+  dyn.appendChild(el('line',{x1:alx,y1:aly,x2:blx,y2:bly,stroke:'#e0c06099','stroke-width':1}));
+  [[alx,aly,'α Cen'],[blx,bly,'β Cen']].forEach(([x,y,lbl])=>{
+    dyn.appendChild(el('circle',{cx:x,cy:y,r:4,fill:'#e0c060'}));
+    const t = el('text',{x:x+7,y:y+3,'font-size':9,fill:'#e0c060'});
+    t.textContent = lbl;
+    dyn.appendChild(t);
+  });
+
+  // metode 1: perpanjangan sumbu Gacrux->Acrux sejauh 4.5x panjang crux
+  const dxAxis = ax-gx, dyAxis = ay-gy;
+  const ext1x = gx + dxAxis*4.5, ext1y = gy + dyAxis*4.5;
+  dyn.appendChild(el('line',{x1:gx,y1:gy,x2:ext1x,y2:ext1y,stroke:'#6fd4c8','stroke-width':1.5,'stroke-dasharray':'5,4'}));
+  dyn.appendChild(el('circle',{cx:ext1x,cy:ext1y,r:4,fill:'#6fd4c8'}));
+
+  // metode 2: bisektor tegak lurus dari titik tengah pointer stars (karena radius alpha=beta, garis ini otomatis lewat pusat)
+  const midx=(alx+blx)/2, midy=(aly+bly)/2;
+  const pdx = -(bly-aly), pdy = (blx-alx);
+  const plen = Math.sqrt(pdx*pdx+pdy*pdy);
+  const nx = pdx/plen, ny = pdy/plen;
+  const ext2x = midx + nx*260, ext2y = midy + ny*260;
+  const ext2x2 = midx - nx*260, ext2y2 = midy - ny*260;
+  dyn.appendChild(el('line',{x1:ext2x,y1:ext2y,x2:ext2x2,y2:ext2y2,stroke:'#e0c06099','stroke-width':1,'stroke-dasharray':'3,3'}));
+
+  document.getElementById('method1Out').textContent = 'jarak ke kutub: '+Math.hypot(ext1x-CCX, ext1y-CCY).toFixed(0)+' px';
+  const distLine2 = Math.abs((ext2x2-ext2x)*(ext2y-CCY)-(ext2x-CCX)*(ext2y2-ext2y))/Math.hypot(ext2x2-ext2x, ext2y2-ext2y);
+  document.getElementById('method2Out').textContent = 'jarak garis ke kutub: '+distLine2.toFixed(1)+' px';
+}
+document.getElementById('cruxRot').addEventListener('input', updateCrux);
+
+updatePolaris();
+updateCrux();
+</script>
+</body>
+</html>

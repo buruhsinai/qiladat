@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalender Kosmos</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600&family=IBM+Plex+Sans&family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0A0A12;--surface:#151420;--line:#2E2C40;--ink:#EFEDF7;--muted:#928DAC;--gold:#D8B26B;--violet:#8C7CF0;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;padding:30px 20px 60px;}
+  .wrap{max-width:580px;margin:0 auto;}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:22px;line-height:1.3;margin:0 0 8px;}
+  p{color:var(--muted);font-size:14px;line-height:1.6;}
+  .tag{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gold);margin-bottom:10px;}
+  .panel{background:var(--surface);border:1px solid var(--line);padding:22px;margin-top:20px;}
+  label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px;}
+  input[type=range]{width:100%;accent-color:var(--gold);}
+  .val{font-family:'IBM Plex Mono',monospace;color:var(--gold);font-size:15px;font-weight:600;}
+  .preset-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+  .preset{background:var(--bg);border:1px solid var(--line);color:var(--muted);padding:6px 10px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;cursor:pointer;}
+  .preset:hover{border-color:var(--gold);color:var(--gold);}
+  .result{margin-top:20px;padding:18px;background:#1D1B2B;border-left:3px solid var(--violet);}
+  .result .event{font-family:'Space Grotesk',sans-serif;font-size:18px;color:var(--violet);}
+  .result .ago{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted);margin-top:6px;}
+  .kpis{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);margin-top:14px;}
+  .kpi{background:var(--surface);padding:12px;}
+  .kpi .v{font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--gold);}
+  .kpi .l{font-size:10px;color:var(--muted);}
+  footer{margin-top:20px;font-size:11px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="tag">ASTRONOMI × GEOLOGI × BIOLOGI × SEJARAH — SATU KALENDER</div>
+  <h1>Cerita 13,8 miliar tahun alam semesta, dipadatkan jadi satu tahun kalender</h1>
+  <p>Konsep "Kalender Kosmos" Carl Sagan: bayangkan seluruh usia alam semesta sejak Big Bang dimampatkan jadi 1 Januari–31 Desember. Geser tanggalnya, dan lihat betapa barunya segala yang kita anggap "sejarah".</p>
+
+  <div class="panel">
+    <label>Hari ke- (1 Jan = hari 1, 31 Des = hari 365): <span class="val" id="vHari"></span></label>
+    <input type="range" id="hari" min="1" max="365" step="0.01" value="180">
+    <div class="preset-row">
+      <button class="preset" onclick="set(1)">Big Bang</button>
+      <button class="preset" onclick="set(245)">Tata surya terbentuk</button>
+      <button class="preset" onclick="set(268)">Kehidupan pertama</button>
+      <button class="preset" onclick="set(360)">Dinosaurus punah</button>
+      <button class="preset" onclick="set(364.94)">Manusia modern</button>
+      <button class="preset" onclick="set(364.9998)">Sejarah tercatat</button>
+    </div>
+
+    <div class="result">
+      <div class="event" id="event"></div>
+      <div class="ago" id="ago"></div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="v" id="tahunLalu"></div><div class="l">setara tahun sungguhan yang lalu</div></div>
+      <div class="kpi"><div class="v">37,8 juta tahun</div><div class="l">nilai 1 hari kalender ini</div></div>
+    </div>
+  </div>
+
+  <footer>Tanggal peristiwa mengikuti pendekatan populer Carl Sagan (Cosmic Calendar) — perkiraan ilustratif, bukan tanggal presisi ilmiah.</footer>
+</div>
+
+<script>
+const EVENTS = [
+  {day:1, nama:'Big Bang'},
+  {day:75, nama:'Galaksi Bima Sakti terbentuk'},
+  {day:245, nama:'Matahari & tata surya terbentuk'},
+  {day:258, nama:'Bumi terbentuk'},
+  {day:268, nama:'Kehidupan pertama di Bumi (mikroba)'},
+  {day:275, nama:'Oksigenasi atmosfer Bumi dimulai'},
+  {day:313, nama:'Organisme multisel pertama'},
+  {day:351, nama:'Tumbuhan darat pertama'},
+  {day:354, nama:'Dinosaurus pertama muncul'},
+  {day:360, nama:'Dinosaurus punah (hantaman asteroid)'},
+  {day:364.94, nama:'Manusia modern (Homo sapiens) muncul'},
+  {day:364.9998, nama:'Seluruh sejarah tercatat manusia'},
+  {day:365, nama:'Hari ini'}
+];
+
+function set(d){ document.getElementById('hari').value=d; hitung(); }
+
+function terdekat(hari){
+  let best=EVENTS[0], bd=Infinity;
+  EVENTS.forEach(e=>{ const d=Math.abs(e.day-hari); if(d<bd){bd=d; best=e;} });
+  return best;
+}
+
+function hitung(){
+  const hari = parseFloat(document.getElementById('hari').value);
+  document.getElementById('vHari').textContent = 'hari ke-'+hari.toFixed(2);
+
+  const tahunLalu = (365-hari)/365*13.8e9;
+  const ev = terdekat(hari);
+
+  document.getElementById('event').textContent = ev.nama;
+  document.getElementById('ago').textContent = 'peristiwa terdekat pada posisi kalender ini';
+  document.getElementById('tahunLalu').textContent = tahunLalu>=1e9
+    ? (tahunLalu/1e9).toFixed(2)+' miliar'
+    : tahunLalu>=1e6
+      ? (tahunLalu/1e6).toFixed(1)+' juta'
+      : Math.round(tahunLalu).toLocaleString('id-ID');
+}
+document.getElementById('hari').addEventListener('input', hitung);
+hitung();
+</script>
+</body>
+</html>

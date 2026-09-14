@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulator Meja Kerja: Ekstraksi DNA dari Tanah</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B1614; --surface:#132420; --surface-2:#1A322B; --line:#274038;
+    --ink:#EAF2EF; --muted:#8FAFA3; --teal:#3FBF95; --blue:#5B9BD9;
+    --amber:#E5A439; --red:#E1614E;
+    --font-display:'Space Grotesk',sans-serif; --font-body:'IBM Plex Sans',sans-serif; --font-mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--font-body); line-height:1.55; padding-bottom:80px;}
+  .wrap{max-width:980px; margin:0 auto; padding:0 20px;}
+  h1,h2,h3{font-family:var(--font-display); font-weight:600; margin:0 0 12px;}
+  p{margin:0 0 14px; max-width:70ch;}
+  .muted{color:var(--muted);}
+  .mono{font-family:var(--font-mono);}
+  section{padding:44px 0; border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+
+  .hero{padding-top:44px;}
+  .hero-tag{font-family:var(--font-mono); font-size:13px; color:var(--teal); margin-bottom:10px;}
+  .hero h1{font-size:clamp(24px,4vw,36px); max-width:24ch; line-height:1.2;}
+  .hero p.lead{font-size:17px; color:var(--muted); max-width:60ch;}
+
+  .disclaimer{background:var(--surface); border:1px solid var(--amber); padding:16px 18px; margin-top:22px; font-size:13px;}
+  .disclaimer strong{color:var(--amber);}
+
+  .live-strip{position:sticky; top:0; z-index:10; background:rgba(11,22,20,0.97); backdrop-filter:blur(4px); border-bottom:1px solid var(--line); padding:12px 0;}
+  .live-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--line); border:1px solid var(--line);}
+  @media(min-width:640px){ .live-grid{grid-template-columns:repeat(4,1fr);} }
+  .live-kpi{background:var(--surface); padding:10px 12px;}
+  .live-kpi .val{font-family:var(--font-mono); font-size:15px; color:var(--teal);}
+  .live-kpi .lbl{font-size:10.5px; color:var(--muted);}
+
+  .step{background:var(--surface); border:1px solid var(--line); padding:22px; margin-bottom:16px;}
+  .step-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:8px;}
+  .step-title{display:flex; align-items:center; gap:10px;}
+  .step-num{font-family:var(--font-mono); font-size:12px; color:var(--teal); border:1px solid var(--teal); width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .step-title h3{font-size:15px; margin:0;}
+  .step-badge{font-family:var(--font-mono); font-size:11px; padding:3px 9px; border:1px solid var(--line); color:var(--muted);}
+  .step-badge.baik{border-color:var(--teal); color:var(--teal);}
+  .step-badge.waspada{border-color:var(--amber); color:var(--amber);}
+  .step-badge.buruk{border-color:var(--red); color:var(--red);}
+  .step-note{font-size:12.5px; color:var(--muted); margin-bottom:14px;}
+  .step-ctl{display:grid; grid-template-columns:1fr; gap:16px;}
+  @media(min-width:640px){ .step-ctl{grid-template-columns:repeat(2,1fr);} }
+  .field{display:flex; flex-direction:column; gap:6px;}
+  .field label{font-size:12.5px; color:var(--muted);}
+  input[type=range]{width:100%; accent-color:var(--teal);}
+  select{background:var(--bg); border:1px solid var(--line); color:var(--ink); padding:8px 9px; font-family:var(--font-mono); font-size:13px; width:100%;}
+  select:focus{outline:2px solid var(--teal); outline-offset:1px;}
+  .range-val{font-family:var(--font-mono); color:var(--teal); font-size:12.5px;}
+  .protokol-hint{font-family:var(--font-mono); font-size:10.5px; color:var(--muted); margin-top:2px;}
+
+  .sec-head{display:flex; align-items:baseline; gap:10px; margin-bottom:22px;}
+  .sec-num{font-family:var(--font-mono); font-size:13px; color:var(--teal);}
+
+  .kpis{display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--line); margin-top:10px; border:1px solid var(--line);}
+  @media(min-width:640px){ .kpis{grid-template-columns:repeat(4,1fr);} }
+  .kpi{background:var(--surface); padding:14px;}
+  .kpi .val{font-family:var(--font-mono); font-size:18px;}
+  .kpi .lbl{font-size:11.5px; color:var(--muted); margin-top:2px;}
+  .kpi.warn .val{color:var(--red);}
+  .kpi.good .val{color:var(--teal);}
+
+  .chart-wrap{background:var(--surface); border:1px solid var(--line); padding:20px; margin-top:20px;}
+  svg text{font-family:var(--font-mono); fill:var(--muted);}
+
+  .verdict-row{display:grid; grid-template-columns:1fr; gap:14px; margin-top:20px;}
+  @media(min-width:700px){ .verdict-row{grid-template-columns:1fr 1fr;} }
+  .verdict-card{border:1px solid var(--line); padding:16px; background:var(--surface);}
+  .verdict-card.baik{border-color:var(--teal);}
+  .verdict-card.waspada{border-color:var(--amber);}
+  .verdict-card.masalah{border-color:var(--red);}
+  .verdict-card .ratio-val{font-family:var(--font-mono); font-size:22px;}
+  .verdict-card.baik .ratio-val{color:var(--teal);}
+  .verdict-card.waspada .ratio-val{color:var(--amber);}
+  .verdict-card.masalah .ratio-val{color:var(--red);}
+  .verdict-card .label{font-family:var(--font-mono); font-size:10.5px; color:var(--muted);}
+  .verdict-card p{font-size:12.5px; margin-top:8px;}
+
+  .takeaway{background:var(--surface-2); border-left:3px solid var(--teal); padding:16px 18px; margin-top:20px; font-size:14px;}
+  .takeaway strong{color:var(--teal);}
+  .diagnosis{background:var(--surface-2); border-left:3px solid var(--amber); padding:16px 18px; margin-top:14px; font-size:13.5px;}
+  .diagnosis strong{color:var(--amber);}
+
+  ul.limits{padding-left:20px;}
+  ul.limits li{margin-bottom:10px; font-size:14px;}
+  .ref-list{list-style:none; padding:0; margin:0;}
+  .ref-list li{padding:12px 0; border-bottom:1px solid var(--line);}
+  .ref-list li:last-child{border-bottom:none;}
+  .ref-list .src{font-family:var(--font-mono); font-size:12px; color:var(--muted);}
+
+  footer{padding:40px 0 20px; text-align:center;}
+  footer p{margin:0; font-size:12px; color:var(--muted); max-width:none;}
+</style>
+</head>
+<body>
+
+<div class="live-strip">
+  <div class="wrap">
+    <div class="live-grid" id="liveStrip"></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section class="hero">
+    <div class="hero-tag">SIMULASI MEJA KERJA — EKSTRAKSI DNA DARI SAMPEL SULIT (TANAH)</div>
+    <h1>Di sini, DNA yang berhasil diekstrak bukan jaminan PCR-nya akan jalan</h1>
+    <p class="lead">Ekstraksi DNA dari darah atau kultur sel murni relatif bersahabat. Tanah berbeda: penuh asam humat — molekul organik yang kebetulan mirip DNA secara kimiawi, ikut terekstrak bersamanya, dan diam-diam menghambat enzim PCR meski DNA-nya sendiri terlihat melimpah dan "murni" di spektrofotometer.</p>
+    <div class="disclaimer">
+      <strong>Catatan sumber:</strong> halaman rinci protokol "Ekstraksi dari Tanah" di arsip Anda kebetulan tidak terfoto lengkap (cuma judulnya yang tertangkap). Simulator ini dibangun dari prinsip umum ekstraksi DNA lingkungan yang sudah mapan di bidang mikrobiologi lingkungan — bukan kutipan langsung dari dokumen Anda.
+    </div>
+  </section>
+
+  <!-- LANGKAH 1 -->
+  <section id="s1">
+    <div class="step">
+      <div class="step-head">
+        <div class="step-title"><span class="step-num">1</span><h3>Lisis Mekanis (Bead-Beating)</h3></div>
+        <span class="step-badge" id="badge1"></span>
+      </div>
+      <p class="step-note">Sel tanah (termasuk spora) sering berdinding sangat kuat — perlu dipecah paksa dengan manik-manik kecil yang dikocok cepat, bukan cuma bahan kimia.</p>
+      <div class="step-ctl">
+        <div class="field">
+          <label>Jumlah tanah (mg): <span class="range-val" id="v_jumlahTanah"></span></label>
+          <input type="range" id="jumlahTanah" min="100" max="1000" step="50" value="300">
+          <span class="protokol-hint">tipikal: 250-500mg</span>
+        </div>
+        <div class="field">
+          <label>Durasi bead-beating (menit): <span class="range-val" id="v_beadBeating"></span></label>
+          <input type="range" id="beadBeating" min="0.5" max="10" step="0.5" value="3">
+          <span class="protokol-hint">tipikal: 2-5 menit — kurang = lisis tak tuntas, lebih = DNA tergunting</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LANGKAH 2 -->
+  <section id="s2">
+    <div class="step">
+      <div class="step-head">
+        <div class="step-title"><span class="step-num">2</span><h3>Pemisahan Debris &amp; Pengikatan Inhibitor Awal</h3></div>
+        <span class="step-badge" id="badge2"></span>
+      </div>
+      <p class="step-note">Reagen pengikat (PVP atau skim milk) menempel pada asam humat sebelum ia sempat ikut ke tahap presipitasi DNA.</p>
+      <div class="step-ctl">
+        <div class="field">
+          <label>Kecepatan sentrifugasi (×g): <span class="range-val" id="v_rcf1"></span></label>
+          <input type="range" id="rcf1" min="1000" max="15000" step="500" value="8000">
+        </div>
+        <div class="field">
+          <label>Durasi (menit): <span class="range-val" id="v_waktu1"></span></label>
+          <input type="range" id="waktu1" min="1" max="15" step="1" value="5">
+        </div>
+        <div class="field">
+          <label>Reagen pengikat inhibitor (PVP/skim milk)</label>
+          <select id="pakaiPVP">
+            <option value="ya" selected>Ya, ditambahkan</option>
+            <option value="tidak">Tidak</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LANGKAH 3 -->
+  <section id="s3">
+    <div class="step">
+      <div class="step-head">
+        <div class="step-title"><span class="step-num">3</span><h3>Presipitasi DNA</h3></div>
+        <span class="step-badge" id="badge3"></span>
+      </div>
+      <div class="step-ctl">
+        <div class="field">
+          <label>Waktu inkubasi (menit): <span class="range-val" id="v_waktuPresipitasi"></span></label>
+          <input type="range" id="waktuPresipitasi" min="1" max="30" step="1" value="10">
+        </div>
+        <div class="field">
+          <label>Kecepatan sentrifugasi (×g): <span class="range-val" id="v_rcf2"></span></label>
+          <input type="range" id="rcf2" min="1000" max="15000" step="500" value="12000">
+        </div>
+        <div class="field">
+          <label>Durasi (menit): <span class="range-val" id="v_waktu2"></span></label>
+          <input type="range" id="waktu2" min="1" max="20" step="1" value="10">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LANGKAH 4 -->
+  <section id="s4">
+    <div class="step">
+      <div class="step-head">
+        <div class="step-title"><span class="step-num">4</span><h3>Pencucian Ekstra Penghilang Inhibitor</h3></div>
+        <span class="step-badge" id="badge4"></span>
+      </div>
+      <p class="step-note">Sampel tanah biasanya butuh lebih banyak siklus cuci daripada sampel biasa — asam humat menempel lebih "lengket" daripada garam biasa.</p>
+      <div class="step-ctl">
+        <div class="field">
+          <label>Jumlah siklus pencucian ekstra: <span class="range-val" id="v_jumlahWash"></span></label>
+          <input type="range" id="jumlahWash" min="0" max="5" step="1" value="2">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LANGKAH 5 -->
+  <section id="s5">
+    <div class="step">
+      <div class="step-head">
+        <div class="step-title"><span class="step-num">5</span><h3>Elusi &amp; Dilusi Sebelum PCR</h3></div>
+        <span class="step-badge" id="badge5"></span>
+      </div>
+      <p class="step-note">Trik lapangan yang nyata: mengencerkan ekstrak sebelum PCR sering "menyelamatkan" reaksi yang gagal — karena inhibitor ikut terencerkan lebih cepat daripada template-nya berkurang secara signifikan.</p>
+      <div class="step-ctl">
+        <div class="field">
+          <label>Volume elusi (µL): <span class="range-val" id="v_volumeElusi"></span></label>
+          <input type="range" id="volumeElusi" min="30" max="500" step="10" value="100">
+        </div>
+        <div class="field">
+          <label>Faktor dilusi tambahan sebelum PCR: <span class="range-val" id="v_dilusiPCR"></span></label>
+          <input type="range" id="dilusiPCR" min="1" max="20" step="1" value="1">
+          <span class="protokol-hint">1× = ekstrak dipakai langsung tanpa diencerkan</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HASIL AKHIR -->
+  <section id="hasil">
+    <div class="sec-head"><span class="sec-num">06</span><h2>Hasil akhir</h2></div>
+    <div class="kpis" id="kpisFinal"></div>
+
+    <div class="chart-wrap">
+      <h3 style="font-size:14px; margin-bottom:10px;">Corong kehilangan DNA</h3>
+      <svg id="funnel" viewBox="0 0 900 260" style="width:100%; height:auto;"></svg>
+    </div>
+
+    <div class="verdict-row">
+      <div class="verdict-card" id="cardMurni">
+        <div class="label">A260/A280 simulasi</div>
+        <div class="ratio-val" id="ratioMurni"></div>
+        <p id="textMurni"></p>
+      </div>
+      <div class="verdict-card" id="cardPCR">
+        <div class="label">Probabilitas PCR berhasil</div>
+        <div class="ratio-val" id="ratioPCR"></div>
+        <p id="textPCR"></p>
+      </div>
+    </div>
+
+    <div class="takeaway" id="takeaway"></div>
+    <div class="diagnosis" id="diagnosis"></div>
+  </section>
+
+  <section id="batasan">
+    <div class="sec-head"><span class="sec-num">07</span><h2>Batasan</h2></div>
+    <ul class="limits">
+      <li><strong>Simulator ini dibangun dari prinsip umum, bukan protokol spesifik dari dokumen Anda</strong> (lihat catatan di bagian atas) — angka acuan bersifat ilustratif.</li>
+      <li><strong>"Probabilitas PCR berhasil" adalah metrik pedagogis</strong> yang menggabungkan efek inhibitor dan dilusi menjadi satu angka — kenyataannya keberhasilan PCR juga bergantung pada primer, target, dan mesin PCR itu sendiri.</li>
+      <li>Spektrofotometer (A260/280) <strong>tidak bisa mendeteksi asam humat dengan andal</strong> — sampel bisa tampak "murni" secara rasio tapi tetap gagal PCR karena inhibitor yang tidak terlihat rasio ini. Ini justru poin utama yang ingin ditunjukkan simulator ini.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <div class="sec-head"><span class="sec-num">08</span><h2>Referensi</h2></div>
+    <ul class="ref-list">
+      <li>Asam humat sebagai inhibitor PCR utama pada ekstraksi DNA tanah, dan penggunaan PVP/skim milk sebagai agen pengikatnya.
+        <div class="src">Rujukan umum mikrobiologi lingkungan &amp; ekologi mikroba tanah</div>
+      </li>
+      <li>Praktik pengenceran ekstrak sebagai strategi mengatasi inhibisi PCR pada sampel lingkungan.
+        <div class="src">Rujukan umum metodologi PCR sampel lingkungan</div>
+      </li>
+      <li>Judul bagian "Ekstraksi dari Sampel Sulit — Ekstraksi dari Tanah" yang menjadi titik tolak topik ini.
+        <div class="src">Arsip "Rincian Wet Lab Capability" milik pengguna (rincian langkah tidak terfoto)</div>
+      </li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Simulasi edukasi berbasis prinsip umum mikrobiologi lingkungan — bukan protokol tervalidasi untuk sampel nyata.</p>
+  </footer>
+
+</div>
+
+<script>
+function clamp(v,lo,hi){ return Math.max(lo, Math.min(hi, v)); }
+function gauss(x,peak,sigma){ return Math.exp(-((x-peak)**2)/(2*sigma*sigma)); }
+function satur(rcf,waktu,k){ return clamp(1-Math.exp(-(k||0.00003)*rcf*waktu), 0, 0.98); }
+function badge(el, score){
+  el.textContent = (score*100).toFixed(0)+'%';
+  el.className = 'step-badge ' + (score>=0.85?'baik':score>=0.6?'waspada':'buruk');
+}
+
+function hitung(){
+  const jumlahTanah = parseFloat(document.getElementById('jumlahTanah').value);
+  const beadBeating = parseFloat(document.getElementById('beadBeating').value);
+  document.getElementById('v_jumlahTanah').textContent = jumlahTanah+' mg';
+  document.getElementById('v_beadBeating').textContent = beadBeating+' menit';
+  const skorLisis = gauss(jumlahTanah,350,250)*gauss(beadBeating,3.5,2.5);
+  badge(document.getElementById('badge1'), skorLisis);
+
+  const rcf1 = parseFloat(document.getElementById('rcf1').value);
+  const waktu1 = parseFloat(document.getElementById('waktu1').value);
+  const pakaiPVP = document.getElementById('pakaiPVP').value==='ya';
+  document.getElementById('v_rcf1').textContent = rcf1.toLocaleString('id-ID')+'×g';
+  document.getElementById('v_waktu1').textContent = waktu1+' menit';
+  const skorPemisahanAwal = satur(rcf1,waktu1);
+  const inhibitorBoostAwal = pakaiPVP ? 0.35 : 0;
+  badge(document.getElementById('badge2'), Math.min(1,skorPemisahanAwal+inhibitorBoostAwal*0.3));
+
+  const waktuPresipitasi = parseFloat(document.getElementById('waktuPresipitasi').value);
+  const rcf2 = parseFloat(document.getElementById('rcf2').value);
+  const waktu2 = parseFloat(document.getElementById('waktu2').value);
+  document.getElementById('v_waktuPresipitasi').textContent = waktuPresipitasi+' menit';
+  document.getElementById('v_rcf2').textContent = rcf2.toLocaleString('id-ID')+'×g';
+  document.getElementById('v_waktu2').textContent = waktu2+' menit';
+  const skorPresipitasi = (1-Math.exp(-0.2*waktuPresipitasi))*satur(rcf2,waktu2);
+  badge(document.getElementById('badge3'), skorPresipitasi);
+
+  const jumlahWash = parseInt(document.getElementById('jumlahWash').value);
+  document.getElementById('v_jumlahWash').textContent = jumlahWash+'×';
+  const kehilanganWash = jumlahWash*0.05;
+  const inhibitorRemovalWash = 1-Math.exp(-0.45*jumlahWash);
+  badge(document.getElementById('badge4'), Math.min(1,inhibitorRemovalWash+0.2));
+
+  const volumeElusi = parseFloat(document.getElementById('volumeElusi').value);
+  const dilusiPCR = parseFloat(document.getElementById('dilusiPCR').value);
+  document.getElementById('v_volumeElusi').textContent = volumeElusi+' µL';
+  document.getElementById('v_dilusiPCR').textContent = dilusiPCR+'×';
+  badge(document.getElementById('badge5'), dilusiPCR>1?0.9:0.7);
+
+  const DNA_ACUAN = 3000; // ng, ilustratif utk sampel tanah yg umumnya rendah dibanding kultur murni
+  const tahapan = [{nama:'DNA acuan', sisa:DNA_ACUAN}];
+  let dna = DNA_ACUAN;
+  dna *= skorLisis; tahapan.push({nama:'Setelah lisis mekanis', sisa:dna});
+  dna *= skorPemisahanAwal; tahapan.push({nama:'Setelah pemisahan debris', sisa:dna});
+  dna *= skorPresipitasi; tahapan.push({nama:'Setelah presipitasi', sisa:dna});
+  dna *= (1-kehilanganWash); tahapan.push({nama:'Setelah pencucian ekstra (akhir)', sisa:dna});
+
+  const yieldAkhir = dna;
+  const konsentrasiSebelumDilusi = yieldAkhir/volumeElusi;
+  const konsentrasiEfektifPCR = konsentrasiSebelumDilusi/dilusiPCR;
+
+  // skor bebas-inhibitor total
+  let skorInhibitorRemoval = inhibitorRemovalWash*0.6 + inhibitorBoostAwal;
+  skorInhibitorRemoval = clamp(skorInhibitorRemoval, 0, 1);
+
+  const probPCR = clamp(skorInhibitorRemoval + Math.log10(dilusiPCR)*0.28, 0, 0.97);
+
+  const simA280 = clamp(1.85 - (1-skorPemisahanAwal)*0.3, 1.3, 2.0); // asam humat kurang terlihat di rasio ini, sengaja tetap "cukup baik"
+
+  const kpis = document.getElementById('kpisFinal');
+  kpis.innerHTML = `
+    <div class="kpi"><div class="val">${yieldAkhir.toFixed(0)} ng</div><div class="lbl">total yield DNA</div></div>
+    <div class="kpi"><div class="val">${konsentrasiEfektifPCR.toFixed(1)} ng/µL</div><div class="lbl">konsentrasi efektif untuk PCR</div></div>
+    <div class="kpi"><div class="val">${simA280.toFixed(2)}</div><div class="lbl">A260/A280 simulasi</div></div>
+    <div class="kpi ${probPCR<0.5?'warn':'good'}"><div class="val">${(probPCR*100).toFixed(0)}%</div><div class="lbl">probabilitas PCR berhasil</div></div>
+  `;
+
+  document.getElementById('liveStrip').innerHTML = `
+    <div class="live-kpi"><div class="val">${yieldAkhir.toFixed(0)} ng</div><div class="lbl">yield</div></div>
+    <div class="live-kpi"><div class="val">${konsentrasiEfektifPCR.toFixed(1)} ng/µL</div><div class="lbl">konsentrasi efektif PCR</div></div>
+    <div class="live-kpi"><div class="val">${simA280.toFixed(2)}</div><div class="lbl">A260/280</div></div>
+    <div class="live-kpi"><div class="val">${(probPCR*100).toFixed(0)}%</div><div class="lbl">peluang PCR sukses</div></div>
+  `;
+
+  renderFunnel(tahapan);
+
+  const stMurni = simA280>=1.7?'baik':simA280>=1.5?'waspada':'masalah';
+  document.getElementById('ratioMurni').textContent = simA280.toFixed(2);
+  document.getElementById('cardMurni').className = 'verdict-card '+stMurni;
+  document.getElementById('textMurni').textContent = 'Rasio ini tetap terlihat cukup baik meski inhibitor tinggi — ini justru jebakannya: spektrofotometer tidak "melihat" asam humat dengan jelas.';
+
+  const stPCR = probPCR>=0.75?'baik':probPCR>=0.4?'waspada':'masalah';
+  document.getElementById('ratioPCR').textContent = (probPCR*100).toFixed(0)+'%';
+  document.getElementById('cardPCR').className = 'verdict-card '+stPCR;
+  document.getElementById('textPCR').textContent = stPCR==='baik' ? 'Inhibitor kemungkinan besar sudah cukup tersingkir — PCR kemungkinan besar akan berjalan.' : (stPCR==='waspada' ? 'Masih ada risiko inhibisi — pertimbangkan tambah siklus pencucian atau dilusi lebih tinggi.' : 'Risiko kegagalan PCR tinggi — inhibitor kemungkinan besar masih pekat dalam ekstrak ini.');
+
+  document.getElementById('takeaway').innerHTML = `<strong>Ringkasan:</strong> ekstrak ini punya ${yieldAkhir.toFixed(0)}ng DNA dengan rasio kemurnian yang terlihat ${stMurni==='baik'?'baik':'lumayan'} (${simA280.toFixed(2)}) — tapi peluang PCR-nya benar-benar berhasil cuma ${(probPCR*100).toFixed(0)}%. Dua angka ini bisa bertentangan justru karena sumbernya berbeda: satu soal protein, satu lagi soal asam humat yang tidak terlihat rasio A260/280.`;
+
+  let saran=[];
+  if(!pakaiPVP) saran.push('tidak memakai reagen pengikat inhibitor (PVP/skim milk) di awal adalah salah satu penyebab utama inhibitor masih tinggi.');
+  if(jumlahWash<2) saran.push('jumlah siklus pencucian ekstra terlalu sedikit untuk sampel tanah — asam humat butuh lebih banyak pencucian dibanding sampel biasa.');
+  if(dilusiPCR===1 && probPCR<0.6) saran.push('coba naikkan faktor dilusi sebelum PCR — kadang solusi tercepat bukan mengulang ekstraksi, tapi mengencerkan ekstrak yang sudah ada.');
+  document.getElementById('diagnosis').innerHTML = saran.length>0 ? `<strong>Yang mungkin perlu diperbaiki:</strong> ${saran.join(' ')}` : `<strong>Tidak ada isu besar terdeteksi</strong> — kombinasi parameter Anda sudah cukup baik untuk mengendalikan inhibitor.`;
+}
+
+function renderFunnel(tahapan){
+  const svg = document.getElementById('funnel');
+  const W=900, rowH=32, padL=220, padR=80, padT=16;
+  const H = padT + tahapan.length*rowH + 10;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const innerW = W-padL-padR;
+  const maxVal = tahapan[0].sisa;
+  let parts=[];
+  tahapan.forEach((t,i)=>{
+    const y = padT + i*rowH;
+    const w = innerW*(t.sisa/maxVal);
+    const pct = (t.sisa/maxVal*100);
+    const warna = pct>70?'#3FBF95':pct>40?'#E5A439':'#E1614E';
+    parts.push(`<text x="${padL-10}" y="${y+rowH*0.65}" font-size="10.5" text-anchor="end">${t.nama}</text>`);
+    parts.push(`<rect x="${padL}" y="${y+4}" width="${w.toFixed(1)}" height="${rowH-12}" fill="${warna}" opacity="0.85"/>`);
+    parts.push(`<text x="${padL+w+8}" y="${y+rowH*0.65}" font-size="10.5" fill="#EAF2EF">${pct.toFixed(0)}%</text>`);
+  });
+  svg.innerHTML = parts.join('');
+}
+
+document.querySelectorAll('input, select').forEach(el=>el.addEventListener('input', hitung));
+hitung();
+</script>
+</body>
+</html>

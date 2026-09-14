@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brute-Force vs Kamus — Kenapa Panjang Mengalahkan Simbol</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0F1115;--panel:#161A21;--panel2:#1D222B;--ink:#E7E9EE;--dim:#98A0AE;--dimmer:#5E6673;
+--line:rgba(231,233,238,.1);--red:#E5534B;--amber:#E0A730;--green:#3FB37F;--blue:#5B9BD5;
+--rsoft:rgba(229,83,75,.14);--asoft:rgba(224,167,48,.14);--gsoft:rgba(63,179,127,.14);--bsoft:rgba(91,155,213,.14);}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Karla',sans-serif;line-height:1.6}
+.mono{font-family:'JetBrains Mono',monospace}
+h1,h2{font-family:'Fraunces',serif;font-weight:600;margin:0}
+.wrap{max-width:900px;margin:0 auto;padding:32px 18px 70px}
+.kicker{font-size:.82rem;color:var(--blue);font-weight:700;margin-bottom:10px}
+h1{font-size:1.5rem;margin-bottom:10px}
+header p{color:var(--dim);font-size:.92rem;max-width:64ch;}
+
+.lab{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:22px;}
+label{display:block;font-size:.82rem;color:var(--dimmer);margin-bottom:6px;font-weight:600}
+input[type=text]{width:100%;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:8px;color:var(--ink);padding:11px 12px;font-family:'JetBrains Mono',monospace;font-size:.95rem;}
+select{background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:8px;color:var(--ink);padding:8px 10px;font-family:'Karla',sans-serif;font-size:.84rem;width:100%;}
+.field{margin-bottom:14px}
+.preset-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.preset{padding:6px 12px;border-radius:20px;border:1px solid var(--line);background:var(--panel2);color:var(--dim);font-size:.78rem;cursor:pointer;}
+.preset:hover{border-color:var(--blue);color:var(--blue);}
+
+.stat-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:16px;}
+.stat{flex:1;min-width:140px;background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;}
+.stat .n{font-family:'Fraunces',serif;font-size:1.3rem;color:var(--blue);word-break:break-word;}
+.stat .l{font-size:.74rem;color:var(--dimmer);margin-top:2px;}
+
+.lanes{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px;}
+@media (max-width:700px){.lanes{grid-template-columns:1fr;}}
+.lane{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:rgba(0,0,0,.16);}
+.lane h3{font-size:.95rem;color:var(--ink);margin-bottom:8px;}
+.lane .desc{font-size:.78rem;color:var(--dimmer);margin-bottom:10px;}
+.attempt-box{font-family:'JetBrains Mono',monospace;font-size:1.1rem;background:rgba(0,0,0,.3);border-radius:8px;padding:12px;text-align:center;letter-spacing:.05em;min-height:1.5em;}
+.attempt-box.found{color:var(--red);background:var(--rsoft);}
+.attempt-box.notfound{color:var(--green);background:var(--gsoft);}
+.lane-stats{display:flex;justify-content:space-between;font-size:.78rem;color:var(--dim);margin-top:10px;}
+.lane-stats b{color:var(--ink);}
+.lane-result{margin-top:10px;font-size:.85rem;padding:8px 10px;border-radius:6px;background:rgba(0,0,0,.2);}
+
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 4px;}
+.btn{padding:10px 18px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--dim);cursor:pointer;font-size:.86rem;font-weight:600;}
+.btn.primary{border-color:rgba(91,155,213,.4);color:var(--blue);background:var(--bsoft);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+
+.takeaway{margin-top:20px;padding:14px 16px;border-radius:10px;border:1px solid rgba(63,179,127,.35);background:var(--gsoft);color:var(--ink);font-size:.88rem;}
+.takeaway b{color:var(--green);}
+
+.explain{margin-top:26px;color:var(--dim);font-size:.88rem;}
+.explain h2{font-size:1.1rem;color:var(--ink);margin-bottom:8px;}
+.explain p{margin:0 0 12px;}
+.explain b{color:var(--ink);}
+footer{margin-top:28px;font-size:.78rem;color:var(--dimmer)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <p class="kicker">Laboratorium JAZMI — Modul Keamanan Siber</p>
+  <h1>Brute-Force vs Kamus</h1>
+  <p>Dua cara berbeda menebak password Anda — coba beberapa preset di bawah, dan lihat sendiri: password pendek berhias simbol bisa jebol dalam hitungan detik, sementara password panjang tanpa simbol sama sekali bisa butuh miliaran tahun.</p>
+</header>
+
+<div class="lab">
+  <div class="field">
+    <label>Password yang diuji</label>
+    <input type="text" id="pwInput" class="mono" value="P@ss1">
+    <div class="preset-row">
+      <div class="preset" data-pw="P@ss1">P@ss1 (pendek + simbol)</div>
+      <div class="preset" data-pw="password123">password123 (umum)</div>
+      <div class="preset" data-pw="kudalaribiru123">kudalaribiru123 (frasa+angka)</div>
+      <div class="preset" data-pw="correcthorsebatterystaple">correcthorsebatterystaple (panjang, tanpa simbol)</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Kecepatan penyerang (tebakan per detik)</label>
+    <select id="speedSelect">
+      <option value="10">Login online dengan pembatasan (≈10/detik)</option>
+      <option value="1000">Hash lambat offline, bcrypt (≈1.000/detik)</option>
+      <option value="1000000000" selected>Satu GPU kelas atas (≈1 miliar/detik)</option>
+      <option value="1000000000000">Klaster GPU besar (≈1 triliun/detik)</option>
+    </select>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat"><div class="n" id="statCharset">94</div><div class="l">ukuran charset terdeteksi</div></div>
+    <div class="stat"><div class="n" id="statLen">5</div><div class="l">panjang password</div></div>
+    <div class="stat"><div class="n mono" id="statKeyspace">–</div><div class="l">total kemungkinan kombinasi</div></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn primary" id="btnRun">▶️ Jalankan Simulasi</button>
+    <button class="btn" id="btnReset">🔁 Reset</button>
+  </div>
+
+  <div class="lanes">
+    <div class="lane">
+      <h3>💥 Serangan Brute-Force</h3>
+      <div class="desc">Mencoba SEMUA kombinasi karakter mungkin, berurutan, sampai ketemu.</div>
+      <div class="attempt-box mono" id="bruteAttempt">—</div>
+      <div class="lane-stats"><span>Kecepatan: <b id="bruteRate">–</b>/dtk</span><span>Estimasi waktu: <b id="bruteTime">–</b></span></div>
+      <div class="lane-result" id="bruteResult"></div>
+    </div>
+    <div class="lane">
+      <h3>📖 Serangan Kamus</h3>
+      <div class="desc">Mencoba daftar password paling umum sedunia, satu per satu (sungguhan dicek, bukan estimasi).</div>
+      <div class="attempt-box mono" id="dictAttempt">—</div>
+      <div class="lane-stats"><span>Diperiksa: <b id="dictChecked">0</b> / <b id="dictTotal">0</b></span><span>Waktu: <b id="dictTime">–</b></span></div>
+      <div class="lane-result" id="dictResult"></div>
+    </div>
+  </div>
+
+  <div class="takeaway" id="takeaway"></div>
+</div>
+
+<div class="explain">
+  <h2>Kenapa dua angka ini bisa berbeda jauh</h2>
+  <p>Brute-force tidak peduli apakah password Anda "masuk akal" atau tidak — ia hanya menghitung <b>berapa banyak kombinasi mungkin</b> lalu mencobanya semua. Itu murni fungsi dari <code class="mono">ukuran_charset ^ panjang</code>. Menambah satu karakter ke panjang password punya efek jauh lebih besar terhadap keyspace dibanding menambah satu jenis simbol ke charset — karena panjang ada di posisi <b>pangkat</b>, simbol cuma menambah <b>basis</b>.</p>
+  <p>Sebaliknya, serangan kamus sama sekali tidak peduli seberapa besar keyspace teoretis Anda — ia cuma mengecek apakah password Anda <b>kebetulan ada di daftar password yang sudah pernah bocor/umum dipakai orang</b>. Password pendek yang penuh simbol tapi umum (seperti "P@ssw0rd!") sering tetap ada di daftar ini — kerumitan aturan tidak melindungi dari kebiasaan yang bisa ditebak.</p>
+  <p>Kesimpulannya: <b>panjang melawan brute-force, keunikan (bukan sekadar simbol) melawan kamus</b>. Password terbaik adalah yang panjang <i>dan</i> tidak ada di daftar mana pun — frasa acak yang hanya Anda yang tahu, bukan kata umum yang dihias angka dan tanda seru.</p>
+</div>
+</div>
+
+<footer>Bagian dari Laboratorium JAZMI — daftar kamus di sini cuma ~300 password paling umum untuk ilustrasi, bukan basis data serangan sungguhan. Simulasi brute-force menampilkan sampel tebakan acak untuk visualisasi; waktu yang ditampilkan adalah estimasi matematis (keyspace/2÷kecepatan), bukan pencarian sungguhan (keyspace nyata terlalu besar untuk benar-benar dienumerasi di browser).</footer>
+
+<script>
+const COMMON_PASSWORDS = ["123456","password","123456789","12345678","12345","qwerty","111111","1234567","dragon",
+"123123","baseball","abc123","football","monkey","letmein","696969","shadow","master","666666","qwertyuiop",
+"123321","mustang","1234567890","michael","654321","superman","1qaz2wsx","7777777","121212","000000",
+"qazwsx","123qwe","killer","trustno1","jordan","jennifer","zxcvbnm","asdfgh","hunter","buster",
+"soccer","harley","batman","andrew","tigger","sunshine","iloveyou","fuckyou","2000","charlie",
+"robert","thomas","hockey","ranger","daniel","starwars","klaster","computer","amanda","summer",
+"love","ashley","6969","pepper","banana","hello","freedom","whatever","qwerty123","pussy",
+"princess","admin","welcome","football1","monkey1","letmein1","dragon1","master1",
+"login","passw0rd","admin123","root","toor","changeme","default","guest","test123","demo123",
+"sayang","rahasia","indonesia","bismillah","assalamualaikum","semangat","cintaku","keluarga","sukses","bahagia",
+"password1","password123","p@ssw0rd","p@ssword","P@ssw0rd!","letmein123","iloveyou1","sunshine1","princess1","football123",
+"1q2w3e4r","zaq12wsx","1q2w3e","aa123456","q1w2e3r4","asdf1234","1234qwer","qwe123","asd123","zxc123",
+"welcome1","access","flower","hottie","loveme","secret","cheese","biteme","matrix","corvette",
+"buster1","dallas","jessica","panties","pussy1","yankees","987654321","joshua","maggie","tigers",
+"cookie","phoenix","hannah","gateway","ranger1","mother","forever","people","fish123","chicken",
+"purple","angel1","diamond1","nicole","chelsea","biteme1","matthew","victoria","daniel1","jasper"];
+
+function detectCharset(pw){
+  let lower=false, upper=false, digit=false, symbol=false;
+  for(const c of pw){
+    if(/[a-z]/.test(c)) lower=true;
+    else if(/[A-Z]/.test(c)) upper=true;
+    else if(/[0-9]/.test(c)) digit=true;
+    else symbol=true;
+  }
+  let size=0;
+  if(lower) size+=26;
+  if(upper) size+=26;
+  if(digit) size+=10;
+  if(symbol) size+=32;
+  return size||1;
+}
+function fmtBig(n){
+  if(n<1e6) return n.toLocaleString('id-ID');
+  const units=[[1e63,'vigintiliun'],[1e33,'desiliun'],[1e30,'nonliun'],[1e27,'oktiliun'],[1e24,'septiliun'],
+    [1e21,'sekstiliun'],[1e18,'kuintiliun'],[1e15,'kuadriliun'],[1e12,'triliun'],[1e9,'miliar'],[1e6,'juta']];
+  for(const [v,name] of units) if(n>=v) return (n/v).toPrecision(3)+' '+name;
+  return n.toExponential(2);
+}
+function fmtTime(sec){
+  const AGE_UNIVERSE = 13.8e9*31557600;
+  if(sec>AGE_UNIVERSE*1000) return 'lebih lama dari '+fmtBig(sec/AGE_UNIVERSE)+'× umur alam semesta';
+  if(sec>AGE_UNIVERSE) return (sec/AGE_UNIVERSE).toFixed(1)+'× umur alam semesta (13,8 miliar tahun)';
+  const units=[['tahun',31557600],['hari',86400],['jam',3600],['menit',60],['detik',1]];
+  if(sec<1) return '<1 detik';
+  for(const [name,s] of units){ if(sec>=s) return fmtBig(sec/s)+' '+name; }
+  return sec.toFixed(1)+' detik';
+}
+
+const pwInput=document.getElementById('pwInput'), speedSelect=document.getElementById('speedSelect');
+let running=false, timers=[];
+
+function analyze(){
+  const pw = pwInput.value || '';
+  const cs = detectCharset(pw);
+  const len = pw.length;
+  const keyspace = Math.pow(cs, len);
+  document.getElementById('statCharset').textContent = cs;
+  document.getElementById('statLen').textContent = len;
+  document.getElementById('statKeyspace').textContent = fmtBig(keyspace);
+  return {pw, cs, len, keyspace};
+}
+
+function stopAll(){ timers.forEach(t=>clearInterval(t)); timers=[]; running=false; }
+
+function resetUI(){
+  stopAll();
+  ['bruteAttempt','dictAttempt'].forEach(id=>{
+    const el=document.getElementById(id); el.textContent='—'; el.className='attempt-box mono';
+  });
+  document.getElementById('bruteResult').textContent='';
+  document.getElementById('dictResult').textContent='';
+  document.getElementById('bruteTime').textContent='–';
+  document.getElementById('dictTime').textContent='–';
+  document.getElementById('dictChecked').textContent='0';
+  document.getElementById('takeaway').innerHTML='';
+  analyze();
+}
+
+function randomAttemptLike(pw){
+  const chars='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+  let s=''; for(let i=0;i<pw.length;i++) s+=chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
+
+function runSimulation(){
+  if(running) return;
+  resetUI();
+  running=true;
+  const {pw, cs, len, keyspace} = analyze();
+  const rate = +speedSelect.value;
+  document.getElementById('bruteRate').textContent = rate.toLocaleString('id-ID');
+
+  // --- Brute force lane: illustrative animation + real math for the time estimate ---
+  const bruteBox = document.getElementById('bruteAttempt');
+  let bruteTicks=0;
+  const bruteTimer = setInterval(()=>{
+    bruteTicks++;
+    bruteBox.textContent = randomAttemptLike(pw);
+    if(bruteTicks>=14){
+      clearInterval(bruteTimer);
+      bruteBox.textContent = pw;
+      bruteBox.classList.add('found');
+      const t = keyspace/2/rate;
+      document.getElementById('bruteTime').textContent = fmtTime(t);
+      document.getElementById('bruteResult').innerHTML = 'Estimasi waktu rata-rata sampai ditemukan: <b>'+fmtTime(t)+'</b> (keyspace÷2÷kecepatan — brute-force PASTI ketemu, cuma soal waktu).';
+      afterBothDone();
+    }
+  }, 130);
+  timers.push(bruteTimer);
+
+  // --- Dictionary lane: genuinely exhaustive check against the embedded list ---
+  const dictBox = document.getElementById('dictAttempt');
+  document.getElementById('dictTotal').textContent = COMMON_PASSWORDS.length;
+  let i=0, found=false;
+  const t0 = performance.now();
+  const dictTimer = setInterval(()=>{
+    if(i>=COMMON_PASSWORDS.length){
+      clearInterval(dictTimer);
+      const elapsed=(performance.now()-t0)/1000;
+      dictBox.textContent = 'habis, tidak ketemu';
+      dictBox.classList.add('notfound');
+      document.getElementById('dictTime').textContent = 'tidak ditemukan';
+      document.getElementById('dictResult').innerHTML = 'Password ini <b>tidak ada</b> di ~300 password paling umum yang diuji — daftar kamus sesederhana ini tidak akan menembusnya.';
+      afterBothDone();
+      return;
+    }
+    const candidate = COMMON_PASSWORDS[i];
+    document.getElementById('dictChecked').textContent = i+1;
+    dictBox.textContent = candidate;
+    if(candidate.toLowerCase()===pw.toLowerCase()){
+      clearInterval(dictTimer);
+      found=true;
+      dictBox.classList.add('found');
+      document.getElementById('dictTime').textContent = '<1 detik';
+      document.getElementById('dictResult').innerHTML = '<b>Ditemukan!</b> Password ini persis ada di daftar password paling umum — akan langsung tebak di percobaan ke-'+(i+1)+', berapa pun panjangnya atau seberapa rumit terlihat.';
+      afterBothDone();
+      return;
+    }
+    i++;
+  }, 20);
+  timers.push(dictTimer);
+}
+
+let doneCount=0;
+function afterBothDone(){
+  doneCount++;
+  if(doneCount<2) return;
+  doneCount=0; running=false;
+  const {pw,cs,len,keyspace} = analyze();
+  const rate=+speedSelect.value;
+  const bruteSec = keyspace/2/rate;
+  const inDict = COMMON_PASSWORDS.some(w=>w.toLowerCase()===pw.toLowerCase());
+  let msg;
+  if(inDict){
+    msg = '⚠️ <b>Password ini gagal total di uji kamus</b> — sepanjang atau serumit apa pun aturan yang dipenuhinya, ia ada di daftar password yang sudah umum diketahui. Ini jenis kegagalan yang tidak bisa diperbaiki dengan menambah simbol.';
+  } else if(bruteSec<3600){
+    msg = '⚠️ <b>Lolos uji kamus, tapi jebol cepat lewat brute-force</b> ('+fmtTime(bruteSec)+') — keyspace-nya terlalu kecil, biasanya karena terlalu pendek meskipun ada simbol.';
+  } else if(bruteSec>31557600*1e6){
+    msg = '✅ <b>Kuat di kedua sisi</b> — tidak ada di daftar kamus, dan brute-force butuh '+fmtTime(bruteSec)+'. Ini yang dimaksud "panjang mengalahkan simbol": panjang password inilah yang membuat keyspace-nya sebesar itu.';
+  } else {
+    msg = 'Lolos uji kamus, brute-force butuh '+fmtTime(bruteSec)+' — cukup baik, tapi menambah panjang beberapa karakter lagi akan melipatgandakan angka ini secara eksponensial.';
+  }
+  document.getElementById('takeaway').innerHTML = msg;
+}
+
+document.getElementById('btnRun').addEventListener('click', runSimulation);
+document.getElementById('btnReset').addEventListener('click', resetUI);
+pwInput.addEventListener('input', ()=>{ if(!running) analyze(); });
+document.querySelectorAll('.preset').forEach(p=>p.addEventListener('click', ()=>{
+  pwInput.value = p.dataset.pw; resetUI();
+}));
+
+resetUI();
+</script>
+</body>
+</html>

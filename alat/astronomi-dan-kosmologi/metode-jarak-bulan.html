@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Metode Jarak-Bulan — JAZMI</title>
+<style>
+  :root{
+    --bg:#0c1220;
+    --panel:#141b2e;
+    --panel2:#1a2338;
+    --silver:#c7d0e0;
+    --silver-light:#e8edf5;
+    --moonglow:#e8dfc0;
+    --gold:#d4af5a;
+    --text:#e4e9f2;
+    --text-soft:#8c96ad;
+    --line:#242e47;
+    --warn:#c9925a;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;line-height:1.65;}
+  .wrap{max-width:920px;margin:0 auto;padding:36px 20px 70px;}
+  .eyebrow{color:var(--gold);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}
+  h1{font-family:Georgia,"Iowan Old Style",serif;font-weight:normal;font-size:clamp(23px,4.3vw,32px);margin:0 0 10px;}
+  h2{font-family:Georgia,"Iowan Old Style",serif;font-weight:normal;font-size:20px;color:var(--silver-light);margin:42px 0 12px;border-bottom:1px solid var(--line);padding-bottom:8px;}
+  h3{font-size:15px;color:var(--text);margin:0 0 10px;}
+  p{color:var(--text-soft);font-size:15px;}
+  .lede{color:var(--text);font-size:15.5px;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:22px 24px;}
+  .badge{display:inline-block;font-size:11px;padding:3px 10px;border-radius:12px;margin-bottom:12px;letter-spacing:0.3px;}
+  .badge.real{background:#16321f;color:#8fd4a0;border:1px solid #2a5c3a;}
+  .badge.illus{background:#3a2a14;color:var(--warn);border:1px solid #5c4526;}
+  .field{margin:14px 0;}
+  .field label{display:block;font-size:13px;color:var(--text-soft);margin-bottom:6px;}
+  input[type=range]{width:100%;accent-color:var(--gold);}
+  svg{display:block;width:100%;height:auto;}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:10px;}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);color:var(--text-soft);}
+  th{color:var(--text);font-weight:600;width:45%;}
+  td.val{color:var(--gold);font-weight:600;text-align:right;}
+  .finalbox{background:#1a2338;border:1px solid var(--gold);border-radius:8px;padding:16px 20px;margin-top:16px;}
+  .finalbox .headline{font-size:22px;color:var(--gold);font-weight:700;margin:0 0 4px;}
+  .finalbox .sub{font-size:12.5px;color:var(--text-soft);}
+  ul{color:var(--text-soft);font-size:14.5px;padding-left:20px;}
+  li{margin-bottom:6px;}
+  .refs li{font-size:13px;}
+  footer{margin-top:44px;font-size:12px;color:var(--text-soft);border-top:1px solid var(--line);padding-top:16px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Laboratorium alat · JAZMI</p>
+    <h1>Metode jarak-bulan (lunar distance)</h1>
+    <p class="lede">Teknik penentuan bujur di laut sebelum kronometer akurat tersedia secara luas (dipakai ±1767–1850-an, dipopulerkan Nevil Maskelyne lewat <em>Nautical Almanac</em>). Bulan bergerak relatif cepat terhadap bintang dan Matahari (≈0,5° per jam) — cukup cepat untuk dipakai sebagai "jam alami" di langit, asalkan sudut yang diukur dibersihkan dulu dari distorsi paralaks dan refraksi lewat trigonometri bola.</p>
+  </header>
+
+  <h2>Belajar</h2>
+  <div class="panel">
+    <p>Prosedur lengkapnya tiga tahap:</p>
+    <ol style="color:var(--text-soft);font-size:14.5px;padding-left:20px;">
+      <li><strong>Ukur</strong> — dengan sekstan, ukur jarak sudut semu antara Bulan dan benda acuan (Matahari atau bintang tertentu), plus altitude semu keduanya, semua pada saat yang (hampir) bersamaan.</li>
+      <li><strong>Bersihkan (clear)</strong> — jarak semu yang terukur di permukaan Bumi terdistorsi oleh paralaks Bulan (sampai ±1° karena Bulan relatif dekat) dan refraksi atmosfer. Trigonometri bola dipakai untuk menghitung ulang jarak yang <em>seharusnya</em> teramati seandainya pengamat berada di pusat Bumi — inilah "jarak sejati" (geosentris).</li>
+      <li><strong>Cocokkan ke almanak</strong> — jarak sejati ini dibandingkan dengan tabel jarak-bulan yang sudah dihitung dan dicetak di <em>Nautical Almanac</em> untuk tiap 3 jam Waktu Greenwich (GMT) bertahun-tahun ke depan. Dengan interpolasi, navigator menemukan GMT saat itu — lalu dibandingkan dengan waktu lokal (dari pengukuran Matahari) untuk mendapatkan bujur: 15° bujur per jam selisih.</li>
+    </ol>
+    <p>Bagian tersulit dan paling "matematis kaya" adalah tahap membersihkan jarak — dan itulah yang saya hitung sungguhan di bawah, bukan cuma diilustrasikan.</p>
+  </div>
+
+  <h2>Eksplorasi — Tahap 1: Membersihkan Jarak</h2>
+  <div class="panel">
+    <span class="badge real">Trigonometri bola sungguhan, dihitung langsung</span>
+    <p style="margin-top:4px;">Menggunakan segitiga bola bantu di titik zenith — sudut zenith dihitung dari segitiga <em>semu</em> (altitude yang teramati), lalu dipakai ulang bersama altitude yang sudah <em>dikoreksi</em> (sejati/geosentris) untuk menghitung jarak sejati. Ini pendekatan baku yang sesungguhnya dipakai navigator (mis. metode Borda), bukan penyederhanaan yang saya karang.</p>
+
+    <div class="field">
+      <label>Altitude semu Bulan — <span id="hmLabel"></span></label>
+      <input type="range" id="haMoon" min="5" max="80" value="35" step="0.5">
+    </div>
+    <div class="field">
+      <label>Altitude semu Matahari — <span id="hsLabel"></span></label>
+      <input type="range" id="haSun" min="5" max="80" value="48" step="0.5">
+    </div>
+    <div class="field">
+      <label>Jarak semu Bulan-Matahari terukur — <span id="dLabel"></span></label>
+      <input type="range" id="dApp" min="20" max="150" value="62" step="0.5">
+    </div>
+    <div class="field">
+      <label>Paralaks horizontal Bulan (berubah tergantung jarak Bumi-Bulan) — <span id="hpLabel"></span></label>
+      <input type="range" id="hpMoon" min="54" max="61" value="57" step="0.1">
+    </div>
+
+    <table>
+      <tr><th>Refraksi Bulan (dikurangkan)</th><td class="val" id="rMoonOut"></td></tr>
+      <tr><th>Refraksi Matahari (dikurangkan)</th><td class="val" id="rSunOut"></td></tr>
+      <tr><th>Altitude sejati Bulan (Ho)</th><td class="val" id="hoMoonOut"></td></tr>
+      <tr><th>Altitude sejati Matahari (Ho)</th><td class="val" id="hoSunOut"></td></tr>
+      <tr><th>Sudut zenith (dari segitiga semu)</th><td class="val" id="zOut"></td></tr>
+    </table>
+
+    <div class="finalbox">
+      <p class="headline" id="dTrueOut"></p>
+      <p class="sub">Jarak sejati (geosentris) hasil pembersihan — bergeser <span id="deltaOut"></span> dari jarak semu yang diukur.</p>
+    </div>
+  </div>
+
+  <h2>Eksplorasi — Tahap 2: Dari Jarak Sejati ke Bujur</h2>
+  <div class="panel">
+    <span class="badge illus">Ilustratif — bukan data almanak asli</span>
+    <p style="margin-top:4px;">Di sini saya tidak punya tabel Nautical Almanac sungguhan untuk tanggal tertentu, jadi bagian ini mendemonstrasikan <strong>prinsip interpolasinya</strong> saja, dengan "titik acuan tabel" dan "laju perubahan" yang bisa Anda atur sendiri — bukan menyamar sebagai data almanak asli.</p>
+
+    <div class="field">
+      <label>Jarak pada tabel di GMT dasar (00:00) — <span id="dBaseLabel"></span></label>
+      <input type="range" id="dBase" min="20" max="150" value="60" step="0.1">
+    </div>
+    <div class="field">
+      <label>Laju perubahan jarak (khas Bulan-Matahari, °/jam) — <span id="rateLabel"></span></label>
+      <input type="range" id="rate" min="0.2" max="0.8" value="0.5" step="0.01">
+    </div>
+    <div class="field">
+      <label>Waktu lokal (LMT) hasil pengukuran Matahari terpisah — <span id="lmtLabel"></span></label>
+      <input type="range" id="lmt" min="0" max="24" value="14" step="0.1">
+    </div>
+
+    <div class="finalbox">
+      <p class="headline" id="gmtOut"></p>
+      <p class="sub" id="lonOut"></p>
+    </div>
+  </div>
+
+  <h2>Metode</h2>
+  <div class="panel">
+    <ul>
+      <li>Refraksi (derajat) ≈ cot(h + 7,31/(h+4,4)) / 60, h = altitude semu dalam derajat (pendekatan Bennett 1982, standar navigasi modern).</li>
+      <li>Altitude sejati Bulan: Ho = Ha − refraksi + (paralaks horizontal × cos(Ha)) — paralaks menaikkan posisi sejati relatif terhadap yang teramati.</li>
+      <li>Altitude sejati Matahari: Ho = Ha − refraksi (paralaks Matahari, hanya ≈8,8 detik busur, diabaikan karena kecil).</li>
+      <li>Sudut zenith dari segitiga semu: cos(Z) = (cos(d semu) − sin(Ha bulan)sin(Ha matahari)) / (cos(Ha bulan)cos(Ha matahari))</li>
+      <li>Jarak sejati dari segitiga sejati: cos(d sejati) = sin(Ho bulan)sin(Ho matahari) + cos(Ho bulan)cos(Ho matahari)cos(Z)</li>
+      <li>Sudah saya uji: bila refraksi dan paralaks dipaksa nol, rumus ini menghasilkan jarak sejati persis sama dengan jarak semu (62,000000° tetap 62°) — bukti bahwa konstruksinya konsisten secara matematis sebelum dipakai dengan angka sungguhan.</li>
+    </ul>
+  </div>
+
+  <h2>Batasan</h2>
+  <div class="panel">
+    <ul>
+      <li><strong>Tahap 1 (membersihkan jarak) genuinely computational</strong> — tapi mengabaikan koreksi semi-diameter, augmentasi, dan index error sekstan yang disebut sumber-sumber sejarah navigasi sebagai bagian dari pembersihan penuh — disederhanakan demi kejelasan prinsip inti (paralaks + refraksi).</li>
+      <li><strong>Tahap 2 sepenuhnya ilustratif</strong> — "titik acuan tabel" dan "laju perubahan" adalah angka yang bisa Anda atur bebas, bukan data Nautical Almanac sungguhan untuk tanggal atau tahun tertentu. Laju sesungguhnya juga tidak konstan sepanjang bulan (bergantung posisi orbit Bulan), disederhanakan jadi linear di sini.</li>
+      <li>Rumus refraksi Bennett adalah pendekatan (akurat untuk altitude di atas ≈5°, kurang akurat sangat dekat cakrawala) — bukan model refraksi atmosfer penuh yang memperhitungkan tekanan dan suhu udara sesungguhnya.</li>
+      <li>Metode aslinya historis punya lusinan variasi teknik pembersihan berbeda (Borda, Dunthorne, Witchell, dan lainnya) — yang dipakai di sini adalah satu pendekatan representatif (segitiga bantu di zenith), bukan reproduksi persis salah satu metode historis tertentu.</li>
+    </ul>
+  </div>
+
+  <h2>Referensi</h2>
+  <div class="panel refs">
+    <ul>
+      <li>Wikipedia — "Lunar distance (navigation)."</li>
+      <li>Brunner, W. — "Longitude by the Method of Lunar Distance," Starpath Publications.</li>
+      <li>Journal of Navigation (2019) — "GMT and Longitude by Lunar Distance: Two Methods Compared."</li>
+      <li>National Maritime Museum — "Navigational workbook: rule for clearing a lunar distance" (arsip manuskrip Fisher).</li>
+      <li>Bennett, G.G. (1982) — pendekatan refraksi atmosfer standar navigasi.</li>
+      <li>ArXiv 2007.14504 — "A (not so) brief history of lunar distances."</li>
+    </ul>
+  </div>
+
+  <footer>
+    Prototipe berdiri sendiri untuk proyek JAZMI, mengikuti metode Belajar → Model → Uji → Tool. Tahap pembersihan jarak diverifikasi numerik (kasus nol-koreksi menghasilkan jarak semu=jarak sejati persis); tahap pencarian GMT ditandai eksplisit sebagai ilustratif karena tidak ada data almanak asli yang tersedia di sini.
+  </footer>
+</div>
+
+<script>
+function refraction(haDeg){
+  const denom = haDeg + 7.31/(haDeg+4.4);
+  return (1/Math.tan(denom*Math.PI/180))/60; // derajat
+}
+
+function updateClearing(){
+  const Ha_moon = parseFloat(document.getElementById('haMoon').value);
+  const Ha_sun = parseFloat(document.getElementById('haSun').value);
+  const d_app = parseFloat(document.getElementById('dApp').value);
+  const HP_moon = parseFloat(document.getElementById('hpMoon').value)/60;
+
+  document.getElementById('hmLabel').textContent = Ha_moon.toFixed(1)+'°';
+  document.getElementById('hsLabel').textContent = Ha_sun.toFixed(1)+'°';
+  document.getElementById('dLabel').textContent = d_app.toFixed(1)+'°';
+  document.getElementById('hpLabel').textContent = (HP_moon*60).toFixed(1)+"'";
+
+  const R_moon = refraction(Ha_moon);
+  const R_sun = refraction(Ha_sun);
+  const Ho_moon = Ha_moon - R_moon + HP_moon*Math.cos(Ha_moon*Math.PI/180);
+  const Ho_sun = Ha_sun - R_sun;
+
+  const HmR=Ha_moon*Math.PI/180, HsR=Ha_sun*Math.PI/180, dR=d_app*Math.PI/180;
+  const cosZ = (Math.cos(dR) - Math.sin(HmR)*Math.sin(HsR)) / (Math.cos(HmR)*Math.cos(HsR));
+  const Z = Math.acos(Math.max(-1,Math.min(1,cosZ)));
+
+  const HomR=Ho_moon*Math.PI/180, HosR=Ho_sun*Math.PI/180;
+  const cosD = Math.sin(HomR)*Math.sin(HosR) + Math.cos(HomR)*Math.cos(HosR)*Math.cos(Z);
+  const d_true = Math.acos(Math.max(-1,Math.min(1,cosD)))*180/Math.PI;
+
+  document.getElementById('rMoonOut').textContent = '−'+(R_moon*60).toFixed(2)+"'";
+  document.getElementById('rSunOut').textContent = '−'+(R_sun*60).toFixed(2)+"'";
+  document.getElementById('hoMoonOut').textContent = Ho_moon.toFixed(4)+'°';
+  document.getElementById('hoSunOut').textContent = Ho_sun.toFixed(4)+'°';
+  document.getElementById('zOut').textContent = (Z*180/Math.PI).toFixed(3)+'°';
+  document.getElementById('dTrueOut').textContent = d_true.toFixed(4)+'°';
+  const delta = d_true - d_app;
+  document.getElementById('deltaOut').textContent = (delta>=0?'+':'')+delta.toFixed(3)+'°';
+
+  document.getElementById('dBase').value = Math.min(150, Math.max(20, d_true.toFixed(1)));
+  updateLongitude(d_true);
+}
+
+function updateLongitude(dTrueOverride){
+  const dBase = parseFloat(document.getElementById('dBase').value);
+  const rate = parseFloat(document.getElementById('rate').value);
+  const lmt = parseFloat(document.getElementById('lmt').value);
+  document.getElementById('dBaseLabel').textContent = dBase.toFixed(1)+'°';
+  document.getElementById('rateLabel').textContent = rate.toFixed(2)+'°/jam';
+  document.getElementById('lmtLabel').textContent = lmt.toFixed(1)+' jam';
+
+  const dTrue = typeof dTrueOverride === 'number' ? dTrueOverride : dBase;
+  const gmt = (dTrue - dBase)/rate; // jam sejak GMT dasar (00:00)
+  const gmtWrapped = ((gmt % 24)+24)%24;
+
+  let lonDeg = 15*(lmt - gmtWrapped);
+  if(lonDeg > 180) lonDeg -= 360;
+  if(lonDeg < -180) lonDeg += 360;
+
+  document.getElementById('gmtOut').textContent = 'GMT ≈ '+gmtWrapped.toFixed(2)+' jam';
+  document.getElementById('lonOut').textContent = 'Bujur ≈ '+Math.abs(lonDeg).toFixed(2)+'° '+(lonDeg>=0?'Timur':'Barat')+' (dari LMT '+lmt.toFixed(1)+' jam − GMT '+gmtWrapped.toFixed(2)+' jam, ×15°/jam)';
+}
+
+['haMoon','haSun','dApp','hpMoon'].forEach(id=>document.getElementById(id).addEventListener('input', updateClearing));
+['dBase','rate','lmt'].forEach(id=>document.getElementById(id).addEventListener('input', ()=>updateLongitude()));
+
+updateClearing();
+</script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deviasi & Variasi Kompas — Compass ↔ Magnetic ↔ True</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0B0F1E;--panel:#141A30;--ink:#E8E6F5;--soft:#9C9DC4;--electron:#4FD8E0;--plasma:#B26BFF;--line:#2A3158;--good:#3FA66B;--warn:#D9A441;--bad:#D9564A;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.65;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif;}
+  .wrap{max-width:900px;margin:0 auto;padding:0 24px 96px;}
+  header.hero{background:radial-gradient(ellipse at top,#1B2360 0%,#0B0F1E 65%);padding:56px 24px 40px;border-bottom:1px solid var(--line);}
+  header.hero .wrap{padding-bottom:0;}
+  .eyebrow{color:var(--plasma);font-size:0.9rem;margin:0 0 6px;font-weight:600;}
+  h1{font-size:clamp(1.4rem,4vw,2.1rem);margin:0 0 14px;font-weight:700;background:linear-gradient(90deg,var(--electron),var(--plasma));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .lede{max-width:640px;color:#C3C4E0;font-size:1.02rem;margin:0;}
+  section{padding:32px 0;border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  h2{font-size:1.25rem;font-weight:700;margin:0 0 8px;color:var(--plasma);}
+  .sub{color:var(--soft);font-size:0.9rem;margin:0 0 16px;}
+  p{margin:0 0 14px;}
+  .fam-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:16px 0;}
+  .fam-card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;font-size:0.85rem;}
+  .fam-card b{color:var(--electron);}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px;margin-top:16px;}
+  .field{margin:14px 0;}
+  .field label{display:flex;justify-content:space-between;font-size:0.82rem;color:var(--soft);margin-bottom:6px;}
+  .value{font-family:'JetBrains Mono',monospace;color:var(--electron);font-weight:600;}
+  input[type=range]{width:100%;accent-color:var(--electron);}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media (max-width:600px){.grid2{grid-template-columns:1fr;}}
+  .diagram-row{display:flex;gap:24px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:16px;}
+  canvas{display:block;}
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:14px;}
+  .stat-card{background:#10152A;border:1px solid var(--line);border-radius:6px;padding:10px 12px;text-align:center;}
+  .stat-card .n{font-family:'JetBrains Mono',monospace;font-size:1.15rem;font-weight:700;color:var(--electron);}
+  .stat-card .l{font-size:0.65rem;color:var(--soft);margin-top:3px;}
+  .check-box{background:#0F2A1C;border:1px solid #235238;border-radius:8px;padding:10px 16px;margin-top:14px;font-size:0.82rem;color:#B7E6C6;text-align:center;}
+  .formula{background:#080B16;color:#C3C4E0;padding:12px 16px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:0.85rem;display:inline-block;margin:6px 0;}
+  .limits{background:#241B0F;border:1px solid #5A4A1E;border-radius:8px;padding:20px;}
+  .limits h3{margin-top:0;font-size:1rem;color:var(--warn);}
+  footer{padding:28px 24px;text-align:center;color:var(--soft);font-size:0.82rem;border-top:1px solid var(--line);}
+  a{color:var(--electron);}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">JAZMI — Modul Sains · Navigasi Bahari</p>
+    <h1>Deviasi & Variasi Kompas</h1>
+    <p class="lede">Jarum kompas tidak pernah persis menunjuk ke utara sejati — ada dua penyimpangan berbeda sumbernya yang harus dikoreksi berlapis sebelum haluan kompas bisa dipercaya di peta.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <h2>Belajar</h2>
+    <p>Ada tiga "utara" yang berbeda, dan navigator harus bisa berpindah bebas di antara ketiganya:</p>
+    <div class="fam-grid">
+      <div class="fam-card"><b>True North</b> — kutub utara geografis, acuan semua peta.</div>
+      <div class="fam-card"><b>Magnetic North</b> — arah medan magnet bumi, sedikit bergeser dari True North dan berubah perlahan tiap tahun. Selisihnya disebut <b>Variation</b>, nilainya dibaca dari peta laut sesuai lokasi.</div>
+      <div class="fam-card"><b>Compass North</b> — arah yang benar-benar ditunjuk jarum kompas di kapal, dibelokkan medan magnet kapal sendiri (besi lambung, kabel, elektronik). Selisihnya dari Magnetic North disebut <b>Deviation</b>, dan nilainya berbeda-beda tergantung ke arah mana haluan kapal saat itu — dicatat di kartu deviasi kapal.</div>
+    </div>
+    <p>Konvensi tanda: Timur = positif, Barat = negatif — untuk Variation maupun Deviation.</p>
+  </section>
+
+  <section id="eksplorasi">
+    <h2>Eksplorasi — Geser Variabelnya</h2>
+    <p class="sub">Masukkan haluan kompas yang terbaca, lalu geser Variation dan Deviation sesuai lokasi &amp; kapal.</p>
+    <div class="panel">
+      <div class="grid2">
+        <div class="field"><label>Haluan Kompas <span class="value" id="v-comp">090°</span></label><input type="range" id="s-comp" min="0" max="359" value="90"></div>
+        <div class="field"><label>Variation (T+/B−) <span class="value" id="v-var">+5°</span></label><input type="range" id="s-var" min="-30" max="30" value="5"></div>
+        <div class="field"><label>Deviation (T+/B−) <span class="value" id="v-dev">-3°</span></label><input type="range" id="s-dev" min="-10" max="10" value="-3"></div>
+      </div>
+
+      <div class="diagram-row">
+        <canvas id="rose-canvas" width="280" height="280"></canvas>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="n" id="out-comp">—</div><div class="l">HALUAN KOMPAS</div></div>
+        <div class="stat-card"><div class="n" id="out-mag">—</div><div class="l">HALUAN MAGNETIC</div></div>
+        <div class="stat-card"><div class="n" id="out-true">—</div><div class="l">HALUAN TRUE</div></div>
+      </div>
+      <div class="check-box" id="check-box"></div>
+    </div>
+  </section>
+
+  <section id="perhitungan">
+    <h2>Perhitungan</h2>
+    <div class="formula">Magnetic = Compass + Deviation<br>True = Magnetic + Variation<br>⇒ True = Compass + Deviation + Variation</div>
+    <p>Arah sebaliknya (dari True ke Compass, misalnya saat merencanakan haluan di peta lalu mau dikemudikan):</p>
+    <div class="formula">Compass = True − Deviation − Variation</div>
+  </section>
+
+  <section id="batasan">
+    <div class="limits">
+      <h3>Batasan</h3>
+      <p>Deviation sesungguhnya <strong>berubah menurut haluan kapal</strong> — tool ini memakai satu nilai deviation tetap untuk kesederhanaan, padahal navigator sungguhan membaca nilai berbeda dari kartu deviasi kapal untuk tiap haluan yang berbeda. Variation juga bergeser perlahan tiap tahun mengikuti pergeseran kutub magnet bumi, jadi harus diambil dari peta laut yang masih berlaku, bukan dihafal jangka panjang. Anomali magnetik lokal (jarang, tapi ada di sebagian perairan) juga tidak dimodelkan di sini.</p>
+    </div>
+  </section>
+
+  <footer>JAZMI — Modul Sains</footer>
+</div>
+
+<script>
+(function(){
+  const sComp=document.getElementById('s-comp'), sVar=document.getElementById('s-var'), sDev=document.getElementById('s-dev');
+  const vComp=document.getElementById('v-comp'), vVar=document.getElementById('v-var'), vDev=document.getElementById('v-dev');
+  const outComp=document.getElementById('out-comp'), outMag=document.getElementById('out-mag'), outTrue=document.getElementById('out-true');
+  const checkBox=document.getElementById('check-box');
+  const canvas=document.getElementById('rose-canvas'), ctx=canvas.getContext('2d');
+  const DEG=Math.PI/180;
+  function norm360(a){ return ((a%360)+360)%360; }
+
+  function drawRing(cx,cy,r,rotationDeg,color,label){
+    ctx.strokeStyle=color; ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+    const a=(rotationDeg-90)*DEG; // 0 at top, clockwise
+    const nx=cx+r*Math.cos(a), ny=cy+r*Math.sin(a);
+    ctx.fillStyle=color; ctx.beginPath(); ctx.arc(nx,ny,4,0,7); ctx.fill();
+    ctx.font='9px "JetBrains Mono", monospace';
+    ctx.fillText(label, nx+6, ny+3);
+  }
+
+  function render(){
+    const comp=parseFloat(sComp.value), varn=parseFloat(sVar.value), dev=parseFloat(sDev.value);
+    vComp.textContent=comp.toFixed(0)+'°';
+    vVar.textContent=(varn>=0?'+':'')+varn.toFixed(0)+'°';
+    vDev.textContent=(dev>=0?'+':'')+dev.toFixed(0)+'°';
+
+    const mag = norm360(comp+dev);
+    const tru = norm360(mag+varn);
+    // round-trip check
+    const backToComp = norm360(tru - dev - varn);
+    const ok = Math.abs(norm360(backToComp-comp+180)-180) < 0.01;
+
+    outComp.textContent=comp.toFixed(1)+'°C';
+    outMag.textContent=mag.toFixed(1)+'°M';
+    outTrue.textContent=tru.toFixed(1)+'°T';
+
+    checkBox.textContent = ok
+      ? `✓ Cek pulang-pergi: Compass→True→Compass = ${backToComp.toFixed(1)}°, cocok dengan input semula (${comp.toFixed(1)}°).`
+      : `✗ Cek pulang-pergi gagal — ada kesalahan tanda di perhitungan.`;
+    checkBox.style.color = ok ? '#B7E6C6' : '#E6B7B7';
+
+    const W=canvas.width,H=canvas.height,cx=W/2,cy=H/2;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#10152A'; ctx.fillRect(0,0,W,H);
+    drawRing(cx,cy,110,0,'#9C9DC4','T');
+    drawRing(cx,cy,85,varn,'#B26BFF','M');
+    drawRing(cx,cy,60,varn+dev,'#4FD8E0','C');
+    // heading arrow at true-frame angle = tru
+    const a=(tru-90)*DEG;
+    const hx=cx+128*Math.cos(a), hy=cy+128*Math.sin(a);
+    ctx.strokeStyle='#3FA66B'; ctx.lineWidth=2.4;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(hx,hy); ctx.stroke();
+    ctx.fillStyle='#3FA66B'; ctx.beginPath(); ctx.arc(hx,hy,4,0,7); ctx.fill();
+    ctx.fillStyle='#E8E6F5'; ctx.font='10px "JetBrains Mono", monospace'; ctx.fillText('haluan',cx+6,cy-6);
+  }
+
+  [sComp,sVar,sDev].forEach(el=>el.addEventListener('input',render));
+  render();
+})();
+</script>
+</body>
+</html>

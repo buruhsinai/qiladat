@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eksperimen Ruang Hampa Al-Farabi — JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-900:#10181c;
+    --ink-800:#16232a;
+    --ink-700:#1e323b;
+    --ink-600:#2b4650;
+    --paper-100:#eef1e6;
+    --paper-200:#dfe6d4;
+    --water-500:#3f7ea6;
+    --water-300:#7fb2cf;
+    --air-100:#dff0ec;
+    --brass-500:#c39a54;
+    --brass-300:#d9bc85;
+    --rust-500:#b1543a;
+    --text-hi:#eef3ef;
+    --text-mid:#a9b8b3;
+    --text-dim:#748680;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink-900);
+    color:var(--text-hi);
+    font-family:'Karla',sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--water-500);color:#fff;}
+  a{color:var(--brass-300);}
+  .wrap{max-width:880px;margin:0 auto;padding:0 20px;}
+
+  /* HERO */
+  .hero{
+    position:relative;
+    padding:60px 0 40px;
+    overflow:hidden;
+    border-bottom:1px solid var(--ink-600);
+    background:
+      radial-gradient(ellipse at 80% -10%, rgba(63,126,166,0.14), transparent 55%),
+      var(--ink-900);
+  }
+  .hero-visual{
+    display:flex;
+    justify-content:center;
+    margin-bottom:30px;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--water-300);
+    margin:0 0 14px;
+  }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:clamp(26px,5vw,42px);
+    line-height:1.12;
+    margin:0 0 16px;
+    color:var(--text-hi);
+  }
+  .hero p.lede{font-size:17px;color:var(--text-mid);max-width:62ch;margin:0 0 6px;}
+  .hero-lineage{
+    margin-top:24px;display:flex;gap:10px;flex-wrap:wrap;
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-dim);
+  }
+  .hero-lineage span{border:1px solid var(--ink-600);padding:4px 10px;border-radius:999px;}
+  .hero-lineage span b{color:var(--water-300);font-weight:600;}
+
+  section{padding:44px 0;border-bottom:1px solid var(--ink-700);}
+  section:last-of-type{border-bottom:none;}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin:0 0 18px;}
+  .sec-num{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--water-300);
+    border:1px solid var(--ink-600);border-radius:4px;padding:2px 7px;
+  }
+  h2{font-family:'Fraunces',serif;font-weight:600;font-size:23px;margin:0;color:var(--text-hi);}
+  h3{font-family:'Fraunces',serif;font-weight:600;font-size:16px;margin:0 0 8px;color:var(--text-hi);}
+  p{color:var(--text-mid);margin:0 0 12px;}
+  ul{color:var(--text-mid);padding-left:20px;margin:0 0 12px;}
+  li{margin-bottom:6px;}
+  code,.mono{font-family:'IBM Plex Mono',monospace;}
+  code{background:var(--ink-700);color:var(--brass-300);padding:1px 6px;border-radius:4px;font-size:.92em;}
+
+  .panel{background:var(--ink-800);border:1px solid var(--ink-600);border-radius:10px;padding:22px;}
+
+  .mode-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+  .mode-tabs button{
+    font-family:'Karla',sans-serif;font-weight:700;font-size:13px;color:var(--text-mid);
+    background:var(--ink-700);border:1px solid var(--ink-600);border-radius:999px;
+    padding:8px 14px;cursor:pointer;transition:all .15s ease;
+  }
+  .mode-tabs button.active{background:var(--water-500);color:#eaf4fa;border-color:var(--water-500);}
+
+  .sim-grid{display:grid;grid-template-columns:1fr;gap:24px;}
+  @media(min-width:720px){.sim-grid{grid-template-columns:180px 1fr;}}
+
+  .vessel-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .vessel-wrap svg{width:140px;height:280px;}
+  .vessel-caption{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);text-align:center;}
+
+  .controls-col{display:flex;flex-direction:column;gap:18px;}
+  .slider-row label{
+    display:flex;justify-content:space-between;font-size:13px;color:var(--text-mid);margin-bottom:6px;
+  }
+  .slider-row label b{color:var(--text-hi);font-family:'IBM Plex Mono',monospace;}
+  input[type="range"]{width:100%;accent-color:var(--water-500);}
+
+  .result-grid{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:6px;
+  }
+  @media(min-width:480px){.result-grid{grid-template-columns:repeat(3,1fr);}}
+  .result-card{
+    background:var(--ink-700);border:1px solid var(--ink-600);border-radius:8px;padding:12px;
+  }
+  .result-card .label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;}
+  .result-card .value{font-family:'IBM Plex Mono',monospace;font-size:18px;color:var(--text-hi);margin-top:4px;}
+  .result-card.warn .value{color:var(--rust-500);}
+
+  .compare-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:22px;}
+  @media(min-width:640px){.compare-grid{grid-template-columns:1fr 1fr;}}
+  .compare-card{border-radius:8px;padding:16px;border:1px solid var(--ink-600);}
+  .compare-card.naif{background:rgba(177,84,58,0.08);border-color:rgba(177,84,58,0.35);}
+  .compare-card.benar{background:rgba(63,126,166,0.08);border-color:rgba(63,126,166,0.4);}
+  .compare-card h3{font-size:14px;}
+  .compare-card p{font-size:13.5px;margin-bottom:0;}
+
+  table.ttable{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:13px;margin-top:6px;}
+  table.ttable td,table.ttable th{border:1px solid var(--ink-600);padding:6px 10px;text-align:left;color:var(--text-mid);}
+  table.ttable th{color:var(--water-300);background:var(--ink-700);width:40%;}
+
+  .whatsapp-box{
+    display:flex;gap:14px;align-items:center;background:var(--ink-700);
+    border:1px solid var(--ink-600);border-radius:10px;padding:16px 18px;margin-top:8px;
+  }
+  .whatsapp-box a{
+    font-family:'Karla',sans-serif;font-weight:700;font-size:13px;color:var(--ink-900);
+    background:var(--brass-500);padding:9px 16px;border-radius:6px;text-decoration:none;white-space:nowrap;
+  }
+  .whatsapp-box a:hover{background:var(--brass-300);}
+
+  footer{padding:30px 0 60px;color:var(--text-dim);font-size:12px;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="hero-visual">
+      <svg width="120" height="140" viewBox="0 0 120 140">
+        <rect x="10" y="120" width="100" height="14" rx="3" fill="#1e323b" stroke="#2b4650"/>
+        <path d="M35 20 L35 90 Q35 118 60 118 Q85 118 85 90 L85 20 Z" fill="#dff0ec" opacity="0.9"/>
+        <rect x="35" y="70" width="50" height="48" fill="#3f7ea6" opacity="0.85"/>
+        <path d="M35 20 L35 90 Q35 118 60 118 Q85 118 85 90 L85 20" fill="none" stroke="#c39a54" stroke-width="2.5"/>
+        <line x1="35" y1="70" x2="85" y2="70" stroke="#7fb2cf" stroke-width="1.5" stroke-dasharray="3 3"/>
+        <line x1="10" y1="40" x2="110" y2="40" stroke="#7fb2cf" stroke-width="1" stroke-dasharray="2 4" opacity="0.5"/>
+      </svg>
+    </div>
+    <p class="eyebrow">JAZMI · Laboratorium Metode Ilmiah</p>
+    <h1>Eksperimen Ruang Hampa Al-Farabi</h1>
+    <p class="lede">Sebuah botol dibalik, mulutnya dicelupkan ke air — air pun "berlomba" masuk. Selama berabad-abad ini dijadikan bukti ruang hampa pernah ada. Al-Farabi membersihkan klaim itu dari distorsi: apa yang sebenarnya terjadi bisa dihitung persis, tanpa perlu ruang hampa sama sekali.</p>
+    <div class="hero-lineage">
+      <span><b>Aristoteles</b> · alam membenci ruang hampa</span>
+      <span><b>Al-Farabi</b> · menguji lewat eksperimen terkendali</span>
+      <span><b>Ibnu al-Haytham</b> · membantah balik lewat geometri</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- BELAJAR -->
+  <section id="belajar">
+    <div class="sec-head"><span class="sec-num">01</span><h2>Belajar</h2></div>
+    <p>Sebelum Al-Farabi (c. 872–950/951 M), perdebatan soal ruang hampa sudah berjalan ratusan tahun. Kaum atomis Yunani seperti Leucippus dan Democritus (abad ke-5 SM) berpendapat harus ada ruang kosong di antara atom-atom. Aristoteles (384–322 SM) menolak keras — mencetuskan gagasan <i>horror vacui</i>, "alam membenci ruang hampa": ruang kosong dianggap mustahil karena materi di sekitarnya akan langsung mengisinya. Hero dari Alexandria (abad 1 M) bahkan mencoba membuat ruang hampa buatan lewat alat pneumatik, meski gagal.</p>
+    <p>Al-Farabi — dijuluki <i>"Guru Kedua"</i> setelah Aristoteles, seorang polymath yang juga menulis kitab musik rujukan penting <i>Kitab al-Musiqa al-Kabir</i> — menulis risalah pendek <b>مقالة في الخلاء (Maqāla fī l-Khalā, "Risalah tentang Ruang Hampa")</b>. Ia menghadapi klaim: ketika mulut sebuah wadah "disedot" lalu dibalik ke dalam air, air yang berlomba masuk membuktikan sempat terbentuk ruang hampa di dalamnya.</p>
+    <p>Metode bantahannya elegan — bukan sekadar filosofis, tapi metodologis. Ia mengandaikan dulu klaim lawan itu benar (demi argumen), lalu menunjukkan konsekuensinya harus mengarah ke kontradiksi. Kesimpulannya: yang terjadi bukan ruang hampa sungguhan, melainkan udara yang <b>termampatkan</b> mengisi ruang yang tersedia — dan itu bisa dihitung, bukan sekadar diyakini.</p>
+    <p>Menariknya, perdebatan tidak berhenti di situ: kemudian Ibnu al-Haytham (965–1039) dan sejumlah teolog Mu'tazilah justru tidak sepakat dengan Al-Farabi maupun Aristoteles — mereka balik mendukung eksistensi ruang hampa lewat argumen geometris. Ini pelajaran penting: metode ilmiah bukan soal siapa menang debat, tapi soal data yang bisa diuji ulang siapa pun.</p>
+  </section>
+
+  <!-- EKSPLORASI -->
+  <section id="eksplorasi">
+    <div class="sec-head"><span class="sec-num">02</span><h2>Eksplorasi</h2></div>
+    <p>Model di bawah menghitung ulang persis apa yang diperdebatkan Al-Farabi: seberapa banyak air yang benar-benar masuk ke wadah, berdasarkan Hukum Boyle (pemampatan udara) dan tekanan hidrostatik air — bukan asumsi "ruang hampa".</p>
+
+    <div class="panel">
+      <div class="mode-tabs" id="modeTabs"></div>
+      <p class="machine-desc" id="modeDesc" style="font-size:14px;margin-bottom:18px;"></p>
+
+      <div class="sim-grid">
+        <div class="vessel-wrap">
+          <svg viewBox="0 0 140 280" id="vesselSvg">
+            <rect x="0" y="0" width="140" height="280" fill="none"/>
+            <line x1="0" y1="60" x2="140" y2="60" stroke="#7fb2cf" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.55"/>
+            <text x="4" y="52" font-family="IBM Plex Mono" font-size="10" fill="#7fb2cf">permukaan air</text>
+            <defs>
+              <clipPath id="vesselClip">
+                <path id="vesselBody" d=""/>
+              </clipPath>
+            </defs>
+            <use href="#vesselBody" fill="#dff0ec" opacity="0.95"/>
+            <rect id="waterFill" x="0" y="0" width="0" height="0" fill="#3f7ea6" opacity="0.88" clip-path="url(#vesselClip)"/>
+            <path id="vesselOutline" d="" fill="none" stroke="#c39a54" stroke-width="3"/>
+            <line id="interfaceLine" x1="0" y1="0" x2="0" y2="0" stroke="#7fb2cf" stroke-width="1.5" stroke-dasharray="3 3"/>
+          </svg>
+          <div class="vessel-caption">potongan melintang wadah</div>
+        </div>
+
+        <div class="controls-col">
+          <div class="slider-row">
+            <label for="lenRange">Panjang wadah (L) <b id="lenVal">30 cm</b></label>
+            <input type="range" id="lenRange" min="5" max="60" value="30">
+          </div>
+          <div class="slider-row">
+            <label for="depthRange">Kedalaman celup mulut (d) <b id="depthVal">100 cm</b></label>
+            <input type="range" id="depthRange" min="0" max="2000" value="100">
+          </div>
+
+          <div class="result-grid">
+            <div class="result-card">
+              <div class="label">Air masuk (x)</div>
+              <div class="value" id="outX">—</div>
+            </div>
+            <div class="result-card">
+              <div class="label">Terisi air</div>
+              <div class="value" id="outFrac">—</div>
+            </div>
+            <div class="result-card" id="pressCard">
+              <div class="label">Tekanan udara jebak</div>
+              <div class="value" id="outP">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="compare-grid">
+        <div class="compare-card naif">
+          <h3>Interpretasi naif (yang dibantah Al-Farabi)</h3>
+          <p>"Air berlomba masuk karena mengejar ruang hampa yang tercipta di dalam wadah." — Ruang di dalam wadah dianggap benar-benar kosong dari materi apa pun.</p>
+        </div>
+        <div class="compare-card benar">
+          <h3>Interpretasi terkoreksi</h3>
+          <p id="correctedText">Udara di dalam wadah termampatkan, tekanannya naik mengikuti kedalaman air di luar. Ia tidak pernah nol — tidak pernah benar-benar hampa. Jumlah air yang masuk bisa dihitung persis dari kedalaman dan panjang wadah.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- METODE -->
+  <section id="metode">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Metode</h2></div>
+    <p>Model ini menggabungkan dua hukum fisika dasar. Misalkan wadah berpenampang seragam luas <code>A</code>, panjang <code>L</code>, mulut berada di kedalaman <code>d</code> di bawah permukaan air, dan tinggi air yang sudah masuk dari mulut adalah <code>x</code>.</p>
+    <ul>
+      <li><b>Hukum Boyle</b> (proses dianggap cukup lambat sehingga suhu tetap / isotermal): <code>P₀·A·L = P_udara·A·(L−x)</code></li>
+      <li><b>Keseimbangan hidrostatik</b> di batas udara–air (di kedalaman d−x): <code>P_udara = P₀ + ρ·g·(d−x)</code></li>
+    </ul>
+    <p>Menggabungkan keduanya (luas <code>A</code> otomatis coret dari kedua sisi — artinya <b>lebar/bentuk penampang wadah, selama seragam, tidak memengaruhi proporsi akhir air yang masuk</b>) menghasilkan persamaan kuadrat dalam <code>x</code>:</p>
+    <p><code>ρg·x² − [ρg(d+L) + P₀]·x + ρg·d·L = 0</code></p>
+    <p>Diselesaikan dengan rumus kuadrat, lalu dipilih akar yang secara fisis masuk akal (0 ≤ x ≤ min(d, L)). Konstanta yang dipakai: P₀ = 101.325 Pa (1 atm), ρ = 1000 kg/m³, g = 9,8 m/s².</p>
+    <p>Ini yang justru menjawab pertanyaan awal proyek ini — "bagaimana pengaruh bentuk/mulut wadah?" — dengan jawaban yang tidak terduga: <b>bentuk penampang tidak berpengaruh pada hasil akhir</b> (asal seragam dan proses berlangsung tenang). Yang benar-benar menentukan adalah <b>lebar mulut relatif terhadap leher</b> — itulah yang memutuskan apakah udara sempat termampatkan rapi (mode "Leher Sempit") atau malah lolos sebagai gelembung sebelum kesetimbangan tercapai (mode "Mulut Lebar/Miring"). Persis titik yang membuat eksperimen lama gagal direplikasi secara konsisten — dan persis yang coba dibersihkan Al-Farabi.</p>
+  </section>
+
+  <!-- BATASAN -->
+  <section id="batasan">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Batasan</h2></div>
+    <ul>
+      <li><b>Mode "Leher Sempit"</b> dihitung penuh dari model fisika di atas (Hukum Boyle + hidrostatika) — hasilnya presisi selama asumsi terpenuhi.</li>
+      <li><b>Mode "Mulut Lebar/Miring"</b> BUKAN simulasi kuantitatif — ini demonstrasi kualitatif saja (wadah dianggap terisi penuh) untuk menunjukkan bahwa begitu udara lolos sebagai gelembung, model kesetimbangan tenang di atas tidak lagi berlaku. Fenomena gelembung lolos jauh lebih rumit (dinamika fluida, tegangan permukaan) dan sengaja tidak dimodelkan di sini.</li>
+      <li><b>Asumsi isotermal</b> — Hukum Boyle mengasumsikan suhu udara tidak berubah. Jika pencelupan dilakukan sangat cepat, udara bisa memanas saat termampatkan (proses adiabatik), dan hasil sebenarnya akan sedikit berbeda dari yang dihitung di sini.</li>
+      <li><b>Dinding wadah dianggap kaku dan tak berbobot</b>, penampang seragam sepanjang wadah — tidak memodelkan bentuk wadah yang menyempit/melebar di tengah.</li>
+      <li>Ini <b>bukan pengganti eksperimen fisik</b>. Al-Farabi sendiri menekankan pengujian nyata, bukan cuma hitungan di atas kertas.</li>
+    </ul>
+  </section>
+
+  <!-- REFERENSI -->
+  <section id="referensi">
+    <div class="sec-head"><span class="sec-num">05</span><h2>Referensi</h2></div>
+    <ul>
+      <li>Necati Lugal & Aydin Sayili (ed. & terj.), "Maqāla fī l-Khalā", <i>Belleten</i> (Türk Tarih Kurumu), 1951 — edisi Arab dengan terjemahan Inggris risalah Al-Farabi tentang ruang hampa.</li>
+      <li>Aydin Sayili, "Al-Farabi's Article on Vacuum" — analisis akademik atas struktur argumen risalah tersebut.</li>
+      <li>Stanford Encyclopedia of Philosophy, entri "Al-Farabi" — ringkasan biografis dan bibliografis.</li>
+      <li>Nader El-Bizri, tentang perdebatan lanjutan Ibnu al-Haytham dan teolog Mu'tazilah terkait ruang hampa.</li>
+    </ul>
+
+    <table class="ttable" style="margin-top:18px;">
+      <tr><th>Konstanta</th><td>Nilai dipakai</td></tr>
+      <tr><th>Tekanan atmosfer (P₀)</th><td>101.325 Pa (1 atm)</td></tr>
+      <tr><th>Massa jenis air (ρ)</th><td>1000 kg/m³</td></tr>
+      <tr><th>Percepatan gravitasi (g)</th><td>9,8 m/s²</td></tr>
+    </table>
+
+    <div class="whatsapp-box">
+      <p style="margin:0;color:var(--text-mid);font-size:13.5px;">Alat ini bagian dari pengembangan tahap awal JAZMI. Ada koreksi model, saran eksperimen sejenis, atau mau diskusi lebih lanjut?</p>
+      <a id="waLink" href="#" target="_blank" rel="noopener">WhatsApp</a>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">Eksperimen Ruang Hampa Al-Farabi — bagian dari Laboratorium Metode Ilmiah, JAZMI (Jalinan Zamrud Islamiah). Versi awal, dibangun mengikuti metode Belajar → Model → Uji → Tool.</div>
+</footer>
+
+<script>
+(function(){
+  const P0 = 101325, RHO = 1000, G = 9.8;
+
+  const MODES = {
+    controlled: {
+      name: "Leher Sempit (terkendali)",
+      desc: "Mulut wadah sempit dan tegak lurus — udara termampatkan rapi mengikuti Hukum Boyle. Ini kondisi yang dipakai Al-Farabi agar hasilnya bisa dihitung dan diuji ulang."
+    },
+    bubbling: {
+      name: "Mulut Lebar / Miring (gelembung lolos)",
+      desc: "Mulut lebar atau wadah dimiringkan — udara tidak sempat termampatkan rapi, malah lolos sebagai gelembung. Wadah akhirnya terisi penuh air, tapi BUKAN karena ruang hampa — karena udaranya kabur duluan. Ini contoh konkret sumber distorsi data yang dikritik Al-Farabi."
+    }
+  };
+  let mode = 'controlled';
+
+  const els = {
+    tabs: document.getElementById('modeTabs'),
+    desc: document.getElementById('modeDesc'),
+    len: document.getElementById('lenRange'),
+    lenVal: document.getElementById('lenVal'),
+    depth: document.getElementById('depthRange'),
+    depthVal: document.getElementById('depthVal'),
+    outX: document.getElementById('outX'),
+    outFrac: document.getElementById('outFrac'),
+    outP: document.getElementById('outP'),
+    pressCard: document.getElementById('pressCard'),
+    correctedText: document.getElementById('correctedText'),
+    waterFill: document.getElementById('waterFill'),
+    vesselBody: document.getElementById('vesselBody'),
+    vesselOutline: document.getElementById('vesselOutline'),
+    interfaceLine: document.getElementById('interfaceLine'),
+    waLink: document.getElementById('waLink')
+  };
+
+  function buildTabs(){
+    els.tabs.innerHTML = '';
+    Object.keys(MODES).forEach(key=>{
+      const b = document.createElement('button');
+      b.textContent = MODES[key].name;
+      b.className = key===mode ? 'active' : '';
+      b.addEventListener('click', ()=>{ mode = key; buildTabs(); render(); });
+      els.tabs.appendChild(b);
+    });
+    els.desc.textContent = MODES[mode].desc;
+  }
+
+  function solveX(d, L){
+    // rho*g*x^2 - (rho*g*(d+L)+P0)*x + rho*g*d*L = 0
+    const a = RHO*G;
+    const b = -(RHO*G*(d+L) + P0);
+    const c = RHO*G*d*L;
+    const disc = b*b - 4*a*c;
+    if (disc < 0) return 0;
+    const sq = Math.sqrt(disc);
+    const x1 = (-b - sq) / (2*a);
+    const x2 = (-b + sq) / (2*a);
+    const cands = [x1,x2].filter(x => x >= -1e-9 && x <= Math.min(d,L)+1e-9);
+    if(!cands.length) return 0;
+    return Math.max(0, Math.min(...cands));
+  }
+
+  function render(){
+    const Lcm = parseInt(els.len.value,10);
+    const dcm = parseInt(els.depth.value,10);
+    els.lenVal.textContent = Lcm + ' cm';
+    els.depthVal.textContent = dcm + ' cm';
+
+    const L = Lcm/100, d = dcm/100; // meter
+
+    let x, Pair, isFull;
+    if(mode === 'bubbling'){
+      x = L; // dianggap penuh, kualitatif
+      Pair = P0 + RHO*G*d; // tekanan luar di kedalaman mulut, bukan hasil kesetimbangan udara jebak
+      isFull = true;
+    } else {
+      x = solveX(d, L);
+      Pair = P0 + RHO*G*Math.max(0,(d-x));
+      isFull = false;
+    }
+
+    const frac = (x/L*100);
+    els.outX.textContent = (x*100).toFixed(1) + ' cm';
+    els.outFrac.textContent = frac.toFixed(1) + '%';
+    if(mode === 'bubbling'){
+      els.outP.textContent = '— (tak setimbang)';
+      els.pressCard.classList.add('warn');
+      els.correctedText.innerHTML = 'Wadah terisi penuh bukan karena ruang hampa terbukti ada — melainkan karena udaranya sudah kabur sebagai gelembung sebelum sempat termampatkan. Ini bukan bukti ruang hampa, ini bukti eksperimen yang tidak terkendali.';
+    } else {
+      els.outP.textContent = (Pair/1000).toFixed(1) + ' kPa';
+      els.pressCard.classList.remove('warn');
+      els.correctedText.innerHTML = 'Udara di dalam wadah termampatkan hingga tekanannya <b>' + (Pair/1000).toFixed(1) + ' kPa</b> (selalu di atas nol — tidak pernah benar-benar hampa). Air yang masuk hanya <b>' + frac.toFixed(1) + '%</b> dari volume wadah, persis sesuai perhitungan, bukan sekadar dugaan.';
+    }
+
+    // --- Gambar wadah (SVG sederhana: tabung vertikal) ---
+    const vx=30, vy=15, vw=80, vh=250;
+    const bodyPath = 'M'+vx+' '+vy+' L'+vx+' '+(vy+vh-30)+' Q'+vx+' '+(vy+vh)+' '+(vx+vw/2)+' '+(vy+vh)+' Q'+(vx+vw)+' '+(vy+vh)+' '+(vx+vw)+' '+(vy+vh-30)+' L'+(vx+vw)+' '+vy+' Z';
+    els.vesselBody.setAttribute('d', bodyPath);
+    els.vesselOutline.setAttribute('d', bodyPath);
+
+    const fillFrac = Math.max(0, Math.min(1, x/L));
+    const fillH = fillFrac * vh;
+    const fillY = vy + vh - fillH;
+    // clip sederhana: gambar water sebagai rect dari bawah, dibatasi oleh clip path lingkaran wadah via mask alami (rect di dalam area path secara visual cukup untuk ilustrasi)
+    els.waterFill.setAttribute('x', vx);
+    els.waterFill.setAttribute('y', fillY);
+    els.waterFill.setAttribute('width', vw);
+    els.waterFill.setAttribute('height', fillH);
+
+    els.interfaceLine.setAttribute('x1', vx-4);
+    els.interfaceLine.setAttribute('x2', vx+vw+4);
+    els.interfaceLine.setAttribute('y1', fillY);
+    els.interfaceLine.setAttribute('y2', fillY);
+
+    const msg = encodeURIComponent(
+      'Halo, saya baru mencoba Eksperimen Ruang Hampa Al-Farabi (JAZMI). Ingin diskusi/validasi lebih lanjut.'
+    );
+    els.waLink.href = 'https://wa.me/6281356572588?text=' + msg;
+  }
+
+  els.len.addEventListener('input', render);
+  els.depth.addEventListener('input', render);
+
+  buildTabs();
+  render();
+})();
+</script>
+
+</body>
+</html>

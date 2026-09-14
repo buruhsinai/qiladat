@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Field Visualizer — Medan &amp; Potensial</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0B0F1E;--panel:#141A30;--ink:#E8E6F5;--soft:#9C9DC4;--electron:#4FD8E0;--plasma:#B26BFF;--line:#2A3158;
+        --pos:#FF6B6B;--neg:#4FA8E0;--field:#C9CBF5;--equi:#D9A441;--vec:#7FD9A0;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.55;}
+  .wrap{max-width:900px;margin:0 auto;padding:0 20px 60px;}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:1.6rem;margin:32px 0 6px;background:linear-gradient(90deg,var(--electron),var(--plasma));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  p.lede{color:var(--soft);margin:0 0 20px;max-width:640px;}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px;}
+  button{font-family:'Space Grotesk',sans-serif;background:var(--panel);border:1px solid var(--line);color:var(--ink);padding:8px 14px;border-radius:6px;font-size:0.8rem;cursor:pointer;}
+  button.active{background:var(--electron);color:#0B0F1E;border-color:var(--electron);}
+  button.neg-active{background:var(--neg);color:#0B0F1E;border-color:var(--neg);}
+  label.chk{display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--soft);}
+  #canvas-holder{position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#10152A;touch-action:none;}
+  canvas{display:block;cursor:crosshair;width:100%;}
+  .field{margin:14px 0;}
+  .field label{display:block;font-size:0.8rem;color:var(--soft);margin-bottom:6px;}
+  .field input[type=range]{width:220px;accent-color:var(--electron);}
+  .value{font-family:'JetBrains Mono',monospace;color:var(--electron);font-weight:600;}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:0.78rem;color:var(--soft);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .sw{width:16px;height:3px;display:inline-block;border-radius:2px;}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+  footer{color:var(--soft);font-size:0.78rem;text-align:center;margin-top:30px;}
+  a{color:var(--electron);}
+  .hint{font-size:0.8rem;color:var(--soft);margin-top:10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Field Visualizer — Medan &amp; Potensial</h1>
+  <p class="lede">Bukan kalkulator — Anda yang membangun medannya. Klik kanvas untuk menaruh muatan, lalu lihat garis medan, garis ekuipotensial, dan vektor medan terbentuk otomatis dari susunan yang Anda buat sendiri.</p>
+
+  <div class="toolbar">
+    <button class="active" id="mode-listrik">⚡ Listrik</button>
+    <button id="mode-gravitasi">🪐 Gravitasi</button>
+  </div>
+  <div class="toolbar" id="sign-toolbar">
+    <button class="active" id="sign-pos">+ Muatan Positif</button>
+    <button id="sign-neg">− Muatan Negatif</button>
+    <div class="field" style="margin:0;">
+      <label>Besar muatan — <span class="value" id="mag-val">1</span></label>
+      <input type="range" id="mag-slider" min="1" max="4" step="1" value="1">
+    </div>
+  </div>
+  <div class="toolbar">
+    <label class="chk"><input type="checkbox" id="chk-field" checked> Garis medan</label>
+    <label class="chk"><input type="checkbox" id="chk-equi" checked> Ekuipotensial</label>
+    <label class="chk"><input type="checkbox" id="chk-vec"> Vektor medan</label>
+    <button id="btn-clear">🗑 Bersihkan Semua</button>
+  </div>
+
+  <div id="canvas-holder">
+    <canvas id="canvas" width="860" height="520"></canvas>
+  </div>
+  <p class="hint">Klik area kosong untuk menaruh muatan baru. Klik muatan yang sudah ada untuk menghapusnya.</p>
+
+  <div class="legend">
+    <span><span class="dot" style="background:var(--pos)"></span> Positif / Massa</span>
+    <span><span class="dot" style="background:var(--neg)"></span> Negatif</span>
+    <span><span class="sw" style="background:var(--field)"></span> Garis medan</span>
+    <span><span class="sw" style="background:var(--equi);border-top:2px dashed var(--equi);height:0;"></span> Ekuipotensial</span>
+    <span><span class="sw" style="background:var(--vec)"></span> Vektor medan</span>
+  </div>
+
+  <p style="font-size:0.85rem;color:var(--soft);margin-top:18px;">Mode <strong>Listrik</strong>: garis medan keluar dari muatan positif dan masuk ke muatan negatif — sesuai konvensi standar. Mode <strong>Gravitasi</strong>: semua benda dianggap bermassa (selalu saling tarik), garis medan selalu masuk menuju setiap massa dari segala arah, karena gravitasi tidak punya "massa negatif". Prinsip perhitungannya sama persis (hukum kuadrat terbalik) — hanya konvensi dan tanda yang berbeda. Mode <strong>Magnet</strong> memerlukan model dipol yang berbeda (bukan monopol) dan belum tersedia di versi ini.</p>
+
+  <footer>JAZMI — Modul Sains · Field Visualizer</footer>
+</div>
+
+<script>
+(function(){
+  const canvas=document.getElementById('canvas');
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  const K=6000;
+
+  let mode='listrik'; // or 'gravitasi'
+  let sign=1;
+  let magnitude=1;
+  let charges=[]; // {x,y,q}
+
+  const modeListrik=document.getElementById('mode-listrik');
+  const modeGravitasi=document.getElementById('mode-gravitasi');
+  const signToolbar=document.getElementById('sign-toolbar');
+  const signPos=document.getElementById('sign-pos');
+  const signNeg=document.getElementById('sign-neg');
+  const magSlider=document.getElementById('mag-slider');
+  const magVal=document.getElementById('mag-val');
+  const chkField=document.getElementById('chk-field');
+  const chkEqui=document.getElementById('chk-equi');
+  const chkVec=document.getElementById('chk-vec');
+
+  function fieldAt(x,y){
+    let ex=0,ey=0;
+    for(const c of charges){
+      let dx=x-c.x, dy=y-c.y;
+      let r2=dx*dx+dy*dy;
+      let r=Math.sqrt(r2);
+      if(r<10) r=10;
+      const f=K*c.q/(r*r*r);
+      ex+=f*dx; ey+=f*dy;
+    }
+    return [ex,ey];
+  }
+  function potentialAt(x,y){
+    let v=0;
+    for(const c of charges){
+      let dx=x-c.x, dy=y-c.y;
+      let r=Math.sqrt(dx*dx+dy*dy);
+      if(r<10) r=10;
+      v+=K*c.q/r;
+    }
+    return v;
+  }
+
+  function traceFieldLine(startX,startY,src,forwardSign){
+    const pts=[[startX,startY]];
+    let x=startX,y=startY;
+    for(let i=0;i<500;i++){
+      const [ex,ey]=fieldAt(x,y);
+      const mag=Math.hypot(ex,ey);
+      if(mag<1e-8) break;
+      const dx=forwardSign*ex/mag, dy=forwardSign*ey/mag;
+      x+=dx*4; y+=dy*4;
+      pts.push([x,y]);
+      if(x<0||x>W||y<0||y>H) break;
+      let hit=false;
+      for(const c of charges){
+        if(c===src) continue;
+        if(Math.hypot(x-c.x,y-c.y)<14){ hit=true; break; }
+      }
+      if(hit) break;
+    }
+    return pts;
+  }
+
+  function drawFieldLines(){
+    const seeds = mode==='listrik' ? charges.filter(c=>c.q>0) : charges;
+    for(const c of seeds){
+      const n = 6+4*Math.abs(c.q);
+      for(let i=0;i<n;i++){
+        const angle=(i/n)*Math.PI*2;
+        const sx=c.x+16*Math.cos(angle), sy=c.y+16*Math.sin(angle);
+        const forward = mode==='listrik' ? 1 : -1;
+        const pts=traceFieldLine(sx,sy,c,forward);
+        if(pts.length<2) continue;
+        ctx.beginPath();
+        ctx.moveTo(pts[0][0],pts[0][1]);
+        for(let k=1;k<pts.length;k++) ctx.lineTo(pts[k][0],pts[k][1]);
+        ctx.strokeStyle='rgba(201,203,245,0.55)';
+        ctx.lineWidth=1.3;
+        ctx.stroke();
+
+        // direction arrow at ~60% along the line
+        const idx=Math.floor(pts.length*0.55);
+        if(idx>2 && idx<pts.length-1){
+          const arrowForward = mode==='listrik';
+          const a = arrowForward ? pts[idx-1] : pts[idx+1];
+          const b = arrowForward ? pts[idx+1] : pts[idx-1];
+          drawArrowhead(a[0],a[1],b[0],b[1]);
+        }
+      }
+    }
+  }
+  function drawArrowhead(x1,y1,x2,y2){
+    const ang=Math.atan2(y2-y1,x2-x1);
+    const len=7;
+    ctx.beginPath();
+    ctx.moveTo(x2,y2);
+    ctx.lineTo(x2-len*Math.cos(ang-0.4), y2-len*Math.sin(ang-0.4));
+    ctx.lineTo(x2-len*Math.cos(ang+0.4), y2-len*Math.sin(ang+0.4));
+    ctx.closePath();
+    ctx.fillStyle='rgba(201,203,245,0.85)';
+    ctx.fill();
+  }
+
+  function computeVGrid(cellSize){
+    const cols=Math.ceil(W/cellSize)+1, rows=Math.ceil(H/cellSize)+1;
+    const grid=[];
+    for(let i=0;i<cols;i++){
+      grid.push([]);
+      for(let j=0;j<rows;j++){
+        grid[i].push(potentialAt(i*cellSize,j*cellSize));
+      }
+    }
+    return {grid,cols,rows,cellSize};
+  }
+
+  function marchAndDrawLevel(gridObj, level){
+    const {grid,cols,rows,cellSize}=gridObj;
+    ctx.beginPath();
+    for(let i=0;i<cols-1;i++){
+      for(let j=0;j<rows-1;j++){
+        const v00=grid[i][j], v10=grid[i+1][j], v11=grid[i+1][j+1], v01=grid[i][j+1];
+        const x0=i*cellSize, x1=(i+1)*cellSize, y0=j*cellSize, y1=(j+1)*cellSize;
+        const pts=[];
+        function interp(pa,va,pb,vb){
+          const t=(level-va)/(vb-va);
+          return [pa[0]+t*(pb[0]-pa[0]), pa[1]+t*(pb[1]-pa[1])];
+        }
+        if((v00-level)*(v10-level)<0) pts.push(interp([x0,y0],v00,[x1,y0],v10));
+        if((v10-level)*(v11-level)<0) pts.push(interp([x1,y0],v10,[x1,y1],v11));
+        if((v11-level)*(v01-level)<0) pts.push(interp([x1,y1],v11,[x0,y1],v01));
+        if((v01-level)*(v00-level)<0) pts.push(interp([x0,y1],v01,[x0,y0],v00));
+        if(pts.length===2){
+          ctx.moveTo(pts[0][0],pts[0][1]);
+          ctx.lineTo(pts[1][0],pts[1][1]);
+        } else if(pts.length===4){
+          const avg=(v00+v10+v11+v01)/4;
+          if(avg>level){
+            ctx.moveTo(pts[0][0],pts[0][1]); ctx.lineTo(pts[1][0],pts[1][1]);
+            ctx.moveTo(pts[2][0],pts[2][1]); ctx.lineTo(pts[3][0],pts[3][1]);
+          } else {
+            ctx.moveTo(pts[1][0],pts[1][1]); ctx.lineTo(pts[2][0],pts[2][1]);
+            ctx.moveTo(pts[3][0],pts[3][1]); ctx.lineTo(pts[0][0],pts[0][1]);
+          }
+        }
+      }
+    }
+    ctx.setLineDash([5,4]);
+    ctx.strokeStyle='rgba(217,164,65,0.65)';
+    ctx.lineWidth=1.2;
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  function drawEquipotentials(){
+    if(charges.length===0) return;
+    const gridObj=computeVGrid(14);
+    let maxAbs=0;
+    for(const row of gridObj.grid) for(const v of row) maxAbs=Math.max(maxAbs,Math.min(Math.abs(v),K*10));
+    const levels=[];
+    for(let p=1;p<=6;p++){
+      const lvl=maxAbs/Math.pow(1.8,p);
+      levels.push(lvl, -lvl);
+    }
+    levels.forEach(lvl=> marchAndDrawLevel(gridObj, lvl));
+  }
+
+  function drawVectors(){
+    const spacing=42;
+    for(let x=spacing/2;x<W;x+=spacing){
+      for(let y=spacing/2;y<H;y+=spacing){
+        const [ex,ey]=fieldAt(x,y);
+        const mag=Math.hypot(ex,ey);
+        if(mag<1e-6) continue;
+        const shown=Math.min(16, 4*Math.log(1+mag/40));
+        const ux=ex/mag, uy=ey/mag;
+        const x2=x+ux*shown, y2=y+uy*shown;
+        ctx.beginPath();
+        ctx.moveTo(x-ux*shown*0.4,y-uy*shown*0.4);
+        ctx.lineTo(x2,y2);
+        ctx.strokeStyle='rgba(127,217,160,0.55)';
+        ctx.lineWidth=1.2;
+        ctx.stroke();
+        drawArrowheadSmall(x2,y2,ux,uy);
+      }
+    }
+  }
+  function drawArrowheadSmall(x,y,ux,uy){
+    const ang=Math.atan2(uy,ux), len=4;
+    ctx.beginPath();
+    ctx.moveTo(x,y);
+    ctx.lineTo(x-len*Math.cos(ang-0.5), y-len*Math.sin(ang-0.5));
+    ctx.lineTo(x-len*Math.cos(ang+0.5), y-len*Math.sin(ang+0.5));
+    ctx.closePath();
+    ctx.fillStyle='rgba(127,217,160,0.7)';
+    ctx.fill();
+  }
+
+  function drawCharges(){
+    for(const c of charges){
+      const r=10+Math.abs(c.q)*2.5;
+      ctx.beginPath();
+      ctx.arc(c.x,c.y,r,0,Math.PI*2);
+      ctx.fillStyle = (mode==='gravitasi'||c.q>0) ? '#FF6B6B' : '#4FA8E0';
+      ctx.fill();
+      ctx.strokeStyle='#0B0F1E'; ctx.lineWidth=2; ctx.stroke();
+      ctx.fillStyle='#0B0F1E';
+      ctx.font='bold 13px Inter, sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      const label = mode==='gravitasi' ? 'm' : (c.q>0?'+':'−');
+      ctx.fillText(label, c.x, c.y);
+      if(Math.abs(c.q)>1){
+        ctx.font='9px JetBrains Mono, monospace';
+        ctx.fillText(Math.abs(c.q), c.x, c.y+r+9);
+      }
+    }
+  }
+
+  function render(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#10152A';
+    ctx.fillRect(0,0,W,H);
+    if(chkEqui.checked) drawEquipotentials();
+    if(chkField.checked) drawFieldLines();
+    if(chkVec.checked) drawVectors();
+    drawCharges();
+  }
+
+  canvas.addEventListener('click', (e)=>{
+    const rect=canvas.getBoundingClientRect();
+    const scaleX=canvas.width/rect.width, scaleY=canvas.height/rect.height;
+    const x=(e.clientX-rect.left)*scaleX, y=(e.clientY-rect.top)*scaleY;
+
+    for(let i=0;i<charges.length;i++){
+      if(Math.hypot(x-charges[i].x,y-charges[i].y)<16){
+        charges.splice(i,1);
+        render();
+        return;
+      }
+    }
+    const q = mode==='gravitasi' ? magnitude : sign*magnitude;
+    charges.push({x,y,q});
+    render();
+  });
+
+  modeListrik.addEventListener('click', ()=>{
+    mode='listrik'; modeListrik.classList.add('active'); modeGravitasi.classList.remove('active');
+    signToolbar.style.display='flex'; render();
+  });
+  modeGravitasi.addEventListener('click', ()=>{
+    mode='gravitasi'; modeGravitasi.classList.add('active'); modeListrik.classList.remove('active');
+    signToolbar.style.display='none'; render();
+  });
+  signPos.addEventListener('click', ()=>{ sign=1; signPos.classList.add('active'); signNeg.classList.remove('neg-active'); });
+  signNeg.addEventListener('click', ()=>{ sign=-1; signNeg.classList.add('neg-active'); signPos.classList.remove('active'); });
+  magSlider.addEventListener('input', ()=>{ magnitude=parseInt(magSlider.value,10); magVal.textContent=magnitude; });
+  [chkField,chkEqui,chkVec].forEach(el=> el.addEventListener('change', render));
+  document.getElementById('btn-clear').addEventListener('click', ()=>{ charges=[]; render(); });
+
+  // seed a starting example: a dipole
+  charges=[{x:W*0.38,y:H*0.5,q:2},{x:W*0.62,y:H*0.5,q:-2}];
+  render();
+})();
+</script>
+</body>
+</html>

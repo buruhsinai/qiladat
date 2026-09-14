@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analemma Matahari — Laboratorium JAZMI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&display=swap');
+:root{
+  --bg:#EAF1F5; --panel:#FFFFFF; --panel-border:#cfe0e8;
+  --ink:#1c2b33; --ink-soft:#5b6d76; --accent:#D97C3C; --sky:#3f7ea6;
+  --line:rgba(28,43,51,.12); --line-strong:rgba(28,43,51,.25);
+}
+*{box-sizing:border-box;} html,body{margin:0;padding:0;}
+body{ background:linear-gradient(180deg,#DCEBF2,var(--bg)); color:var(--ink); font-family:'Karla',sans-serif; }
+.wrap{max-width:760px; margin:0 auto; padding:20px 14px 40px;}
+.eyebrow{font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--sky); margin:0 0 4px;}
+h1{font-family:'Fraunces',serif; font-weight:700; font-size:clamp(22px,5vw,30px); margin:0 0 6px;}
+.sub{font-size:13.5px; color:var(--ink-soft); max-width:66ch; line-height:1.55;}
+
+.intro{ background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:14px 16px; margin-top:14px; font-size:13px; line-height:1.6; }
+
+.controls{ background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:14px 16px; margin-top:14px; }
+.field label{ font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); display:flex; justify-content:space-between; }
+.field label .val{ color:var(--accent); font-weight:700; }
+input[type=range]{ width:100%; accent-color:var(--accent); }
+.jamrow{ display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+.jamrow button{ font-family:'Karla',sans-serif; font-size:12px; font-weight:700; background:transparent; border:1px solid var(--line-strong); color:var(--ink); border-radius:999px; padding:6px 12px; cursor:pointer; }
+.jamrow button.active{ background:var(--sky); color:#fff; border-color:var(--sky); }
+
+.stage{ background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:10px; margin-top:14px; }
+svg{ width:100%; height:auto; display:block; }
+.curve{ fill:none; stroke:var(--sky); stroke-width:2; opacity:.55; }
+.axis{ stroke:var(--line-strong); stroke-width:1; stroke-dasharray:3 3; }
+.axislabel{ font-size:10px; fill:var(--ink-soft); }
+.marker{ fill:var(--accent); stroke:#7a3e14; stroke-width:1; }
+
+.readout{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-top:14px; }
+.rcard{ background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:10px 12px; }
+.rcard .l{ font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); }
+.rcard .v{ font-family:'Fraunces',serif; font-size:17px; font-weight:700; margin-top:2px; }
+
+footer{margin-top:22px; padding-top:12px; border-top:1px solid var(--line); font-size:11.5px; color:var(--ink-soft); line-height:1.6;}
+footer b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">JAZMI · Laboratorium Astronomi · Level 4 (ringan)</p>
+  <h1>Analemma Matahari</h1>
+  <p class="sub">Kalau Anda memotret posisi Matahari di jam yang <i>persis sama</i> setiap hari
+  sepanjang tahun, hasilnya bukan titik yang sama — tapi kurva angka-8. Ini itu.</p>
+
+  <div class="intro">
+    Angka-8 ini muncul dari dua efek yang bercampur: <b>kemiringan sumbu Bumi</b> (23,44°) yang
+    membuat Matahari naik-turun tinggi-rendahnya sepanjang tahun (sumbu vertikal kurva), dan
+    <b>bentuk elips orbit Bumi</b> yang membuat Matahari kadang "lebih cepat" kadang "lebih lambat"
+    dari jam rata-rata (sumbu horizontal — disebut <i>equation of time</i>). Inilah juga koreksi yang
+    dibutuhkan setiap jam matahari (sundial) supaya cocok dengan jam beneran.
+  </div>
+
+  <div class="controls">
+    <div class="field">
+      <label>Hari ke- dalam tahun <span class="val" id="dayVal">1</span></label>
+      <input type="range" id="dayIn" min="1" max="365" value="1">
+    </div>
+    <div class="jamrow" id="hourRow"></div>
+    <div class="field" style="margin-top:10px;">
+      <label>Lintang lokasi (°) <span class="val" id="latVal">-6,2</span></label>
+      <input type="range" id="latIn" min="-66" max="66" value="-6.2" step="0.5">
+    </div>
+  </div>
+
+  <p style="font-family:'Fraunces',serif; font-size:16px; margin:18px 0 4px; color:var(--sky);">Kurva angka-8 (abstrak)</p>
+  <div class="stage">
+    <svg id="svg" viewBox="0 0 500 420" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="readout" id="readout"></div>
+
+  <p style="font-family:'Fraunces',serif; font-size:16px; margin:20px 0 4px; color:var(--sky);">Diproyeksikan ke langit sungguhan (altitude-azimuth)</p>
+  <p style="font-size:12px; color:var(--ink-soft); margin:0 0 8px;">Ini bentuk analemma yang sungguh-sungguh akan Anda lihat kalau memotret Matahari di jam yang
+  sama setiap hari dari lintang di atas — bentuknya berubah (bahkan bisa terbalik) tergantung jam
+  dan lintang yang dipilih, tidak seperti kurva abstrak di atas yang selalu sama.</p>
+  <div class="stage">
+    <svg id="skySvg" viewBox="0 0 500 340" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <footer>
+    <b>Batasan:</b> Deklinasi Matahari dan equation of time dihitung dari rumus posisi Matahari
+    sederhana yang sama seperti dipakai di alat-alat JAZMI lain (akurasi ~1 hari/beberapa menit) —
+    cukup untuk memperlihatkan bentuk & prinsip analemma, bukan tabel almanak presisi tinggi. Jam
+    yang dipilih adalah jam standar/zona waktu rata-rata, bukan disesuaikan lokasi spesifik Anda.
+    Panel langit sungguhan memakai rumus altitude-azimuth yang sama seperti Star Finder — pada
+    lintang tinggi & jam pagi/sore ekstrem, sebagian hari bisa berada di bawah ufuk sepanjang tahun
+    sehingga kurvanya terpotong; itu perilaku astronomis yang benar, bukan galat perhitungan.
+  </footer>
+</div>
+
+<script>
+function solarLambda(n){ // n = days since J2000-ish, but here just day-of-year offset works fine
+  let L=(280.460+0.9856474*n)%360; if(L<0)L+=360;
+  let g=(357.528+0.9856003*n)%360; if(g<0)g+=360;
+  const gR=g*Math.PI/180;
+  let lam=(L+1.915*Math.sin(gR)+0.020*Math.sin(2*gR))%360; if(lam<0)lam+=360;
+  return lam;
+}
+function declinationOf(dayOfYear){
+  const n = dayOfYear - 1; // approx days since Jan1
+  const lam = solarLambda(n)*Math.PI/180;
+  const eps = 23.439*Math.PI/180;
+  return Math.asin(Math.sin(eps)*Math.sin(lam))*180/Math.PI;
+}
+function eqOfTimeMin(dayOfYear){
+  const B = (360/365)*(dayOfYear-81)*Math.PI/180;
+  return 9.87*Math.sin(2*B) - 7.53*Math.cos(B) - 1.5*Math.sin(B);
+}
+
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs){const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); return e;}
+
+const CX=250, CY=210;
+const XSCALE=11, YSCALE=6.5; // px per minute (EoT) and px per degree (dec)
+
+function xyFor(day){
+  const eot=eqOfTimeMin(day);
+  const dec=declinationOf(day);
+  return {x: CX - eot*XSCALE, y: CY - dec*YSCALE};
+}
+
+const svg=document.getElementById('svg');
+function drawStatic(){
+  svg.innerHTML='';
+  svg.appendChild(el('line',{x1:20,y1:CY,x2:480,y2:CY,class:'axis'}));
+  svg.appendChild(el('line',{x1:CX,y1:20,x2:CX,y2:400,class:'axis'}));
+  const xl=el('text',{x:470,y:CY-6,class:'axislabel','text-anchor':'end'}); xl.textContent='lebih cepat dari jam rata-rata →'; svg.appendChild(xl);
+  const yl=el('text',{x:CX+6,y:30,class:'axislabel'}); yl.textContent='Matahari lebih tinggi ↑'; svg.appendChild(yl);
+
+  let d='';
+  for(let day=1; day<=365; day++){
+    const p=xyFor(day);
+    d += (day===1?'M':'L')+p.x.toFixed(1)+','+p.y.toFixed(1)+' ';
+  }
+  svg.appendChild(el('path',{d, class:'curve'}));
+}
+drawStatic();
+
+const hourRow=document.getElementById('hourRow');
+[6,9,12,15,18].forEach(h=>{
+  const b=document.createElement('button'); b.textContent=h+':00'; b.dataset.h=h;
+  if(h===12) b.classList.add('active');
+  hourRow.appendChild(b);
+});
+let selHour=12;
+hourRow.addEventListener('click',(e)=>{
+  if(e.target.tagName!=='BUTTON') return;
+  selHour=parseInt(e.target.dataset.h);
+  [...hourRow.children].forEach(b=>b.classList.toggle('active', b===e.target));
+  render();
+});
+
+function render(){
+  const day=parseInt(document.getElementById('dayIn').value);
+  document.getElementById('dayVal').textContent=day;
+  drawStatic();
+  const p=xyFor(day);
+  svg.appendChild(el('circle',{cx:p.x,cy:p.y,r:6,class:'marker'}));
+
+  const eot=eqOfTimeMin(day), dec=declinationOf(day);
+  const trueTime = selHour + eot/60;
+  const hh=Math.floor(trueTime), mm=Math.round((trueTime-hh)*60);
+
+  document.getElementById('readout').innerHTML=`
+    <div class="rcard"><div class="l">Deklinasi Matahari</div><div class="v">${dec.toFixed(1)}°</div></div>
+    <div class="rcard"><div class="l">Equation of Time</div><div class="v">${eot>=0?'+':''}${eot.toFixed(1)} mnt</div></div>
+    <div class="rcard"><div class="l">Jam matahari tunjuk ${selHour}:00 →</div><div class="v">${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')} jam beneran</div></div>
+  `;
+}
+document.getElementById('dayIn').addEventListener('input', ()=>render());
+
+// ---- real-sky (alt-az) projection ----
+function altAzFor(day, lat, hour){
+  const dec=declinationOf(day);
+  const eot=eqOfTimeMin(day);
+  const trueSolarTime = hour + eot/60;
+  const H=(trueSolarTime-12)*15;
+  const decR=dec*Math.PI/180, latR=lat*Math.PI/180, Hr=H*Math.PI/180;
+  const sinAlt=Math.sin(decR)*Math.sin(latR)+Math.cos(decR)*Math.cos(latR)*Math.cos(Hr);
+  const alt=Math.asin(Math.max(-1,Math.min(1,sinAlt)));
+  const cosAlt=Math.cos(alt)||1e-6;
+  const sinAz=-Math.cos(decR)*Math.sin(Hr)/cosAlt;
+  const cosAz=(Math.sin(decR)-Math.sin(latR)*Math.sin(alt))/(Math.cos(latR)*cosAlt);
+  let az=Math.atan2(sinAz,cosAz)*180/Math.PI; if(az<0) az+=360;
+  return {alt:alt*180/Math.PI, az};
+}
+
+const skySvg=document.getElementById('skySvg');
+function renderSky(){
+  const lat=parseFloat(document.getElementById('latIn').value);
+  document.getElementById('latVal').textContent=lat.toFixed(1);
+  const day=parseInt(document.getElementById('dayIn').value);
+
+  const pts=[];
+  for(let d=1; d<=365; d+=1){
+    const p=altAzFor(d, lat, selHour);
+    if(p.alt > -8) pts.push({d, ...p});
+  }
+  skySvg.innerHTML='';
+  if(pts.length<2){
+    const t=el('text',{x:250,y:170,fill:'var(--ink-soft)','font-size':13,'text-anchor':'middle'});
+    t.textContent='Matahari selalu di bawah ufuk pada jam ini & lintang ini sepanjang tahun';
+    skySvg.appendChild(t);
+    return;
+  }
+  const azs=pts.map(p=>p.az), alts=pts.map(p=>p.alt);
+  const azMin=Math.min(...azs), azMax=Math.max(...azs);
+  const altMin=Math.min(...alts,0), altMax=Math.max(...alts);
+  const PAD=40, W=500-2*PAD, H=300-2*PAD;
+  const azSpan=Math.max(azMax-azMin, 1), altSpan=Math.max(altMax-altMin,1);
+  function toXY(p){
+    return { x: PAD+(p.az-azMin)/azSpan*W, y: 300-PAD-(p.alt-altMin)/altSpan*H };
+  }
+  // horizon line
+  if(altMin<=0){
+    const hy=300-PAD-(0-altMin)/altSpan*H;
+    skySvg.appendChild(el('line',{x1:PAD,y1:hy,x2:500-PAD,y2:hy,class:'axis'}));
+    const hl=el('text',{x:PAD,y:hy-4,class:'axislabel'}); hl.textContent='ufuk (altitude 0°)'; skySvg.appendChild(hl);
+  }
+  let d='';
+  pts.forEach((p,i)=>{ const xy=toXY(p); d+=(i===0?'M':'L')+xy.x.toFixed(1)+','+xy.y.toFixed(1)+' '; });
+  skySvg.appendChild(el('path',{d, class:'curve'}));
+
+  const today=pts.find(p=>p.d===day) || altAzFor(day,lat,selHour);
+  const txy=toXY(today.alt!==undefined && today.az!==undefined ? today : {az:today.az,alt:today.alt});
+  skySvg.appendChild(el('circle',{cx:txy.x,cy:txy.y,r:6,class:'marker'}));
+
+  const xl=el('text',{x:250,y:295,class:'axislabel','text-anchor':'middle'}); xl.textContent='azimuth (arah kompas) →'; skySvg.appendChild(xl);
+  const yl=el('text',{x:12,y:PAD,class:'axislabel'}); yl.textContent='altitude ↑'; skySvg.appendChild(yl);
+}
+document.getElementById('latIn').addEventListener('input', ()=>{ renderSky(); });
+
+const _origRender = render;
+render = function(){ _origRender(); renderSky(); };
+render();
+</script>
+</body>
+</html>

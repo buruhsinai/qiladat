@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Konverter Notasi — Alat JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#141922;
+    --panel:#1b2230;
+    --panel-line:#2c3547;
+    --paper:#f2ead9;
+    --paper-line:#d9cba9;
+    --brass:#c19a5b;
+    --brass-bright:#dab476;
+    --text:#e9e5da;
+    --text-dim:#8d94a3;
+    --ink-on-paper:#241d10;
+    --ink-on-paper-dim:#6b5f45;
+    --danger:#c47a5a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    color:var(--text);
+    font-family:'Karla',sans-serif;
+    line-height:1.5;
+    padding:0 0 64px;
+  }
+  .wrap{
+    max-width:920px;
+    margin:0 auto;
+    padding:0 20px;
+  }
+
+  /* ---- Header ---- */
+  header{
+    padding:48px 0 32px;
+    border-bottom:1px solid var(--panel-line);
+    margin-bottom:36px;
+  }
+  .eyebrow-row{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    margin-bottom:14px;
+    color:var(--brass);
+    font-size:0.9rem;
+    letter-spacing:0.02em;
+  }
+  .eyebrow-row .sep{ color:var(--text-dim); }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:clamp(1.9rem,5vw,2.7rem);
+    line-height:1.15;
+    margin:0 0 14px;
+    color:#f5f1e8;
+  }
+  header p{
+    color:var(--text-dim);
+    max-width:56ch;
+    font-size:1.02rem;
+    margin:0;
+  }
+  header p em{
+    color:var(--text);
+    font-style:normal;
+    border-bottom:1px solid var(--brass);
+  }
+
+  /* ---- Converter grid ---- */
+  .converter{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+    align-items:stretch;
+  }
+  @media (max-width:760px){
+    .converter{ grid-template-columns:1fr; }
+  }
+
+  .pane{
+    display:flex;
+    flex-direction:column;
+    border-radius:10px;
+    overflow:hidden;
+    min-height:280px;
+  }
+  .pane-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 16px;
+    font-size:0.85rem;
+    font-weight:600;
+  }
+
+  .pane.input{
+    background:var(--panel);
+    border:1px solid var(--panel-line);
+  }
+  .pane.input .pane-head{
+    color:var(--text-dim);
+    border-bottom:1px solid var(--panel-line);
+  }
+  textarea{
+    flex:1;
+    resize:none;
+    border:0;
+    outline:0;
+    background:transparent;
+    color:var(--text);
+    font-family:'JetBrains Mono',monospace;
+    font-size:1rem;
+    padding:16px;
+    min-height:220px;
+  }
+  textarea::placeholder{ color:#565f70; }
+
+  .pane.output{
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+    color:var(--ink-on-paper);
+  }
+  .pane.output .pane-head{
+    color:var(--ink-on-paper-dim);
+    border-bottom:1px solid var(--paper-line);
+  }
+  #output{
+    flex:1;
+    padding:16px;
+    font-family:'Fraunces',serif;
+    font-size:1.15rem;
+    white-space:pre-wrap;
+    word-break:break-word;
+    min-height:220px;
+  }
+  #output.empty{
+    color:#a89a78;
+    font-family:'Karla',sans-serif;
+    font-size:0.95rem;
+  }
+
+  button{
+    font-family:'Karla',sans-serif;
+    font-size:0.82rem;
+    font-weight:600;
+    border-radius:6px;
+    border:1px solid transparent;
+    cursor:pointer;
+    padding:6px 12px;
+    transition:opacity .15s ease;
+  }
+  button:active{ opacity:0.7; }
+  .btn-ghost{
+    background:transparent;
+    color:var(--text-dim);
+    border-color:var(--panel-line);
+  }
+  .btn-ghost:hover{ color:var(--text); border-color:var(--brass); }
+  .btn-brass{
+    background:var(--brass);
+    color:#241d10;
+  }
+  .btn-brass:hover{ background:var(--brass-bright); }
+  .btn-brass.copied{ background:#7a9b7e; color:#0f1a10; }
+
+  /* ---- Quick insert chips ---- */
+  .chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin:18px 0 0;
+  }
+  .chip{
+    font-family:'JetBrains Mono',monospace;
+    font-size:0.8rem;
+    background:var(--panel);
+    border:1px solid var(--panel-line);
+    color:var(--text);
+    padding:5px 10px;
+    border-radius:5px;
+    cursor:pointer;
+  }
+  .chip:hover{ border-color:var(--brass); color:var(--brass-bright); }
+  .chip .glyph{ color:var(--brass); margin-right:5px; }
+
+  /* ---- Notice ---- */
+  .notice{
+    margin-top:14px;
+    font-size:0.85rem;
+    color:var(--danger);
+    display:none;
+  }
+  .notice.show{ display:block; }
+  .notice code{
+    font-family:'JetBrains Mono',monospace;
+    background:rgba(196,122,90,0.12);
+    padding:1px 5px;
+    border-radius:4px;
+  }
+
+  /* ---- Reference ---- */
+  .reference{
+    margin-top:52px;
+  }
+  .reference summary{
+    cursor:pointer;
+    font-family:'Fraunces',serif;
+    font-size:1.15rem;
+    color:#f5f1e8;
+    padding:14px 0;
+    border-top:1px solid var(--panel-line);
+    list-style:none;
+  }
+  .reference summary::-webkit-details-marker{ display:none; }
+  .reference summary::before{
+    content:'+ ';
+    color:var(--brass);
+    font-family:'Karla',sans-serif;
+    font-weight:700;
+  }
+  .reference[open] summary::before{ content:'– '; }
+
+  .ref-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+    gap:22px;
+    padding:8px 0 20px;
+  }
+  .ref-group h3{
+    font-size:0.78rem;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--brass);
+    margin:0 0 10px;
+    font-weight:600;
+  }
+  .ref-list{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    font-size:0.88rem;
+  }
+  .ref-item{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    color:var(--text-dim);
+    font-family:'JetBrains Mono',monospace;
+    font-size:0.82rem;
+  }
+  .ref-item span:last-child{
+    color:var(--text);
+    font-family:'Fraunces',serif;
+    font-size:0.95rem;
+  }
+
+  footer{
+    margin-top:44px;
+    padding-top:20px;
+    border-top:1px solid var(--panel-line);
+    color:var(--text-dim);
+    font-size:0.82rem;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow-row">JAZMI <span class="sep">/</span> Bank Alat</div>
+    <h1>Konverter Notasi Matematika</h1>
+    <p>Tulis notasi ala-LaTeX — <em>\frac{}{}</em>, <em>\sqrt{}</em>, <em>\alpha</em>, <em>x^2</em> — dan alat ini mengubahnya langsung menjadi karakter Unicode biasa yang bisa ditempel ke mana saja: artikel, WhatsApp, catatan. Berjalan sepenuhnya di peramban Anda, tanpa pustaka eksternal.</p>
+  </header>
+
+  <div class="converter">
+    <div class="pane input">
+      <div class="pane-head">
+        <span>NOTASI (masukan)</span>
+        <button class="btn-ghost" id="clearBtn" type="button">Bersihkan</button>
+      </div>
+      <textarea id="input" placeholder="Contoh: \frac{a+b}{c} = \sqrt{x^2 + y^2}, x \in \mathbb{R}" spellcheck="false"></textarea>
+    </div>
+
+    <div class="pane output">
+      <div class="pane-head">
+        <span>HASIL (unicode)</span>
+        <button class="btn-brass" id="copyBtn" type="button">Salin</button>
+      </div>
+      <div id="output" class="empty">Hasil konversi akan muncul di sini saat Anda mengetik.</div>
+    </div>
+  </div>
+
+  <div class="chips" id="chips"></div>
+
+  <div class="notice" id="notice"></div>
+
+  <details class="reference">
+    <summary>Daftar notasi yang dikenali</summary>
+    <div class="ref-grid" id="refGrid"></div>
+  </details>
+
+  <footer>
+    Bagian dari kurikulum laboratorium alat JAZMI — modul konversi ini dibangun dan diuji terlebih dahulu sebagai fungsi murni sebelum dibungkus menjadi antarmuka ini.
+  </footer>
+</div>
+
+<script>
+/* ===================== DATA TABLES ===================== */
+const MACRO_MAP = {
+  '\\alpha':'α','\\beta':'β','\\gamma':'γ','\\delta':'δ','\\epsilon':'ε','\\varepsilon':'ϵ',
+  '\\zeta':'ζ','\\eta':'η','\\theta':'θ','\\vartheta':'ϑ','\\iota':'ι','\\kappa':'κ',
+  '\\lambda':'λ','\\mu':'μ','\\nu':'ν','\\xi':'ξ','\\omicron':'ο','\\pi':'π','\\varpi':'ϖ',
+  '\\rho':'ρ','\\varrho':'ϱ','\\sigma':'σ','\\varsigma':'ς','\\tau':'τ','\\upsilon':'υ',
+  '\\phi':'φ','\\varphi':'ϕ','\\chi':'χ','\\psi':'ψ','\\omega':'ω',
+  '\\Gamma':'Γ','\\Delta':'Δ','\\Theta':'Θ','\\Lambda':'Λ','\\Xi':'Ξ','\\Pi':'Π',
+  '\\Sigma':'Σ','\\Upsilon':'Υ','\\Phi':'Φ','\\Psi':'Ψ','\\Omega':'Ω',
+  '\\times':'×','\\div':'÷','\\pm':'±','\\mp':'∓','\\cdot':'⋅',
+  '\\leq':'≤','\\le':'≤','\\geq':'≥','\\ge':'≥','\\neq':'≠','\\ne':'≠',
+  '\\approx':'≈','\\equiv':'≡','\\sim':'∼','\\simeq':'≃','\\cong':'≅','\\propto':'∝',
+  '\\infty':'∞','\\partial':'∂','\\nabla':'∇',
+  '\\sum':'∑','\\prod':'∏','\\int':'∫','\\iint':'∬','\\iiint':'∭','\\oint':'∮',
+  '\\forall':'∀','\\exists':'∃','\\nexists':'∄',
+  '\\in':'∈','\\notin':'∉','\\ni':'∋',
+  '\\subset':'⊂','\\subseteq':'⊆','\\supset':'⊃','\\supseteq':'⊇',
+  '\\cup':'∪','\\cap':'∩','\\emptyset':'∅','\\varnothing':'∅','\\setminus':'∖',
+  '\\rightarrow':'→','\\to':'→','\\leftarrow':'←','\\gets':'←',
+  '\\Rightarrow':'⇒','\\Leftarrow':'⇐','\\leftrightarrow':'↔','\\Leftrightarrow':'⇔',
+  '\\mapsto':'↦','\\uparrow':'↑','\\downarrow':'↓',
+  '\\perp':'⊥','\\parallel':'∥','\\angle':'∠','\\triangle':'△',
+  '\\therefore':'∴','\\because':'∵','\\ldots':'…','\\cdots':'⋯','\\dots':'…',
+  '\\aleph':'ℵ','\\hbar':'ℏ','\\ell':'ℓ','\\Re':'ℜ','\\Im':'ℑ','\\wp':'℘',
+  '\\degree':'°','\\prime':'′','\\dagger':'†','\\ddagger':'‡',
+  '\\star':'⋆','\\ast':'∗','\\circ':'∘','\\bullet':'•',
+  '\\oplus':'⊕','\\ominus':'⊖','\\otimes':'⊗','\\oslash':'⊘','\\odot':'⊙',
+  '\\wedge':'∧','\\vee':'∨','\\neg':'¬','\\top':'⊤','\\bot':'⊥',
+};
+
+const MATHBB_MAP = {R:'ℝ',N:'ℕ',Z:'ℤ',Q:'ℚ',C:'ℂ',P:'ℙ'};
+
+const SUPER_MAP = {
+  '0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹',
+  '+':'⁺','-':'⁻','=':'⁼','(':'⁽',')':'⁾',
+  'a':'ᵃ','b':'ᵇ','c':'ᶜ','d':'ᵈ','e':'ᵉ','f':'ᶠ','g':'ᵍ','h':'ʰ','i':'ⁱ','j':'ʲ',
+  'k':'ᵏ','l':'ˡ','m':'ᵐ','n':'ⁿ','o':'ᵒ','p':'ᵖ','r':'ʳ','s':'ˢ','t':'ᵗ','u':'ᵘ',
+  'v':'ᵛ','w':'ʷ','x':'ˣ','y':'ʸ','z':'ᶻ'
+};
+const SUB_MAP = {
+  '0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉',
+  '+':'₊','-':'₋','=':'₌','(':'₍',')':'₎',
+  'a':'ₐ','e':'ₑ','h':'ₕ','i':'ᵢ','j':'ⱼ','k':'ₖ','l':'ₗ','m':'ₘ','n':'ₙ','o':'ₒ',
+  'p':'ₚ','r':'ᵣ','s':'ₛ','t':'ₜ','u':'ᵤ','v':'ᵥ','x':'ₓ'
+};
+
+const EXTRA_NOTATION = [
+  [/<->/g,'↔'], [/=>/g,'⇒'], [/->/g,'→'], [/<=/g,'≤'], [/>=/g,'≥'],
+  [/!=/g,'≠'], [/~=/g,'≈'], [/\+-/g,'±']
+];
+
+/* ===================== HELPERS ===================== */
+function findMatchingBrace(str, openIdx){
+  let depth=0;
+  for(let i=openIdx;i<str.length;i++){
+    if(str[i]==='{') depth++;
+    else if(str[i]==='}'){ depth--; if(depth===0) return i; }
+  }
+  return -1;
+}
+function mapChars(str, map, unconverted){
+  let out='';
+  for(const ch of str){
+    if(map[ch]!==undefined) out+=map[ch];
+    else { out+=ch; if(/[a-zA-Z0-9]/.test(ch)) unconverted.add(ch); }
+  }
+  return out;
+}
+
+/* ===================== BRACE COMMANDS: \frac \sqrt \mathbb \text ===================== */
+function processBraceCommands(str, ctx){
+  let out=''; let i=0;
+  while(i<str.length){
+    if(str.startsWith('\\frac', i) && str[i+5]==='{'){
+      const openA = i+5;
+      const closeA = findMatchingBrace(str, openA);
+      if(closeA!==-1 && str[closeA+1]==='{'){
+        const openB = closeA+1;
+        const closeB = findMatchingBrace(str, openB);
+        if(closeB!==-1){
+          const num = convert(str.slice(openA+1, closeA), ctx);
+          const den = convert(str.slice(openB+1, closeB), ctx);
+          const wn = num.length>1 ? '('+num+')' : num;
+          const wd = den.length>1 ? '('+den+')' : den;
+          out += wn+'/'+wd;
+          i = closeB+1;
+          continue;
+        }
+      }
+    }
+    if(str.startsWith('\\sqrt', i)){
+      let j = i+5;
+      let degreeRaw=null;
+      if(str[j]==='['){
+        const closeBr = str.indexOf(']', j);
+        if(closeBr!==-1){ degreeRaw = str.slice(j+1, closeBr); j=closeBr+1; }
+      }
+      if(str[j]==='{'){
+        const closeC = findMatchingBrace(str, j);
+        if(closeC!==-1){
+          const content = convert(str.slice(j+1, closeC), ctx);
+          let prefix = '';
+          if(degreeRaw){ prefix = mapChars(degreeRaw, SUPER_MAP, ctx.unconverted); }
+          out += prefix + '√(' + content + ')';
+          i = closeC+1;
+          continue;
+        }
+      }
+    }
+    if(str.startsWith('\\mathbb', i) && str[i+7]==='{'){
+      const open = i+7;
+      const close = findMatchingBrace(str, open);
+      if(close!==-1){
+        const inner = str.slice(open+1, close);
+        let mapped='';
+        for(const ch of inner){
+          if(MATHBB_MAP[ch]) mapped+=MATHBB_MAP[ch];
+          else { mapped+=ch; ctx.unconverted.add('\\mathbb{'+ch+'}'); }
+        }
+        out += mapped;
+        i = close+1;
+        continue;
+      }
+    }
+    if(str.startsWith('\\text', i) && str[i+5]==='{'){
+      const open=i+5;
+      const close = findMatchingBrace(str, open);
+      if(close!==-1){
+        out += str.slice(open+1, close);
+        i = close+1;
+        continue;
+      }
+    }
+    out += str[i];
+    i++;
+  }
+  return out;
+}
+
+/* ===================== SUPER/SUBSCRIPT ===================== */
+function processSuperSub(str, ctx){
+  let out=''; let i=0;
+  while(i<str.length){
+    if(str[i]==='^' || str[i]==='_'){
+      const isSuper = str[i]==='^';
+      const map = isSuper ? SUPER_MAP : SUB_MAP;
+      if(str[i+1]==='{'){
+        const close = findMatchingBrace(str, i+1);
+        if(close!==-1){
+          const inner = str.slice(i+2, close);
+          out += mapChars(inner, map, ctx.unconverted);
+          i = close+1;
+          continue;
+        }
+      } else if(str[i+1]!==undefined && str[i+1]!==' '){
+        out += mapChars(str[i+1], map, ctx.unconverted);
+        i+=2;
+        continue;
+      }
+    }
+    out += str[i];
+    i++;
+  }
+  return out;
+}
+
+/* ===================== MACRO WORDS ===================== */
+function processMacros(str, ctx){
+  return str.replace(/\\([a-zA-Z]+)/g, (m, word)=>{
+    const key = '\\'+word;
+    if(MACRO_MAP[key]!==undefined) return MACRO_MAP[key];
+    ctx.unrecognized.add(key);
+    return m;
+  });
+}
+
+/* ===================== MAIN ===================== */
+function convert(input, ctx, extraNotation){
+  ctx = ctx || {unconverted:new Set(), unrecognized:new Set()};
+  let s = processBraceCommands(input, ctx);
+  s = processSuperSub(s, ctx);
+  s = processMacros(s, ctx);
+  if(extraNotation){
+    EXTRA_NOTATION.forEach(([re,rep])=>{ s = s.replace(re, rep); });
+  }
+  return s;
+}
+
+/* ===================== UI WIRING ===================== */
+const inputEl = document.getElementById('input');
+const outputEl = document.getElementById('output');
+const noticeEl = document.getElementById('notice');
+const copyBtn = document.getElementById('copyBtn');
+const clearBtn = document.getElementById('clearBtn');
+
+function render(){
+  const raw = inputEl.value;
+  if(!raw.trim()){
+    outputEl.textContent = 'Hasil konversi akan muncul di sini saat Anda mengetik.';
+    outputEl.classList.add('empty');
+    noticeEl.classList.remove('show');
+    return;
+  }
+  const ctx = {unconverted:new Set(), unrecognized:new Set()};
+  const result = convert(raw, ctx, true);
+  outputEl.textContent = result;
+  outputEl.classList.remove('empty');
+
+  if(ctx.unrecognized.size){
+    noticeEl.innerHTML = 'Perintah tidak dikenali, dibiarkan apa adanya: ' +
+      [...ctx.unrecognized].map(c => '<code>'+c+'</code>').join(' ');
+    noticeEl.classList.add('show');
+  } else {
+    noticeEl.classList.remove('show');
+  }
+}
+
+inputEl.addEventListener('input', render);
+
+clearBtn.addEventListener('click', () => {
+  inputEl.value = '';
+  render();
+  inputEl.focus();
+});
+
+copyBtn.addEventListener('click', async () => {
+  const text = outputEl.classList.contains('empty') ? '' : outputEl.textContent;
+  if(!text) return;
+  try{
+    await navigator.clipboard.writeText(text);
+    copyBtn.textContent = 'Tersalin';
+    copyBtn.classList.add('copied');
+    setTimeout(()=>{ copyBtn.textContent='Salin'; copyBtn.classList.remove('copied'); }, 1400);
+  }catch(e){
+    outputEl.focus();
+    document.getSelection().selectAllChildren(outputEl);
+  }
+});
+
+/* ---- Quick-insert chips ---- */
+const CHIPS = [
+  ['\\frac{}{}','⁄'], ['\\sqrt{}','√'], ['^{}','x²'], ['_{}','xₙ'],
+  ['\\alpha','α'], ['\\beta','β'], ['\\pi','π'], ['\\theta','θ'],
+  ['\\sum_{}^{}','∑'], ['\\int_{}^{}','∫'], ['\\infty','∞'],
+  ['\\leq','≤'], ['\\geq','≥'], ['\\neq','≠'], ['\\approx','≈'],
+  ['\\times','×'], ['\\in','∈'], ['\\rightarrow','→'], ['\\mathbb{}','ℝ']
+];
+const chipsEl = document.getElementById('chips');
+CHIPS.forEach(([code,glyph]) => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'chip';
+  b.innerHTML = '<span class="glyph">'+glyph+'</span>'+code;
+  b.addEventListener('click', () => {
+    const start = inputEl.selectionStart ?? inputEl.value.length;
+    const end = inputEl.selectionEnd ?? inputEl.value.length;
+    const before = inputEl.value.slice(0, start);
+    const after = inputEl.value.slice(end);
+    inputEl.value = before + code + after;
+    const caret = start + code.length;
+    inputEl.focus();
+    inputEl.setSelectionRange(caret, caret);
+    render();
+  });
+  chipsEl.appendChild(b);
+});
+
+/* ---- Reference table ---- */
+const REFERENCE = [
+  ['Huruf Yunani', [['\\alpha','α'],['\\beta','β'],['\\gamma','γ'],['\\delta','δ'],['\\theta','θ'],['\\lambda','λ'],['\\mu','μ'],['\\pi','π'],['\\sigma','σ'],['\\phi','φ'],['\\omega','ω'],['\\Delta','Δ'],['\\Sigma','Σ'],['\\Omega','Ω']]],
+  ['Operator', [['\\times','×'],['\\div','÷'],['\\pm','±'],['\\cdot','⋅'],['\\leq','≤'],['\\geq','≥'],['\\neq','≠'],['\\approx','≈'],['\\propto','∝']]],
+  ['Kalkulus & Himpunan', [['\\sum','∑'],['\\prod','∏'],['\\int','∫'],['\\partial','∂'],['\\infty','∞'],['\\in','∈'],['\\subset','⊂'],['\\cup','∪'],['\\cap','∩'],['\\emptyset','∅']]],
+  ['Panah & Logika', [['\\rightarrow','→'],['\\Rightarrow','⇒'],['\\leftrightarrow','↔'],['\\forall','∀'],['\\exists','∃'],['\\therefore','∴'],['\\because','∵']]],
+  ['Struktur', [['\\frac{a}{b}','a/b'],['\\sqrt{x}','√(x)'],['\\sqrt[3]{x}','³√(x)'],['x^{2}','x²'],['x_{n}','xₙ'],['\\mathbb{R}','ℝ'],['\\text{kata}','kata']]],
+  ['Ketikan cepat (opsional)', [['a -> b','a → b'],['a <= b','a ≤ b'],['a >= b','a ≥ b'],['a != b','a ≠ b'],['a ~= b','a ≈ b']]]
+];
+const refGrid = document.getElementById('refGrid');
+REFERENCE.forEach(([title, items]) => {
+  const group = document.createElement('div');
+  group.className = 'ref-group';
+  const h3 = document.createElement('h3');
+  h3.textContent = title;
+  group.appendChild(h3);
+  const list = document.createElement('div');
+  list.className = 'ref-list';
+  items.forEach(([code, glyph]) => {
+    const row = document.createElement('div');
+    row.className = 'ref-item';
+    row.innerHTML = '<span>'+code+'</span><span>'+glyph+'</span>';
+    list.appendChild(row);
+  });
+  group.appendChild(list);
+  refGrid.appendChild(group);
+});
+</script>
+</body>
+</html>

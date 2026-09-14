@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kepler's Law Explorer | Tools Qiladat JAZMI</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Karla:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0E1526;--panel:#141C33;--panel2:#1A233C;--line:rgba(220,230,245,.15);--text:#E4EAF5;--muted:#8792AD;--violet:#8B7FD9;--amber:#D9A441;--cyan:#5FC2D6;}
+*{box-sizing:border-box;}body{margin:0;background:var(--ink);color:var(--text);font-family:'Karla',sans-serif;padding:0 18px 50px;}
+.wrap{max-width:760px;margin:0 auto;}
+h1{font-family:'Fraunces',serif;font-size:28px;margin:24px 0 4px;}
+p.sub{color:var(--muted);font-size:14.5px;margin:0 0 20px;}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:18px;margin-bottom:14px;}
+h2{font-family:'Fraunces',serif;font-size:17px;margin:0 0 10px;}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+label{display:block;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);margin-bottom:6px;}
+label span{color:var(--violet);}
+input[type=range]{width:100%;accent-color:var(--violet);}
+.stat-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px;}
+.stat{background:var(--panel2);border-radius:3px;padding:9px 10px;}
+.stat .l{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--muted);text-transform:uppercase;}
+.stat .v{font-family:'Fraunces',serif;font-size:17px;color:var(--amber);}
+.svgbox{background:#050810;border-radius:3px;margin-top:12px;}
+.svgbox svg{width:100%;height:auto;display:block;}
+.fact{background:rgba(139,127,217,.12);border-left:3px solid var(--violet);padding:10px 12px;font-size:13px;margin-top:10px;border-radius:2px;}
+.note{font-size:12px;color:var(--muted);margin-top:10px;}
+button{font-family:'JetBrains Mono',monospace;background:var(--violet);color:#150F2E;border:none;padding:8px 16px;border-radius:3px;font-weight:600;cursor:pointer;margin-top:10px;}
+table{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:12px;margin-top:10px;}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--line);}
+th:first-child,td:first-child{text-align:left;}
+th{color:var(--muted);font-size:10px;text-transform:uppercase;}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Kepler's Law Explorer</h1>
+<p class="sub">Ubah sumbu-semi-mayor &amp; eksentrisitas, lihat orbit, periode, dan kecepatan berubah — plus animasi gerak sungguhan yang membuktikan Hukum II Kepler (garis dari Matahari menyapu area yang sama dalam waktu yang sama, makanya planet bergerak lebih cepat saat dekat Matahari).</p>
+
+<div class="card">
+  <h2>Parameter Orbit</h2>
+  <div class="grid">
+    <div>
+      <label for="semiA">Sumbu-semi-mayor a <span id="aVal">1.0</span> AU</label>
+      <input type="range" id="semiA" min="0.3" max="30" step="0.1" value="1.0">
+    </div>
+    <div>
+      <label for="ecc">Eksentrisitas e <span id="eVal">0.02</span></label>
+      <input type="range" id="ecc" min="0" max="0.9" step="0.01" value="0.02">
+    </div>
+  </div>
+  <div class="svgbox"><svg id="orbitSvg" viewBox="0 0 500 380" xmlns="http://www.w3.org/2000/svg"></svg></div>
+  <button id="playBtn">▶ Jalankan Animasi</button>
+
+  <div class="stat-row">
+    <div class="stat"><div class="l">Periode T</div><div class="v" id="outT">–</div></div>
+    <div class="stat"><div class="l">v perihelion</div><div class="v" id="outVp" style="font-size:14px;">–</div></div>
+    <div class="stat"><div class="l">v aphelion</div><div class="v" id="outVa" style="font-size:14px;">–</div></div>
+  </div>
+
+  <div class="fact" id="factBox"></div>
+</div>
+
+<div class="card">
+  <h2>Uji T² ∝ a³</h2>
+  <p class="note" style="margin-top:0;">Tabel ini TIDAK berubah walau Anda geser eksentrisitas — bukti bahwa periode orbit hanya bergantung pada a, sama sekali tidak bergantung pada e.</p>
+  <table id="testTable"></table>
+</div>
+
+<p class="note">Asumsi: massa benda pusat = 1 massa Matahari, orbit dua-benda murni (tanpa gangguan planet lain), bidang orbit dilihat tegak lurus (tanpa kemiringan/inklinasi).</p>
+</div>
+
+<script>
+const G=6.674e-11, MSUN=1.989e30, AU=1.496e11, YEAR=365.25*86400;
+
+function periodSeconds(a_AU){ const a=a_AU*AU; return 2*Math.PI*Math.sqrt(a**3/(G*MSUN)); }
+function velocities(a_AU, e){
+  const a=a_AU*AU, mu=G*MSUN;
+  const rP=a*(1-e), rA=a*(1+e);
+  return { vP: Math.sqrt(mu*(2/rP-1/a)), vA: Math.sqrt(mu*(2/rA-1/a)) };
+}
+function fmt(n,d=3){ return Number(n).toLocaleString('id-ID',{maximumFractionDigits:d}); }
+
+let animId=null, animT0=null, playing=false;
+
+function solveKepler(M,e){
+  let E=M;
+  for(let i=0;i<8;i++) E = E - (E-e*Math.sin(E)-M)/(1-e*Math.cos(E));
+  return E;
+}
+
+function drawStatic(a_AU, e){
+  const svg=document.getElementById('orbitSvg');
+  const W=500,H=380,cx=W/2,cy=H/2;
+  const scale = 140/Math.max(a_AU*(1+e), 1); // supaya aphelion selalu muat
+  const aPx = a_AU*scale, bPx = aPx*Math.sqrt(1-e*e), cPx = aPx*e;
+  // fokus (matahari) di (cx-cPx, cy) supaya perihelion di kanan
+  const sunX = cx-cPx;
+  let content = `<ellipse cx="${cx-cPx}" cy="${cy}" rx="${aPx}" ry="${bPx}" fill="none" stroke="var(--violet)" stroke-width="1.5" opacity="0.6" transform="translate(${cPx*0},0)"/>`;
+  // koreksi: pusat ellipse geometris ada di (cx, cy), fokus di (cx-cPx,cy)
+  content = `<ellipse cx="${cx}" cy="${cy}" rx="${aPx.toFixed(1)}" ry="${bPx.toFixed(1)}" fill="none" stroke="var(--violet)" stroke-width="1.5" opacity="0.6"/>`;
+  content += `<circle cx="${sunX.toFixed(1)}" cy="${cy}" r="9" fill="var(--amber)"/>`;
+  content += `<text x="${sunX.toFixed(1)}" y="${cy-14}" text-anchor="middle" font-size="10" fill="var(--amber)" font-family="JetBrains Mono, monospace">Matahari</text>`;
+  // perihelion & aphelion markers
+  const periX = sunX + (aPx-cPx); // titik elips terdekat fokus (kanan)
+  const apoX = sunX - (aPx+cPx);
+  content += `<circle cx="${periX.toFixed(1)}" cy="${cy}" r="4" fill="var(--cyan)"/>`;
+  content += `<text x="${periX.toFixed(1)}" y="${cy+22}" text-anchor="middle" font-size="9.5" fill="var(--cyan)" font-family="JetBrains Mono, monospace">perihelion</text>`;
+  content += `<circle cx="${apoX.toFixed(1)}" cy="${cy}" r="4" fill="var(--muted)"/>`;
+  content += `<text x="${apoX.toFixed(1)}" y="${cy+22}" text-anchor="middle" font-size="9.5" fill="var(--muted)" font-family="JetBrains Mono, monospace">aphelion</text>`;
+  svg.innerHTML = content;
+  return {cx,cy,sunX,aPx,bPx,cPx};
+}
+
+function drawFrame(a_AU,e,phase){
+  const {cx,cy,sunX,aPx,bPx,cPx} = drawStatic(a_AU,e);
+  const M = phase*2*Math.PI;
+  const E = solveKepler(M,e);
+  // posisi relatif fokus: x=a(cosE-e), y=a*sqrt(1-e^2)*sinE  (dalam satuan a_AU, lalu diskalakan)
+  const xRel = (Math.cos(E)-e);
+  const yRel = Math.sqrt(1-e*e)*Math.sin(E);
+  const px = sunX + xRel*aPx;
+  const py = cy - yRel*bPx;
+  const svg=document.getElementById('orbitSvg');
+  svg.innerHTML += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="6" fill="#fff"/>`;
+  svg.innerHTML += `<line x1="${sunX.toFixed(1)}" y1="${cy}" x2="${px.toFixed(1)}" y2="${py.toFixed(1)}" stroke="var(--cyan)" stroke-width="1" opacity="0.5"/>`;
+}
+
+function animate(ts){
+  const a_AU = parseFloat(document.getElementById('semiA').value);
+  const e = parseFloat(document.getElementById('ecc').value);
+  const T_s = periodSeconds(a_AU);
+  if(animT0===null) animT0=ts;
+  const elapsedFraction = ((ts-animT0)/1000) / 6; // 1 orbit visual = 6 detik nyata, tetap non-linear internal (Kepler eq.)
+  const phase = elapsedFraction % 1;
+  drawFrame(a_AU,e,phase);
+  if(playing) animId = requestAnimationFrame(animate);
+}
+
+document.getElementById('playBtn').addEventListener('click', ()=>{
+  playing = !playing;
+  document.getElementById('playBtn').textContent = playing ? '⏸ Jeda' : '▶ Jalankan Animasi';
+  if(playing){ animT0=null; animId=requestAnimationFrame(animate); }
+  else if(animId) cancelAnimationFrame(animId);
+});
+
+function renderTestTable(){
+  const rows = [0.39,1.0,1.52,5.2,9.58,19.2,30.05].map(a=>{
+    const T_yr = periodSeconds(a)/YEAR;
+    const ratio = (T_yr*T_yr)/(a*a*a);
+    return `<tr><td>a=${a} AU</td><td>${fmt(T_yr,2)} th</td><td>T²=${fmt(T_yr*T_yr,2)}</td><td>a³=${fmt(a*a*a,2)}</td><td>${ratio.toFixed(4)}</td></tr>`;
+  }).join('');
+  document.getElementById('testTable').innerHTML = `<thead><tr><th>a</th><th>T</th><th>T²</th><th>a³</th><th>T²/a³</th></tr></thead><tbody>${rows}</tbody>`;
+}
+
+function compute(){
+  const a=parseFloat(document.getElementById('semiA').value);
+  const e=parseFloat(document.getElementById('ecc').value);
+  document.getElementById('aVal').textContent=a.toFixed(1);
+  document.getElementById('eVal').textContent=e.toFixed(2);
+
+  const T_yr = periodSeconds(a)/YEAR;
+  const {vP,vA} = velocities(a,e);
+  document.getElementById('outT').textContent = fmt(T_yr,2)+' th';
+  document.getElementById('outVp').textContent = fmt(vP/1000,2)+' km/s';
+  document.getElementById('outVa').textContent = fmt(vA/1000,2)+' km/s';
+
+  document.getElementById('factBox').innerHTML =
+    `<strong>T²/a³ = ${((T_yr*T_yr)/(a*a*a)).toFixed(4)}</strong> (selalu ≈1 dalam satuan AU-tahun-massa Matahari, berapa pun e-nya). `+
+    (e>0.3 ? `Di e=${e.toFixed(2)} ini, planet bergerak ${fmt(vP/vA,2)}× lebih cepat di perihelion dibanding aphelion — itulah Hukum II Kepler.` : `Coba naikkan eksentrisitas untuk melihat kecepatan perihelion/aphelion makin berbeda jauh.`);
+
+  if(!playing) drawStatic(a,e);
+  renderTestTable();
+}
+['semiA','ecc'].forEach(id=>document.getElementById(id).addEventListener('input', compute));
+compute();
+</script>
+</body>
+</html>

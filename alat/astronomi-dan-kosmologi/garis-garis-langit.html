@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Garis-Garis Langit — Klasifikasi &amp; Bola Langit Interaktif</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#05070d; --void-2:#0c0f18; --void-3:#141a26; --line:rgba(255,255,255,0.09);
+    --star:#eef1f8; --dim:#8790a8; --dim-2:#5c6478;
+    --equator:#5fb3d9; --ecliptic:#e8b84b; --galactic:#e2879c; --horizon:#6f7a8f;
+    --meridian:#8fd19e; --primevert:#c9a4e0; --colure:#e0946a; --ok:#7ec9a0;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--void);color:var(--star);font-family:'Space Grotesk',sans-serif;line-height:1.55;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif;margin:0;font-weight:600;}
+  p{margin:0 0 14px;color:var(--dim);}
+  .mono{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;}
+  a{color:var(--galactic);}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px 90px;}
+  header.hero{padding:64px 20px 40px;border-bottom:1px solid var(--line);}
+  .brand{color:var(--dim-2);font-size:0.8rem;margin:0 0 10px;letter-spacing:0.03em;font-family:'IBM Plex Mono',monospace;}
+  .kicker{color:var(--galactic);font-size:0.9rem;margin-bottom:8px;}
+  h1{font-size:clamp(1.7rem,4vw,2.4rem);color:var(--star);margin-bottom:14px;}
+  .lede{max-width:640px;color:#b7bfd2;font-size:1.03rem;}
+  section{padding:44px 0;border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  .section-title{font-size:1.4rem;margin-bottom:8px;color:var(--star);}
+  .sub{color:var(--dim);font-size:0.9rem;margin-bottom:16px;}
+  ul,ol{padding-left:22px;color:var(--dim);} li{margin-bottom:8px;}
+
+  table{width:100%;border-collapse:collapse;margin-top:14px;font-size:0.85rem;}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);color:var(--dim);}
+  th{font-family:'Space Grotesk',sans-serif;color:var(--star);font-size:0.78rem;}
+  td strong{color:var(--star);}
+
+  .panel{background:var(--void-2);border:1px solid var(--line);border-radius:8px;padding:20px;margin-top:16px;}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+  .chip{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;border:1px solid var(--line);border-radius:14px;padding:6px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;background:var(--void-3);color:var(--dim);}
+  .chip .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+  .chip.active{color:var(--star);border-color:currentColor;}
+  canvas{display:block;width:100%;background:radial-gradient(ellipse at center,#0a0e18,#05070d);border-radius:6px;}
+  .field{margin:14px 0;}
+  .field label{display:block;font-size:0.8rem;color:var(--dim);margin-bottom:6px;}
+  .field input[type=range]{width:100%;accent-color:var(--galactic);}
+  .value{font-family:'IBM Plex Mono',monospace;color:var(--star);font-weight:600;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media (max-width:600px){.grid2{grid-template-columns:1fr;}}
+  .readout-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:14px;}
+  .readout{background:var(--void-3);border:1px solid var(--line);border-radius:6px;padding:12px;text-align:center;}
+  .readout .n{font-family:'IBM Plex Mono',monospace;font-size:1.05rem;color:var(--star);font-weight:600;}
+  .readout .l{font-size:0.65rem;color:var(--dim);margin-top:4px;}
+
+  .formula{background:#020306;color:#b7bfd2;padding:12px 16px;border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:0.82rem;display:inline-block;margin:6px 0;}
+  .limits{background:#1a1408;border:1px solid #4a3a1a;border-radius:8px;padding:20px;}
+  .limits h3{color:#e0b96a;font-size:1rem;margin-bottom:10px;}
+  footer{padding:30px 20px;text-align:center;color:var(--dim-2);font-size:0.82rem;border-top:1px solid var(--line);}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="brand">JAZMI — Modul Sains · Astronomi Posisi</p>
+    <p class="kicker">Bukan cuma empat — peta lengkap garis acuan di langit</p>
+    <h1>Garis-Garis Langit</h1>
+    <p class="lede">Horizon, ekuator langit, ekliptika, dan bidang galaksi hanyalah empat yang paling sering dibahas. Di baliknya ada seluruh keluarga lingkaran besar yang saling silang, masing-masing mendefinisikan sistem koordinatnya sendiri — dan semuanya bisa diputar dan disaksikan sekaligus di satu bola langit interaktif.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <h2 class="section-title">Belajar</h2>
+    <p class="sub">Kenapa langit butuh begitu banyak garis acuan?</p>
+    <p>Setiap sistem koordinat langit butuh tiga hal: <strong style="color:var(--star)">bidang dasar</strong> (fundamental plane), <strong style="color:var(--star)">kutub</strong> (arah tegak lurus bidang itu), dan <strong style="color:var(--star)">titik nol</strong> (dari mana sudut mulai dihitung). Beda pilihan bidang dasar → beda sistem koordinat → beda "garis langit" yang jadi acuan utamanya. Empat yang paling terkenal:</p>
+    <table>
+      <thead><tr><th>Garis</th><th>Ditentukan oleh</th><th>Sistem koordinat</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Horizon</strong></td><td>Posisi pengamat + waktu</td><td>Horizontal (altitude–azimuth)</td></tr>
+        <tr><td><strong>Ekuator langit</strong></td><td>Rotasi Bumi</td><td>Ekuatorial (RA–deklinasi)</td></tr>
+        <tr><td><strong>Ekliptika</strong></td><td>Orbit Bumi mengelilingi Matahari</td><td>Ekliptika (bujur–lintang ekliptika)</td></tr>
+        <tr><td><strong>Bidang galaksi</strong></td><td>Piringan Bimasakti</td><td>Galaktik (bujur–lintang galaktik)</td></tr>
+      </tbody>
+    </table>
+    <p>Tapi begitu Anda punya dua kutub (mis. kutub langit &amp; zenith), otomatis muncul garis-garis <em>turunan</em> lain yang juga dipakai serius dalam astronomi klasik dan navigasi:</p>
+    <table>
+      <thead><tr><th>Garis turunan</th><th>Melalui titik apa</th><th>Kegunaan</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Meridian langit</strong></td><td>Zenith, nadir, kedua kutub langit</td><td>Menentukan tengah hari matahari &amp; arah utara-selatan tepat</td></tr>
+        <tr><td><strong>Vertikal utama (prime vertical)</strong></td><td>Zenith, nadir, titik timur &amp; barat</td><td>Titik terbit/terbenam benda langit tepat di ekuator langit</td></tr>
+        <tr><td><strong>Kolur ekuinoks</strong></td><td>Kedua kutub langit + kedua titik ekuinoks</td><td>Kerangka klasik pembagi bola langit (dipakai sebelum sistem RA modern)</td></tr>
+        <tr><td><strong>Kolur solstis</strong></td><td>Kedua kutub langit + kedua titik solstis</td><td>Menandai titik balik matahari (pasangan tegak lurus kolur ekuinoks)</td></tr>
+      </tbody>
+    </table>
+    <p>Di luar keduanya, ada lagi bidang acuan berskala jauh lebih besar yang jarang dibahas di luar astronomi profesional: <strong style="color:var(--star)">bidang supergalaksi</strong> (mengacu ke sebaran gugus-gugus galaksi tetangga, dimiringkan ~90° dari bidang galaksi) dan <strong style="color:var(--star)">bidang invarian Tata Surya</strong> (rata-rata tertimbang seluruh bidang orbit planet, sedikit berbeda dari ekliptika Bumi). Keduanya nyata dipakai dalam katalog astronomi, tapi tidak kami render presisi di simulator ini — lihat Batasan.</p>
+  </section>
+
+  <section id="klasifikasi">
+    <h2 class="section-title">Klasifikasi</h2>
+    <p class="sub">Mengelompokkan garis-garis di atas menurut apa yang sebenarnya menentukan posisinya.</p>
+    <table>
+      <thead><tr><th>Kelompok</th><th>Anggota</th><th>Bergerak relatif ke bintang latar?</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Berbasis pengamat</strong><br>(observer-centric)</td><td>Horizon, Meridian, Vertikal utama</td><td>Ya — berubah tiap detik (rotasi Bumi) &amp; tiap pindah lokasi</td></tr>
+        <tr><td><strong>Berbasis rotasi Bumi</strong></td><td>Ekuator langit, Kolur ekuinoks, Kolur solstis</td><td>Nyaris tetap (bergeser sangat lambat akibat presesi, ~26.000 tahun)</td></tr>
+        <tr><td><strong>Berbasis orbit Bumi</strong></td><td>Ekliptika</td><td>Tetap dalam skala manusia</td></tr>
+        <tr><td><strong>Berbasis struktur galaksi</strong></td><td>Bidang galaksi</td><td>Tetap dalam skala manusia</td></tr>
+        <tr><td><strong>Berbasis struktur alam semesta besar</strong></td><td>Bidang supergalaksi</td><td>Tetap</td></tr>
+        <tr><td><strong>Berbasis dinamika Tata Surya</strong></td><td>Bidang invarian</td><td>Tetap (bergeser sangat lambat)</td></tr>
+      </tbody>
+    </table>
+    <p>Pola pentingnya: makin besar skala fisik yang mendefinisikan sebuah garis (dari "posisi Anda berdiri" sampai "struktur galaksi"), makin stabil garis itu terhadap waktu manusia — tapi horizon, yang paling akrab dalam pengalaman sehari-hari, justru yang paling cepat berubah.</p>
+  </section>
+
+  <section id="eksplorasi">
+    <h2 class="section-title">Eksplorasi — Bola Langit Interaktif</h2>
+    <p class="sub">Nyalakan/matikan tiap garis, putar sudut pandang, geser lintang pengamat, waktu, dan tanggal — semua garis dihitung ulang dari vektor kutubnya masing-masing secara real-time.</p>
+
+    <div class="panel">
+      <div class="toolbar" id="toggle-row"></div>
+      <canvas id="sphere" width="700" height="480"></canvas>
+
+      <div class="grid2" style="margin-top:16px;">
+        <div class="field"><label>Lintang pengamat — <span class="value" id="lat-val">-6</span>°</label><input type="range" id="lat-slider" min="-90" max="90" step="1" value="-6"></div>
+        <div class="field"><label>Waktu sidereal — <span class="value" id="time-val">12.0</span> jam</label><input type="range" id="time-slider" min="0" max="24" step="0.1" value="12"></div>
+        <div class="field"><label>Hari sejak ekuinoks Maret — <span class="value" id="day-val">0</span></label><input type="range" id="day-slider" min="0" max="365" step="1" value="0"></div>
+        <div class="field"><label>Putar pandangan (azimut) — <span class="value" id="az-val">35</span>°</label><input type="range" id="az-slider" min="0" max="360" step="1" value="35"></div>
+        <div class="field"><label>Putar pandangan (elevasi) — <span class="value" id="el-val">18</span>°</label><input type="range" id="el-slider" min="-89" max="89" step="1" value="18"></div>
+      </div>
+
+      <div class="readout-grid" id="readout-grid"></div>
+    </div>
+  </section>
+
+  <section id="perhitungan">
+    <h2 class="section-title">Perhitungan</h2>
+    <p>Setiap lingkaran besar didefinisikan cukup oleh satu vektor kutub P (satuan): lingkarannya adalah himpunan titik X pada bola satuan dengan X·P=0. Semua kutub di simulator ini diturunkan dari kerangka ekuatorial tetap (sumbu-Z = kutub langit utara, sumbu-X = arah ekuinoks Maret):</p>
+    <div class="formula">Kutub ekuator = (0,0,1)
+Kutub ekliptika = rotasi (0,0,1) sejauh ε=23,44° mengelilingi sumbu-X
+Kutub galaksi = arah (AR=192,86°, Dek=+27,13°) [J2000, IAU 1958]
+Kutub horizon (zenith) = arah (AR=waktu sidereal, Dek=lintang pengamat)
+Kutub meridian = normalisasi( zenith × kutub_ekuator )
+Kutub vertikal-utama = normalisasi( zenith × kutub_meridian )
+Kutub kolur ekuinoks = (0,1,0)
+Kutub kolur solstis = (1,0,0)</div>
+    <p>Matahari ditempatkan pada lingkaran ekliptika pada bujur ekliptika λ=(hari/365,25)×360°, memakai basis (arah ekuinoks, arah tegak lurusnya dalam bidang ekliptika) — sehingga deklinasi Matahari yang dihasilkan otomatis berayun antara ±23,44° sepanjang tahun, persis pola musim sungguhan.</p>
+  </section>
+
+  <section id="metode">
+    <h2 class="section-title">Metode</h2>
+    <p>Nilai kemiringan ekliptika (23,44°) dan koordinat kutub galaksi utara (AR 12ʲ51,4ᵐ, Dek +27°07′, J2000 — setara AR≈192,86°) diperiksa silang terhadap sumber IAU 1958 dan katalog astronomi standar (Swinburne COSMOS, CIAO/CXC Harvard). Konstruksi vektor untuk meridian dan vertikal-utama diturunkan sendiri dari definisi geometrisnya (lingkaran besar melalui zenith dan kutub terkait), lalu diverifikasi memastikan zenith benar-benar terletak pada kedua lingkaran tersebut secara aljabar.</p>
+  </section>
+
+  <section id="batasan">
+    <div class="limits">
+      <h3>Batasan</h3>
+      <ul>
+        <li><strong>Bidang supergalaksi dan bidang invarian Tata Surya tidak dirender</strong> di simulator ini — kami tidak cukup yakin dengan presisi angka kutubnya untuk ditampilkan sebagai garis akurat, jadi keduanya hanya dijelaskan secara tekstual di bagian Belajar.</li>
+        <li>Presesi sumbu Bumi (siklus ~26.000 tahun, yang perlahan menggeser posisi ekuator &amp; kolur terhadap bintang latar) tidak dimodelkan — semua perhitungan memakai kerangka J2000 tetap.</li>
+        <li>Rotasi harian horizon disederhanakan lewat satu slider "waktu sidereal" langsung — bukan simulasi rotasi Bumi 24 jam matahari yang sesungguhnya sedikit berbeda dari hari sideris (23j56m).</li>
+        <li>Bola langit digambar dengan proyeksi ortografik sederhana (bagian belakang bola ditampilkan redup) — bukan rendering 3D dengan pencahayaan atau perspektif sungguhan.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="referensi">
+    <h2 class="section-title">Referensi</h2>
+    <ul>
+      <li>Swinburne University, COSMOS — "Galactic Coordinate System", "North Galactic Pole".</li>
+      <li>CIAO/CXC Harvard — "prop-coords: coordinate system definitions".</li>
+      <li>Britannica — "galactic coordinate".</li>
+      <li>Wikipedia — "Celestial coordinate system", "Colures", "Prime vertical", "Invariable plane", "Supergalactic coordinate system".</li>
+    </ul>
+    <p style="margin-top:12px;">Lihat juga <a href="bidang-galaksi.html">Bidang Galaksi</a> untuk pembahasan mendalam garis yang paling jarang dibahas dari keempatnya.</p>
+  </section>
+
+</div>
+
+<footer>JAZMI — Modul Sains · Belajar → Memodelkan → Menguji → Membuat</footer>
+
+<script>
+(function(){
+  const D2R=Math.PI/180;
+  const OBLIQUITY=23.44*D2R;
+  const NGP_RA=192.86*D2R, NGP_DEC=27.13*D2R;
+
+  function vecFromRaDec(ra,dec){ return [Math.cos(dec)*Math.cos(ra), Math.cos(dec)*Math.sin(ra), Math.sin(dec)]; }
+  function normalize(v){ const m=Math.hypot(v[0],v[1],v[2]); return [v[0]/m,v[1]/m,v[2]/m]; }
+  function cross(a,b){ return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]]; }
+  function rotAroundX(v,ang){
+    const c=Math.cos(ang), s=Math.sin(ang);
+    return [v[0], v[1]*c - v[2]*s, v[1]*s + v[2]*c];
+  }
+
+  const NCP=[0,0,1];
+  const VERNAL=[1,0,0];
+  const EQUINOCTIAL_COLURE_POLE=[0,1,0];
+  const SOLSTITIAL_COLURE_POLE=[1,0,0];
+  const ECLIPTIC_POLE=rotAroundX(NCP, OBLIQUITY);
+  const GALACTIC_POLE=vecFromRaDec(NGP_RA,NGP_DEC);
+  const ECLIPTIC_V=normalize(cross(ECLIPTIC_POLE, VERNAL));
+
+  const CIRCLES=[
+    {id:'horizon', label:'Horizon', color:getVar('--horizon'), dynamic:true},
+    {id:'equator', label:'Ekuator Langit', color:getVar('--equator'), pole:NCP},
+    {id:'ecliptic', label:'Ekliptika', color:getVar('--ecliptic'), pole:ECLIPTIC_POLE},
+    {id:'galactic', label:'Bidang Galaksi', color:getVar('--galactic'), pole:GALACTIC_POLE},
+    {id:'meridian', label:'Meridian Langit', color:getVar('--meridian'), dynamic:true},
+    {id:'primevert', label:'Vertikal Utama', color:getVar('--primevert'), dynamic:true},
+    {id:'eqcolure', label:'Kolur Ekuinoks', color:getVar('--colure'), pole:EQUINOCTIAL_COLURE_POLE, dash:true},
+    {id:'solcolure', label:'Kolur Solstis', color:getVar('--colure'), pole:SOLSTITIAL_COLURE_POLE, dash:true},
+  ];
+  function getVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+  const active={horizon:true, equator:true, ecliptic:true, galactic:true, meridian:false, primevert:false, eqcolure:false, solcolure:false};
+
+  const toggleRow=document.getElementById('toggle-row');
+  toggleRow.innerHTML=CIRCLES.map(c=>
+    '<div class="chip '+(active[c.id]?'active':'')+'" data-id="'+c.id+'" style="color:'+(active[c.id]?c.color:'')+'">'+
+    '<span class="dot" style="background:'+c.color+'"></span>'+c.label+'</div>'
+  ).join('');
+  toggleRow.querySelectorAll('.chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      const id=chip.dataset.id;
+      active[id]=!active[id];
+      chip.classList.toggle('active', active[id]);
+      const c=CIRCLES.find(x=>x.id===id);
+      chip.style.color = active[id] ? c.color : '';
+      render();
+    });
+  });
+
+  const canvas=document.getElementById('sphere');
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height, CX=W/2, CY=H/2, R=Math.min(W,H)/2*0.82;
+
+  const latSlider=document.getElementById('lat-slider'), timeSlider=document.getElementById('time-slider');
+  const daySlider=document.getElementById('day-slider'), azSlider=document.getElementById('az-slider'), elSlider=document.getElementById('el-slider');
+  const latVal=document.getElementById('lat-val'), timeVal=document.getElementById('time-val'), dayVal=document.getElementById('day-val');
+  const azVal=document.getElementById('az-val'), elVal=document.getElementById('el-val');
+  const readoutGrid=document.getElementById('readout-grid');
+
+  function viewRotate(v, az, el){
+    let [x,y,z]=v;
+    let x1=x*Math.cos(az)+y*Math.sin(az);
+    let y1=-x*Math.sin(az)+y*Math.cos(az);
+    let z1=z;
+    let y2=y1*Math.cos(el)+z1*Math.sin(el);
+    let z2=-y1*Math.sin(el)+z1*Math.cos(el);
+    return [x1,y2,z2];
+  }
+  function project(v){ return [CX+v[0]*R, CY-v[1]*R]; }
+
+  function circlePoints(pole){
+    let ref=Math.abs(pole[2])<0.9 ? [0,0,1] : [1,0,0];
+    const u=normalize(cross(pole,ref));
+    const v=normalize(cross(pole,u));
+    const pts=[];
+    for(let i=0;i<=72;i++){
+      const t=(i/72)*Math.PI*2;
+      pts.push([
+        Math.cos(t)*u[0]+Math.sin(t)*v[0],
+        Math.cos(t)*u[1]+Math.sin(t)*v[1],
+        Math.cos(t)*u[2]+Math.sin(t)*v[2]
+      ]);
+    }
+    return pts;
+  }
+
+  function drawCircle(pole, color, az, el, dashed){
+    const pts=circlePoints(pole).map(p=>viewRotate(p,az,el));
+    for(let i=0;i<pts.length-1;i++){
+      const a=pts[i], b=pts[i+1];
+      const zAvg=(a[2]+b[2])/2;
+      const [ax,ay]=project(a), [bx,by]=project(b);
+      ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(bx,by);
+      ctx.strokeStyle=color;
+      ctx.globalAlpha = zAvg>0 ? 1 : 0.22;
+      ctx.lineWidth = zAvg>0 ? 2 : 1.2;
+      ctx.setLineDash(dashed ? [5,4] : []);
+      ctx.stroke();
+    }
+    ctx.globalAlpha=1; ctx.setLineDash([]);
+  }
+  function drawPoint(v, az, el, color, label){
+    const p=viewRotate(v,az,el);
+    const [x,y]=project(p);
+    ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2);
+    ctx.fillStyle=color; ctx.globalAlpha = p[2]>0?1:0.3; ctx.fill(); ctx.globalAlpha=1;
+    if(p[2]>0 && label){
+      ctx.font='10px IBM Plex Mono, monospace'; ctx.fillStyle=color; ctx.textAlign='center';
+      ctx.fillText(label, x, y-9);
+    }
+  }
+
+  function render(){
+    const lat=parseFloat(latSlider.value)*D2R;
+    const t=parseFloat(timeSlider.value);
+    const day=parseFloat(daySlider.value);
+    const az=parseFloat(azSlider.value)*D2R;
+    const el=parseFloat(elSlider.value)*D2R;
+    latVal.textContent=Math.round(lat/D2R); timeVal.textContent=t.toFixed(1); dayVal.textContent=day;
+    azVal.textContent=Math.round(az/D2R); elVal.textContent=Math.round(el/D2R);
+
+    const zenithRA=(t/24)*2*Math.PI;
+    const zenith=vecFromRaDec(zenithRA, lat);
+    const meridianPole=normalize(cross(zenith,NCP));
+    const primevertPole=normalize(cross(zenith,meridianPole));
+
+    ctx.clearRect(0,0,W,H);
+    ctx.beginPath(); ctx.arc(CX,CY,R,0,Math.PI*2); ctx.strokeStyle='rgba(255,255,255,0.12)'; ctx.lineWidth=1; ctx.stroke();
+
+    const poleMap={equator:NCP, ecliptic:ECLIPTIC_POLE, galactic:GALACTIC_POLE, horizon:zenith, meridian:meridianPole, primevert:primevertPole, eqcolure:EQUINOCTIAL_COLURE_POLE, solcolure:SOLSTITIAL_COLURE_POLE};
+    CIRCLES.forEach(c=>{
+      if(!active[c.id]) return;
+      drawCircle(poleMap[c.id], c.color, az, el, !!c.dash);
+    });
+
+    drawPoint(NCP, az, el, '#ffffff', 'KLU');
+    drawPoint(zenith, az, el, '#ffe08a', 'Zenit');
+    drawPoint(GALACTIC_POLE, az, el, getVar('--galactic'), null);
+
+    const lambdaSun=(day/365.25)*2*Math.PI;
+    const sunPos=[
+      Math.cos(lambdaSun)*VERNAL[0]+Math.sin(lambdaSun)*ECLIPTIC_V[0],
+      Math.cos(lambdaSun)*VERNAL[1]+Math.sin(lambdaSun)*ECLIPTIC_V[1],
+      Math.cos(lambdaSun)*VERNAL[2]+Math.sin(lambdaSun)*ECLIPTIC_V[2]
+    ];
+    drawPoint(sunPos, az, el, '#ffcf5c', '☀');
+
+    const sunDec=Math.asin(sunPos[2])/D2R;
+    readoutGrid.innerHTML=
+      '<div class="readout"><div class="n">'+sunDec.toFixed(1)+'°</div><div class="l">DEKLINASI MATAHARI</div></div>'+
+      '<div class="readout"><div class="n">'+(lat/D2R).toFixed(0)+'°</div><div class="l">LINTANG = DEKLINASI ZENITH</div></div>'+
+      '<div class="readout"><div class="n">'+((zenithRA/D2R)).toFixed(0)+'°</div><div class="l">AR ZENITH (= WAKTU SIDEREAL)</div></div>';
+  }
+
+  [latSlider,timeSlider,daySlider,azSlider,elSlider].forEach(el=>el.addEventListener('input', render));
+  render();
+})();
+</script>
+
+</body>
+</html>

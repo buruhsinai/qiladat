@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kompleksitas Sel Pertama — Kalkulator Interaktif</title>
+<style>
+  :root {
+    --bg: #080a0e;
+    --bg2: #0e1218;
+    --bg3: #141a22;
+    --border: #1c2830;
+    --text: #b8c8d8;
+    --text-dim: #405060;
+    --accent: #5090c0;
+    --accent2: #50b880;
+    --accent3: #c0a040;
+    --accent4: #c05050;
+    --font: 'Georgia', serif;
+    --mono: 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; line-height: 1.7; }
+
+  header { max-width: 1080px; margin: 0 auto; padding: 2.5rem 2rem 1.5rem; border-bottom: 1px solid var(--border); }
+  .eyebrow { font-family: var(--mono); font-size: 0.68rem; color: var(--text-dim); letter-spacing: 0.15em; margin-bottom: 0.6rem; }
+  h1 { font-size: clamp(1.4rem, 3vw, 2rem); font-weight: normal; color: #c8d8e8; line-height: 1.3; margin-bottom: 0.5rem; }
+  h1 em { color: var(--accent2); font-style: normal; }
+  .sub { font-size: 0.85rem; color: var(--text-dim); max-width: 640px; font-style: italic; line-height: 1.7; }
+
+  .main { max-width: 1080px; margin: 0 auto; padding: 1.5rem 2rem; display: grid; grid-template-columns: 1fr 360px; gap: 1.2rem; }
+  @media(max-width:750px){ .main { grid-template-columns:1fr; padding:1rem; } }
+  .full { grid-column: 1/-1; }
+
+  .panel { background: var(--bg2); border: 1px solid var(--border); border-radius: 3px; padding: 1.4rem; }
+  .ptitle { font-family: var(--mono); font-size: 0.68rem; color: var(--text-dim); letter-spacing: 0.12em; border-bottom: 1px solid var(--border); padding-bottom: 0.6rem; margin-bottom: 1.1rem; }
+
+  /* KOMPONEN */
+  .component-row {
+    display: flex; align-items: flex-start; gap: 0.7rem;
+    padding: 0.7rem 0; border-bottom: 1px solid var(--border);
+    transition: background 0.2s; cursor: pointer;
+  }
+  .component-row:last-child { border-bottom: none; }
+  .component-row:hover { background: var(--bg3); margin: 0 -0.5rem; padding-left: 0.5rem; padding-right: 0.5rem; border-radius: 2px; }
+
+  .comp-toggle {
+    width: 18px; height: 18px; border: 1px solid var(--border);
+    border-radius: 2px; flex-shrink: 0; margin-top: 2px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; transition: all 0.2s; cursor: pointer;
+  }
+  .comp-toggle.on { background: var(--accent2); border-color: var(--accent2); color: var(--bg); }
+
+  .comp-body { flex: 1; }
+  .comp-name { font-size: 0.85rem; color: var(--text); margin-bottom: 0.15rem; }
+  .comp-desc { font-size: 0.72rem; color: var(--text-dim); line-height: 1.6; }
+
+  .comp-prob {
+    text-align: right; flex-shrink: 0; width: 80px;
+  }
+  .comp-prob-val { font-family: var(--mono); font-size: 0.75rem; color: var(--accent3); }
+  .comp-prob-label { font-family: var(--mono); font-size: 0.6rem; color: var(--text-dim); margin-top: 0.1rem; }
+
+  /* PROBABILITY DISPLAY */
+  .prob-main {
+    text-align: center; padding: 1.5rem;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 3px;
+    margin-bottom: 1rem;
+  }
+  .prob-label { font-family: var(--mono); font-size: 0.65rem; color: var(--text-dim); letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+  .prob-number { font-family: var(--mono); font-size: clamp(1.4rem, 4vw, 2rem); color: var(--accent4); line-height: 1.2; margin-bottom: 0.3rem; font-weight: bold; }
+  .prob-number.possible { color: var(--accent3); }
+  .prob-number.marginal { color: var(--accent); }
+  .prob-context { font-size: 0.75rem; color: var(--text-dim); line-height: 1.6; }
+
+  /* COMPARISON */
+  .comp-bar-row { margin-bottom: 0.5rem; }
+  .cbr-head { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-dim); margin-bottom: 0.25rem; font-family: var(--mono); }
+  .cbr-track { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
+  .cbr-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+
+  /* PARAMETERS */
+  .sl-group { margin-bottom: 0.9rem; }
+  .sl-head { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.2rem; }
+  .sl-val { font-family: var(--mono); font-size: 0.75rem; color: var(--accent); }
+  .sl-note { font-size: 0.68rem; color: var(--text-dim); font-style: italic; margin-bottom: 0.28rem; }
+  input[type=range] { width:100%; height:4px; background:var(--bg3); border-radius:2px; outline:none; -webkit-appearance:none; cursor:pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:12px; height:12px; border-radius:50%; background:var(--accent); cursor:pointer; }
+
+  /* READOUT */
+  .readout { background: var(--bg); border-left: 3px solid var(--accent); padding: 0.85rem 1rem; font-size: 0.82rem; line-height: 1.8; border-radius: 0 3px 3px 0; transition: border-color 0.4s; }
+  .readout em { color: var(--accent2); font-style: normal; }
+  .readout .ar { direction: rtl; color: var(--accent3); font-size: 0.9rem; display: block; margin-top: 0.4rem; text-align: right; }
+
+  .sep { height: 1px; background: var(--border); margin: 1rem 0; }
+
+  .infobox { background: var(--bg3); border: 1px solid var(--border); padding: 0.85rem; border-radius: 3px; font-size: 0.8rem; color: var(--text-dim); line-height: 1.75; }
+  .infobox strong { color: var(--text); }
+  .infobox em { color: var(--accent2); font-style: normal; }
+
+  .btn-row { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+  button.b { padding: 0.28rem 0.7rem; border: 1px solid var(--border); background: var(--bg); color: var(--text-dim); font-size: 0.72rem; border-radius: 3px; cursor: pointer; font-family: var(--mono); transition: all 0.2s; }
+  button.b:hover { border-color: var(--accent); color: var(--accent); }
+  button.b.on { border-color: var(--accent2); color: var(--accent2); background: var(--bg3); }
+
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 0.8rem; }
+  .stat { background: var(--bg); border: 1px solid var(--border); padding: 0.6rem; border-radius: 3px; text-align: center; }
+  .stat-n { font-family: var(--mono); font-size: 1.1rem; font-weight: bold; }
+  .stat-l { font-size: 0.62rem; color: var(--text-dim); font-family: var(--mono); margin-top: 0.1rem; }
+
+  .caveat-box { background: var(--bg3); border: 1px solid var(--border); border-left: 3px solid var(--accent); padding: 0.9rem; border-radius: 0 3px 3px 0; font-size: 0.78rem; color: var(--text-dim); line-height: 1.75; margin-top: 0.8rem; }
+  .caveat-box strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">LABORATORIUM INTERAKTIF · QIDALAT.COM</div>
+  <h1>Kompleksitas <em>Sel Pertama</em></h1>
+  <p class="sub">Berapa komponen yang harus ada serentak agar sebuah sel bisa berfungsi? Dan berapa probabilitas kumulatifnya muncul secara acak? Ini bukan argumen — ini perhitungan jujur.</p>
+</header>
+
+<div class="main">
+
+  <!-- KIRI: KOMPONEN -->
+  <div style="display:flex;flex-direction:column;gap:1.2rem;">
+
+    <div class="panel">
+      <div class="ptitle">KOMPONEN SEL MINIMUM — AKTIF/NONAKTIFKAN</div>
+
+      <div class="btn-row">
+        <button class="b on" onclick="setPreset('minimal')">Sel Minimal</button>
+        <button class="b" onclick="setPreset('typical')">Sel Tipikal</button>
+        <button class="b" onclick="setPreset('all')">Semua Komponen</button>
+        <button class="b" onclick="setPreset('none')">Kosongkan</button>
+      </div>
+
+      <div id="components-list"></div>
+    </div>
+
+  </div>
+
+  <!-- KANAN: KALKULASI -->
+  <div style="display:flex;flex-direction:column;gap:1.2rem;">
+
+    <div class="panel">
+      <div class="ptitle">PROBABILITAS KUMULATIF</div>
+
+      <div class="prob-main">
+        <div class="prob-label">PELUANG MUNCUL SECARA ACAK</div>
+        <div class="prob-number" id="prob-display">—</div>
+        <div class="prob-context" id="prob-context">Pilih komponen untuk memulai kalkulasi.</div>
+      </div>
+
+      <div class="stat-grid" id="stat-grid"></div>
+
+      <div class="sep"></div>
+
+      <div style="font-size:0.72rem;color:var(--text-dim);font-family:var(--mono);margin-bottom:0.5rem;letter-spacing:0.08em;">PERBANDINGAN DENGAN ANGKA ALAM SEMESTA:</div>
+
+      <div class="comp-bar-row">
+        <div class="cbr-head"><span>Atom di alam semesta (~10⁸⁰)</span><span id="bar-atoms-val"></span></div>
+        <div class="cbr-track"><div class="cbr-fill" id="bar-atoms" style="background:var(--accent)"></div></div>
+      </div>
+      <div class="comp-bar-row">
+        <div class="cbr-head"><span>Detik sejak Big Bang (~10¹⁷)</span><span id="bar-time-val"></span></div>
+        <div class="cbr-track"><div class="cbr-fill" id="bar-time" style="background:var(--accent2)"></div></div>
+      </div>
+      <div class="comp-bar-row">
+        <div class="cbr-head"><span>Probabilitas sel ini (10⁻ⁿ)</span><span id="bar-prob-val"></span></div>
+        <div class="cbr-track"><div class="cbr-fill" id="bar-prob" style="background:var(--accent4)"></div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="ptitle">PARAMETER ASUMSI</div>
+
+      <div class="sl-group">
+        <div class="sl-head"><span>Optimisme probabilitas</span><span class="sl-val" id="v-opt">50%</span></div>
+        <div class="sl-note">Seberapa optimis kita tentang peluang tiap komponen muncul. 100% = asumsi paling optimis yang mungkin.</div>
+        <input type="range" id="sl-opt" min="1" max="100" value="50" oninput="recalc()">
+      </div>
+
+      <div class="sl-group">
+        <div class="sl-head"><span>Percobaan per detik (×10ⁿ)</span><span class="sl-val" id="v-trials">6</span></div>
+        <div class="sl-note">Jumlah reaksi kimia per detik di lautan purba — estimasi. Lebih tinggi = lebih banyak kesempatan.</div>
+        <input type="range" id="sl-trials" min="1" max="40" value="6" oninput="recalc()">
+      </div>
+
+      <div class="sl-group">
+        <div class="sl-head"><span>Waktu tersedia (×10ⁿ tahun)</span><span class="sl-val" id="v-time">8</span></div>
+        <div class="sl-note">Waktu yang tersedia di bumi purba — sekitar 500 juta tahun sebelum fosil pertama.</div>
+        <input type="range" id="sl-time" min="6" max="10" value="8" oninput="recalc()">
+      </div>
+
+      <div class="readout" id="main-readout" style="margin-top:0.8rem;">
+        Aktifkan komponen di kiri untuk memulai.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BAWAH -->
+  <div class="panel full">
+    <div class="ptitle">INTERPRETASI JUJUR — BUKAN ARGUMEN, INI KALKULASI</div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;">
+      <div class="infobox">
+        <strong>Apa yang dihitung ini</strong><br><br>
+        Probabilitas semua komponen minimum sel muncul secara simultan dan tersusun dengan benar, berdasarkan kombinatorika. Ini mengikuti pendekatan Hubert Yockey, Fred Hoyle, dan Michael Denton — matematikawan dan biofisikawan yang menghitung masalah ini secara serius.
+      </div>
+      <div class="infobox">
+        <strong>Apa yang tidak dihitung</strong><br><br>
+        Proses bertahap yang mungkin mereduksi kompleksitas — RNA world hypothesis, proto-metabolism, self-organizing chemistry. Sains sedang mengeksplorasi jalur-jalur ini. Mereka tidak menghilangkan masalah, tapi mungkin mengubah skala perhitungannya.
+      </div>
+      <div class="infobox">
+        <strong>Batas jujur perhitungan ini</strong><br><br>
+        Kita tidak tahu dengan pasti probabilitas tiap komponen. Angka di sini adalah estimasi terbaik berdasarkan ukuran protein fungsional dan ruang konfigurasional. <em>Margin errornya besar</em> — tapi bahkan dengan asumsi paling optimis, angkanya tetap sangat kecil.
+      </div>
+      <div class="infobox">
+        <strong>Mengapa ini penting secara epistemologis</strong><br><br>
+        Saintisme sering berkata "sains akan menjelaskannya." Tapi kalkulasi ini menunjukkan bahwa skala masalahnya bukan sekadar "belum terjawab" — ia adalah <em>tantangan matematis yang serius</em> yang tidak bisa diselesaikan hanya dengan waktu lebih lama.
+      </div>
+    </div>
+
+    <div class="caveat-box">
+      <strong>Catatan penting:</strong> Tool ini bukan untuk membuktikan Tuhan ada atau sains salah. Ia adalah visualisasi jujur dari seberapa besar tantangan abiogenesis secara matematis. Sains masih mencari — dan itu baik. Pertanyaan yang tetap terbuka adalah pertanyaan yang sehat. Yang tidak sehat adalah berpura-pura pertanyaan ini sudah terjawab ketika belum.
+    </div>
+
+    <div style="margin-top:1.2rem;padding:1.1rem;background:var(--bg);border:1px solid var(--border);border-left:3px solid var(--accent3);border-radius:0 3px 3px 0;font-size:0.85rem;line-height:1.9;">
+      <div style="font-family:var(--mono);font-size:0.68rem;color:var(--text-dim);letter-spacing:0.1em;margin-bottom:0.5rem;">FRED HOYLE, 1981</div>
+      "The chance that higher life forms might have emerged through evolutionary processes is comparable with the chance that a tornado sweeping through a junk yard might assemble a Boeing 747." — Ini analogi yang terlalu kuat dan sering dikritik. Tapi angka di baliknya nyata dan perlu dihadapi dengan jujur, bukan diabaikan.
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ==========================================
+// DATA KOMPONEN
+// ==========================================
+const COMPONENTS = [
+  {
+    id: 'membrane',
+    name: 'Membran Lipid Bilayer',
+    desc: 'Batas sel. Harus terbentuk secara spontan, semi-permeabel, dan stabil. Fosfolipid memang bisa self-assemble — ini yang paling mungkin muncul duluan.',
+    prob_exp: -8,
+    prob_label: '~10⁻⁸',
+    category: 'struktural',
+    default: true,
+    note: 'Relatif lebih mungkin — lipid bilayer bisa terbentuk dari komponen sederhana di kondisi air.'
+  },
+  {
+    id: 'atp_synthase',
+    name: 'ATP Synthase',
+    desc: 'Mesin molekuler penghasil energi. Kompleks protein dengan 8+ subunit. Tanpa ini, tidak ada energi untuk proses lain.',
+    prob_exp: -45,
+    prob_label: '~10⁻⁴⁵',
+    category: 'energi',
+    default: true,
+    note: 'Salah satu protein paling kompleks yang diketahui. Berputar seperti motor — koordinasi sangat presisi.'
+  },
+  {
+    id: 'ribosome',
+    name: 'Ribosom',
+    desc: 'Mesin pembuat protein dari instruksi RNA. Terdiri dari 50+ protein dan beberapa RNA. Tidak bisa dibuat tanpa protein — tapi protein tidak bisa dibuat tanpa ribosom.',
+    prob_exp: -120,
+    prob_label: '~10⁻¹²⁰',
+    category: 'informasi',
+    default: true,
+    note: 'Paradoks bootstrap: ribosom membuat protein, tapi ribosom sendiri terbuat dari protein.'
+  },
+  {
+    id: 'dna',
+    name: 'DNA dengan Sekuens Fungsional',
+    desc: 'Informasi genetik minimum — ratusan gen untuk sel paling sederhana. Tidak hanya perlu ada, tapi harus dalam urutan yang mengkode protein yang benar.',
+    prob_exp: -200,
+    prob_label: '~10⁻²⁰⁰',
+    category: 'informasi',
+    default: true,
+    note: 'Mycoplasma genitalium — sel paling sederhana yang diketahui — punya 473 gen. Estimasi sel primitif: ~250 gen minimum.'
+  },
+  {
+    id: 'rna_pol',
+    name: 'RNA Polimerase',
+    desc: 'Enzim yang "membaca" DNA dan membuat RNA. Protein kompleks. Tanpa ini, informasi DNA tidak bisa diakses.',
+    prob_exp: -55,
+    prob_label: '~10⁻⁵⁵',
+    category: 'informasi',
+    default: true,
+    note: 'Harus spesifik terhadap promoter DNA — yaitu harus "tahu" di mana memulai pembacaan.'
+  },
+  {
+    id: 'trna',
+    name: 'tRNA dan Aminoacyl Synthetase',
+    desc: 'Penerjemah antara bahasa RNA dan bahasa protein. 20 jenis synthetase berbeda, satu untuk setiap asam amino.',
+    prob_exp: -80,
+    prob_label: '~10⁻⁸⁰',
+    category: 'informasi',
+    default: false,
+    note: 'Masing-masing synthetase harus mengenali tRNA yang tepat DAN asam amino yang tepat — presisi ganda.'
+  },
+  {
+    id: 'dna_repair',
+    name: 'Sistem Perbaikan DNA',
+    desc: 'DNA rusak secara alami — radiasi, kimia, kesalahan replikasi. Tanpa perbaikan, informasi genetik terdegradasi dalam hitungan generasi.',
+    prob_exp: -60,
+    prob_label: '~10⁻⁶⁰',
+    category: 'perbaikan',
+    default: false,
+    note: 'Tanpa ini, sel tidak bisa mewariskan informasi yang utuh ke keturunan — evolusi tidak bisa berjalan.'
+  },
+  {
+    id: 'membrane_transport',
+    name: 'Protein Transport Membran',
+    desc: 'Kanal dan pompa yang mengatur apa yang masuk dan keluar sel. Membran yang tidak selektif tidak berguna.',
+    prob_exp: -35,
+    prob_label: '~10⁻³⁵',
+    category: 'struktural',
+    default: false,
+    note: 'Sel butuh nutrisi masuk dan limbah keluar — tanpa protein transport, membran hanya jadi penjara.'
+  },
+  {
+    id: 'metabolism_core',
+    name: 'Metabolisme Inti (10 reaksi)',
+    desc: 'Jalur metabolisme dasar untuk menghasilkan prekursor molekuler. Minimum 10 enzim yang bekerja berurutan.',
+    prob_exp: -150,
+    prob_label: '~10⁻¹⁵⁰',
+    category: 'energi',
+    default: false,
+    note: 'Setiap enzim spesifik untuk substrat tertentu. 10 enzim yang harus ada serentak dan bekerja secara berurutan.'
+  },
+  {
+    id: 'cell_division',
+    name: 'Mesin Pembelahan Sel',
+    desc: 'Tanpa reproduksi, tidak ada evolusi. Tapi mesin pembelahan sel sendiri sangat kompleks.',
+    prob_exp: -90,
+    prob_label: '~10⁻⁹⁰',
+    category: 'reproduksi',
+    default: false,
+    note: 'Sel yang bisa bertahan tapi tidak bisa bereproduksi adalah jalan buntu evolusi.'
+  },
+  {
+    id: 'chaperones',
+    name: 'Protein Chaperone',
+    desc: 'Protein yang membantu protein lain melipat dengan benar. Tanpa ini, banyak protein yang baru dibuat akan salah lipat dan tidak fungsional.',
+    prob_exp: -40,
+    prob_label: '~10⁻⁴⁰',
+    category: 'perbaikan',
+    default: false,
+    note: 'Protein misfolding bisa berakibat fatal — penyakit prion adalah contoh ekstremnya.'
+  },
+  {
+    id: 'genetic_code',
+    name: 'Kode Genetik (kodon-asam amino)',
+    desc: 'Sistem pemetaan 64 kodon ke 20 asam amino. Ini adalah "bahasa" yang harus disepakati sebelum ribosom bisa bekerja.',
+    prob_exp: -30,
+    prob_label: '~10⁻³⁰',
+    category: 'informasi',
+    default: true,
+    note: 'Kode genetik hampir universal — semua kehidupan menggunakan kode yang sama. Dari mana "kesepakatan" ini?'
+  },
+];
+
+let activeComponents = new Set(COMPONENTS.filter(c => c.default).map(c => c.id));
+
+// ==========================================
+// RENDER KOMPONEN
+// ==========================================
+function renderComponents() {
+  const list = document.getElementById('components-list');
+  const cats = {
+    informasi: { label: 'Informasi & Kode', color: 'var(--accent)' },
+    energi: { label: 'Energi & Metabolisme', color: 'var(--accent3)' },
+    struktural: { label: 'Struktur', color: 'var(--accent2)' },
+    reproduksi: { label: 'Reproduksi', color: 'var(--accent4)' },
+    perbaikan: { label: 'Perbaikan & Stabilitas', color: '#a080c0' },
+  };
+
+  let html = '';
+  const catOrder = ['informasi','energi','struktural','perbaikan','reproduksi'];
+
+  catOrder.forEach(cat => {
+    const comps = COMPONENTS.filter(c => c.category === cat);
+    html += `<div style="font-family:var(--mono);font-size:0.62rem;color:${cats[cat].color};letter-spacing:0.1em;margin:0.8rem 0 0.3rem;padding-bottom:0.3rem;border-bottom:1px solid var(--border);">${cats[cat].label}</div>`;
+    comps.forEach(c => {
+      const on = activeComponents.has(c.id);
+      html += `
+        <div class="component-row" onclick="toggleComp('${c.id}')">
+          <div class="comp-toggle ${on ? 'on' : ''}">
+            ${on ? '✓' : ''}
+          </div>
+          <div class="comp-body">
+            <div class="comp-name">${c.name}</div>
+            <div class="comp-desc">${c.desc}</div>
+            ${c.note ? `<div style="font-size:0.68rem;color:var(--accent);font-style:italic;margin-top:0.2rem;">↳ ${c.note}</div>` : ''}
+          </div>
+          <div class="comp-prob">
+            <div class="comp-prob-val">${c.prob_label}</div>
+            <div class="comp-prob-label">peluang</div>
+          </div>
+        </div>
+      `;
+    });
+  });
+
+  list.innerHTML = html;
+}
+
+// ==========================================
+// TOGGLE
+// ==========================================
+function toggleComp(id) {
+  if (activeComponents.has(id)) activeComponents.delete(id);
+  else activeComponents.add(id);
+  renderComponents();
+  recalc();
+}
+
+// ==========================================
+// PRESET
+// ==========================================
+function setPreset(p) {
+  document.querySelectorAll('.btn-row button').forEach((b,i) => {
+    b.classList.toggle('on', ['minimal','typical','all','none'][i] === p);
+  });
+
+  if (p === 'minimal') {
+    activeComponents = new Set(COMPONENTS.filter(c => c.default).map(c => c.id));
+  } else if (p === 'typical') {
+    activeComponents = new Set(['membrane','atp_synthase','ribosome','dna','rna_pol','trna','dna_repair','membrane_transport','genetic_code']);
+  } else if (p === 'all') {
+    activeComponents = new Set(COMPONENTS.map(c => c.id));
+  } else {
+    activeComponents = new Set();
+  }
+
+  renderComponents();
+  recalc();
+}
+
+// ==========================================
+// KALKULASI
+// ==========================================
+function recalc() {
+  const opt = +document.getElementById('sl-opt').value;
+  const trialsExp = +document.getElementById('sl-trials').value;
+  const timeExp = +document.getElementById('sl-time').value;
+
+  document.getElementById('v-opt').textContent = opt + '%';
+  document.getElementById('v-trials').textContent = trialsExp;
+  document.getElementById('v-time').textContent = timeExp;
+
+  const active = COMPONENTS.filter(c => activeComponents.has(c.id));
+  const n = active.length;
+
+  if (n === 0) {
+    document.getElementById('prob-display').textContent = '—';
+    document.getElementById('prob-context').textContent = 'Tidak ada komponen dipilih.';
+    document.getElementById('main-readout').innerHTML = 'Aktifkan komponen di kiri untuk memulai kalkulasi.';
+    document.getElementById('stat-grid').innerHTML = '';
+    return;
+  }
+
+  // Hitung total eksponent probabilitas
+  let totalExp = active.reduce((sum, c) => sum + c.prob_exp, 0);
+
+  // Koreksi optimisme
+  const optFactor = opt / 50; // 50% = baseline
+  totalExp = Math.round(totalExp / optFactor);
+
+  // Total percobaan yang mungkin
+  const secondsPerYear = 3.15e7;
+  const trialsTotal_exp = trialsExp + timeExp + Math.round(Math.log10(secondsPerYear));
+  // ~trialsExp + timeExp + 7.5
+
+  const netExp = totalExp - trialsTotal_exp;
+
+  // Display
+  const probEl = document.getElementById('prob-display');
+  const ctxEl = document.getElementById('prob-context');
+
+  if (netExp > 100) {
+    probEl.textContent = `10⁻${totalExp}`;
+    probEl.className = 'prob-number';
+    ctxEl.textContent = `Bahkan dengan ${trialsExp} reaksi per detik selama 10${timeExp} tahun, dibutuhkan peluang yang melampaui semua sumber daya alam semesta yang bisa diobservasi (10⁸⁰ atom, 10¹⁷ detik).`;
+  } else if (netExp > 30) {
+    probEl.textContent = `10⁻${totalExp}`;
+    probEl.className = 'prob-number';
+    ctxEl.textContent = `Setelah memperhitungkan semua percobaan yang mungkin, peluang neto masih 10⁻${netExp} — jauh di bawah ambang "mungkin terjadi."`;
+  } else if (netExp > 0) {
+    probEl.textContent = `10⁻${netExp}`;
+    probEl.className = 'prob-number marginal';
+    ctxEl.textContent = `Dengan asumsi sangat optimis, peluang neto adalah 10⁻${netExp}. Masih sangat kecil — tapi di wilayah yang bisa diperdebatkan.`;
+  } else {
+    probEl.textContent = `~1`;
+    probEl.className = 'prob-number possible';
+    ctxEl.textContent = `Dengan asumsi paling optimis, probabilitas mendekati 1. Tapi ini berarti komponen yang dipilih tidak terlalu spesifik secara fungsional.`;
+  }
+
+  // Stats
+  document.getElementById('stat-grid').innerHTML = `
+    <div class="stat">
+      <div class="stat-n" style="color:var(--accent)">${n}</div>
+      <div class="stat-l">Komponen aktif</div>
+    </div>
+    <div class="stat">
+      <div class="stat-n" style="color:var(--accent4)">10⁻${totalExp}</div>
+      <div class="stat-l">Prob. gabungan</div>
+    </div>
+    <div class="stat">
+      <div class="stat-n" style="color:var(--accent2)">10${trialsTotal_exp}</div>
+      <div class="stat-l">Total percobaan</div>
+    </div>
+    <div class="stat">
+      <div class="stat-n" style="color:${netExp > 30 ? 'var(--accent4)' : netExp > 0 ? 'var(--accent3)' : 'var(--accent2)'}">
+        ${netExp > 0 ? '10⁻'+netExp : '~1'}
+      </div>
+      <div class="stat-l">Prob. neto</div>
+    </div>
+  `;
+
+  // Comparison bars
+  const maxExp = 250;
+  const atomsExp = 80;
+  const timeRefExp = 17;
+
+  const atomsPct = Math.min(100, (atomsExp / maxExp) * 100);
+  const timePct = Math.min(100, (timeRefExp / maxExp) * 100);
+  const probPct = Math.min(100, (totalExp / maxExp) * 100);
+
+  document.getElementById('bar-atoms').style.width = atomsPct + '%';
+  document.getElementById('bar-time').style.width = timePct + '%';
+  document.getElementById('bar-prob').style.width = probPct + '%';
+
+  document.getElementById('bar-atoms-val').textContent = '10⁸⁰';
+  document.getElementById('bar-time-val').textContent = '10¹⁷ detik';
+  document.getElementById('bar-prob-val').textContent = `10⁻${totalExp}`;
+
+  // Readout
+  updateReadout(n, totalExp, netExp, opt, active);
+}
+
+function updateReadout(n, totalExp, netExp, opt, active) {
+  const el = document.getElementById('main-readout');
+  const most_complex = active.reduce((a, b) => Math.abs(a.prob_exp) > Math.abs(b.prob_exp) ? a : b, active[0]);
+
+  if (n === 0) return;
+
+  if (totalExp > 150) {
+    el.innerHTML = `${n} komponen aktif. Probabilitas gabungan: <em>10⁻${totalExp}</em> — sebuah angka yang melampaui jumlah atom di seluruh alam semesta yang bisa diobservasi (10⁸⁰) sekaligus jumlah detik sejak Big Bang (10¹⁷). Komponen paling kompleks: <em>${most_complex.name}</em> (${most_complex.prob_label}).`;
+    el.style.borderColor = 'var(--accent4)';
+  } else if (totalExp > 60) {
+    el.innerHTML = `${n} komponen aktif. Probabilitas gabungan: <em>10⁻${totalExp}</em>. Dengan asumsi optimisme ${opt}% dan semua percobaan yang mungkin di bumi purba, peluang neto masih sangat kecil. Ini adalah tantangan matematis yang serius — bukan hanya soal "kurang waktu."`;
+    el.style.borderColor = 'var(--accent3)';
+  } else {
+    el.innerHTML = `${n} komponen aktif dengan asumsi optimisme ${opt}%. Probabilitas gabungan: <em>10⁻${totalExp}</em>. Dengan jumlah komponen yang lebih sedikit dan asumsi sangat longgar, angka mulai mendekati wilayah yang bisa diperdebatkan.`;
+    el.style.borderColor = 'var(--accent)';
+  }
+}
+
+// ==========================================
+// INIT
+// ==========================================
+window.addEventListener('load', () => {
+  renderComponents();
+  recalc();
+});
+</script>
+</body>
+</html>

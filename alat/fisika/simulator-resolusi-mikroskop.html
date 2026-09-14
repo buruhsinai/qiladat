@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulator Batas Resolusi Mikroskop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B1614; --surface:#132420; --surface-2:#1A322B; --line:#274038;
+    --ink:#EAF2EF; --muted:#8FAFA3; --teal:#3FBF95; --blue:#5B9BD9;
+    --amber:#E5A439; --red:#E1614E; --violet:#8C7CF0;
+    --font-display:'Space Grotesk',sans-serif; --font-body:'IBM Plex Sans',sans-serif; --font-mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--font-body); line-height:1.55; padding-bottom:80px;}
+  .wrap{max-width:980px; margin:0 auto; padding:0 20px;}
+  h1,h2,h3{font-family:var(--font-display); font-weight:600; margin:0 0 12px;}
+  p{margin:0 0 14px; max-width:70ch;}
+  .muted{color:var(--muted);}
+  .mono{font-family:var(--font-mono);}
+  section{padding:52px 0; border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+
+  .hero{padding-top:44px;}
+  .hero-tag{font-family:var(--font-mono); font-size:13px; color:var(--teal); margin-bottom:10px;}
+  .hero h1{font-size:clamp(24px,4vw,36px); max-width:24ch; line-height:1.2;}
+  .hero p.lead{font-size:17px; color:var(--muted); max-width:60ch;}
+
+  .sec-head{display:flex; align-items:baseline; gap:10px; margin-bottom:22px;}
+  .sec-num{font-family:var(--font-mono); font-size:13px; color:var(--teal);}
+
+  .panel{background:var(--surface); border:1px solid var(--line); padding:24px;}
+  .grid-ctl{display:grid; grid-template-columns:1fr; gap:20px;}
+  @media(min-width:640px){ .grid-ctl{grid-template-columns:1fr 1fr;} }
+  .field{display:flex; flex-direction:column; gap:6px;}
+  .field label{font-size:13px; color:var(--muted);}
+  .field .hint{font-size:11px; color:var(--muted); font-family:var(--font-mono);}
+  input[type=range]{width:100%;}
+  select{background:var(--bg); border:1px solid var(--line); color:var(--ink); padding:9px 10px; font-family:var(--font-mono); font-size:14px; width:100%;}
+  select:focus{outline:2px solid var(--teal); outline-offset:1px;}
+  .range-val{font-family:var(--font-mono); color:var(--teal); font-size:13px;}
+
+  .preset-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;}
+  .preset-btn{background:var(--bg); border:1px solid var(--line); color:var(--muted); padding:6px 10px; font-family:var(--font-mono); font-size:11px; cursor:pointer;}
+  .preset-btn:hover{border-color:var(--teal); color:var(--teal);}
+
+  .toggle-row{display:flex; gap:10px; align-items:center; margin-top:10px;}
+  .toggle-row input{width:16px; height:16px; accent-color:var(--teal);}
+  .toggle-row label{font-size:13px; color:var(--ink);}
+
+  .kpis{display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--line); margin-top:22px; border:1px solid var(--line);}
+  @media(min-width:640px){ .kpis{grid-template-columns:repeat(4,1fr);} }
+  .kpi{background:var(--surface); padding:14px;}
+  .kpi .val{font-family:var(--font-mono); font-size:18px;}
+  .kpi .lbl{font-size:11.5px; color:var(--muted); margin-top:2px;}
+  .kpi.warn .val{color:var(--red);}
+  .kpi.good .val{color:var(--teal);}
+
+  .chart-wrap{background:var(--surface); border:1px solid var(--line); padding:20px; margin-top:22px;}
+  svg text{font-family:var(--font-mono); fill:var(--muted);}
+  .legend{display:flex; gap:14px; flex-wrap:wrap; margin-top:14px; font-size:11px; color:var(--muted);}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .dot{width:9px; height:9px; display:inline-block;}
+  .ln{width:14px; height:2px; display:inline-block;}
+
+  .takeaway{background:var(--surface-2); border-left:3px solid var(--teal); padding:16px 18px; margin-top:20px; font-size:14px;}
+  .takeaway strong{color:var(--teal);}
+
+  .formula{background:var(--surface); border:1px solid var(--line); padding:16px 18px; font-family:var(--font-mono); font-size:12.5px; color:var(--teal); margin:14px 0; overflow-x:auto;}
+  ul.limits{padding-left:20px;}
+  ul.limits li{margin-bottom:10px; font-size:14px;}
+  .ref-list{list-style:none; padding:0; margin:0;}
+  .ref-list li{padding:12px 0; border-bottom:1px solid var(--line);}
+  .ref-list li:last-child{border-bottom:none;}
+  .ref-list .src{font-family:var(--font-mono); font-size:12px; color:var(--muted);}
+
+  footer{padding:40px 0 20px; text-align:center;}
+  footer p{margin:0; font-size:12px; color:var(--muted); max-width:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <section class="hero">
+    <div class="hero-tag">DARI ARSIP "MATAN WET LAB CAPABILITY" — KAPABILITAS NO. 9: MIKROSKOPI &amp; SUPER-RESOLUSI</div>
+    <h1>Bukan lensanya yang kurang kuat — cahaya sendiri yang punya batas</h1>
+    <p class="lead">Mikroskop sekolah "cuma" bisa memperbesar sampai batas tertentu bukan karena lensanya jelek, tapi karena cahaya adalah gelombang — dan gelombang tidak bisa dipakai untuk melihat sesuatu yang jauh lebih kecil dari panjang gelombangnya sendiri. Ini hukum fisika (difraksi), bukan keterbatasan teknik semata.</p>
+  </section>
+
+  <section id="konteks">
+    <div class="sec-head"><span class="sec-num">00</span><h2>Kenapa ini soal difraksi, bukan soal pembesaran</h2></div>
+    <p>Memperbesar gambar (zoom) tidak sama dengan memperjelas detail (resolusi). Anda bisa memperbesar foto buram sebesar apa pun di komputer — hasilnya tetap buram, cuma buramnya jadi lebih besar. Mikroskop cahaya punya batas serupa: begitu dua titik lebih berdekatan dari <span class="mono">batas resolusi</span>, menambah perbesaran cuma memperbesar satu blob kabur, bukan memisahkan keduanya jadi dua titik yang jelas.</p>
+  </section>
+
+  <section id="eksplorasi">
+    <div class="sec-head"><span class="sec-num">01</span><h2>Eksplorasi: geser cahaya dan lensanya</h2></div>
+
+    <div class="panel">
+      <div class="grid-ctl">
+        <div class="field">
+          <label>Panjang gelombang cahaya (λ, nm): <span class="range-val" id="valLambda"></span></label>
+          <input type="range" id="lambda" min="250" max="700" step="5" value="550">
+          <span class="hint">400–700nm = cahaya tampak (ungu→merah), di bawah itu ultraviolet</span>
+        </div>
+        <div class="field">
+          <label>Sudut setengah-bukaan lensa (θ, °): <span class="range-val" id="valTheta"></span></label>
+          <input type="range" id="theta" min="10" max="72" step="1" value="60">
+        </div>
+        <div class="field">
+          <label>Medium antara sampel dan lensa</label>
+          <select id="medium">
+            <option value="1.00">Udara (n=1,00) — lensa kering</option>
+            <option value="1.33">Air (n=1,33) — imersi air</option>
+            <option value="1.52" selected>Minyak imersi (n=1,52)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Preset objektif</label>
+          <div class="preset-row">
+            <button class="preset-btn" onclick="preset('sekolah')">mikroskop sekolah (kering, NA~0,65)</button>
+            <button class="preset-btn" onclick="preset('premium')">objektif kering premium (NA~0,95)</button>
+            <button class="preset-btn" onclick="preset('imersi')">objektif imersi minyak (NA~1,4)</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="toggle-row"><input type="checkbox" id="toggleSR"><label for="toggleSR">Bandingkan dengan mikroskopi super-resolusi (STED/PALM/STORM/SIM)</label></div>
+      <div class="toggle-row"><input type="checkbox" id="toggleEM"><label for="toggleEM">Bandingkan dengan mikroskop elektron</label></div>
+    </div>
+
+    <div class="kpis" id="kpis"></div>
+
+    <div class="chart-wrap">
+      <svg id="ruler" viewBox="0 0 900 260" style="width:100%; height:auto;"></svg>
+      <div class="legend" id="legend"></div>
+    </div>
+
+    <div class="takeaway" id="takeaway"></div>
+  </section>
+
+  <section id="metode">
+    <div class="sec-head"><span class="sec-num">02</span><h2>Metode</h2></div>
+    <p>Numerical aperture (NA) menggabungkan sudut kerucut cahaya yang bisa ditangkap lensa dan indeks bias medium di depannya:</p>
+    <div class="formula">NA = n · sin(θ)</div>
+    <p>Batas resolusi (kriteria Abbe) menghubungkan panjang gelombang dan NA menjadi satu angka — jarak minimum antara dua titik agar masih terlihat sebagai dua titik terpisah, bukan satu blob kabur:</p>
+    <div class="formula">d = λ / (2 · NA)</div>
+    <p>Kenapa minyak imersi membantu: menaikkan n (indeks bias medium) langsung menaikkan NA, sehingga d mengecil (resolusi membaik) — inilah alasan teknis di balik setetes minyak yang diteteskan ke slide sebelum memakai lensa objektif 100×.</p>
+    <p><strong>Nuansa penting:</strong> di bawah batas resolusi ini bukan berarti benda itu benar-benar "tidak terlihat sama sekali" — sebuah virus yang berpendar (fluoresens) sekalipun ukurannya di bawah batas resolusi tetap bisa muncul sebagai titik cahaya kabur (blob). Yang tidak bisa dilakukan adalah membedakan <em>bentuknya</em> atau memisahkannya dari objek lain yang berjarak lebih dekat dari d. Mikroskopi super-resolusi (STED, PALM, STORM, SIM) menembus batas ini bukan dengan lensa yang lebih baik, tapi lewat trik fotofisika berbeda sama sekali — misalnya melacak posisi molekul tunggal yang menyala bergantian, lalu menyusun ulang posisinya secara komputasional.</p>
+  </section>
+
+  <section id="batasan">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Batasan</h2></div>
+    <ul class="limits">
+      <li><strong>Kriteria Abbe (d=λ/2NA) adalah salah satu dari beberapa definisi resolusi</strong> yang umum dipakai — kriteria Rayleigh (d≈0,61λ/NA) memberi angka sedikit berbeda meski konsepnya sama. Pilihan definisi memengaruhi angka presisi, bukan kesimpulan umumnya.</li>
+      <li><strong>Ukuran objek biologis pada penggaris di atas adalah rentang tipikal</strong>, bukan angka pasti untuk semua jenis — ukuran virus, misalnya, bervariasi puluhan hingga ratusan nanometer tergantung jenisnya.</li>
+      <li><strong>Angka resolusi super-resolusi dan mikroskop elektron di sini bersifat ilustratif</strong> (rentang umum yang sering dilaporkan), bukan dihitung dari rumus yang sama — keduanya bekerja lewat prinsip fisika yang berbeda dari mikroskop cahaya konvensional dan performa sesungguhnya sangat bergantung pada instrumen dan sampel.</li>
+      <li>Alat ini untuk memahami <em>konsep</em> batas difraksi — bukan spesifikasi teknis untuk memilih atau membeli mikroskop sungguhan.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Referensi</h2></div>
+    <ul class="ref-list">
+      <li>Kriteria difraksi Abbe dan konsep numerical aperture sebagai dasar standar optik mikroskopi.
+        <div class="src">Rujukan umum optik &amp; mikroskopi</div>
+      </li>
+      <li>Prinsip mikroskopi super-resolusi (STED, PALM, STORM, SIM) yang menembus batas difraksi lewat manipulasi fotofisika fluorofor, bukan optik lensa semata.
+        <div class="src">Rujukan umum biofisika pencitraan sel</div>
+      </li>
+      <li>Kapabilitas wet-lab nomor 9: mikroskopi cahaya, fluoresensi, konfokal, dan pencitraan super-resolusi.
+        <div class="src">Arsip "MATAN Wet Lab Capability (1–100)" milik pengguna</div>
+      </li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Alat edukasi konsep batas difraksi optik — bukan spesifikasi teknis instrumen sungguhan.</p>
+  </footer>
+
+</div>
+
+<script>
+const OBJEK = [
+  {nama:'Atom', ukuran:0.2, tipe:'titik'},
+  {nama:'Lebar DNA', ukuran:2, tipe:'titik'},
+  {nama:'Protein besar', ukuran:8, tipe:'titik'},
+  {nama:'Ribosom', ukuran:25, tipe:'titik'},
+  {nama:'Virus (kecil–besar)', min:20, max:300, tipe:'rentang'},
+  {nama:'Mitokondria', min:500, max:1000, tipe:'rentang'},
+  {nama:'Bakteri', min:1000, max:5000, tipe:'rentang'},
+  {nama:'Sel manusia tipikal', min:10000, max:30000, tipe:'rentang'},
+  {nama:'Lebar rambut manusia', ukuran:70000, tipe:'titik'}
+];
+
+function preset(jenis){
+  if(jenis==='sekolah'){ document.getElementById('theta').value=40; document.getElementById('medium').value='1.00'; }
+  if(jenis==='premium'){ document.getElementById('theta').value=72; document.getElementById('medium').value='1.00'; }
+  if(jenis==='imersi'){ document.getElementById('theta').value=67; document.getElementById('medium').value='1.52'; }
+  hitung();
+}
+
+function hitung(){
+  const lambda = parseFloat(document.getElementById('lambda').value);
+  const theta = parseFloat(document.getElementById('theta').value);
+  const n = parseFloat(document.getElementById('medium').value);
+  const srAktif = document.getElementById('toggleSR').checked;
+  const emAktif = document.getElementById('toggleEM').checked;
+
+  document.getElementById('valLambda').textContent = lambda+' nm';
+  document.getElementById('valTheta').textContent = theta+'°';
+
+  const NA = n*Math.sin(theta*Math.PI/180);
+  const d = lambda/(2*NA);
+
+  const dSR = 25; // nm, ilustratif rentang super-resolusi umum (~10-50nm)
+  const dEM = 0.5; // nm, ilustratif rentang praktis mikroskop elektron biologis umum
+
+  const kpis = document.getElementById('kpis');
+  kpis.innerHTML = `
+    <div class="kpi"><div class="val">${NA.toFixed(2)}</div><div class="lbl">numerical aperture (NA)</div></div>
+    <div class="kpi good"><div class="val">${d.toFixed(0)} nm</div><div class="lbl">batas resolusi mikroskop cahaya (d)</div></div>
+    <div class="kpi"><div class="val">${(70/d).toFixed(1)}×</div><div class="lbl">virus kecil (~70nm) lebih kecil dari batas ini</div></div>
+    <div class="kpi"><div class="val">${d<300 && d>20 ? 'Sebagian' : (d<=20?'Ya':'Tidak')}</div><div class="lbl">bisa membedakan bentuk virus tipikal?</div></div>
+  `;
+
+  document.getElementById('takeaway').innerHTML = d>200
+    ? `<strong>Pada pengaturan ini</strong> (mendekati mikroskop sekolah tanpa imersi), batas resolusinya sekitar <strong>${d.toFixed(0)} nm</strong> — lebih besar dari hampir semua virus dan seluruh molekul individual. Bakteri (1.000–5.000nm) masih bisa dilihat bentuknya, tapi virus akan tampak sebagai titik kabur paling banter, bukan bentuk yang jelas.`
+    : `<strong>Pada pengaturan ini</strong>, batas resolusinya sekitar <strong>${d.toFixed(0)} nm</strong> — sudah cukup tajam untuk membedakan sebagian virus besar, tapi virus-virus kecil dan hampir semua molekul individual (protein, DNA) tetap di bawah batas ini. Untuk itu dibutuhkan pendekatan yang sama sekali berbeda: mikroskopi elektron atau super-resolusi.`;
+
+  renderRuler(d, srAktif?dSR:null, emAktif?dEM:null);
+  renderLegend(srAktif, emAktif);
+}
+
+function renderLegend(srAktif, emAktif){
+  const legend = document.getElementById('legend');
+  let items = [
+    `<span><span class="ln" style="background:var(--teal);"></span>Batas resolusi mikroskop cahaya saat ini</span>`
+  ];
+  if(srAktif) items.push(`<span><span class="ln" style="background:var(--violet);"></span>Batas super-resolusi (ilustratif ~25nm)</span>`);
+  if(emAktif) items.push(`<span><span class="ln" style="background:var(--amber);"></span>Batas mikroskop elektron (ilustratif ~0,5nm)</span>`);
+  legend.innerHTML = items.join('');
+}
+
+function renderRuler(d, dSR, dEM){
+  const svg = document.getElementById('ruler');
+  const W=900,H=260,padL=20,padR=20,padT=60,padB=70;
+  const innerW=W-padL-padR;
+  const logMin = Math.log10(0.1), logMax = Math.log10(100000);
+  const x = size => padL + innerW*((Math.log10(size)-logMin)/(logMax-logMin));
+
+  let parts=[];
+  // sumbu & grid log
+  const axisY = 150;
+  parts.push(`<line x1="${padL}" y1="${axisY}" x2="${W-padR}" y2="${axisY}" stroke="#274038" stroke-width="1.5"/>`);
+  for(let p=-1; p<=5; p++){
+    const size = Math.pow(10,p);
+    const xx = x(size);
+    if(xx<padL || xx>W-padR) continue;
+    parts.push(`<line x1="${xx.toFixed(1)}" y1="${axisY-5}" x2="${xx.toFixed(1)}" y2="${axisY+5}" stroke="#8FAFA3" stroke-width="1"/>`);
+    const label = size>=1000 ? (size/1000)+'µm' : size+'nm';
+    parts.push(`<text x="${xx.toFixed(1)}" y="${axisY+20}" font-size="9" text-anchor="middle">${label}</text>`);
+  }
+
+  // objek biologis
+  OBJEK.forEach((obj,i)=>{
+    const row = i%2===0 ? -1 : 1;
+    const yy = axisY + row*(38 + Math.floor(i/2)*0);
+    const yOffset = axisY + (row * (34 + (i%4>=2?20:0)));
+    if(obj.tipe==='titik'){
+      const xx = x(obj.ukuran);
+      parts.push(`<circle cx="${xx.toFixed(1)}" cy="${axisY}" r="3" fill="#EAF2EF"/>`);
+      parts.push(`<line x1="${xx.toFixed(1)}" y1="${axisY}" x2="${xx.toFixed(1)}" y2="${yOffset}" stroke="#274038" stroke-width="1"/>`);
+      parts.push(`<text x="${xx.toFixed(1)}" y="${yOffset + (row<0?-6:14)}" font-size="9" text-anchor="middle">${obj.nama}</text>`);
+    } else {
+      const x1 = x(obj.min), x2 = x(obj.max);
+      parts.push(`<rect x="${x1.toFixed(1)}" y="${axisY-4}" width="${(x2-x1).toFixed(1)}" height="8" fill="#1A322B" stroke="#8FAFA3" stroke-width="1"/>`);
+      const xm = (x1+x2)/2;
+      parts.push(`<line x1="${xm.toFixed(1)}" y1="${axisY}" x2="${xm.toFixed(1)}" y2="${yOffset}" stroke="#274038" stroke-width="1"/>`);
+      parts.push(`<text x="${xm.toFixed(1)}" y="${yOffset + (row<0?-6:14)}" font-size="9" text-anchor="middle">${obj.nama}</text>`);
+    }
+  });
+
+  // garis batas resolusi
+  function garisBatas(dNm, warna, labelY){
+    const xx = x(dNm);
+    parts.push(`<line x1="${xx.toFixed(1)}" y1="${padT-20}" x2="${xx.toFixed(1)}" y2="${H-padB+20}" stroke="${warna}" stroke-width="2" stroke-dasharray="6,4"/>`);
+    parts.push(`<text x="${xx.toFixed(1)}" y="${labelY}" font-size="9" text-anchor="middle" fill="${warna}">${dNm>=1000?(dNm/1000).toFixed(1)+'µm':dNm.toFixed(0)+'nm'}</text>`);
+  }
+  garisBatas(d, '#3FBF95', padT-26);
+  if(dSR) garisBatas(dSR, '#8C7CF0', padT-8);
+  if(dEM) garisBatas(dEM, '#E5A439', H-padB+40);
+
+  svg.innerHTML = parts.join('');
+}
+
+['lambda','theta','medium'].forEach(id=>document.getElementById(id).addEventListener('input', hitung));
+document.getElementById('toggleSR').addEventListener('change', hitung);
+document.getElementById('toggleEM').addEventListener('change', hitung);
+hitung();
+</script>
+</body>
+</html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Composite Sailing — Great Circle Dibatasi Lintang</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0B0F1E;--panel:#141A30;--panel2:#1B2340;--ink:#E8E6F5;--soft:#9C9DC4;--electron:#4FD8E0;--plasma:#B26BFF;--line:#2A3158;--good:#3FA66B;--warn:#D9A441;--bad:#D9564A;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.65;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif;}
+  .wrap{max-width:940px;margin:0 auto;padding:0 24px 96px;}
+  header.hero{background:radial-gradient(ellipse at top,#1B2360 0%,#0B0F1E 65%);padding:56px 24px 40px;border-bottom:1px solid var(--line);}
+  header.hero .wrap{padding-bottom:0;}
+  .eyebrow{color:var(--plasma);font-size:0.9rem;margin:0 0 6px;font-weight:600;}
+  h1{font-size:clamp(1.4rem,4vw,2.1rem);margin:0 0 14px;font-weight:700;background:linear-gradient(90deg,var(--electron),var(--plasma));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .lede{max-width:660px;color:#C3C4E0;font-size:1.02rem;margin:0;}
+  section{padding:36px 0;border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  h2{font-size:1.3rem;font-weight:700;margin:0 0 8px;color:var(--plasma);}
+  .sub{color:var(--soft);font-size:0.9rem;margin:0 0 16px;}
+  p{margin:0 0 14px;}
+  .fam-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0;}
+  .fam-card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;font-size:0.85rem;}
+  .fam-card b{color:var(--electron);}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px;margin-top:16px;}
+  .field{margin:14px 0;}
+  .field label{display:flex;justify-content:space-between;font-size:0.82rem;color:var(--soft);margin-bottom:6px;}
+  .value{font-family:'JetBrains Mono',monospace;color:var(--electron);font-weight:600;}
+  input[type=range]{width:100%;accent-color:var(--electron);}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media (max-width:680px){.grid2{grid-template-columns:1fr;}}
+  .canvas-box{background:#10152A;border:1px solid var(--line);border-radius:6px;overflow:hidden;text-align:center;}
+  .canvas-box canvas{display:block;width:100%;height:auto;}
+  .legend-row{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:8px;font-size:0.75rem;color:var(--soft);}
+  .legend-row span{display:inline-flex;align-items:center;gap:5px;}
+  .sw{width:16px;height:2.5px;display:inline-block;}
+  .status-line{font-size:0.82rem;margin-top:10px;text-align:center;padding:8px;border-radius:6px;}
+  .status-ok{color:var(--soft);}
+  .status-info{color:var(--electron);background:#0F2A2C;border:1px solid #1F4F52;}
+  .status-bad{color:var(--bad);background:#2A1414;border:1px solid #5A2A2A;}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px;}
+  .stat-card{background:#10152A;border:1px solid var(--line);border-radius:6px;padding:10px 12px;text-align:center;}
+  .stat-card .n{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--electron);}
+  .stat-card .l{font-size:0.65rem;color:var(--soft);margin-top:3px;}
+
+  .check-box{background:#0F2A1C;border:1px solid #235238;border-radius:8px;padding:12px 16px;margin-top:14px;font-size:0.82rem;color:#B7E6C6;}
+  .check-box.fail{background:#2A1414;border-color:#5A2A2A;color:#E6B7B7;}
+
+  .formula{background:#080B16;color:#C3C4E0;padding:12px 16px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:0.85rem;display:inline-block;margin:6px 0;}
+  .limits{background:#241B0F;border:1px solid #5A4A1E;border-radius:8px;padding:20px;}
+  .limits h3{margin-top:0;font-size:1rem;color:var(--warn);}
+  footer{padding:28px 24px;text-align:center;color:var(--soft);font-size:0.82rem;border-top:1px solid var(--line);}
+  a{color:var(--electron);}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">JAZMI — Modul Sains · Navigasi Bahari</p>
+    <h1>Composite Sailing</h1>
+    <p class="lede">Great circle selalu memberi jarak terpendek — tapi kadang melengkung terlalu jauh ke lintang tinggi untuk aman dilewati. Composite sailing menahan rute itu di batas lintang tertentu, dengan menyisipkan satu kaki perjalanan menyusuri paralel.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <h2>Belajar</h2>
+    <p>Great circle antara dua titik di lintang tengah yang jauh terpisah bujurnya seringkali melengkung ke arah kutub sebelum turun lagi — itu bukan cacat, itu memang sifat geometri bola (lihat <a href="navigasi-rhumb-greatcircle.html">Rhumb Line vs Great Circle</a>). Masalahnya, di lintang tinggi bisa ada risiko nyata: es, badai musiman, atau batas operasional kapal. Kalau puncak (vertex) great circle itu melewati batas aman, rutenya perlu dipotong.</p>
+    <div class="fam-grid">
+      <div class="fam-card"><b>Vertex</b> — titik terjauh (lintang tertinggi) yang dicapai sebuah great circle sepanjang rutenya; di titik ini arahnya persis 090°/270° (timur-barat murni).</div>
+      <div class="fam-card"><b>Limiting latitude (Lm)</b> — lintang batas yang tidak boleh dilewati, ditentukan operator/kondisi (bukan hasil hitungan, tapi keputusan keselamatan).</div>
+      <div class="fam-card"><b>Rute Composite</b> — 3 kaki: great circle dari A naik sampai menyentuh Lm (di titik V1), menyusuri paralel Lm ke V2, lalu great circle turun ke B.</div>
+      <div class="fam-card"><b>Penalti jarak</b> — composite selalu sedikit lebih jauh dari great circle langsung, karena ia rute yang dibatasi — itu harga dari keselamatan.</div>
+    </div>
+  </section>
+
+  <section id="eksplorasi">
+    <h2>Eksplorasi — Geser Variabelnya</h2>
+    <p class="sub">Versi ini untuk kasus umum: kedua titik di belahan bumi utara, pelayaran timur–barat lintas samudra. Geser batas lintang (Lm) dan lihat kapan rute otomatis kembali menjadi great circle murni.</p>
+    <div class="panel">
+      <div class="grid2">
+        <div>
+          <div class="field"><label>Lintang A <span class="value" id="v-latA">30°N</span></label><input type="range" id="s-latA" min="0" max="60" step="1" value="30"></div>
+          <div class="field"><label>Bujur A <span class="value" id="v-lonA">-60°</span></label><input type="range" id="s-lonA" min="-100" max="60" step="1" value="-60"></div>
+        </div>
+        <div>
+          <div class="field"><label>Lintang B <span class="value" id="v-latB">50°N</span></label><input type="range" id="s-latB" min="0" max="60" step="1" value="50"></div>
+          <div class="field"><label>Bujur B <span class="value" id="v-lonB">0°</span></label><input type="range" id="s-lonB" min="-100" max="60" step="1" value="0"></div>
+        </div>
+      </div>
+      <div class="field"><label>Batas lintang (Lm) <span class="value" id="v-lm">45°N</span></label><input type="range" id="s-lm" min="10" max="80" step="1" value="45"></div>
+
+      <div class="canvas-box">
+        <canvas id="map-canvas" width="700" height="420"></canvas>
+      </div>
+      <div class="legend-row">
+        <span><span class="sw" style="border-top:2px dashed #9C9DC4;height:0"></span> Great circle langsung</span>
+        <span><span class="sw" style="border-top:2px dashed #D9A441;height:0"></span> Batas lintang Lm</span>
+        <span><span class="sw" style="background:#4FD8E0"></span> Composite: kaki GC</span>
+        <span><span class="sw" style="background:#3FA66B"></span> Composite: kaki paralel</span>
+      </div>
+      <div class="status-line" id="status-line"></div>
+      <div class="stat-grid" id="stat-grid"></div>
+      <div class="check-box" id="check-box"></div>
+    </div>
+  </section>
+
+  <section id="perhitungan">
+    <h2>Perhitungan</h2>
+    <p>Vertex great circle langsung (untuk mengetahui apakah batas benar-benar dilanggar):</p>
+    <div class="formula">C₁ = haluan awal A→B (rumus great circle standar)<br>Lv_langsung = arccos( |cos(latA)·sin(C₁)| )</div>
+    <p>Bila Lv_langsung ≤ Lm, great circle langsung sudah aman — composite tidak diperlukan. Bila melebihi, titik V1 &amp; V2 (tempat rute great circle menyentuh paralel Lm) dicari dengan Aturan Napier:</p>
+    <div class="formula">ΔBujur(A→V1) = arccos( sin(latA)/sin(Lm) )<br>ΔBujur(B→V2) = arccos( sin(latB)/sin(Lm) )</div>
+    <p>Kaki tengah (menyusuri paralel) dihitung dengan rumus <em>departure</em>:</p>
+    <div class="formula">Jarak paralel = ΔBujur(V1,V2) · cos(Lm) · 60 mil laut</div>
+    <p>Jarak total = kaki GC(A→V1) + kaki paralel(V1→V2) + kaki GC(V2→B).</p>
+  </section>
+
+  <section id="batasan">
+    <div class="limits">
+      <h3>Batasan</h3>
+      <p>Versi tool ini disederhanakan untuk kasus kedua titik berada di belahan bumi yang sama (lintang utara) — perluasan ke rute lintas-hemisfer atau lintang selatan memerlukan penanganan tanda yang lebih hati-hati dan belum diimplementasikan di sini. Model memakai bumi sebagai bola sempurna (bukan elipsoid), sama seperti modul <a href="navigasi-rhumb-greatcircle.html">Rhumb Line vs Great Circle</a> — cukup akurat untuk perencanaan awal, kurang tepat untuk navigasi presisi tinggi. Batas lintang (Lm) di sini dianggap tetap sepanjang rute, padahal batas es laut sungguhan bergeser tiap bulan mengikuti musim (lihat peta batas es di pilot chart) — pengguna harus memasukkan Lm yang sudah sesuai musimnya sendiri, tool ini tidak menyediakan nilai tersebut. Tool juga hanya menangani satu batas lintang tunggal, bukan beberapa kendala/zona larangan sekaligus.</p>
+    </div>
+  </section>
+
+  <footer>JAZMI — Modul Sains · Pelengkap <a href="navigasi-rhumb-greatcircle.html">Rhumb Line vs Great Circle</a></footer>
+</div>
+
+<script>
+(function(){
+  const DEG=Math.PI/180, RAD=180/Math.PI, NM_PER_DEG=60;
+  const els = {
+    latA: document.getElementById('s-latA'), lonA: document.getElementById('s-lonA'),
+    latB: document.getElementById('s-latB'), lonB: document.getElementById('s-lonB'),
+    lm: document.getElementById('s-lm')
+  };
+  const vv = {
+    latA: document.getElementById('v-latA'), lonA: document.getElementById('v-lonA'),
+    latB: document.getElementById('v-latB'), lonB: document.getElementById('v-lonB'),
+    lm: document.getElementById('v-lm')
+  };
+  const statusLine=document.getElementById('status-line');
+  const statGrid=document.getElementById('stat-grid');
+  const checkBox=document.getElementById('check-box');
+  const canvas=document.getElementById('map-canvas'), ctx=canvas.getContext('2d');
+
+  function norm180(a){ let x=((a+180)%360+360)%360-180; return x; }
+
+  function haversineNM(lat1,lon1,lat2,lon2){
+    const R=3440.065; // earth radius in nm
+    const p1=lat1*DEG,p2=lat2*DEG,dp=(lat2-lat1)*DEG,dl=(lon2-lon1)*DEG;
+    const a=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  }
+
+  function initialCourseDeg(lat1,lon1,lat2,lon2){
+    const p1=lat1*DEG,p2=lat2*DEG,dl=(lon2-lon1)*DEG;
+    const y=Math.sin(dl)*Math.cos(p2);
+    const x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);
+    return ((Math.atan2(y,x)*RAD)+360)%360;
+  }
+
+  function slerpGC(lat1,lon1,lat2,lon2,n){
+    const p1=lat1*DEG,l1=lon1*DEG,p2=lat2*DEG,l2=lon2*DEG;
+    const A=[Math.cos(p1)*Math.cos(l1),Math.cos(p1)*Math.sin(l1),Math.sin(p1)];
+    const B=[Math.cos(p2)*Math.cos(l2),Math.cos(p2)*Math.sin(l2),Math.sin(p2)];
+    const dot=Math.max(-1,Math.min(1,A[0]*B[0]+A[1]*B[1]+A[2]*B[2]));
+    const delta=Math.acos(dot);
+    const pts=[];
+    if(delta<1e-9){ pts.push({lat:lat1,lon:lon1}); return pts; }
+    for(let i=0;i<=n;i++){
+      const t=i/n;
+      const a=Math.sin((1-t)*delta)/Math.sin(delta), b=Math.sin(t*delta)/Math.sin(delta);
+      const x=a*A[0]+b*B[0], y=a*A[1]+b*B[1], z=a*A[2]+b*B[2];
+      const lat=Math.atan2(z,Math.sqrt(x*x+y*y))*RAD;
+      const lon=Math.atan2(y,x)*RAD;
+      pts.push({lat,lon});
+    }
+    return pts;
+  }
+
+  function compute(latA,lonA,latB,lonB,Lm){
+    if(Lm <= Math.max(latA,latB)){
+      return {error:'Batas lintang harus lebih tinggi daripada lintang A maupun B.'};
+    }
+    const C1 = initialCourseDeg(latA,lonA,latB,lonB);
+    const LvDirect = Math.acos(Math.min(1,Math.abs(Math.cos(latA*DEG)*Math.sin(C1*DEG))))*RAD;
+    const distDirect = haversineNM(latA,lonA,latB,lonB);
+    const eastbound = norm180(lonB-lonA) > 0;
+
+    if(LvDirect <= Lm){
+      return {needsComposite:false, LvDirect, distDirect, eastbound, C1};
+    }
+
+    const DLoA = Math.acos(Math.min(1,Math.max(-1, Math.sin(latA*DEG)/Math.sin(Lm*DEG) )))*RAD;
+    const DLoB = Math.acos(Math.min(1,Math.max(-1, Math.sin(latB*DEG)/Math.sin(Lm*DEG) )))*RAD;
+    let lonV1, lonV2;
+    if(eastbound){ lonV1=lonA+DLoA; lonV2=lonB-DLoB; }
+    else { lonV1=lonA-DLoA; lonV2=lonB+DLoB; }
+
+    const leg1 = haversineNM(latA,lonA,Lm,lonV1);
+    const leg2 = Math.abs(norm180(lonV2-lonV1))*Math.cos(Lm*DEG)*NM_PER_DEG;
+    const leg3 = haversineNM(Lm,lonV2,latB,lonB);
+    const totalComposite = leg1+leg2+leg3;
+
+    return {needsComposite:true, LvDirect, distDirect, eastbound, C1, lonV1, lonV2, leg1, leg2, leg3, totalComposite};
+  }
+
+  function render(){
+    const latA=parseFloat(els.latA.value), lonA=parseFloat(els.lonA.value);
+    const latB=parseFloat(els.latB.value), lonB=parseFloat(els.lonB.value);
+    const Lm=parseFloat(els.lm.value);
+    vv.latA.textContent=latA+'°N'; vv.lonA.textContent=lonA+'°';
+    vv.latB.textContent=latB+'°N'; vv.lonB.textContent=lonB+'°';
+    vv.lm.textContent=Lm+'°N';
+
+    const r = compute(latA,lonA,latB,lonB,Lm);
+
+    const W=canvas.width,H=canvas.height;
+    ctx.clearRect(0,0,W,H); ctx.fillStyle='#10152A'; ctx.fillRect(0,0,W,H);
+
+    if(r.error){
+      statusLine.className='status-line status-bad';
+      statusLine.textContent=r.error;
+      statGrid.innerHTML=''; checkBox.style.display='none';
+      return;
+    }
+    checkBox.style.display='block';
+
+    // bounding box
+    let lons=[lonA,lonB], lats=[latA,latB,0,Lm+8];
+    if(r.needsComposite){ lons.push(r.lonV1,r.lonV2); }
+    const lonMin=Math.min(...lons)-8, lonMax=Math.max(...lons)+8;
+    const latMin=0, latMax=Math.max(...lats);
+    function xFor(lon){ return 50 + (lon-lonMin)/(lonMax-lonMin)*(W-100); }
+    function yFor(lat){ return H-40 - (lat-latMin)/(latMax-latMin)*(H-80); }
+
+    // graticule
+    ctx.strokeStyle='#232B4E'; ctx.lineWidth=1; ctx.font='9px JetBrains Mono'; ctx.fillStyle='#5A6290';
+    for(let lo=Math.ceil(lonMin/15)*15; lo<=lonMax; lo+=15){
+      ctx.beginPath(); ctx.moveTo(xFor(lo),40); ctx.lineTo(xFor(lo),H-40); ctx.stroke();
+    }
+    for(let la=0; la<=latMax; la+=10){
+      ctx.beginPath(); ctx.moveTo(50,yFor(la)); ctx.lineTo(W-50,yFor(la)); ctx.stroke();
+      ctx.fillText(la+'°N', 8, yFor(la)+3);
+    }
+
+    // direct great circle (dashed grey)
+    const gcDirect = slerpGC(latA,lonA,latB,lonB,60);
+    ctx.setLineDash([5,4]); ctx.strokeStyle='#9C9DC4'; ctx.lineWidth=1.4;
+    ctx.beginPath();
+    gcDirect.forEach((p,i)=>{ const x=xFor(p.lon),y=yFor(p.lat); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+    ctx.stroke();
+
+    // Lm line (dashed orange)
+    ctx.strokeStyle='#D9A441'; ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.moveTo(50,yFor(Lm)); ctx.lineTo(W-50,yFor(Lm)); ctx.stroke();
+    ctx.setLineDash([]);
+
+    if(r.needsComposite){
+      // leg1 A->V1
+      const g1 = slerpGC(latA,lonA,Lm,r.lonV1,30);
+      ctx.strokeStyle='#4FD8E0'; ctx.lineWidth=2.4;
+      ctx.beginPath(); g1.forEach((p,i)=>{const x=xFor(p.lon),y=yFor(p.lat); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}); ctx.stroke();
+      // parallel leg V1->V2
+      ctx.strokeStyle='#3FA66B'; ctx.lineWidth=2.8;
+      ctx.beginPath(); ctx.moveTo(xFor(r.lonV1),yFor(Lm)); ctx.lineTo(xFor(r.lonV2),yFor(Lm)); ctx.stroke();
+      // leg3 V2->B
+      const g3 = slerpGC(Lm,r.lonV2,latB,lonB,30);
+      ctx.strokeStyle='#4FD8E0'; ctx.lineWidth=2.4;
+      ctx.beginPath(); g3.forEach((p,i)=>{const x=xFor(p.lon),y=yFor(p.lat); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}); ctx.stroke();
+
+      // vertex markers
+      [['V1',r.lonV1,Lm],['V2',r.lonV2,Lm]].forEach(([lbl,lo,la])=>{
+        ctx.fillStyle='#3FA66B'; ctx.beginPath(); ctx.arc(xFor(lo),yFor(la),4,0,7); ctx.fill();
+        ctx.fillStyle='#E8E6F5'; ctx.font='10px JetBrains Mono'; ctx.fillText(lbl,xFor(lo)+6,yFor(la)-6);
+      });
+    }
+
+    // A, B markers
+    [['A',lonA,latA],['B',lonB,latB]].forEach(([lbl,lo,la])=>{
+      ctx.fillStyle='#B26BFF'; ctx.beginPath(); ctx.arc(xFor(lo),yFor(la),5,0,7); ctx.fill();
+      ctx.fillStyle='#E8E6F5'; ctx.font='11px JetBrains Mono'; ctx.fillText(lbl,xFor(lo)+7,yFor(la)-7);
+    });
+
+    if(!r.needsComposite){
+      statusLine.className='status-line status-info';
+      statusLine.textContent = `Vertex great circle langsung ≈ ${r.LvDirect.toFixed(1)}°N — sudah di bawah Lm=${Lm}°N. Composite tidak diperlukan, rute = great circle biasa.`;
+      statGrid.innerHTML = `
+        <div class="stat-card"><div class="n">${r.LvDirect.toFixed(1)}°N</div><div class="l">VERTEX GC LANGSUNG</div></div>
+        <div class="stat-card"><div class="n">${r.distDirect.toFixed(0)} nm</div><div class="l">JARAK GC LANGSUNG</div></div>
+        <div class="stat-card"><div class="n">0 nm</div><div class="l">PENALTI COMPOSITE</div></div>`;
+      checkBox.className='check-box';
+      checkBox.textContent = '✓ Cek batas: Lm ≥ vertex GC langsung → composite menyusut jadi great circle biasa, seperti seharusnya.';
+    } else {
+      const penalty = r.totalComposite - r.distDirect;
+      statusLine.className='status-line status-ok';
+      statusLine.textContent = `Vertex GC langsung ${r.LvDirect.toFixed(1)}°N melebihi Lm=${Lm}°N → rute dipaksa lewat paralel.`;
+      statGrid.innerHTML = `
+        <div class="stat-card"><div class="n">${r.leg1.toFixed(0)} nm</div><div class="l">KAKI GC 1 (A→V1)</div></div>
+        <div class="stat-card"><div class="n">${r.leg2.toFixed(0)} nm</div><div class="l">KAKI PARALEL (V1→V2)</div></div>
+        <div class="stat-card"><div class="n">${r.leg3.toFixed(0)} nm</div><div class="l">KAKI GC 2 (V2→B)</div></div>
+        <div class="stat-card"><div class="n">${r.totalComposite.toFixed(0)} nm</div><div class="l">TOTAL COMPOSITE</div></div>
+        <div class="stat-card"><div class="n">+${penalty.toFixed(0)} nm</div><div class="l">PENALTI vs GC LANGSUNG</div></div>`;
+      if(penalty >= -0.01){
+        checkBox.className='check-box';
+        checkBox.textContent = `✓ Cek batas: total composite (${r.totalComposite.toFixed(0)} nm) ≥ great circle langsung (${r.distDirect.toFixed(0)} nm), sesuai sifat rute yang dibatasi.`;
+      } else {
+        checkBox.className='check-box fail';
+        checkBox.textContent = '✗ Composite lebih pendek dari great circle langsung — ini seharusnya tidak mungkin terjadi, ada yang salah di perhitungan.';
+      }
+    }
+  }
+
+  Object.values(els).forEach(el=>el.addEventListener('input',render));
+  render();
+})();
+</script>
+</body>
+</html>

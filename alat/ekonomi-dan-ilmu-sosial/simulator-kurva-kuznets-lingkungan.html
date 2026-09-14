@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulator Kurva Kuznets Lingkungan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12151a; --bg-panel:#1a1e25; --bg-panel-2:#20242c; --line:#2c313b;
+    --text:#e9e6df; --text-dim:#9aa1ad;
+    --gold:#c9a24b; --gold-soft:#e3c988;
+    --ok:#4f9c94; --warn:#e3766a; --blue:#5b8fc9; --purple:#9b7fc9;
+    --font-display:"Fraunces",serif; --font-body:"Karla",sans-serif; --font-mono:"JetBrains Mono",monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px 80px;}
+  header.hero{padding:56px 20px 40px;text-align:center;border-bottom:1px solid var(--line);
+    background:radial-gradient(ellipse at 50% 0%, rgba(79,156,148,0.10), transparent 60%);}
+  .eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ok);margin-bottom:14px;}
+  .brand{font-family:var(--font-mono);font-size:12px;letter-spacing:.03em;color:var(--text-dim);margin:0 0 8px;}
+  h1{font-family:var(--font-display);font-weight:600;font-size:clamp(26px,5vw,40px);margin:0 0 12px;}
+  .subtitle{color:var(--text-dim);font-size:15px;max-width:640px;margin:0 auto;}
+  section{padding:36px 0;border-bottom:1px solid var(--line);} section:last-of-type{border-bottom:none;}
+  h2{font-family:var(--font-display);font-weight:600;font-size:22px;color:var(--gold-soft);margin:0 0 6px;display:flex;align-items:baseline;gap:10px;}
+  h2 .num{font-family:var(--font-mono);font-size:13px;color:var(--text-dim);font-weight:400;}
+  p{font-size:15.5px;} p.dim{color:var(--text-dim);font-size:14px;}
+  ul{padding-left:20px;} li{margin-bottom:6px;font-size:14.5px;}
+
+  .panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:24px;}
+  .mode-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
+  .mode-btn{background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text-dim);
+    padding:10px 15px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;}
+  .mode-btn.active{border-color:var(--ok);color:var(--ok);background:rgba(79,156,148,0.10);}
+
+  .controls-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:18px;}
+  .field label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--text-dim);margin-bottom:6px;font-family:var(--font-mono);text-transform:uppercase;}
+  .field label .val{color:var(--gold-soft);}
+  .field input[type=range]{width:100%;accent-color:var(--blue);}
+
+  svg.chart{width:100%;height:auto;display:block;background:var(--bg-panel-2);border-radius:8px;border:1px solid var(--line);}
+  .results{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px;}
+  .result-card{background:var(--bg-panel-2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;}
+  .result-card .l{font-family:var(--font-mono);font-size:10.5px;color:var(--text-dim);text-transform:uppercase;}
+  .result-card .v{font-family:var(--font-display);font-size:19px;color:var(--gold-soft);}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:12.5px;color:var(--text-dim);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .swatch{width:14px;height:14px;border-radius:3px;display:inline-block;}
+  .insight-box{margin-top:16px;background:var(--bg-panel-2);border:1px dashed var(--gold);border-radius:8px;padding:14px 18px;font-size:14px;color:var(--text);}
+  .insight-box b{color:var(--gold-soft);}
+
+  .benefit-list{display:grid;gap:10px;}
+  .benefit-item{background:var(--bg-panel);border:1px solid var(--line);border-radius:8px;padding:14px 18px;}
+  .benefit-item .btitle{font-weight:700;color:var(--gold-soft);font-size:15px;margin-bottom:4px;}
+  .limit-item{background:var(--bg-panel);border:1px solid var(--line);border-left:3px solid var(--warn);
+    padding:12px 16px;border-radius:6px;margin-bottom:8px;font-size:14.5px;color:var(--text-dim);}
+  table.refs{width:100%;border-collapse:collapse;font-size:14px;}
+  table.refs td{padding:8px 4px;border-bottom:1px solid var(--line);color:var(--text-dim);vertical-align:top;}
+  table.refs td:first-child{color:var(--text);width:32%;font-weight:600;}
+  footer{text-align:center;padding:36px 20px 10px;color:var(--text-dim);font-size:12.5px;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <p class="brand">JAZMI &mdash; Modul Ekonomi &middot; Ekonomi Lingkungan</p>
+  <div class="eyebrow">Ilmu Ekonomi Murni · Ekonomi Lingkungan &amp; Pembangunan</div>
+  <h1>Simulator Kurva Kuznets Lingkungan</h1>
+  <p class="subtitle">Apakah negara HARUS mengotori lingkungan dulu untuk bisa kaya, baru belakangan membersihkannya? Hipotesis ini benar untuk sebagian polutan — tapi sangat diperdebatkan untuk yang lain. Pilih jenis polutan &amp; geser pendapatan per kapita, lalu lihat sendiri kenapa "tumbuh dulu, bersih belakangan" bukan hukum besi yang berlaku untuk semua jenis kerusakan lingkungan.</p>
+</header>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <h2><span class="num">01</span> Belajar</h2>
+    <p><strong>Kurva Kuznets Lingkungan (Environmental Kuznets Curve/EKC)</strong> adalah hipotesis bahwa tingkat polusi mula-mula NAIK seiring pendapatan per kapita tumbuh (fase industrialisasi awal), lalu TURUN setelah melewati titik pendapatan tertentu — karena masyarakat yang lebih makmur mulai mampu &amp; mau membayar untuk teknologi bersih serta regulasi lingkungan yang lebih ketat:</p>
+    <p style="font-family:var(--font-mono);font-size:14px;color:var(--gold-soft);text-align:center;">Polusi(Y) = a×Y + b×Y² &nbsp;&nbsp;(dengan b &lt; 0 untuk bentuk kurva-U terbalik)</p>
+    <p>Nama "Kuznets" dipinjam dari hipotesis Simon Kuznets tentang ketimpangan pendapatan (yang juga berbentuk U terbalik terhadap pertumbuhan) — analoginya diterapkan ke lingkungan pada awal 1990-an. Tapi ini bukan hukum ekonomi yang berlaku universal: pola U-terbalik ini terbukti KUAT untuk sebagian polutan (misalnya SO₂, kualitas udara lokal) tapi LEMAH atau bahkan TIDAK ADA untuk polutan lain (misalnya emisi CO₂ global, sampah plastik).</p>
+  </section>
+
+  <section id="pertanyaan">
+    <h2><span class="num">02</span> Pertanyaan Ilmiah</h2>
+    <p class="dim" style="font-style:italic;">Kalau pola U-terbalik ini benar untuk sebagian polutan, apa yang membedakan polutan yang "membaik sendiri seiring kekayaan" dari yang tidak? Apakah penurunan polusi lokal di negara kaya benar-benar berarti dunia jadi lebih bersih — atau jangan-jangan polusinya hanya BERPINDAH ke negara lain lewat perdagangan &amp; relokasi pabrik ("pollution haven")? Haruskah negara berkembang menerima "kotor dulu, bersih belakangan" sebagai jalan yang tak terelakkan?</p>
+  </section>
+
+  <section id="eksplorasi">
+    <h2><span class="num">03</span> Eksplorasi &amp; Perhitungan</h2>
+    <div class="panel">
+
+      <div class="mode-row" id="modeRow">
+        <button class="mode-btn active" data-mode="so2">Polutan Udara Lokal (SO₂) — EKC Kuat</button>
+        <button class="mode-btn" data-mode="co2">Emisi Karbon (CO₂) — EKC Lemah/Diperdebatkan</button>
+        <button class="mode-btn" data-mode="plastik">Sampah Plastik — EKC Nyaris Tidak Ada</button>
+      </div>
+
+      <div class="controls-row">
+        <div class="field"><label>Pendapatan per Kapita Saat Ini (Y) <span class="val" id="vY">8.000</span></label><input type="range" id="inY" min="500" max="60000" step="500" value="8000"></div>
+        <div class="field"><label>Laju Pertumbuhan Ekonomi per Tahun (g) <span class="val" id="vG">3%</span></label><input type="range" id="inG" min="0" max="8" step="0.5" value="3"></div>
+        <div class="field"><label>Jumlah Tahun Diproyeksikan <span class="val" id="vYears">30</span></label><input type="range" id="inYears" min="5" max="60" step="5" value="30"></div>
+      </div>
+
+      <svg class="chart" id="svgEKC" viewBox="0 0 620 380"></svg>
+      <div class="legend">
+        <span><span class="swatch" style="background:#4f9c94"></span> Kurva Polusi vs Pendapatan</span>
+        <span><span class="swatch" style="background:#c9a24b"></span> Titik Balik (Turning Point)</span>
+        <span><span class="swatch" style="background:#5b8fc9"></span> Jejak Proyeksi Negara Anda</span>
+      </div>
+
+      <div class="results" id="resultsGrid"></div>
+      <div class="insight-box" id="insightBox"></div>
+    </div>
+  </section>
+
+  <section id="manfaat">
+    <h2><span class="num">04</span> Manfaat &amp; Kegunaan</h2>
+    <div class="benefit-list">
+      <div class="benefit-item"><div class="btitle">Memahami perdebatan "tumbuh dulu vs lompat langsung" (leapfrogging)</div>Menjelaskan basis ilmiah perdebatan kebijakan pembangunan: apakah negara berkembang harus melalui fase industrialisasi kotor seperti negara maju dulu, atau bisa "melompat" langsung ke teknologi bersih.</div>
+      <div class="benefit-item"><div class="btitle">Menyambung tema "ongkos kemajuan" dari Neraca Peradaban</div>Simulator ini memberi kerangka kuantitatif untuk pertanyaan reflektif "apakah kemajuan selalu punya ongkos lingkungan" — dengan jawaban bernuansa: TERGANTUNG jenis kerusakannya.</div>
+      <div class="benefit-item"><div class="btitle">Memahami kritik "pollution haven hypothesis"</div>Membantu memahami argumen bahwa penurunan polusi lokal di negara kaya sebagian bisa dijelaskan oleh RELOKASI industri kotor ke negara berkembang, bukan murni kemajuan teknologi bersih.</div>
+      <div class="benefit-item"><div class="btitle">Dasar untuk memahami kebijakan iklim global (Perjanjian Paris, dst.)</div>Menjelaskan kenapa emisi karbon global TIDAK bisa diandalkan turun otomatis seiring kekayaan dunia bertambah — kebutuhan kebijakan aktif (bukan menunggu "EKC bekerja sendiri") menjadi jauh lebih jelas.</div>
+    </div>
+  </section>
+
+  <section id="batasan">
+    <h2><span class="num">05</span> Batasan</h2>
+    <div class="limit-item">Hipotesis EKC adalah salah satu topik <strong>PALING diperdebatkan</strong> dalam ekonomi lingkungan. Studi awal Grossman &amp; Krueger (1991, 1995) menemukan pola U-terbalik untuk beberapa polutan udara — tapi tinjauan kritis berikutnya (mis. Stern 2004) menunjukkan hasil ini sangat sensitif terhadap polutan, negara, dan metode statistik yang dipakai.</div>
+    <div class="limit-item">Untuk emisi karbon (CO₂) skala global, sebagian besar bukti menunjukkan EKC <strong>lemah atau tidak konsisten</strong> — berbeda jauh dari SO₂ yang polanya relatif kuat di banyak studi.</div>
+    <div class="limit-item">Simulator ini TIDAK memodelkan hipotesis "pollution haven": kemungkinan bahwa sebagian penurunan polusi di negara kaya sebenarnya adalah PERPINDAHAN industri kotor ke negara lain, bukan pengurangan polusi global secara nyata.</div>
+    <div class="limit-item">Kurva berbentuk parabola dalam model ini adalah PENYEDERHANAAN drastis. Data riil sering tidak rapi berbentuk parabola — beberapa negara "melompat" pola karena kebijakan aktif, bukan mengikuti kurva otomatis.</div>
+    <div class="limit-item">Model ini tidak memasukkan kerusakan yang BERSIFAT TAK-TERBALIKKAN (mis. kepunahan spesies, titik kritis iklim/permafrost) — untuk jenis kerusakan ini, "menunggu sampai titik balik EKC tercapai" bisa jadi sudah terlambat, apa pun bentuk kurvanya.</div>
+  </section>
+
+  <section id="referensi">
+    <h2><span class="num">06</span> Referensi</h2>
+    <table class="refs">
+      <tr><td>Gene Grossman &amp; Alan Krueger — studi NAFTA (1991, 1995)</td><td>Studi empiris awal yang mempopulerkan hipotesis EKC dalam ekonomi lingkungan</td></tr>
+      <tr><td>David Stern — "The Rise and Fall of the Environmental Kuznets Curve" (2004)</td><td>Tinjauan kritis berpengaruh yang mempertanyakan generalisasi EKC ke semua polutan</td></tr>
+      <tr><td>Simon Kuznets — hipotesis ketimpangan pendapatan (1955)</td><td>Sumber bentuk kurva U-terbalik asli yang analoginya dipinjam untuk konteks lingkungan</td></tr>
+      <tr><td>IPCC &amp; World Bank — data emisi CO₂ vs PDB per kapita lintas-negara</td><td>Data empiris pembanding pola EKC yang lemah untuk emisi karbon global</td></tr>
+    </table>
+  </section>
+
+</div>
+
+<footer>JAZMI &mdash; Modul Ekonomi &middot; Belajar &rarr; Memodelkan &rarr; Menguji &rarr; Membuat</footer>
+
+<script>
+(function(){
+  const el = id => document.getElementById(id);
+  const presets = {
+    so2:     { a: 0.012, b: -0.00000045, label:'SO₂ (Polutan Udara Lokal)', strength:'kuat' },
+    co2:     { a: 0.006, b: -0.00000006, label:'CO₂ (Emisi Karbon Global)', strength:'lemah' },
+    plastik: { a: 0.004, b: -0.00000001, label:'Sampah Plastik', strength:'nyaris tidak ada' },
+  };
+  const state = { mode:'so2', Y:8000, g:3, years:30 };
+
+  const inY=el('inY'), inG=el('inG'), inYears=el('inYears');
+  [inY,inG,inYears].forEach(inp=>inp.addEventListener('input', ()=>{
+    state.Y=+inY.value; state.g=+inG.value; state.years=+inYears.value;
+    recompute();
+  }));
+
+  document.querySelectorAll('.mode-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      state.mode = btn.dataset.mode;
+      recompute();
+    });
+  });
+
+  function num(n,dec){ return Number(n.toFixed(dec===undefined?1:dec)); }
+
+  function recompute(){
+    const {a,b} = presets[state.mode];
+    const {Y,g,years} = state;
+    function pollution(y){ return Math.max(0, a*y + b*y*y); }
+    const turningPoint = -a/(2*b);
+
+    const Ymax = Math.max(turningPoint*2.1, Y*Math.pow(1+g/100,years)*1.2, 60000);
+    const Pmax = pollution(turningPoint)*1.15;
+
+    const W=620,H=380, padL=60,padR=20,padT=20,padB=44;
+    const plotW=W-padL-padR, plotH=H-padT-padB;
+    const sx = plotW/Ymax, sy = plotH/(Pmax||1);
+    function pt(y,pp){ return [padL+y*sx, H-padB-pp*sy]; }
+
+    let pts=[];
+    for(let i=0;i<=60;i++){ const y=Ymax*i/60; pts.push(pt(y,pollution(y)).join(',')); }
+
+    let svg='';
+    svg += `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-padB}" stroke="#3a4150" stroke-width="1"/>`;
+    svg += `<line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#3a4150" stroke-width="1"/>`;
+    svg += `<text x="${W-padR}" y="${H-padB+18}" fill="#9aa1ad" font-size="11" text-anchor="end" font-family="JetBrains Mono, monospace">pendapatan per kapita</text>`;
+    svg += `<text x="${padL-8}" y="${padT+4}" fill="#9aa1ad" font-size="11" text-anchor="end" font-family="JetBrains Mono, monospace">tingkat polusi</text>`;
+    svg += `<polyline points="${pts.join(' ')}" fill="none" stroke="#4f9c94" stroke-width="2.5"/>`;
+
+    if(turningPoint>0 && turningPoint<Ymax){
+      const tp = pt(turningPoint, pollution(turningPoint));
+      svg += `<line x1="${tp[0]}" y1="${H-padB}" x2="${tp[0]}" y2="${tp[1]}" stroke="#c9a24b" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+      svg += `<circle cx="${tp[0]}" cy="${tp[1]}" r="5" fill="#c9a24b" stroke="#12151a" stroke-width="1.5"/>`;
+    }
+
+    // trajectory of country growing over 'years' at rate g starting from Y
+    let traj=[];
+    for(let t=0;t<=years;t++){
+      const yt = Y*Math.pow(1+g/100,t);
+      traj.push(pt(Math.min(yt,Ymax), pollution(Math.min(yt,Ymax))));
+    }
+    const trajStr = traj.map(p=>p.join(',')).join(' ');
+    svg += `<polyline points="${trajStr}" fill="none" stroke="#5b8fc9" stroke-width="2" stroke-dasharray="1,4"/>`;
+    svg += `<circle cx="${traj[0][0]}" cy="${traj[0][1]}" r="5" fill="#5b8fc9" stroke="#12151a" stroke-width="1.5"/>`;
+    const lastT = traj[traj.length-1];
+    svg += `<circle cx="${lastT[0]}" cy="${lastT[1]}" r="5" fill="#e3766a" stroke="#12151a" stroke-width="1.5"/>`;
+
+    el('svgEKC').innerHTML = svg;
+
+    const Yend = Y*Math.pow(1+g/100,years);
+    const Pnow = pollution(Y), Pend = pollution(Yend);
+    const crossesTurning = (Y < turningPoint && Yend >= turningPoint);
+
+    el('resultsGrid').innerHTML = [
+      {l:'Polusi Saat Ini', v: num(Pnow,2)},
+      {l:'Titik Balik (Pendapatan)', v: turningPoint>0? num(turningPoint,0) : '—'},
+      {l:'Pendapatan Setelah '+years+' Th', v: num(Yend,0)},
+      {l:'Polusi Setelah '+years+' Th', v: num(Pend,2)},
+    ].map(r=>`<div class="result-card"><div class="l">${r.l}</div><div class="v">${r.v}</div></div>`).join('');
+
+    const {label,strength} = presets[state.mode];
+    // Narasi HARUS mengikuti tren angka Pnow→Pend yang sebenarnya terjadi di skenario ini,
+    // bukan cuma kategori "strength" preset — kalau tidak, pada slider ekstrem (g/tahun besar)
+    // proyeksi CO2/plastik bisa saja tetap melewati titik baliknya yang jauh, sehingga Pend < Pnow,
+    // tapi teks lama tetap memaksakan "polusi terus naik" (kontradiksi dengan angka yang ditampilkan).
+    const caveat = strength==='nyaris tidak ada'
+      ? `Perlu diingat: titik balik ${label} berada sangat jauh (~${num(turningPoint,0)}) sehingga dalam praktiknya nyaris tidak pernah tercapai negara mana pun — skenario ini memerlukan asumsi pertumbuhan yang sangat ekstrem.`
+      : `Perlu diingat (lihat Batasan): pola EKC untuk ${label} tergolong ${strength}, jadi hasil ini sangat bergantung asumsi &amp; TIDAK boleh dianggap pasti terjadi otomatis tanpa kebijakan aktif.`;
+
+    let insight;
+    if(crossesTurning){
+      insight = `Untuk ${label}, proyeksi menunjukkan negara Anda akan MELEWATI titik balik (~${num(turningPoint,0)}) dalam ${years} tahun ke depan — polusi diperkirakan naik dulu lalu mulai turun, dari ${num(Pnow,2)} sekarang menuju ${num(Pend,2)}. ${caveat}`;
+    } else if(Yend < turningPoint) {
+      insight = `Untuk ${label}, proyeksi ${years} tahun ke depan (pendapatan naik dari ${num(Y,0)} ke ${num(Yend,0)}) masih berada DI BAWAH titik balik (~${num(turningPoint,0)}) — polusi diperkirakan terus NAIK dari ${num(Pnow,2)} menjadi ${num(Pend,2)} tanpa tanda-tanda membaik sendiri dalam periode ini. ${caveat}`;
+    } else {
+      insight = `Untuk ${label}, negara Anda sudah berada DI ATAS titik balik (~${num(turningPoint,0)}) — pola EKC memperkirakan polusi terus MENURUN dari ${num(Pnow,2)} menjadi ${num(Pend,2)} seiring pendapatan terus tumbuh, dengan pola EKC yang tergolong ${strength} untuk jenis polutan ini.`;
+    }
+    el('insightBox').innerHTML = insight;
+
+    el('vY').textContent = Y.toLocaleString('id-ID'); el('vG').textContent = g+'%'; el('vYears').textContent = years;
+  }
+
+  recompute();
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bandul Sederhana — JAZMI Sains</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12262a; --ink-soft:#3c5a5a;
+    --paper:#f4f7f5; --panel:#e7efe9; --panel-deep:#d7e3dc;
+    --teal:#2f7d6b; --teal-deep:#1e5b4d;
+    --amber:#b9793a; --brick:#a34a3c;
+    --line:#c9d6cd; --radius:3px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--ink);color:var(--ink);font-family:'Karla',sans-serif;line-height:1.55;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:760px;margin:0 auto;}
+  header{background:var(--ink);color:#dce8e3;padding:40px 22px 36px;position:relative;overflow:hidden;}
+  header::before{content:"◐";position:absolute;right:14px;top:-18px;font-size:9rem;color:rgba(220,232,227,0.06);}
+  header .eyebrow{color:#7fc2ac;font-family:'JetBrains Mono',monospace;font-size:0.8rem;letter-spacing:0.06em;margin-bottom:10px;text-transform:uppercase;}
+  header h1{font-family:'Fraunces',serif;font-weight:600;font-size:1.95rem;line-height:1.18;margin:0 0 12px;max-width:16ch;}
+  header p{color:#a9bfb8;max-width:46ch;margin:0;font-size:0.96rem;}
+  main{background:var(--paper);}
+  section{padding:28px 20px;border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  h2{font-family:'Fraunces',serif;font-weight:600;font-size:1.28rem;margin:0 0 6px;}
+  .lede{color:var(--ink-soft);font-size:0.9rem;margin:0 0 18px;max-width:56ch;}
+
+  .term{border-top:1px solid var(--line);}
+  .term:last-child{border-bottom:1px solid var(--line);}
+  .term button{width:100%;text-align:left;background:none;border:none;padding:12px 4px;font-family:'Fraunces',serif;font-size:0.98rem;font-weight:500;color:var(--ink);display:flex;justify-content:space-between;cursor:pointer;}
+  .term .plus{color:var(--teal-deep);transition:transform .2s;}
+  .term.open .plus{transform:rotate(45deg);}
+  .term .body{max-height:0;overflow:hidden;transition:max-height .25s ease;}
+  .term.open .body{max-height:220px;}
+  .term .body p{padding:0 4px 14px;margin:0;color:var(--ink-soft);font-size:0.88rem;}
+
+  .ctrl{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px;}
+  .ctrl .lbl{display:flex;justify-content:space-between;font-size:0.85rem;color:var(--ink-soft);margin-bottom:6px;}
+  .ctrl .lbl b{font-family:'JetBrains Mono',monospace;color:var(--teal-deep);font-size:0.95rem;}
+  input[type=range]{width:100%;accent-color:var(--teal-deep);height:22px;}
+  .pill-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .pill{font-family:'Karla',sans-serif;font-weight:600;font-size:0.82rem;padding:7px 13px;border-radius:20px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);cursor:pointer;}
+  .pill.active{background:var(--teal-deep);color:#fff;border-color:var(--teal-deep);}
+
+  .canvas-row{display:flex;flex-direction:column;gap:14px;margin:18px 0;}
+  .canvas-box{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:10px;}
+  .canvas-box .cap{font-size:0.76rem;color:var(--ink-soft);margin:6px 2px 0;}
+  canvas{width:100%;display:block;background:linear-gradient(#eef5f1,#ffffff);border-radius:2px;}
+  .canvas-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+  .btn{font-family:'Karla',sans-serif;font-weight:600;font-size:0.82rem;padding:8px 14px;border-radius:20px;border:1px solid var(--teal-deep);background:#fff;color:var(--teal-deep);cursor:pointer;}
+  .btn.primary{background:var(--teal-deep);color:#fff;}
+
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:12px;}
+  .stat .k{font-size:0.74rem;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.03em;}
+  .stat .v{font-family:'JetBrains Mono',monospace;font-size:1.1rem;color:var(--teal-deep);font-weight:700;margin-top:2px;}
+
+  .callout{background:#fff;border:1px dashed var(--teal-deep);border-radius:var(--radius);padding:12px 14px;font-size:0.86rem;color:var(--ink-soft);margin-top:14px;}
+  .callout b{color:var(--teal-deep);}
+
+  .plain-list{margin:0;padding-left:1.1em;color:var(--ink-soft);font-size:0.9rem;}
+  .plain-list li{margin-bottom:8px;}
+  .disclaimer{background:var(--panel-deep);border-left:3px solid var(--brick);padding:14px 16px;font-size:0.86rem;color:var(--ink-soft);border-radius:0 var(--radius) var(--radius) 0;margin-top:12px;}
+
+  footer{background:var(--ink);color:#5d7570;padding:22px 22px 36px;font-size:0.78rem;text-align:center;}
+
+  @media(min-width:600px){
+    header{padding:56px 40px 48px;} header h1{font-size:2.3rem;}
+    section{padding:40px;}
+    .canvas-row{flex-direction:row;}
+    .canvas-row .canvas-box:first-child{flex:0 0 40%;}
+    .canvas-row .canvas-box:last-child{flex:1;}
+    .stats{grid-template-columns:repeat(4,1fr);}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="eyebrow">jazmi · sains · mekanika</div>
+    <h1>Bandul Sederhana</h1>
+    <p>Ayunkan bandul, geser sudut awalnya sampai besar — lihat kapan rumus periode yang biasa diajarkan mulai meleset dari simulasi yang sebenarnya.</p>
+  </div>
+</header>
+
+<main>
+<div class="wrap">
+
+  <section>
+    <h2>Belajar dulu</h2>
+    <p class="lede">Rumus periode bandul yang biasa dihafal sebenarnya sebuah pendekatan — bukan hukum yang berlaku untuk semua sudut.</p>
+    <div id="accordion"></div>
+  </section>
+
+  <section>
+    <h2>Eksplorasi &amp; Perhitungan</h2>
+    <p class="lede">Geser parameter — ayunan dan grafik sudutnya berubah langsung. Perhatikan kolom "Periode" di bawah saat sudut awal digeser sampai besar.</p>
+
+    <div class="ctrl">
+      <div class="lbl"><span>Panjang tali (L)</span><b id="lVal">1.0 m</b></div>
+      <input type="range" id="lRange" min="0.2" max="3" step="0.1" value="1.0">
+    </div>
+    <div class="ctrl">
+      <div class="lbl"><span>Sudut simpangan awal (θ₀)</span><b id="thetaVal">20°</b></div>
+      <input type="range" id="thetaRange" min="1" max="170" step="1" value="20">
+    </div>
+    <div class="ctrl">
+      <div class="lbl"><span>Massa bandul (tidak memengaruhi periode)</span><b id="mVal">0.5 kg</b></div>
+      <input type="range" id="mRange" min="0.05" max="5" step="0.05" value="0.5">
+    </div>
+    <div class="ctrl">
+      <div class="lbl"><span>Koefisien redaman (c)</span><b id="cVal">0.05</b></div>
+      <input type="range" id="cRange" min="0" max="1" step="0.02" value="0.05">
+    </div>
+    <div class="ctrl">
+      <div class="lbl" style="margin-bottom:10px;"><span>Percepatan gravitasi</span></div>
+      <div class="pill-row" id="gravityPills"></div>
+    </div>
+
+    <div class="canvas-row">
+      <div class="canvas-box">
+        <canvas id="pendulum" width="360" height="360"></canvas>
+        <div class="cap">Ayunan bandul secara langsung</div>
+      </div>
+      <div class="canvas-box">
+        <canvas id="chart" width="700" height="360"></canvas>
+        <div class="cap">Sudut θ(t) terhadap waktu — garis vertikal menandai posisi saat ini</div>
+      </div>
+    </div>
+    <div class="canvas-actions">
+      <button class="btn primary" id="playBtn">▶ Ayunkan</button>
+      <button class="btn" id="resetBtn">Ulangi dari awal</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="k">Periode teori (sudut kecil)</div><div class="v" id="statT0">–</div></div>
+      <div class="stat"><div class="k">Periode terukur (simulasi)</div><div class="v" id="statTsim">–</div></div>
+      <div class="stat"><div class="k">Energi total awal</div><div class="v" id="statE">–</div></div>
+      <div class="stat"><div class="k">Selisih dari teori</div><div class="v" id="statDiff">–</div></div>
+    </div>
+
+    <div class="callout" id="massCallout"><b>Coba:</b> ubah slider massa — perhatikan kolom periode di atas tidak berubah sama sekali. Massa hanya memengaruhi energi ayunan, bukan berapa lama satu ayunan penuh berlangsung.</div>
+  </section>
+
+  <section>
+    <h2>Metode</h2>
+    <ul class="plain-list">
+      <li><b>Periode teori</b> memakai rumus sudut kecil T = 2π√(L/g), yang diturunkan dengan mengganti sinθ ≈ θ (berlaku akurat hanya untuk θ di bawah ±10° kira-kira).</li>
+      <li><b>Periode simulasi</b> dihitung dari persamaan gerak bandul yang sebenarnya, θ'' = −(g/L)sinθ − c·θ', diselesaikan langkah demi langkah dengan integrasi numerik Runge–Kutta orde 4, lalu diukur langsung jarak waktu antar-ayunan pada hasilnya.</li>
+      <li>Semakin besar sudut awal, semakin besar pula selisih antara periode teori dan periode simulasi — itulah efek anharmonik yang hilang saat sinθ disederhanakan jadi θ.</li>
+      <li>Energi total dihitung dari energi kinetik + energi potensial pada titik tertinggi ayunan: E = mgL(1−cosθ₀).</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Batasan</h2>
+    <div class="disclaimer">Model ini mengasumsikan tali tak bermassa dan tak elastis, bandul sebagai titik massa, tumpuan diam sempurna, dan redaman disederhanakan sebagai satu koefisien sebanding kecepatan sudut — bukan hasil perhitungan gesekan udara maupun gesekan poros yang sesungguhnya. Untuk sudut sangat dekat 180°, hasil simulasi menjadi tidak realistis karena bandul mendekati kondisi diam tak stabil di puncak.</div>
+  </section>
+
+  <section>
+    <h2>Referensi &amp; Artikel Terkait</h2>
+    <ul class="plain-list">
+      <li>Mekanika klasik Newton dan prinsip ekivalensi Galileo — dasar kenapa massa tidak memengaruhi periode osilasi maupun percepatan jatuh bebas.</li>
+      <li>Terkait: Gerak Peluru (sama-sama dari cabang mekanika klasik), Hukum Kepler &amp; Orbit Elips (integrasi numerik serupa untuk gerak dua benda).</li>
+    </ul>
+  </section>
+
+</div>
+</main>
+
+<footer>JAZMI — Laboratorium Pengetahuan Digital · Modul Sains · Tier 1 №2 dari Peta Prioritas Fisika</footer>
+
+<script>
+/* ---------- BELAJAR ---------- */
+const TERMS = [
+  ["Kenapa T = 2π√(L/g) hanya pendekatan","Rumus ini lahir dari mengganti sinθ dengan θ saja (dalam radian) di persamaan gerak — pendekatan yang cukup akurat untuk sudut kecil, tapi meleset saat sudut membesar karena sinθ dan θ mulai menjauh nilainya."],
+  ["Kenapa massa tidak memengaruhi periode","Gaya pemulih pada bandul (komponen gravitasi) dan massa bandul sama-sama berbanding lurus dengan massa — jadi massa saling meniadakan di persamaan gerak. Ini versi kecil dari prinsip ekivalensi Galileo: semua benda jatuh dengan percepatan yang sama, berapa pun massanya."],
+  ["Redaman (damping)","Energi ayunan yang hilang sedikit demi sedikit — biasanya karena gesekan udara atau poros — membuat amplitudo mengecil dari waktu ke waktu. Untuk redaman yang kecil, periode nyaris tidak berubah; hanya amplitudonya yang menyusut."],
+  ["Periode vs frekuensi","Periode (T) adalah waktu satu ayunan penuh (bolak-balik), dalam detik. Frekuensi (f = 1/T) adalah berapa kali ayunan penuh terjadi tiap detik, dalam Hertz."],
+];
+function renderAccordion(){
+  const el = document.getElementById('accordion');
+  el.innerHTML = TERMS.map((t,i)=>`<div class="term" data-i="${i}"><button type="button">${t[0]}<span class="plus">+</span></button><div class="body"><p>${t[1]}</p></div></div>`).join('');
+  el.querySelectorAll('.term button').forEach(btn=>btn.addEventListener('click',()=>btn.closest('.term').classList.toggle('open')));
+}
+
+/* ---------- STATE ---------- */
+const GRAVITIES = [
+  {k:'bumi', label:'Bumi', g:9.8},
+  {k:'bulan', label:'Bulan', g:1.62},
+  {k:'mars', label:'Mars', g:3.71},
+];
+let gravityKey = 'bumi';
+let L=1.0, theta0Deg=20, mass=0.5, damp=0.05;
+
+function renderGravityPills(){
+  const el = document.getElementById('gravityPills');
+  el.innerHTML = GRAVITIES.map(g=>`<button class="pill ${g.k===gravityKey?'active':''}" data-k="${g.k}">${g.label} (${g.g} m/s²)</button>`).join('');
+  el.querySelectorAll('.pill').forEach(b=>b.addEventListener('click',()=>{ gravityKey=b.dataset.k; renderGravityPills(); compute(); }));
+}
+function currentG(){ return GRAVITIES.find(g=>g.k===gravityKey).g; }
+
+/* ---------- PHYSICS: RK4 pendulum ---------- */
+function simulate(L, g, theta0Rad, c, duration, dt){
+  let theta = theta0Rad, omega = 0, t = 0;
+  const series = [{t, theta}];
+  const f = (th, om) => ({dth: om, dom: -(g/L)*Math.sin(th) - c*om});
+  while(t < duration){
+    const k1 = f(theta, omega);
+    const k2 = f(theta+0.5*dt*k1.dth, omega+0.5*dt*k1.dom);
+    const k3 = f(theta+0.5*dt*k2.dth, omega+0.5*dt*k2.dom);
+    const k4 = f(theta+dt*k3.dth, omega+dt*k3.dom);
+    theta += dt/6*(k1.dth+2*k2.dth+2*k3.dth+k4.dth);
+    omega += dt/6*(k1.dom+2*k2.dom+2*k3.dom+k4.dom);
+    t += dt;
+    series.push({t, theta});
+  }
+  return series;
+}
+function measuredPeriod(series){
+  const crossings = [];
+  for(let i=1;i<series.length;i++){
+    if(series[i-1].theta>=0 && series[i].theta<0) crossings.push(series[i].t);
+  }
+  if(crossings.length<2) return null;
+  let sum=0;
+  for(let i=1;i<crossings.length;i++) sum += crossings[i]-crossings[i-1];
+  return sum/(crossings.length-1);
+}
+
+/* ---------- CANVAS: pendulum swing ---------- */
+const pendCanvas = document.getElementById('pendulum');
+const pctx = pendCanvas.getContext('2d');
+function drawPendulum(thetaRad){
+  const W = pendCanvas.width, H = pendCanvas.height;
+  pctx.clearRect(0,0,W,H);
+  const pivotX = W/2, pivotY = 34;
+  const armLen = H-70;
+  const bobX = pivotX + armLen*Math.sin(thetaRad);
+  const bobY = pivotY + armLen*Math.cos(thetaRad);
+
+  pctx.strokeStyle = '#c9d6cd'; pctx.lineWidth = 2;
+  pctx.beginPath(); pctx.moveTo(pivotX-24,pivotY); pctx.lineTo(pivotX+24,pivotY); pctx.stroke();
+
+  pctx.strokeStyle = '#1e5b4d'; pctx.lineWidth = 2;
+  pctx.beginPath(); pctx.moveTo(pivotX,pivotY); pctx.lineTo(bobX,bobY); pctx.stroke();
+
+  pctx.fillStyle = '#2f7d6b';
+  pctx.beginPath(); pctx.arc(pivotX,pivotY,4,0,7); pctx.fill();
+
+  const bobR = 10 + Math.min(mass,5)*3;
+  pctx.fillStyle = '#a34a3c';
+  pctx.beginPath(); pctx.arc(bobX,bobY,bobR,0,7); pctx.fill();
+}
+
+/* ---------- CANVAS: angle-time chart ---------- */
+const chartCanvas = document.getElementById('chart');
+const cctx = chartCanvas.getContext('2d');
+function drawChart(series, markerT){
+  const W = chartCanvas.width, H = chartCanvas.height;
+  cctx.clearRect(0,0,W,H);
+  const pad = 36;
+  const maxT = series[series.length-1].t;
+  const maxTheta = Math.max(...series.map(p=>Math.abs(p.theta)), 0.1)*1.15;
+  const sx = (W-2*pad)/maxT;
+  const sy = (H-2*pad)/(2*maxTheta);
+  const midY = H/2;
+
+  cctx.strokeStyle = '#c9d6cd'; cctx.lineWidth = 1;
+  cctx.beginPath(); cctx.moveTo(pad,midY); cctx.lineTo(W-pad,midY); cctx.stroke();
+
+  cctx.strokeStyle = '#1e5b4d'; cctx.lineWidth = 2;
+  cctx.beginPath();
+  series.forEach((p,i)=>{
+    const px = pad+p.t*sx;
+    const py = midY - p.theta*sy;
+    if(i===0) cctx.moveTo(px,py); else cctx.lineTo(px,py);
+  });
+  cctx.stroke();
+
+  cctx.fillStyle = '#3c5a5a'; cctx.font='11px Karla, sans-serif';
+  cctx.fillText('0 s', pad-4, H-10);
+  cctx.fillText(maxT.toFixed(1)+' s', W-pad-24, H-10);
+
+  if(markerT!==undefined){
+    const px = pad+markerT*sx;
+    cctx.strokeStyle = '#a34a3c'; cctx.lineWidth = 2;
+    cctx.beginPath(); cctx.moveTo(px,pad*0.4); cctx.lineTo(px,H-pad*0.4); cctx.stroke();
+  }
+}
+
+/* ---------- COMPUTE ---------- */
+let lastSeries = null;
+let animId = null;
+
+function compute(){
+  L = parseFloat(document.getElementById('lRange').value);
+  theta0Deg = parseFloat(document.getElementById('thetaRange').value);
+  mass = parseFloat(document.getElementById('mRange').value);
+  damp = parseFloat(document.getElementById('cRange').value);
+  const g = currentG();
+  const theta0Rad = theta0Deg*Math.PI/180;
+
+  const T0 = 2*Math.PI*Math.sqrt(L/g);
+  const duration = Math.min(Math.max(T0*8, 6), 40);
+  lastSeries = simulate(L, g, theta0Rad, damp, duration, 0.01);
+  const Tsim = measuredPeriod(lastSeries);
+  const E = mass*g*L*(1-Math.cos(theta0Rad));
+
+  document.getElementById('statT0').textContent = T0.toFixed(3)+' s';
+  document.getElementById('statTsim').textContent = Tsim ? Tsim.toFixed(3)+' s' : '(teredam habis)';
+  document.getElementById('statE').textContent = E.toFixed(2)+' J';
+  document.getElementById('statDiff').textContent = Tsim ? (((Tsim-T0)/T0*100).toFixed(1)+' %') : '–';
+
+  drawPendulum(theta0Rad);
+  drawChart(lastSeries, 0);
+}
+
+function playAnimation(){
+  if(animId) cancelAnimationFrame(animId);
+  const start = performance.now();
+  const totalT = lastSeries[lastSeries.length-1].t;
+  const realDurMs = Math.min(totalT*900, 16000);
+  function frame(now){
+    const elapsed = (now-start)/realDurMs;
+    const simT = Math.min(elapsed*totalT, totalT);
+    let idx = Math.floor((simT/totalT)*(lastSeries.length-1));
+    idx = Math.max(0, Math.min(idx, lastSeries.length-1));
+    drawPendulum(lastSeries[idx].theta);
+    drawChart(lastSeries, simT);
+    if(elapsed<1) animId = requestAnimationFrame(frame);
+  }
+  animId = requestAnimationFrame(frame);
+}
+
+/* ---------- WIRING ---------- */
+document.getElementById('lRange').addEventListener('input', e=>{ document.getElementById('lVal').textContent=parseFloat(e.target.value).toFixed(1)+' m'; compute(); });
+document.getElementById('thetaRange').addEventListener('input', e=>{ document.getElementById('thetaVal').textContent=e.target.value+'°'; compute(); });
+document.getElementById('mRange').addEventListener('input', e=>{ document.getElementById('mVal').textContent=parseFloat(e.target.value).toFixed(2)+' kg'; compute(); });
+document.getElementById('cRange').addEventListener('input', e=>{ document.getElementById('cVal').textContent=parseFloat(e.target.value).toFixed(2); compute(); });
+document.getElementById('playBtn').addEventListener('click', playAnimation);
+document.getElementById('resetBtn').addEventListener('click', ()=>{ if(animId) cancelAnimationFrame(animId); compute(); });
+
+renderAccordion();
+renderGravityPills();
+compute();
+</script>
+</body>
+</html>

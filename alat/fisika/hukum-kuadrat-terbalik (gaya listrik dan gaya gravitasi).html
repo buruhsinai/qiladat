@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Satu Hukum, Dua Gaya — Kuadrat Terbalik</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0B0F1E;--panel:#141A30;--ink:#E8E6F5;--soft:#9C9DC4;--electron:#4FD8E0;--plasma:#B26BFF;--line:#2A3158;--pos:#FF6B6B;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.6;padding:0 20px 50px;}
+  .wrap{max-width:640px;margin:0 auto;}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:1.5rem;margin:32px 0 8px;background:linear-gradient(90deg,var(--electron),var(--plasma));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  p.lede{color:var(--soft);margin:0 0 20px;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px;}
+  label{display:block;font-size:0.85rem;color:var(--soft);margin-bottom:8px;}
+  .value{font-family:'JetBrains Mono',monospace;color:var(--electron);font-weight:600;}
+  input[type=range]{width:100%;accent-color:var(--electron);}
+  svg{display:block;width:100%;margin-top:16px;}
+  .legend{display:flex;gap:16px;margin-top:8px;font-size:0.8rem;color:var(--soft);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .sw{width:16px;height:3px;display:inline-block;border-radius:2px;}
+  .note{font-size:0.85rem;color:var(--soft);margin-top:16px;}
+  a{color:var(--electron);}
+  footer{color:var(--soft);font-size:0.78rem;text-align:center;margin-top:24px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Satu Hukum, Dua Gaya</h1>
+  <p class="lede">Field Visualizer (listrik) dan Gravity Laboratory (gravitasi) diam-diam memakai persamaan yang sama persis — gaya berbanding terbalik dengan kuadrat jarak. Geser jaraknya, lihat kedua kurva jatuh dengan pola identik.</p>
+
+  <div class="panel">
+    <label>Jarak (r) — <span class="value" id="r-val">5</span> satuan</label>
+    <input type="range" id="r-slider" min="1" max="20" step="0.2" value="5">
+    <svg id="chart" viewBox="0 0 560 300"></svg>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--pos)"></span> F listrik = kq₁q₂/r²</span>
+      <span><span class="sw" style="background:var(--electron)"></span> F gravitasi = Gm₁m₂/r²</span>
+    </div>
+  </div>
+
+  <p class="note">Bedanya cuma konstanta (k vs G) dan tanda: gravitasi selalu menarik, listrik bisa menarik atau menolak tergantung tanda muatan — itulah kenapa <a href="field-visualizer.html">Field Visualizer</a> punya dua warna muatan tapi <a href="gravity-laboratory.html">Gravity Laboratory</a> tidak perlu. Bentuk kurvanya, pada sumbu log-log, akan selalu sejajar — itu ciri khas semua hukum kuadrat terbalik, termasuk juga intensitas cahaya dan bunyi yang meredup dari sumbernya.</p>
+
+  <footer>JAZMI — Modul Sains · Penghubung Field Visualizer &amp; Gravity Laboratory</footer>
+</div>
+
+<script>
+(function(){
+  const slider=document.getElementById('r-slider');
+  const rVal=document.getElementById('r-val');
+  const chart=document.getElementById('chart');
+  const K=200, G=200; // constanta simulasi disamakan agar kurva berimpit skalanya
+
+  function render(){
+    const r=parseFloat(slider.value);
+    rVal.textContent=r.toFixed(1);
+    const W=560,H=300,padL=44,padR=16,padT=16,padB=34;
+    const pw=W-padL-padR, ph=H-padT-padB;
+    const xOf=rr=>padL+(rr/20)*pw;
+    const F=rr=>K/(rr*rr);
+    const yMax=F(1);
+    const yOf=f=>padT+(1-f/yMax)*ph;
+
+    function path(fn){
+      let d='';
+      for(let rr=1;rr<=20;rr+=0.2){
+        const x=xOf(rr),y=yOf(fn(rr));
+        d+=(rr===1?'M':'L')+x.toFixed(1)+','+Math.max(padT,y).toFixed(1)+' ';
+      }
+      return d;
+    }
+    let svg='';
+    svg+='<line x1="'+padL+'" y1="'+(padT+ph)+'" x2="'+(padL+pw)+'" y2="'+(padT+ph)+'" stroke="#3A4270"/>';
+    svg+='<line x1="'+padL+'" y1="'+padT+'" x2="'+padL+'" y2="'+(padT+ph)+'" stroke="#3A4270"/>';
+    svg+='<text x="'+(padL+pw/2)+'" y="'+(H-6)+'" text-anchor="middle" fill="#9C9DC4" font-size="10">jarak r →</text>';
+    svg+='<path d="'+path(F)+'" fill="none" stroke="var(--pos)" stroke-width="3"/>';
+    svg+='<path d="'+path(F)+'" fill="none" stroke="var(--electron)" stroke-width="1.5" stroke-dasharray="6 4"/>';
+    const mx=xOf(r), my=yOf(F(r));
+    svg+='<line x1="'+mx+'" y1="'+padT+'" x2="'+mx+'" y2="'+(padT+ph)+'" stroke="#fff" stroke-width="1" stroke-dasharray="3 3" opacity="0.5"/>';
+    svg+='<circle cx="'+mx+'" cy="'+my+'" r="5" fill="#fff"/>';
+    svg+='<text x="'+(mx+10)+'" y="'+(my-8)+'" fill="#fff" font-size="11" font-family=\'JetBrains Mono\'>F ∝ 1/r² = '+F(r).toFixed(1)+'</text>';
+    chart.innerHTML=svg;
+  }
+  slider.addEventListener('input', render);
+  render();
+})();
+</script>
+</body>
+</html>

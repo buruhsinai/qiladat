@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rosetta Kode — Satu Perintah, Banyak Bahasa — JAZMI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+:root{
+  --bg:#12141c; --bg-panel:#1b1f2b; --bg-panel-2:#20263a;
+  --line:#333a4f; --text:#eee7d6; --text-dim:#a9a6ac;
+  --gold:#c9a15a; --gold-soft:#8a713c; --teal:#5a9c92; --radius:10px;
+}
+*{box-sizing:border-box;}
+body{ margin:0; background:var(--bg); color:var(--text); font-family:'Karla',sans-serif; line-height:1.6; }
+h1,h2,h3{ font-family:'Fraunces',serif; font-weight:600; margin:0 0 0.5em; }
+code, .mono{ font-family:'JetBrains Mono', monospace; }
+.wrap{ max-width:860px; margin:0 auto; padding:0 20px; }
+
+.hero{ padding:50px 0 32px; border-bottom:1px solid var(--line); text-align:center; }
+.hero .eyebrow{ text-transform:uppercase; font-size:0.72rem; letter-spacing:2.5px; color:var(--gold); margin-bottom:12px; }
+.hero h1{ font-size:clamp(1.5rem,4.6vw,2.3rem); color:#fff; }
+.hero p.tag{ color:var(--text-dim); max-width:560px; margin:10px auto 0; font-size:0.95rem; }
+
+section{ padding:38px 0; border-bottom:1px solid var(--line); }
+section:last-of-type{ border-bottom:none; }
+.kicker{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+.kicker .num{ font-family:'Fraunces',serif; color:var(--gold); font-size:0.85rem; border:1px solid var(--gold-soft); border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.kicker h2{ font-size:1.22rem; margin:0; color:#fff; }
+p{ color:var(--text); }
+p.dim{ color:var(--text-dim); font-size:0.9rem; }
+.panel{ background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-top:16px; }
+
+/* CONTROLS */
+.preset-row{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+.preset-btn{
+  background:var(--bg-panel-2); border:1px solid var(--line); color:var(--text-dim);
+  padding:10px 14px; border-radius:8px; font-size:0.85rem; font-weight:700; cursor:pointer;
+}
+.preset-btn.active{ background:var(--gold); color:#12141c; border-color:var(--gold); }
+
+.lang-toggle-row{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.lang-chip{
+  background:var(--bg-panel-2); border:1px solid var(--line); color:var(--text-dim);
+  padding:5px 10px; border-radius:14px; font-size:0.74rem; cursor:pointer; user-select:none;
+}
+.lang-chip.on{ background:rgba(201,161,90,0.18); border-color:var(--gold); color:var(--gold); }
+.chip-actions{ margin-top:8px; display:flex; gap:10px; }
+.chip-actions a{ font-size:0.76rem; color:var(--teal); cursor:pointer; text-decoration:underline; }
+
+/* CODE CARDS */
+.code-grid{ display:grid; grid-template-columns:1fr; gap:10px; margin-top:18px; }
+.code-card{ background:#0e1017; border:1px solid var(--line); border-radius:8px; padding:12px 14px; display:none; }
+.code-card.show{ display:block; }
+.code-card .lang-name{ font-size:0.72rem; text-transform:uppercase; letter-spacing:1.5px; color:var(--gold); margin-bottom:6px; }
+.code-card pre{ margin:0; white-space:pre-wrap; word-break:break-word; font-size:0.88rem; color:#f4eede; }
+
+/* BINARY */
+.binary-box{ margin-top:20px; padding:16px; background:var(--bg-panel-2); border:1px solid var(--gold-soft); border-radius:var(--radius); }
+.binary-box .label{ font-size:0.78rem; color:var(--text-dim); margin-bottom:6px; }
+.binary-out{ font-size:0.82rem; word-break:break-all; color:var(--gold); line-height:1.8; }
+
+.asm-box{ margin-top:14px; padding:16px; background:#0e1017; border:1px dashed var(--line); border-radius:var(--radius); }
+.asm-box pre{ margin:0; font-size:0.82rem; color:var(--text-dim); }
+
+.formula{ font-family:'Fraunces',serif; font-style:italic; background:var(--bg-panel-2); border-radius:8px; padding:14px 18px; margin:14px 0; overflow-x:auto; color:#f4eede; }
+ul{ padding-left:20px; }
+ul.batas li{ margin-bottom:10px; }
+.refs li{ margin-bottom:10px; font-size:0.9rem; color:var(--text-dim); }
+.consult{ background:linear-gradient(135deg,var(--bg-panel-2),var(--bg-panel)); border:1px solid var(--gold-soft); border-radius:var(--radius); padding:22px; text-align:center; }
+.consult a.wa{ display:inline-block; margin-top:14px; background:var(--teal); color:#0e1017; text-decoration:none; font-weight:700; padding:12px 26px; border-radius:30px; }
+footer{ text-align:center; padding:26px 0; color:var(--text-dim); font-size:0.8rem; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">JAZMI · Sains Komputasi</div>
+    <h1>Rosetta Kode</h1>
+    <p class="tag">Satu perintah sederhana, ditulis ulang dalam banyak bahasa pemrograman — untuk melihat sendiri bahwa semuanya, dengan caranya masing-masing, berakar pada satu hal yang sama: nol dan satu.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <div class="kicker"><div class="num">1</div><h2>Belajar</h2></div>
+    <p>Setiap bahasa pemrograman punya sintaksis sendiri, tapi tak satu pun dari sintaksis itu yang benar-benar dipahami langsung oleh perangkat keras komputer. Prosesor hanya mengenali satu "bahasa": urutan sinyal listrik yang direpresentasikan sebagai <strong>0 dan 1</strong> (biner) — instruksi mesin.</p>
+    <p>Tapi jalan menuju biner itu <strong>tidak seragam</strong> untuk semua bahasa, dan ini penting untuk dipahami dengan jujur, bukan disederhanakan berlebihan:</p>
+    <ul>
+      <li><strong>Bahasa terkompilasi</strong> (C, C++, Rust, Go, Swift) — kode sumber diubah langsung menjadi kode mesin oleh compiler, menghasilkan berkas biner yang bisa dijalankan langsung oleh CPU tertentu.</li>
+      <li><strong>Bahasa dengan bytecode</strong> (Java, C#) — kode sumber dikompilasi ke "bytecode" perantara (bukan kode mesin akhir), yang baru diterjemahkan ke kode mesin saat dijalankan (JIT compilation) oleh JVM atau .NET runtime.</li>
+      <li><strong>Bahasa interpreter</strong> (Python, Ruby, PHP, JavaScript klasik) — kode sumber dibaca dan dijalankan baris demi baris oleh interpreter saat program berjalan, tanpa menghasilkan satu berkas biner mandiri.</li>
+    </ul>
+    <p>Selain itu, kode mesin akhirnya sendiri <strong>berbeda-beda tergantung arsitektur prosesor</strong> (x86 di laptop kebanyakan, ARM di ponsel/Apple Silicon, RISC-V di beberapa chip baru) — jadi tidak ada satu "biner universal" yang sama untuk semua kombinasi bahasa dan perangkat.</p>
+    <p>Yang benar-benar universal, dan bisa dibuktikan langsung tanpa perlu compiler sungguhan, adalah ini: begitu program menghasilkan <em>teks atau angka</em>, data itu disimpan dan dikirim sebagai kode biner ASCII/Unicode — sama persis di semua bahasa, semua perangkat. Itulah yang dihitung otomatis di panel "Biner" di bawah.</p>
+  </section>
+
+  <section id="perintah">
+    <div class="kicker"><div class="num">2</div><h2>Pilih Perintah &amp; Bahasa</h2></div>
+
+    <div class="panel">
+      <p class="dim" style="margin-top:0;">Pilih satu perintah dasar:</p>
+      <div class="preset-row" id="preset-row"></div>
+
+      <p class="dim">Pilih bahasa yang ingin ditampilkan:</p>
+      <div class="lang-toggle-row" id="lang-toggle-row"></div>
+      <div class="chip-actions">
+        <a onclick="pilihSemua(true)">Pilih semua</a>
+        <a onclick="pilihSemua(false)">Kosongkan</a>
+      </div>
+
+      <div class="code-grid" id="code-grid"></div>
+
+      <div class="binary-box">
+        <div class="label">Biner ASCII dari keluaran perintah ini (dihitung langsung, sama untuk semua bahasa di atas):</div>
+        <div class="binary-out mono" id="binary-out"></div>
+      </div>
+
+      <div class="asm-box">
+        <div class="label dim" style="margin-bottom:6px;">Ilustrasi Assembly x86 (NASM, Linux) — disederhanakan, <u>bukan</u> hasil compiler sungguhan:</div>
+        <pre id="asm-out"></pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="metode">
+    <div class="kicker"><div class="num">3</div><h2>Metode</h2></div>
+    <p>Kode untuk tiap bahasa di atas adalah sintaksis baku yang ditulis manual dan diverifikasi, bukan hasil terjemahan otomatis — supaya akurat. Panel Biner dihitung langsung dari teks/angka yang menjadi hasil perintah tersebut:</p>
+    <div class="formula">biner(karakter) = kode ASCII karakter, ditulis dalam basis 2 (8 bit)</div>
+    <p class="dim">Contoh: karakter "A" berkode ASCII 65, dalam biner 8-bit menjadi 01000001.</p>
+  </section>
+
+  <section id="batasan">
+    <div class="kicker"><div class="num">4</div><h2>Batasan</h2></div>
+    <ul class="batas">
+      <li>Panel Assembly bersifat <strong>ilustratif</strong> untuk menunjukkan tingkat kedekatan bahasa rendah dengan perangkat keras — bukan hasil kompilasi nyata, yang sebenarnya sangat bergantung pada compiler, level optimasi, sistem operasi, dan arsitektur prosesor.</li>
+      <li>Panel Biner hanya merepresentasikan <strong>encoding karakter (ASCII)</strong>, bukan instruksi mesin sesungguhnya yang dijalankan CPU untuk menjalankan program tersebut — dua hal yang berbeda meski sering tertukar.</li>
+      <li>Sintaksis tiap bahasa disederhanakan ke bentuk paling umum (mengabaikan variasi versi, framework, atau gaya penulisan alternatif).</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <div class="kicker"><div class="num">5</div><h2>Referensi</h2></div>
+    <ul class="refs">
+      <li>Dokumentasi resmi tiap bahasa (Python.org, developer.mozilla.org untuk JavaScript, doc.rust-lang.org, go.dev, dsb.) — rujukan sintaksis dasar yang dipakai di alat ini.</li>
+      <li>Standar ASCII (ISO/IEC 646) — dasar tabel kode karakter ke biner yang dipakai panel Biner.</li>
+      <li>Materi pengantar arsitektur komputer (mis. "Computer Organization and Design", Patterson &amp; Hennessy) — untuk konsep compiler vs interpreter vs JIT.</li>
+    </ul>
+  </section>
+
+  <section id="konsultasi">
+    <div class="consult">
+      <h3 style="color:#fff;">Ada bahasa pemrograman yang ingin ditambahkan?</h3>
+      <p class="dim">Alat ini masih pengembangan versi awal. Silakan hubungi kami untuk koreksi sintaksis atau usulan bahasa baru.</p>
+      <a class="wa" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20bertanya%20seputar%20Rosetta%20Kode%20JAZMI." target="_blank">Hubungi via WhatsApp</a>
+    </div>
+  </section>
+
+</div>
+<footer>JAZMI — Laboratorium Pengetahuan Digital · Prototipe, belum masuk struktur menu utama.</footer>
+
+<script>
+const PRESET = {
+  cetak: {
+    label: 'Cetak teks',
+    output: 'Halo Dunia',
+    code: {
+      Python: 'print("Halo Dunia")',
+      JavaScript: 'console.log("Halo Dunia");',
+      TypeScript: 'console.log("Halo Dunia");',
+      Java: 'System.out.println("Halo Dunia");',
+      C: '#include <stdio.h>\nprintf("Halo Dunia");',
+      'C++': '#include <iostream>\nstd::cout << "Halo Dunia";',
+      'C#': 'Console.WriteLine("Halo Dunia");',
+      Go: 'fmt.Println("Halo Dunia")',
+      Rust: 'println!("Halo Dunia");',
+      Ruby: 'puts "Halo Dunia"',
+      PHP: 'echo "Halo Dunia";',
+      Swift: 'print("Halo Dunia")',
+      Kotlin: 'println("Halo Dunia")',
+      Perl: 'print "Halo Dunia";',
+      Lua: 'print("Halo Dunia")',
+    },
+    asm: '; cetak string ke layar (syscall write, Linux x86)\nsection .data\n  teks db "Halo Dunia", 0\nsection .text\n  mov eax, 4      ; syscall: write\n  mov ebx, 1      ; file descriptor: stdout\n  mov ecx, teks\n  mov edx, 10     ; panjang teks\n  int 0x80'
+  },
+  variabel: {
+    label: 'Deklarasi variabel',
+    output: '5',
+    code: {
+      Python: 'angka = 5',
+      JavaScript: 'let angka = 5;',
+      TypeScript: 'let angka: number = 5;',
+      Java: 'int angka = 5;',
+      C: 'int angka = 5;',
+      'C++': 'int angka = 5;',
+      'C#': 'int angka = 5;',
+      Go: 'angka := 5',
+      Rust: 'let angka = 5;',
+      Ruby: 'angka = 5',
+      PHP: '$angka = 5;',
+      Swift: 'var angka = 5',
+      Kotlin: 'val angka = 5',
+      Perl: 'my $angka = 5;',
+      Lua: 'local angka = 5',
+    },
+    asm: '; simpan nilai 5 ke sebuah register\nmov eax, 5      ; register eax sekarang berisi 5'
+  },
+  ulang: {
+    label: 'Perulangan 5 kali',
+    output: '01234',
+    code: {
+      Python: 'for i in range(5):\n    ...',
+      JavaScript: 'for (let i = 0; i < 5; i++) { }',
+      TypeScript: 'for (let i = 0; i < 5; i++) { }',
+      Java: 'for (int i = 0; i < 5; i++) { }',
+      C: 'for (int i = 0; i < 5; i++) { }',
+      'C++': 'for (int i = 0; i < 5; i++) { }',
+      'C#': 'for (int i = 0; i < 5; i++) { }',
+      Go: 'for i := 0; i < 5; i++ { }',
+      Rust: 'for i in 0..5 { }',
+      Ruby: '5.times do |i|\nend',
+      PHP: 'for ($i = 0; $i < 5; $i++) { }',
+      Swift: 'for i in 0..<5 { }',
+      Kotlin: 'for (i in 0 until 5) { }',
+      Perl: 'for (my $i = 0; $i < 5; $i++) { }',
+      Lua: 'for i = 1, 5 do end',
+    },
+    asm: '; perulangan pakai register sebagai penghitung\n  mov ecx, 5      ; penghitung = 5\nulang:\n  ; ...isi perulangan...\n  loop ulang      ; kurangi ecx, ulangi jika belum 0'
+  }
+};
+
+let presetAktif = 'cetak';
+let bahasaAktif = new Set(Object.keys(PRESET.cetak.code));
+
+function bikinPresetTombol(){
+  const row = document.getElementById('preset-row');
+  row.innerHTML = '';
+  Object.keys(PRESET).forEach(key=>{
+    const b = document.createElement('button');
+    b.className = 'preset-btn' + (key===presetAktif ? ' active' : '');
+    b.textContent = PRESET[key].label;
+    b.onclick = ()=>{ presetAktif = key; render(); };
+    row.appendChild(b);
+  });
+}
+
+function bikinChipBahasa(){
+  const row = document.getElementById('lang-toggle-row');
+  row.innerHTML = '';
+  Object.keys(PRESET[presetAktif].code).forEach(nama=>{
+    const chip = document.createElement('div');
+    chip.className = 'lang-chip' + (bahasaAktif.has(nama) ? ' on' : '');
+    chip.textContent = nama;
+    chip.onclick = ()=>{
+      if(bahasaAktif.has(nama)) bahasaAktif.delete(nama); else bahasaAktif.add(nama);
+      render();
+    };
+    row.appendChild(chip);
+  });
+}
+
+function pilihSemua(semua){
+  bahasaAktif = semua ? new Set(Object.keys(PRESET[presetAktif].code)) : new Set();
+  render();
+}
+
+function teksKeBiner(teks){
+  return teks.split('').map(ch=>{
+    const kode = ch.codePointAt(0);
+    return kode.toString(2).padStart(8,'0');
+  }).join(' ');
+}
+
+function render(){
+  bikinPresetTombol();
+  bikinChipBahasa();
+
+  const grid = document.getElementById('code-grid');
+  grid.innerHTML = '';
+  const data = PRESET[presetAktif];
+  Object.keys(data.code).forEach(nama=>{
+    if(!bahasaAktif.has(nama)) return;
+    const card = document.createElement('div');
+    card.className = 'code-card show';
+    card.innerHTML = '<div class="lang-name">'+nama+'</div><pre>'+data.code[nama].replace(/</g,'&lt;')+'</pre>';
+    grid.appendChild(card);
+  });
+
+  document.getElementById('binary-out').textContent = teksKeBiner(data.output);
+  document.getElementById('asm-out').textContent = data.asm;
+}
+
+render();
+</script>
+
+</body>
+</html>

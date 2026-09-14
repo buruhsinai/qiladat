@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kenapa Baju Hitam Lebih Panas di Matahari</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600&family=IBM+Plex+Sans&family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0C0A10;--surface:#17131D;--line:#332C40;--ink:#F1EDF5;--muted:#9C93AC;--amber:#E8A34A;--red:#E1614E;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;padding:30px 20px 60px;}
+  .wrap{max-width:560px;margin:0 auto;}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:22px;line-height:1.3;margin:0 0 8px;}
+  p{color:var(--muted);font-size:14px;line-height:1.6;}
+  .tag{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--amber);margin-bottom:10px;}
+  .panel{background:var(--surface);border:1px solid var(--line);padding:22px;margin-top:20px;}
+  .field{margin-bottom:20px;}
+  label{font-size:13px; color:var(--muted); display:block; margin-bottom:6px;}
+  input[type=range]{width:100%;accent-color:var(--amber);}
+  .val{font-family:'IBM Plex Mono',monospace;color:var(--amber);font-size:15px;font-weight:600;}
+  .preset-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+  .preset-btn{background:var(--bg);border:1px solid var(--line);color:var(--muted);padding:6px 11px;font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer;}
+  .preset-btn:hover{border-color:var(--amber);color:var(--amber);}
+  .swatch-row{display:flex;align-items:center;gap:16px;margin-top:6px;}
+  .swatch{width:46px;height:46px;border-radius:8px;border:1px solid var(--line);flex-shrink:0;}
+  .kpis{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); border:1px solid var(--line); margin-top:16px;}
+  .kpi{background:var(--surface); padding:12px;}
+  .kpi .v{font-family:'IBM Plex Mono',monospace; font-size:18px; color:var(--amber);}
+  .kpi .l{font-size:10.5px; color:var(--muted);}
+  .note{margin-top:16px; padding:14px 16px; font-size:13.5px; border-left:3px solid var(--amber); background:#201A29;}
+  footer{margin-top:24px;font-size:11px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="tag">TERKAIT NO. 18 — VERSI SEHARI-HARI (4)</div>
+  <h1>Warna cuma penting untuk cahaya matahari yang datang — bukan untuk panas yang keluar</h1>
+  <p>Baju hitam menyerap sinar matahari (cahaya tampak) jauh lebih banyak dari baju putih — itu bagian yang semua orang tahu. Yang jarang disadari: begitu benda itu memancarkan panasnya sendiri (radiasi termal inframerah), warna aslinya nyaris tidak berpengaruh — hampir semua bahan sehari-hari "gelap" secara inframerah, apa pun warna aslinya di mata kita.</p>
+
+  <div class="panel">
+    <div class="field">
+      <label>Warna permukaan (menentukan penyerapan cahaya matahari): <span class="val" id="vAbsorp"></span></label>
+      <input type="range" id="absorptivitas" min="0.1" max="0.95" step="0.05" value="0.85">
+      <div class="preset-row">
+        <button class="preset-btn" onclick="set(0.15)">Putih</button>
+        <button class="preset-btn" onclick="set(0.4)">Abu-abu terang</button>
+        <button class="preset-btn" onclick="set(0.65)">Merah/biru tua</button>
+        <button class="preset-btn" onclick="set(0.9)">Hitam</button>
+      </div>
+      <div class="swatch-row"><div class="swatch" id="swatch"></div></div>
+    </div>
+    <div class="field">
+      <label>Suhu udara: <span class="val" id="vUdara"></span></label>
+      <input type="range" id="suhuUdara" min="20" max="40" step="1" value="32">
+    </div>
+    <div class="field">
+      <label>Intensitas matahari (W/m²): <span class="val" id="vMatahari"></span></label>
+      <input type="range" id="intensitas" min="200" max="1000" step="25" value="800">
+      <span style="font-family:monospace;font-size:10.5px;color:var(--muted);">800-1000 ≈ siang terik cerah</span>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="v" id="tPermukaan"></div><div class="l">perkiraan suhu permukaan</div></div>
+      <div class="kpi"><div class="v" id="selisih"></div><div class="l">lebih panas dari udara</div></div>
+    </div>
+
+    <div class="note" id="catatan"></div>
+  </div>
+
+  <footer>Model kesetimbangan radiasi sederhana (mengabaikan konveksi angin &amp; keringat) — suhu tubuh/pakaian sungguhan juga didinginkan lewat cara lain. Emisivitas termal diasumsikan tetap ≈0,92 untuk semua warna, sesuai sifat kebanyakan bahan sehari-hari di inframerah.</footer>
+</div>
+
+<script>
+const sigma=5.670e-8;
+const emisivitasTermal=0.92; // hampir sama utk semua warna sehari-hari di inframerah
+
+function set(v){ document.getElementById('absorptivitas').value=v; hitung(); }
+
+function hitung(){
+  const absorp = parseFloat(document.getElementById('absorptivitas').value);
+  const suhuUdaraC = parseFloat(document.getElementById('suhuUdara').value);
+  const intensitas = parseFloat(document.getElementById('intensitas').value);
+
+  document.getElementById('vAbsorp').textContent = (absorp*100).toFixed(0)+'% terserap';
+  document.getElementById('vUdara').textContent = suhuUdaraC+'°C';
+  document.getElementById('vMatahari').textContent = intensitas+' W/m²';
+
+  const gray = Math.round(255*(1-absorp*0.9));
+  document.getElementById('swatch').style.background = `rgb(${gray},${gray},${gray})`;
+
+  const Tudara = suhuUdaraC+273.15;
+  const T4 = Math.pow(Tudara,4) + (absorp*intensitas)/(emisivitasTermal*sigma);
+  const Tpermukaan = Math.pow(T4,0.25)-273.15;
+  const selisih = Tpermukaan-suhuUdaraC;
+
+  document.getElementById('tPermukaan').textContent = Tpermukaan.toFixed(1)+'°C';
+  document.getElementById('selisih').textContent = '+'+selisih.toFixed(1)+'°C';
+
+  document.getElementById('catatan').innerHTML = absorp>0.7
+    ? `<strong>Permukaan gelap:</strong> menyerap ${(absorp*100).toFixed(0)}% cahaya matahari yang datang, sehingga perlu memanas jauh di atas suhu udara sebelum radiasi keluarnya (di inframerah, hampir tidak bergantung warna) bisa mengimbangi. Ini kenapa aspal atau baju hitam terasa jauh lebih panas dipegang siang hari.`
+    : `<strong>Permukaan terang:</strong> memantulkan sebagian besar cahaya matahari, jadi tidak perlu memanas terlalu jauh di atas suhu udara untuk mencapai kesetimbangan. Warna terang menang di sini bukan karena "memancarkan panas lebih baik" — tapi karena dari awal menyerap lebih sedikit.`;
+}
+document.getElementById('absorptivitas').addEventListener('input', hitung);
+document.getElementById('suhuUdara').addEventListener('input', hitung);
+document.getElementById('intensitas').addEventListener('input', hitung);
+hitung();
+</script>
+</body>
+</html>

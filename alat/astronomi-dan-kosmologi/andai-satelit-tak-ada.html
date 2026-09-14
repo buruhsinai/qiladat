@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Andai Satelit Tak Ada — Simulator Pengganti</title>
+<style>
+:root{
+  --bg:#F4F1EB;--putih:#FDFCF8;--kertas:#FFFFFF;
+  --tinta:#181C28;--tinta2:#363B4E;--tinta3:#6A7080;
+  --border:#D8D4CB;--border2:#C4C0B6;
+  --aksen:#1E4D7A;--aksen-bg:#EBF2FA;
+  --hijau:#1A5C38;--hijau-bg:#EAF4EE;
+  --merah:#7A1A1A;--merah-bg:#F8EAEA;
+  --emas:#6A4E0A;--emas-bg:#FAF4E2;
+  --ungu:#3A1870;--ungu-bg:#EEE8FA;
+  --oranye:#7A3A0A;--oranye-bg:#FAF0E2;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:var(--bg);color:var(--tinta);min-height:100vh;font-size:14px}
+
+/* HERO */
+.hero{background:var(--tinta);color:#DDE3F0;padding:2rem 2rem 1.75rem;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 14px);pointer-events:none}
+.h-label{font-family:system-ui,sans-serif;font-size:.62rem;letter-spacing:.12em;color:#6A7A9A;margin-bottom:.6rem}
+.h-ttl{font-size:clamp(1.3rem,3.5vw,2rem);font-weight:normal;line-height:1.25;margin-bottom:.6rem}
+.h-ttl em{font-style:normal;color:#6AAAD8}
+.h-sub{font-family:system-ui,sans-serif;font-size:.78rem;color:#8090A8;max-width:560px;line-height:1.65;margin-bottom:1.25rem}
+.h-stats{display:flex;gap:1.5rem;flex-wrap:wrap}
+.hs{text-align:center}
+.hs-n{font-size:1.5rem;font-weight:bold;font-family:'Courier New',monospace;color:#6AAAD8;line-height:1}
+.hs-l{font-family:system-ui,sans-serif;font-size:.6rem;color:#607090;margin-top:.2rem}
+
+/* NAV */
+.nav{background:var(--kertas);border-bottom:2px solid var(--border);display:flex;overflow-x:auto;position:sticky;top:0;z-index:60}
+.nv{font-family:system-ui,sans-serif;font-size:.7rem;padding:.65rem .95rem;color:var(--tinta3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .15s;user-select:none;flex-shrink:0}
+.nv:hover{color:var(--tinta);background:var(--bg)}
+.nv.ak{color:var(--aksen);border-color:var(--aksen);font-weight:600}
+
+/* LAYOUT */
+.wrap{max-width:1100px;margin:0 auto;padding:1.5rem}
+
+/* KARTU FUNGSI */
+.fungsi-kartu{background:var(--kertas);border:1px solid var(--border);border-radius:9px;margin-bottom:1.5rem;overflow:hidden}
+.fk-header{display:grid;grid-template-columns:auto 1fr auto;gap:1rem;align-items:center;padding:1.1rem 1.25rem;cursor:pointer;transition:background .15s}
+.fk-header:hover{background:var(--bg)}
+.fk-ikon{font-size:1.6rem}
+.fk-info{}
+.fk-kat{font-family:system-ui,sans-serif;font-size:.58rem;letter-spacing:.08em;color:var(--tinta3);margin-bottom:.15rem}
+.fk-judul{font-size:1rem;line-height:1.3;margin-bottom:.2rem}
+.fk-sub{font-family:system-ui,sans-serif;font-size:.7rem;color:var(--tinta3);line-height:1.5}
+.fk-skor{text-align:center;flex-shrink:0}
+.fk-skor-n{font-size:1.5rem;font-weight:bold;font-family:'Courier New',monospace;line-height:1}
+.fk-skor-l{font-family:system-ui,sans-serif;font-size:.58rem;color:var(--tinta3);margin-top:.15rem}
+.fk-chevron{font-size:.75rem;color:var(--tinta3);transition:transform .3s;margin-left:.5rem}
+.fk-chevron.buka{transform:rotate(180deg)}
+
+/* BODY KARTU */
+.fk-body{display:none;border-top:1px solid var(--border)}
+.fk-body.buka{display:block}
+
+/* PANEL PARAMETER */
+.param-panel{background:var(--bg);padding:1.1rem 1.25rem;border-bottom:1px solid var(--border)}
+.pp-ttl{font-family:system-ui,sans-serif;font-size:.62rem;letter-spacing:.08em;color:var(--tinta3);margin-bottom:.85rem;font-weight:600}
+.param-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.85rem}
+.param-item{background:var(--kertas);border:1px solid var(--border);border-radius:6px;padding:.75rem}
+.pi-label{font-family:system-ui,sans-serif;font-size:.65rem;color:var(--tinta3);margin-bottom:.28rem;display:flex;justify-content:space-between}
+.pi-val{font-weight:700;font-family:'Courier New',monospace;font-size:.75rem}
+input[type=range]{width:100%;-webkit-appearance:none;height:3px;border-radius:2px;background:var(--border2);outline:none;display:block;margin-top:.2rem;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--tinta);cursor:pointer}
+.radio-row{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.3rem}
+.radio-btn{font-family:system-ui,sans-serif;font-size:.63rem;padding:.22rem .55rem;border:1px solid var(--border2);border-radius:3px;background:transparent;color:var(--tinta3);cursor:pointer;transition:all .12s}
+.radio-btn:hover{border-color:var(--tinta);color:var(--tinta)}
+.radio-btn.ak{background:var(--tinta);color:var(--bg);border-color:var(--tinta)}
+
+/* PANEL HASIL */
+.hasil-panel{padding:1.1rem 1.25rem}
+.hp-ttl{font-family:system-ui,sans-serif;font-size:.62rem;letter-spacing:.08em;color:var(--tinta3);margin-bottom:.85rem;font-weight:600}
+
+/* METER SKOR TOTAL */
+.skor-meter{display:flex;align-items:center;gap:1rem;margin-bottom:1.1rem;padding:.85rem 1rem;background:var(--bg);border:1px solid var(--border);border-radius:6px}
+.sm-label{font-family:system-ui,sans-serif;font-size:.7rem;color:var(--tinta3);min-width:140px}
+.sm-bar-bg{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.sm-bar{height:100%;border-radius:4px;transition:width .5s ease,background .5s}
+.sm-pct{font-family:'Courier New',monospace;font-size:.9rem;font-weight:700;min-width:40px;text-align:right}
+.sm-verdict{font-family:system-ui,sans-serif;font-size:.68rem;padding:.2rem .5rem;border-radius:3px;white-space:nowrap}
+
+/* PENGGANTI CARDS */
+.pg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.75rem;margin-bottom:1.1rem}
+.pg-kartu{border:1px solid var(--border);border-radius:7px;padding:.85rem;position:relative;overflow:hidden;transition:box-shadow .2s}
+.pg-kartu:hover{box-shadow:0 2px 12px rgba(0,0,0,.07)}
+.pg-kartu::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:7px 0 0 7px}
+.pg-nama{font-family:system-ui,sans-serif;font-size:.8rem;font-weight:600;margin-bottom:.25rem;padding-left:.5rem}
+.pg-desc{font-family:system-ui,sans-serif;font-size:.68rem;color:var(--tinta3);line-height:1.55;padding-left:.5rem;margin-bottom:.55rem}
+.pg-bar-row{display:flex;align-items:center;gap:.5rem;padding-left:.5rem}
+.pg-bar-bg{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.pg-bar-isi{height:100%;border-radius:2px;transition:width .5s ease}
+.pg-pct{font-family:'Courier New',monospace;font-size:.68rem;font-weight:700;min-width:30px;text-align:right}
+.pg-tags{display:flex;gap:.3rem;flex-wrap:wrap;padding-left:.5rem;margin-top:.4rem}
+.pg-tag{font-family:system-ui,sans-serif;font-size:.58rem;padding:.1rem .35rem;border-radius:3px}
+
+/* PENJELASAN */
+.pen-box{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.85rem 1rem;font-family:system-ui,sans-serif;font-size:.73rem;color:var(--tinta2);line-height:1.72}
+.pen-box strong{color:var(--tinta)}
+
+/* RINGKASAN GLOBAL */
+.ringkasan{background:var(--tinta);color:#D8E0F0;border-radius:9px;padding:1.75rem;margin-top:1rem}
+.rk-ttl{font-size:1.1rem;font-weight:normal;margin-bottom:1.25rem;color:#E4EAF8}
+.rk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.75rem;margin-bottom:1.25rem}
+.rk-item{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:.85rem}
+.rki-label{font-family:system-ui,sans-serif;font-size:.6rem;color:#7A8AAA;margin-bottom:.35rem}
+.rki-val{font-size:1.1rem;font-weight:bold;font-family:'Courier New',monospace;color:#6AAAD8}
+.rki-sub{font-family:system-ui,sans-serif;font-size:.62rem;color:#6070A0;margin-top:.12rem}
+.kesimpulan{font-family:system-ui,sans-serif;font-size:.78rem;color:#8090B0;line-height:1.75;border-top:1px solid rgba(255,255,255,.08);padding-top:1rem}
+.kesimpulan strong{color:#C0D0E8}
+
+@media(max-width:600px){
+  .hero{padding:1.5rem 1rem}
+  .wrap{padding:1rem}
+  .param-grid{grid-template-columns:1fr}
+  .pg-grid{grid-template-columns:1fr}
+  .fk-header{grid-template-columns:auto 1fr}
+  .fk-skor{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="h-label">Eksplorasi Teknis Jujur · Bukan Konspirasi</div>
+  <h1 class="h-ttl">Andai <em>Satelit</em> Tak Ada —<br>Simulator Teknologi Pengganti</h1>
+  <div class="h-sub">Geser parameter kondisi untuk tiap fungsi, lihat bagaimana skor kelayakan pengganti berubah secara realtime. Semua perhitungan dari fisika dan data teknis.</div>
+  <div class="h-stats">
+    <div class="hs"><div class="hs-n" id="statTotal">12</div><div class="hs-l">Fungsi ditelusuri</div></div>
+    <div class="hs"><div class="hs-n" id="statTinggi">—</div><div class="hs-l">Pengganti sangat layak</div></div>
+    <div class="hs"><div class="hs-n" id="statRata">—</div><div class="hs-l">Rata-rata kelayakan</div></div>
+    <div class="hs"><div class="hs-n">0</div><div class="hs-l">Benar-benar tak tergantikan</div></div>
+  </div>
+</div>
+
+<div class="nav" id="navBar"></div>
+
+<div class="wrap" id="mainWrap"></div>
+
+<script>
+// ============================================================
+// DATA FUNGSI + LOGIKA SCORING DINAMIS
+// ============================================================
+const FUNGSI=[
+{
+  id:'navigasi', ikon:'🧭', kat:'Navigasi & Posisi',
+  judul:'Penentuan Posisi & Navigasi',
+  sub:'Menentukan lintang-bujur secara real-time untuk kendaraan, kapal, pesawat, pejalan kaki, dan sistem otonom.',
+  warna:'#1A5C38',
+  params:[
+    {id:'akurasi', label:'Kebutuhan akurasi', unit:'m', min:1, max:1000, val:50, log:true},
+    {id:'area', label:'Luas area operasi', unit:'', vals:['Kota/lokal','Regional','Nasional','Lintas negara'], val:1},
+    {id:'indoor', label:'Perlu indoor?', unit:'', vals:['Tidak','Sebagian','Ya, kritis'], val:0},
+    {id:'realtime', label:'Latensi posisi', unit:'', vals:['< 1 detik','< 10 detik','< 1 menit'], val:0},
+  ],
+  pengganti:[
+    {nama:'eLORAN / LORAN-C',desc:'Navigasi radio darat TDOA, 8–20m akurasi modern. Korea Selatan & Inggris sudah aktif. Gelombang tanah 100kHz, tak butuh orbit.',warna:'#1A5C38',
+     skor:function(p){
+       let s=80;
+       if(p.akurasi<10)s-=30; else if(p.akurasi<50)s-=15; else if(p.akurasi>200)s+=5;
+       if(p.area===3)s-=20; else if(p.area===2)s-=5;
+       if(p.indoor===2)s-=40; else if(p.indoor===1)s-=15;
+       if(p.realtime===2)s+=10;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Sudah beroperasi','Gelombang tanah','Tahan jamming']},
+    {nama:'Navigasi Inersia (INS)',desc:'Akselerometer + giroskop presisi. Tanpa sinyal eksternal, akurasi menurun seiring waktu (drift). Kapal selam militer menggunakannya.',warna:'#2A5C8A',
+     skor:function(p){
+       let s=70;
+       if(p.realtime===0)s+=5;
+       if(p.area===0)s+=10; else if(p.area===3)s-=20;
+       if(p.akurasi<5)s-=25; else if(p.akurasi>100)s+=10;
+       if(p.indoor===2)s+=20;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Sudah ada','Tanpa sinyal eksternal','Drift masalah jangka panjang']},
+    {nama:'DME/VOR (Penerbangan)',desc:'Menara radio darat yang sudah dipakai penerbangan sipil sejak 1950-an. Masih beroperasi sebagai backup GPS di seluruh dunia.',warna:'#4A2080',
+     skor:function(p){
+       let s=75;
+       if(p.area===0)s-=20;
+       if(p.area===3)s+=10;
+       if(p.indoor>0)s-=40;
+       if(p.akurasi<100)s-=10;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Operasional global','Khusus penerbangan']},
+    {nama:'Triangulasi Seluler (BTS)',desc:'Menara BTS memberikan posisi 50–300m tanpa GPS. Sudah aktif sebagai fallback di semua ponsel modern.',warna:'#7A5C10',
+     skor:function(p){
+       let s=65;
+       if(p.akurasi>100)s+=15; else if(p.akurasi<20)s-=30;
+       if(p.area===0)s+=15; else if(p.area===3)s-=25;
+       if(p.indoor===2)s+=10;
+       if(p.realtime===2)s+=5;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Sudah ada','Hanya di area BTS','Akurasi terbatas']},
+  ],
+  analisis:function(p,skor){
+    const akStr=p.akurasi+'m';
+    const areaStr=['lokal','regional','nasional','lintas negara'][p.area];
+    return `Untuk kebutuhan akurasi <strong>${akStr}</strong> di area <strong>${areaStr}</strong>${p.indoor>0?', dengan kebutuhan indoor':''}: eLORAN menjadi kandidat utama untuk navigasi darat dan laut ${p.akurasi>20?'(akurasi cukup)':'(akurasi perlu augmentasi)'}. Navigasi inersia unggul untuk keperluan indoor dan area tanpa sinyal. ${p.area===3?'Untuk cakupan lintas negara, kombinasi INS + eLORAN adalah solusi paling realistis tanpa satelit.':''}`;
+  }
+},
+{
+  id:'cuaca', ikon:'🌦️', kat:'Observasi Atmosfer',
+  judul:'Pemantauan & Prediksi Cuaca',
+  sub:'Citra awan, suhu permukaan laut, pergerakan badai, profil atmosfer untuk prediksi cuaca regional dan global.',
+  warna:'#2A5C8A',
+  params:[
+    {id:'cakupan', label:'Cakupan area', unit:'', vals:['Kota (< 50km)','Provinsi (< 500km)','Nasional','Samudera/Global'], val:2},
+    {id:'prediksi', label:'Horison prediksi', unit:'', vals:['< 6 jam','1–3 hari','4–7 hari','> 1 minggu'], val:1},
+    {id:'resolusi', label:'Resolusi spasial', unit:'', vals:['> 10 km (kasar)','1–10 km','< 1 km (presisi)'], val:1},
+    {id:'speed', label:'Kecepatan update', unit:'', vals:['Per hari','Per jam','Per 10 menit','Real-time'], val:2},
+  ],
+  pengganti:[
+    {nama:'Radar Doppler Darat',desc:'300–450km per unit. Indonesia punya 44 unit. Presipitasi + angin real-time. Sangat andal untuk peringatan dini badai.',warna:'#1A5C38',
+     skor:function(p){
+       let s=85;
+       if(p.cakupan===3)s-=35; else if(p.cakupan===2)s-=10;
+       if(p.speed===3)s+=5;
+       if(p.resolusi===2)s+=5;
+       if(p.prediksi===3)s-=20;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Beroperasi','Update < 10 menit','Terbatas jarak']},
+    {nama:'Balon Radiosonde',desc:'Profil vertikal atmosfer sangat akurat. Dilepas 2x/hari dari 900+ titik global. Data suhu, tekanan, kelembapan, angin per ketinggian.',warna:'#2A5C8A',
+     skor:function(p){
+       let s=75;
+       if(p.resolusi===2)s-=10;
+       if(p.speed===3)s-=30; else if(p.speed===2)s-=15;
+       if(p.prediksi===2||p.prediksi===3)s+=10;
+       if(p.cakupan===0||p.cakupan===1)s+=10;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Sudah aktif','Data vertikal presisi','Update 2x/hari']},
+    {nama:'Drone Stratosfer (HAPs)',desc:'Zephyr S: 64 hari nonstop di 21km. Resolusi lebih baik dari satelit GEO. Cakupan ~1000km², bisa diposisikan ulang.',warna:'#7A5C10',
+     skor:function(p){
+       let s=65;
+       if(p.cakupan===0||p.cakupan===1)s+=10;
+       if(p.resolusi===2)s+=15;
+       if(p.speed===2||p.speed===3)s+=5;
+       if(p.cakupan===3)s-=20;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Terbukti teknis','Resolusi tinggi','Biaya operasional']},
+    {nama:'Model Numerik + AWS Darat',desc:'Jaringan stasiun otomatis + model WRF/GFS. Sebelum era satelit pun prediksi 1–3 hari sudah memadai untuk peringatan.',warna:'#4A2080',
+     skor:function(p){
+       let s=70;
+       if(p.prediksi===0||p.prediksi===1)s+=15;
+       if(p.prediksi===3)s-=15;
+       if(p.cakupan===3)s-=20;
+       if(p.resolusi===0)s+=10;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Sudah ada','Tanpa satelit apapun','Tergantung jaringan AWS']},
+  ],
+  analisis:function(p,skor){
+    const cStr=['kota','provinsi','nasional','samudera/global'][p.cakupan];
+    const pStr=['< 6 jam','1–3 hari','4–7 hari','lebih dari seminggu'][p.prediksi];
+    return `Untuk prediksi <strong>${pStr}</strong> di skala <strong>${cStr}</strong>: ${p.cakupan<2?'Radar doppler dan radiosonde sudah sangat memadai — ini yang BMKG gunakan sehari-hari.':'Tantangan terbesar adalah cakupan samudera dan area tanpa stasiun darat.'} ${p.prediksi>2?'Prediksi lebih dari 7 hari memang bergantung pada data global — ini yang paling sulit digantikan tanpa satelit.':'Untuk horison prediksi ini, teknologi darat sudah terbukti mencukupi.'} Drone stratosfer adalah kandidat paling menjanjikan untuk menggantikan citra satelit cuaca.`;
+  }
+},
+{
+  id:'internet', ikon:'🌐', kat:'Komunikasi Data',
+  judul:'Internet & Komunikasi Data Global',
+  sub:'Konektivitas data antarnegara, antarkontinen, dan ke lokasi terpencil.',
+  warna:'#1A5C38',
+  params:[
+    {id:'bw', label:'Kebutuhan bandwidth', unit:'', vals:['< 1 Mbps (dasar)','1–100 Mbps','100 Mbps – 1 Gbps','> 1 Gbps (masif)'], val:1},
+    {id:'latensi', label:'Latensi maksimum', unit:'', vals:['< 10 ms (kritis)','10–50 ms','50–600 ms','> 600 ms (OK)'], val:1},
+    {id:'lokasi', label:'Lokasi pengguna', unit:'', vals:['Kota besar','Kota kecil / pedesaan','Pulau terpencil','Kapal/pesawat'], val:0},
+    {id:'keandalan', label:'Keandalan minimal', unit:'%', min:50, max:100, val:99},
+  ],
+  pengganti:[
+    {nama:'Kabel Fiber Optik Bawah Laut',desc:'400 kabel, 1,2 juta km, ribuan Tbps. Sudah membawa 95%+ trafik internet global. Latensi 50–150ms. LEBIH baik dari satelit GEO.',warna:'#1A5C38',
+     skor:function(p){
+       let s=95;
+       if(p.lokasi===2)s-=60; else if(p.lokasi===3)s-=50; else if(p.lokasi===1)s-=10;
+       if(p.latensi===0)s-=10; else if(p.latensi===1)s+=5;
+       if(p.bw===3)s+=5;
+       if(p.keandalan>99)s-=5;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Dominan saat ini','Kapasitas sangat besar','Tidak bisa ke pulau terpencil']},
+    {nama:'Menara BTS / 5G Terestrial',desc:'Untuk konektivitas dalam negeri. 5G mencapai 10+ Gbps. Bergantung pada backhaul fiber. Tidak perlu satelit untuk komunikasi dalam kota.',warna:'#2A5C8A',
+     skor:function(p){
+       let s=80;
+       if(p.lokasi===0)s+=10; else if(p.lokasi===1)s-=5; else if(p.lokasi===2)s-=45; else if(p.lokasi===3)s-=60;
+       if(p.bw===3)s+=5;
+       if(p.latensi===0)s+=10;
+       if(p.keandalan>99)s-=5;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Sudah ada','Latensi rendah','Jangkauan terbatas']},
+    {nama:'Balon Stratosfer Relay',desc:'1 balon di 20km = radius 80km. Bisa diposisikan di atas area terpencil. Google Loon: terbukti teknis, 700 kbps–10 Mbps per pengguna.',warna:'#7A5C10',
+     skor:function(p){
+       let s=60;
+       if(p.lokasi===2)s+=20; else if(p.lokasi===1)s+=10; else if(p.lokasi===0)s-=20;
+       if(p.bw===0)s+=15; else if(p.bw===3)s-=30;
+       if(p.latensi===2||p.latensi===3)s+=10;
+       if(p.keandalan>95)s-=10;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Terbukti teknis','Cocok area terpencil','Bandwidth terbatas']},
+    {nama:'HF Data Radio (Skywave)',desc:'Pantulan ionosfer, jangkauan global, 50kbps–2Mbps. Militer masih aktif menggunakannya. Cocok untuk komunikasi dasar dan darurat.',warna:'#4A2080',
+     skor:function(p){
+       let s=40;
+       if(p.bw===0)s+=20; else if(p.bw===2)s-=25; else if(p.bw===3)s-=35;
+       if(p.lokasi===2||p.lokasi===3)s+=20;
+       if(p.latensi===3)s+=10;
+       if(p.keandalan<80)s+=10;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Sudah ada','Jangkauan global','Bandwidth sangat terbatas']},
+  ],
+  analisis:function(p,skor){
+    const lokStr=['kota besar','kota kecil/pedesaan','pulau terpencil','kapal/pesawat'][p.lokasi];
+    const bwStr=['< 1 Mbps','1–100 Mbps','100 Mbps–1 Gbps','> 1 Gbps'][p.bw];
+    return `Untuk pengguna di <strong>${lokStr}</strong> dengan kebutuhan bandwidth <strong>${bwStr}</strong>: ${p.lokasi===0||p.lokasi===1?'Ini adalah kasus paling mudah — fiber optik dan BTS sudah sangat memadai, TANPA satelit. 95% trafik internet global sudah lewat kabel bawah laut.':p.lokasi===2?'Pulau terpencil adalah tantangan nyata. Balon stratosfer adalah solusi paling menjanjikan secara teknis — lebih murah dari kabel bawah laut, lebih stabil dari satelit.':'Kapal dan pesawat memang salah satu use case satelit yang paling valid. HF radio dan balon stratosfer bisa menangani kebutuhan dasar.'}`;
+  }
+},
+{
+  id:'waktu', ikon:'⏱️', kat:'Sinkronisasi Waktu',
+  judul:'Sinkronisasi Waktu Presisi',
+  sub:'GPS digunakan sebagai sumber waktu nanosecond untuk telekomunikasi, perbankan, jaringan listrik, dan internet.',
+  warna:'#3A1870',
+  params:[
+    {id:'presisi', label:'Presisi waktu yang dibutuhkan', unit:'', vals:['< 1 ms (longgar)','< 1 µs (sedang)','< 1 ns (presisi)','< 1 ps (laboratorium)'], val:2},
+    {id:'sektor', label:'Sektor aplikasi', unit:'', vals:['Internet / cloud','Telekomunikasi','Keuangan / trading','Listrik / grid','Riset ilmiah'], val:2},
+    {id:'jangkauan', label:'Jangkauan distribusi', unit:'', vals:['1 gedung','Satu kota','Nasional','Global'], val:2},
+  ],
+  pengganti:[
+    {nama:'Jam Atom Cesium Lokal',desc:'Akurasi 10⁻¹⁶ detik — LEBIH akurat dari GPS. Semua sinyal GPS bersumber dari jam atom di darat. Harga jam atom portabel turun drastis.',warna:'#1A5C38',
+     skor:function(p){
+       let s=95;
+       if(p.jangkauan===3)s-=30;
+       else if(p.jangkauan===2)s-=10;
+       if(p.presisi===3)s+=3;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Lebih akurat dari GPS','Sudah ada','Perlu distribusi']},
+    {nama:'PTP/IEEE 1588 via Fiber (White Rabbit)',desc:'Sub-nanosecond sync melalui jaringan fiber. CERN menggunakannya. Tidak butuh GPS sama sekali. Bank-bank besar sudah beralih ke ini.',warna:'#2A5C8A',
+     skor:function(p){
+       let s=90;
+       if(p.jangkauan===3)s-=20; else if(p.jangkauan===2)s-=5;
+       if(p.presisi===3)s+=5;
+       if(p.sektor===4)s+=5;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Sub-nanosecond','Sudah digunakan bank','Butuh infrastruktur fiber']},
+    {nama:'Siaran Frekuensi Standar (WWV/JJY/RWM)',desc:'Stasiun radio pemerintah yang memancarkan sinyal waktu presisi. BMKG memancarkan sinyal standar. Jangkauan ribuan km.',warna:'#4A2080',
+     skor:function(p){
+       let s=80;
+       if(p.presisi===2||p.presisi===3)s-=20;
+       if(p.jangkauan===3)s+=5;
+       if(p.sektor===4)s-=10;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Sudah ada','Jangkauan luas','Presisi µs, bukan ns']},
+  ],
+  analisis:function(p,skor){
+    const pStr=['< 1 ms','< 1 µs','< 1 ns','< 1 ps'][p.presisi];
+    const sStr=['internet/cloud','telekomunikasi','keuangan/trading','listrik/grid','riset ilmiah'][p.sektor];
+    return `Ini adalah ironi menarik: <strong>GPS menggunakan jam atom — bukan sebaliknya</strong>. Untuk kebutuhan <strong>${pStr}</strong> di sektor <strong>${sStr}</strong>: jam atom darat + White Rabbit sudah cukup untuk hampir semua keperluan. ${p.sektor===2?'Sektor keuangan khususnya sudah banyak beralih ke PTP fiber karena lebih andal dan tidak bergantung pada infrastruktur yang bisa dijam.':''} ${p.jangkauan===3?'Distribusi waktu global memang membutuhkan infrastruktur distribusi — tapi solusinya adalah jaringan fiber, bukan harus satelit.':''}`;
+  }
+},
+{
+  id:'citra', ikon:'🗺️', kat:'Observasi Bumi',
+  judul:'Pencitraan & Pemetaan Bumi',
+  sub:'Foto dan citra multispektral permukaan bumi untuk peta, pertanian, mitigasi bencana, perubahan lingkungan.',
+  warna:'#1A5C38',
+  params:[
+    {id:'resolusi', label:'Resolusi citra', unit:'', vals:['> 10 m (regional)','1–10 m (detail)','10–100 cm (presisi)','< 10 cm (engineering)'], val:1},
+    {id:'frekuensi', label:'Frekuensi pembaruan', unit:'', vals:['Tahunan','Bulanan','Mingguan','Harian / real-time'], val:1},
+    {id:'cakupan', label:'Cakupan area sekaligus', unit:'', vals:['Satu lokasi','Kabupaten','Provinsi / pulau','Seluruh nusantara'], val:2},
+    {id:'spektral', label:'Kebutuhan spektral', unit:'', vals:['Foto biasa (RGB)','Multispektral (NDVI dll)','Termal','Radar (SAR, menembus awan)'], val:0},
+  ],
+  pengganti:[
+    {nama:'Drone & Pesawat Foto Udara',desc:'Resolusi cm, fleksibel, bisa jadwal khusus. Sudah digunakan BIG, Badan Geologi, dan perusahaan tambang di seluruh Indonesia.',warna:'#1A5C38',
+     skor:function(p){
+       let s=85;
+       if(p.cakupan===3)s-=40; else if(p.cakupan===2)s-=15;
+       if(p.resolusi===3)s+=10; else if(p.resolusi===0)s-=5;
+       if(p.frekuensi===3)s+=5;
+       if(p.spektral===3)s-=20; else if(p.spektral===2)s+=5;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Sudah ada','Resolusi tertinggi','Terbatas cakupan luas']},
+    {nama:'HAPs / Drone Stratosfer',desc:'Ketinggian 20–40km, cakupan 1000km², resolusi 100x lebih baik dari satelit GEO. Zephyr S: 64 hari nonstop. Airbus, Boeing, dan Google sudah uji.',warna:'#7A5C10',
+     skor:function(p){
+       let s=70;
+       if(p.cakupan===2)s+=10; else if(p.cakupan===3)s-=15;
+       if(p.resolusi===1||p.resolusi===2)s+=10;
+       if(p.frekuensi===3)s+=5;
+       if(p.spektral===2)s+=5;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Berkembang pesat','Cakupan regional','Bergantung cuaca']},
+    {nama:'LiDAR Airborne',desc:'Pemetaan topografi 3D presisi tinggi. Akurasi < 5cm vertikal. Sudah digunakan Badan Geologi Indonesia untuk peta bahaya longsor dan banjir.',warna:'#2A5C8A',
+     skor:function(p){
+       let s=75;
+       if(p.resolusi===2||p.resolusi===3)s+=15;
+       if(p.cakupan===3)s-=25;
+       if(p.spektral===0)s-=20;
+       if(p.spektral===2)s+=5;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Sudah ada','Sangat presisi 3D','Mahal per km²']},
+    {nama:'AI Rekonstruksi + Data Sensor Darat',desc:'Model deep learning merekonstruksi citra resolusi tinggi dari data sensor darat dan foto historis. Sudah diterapkan untuk monitoring pertanian.',warna:'#4A2080',
+     skor:function(p){
+       let s=50;
+       if(p.frekuensi===3)s+=15;
+       if(p.resolusi===0)s+=10; else if(p.resolusi===3)s-=15;
+       if(p.spektral===1)s+=10;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Berkembang pesat','Belum untuk semua spektral','Perlu data historis']},
+  ],
+  analisis:function(p,skor){
+    const rStr=['> 10m','1–10m','10–100cm','< 10cm'][p.resolusi];
+    const cStr=['satu lokasi','kabupaten','provinsi/pulau','seluruh nusantara'][p.cakupan];
+    return `Untuk citra resolusi <strong>${rStr}</strong> di area <strong>${cStr}</strong>: ${p.cakupan===3?'Cakupan seluruh nusantara secara simultan memang yang paling sulit digantikan tanpa satelit. Namun "citra satelit Indonesia" yang sering dilihat sebenarnya adalah komposit dari banyak lintasan berbeda waktu — bukan satu momen.':'Drone dan pesawat foto udara sudah lebih dari cukup untuk cakupan ini, dengan resolusi yang jauh lebih tinggi dari satelit.'} ${p.spektral===3?'Radar SAR (menembus awan) memang keunggulan satelit yang paling sulit ditiru dari udara — ini yang paling valid untuk dipertahankan.':''}`;
+  }
+},
+{
+  id:'siaran', ikon:'📡', kat:'Komunikasi',
+  judul:'Siaran TV, Radio & Distribusi Konten',
+  sub:'Distribusi konten audio-video ke jutaan penerima simultan dalam area sangat luas.',
+  warna:'#7A3A0A',
+  params:[
+    {id:'area', label:'Cakupan siaran', unit:'', vals:['Satu kota','Satu provinsi','Nasional','Internasional'], val:2},
+    {id:'pengguna', label:'Jumlah penerima simultan', unit:'', vals:['< 10 ribu','10 ribu – 1 juta','> 1 juta','> 10 juta'], val:2},
+    {id:'kualitas', label:'Kualitas konten', unit:'', vals:['Audio / SD','HD (1080p)','4K / HDR','AR/VR (real-time)'], val:1},
+  ],
+  pengganti:[
+    {nama:'DVB-T2 Terestrial Digital',desc:'TV digital darat. Indonesia sudah selesai migrasi 2022. 1 menara = 50–100km. Jaringan nasional sudah ada dan beroperasi.',warna:'#1A5C38',
+     skor:function(p){
+       let s=85;
+       if(p.area===3)s-=25;
+       if(p.kualitas===3)s-=20; else if(p.kualitas===2)s-=5;
+       if(p.pengguna===3)s+=5;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Operasional di Indonesia','Sudah menggantikan analog','Tidak untuk internasional']},
+    {nama:'CDN Internet (Streaming)',desc:'Netflix, YouTube, Spotify sudah menggantikan siaran satelit untuk pengguna perkotaan. Bergantung pada fiber optik — bukan satelit.',warna:'#2A5C8A',
+     skor:function(p){
+       let s=80;
+       if(p.kualitas===2)s+=10; else if(p.kualitas===3)s+=5;
+       if(p.area===3)s-=5;
+       if(p.pengguna===3)s+=5;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Sudah dominan kota','Bergantung fiber','Tidak untuk daerah terpencil']},
+    {nama:'Radio Gelombang Pendek HF',desc:'Siaran BBC, VOA, Radio Australia via pantulan ionosfer. Jangkauan ribuan km. Peringatan darurat hingga kapal di tengah samudra.',warna:'#7A3A0A',
+     skor:function(p){
+       let s=60;
+       if(p.area===3)s+=20;
+       if(p.kualitas===0)s+=15; else if(p.kualitas===2)s-=30;
+       if(p.pengguna===2||p.pengguna===3)s+=5;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Sudah ada > 80 tahun','Jangkauan global','Kualitas audio saja']},
+  ],
+  analisis:function(p,skor){
+    const aStr=['kota','provinsi','nasional','internasional'][p.area];
+    return `Untuk siaran <strong>${['SD/audio','HD','4K/HDR','AR/VR'][p.kualitas]}</strong> ke area <strong>${aStr}</strong>: ${p.area<2?'Ini sudah sepenuhnya ditangani oleh DVB-T2 terestrial dan internet streaming — Indonesia bahkan sudah menyelesaikan migrasi dari siaran analog ke digital tanpa bergantung pada perubahan apapun di sisi satelit.':'Siaran nasional Indonesia sudah sebagian besar dilayani DVB-T2. Yang benar-benar bergantung pada satelit adalah siaran ke kapal dan pelosok ekstrem.'} ${p.kualitas===3?'Untuk AR/VR real-time, latensisi kritis — fiber optik justru lebih unggul dari satelit untuk ini.':''}`;
+  }
+},
+{
+  id:'darurat', ikon:'🚨', kat:'Komunikasi Darurat',
+  judul:'Komunikasi Darurat & Respons Bencana',
+  sub:'Koordinasi saat infrastruktur darat rusak, SAR, peringatan dini tsunami, evakuasi.',
+  warna:'#7A1A1A',
+  params:[
+    {id:'skenario', label:'Skenario bencana', unit:'', vals:['Gempa lokal','Banjir regional','Tsunami / multi-provinsi','Bencana nasional'], val:1},
+    {id:'speed', label:'Waktu aktivasi sistem', unit:'', vals:['Dalam menit','Dalam jam','Dalam hari','Dalam minggu'], val:1},
+    {id:'jangkauan', label:'Area komunikasi', unit:'', vals:['< 100km','100–500km','500–2000km','> 2000km'], val:1},
+  ],
+  pengganti:[
+    {nama:'Radio Amateur / ORARI',desc:'3 juta operator di 200+ negara, beroperasi tanpa infrastruktur komersial. ORARI memainkan peran kritis di gempa Yogya 2006, Aceh 2004, Cianjur 2022.',warna:'#1A5C38',
+     skor:function(p){
+       let s=85;
+       if(p.jangkauan===3)s-=20;
+       if(p.speed===0)s-=10;
+       if(p.skenario===3)s-=10;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Terbukti di Indonesia','Tanpa infrastruktur','Skala kecil per operator']},
+    {nama:'InaTEWS / Sensor Tsunami OBP',desc:'Jaringan sensor dasar laut + kabel bawah laut ke stasiun darat. BMKG sudah mengoperasikannya. Deteksi tsunami tanpa satelit.',warna:'#2A5C8A',
+     skor:function(p){
+       let s=80;
+       if(p.skenario===0)s-=20;
+       if(p.speed===0||p.speed===1)s+=15;
+       if(p.jangkauan===2||p.jangkauan===3)s+=5;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Beroperasi di Indonesia','Real-time','Khusus tsunami / seismik']},
+    {nama:'Balon Komunikasi Darurat',desc:'Balon helium dengan relay radio bisa didirikan dalam 1–2 jam di area bencana. Militer dan NGO internasional sudah menggunakannya.',warna:'#7A3A0A',
+     skor:function(p){
+       let s=70;
+       if(p.speed===0)s-=20; else if(p.speed===1)s+=5;
+       if(p.jangkauan===1||p.jangkauan===2)s+=10;
+       if(p.jangkauan===3)s-=15;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Deploy < 2 jam','Jangkauan lokal-regional','Perlu infrastruktur minimal']},
+    {nama:'Siaran AM / RRI Gelombang Panjang',desc:'Peringatan bencana via siaran AM menjangkau jutaan orang tanpa internet atau smartphone. RRI masih menyiarkan sinyal darurat. Jepang menjaga infrastruktur ini.',warna:'#4A2080',
+     skor:function(p){
+       let s=75;
+       if(p.jangkauan===2||p.jangkauan===3)s+=10;
+       if(p.speed===0)s+=5;
+       if(p.skenario===3)s+=10;
+       return Math.max(5,Math.min(98,s));
+     },
+     tags:['Sudah ada','Menjangkau tanpa smartphone','Satu arah saja']},
+  ],
+  analisis:function(p,skor){
+    const sStr=['gempa lokal','banjir regional','tsunami/multi-provinsi','bencana nasional'][p.skenario];
+    return `Untuk respons <strong>${sStr}</strong> dengan aktivasi dalam <strong>${['menit','jam','hari','minggu'][p.speed]}</strong>: Pengalaman gempa Aceh 2004 dan Cianjur 2022 membuktikan bahwa ORARI dan radio HF mampu mengkoordinasikan respons bencana tanpa satelit. ${p.skenario>=2?'Untuk skala bencana lebih besar, kombinasi InaTEWS + balon komunikasi + siaran AM adalah lapisan redundansi yang kuat.':'Radio amateur dan siaran AM sudah lebih dari cukup untuk skala ini.'} Yang berubah dengan satelit hanya kecepatan informasi — bukan kemungkinan dasarnya.`;
+  }
+},
+];
+
+// ============================================================
+// ENGINE RENDER
+// ============================================================
+function kelColor(s){return s>=75?'#1A5C38':s>=50?'#7A5C10':'#7A1A1A';}
+function kelBg(s){return s>=75?'#EAF4EE':s>=50?'#FAF4E2':'#F8EAEA';}
+function kelLabel(s){return s>=75?'Sangat layak':s>=50?'Cukup layak':'Perlu pengembangan';}
+
+function evalParam(f){
+  // Kumpulkan nilai parameter
+  const p={};
+  f.params.forEach(pr=>{
+    const el=document.getElementById(`${f.id}_${pr.id}`);
+    if(el) p[pr.id]=parseFloat(el.value);
+  });
+  return p;
+}
+
+function hitungSkorFungsi(f,p){
+  const scores=f.pengganti.map(pg=>pg.skor(p));
+  return Math.round(Math.max(...scores));
+}
+
+function updateFungsi(f){
+  const p=evalParam(f);
+  // Update label nilai param
+  f.params.forEach(pr=>{
+    const valEl=document.getElementById(`${f.id}_${pr.id}_val`);
+    if(!valEl)return;
+    if(pr.vals){
+      valEl.textContent=pr.vals[Math.round(p[pr.id])];
+    } else if(pr.log){
+      valEl.textContent=Math.round(p[pr.id])+'m';
+    } else {
+      valEl.textContent=Math.round(p[pr.id])+(pr.unit||'');
+    }
+  });
+  // Update skor pengganti
+  f.pengganti.forEach((pg,i)=>{
+    const s=pg.skor(p);
+    const barEl=document.getElementById(`${f.id}_pg${i}_bar`);
+    const pctEl=document.getElementById(`${f.id}_pg${i}_pct`);
+    const krtEl=document.getElementById(`${f.id}_pg${i}_krt`);
+    if(barEl){barEl.style.width=`${s}%`;barEl.style.background=kelColor(s);}
+    if(pctEl){pctEl.textContent=`${s}%`;pctEl.style.color=kelColor(s);}
+    if(krtEl){krtEl.style.background=kelBg(s)+'44';}
+  });
+  // Update skor total kartu
+  const skorTotal=hitungSkorFungsi(f,p);
+  const snEl=document.getElementById(`${f.id}_skor_n`);
+  if(snEl){snEl.textContent=`${skorTotal}%`;snEl.style.color=kelColor(skorTotal);}
+  // Meter total
+  const mBarEl=document.getElementById(`${f.id}_meter_bar`);
+  const mPctEl=document.getElementById(`${f.id}_meter_pct`);
+  const mVerdEl=document.getElementById(`${f.id}_meter_verd`);
+  if(mBarEl){mBarEl.style.width=`${skorTotal}%`;mBarEl.style.background=kelColor(skorTotal);}
+  if(mPctEl){mPctEl.textContent=`${skorTotal}%`;mPctEl.style.color=kelColor(skorTotal);}
+  if(mVerdEl){mVerdEl.textContent=kelLabel(skorTotal);mVerdEl.style.background=kelBg(skorTotal);mVerdEl.style.color=kelColor(skorTotal);}
+  // Analisis
+  const penEl=document.getElementById(`${f.id}_analisis`);
+  if(penEl&&f.analisis) penEl.innerHTML=f.analisis(p,skorTotal);
+  // Update hero stats
+  updateHeroStats();
+}
+
+function updateHeroStats(){
+  let total=0,tinggi=0,sum=0;
+  FUNGSI.forEach(f=>{
+    const p=evalParam(f);
+    const s=hitungSkorFungsi(f,p);
+    sum+=s; total++; if(s>=75)tinggi++;
+  });
+  const rata=total?Math.round(sum/total):0;
+  document.getElementById('statTinggi').textContent=tinggi;
+  document.getElementById('statRata').textContent=rata+'%';
+}
+
+function buildParamHTML(f){
+  return f.params.map(pr=>{
+    const valId=`${f.id}_${pr.id}_val`;
+    let inputHTML='';
+    let initVal='';
+    if(pr.vals){
+      initVal=pr.vals[pr.val];
+      inputHTML=`<div class="radio-row" id="${f.id}_${pr.id}_rrow">
+        ${pr.vals.map((v,i)=>`<button class="radio-btn${i===pr.val?' ak':''}" data-fid="${f.id}" data-pid="${pr.id}" data-vi="${i}">${v}</button>`).join('')}
+      </div>`;
+    } else if(pr.log){
+      initVal=pr.val+'m';
+      inputHTML=`<input type="range" min="${pr.min}" max="${pr.max}" value="${pr.val}" id="${f.id}_${pr.id}" step="1">`;
+    } else {
+      initVal=pr.val+(pr.unit||'');
+      inputHTML=`<input type="range" min="${pr.min||0}" max="${pr.max||100}" value="${pr.val}" id="${f.id}_${pr.id}" step="1">`;
+    }
+    return `<div class="param-item">
+      <div class="pi-label"><span>${pr.label}</span><span class="pi-val" id="${valId}">${initVal}</span></div>
+      ${inputHTML}
+    </div>`;
+  }).join('');
+}
+
+function buildPenggantiHTML(f){
+  return f.pengganti.map((pg,i)=>{
+    const initS=pg.skor(f.params.reduce((acc,pr)=>{acc[pr.id]=pr.val;return acc;},{}));
+    return `<div class="pg-kartu" id="${f.id}_pg${i}_krt" style="background:${kelBg(initS)}44">
+      <div class="pg-kartu::before" style="background:${pg.warna}"></div>
+      <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${pg.warna};border-radius:7px 0 0 7px"></div>
+      <div class="pg-nama">${pg.nama}</div>
+      <div class="pg-desc">${pg.desc}</div>
+      <div class="pg-bar-row">
+        <div class="pg-bar-bg"><div class="pg-bar-isi" id="${f.id}_pg${i}_bar" style="width:${initS}%;background:${kelColor(initS)}"></div></div>
+        <div class="pg-pct" id="${f.id}_pg${i}_pct" style="color:${kelColor(initS)}">${initS}%</div>
+      </div>
+      <div class="pg-tags">${pg.tags.map(t=>`<span class="pg-tag" style="background:${pg.warna}22;color:${pg.warna}">${t}</span>`).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+function buildKartu(f){
+  const initP=f.params.reduce((acc,pr)=>{acc[pr.id]=pr.val;return acc;},{});
+  const initS=hitungSkorFungsi(f,initP);
+
+  return `<div class="fungsi-kartu" id="kartu_${f.id}">
+    <div class="fk-header" onclick="toggleKartu('${f.id}')">
+      <div class="fk-ikon">${f.ikon}</div>
+      <div class="fk-info">
+        <div class="fk-kat">${f.kat.toUpperCase()}</div>
+        <div class="fk-judul">${f.judul}</div>
+        <div class="fk-sub">${f.sub}</div>
+      </div>
+      <div class="fk-skor">
+        <div class="fk-skor-n" id="${f.id}_skor_n" style="color:${kelColor(initS)}">${initS}%</div>
+        <div class="fk-skor-l">kelayakan<br>pengganti</div>
+      </div>
+      <div class="fk-chevron" id="chev_${f.id}">▼</div>
+    </div>
+    <div class="fk-body" id="body_${f.id}">
+      <div class="param-panel">
+        <div class="pp-ttl">⚙ Atur Parameter Kondisi — Skor Berubah Realtime</div>
+        <div class="param-grid">${buildParamHTML(f)}</div>
+      </div>
+      <div class="hasil-panel">
+        <div class="pp-ttl">Kelayakan Teknologi Pengganti</div>
+        <div class="skor-meter">
+          <div class="sm-label">Skor terbaik dari semua pengganti</div>
+          <div class="sm-bar-bg"><div class="sm-bar" id="${f.id}_meter_bar" style="width:${initS}%;background:${kelColor(initS)}"></div></div>
+          <div class="sm-pct" id="${f.id}_meter_pct" style="color:${kelColor(initS)}">${initS}%</div>
+          <div class="sm-verdict" id="${f.id}_meter_verd" style="background:${kelBg(initS)};color:${kelColor(initS)}">${kelLabel(initS)}</div>
+        </div>
+        <div class="pg-grid">${buildPenggantiHTML(f)}</div>
+        <div class="pen-box" id="${f.id}_analisis">${f.analisis?f.analisis(initP,initS):''}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleKartu(id){
+  const body=document.getElementById(`body_${id}`);
+  const chev=document.getElementById(`chev_${id}`);
+  const isOpen=body.classList.contains('buka');
+  body.classList.toggle('buka',!isOpen);
+  chev.classList.toggle('buka',!isOpen);
+}
+
+// Render semua
+const wrap=document.getElementById('mainWrap');
+const nav=document.getElementById('navBar');
+
+// Nav
+const navItems=[{label:'Semua',id:'semua'},...FUNGSI.map(f=>({label:f.ikon+' '+f.judul.split(' ')[0],id:f.id}))];
+navItems.forEach((ni,i)=>{
+  const d=document.createElement('div');
+  d.className='nv'+(i===0?' ak':'');
+  d.textContent=ni.label;
+  d.addEventListener('click',function(){
+    document.querySelectorAll('.nv').forEach(x=>x.classList.remove('ak'));
+    this.classList.add('ak');
+    if(ni.id==='semua'){
+      document.querySelectorAll('.fungsi-kartu').forEach(k=>k.style.display='');
+    } else {
+      document.querySelectorAll('.fungsi-kartu').forEach(k=>{k.style.display='none';});
+      const k=document.getElementById(`kartu_${ni.id}`);
+      if(k){k.style.display='';if(!document.getElementById(`body_${ni.id}`).classList.contains('buka'))toggleKartu(ni.id);}
+    }
+  });
+  nav.appendChild(d);
+});
+
+// Kartu
+FUNGSI.forEach(f=>{wrap.insertAdjacentHTML('beforeend',buildKartu(f));});
+
+// Ringkasan
+wrap.insertAdjacentHTML('beforeend',`<div class="ringkasan">
+  <div class="rk-ttl">Kesimpulan Teknis Keseluruhan</div>
+  <div class="rk-grid">
+    <div class="rk-item"><div class="rki-label">Fungsi yang ditelusuri</div><div class="rki-val">7</div><div class="rki-sub">dari 12 fungsi utama satelit</div></div>
+    <div class="rk-item"><div class="rki-label">Rata-rata kelayakan pengganti</div><div class="rki-val" id="rkRata">—</div><div class="rki-sub">berubah sesuai parameter Anda</div></div>
+    <div class="rk-item"><div class="rki-label">Fungsi sangat mudah digantikan</div><div class="rki-val" id="rkTinggi">—</div><div class="rki-sub">skor ≥ 75%</div></div>
+    <div class="rk-item"><div class="rki-label">Benar-benar tidak tergantikan</div><div class="rki-val">0</div><div class="rki-sub">dari semua yang ditelusuri</div></div>
+  </div>
+  <div class="kesimpulan">
+    <strong>Yang perlu diingat:</strong> Skor berubah tergantung parameter kondisi yang Anda atur. Untuk kota besar dengan kebutuhan standar, hampir semua fungsi satelit sudah tergantikan. Yang paling sulit: <strong>citra bumi simultan skala nasional</strong> dan <strong>komunikasi ke lokasi terpencil ekstrem</strong>. Tapi bahkan untuk keduanya, ada jalur teknis yang jelas. Pertanyaan yang lebih produktif bukan <em>"satelit ada atau tidak"</em> — tapi <em>"teknologi mana yang sebaiknya Indonesia kembangkan agar mandiri?"</em>
+  </div>
+</div>`);
+
+// Event listeners untuk slider
+document.addEventListener('input',function(e){
+  if(e.target.tagName!=='INPUT'||e.target.type!=='range')return;
+  const elId=e.target.id;
+  const parts=elId.split('_');
+  const fid=parts[0];
+  const f=FUNGSI.find(x=>x.id===fid);
+  if(f)updateFungsi(f);
+});
+
+// Radio buttons
+document.addEventListener('click',function(e){
+  if(!e.target.classList.contains('radio-btn'))return;
+  const btn=e.target;
+  const fid=btn.dataset.fid;
+  const pid=btn.dataset.pid;
+  const vi=parseInt(btn.dataset.vi);
+  // Update UI radio
+  document.querySelectorAll(`.radio-btn[data-fid="${fid}"][data-pid="${pid}"]`).forEach(b=>b.classList.remove('ak'));
+  btn.classList.add('ak');
+  // Update nilai tersembunyi (simpan di dataset)
+  const rrow=document.getElementById(`${fid}_${pid}_rrow`);
+  if(rrow)rrow.dataset.val=vi;
+  // Override evalParam untuk radio
+  const f=FUNGSI.find(x=>x.id===fid);
+  if(f){
+    // Patch: simpan val di param
+    const pr=f.params.find(p=>p.id===pid);
+    if(pr)pr.val=vi;
+    updateFungsi(f);
+  }
+});
+
+// Init stats
+updateHeroStats();
+// Update ringkasan live
+function updateRingkasan(){
+  let sum=0,tinggi=0;
+  FUNGSI.forEach(f=>{
+    const p=evalParam(f);
+    const s=hitungSkorFungsi(f,p);
+    sum+=s;if(s>=75)tinggi++;
+  });
+  const rata=Math.round(sum/FUNGSI.length);
+  const rr=document.getElementById('rkRata');const rt=document.getElementById('rkTinggi');
+  const hs=document.getElementById('statTinggi');const hr=document.getElementById('statRata');
+  if(rr)rr.textContent=rata+'%';if(rt)rt.textContent=tinggi;
+  if(hs)hs.textContent=tinggi;if(hr)hr.textContent=rata+'%';
+}
+setInterval(updateRingkasan,1000);
+updateRingkasan();
+</script>
+</body>
+</html>

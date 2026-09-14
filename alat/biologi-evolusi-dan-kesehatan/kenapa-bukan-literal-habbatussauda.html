@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kenapa Bukan Literal — Laboratorium JAZMI</title>
+<style>
+  :root{
+    --bg:#0a1512; --bg2:#0f1e19; --card:#122420; --card2:#16302a; --line:#1f3d34;
+    --emerald:#22c98a; --emerald-dim:#0e6b4f; --gold:#e0b354; --text:#e9f3ee;
+    --muted:#8fada0; --danger:#e07a5f; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:'Georgia','Iowan Old Style',serif; line-height:1.65;}
+  .sans{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;}
+  header{padding:34px 20px 24px; text-align:center; background:radial-gradient(ellipse at top, #113b2e 0%, var(--bg) 70%); border-bottom:1px solid var(--line);}
+  header .kicker{font-family:-apple-system,sans-serif; letter-spacing:.14em; text-transform:uppercase; font-size:12px; color:var(--gold); margin-bottom:10px;}
+  header h1{font-size:1.4rem; margin:0 0 10px; font-weight:600; line-height:1.35;}
+  header p{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px; max-width:640px; margin:0 auto;}
+  nav.tabs{position:sticky; top:0; z-index:10; display:flex; overflow-x:auto; gap:6px; padding:10px 14px; background:rgba(10,21,18,.96); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); font-family:-apple-system,sans-serif; -webkit-overflow-scrolling:touch;}
+  nav.tabs a{flex:0 0 auto; padding:7px 13px; border-radius:999px; font-size:12.5px; color:var(--muted); text-decoration:none; border:1px solid var(--line); white-space:nowrap;}
+  main{max-width:780px; margin:0 auto; padding:8px 18px 60px;}
+  section{padding:32px 0; border-bottom:1px solid var(--line);}
+  section:last-child{border-bottom:none;}
+  h2{font-size:1.1rem; color:var(--emerald); margin:0 0 6px; display:flex; align-items:center; gap:8px;}
+  h2 .num{font-family:-apple-system,sans-serif; font-size:11px; background:var(--emerald-dim); color:#dff7ec; padding:2px 8px; border-radius:6px;}
+  h3{color:var(--gold); font-size:1rem; margin:20px 0 8px;}
+  p{margin:0 0 14px; font-size:15.5px;}
+  .lead{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px; margin:14px 0;}
+  .qbox{background:var(--card2); border-left:3px solid var(--gold); border-radius:8px; padding:14px 16px; margin:16px 0; font-style:italic; color:#f0e6cc; font-size:14.5px;}
+  ul{padding-left:20px; margin:10px 0;} li{margin-bottom:7px; font-size:15px;}
+  .sourceline{font-family:-apple-system,sans-serif; font-size:11.5px; color:var(--muted); margin-top:6px; padding-top:6px; border-top:1px dashed var(--line);}
+  .warn{background:#241407; border:1px solid #5c3a12; border-radius:10px; padding:14px 16px; margin:14px 0; font-family:-apple-system,sans-serif; font-size:13.5px; color:#f0d3a8;}
+  .critical{background:#2a0f0f; border:2px solid var(--danger); border-radius:10px; padding:16px; margin:14px 0; font-family:-apple-system,sans-serif; font-size:14px; color:#ffd9d0;}
+  .critical b{color:var(--danger);}
+
+  .quote-ulama{background:#16302a; border:1.5px solid var(--emerald-dim); border-radius:var(--radius); padding:16px; margin:14px 0; font-family:-apple-system,sans-serif;}
+  .quote-ulama .qname{color:var(--emerald); font-weight:700; font-size:12.5px; text-transform:uppercase; margin-bottom:8px;}
+  .quote-ulama p{font-size:14px; margin-bottom:0;}
+
+  table.compare{width:100%; border-collapse:collapse; font-family:-apple-system,sans-serif; font-size:12.5px; margin:14px 0;}
+  table.compare th, table.compare td{padding:8px 9px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top;}
+  table.compare th{color:var(--gold); font-size:11px;}
+
+  /* simulator kecocokan mekanisme */
+  .disease-grid{display:flex; flex-direction:column; gap:8px; margin:14px 0;}
+  .disease-card{font-family:-apple-system,sans-serif; background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:12px 14px; cursor:pointer;}
+  .disease-card .dtop{display:flex; justify-content:space-between; align-items:center;}
+  .disease-card .dname{font-weight:700; font-size:13.5px;}
+  .match-badge{font-size:10.5px; padding:3px 9px; border-radius:999px; font-weight:700;}
+  .match-verylow{background:#3a1414; color:var(--danger);}
+  .match-low{background:#3a2408; color:#e08a54;}
+  .match-mid{background:#2a2408; color:var(--gold);}
+  .match-high{background:#0e2a20; color:var(--emerald);}
+  .dexplain{display:none; margin-top:8px; font-size:12.5px; color:var(--muted); border-top:1px dashed var(--line); padding-top:8px;}
+  .disease-card.open .dexplain{display:block;}
+
+  .avg-readout{font-family:-apple-system,sans-serif; text-align:center; margin-top:14px; padding:12px; border-radius:10px; background:#0e2a20; color:var(--emerald); font-weight:700; font-size:14px;}
+
+  /* dose simulator */
+  .dose-card{font-family:-apple-system,sans-serif; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px;}
+  .dose-card label{font-size:13px; color:var(--muted); display:block; margin-bottom:6px;}
+  .dose-card input[type=range]{width:100%; accent-color:var(--emerald); margin-bottom:14px;}
+  .val{color:var(--gold); font-weight:700;}
+  .dose-curve-wrap{background:var(--bg2); border-radius:10px; border:1px solid var(--line); padding:8px;}
+  .dose-curve-wrap svg{width:100%; height:auto;}
+  .dose-readout{margin-top:12px; padding:12px; border-radius:8px; text-align:center; font-size:13.5px; font-weight:700;}
+  .zone-none{background:#1a2a3a; color:#7fa8d8;}
+  .zone-therapeutic{background:#0e2a20; color:var(--emerald);}
+  .zone-toxic{background:#3a1414; color:var(--danger);}
+
+  .refs{font-family:-apple-system,sans-serif; font-size:12.5px; color:var(--muted);} .refs li{margin-bottom:8px;}
+  footer{text-align:center; padding:30px 20px; color:var(--muted); font-family:-apple-system,sans-serif; font-size:12px;}
+  @media(max-width:420px){ table.compare{font-size:11px;} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kicker">Laboratorium JAZMI · Sisi Sebaliknya</div>
+  <h1>Kenapa "Obat Segala Penyakit" Bukan Dimaksudkan Secara Literal</h1>
+  <p>Level 1–5. Pasangan dari tool sebelumnya — kali ini membangun argumen dari arah berlawanan: dari ulama sendiri, dari praktik Nabi ﷺ, dan dari prinsip dasar farmakologi modern.</p>
+</header>
+
+<nav class="tabs">
+  <a href="#belajar">Belajar</a>
+  <a href="#ulama">Bantahan Ulama</a>
+  <a href="#praktik">Praktik Nabi ﷺ</a>
+  <a href="#mekanisme">Simulator Mekanisme</a>
+  <a href="#dosis">Simulator Dosis</a>
+  <a href="#sintesis">Sintesis</a>
+  <a href="#batasan">Batasan</a>
+  <a href="#referensi">Referensi</a>
+</nav>
+
+<main>
+
+  <section id="belajar">
+    <h2><span class="num">01</span>Belajar</h2>
+    <p>Tool sebelumnya menelusuri <em>kapan</em> habbatussauda paling relevan menurut kerangka klasik. Tool ini menjawab pertanyaan yang berbeda tapi saling melengkapi: <strong>kenapa hadits itu, sejak awal, tidak mungkin dimaksudkan secara literal "menyembuhkan apa saja"</strong> — dan buktinya datang dari tiga arah sekaligus, bukan cuma dugaan modern yang skeptis terhadap agama.</p>
+    <div class="qbox">"Bantahan paling kuat terhadap pembacaan literal justru datang dari dalam tradisi itu sendiri — dari ulama yang paling otoritatif mensyarah hadits ini, dan dari catatan bagaimana Nabi ﷺ sendiri benar-benar bersikap di hadapan orang sakit."</div>
+  </section>
+
+  <section id="ulama">
+    <h2><span class="num">02</span>Bantahan dari Ulama Sendiri</h2>
+    <p>Ibnu Hajar Al-Asqalani, dalam <em>Fathul Bari</em> (syarah Shahih Al-Bukhari) — kitab syarah hadits paling otoritatif yang pernah ditulis — menukil penjelasan Imam Al-Khattabi:</p>
+    <div class="quote-ulama">
+      <div class="qname">Imam Al-Khattabi (dinukil Ibnu Hajar, Fathul Bari)</div>
+      <p>Ungkapan "penawar segala penyakit" adalah <strong>lafaz umum yang membawa maksud khusus</strong> — karena tidak ada satu pun tumbuhan yang diciptakan Allah di dunia ini yang terkumpul di dalamnya seluruh manfaat pengobatan. Yang dimaksud adalah habbatussauda bermanfaat sebagai penawar bagi penyakit-penyakit yang memang sesuai diobati dengannya.</p>
+    </div>
+    <p>Ibnu Hajar menambahkan detail praktis yang justru menegaskan hal ini: penggunaannya bervariasi — kadang diminum, kadang dimakan, kadang dibalurkan, kadang dicampur bahan lain — dan dosis/caranya bergantung jenis penyakit. Kalau maksudnya benar-benar literal "satu zat menyembuhkan segalanya dengan cara yang sama", penjelasan serinci ini tidak akan diperlukan sama sekali.</p>
+    <div class="sourceline">Sumber: Fathul Bari bi Syarhi Shahih al-Bukhari (Ibnu Hajar Al-Asqalani), dikutip NU Online, Muhammadiyah.or.id, IKIM Malaysia.</div>
+  </section>
+
+  <section id="praktik">
+    <h2><span class="num">03</span>Bantahan dari Praktik Nabi ﷺ Sendiri</h2>
+    <p>Kalau hadits ini dimaksudkan literal, mestinya setiap kali ada sahabat mengeluh sakit, jawabannya selalu sama: "makan habbatussauda". Tapi riwayat-riwayat lain menunjukkan Nabi ﷺ memberi resep yang <strong>berbeda-beda sesuai keluhannya</strong> — pola yang justru cocok dengan hadits lain yang lebih eksplisit soal keragaman obat: <em>"Setiap penyakit ada obatnya; apabila obat itu tepat mengenai penyakitnya, ia akan sembuh dengan izin Allah."</em> (HR. Muslim) — perhatikan kata "tepat mengenai", menyiratkan pasangan obat-penyakit yang spesifik, bukan satu obat untuk semua.</p>
+
+    <table class="compare">
+      <tr><th>Keluhan</th><th>Yang Disarankan Nabi ﷺ</th><th>Bukan Disarankan</th></tr>
+      <tr><td>Sahabat mengeluh saudaranya sakit perut/mencret</td><td>Madu — diulang beberapa kali seiring kondisi</td><td>Habbatussauda</td></tr>
+      <tr><td>Berbagai keluhan fisik umum</td><td>Hijamah (bekam) — disebut salah satu pengobatan terbaik</td><td>Habbatussauda</td></tr>
+      <tr><td>Sekelompok orang dari 'Urainah dengan keluhan pencernaan/perut membengkak</td><td>Susu &amp; air kencing unta di area penggembalaan</td><td>Habbatussauda</td></tr>
+      <tr><td>Luka fisik (mis. luka perang)</td><td>Perawatan/penanganan luka langsung oleh yang ahli</td><td>Habbatussauda</td></tr>
+    </table>
+    <p class="lead">Keragaman resep inilah bukti perilaku (bukan cuma teks) bahwa Nabi ﷺ sendiri memperlakukan penyakit sebagai hal yang butuh penanganan spesifik — bukan satu jawaban universal.</p>
+    <div class="sourceline">Sumber: hadits riwayat Bukhari-Muslim tentang madu untuk sakit perut, hijamah, dan kaum 'Urainah — kompilasi umum kitab-kitab hadits &amp; syarahnya.</div>
+  </section>
+
+  <section id="mekanisme">
+    <h2><span class="num">04</span>Simulator: Uji Kecocokan Mekanisme Penyakit</h2>
+    <p class="lead">Ketuk tiap kategori penyakit untuk melihat kenapa mekanisme kerja thymoquinone (senyawa aktif habbatussauda) cocok atau tidak cocok dengannya.</p>
+    <div class="disease-grid" id="diseaseGrid"></div>
+    <div class="avg-readout" id="avgReadout"></div>
+  </section>
+
+  <section id="dosis">
+    <h2><span class="num">05</span>Simulator: Kurva Dosis-Racun (Prinsip Paracelsus)</h2>
+    <p class="lead">"Semua zat adalah racun; tidak ada yang bukan racun. Dosis yang membedakan racun dari obat." — prinsip dasar toksikologi ini berlaku untuk zat apa pun, termasuk habbatussauda. Geser dosisnya:</p>
+
+    <div class="dose-card">
+      <label>Tingkat dosis: <span class="val" id="doseVal">Sedang</span></label>
+      <input type="range" id="doseRange" min="0" max="100" step="1" value="35">
+      <div class="dose-curve-wrap">
+        <svg id="doseSVG" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="dose-readout" id="doseReadout"></div>
+    </div>
+    <div class="warn" style="margin-top:14px;">
+      <b>Catatan:</b> Nigella sativa punya sejumlah kondisi kehati-hatian yang dicatat literatur — misalnya interaksi dengan obat pengencer darah, kondisi kehamilan, atau menjelang operasi. Simulator ini menunjukkan prinsip umumnya secara relatif (bukan angka dosis nyata dalam gram/mg) — untuk dosis aktual, itu ranah tenaga medis, bukan tool ini.
+    </div>
+  </section>
+
+  <section id="sintesis">
+    <h2><span class="num">06</span>Sintesis: Menyambung dengan Tool Sebelumnya</h2>
+    <p>Kedua tool ini tidak saling membatalkan — mereka menjawab pertanyaan berbeda. Tool sebelumnya bertanya <em>"di jendela seperti apa habbatussauda paling relevan"</em> (jawabannya: penyakit dingin-lembab/fase pasca-inflamasi, menurut kerangka klasik). Tool ini bertanya <em>"apakah itu berarti ia menyembuhkan segalanya"</em> (jawabannya: tidak, dan itu ditegaskan Al-Khattabi sendiri sejak berabad-abad lalu).</p>
+    <p><strong>"Lafaz umum, maksud khusus"</strong> adalah jembatan yang menyatukan keduanya: umum dalam penyebutan ("segala penyakit"), khusus dalam penerapan (penyakit yang memang sesuai dengan tabiatnya — kemungkinan besar yang dingin-lembab/pasca-inflamasi, seperti dibahas di tool sebelumnya).</p>
+  </section>
+
+  <section id="batasan">
+    <h2><span class="num">07</span>Batasan</h2>
+    <div class="critical">
+      <b>Ini bukan panduan pengobatan.</b> Skor "kecocokan mekanisme" pada simulator adalah penyederhanaan edukatif berdasar prinsip farmakologi umum, bukan hasil uji klinis per kategori penyakit. Jangan gunakan tool ini untuk menunda pengobatan medis apa pun — terutama untuk kondisi serius (kanker, keracunan, patah tulang, infeksi berat). Selalu konsultasikan ke tenaga medis kompeten.
+    </div>
+    <ul>
+      <li>Contoh riwayat pada tabel Bagian 3 dirangkum secara umum dari kompilasi hadits yang dikenal luas — untuk rujukan sanad/nomor hadits presisi, cek langsung ke kitab hadits &amp; syarahnya.</li>
+      <li>Simulator kurva dosis bersifat ilustratif prinsip umum toksikologi (Paracelsus), bukan kurva dosis-respons Nigella sativa yang sesungguhnya diukur secara klinis.</li>
+      <li>Skor kecocokan mekanisme di Bagian 4 adalah penilaian kualitatif berdasar prinsip farmakologi dasar (jenis mekanisme penyakit vs mekanisme kerja thymoquinone yang diketahui), bukan meta-analisis sistematis per kategori.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <h2><span class="num">08</span>Referensi</h2>
+    <ul class="refs">
+      <li>Ibnu Hajar Al-Asqalani — Fathul Bari bi Syarhi Shahih al-Bukhari, jilid 10 (penjelasan hadits habbatussauda, penukilan Al-Khattabi).</li>
+      <li>NU Online, Muhammadiyah.or.id, IKIM Malaysia — ringkasan syarah Ibnu Hajar &amp; Al-Khattabi tentang hadits ini.</li>
+      <li>Shahih Muslim — hadits "likulli da'in dawa'un" (setiap penyakit ada obatnya).</li>
+      <li>Shahih Bukhari &amp; Muslim — hadits madu untuk sakit perut, hijamah, dan kisah kaum 'Urainah.</li>
+      <li>Prinsip toksikologi Paracelsus ("dosis sola facit venenum") — dasar toksikologi modern, rujukan umum.</li>
+      <li>ScienceDirect — tinjauan efek farmakologis thymoquinone (dipakai juga di tool sebelumnya, Lapis 4).</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  Laboratorium JAZMI — Jalinan Zamrud Islamiah · Belajar → Model → Uji → Tool<br>
+  Pasangan dari "Fase Dingin & Habbatussauda" — dua sisi argumen yang sama.
+</footer>
+
+<script>
+/* ================= SIMULATOR MEKANISME ================= */
+const DISEASES = [
+  {name:"Infeksi Virus (mis. flu, COVID)", match:"low", score:25, explain:"Virus membajak mesin sel inang untuk memperbanyak diri. Thymoquinone tidak punya mekanisme antivirus spesifik yang kuat terbukti — paling banter membantu meredakan gejala peradangan penyerta, bukan membasmi virusnya."},
+  {name:"Infeksi Bakteri", match:"low", score:30, explain:"Ada riset antibakteri in vitro terbatas, tapi jauh di bawah potensi antibiotik yang memang dirancang menarget dinding sel/ribosom bakteri secara spesifik."},
+  {name:"Patah Tulang / Trauma Fisik", match:"verylow", score:5, explain:"Ini soal kerusakan struktural mekanis — butuh reposisi &amp; imobilisasi atau operasi. Tidak ada senyawa herbal apa pun yang bisa 'menyambung' tulang secara instan."},
+  {name:"Penyakit Genetik (mis. thalasemia)", match:"verylow", score:2, explain:"Penyebabnya variasi materi genetik sejak lahir. Thymoquinone tidak mengubah kode DNA — ini bukan soal senyawa kimia yang bisa dikonsumsi sama sekali."},
+  {name:"Keracunan Spesifik (racun ular, dll)", match:"verylow", score:5, explain:"Butuh antidotum yang secara kimiawi menetralkan toksin tertentu. Menunda penanganan sebenarnya demi mencoba herbal apa pun bisa berbahaya."},
+  {name:"Peradangan Ringan/Kronis (mis. radang sendi, alergi)", match:"high", score:75, explain:"Ini area paling didukung riset — thymoquinone terdokumentasi memengaruhi jalur NF-κB &amp; keseimbangan Th1/Th2 yang relevan untuk kondisi peradangan kronis ringan-sedang."},
+  {name:"Kanker", match:"verylow", score:10, explain:"Ada riset awal (in vitro/hewan) yang menarik, tapi sangat jauh dari terbukti sebagai pengobatan kanker pada manusia. JANGAN menggantikan pengobatan kanker medis dengan ini."},
+  {name:"Kekurangan Gizi / Malnutrisi", match:"low", score:20, explain:"Butuh asupan nutrisi seimbang yang sesuai kekurangannya (protein, vitamin, mineral spesifik) — bukan satu jenis biji-bijian saja, meski secara umum bergizi."}
+];
+
+const grid = document.getElementById('diseaseGrid');
+DISEASES.forEach(d=>{
+  const el = document.createElement('div');
+  el.className = 'disease-card';
+  el.innerHTML = `
+    <div class="dtop">
+      <span class="dname">${d.name}</span>
+      <span class="match-badge match-${d.match}">${d.score}%</span>
+    </div>
+    <div class="dexplain">${d.explain}</div>
+  `;
+  el.addEventListener('click', ()=> el.classList.toggle('open'));
+  grid.appendChild(el);
+});
+const avg = Math.round(DISEASES.reduce((a,d)=>a+d.score,0)/DISEASES.length);
+document.getElementById('avgReadout').textContent = `Rata-rata kecocokan mekanisme di 8 kategori penyakit ini: ${avg}% — jauh dari "cocok untuk segalanya".`;
+
+/* ================= SIMULATOR DOSIS ================= */
+const doseRange = document.getElementById('doseRange');
+const doseVal = document.getElementById('doseVal');
+const doseSVG = document.getElementById('doseSVG');
+const doseReadout = document.getElementById('doseReadout');
+
+function doseLabel(v){
+  if(v<15) return 'Sangat Rendah';
+  if(v<35) return 'Rendah';
+  if(v<65) return 'Sedang';
+  if(v<85) return 'Tinggi';
+  return 'Berlebihan';
+}
+
+function drawDoseCurve(v){
+  const W=400,H=200,padL=30,padB=28,padT=20,padR=15;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  function toXY(x01,y01){ return [padL+x01*plotW, padT+(1-y01)*plotH]; }
+
+  // efek kurva: rendah=tidak ada efek, sedang=terapeutik (puncak di tengah), tinggi=toksik naik lagi
+  let path = 'M';
+  const steps=60;
+  const pts=[];
+  for(let i=0;i<=steps;i++){
+    const x01 = i/steps;
+    let y01;
+    if(x01<0.3){ y01 = (x01/0.3)*0.35; } // naik menuju efek ringan
+    else if(x01<0.6){ const t=(x01-0.3)/0.3; y01 = 0.35 + t*0.55; } // naik ke puncak terapeutik
+    else { const t=(x01-0.6)/0.4; y01 = 0.9 - t*0.15 + t*t*0.5; } // turun sedikit lalu naik lagi (toksik)
+    pts.push(toXY(x01,Math.min(1,y01)));
+  }
+  path += pts.map(p=>p.join(',')).join(' L');
+
+  let html = `<line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#1f3d34" stroke-width="1.5"/>`;
+  html += `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-padB}" stroke="#1f3d34" stroke-width="1.5"/>`;
+  // zona
+  html += `<rect x="${padL}" y="${padT}" width="${plotW*0.3}" height="${plotH}" fill="#1a2a3a" opacity="0.3"/>`;
+  html += `<rect x="${padL+plotW*0.3}" y="${padT}" width="${plotW*0.3}" height="${plotH}" fill="#0e2a20" opacity="0.35"/>`;
+  html += `<rect x="${padL+plotW*0.6}" y="${padT}" width="${plotW*0.4}" height="${plotH}" fill="#3a1414" opacity="0.3"/>`;
+  html += `<text x="${padL+plotW*0.15}" y="${H-padB+14}" font-size="9" fill="#7fa8d8" text-anchor="middle" font-family="sans-serif">tanpa efek</text>`;
+  html += `<text x="${padL+plotW*0.45}" y="${H-padB+14}" font-size="9" fill="#22c98a" text-anchor="middle" font-family="sans-serif">terapeutik</text>`;
+  html += `<text x="${padL+plotW*0.8}" y="${H-padB+14}" font-size="9" fill="#e07a5f" text-anchor="middle" font-family="sans-serif">berpotensi toksik</text>`;
+
+  html += `<path d="${path}" stroke="#e0b354" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+
+  const markX = v/100;
+  const [mx,my] = toXY(markX, markX<0.3 ? (markX/0.3)*0.35 : markX<0.6 ? 0.35+((markX-0.3)/0.3)*0.55 : 0.9-((markX-0.6)/0.4)*0.15+((markX-0.6)/0.4)*((markX-0.6)/0.4)*0.5);
+  html += `<line x1="${mx}" y1="${padT}" x2="${mx}" y2="${H-padB}" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.7"/>`;
+  html += `<circle cx="${mx}" cy="${my}" r="6" fill="#ffffff"/>`;
+
+  doseSVG.innerHTML = html;
+}
+
+function updateDose(){
+  const v = parseInt(doseRange.value);
+  doseVal.textContent = doseLabel(v);
+  drawDoseCurve(v);
+  const readout = doseReadout;
+  if(v<30){
+    readout.className='dose-readout zone-none';
+    readout.textContent = 'Zona tanpa efek berarti — dosis terlalu kecil untuk memberi manfaat apa pun.';
+  } else if(v<60){
+    readout.className='dose-readout zone-therapeutic';
+    readout.textContent = 'Zona terapeutik — kisaran yang umumnya dibahas literatur sebagai bermanfaat, dengan risiko rendah.';
+  } else {
+    readout.className='dose-readout zone-toxic';
+    readout.textContent = 'Zona berpotensi merugikan — dosis berlebihan bisa memicu efek samping, sekalipun bahannya "alami". Prinsip Paracelsus berlaku untuk semua zat, tanpa kecuali.';
+  }
+}
+doseRange.addEventListener('input', updateDose);
+updateDose();
+</script>
+
+</body>
+</html>

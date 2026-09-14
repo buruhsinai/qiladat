@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mekanisme Antikythera — Laboratorium JAZMI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&display=swap');
+
+:root{
+  --bg-top:#14171c; --bg-bot:#241f16;
+  --bronze:#8a6a3a; --bronze-light:#c9a24d; --bronze-dark:#4a3418;
+  --verdigris:#5c7d6e; --ivory:#EDE3C8;
+  --ink:#EDE3C8; --ink-soft:#a89b7c;
+  --panel:#20241f; --panel-border:#40402c;
+  --line:rgba(237,227,200,.16); --line-strong:rgba(237,227,200,.3);
+}
+*{box-sizing:border-box;} html,body{margin:0;padding:0;}
+body{
+  background: radial-gradient(circle at 30% 0%, #2c2618 0%, var(--bg-top) 55%), var(--bg-bot);
+  color:var(--ink); font-family:'Karla',sans-serif; min-height:100vh;
+}
+.wrap{max-width:1000px; margin:0 auto; padding:20px 14px 44px;}
+.eyebrow{font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--bronze-light); margin:0 0 4px;}
+h1{font-family:'Fraunces',serif; font-weight:700; font-size:clamp(24px,5.5vw,34px); margin:0 0 6px;}
+.sub{font-size:13.5px; color:var(--ink-soft); max-width:70ch; line-height:1.55;}
+
+.intro{ background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:16px 18px; margin-top:16px; }
+.intro h2{ font-family:'Fraunces',serif; font-size:17px; margin:0 0 8px; color:var(--bronze-light); }
+.intro p{ font-size:13px; line-height:1.65; margin:0 0 8px; color:var(--ink); }
+
+.controls{ background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:16px; margin-top:16px; }
+.row{ display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; margin-bottom:6px; }
+.field{ display:flex; flex-direction:column; gap:4px; }
+.field label{ font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); }
+.field input[type=date]{
+  background:#181a15; border:1px solid var(--line-strong); color:var(--ink);
+  border-radius:4px; padding:7px 8px; font-family:'Karla',sans-serif; font-size:13px;
+}
+button{
+  font-family:'Karla',sans-serif; font-weight:700; font-size:12px;
+  background:var(--bronze-light); color:#241c08; border:none; border-radius:999px; padding:8px 14px; cursor:pointer;
+}
+button.ghost{ background:transparent; color:var(--ink); border:1px solid var(--line-strong); font-weight:500; }
+button:hover{ filter:brightness(1.08); }
+.jumprow{ display:flex; gap:6px; flex-wrap:wrap; }
+
+.dials{ display:grid; grid-template-columns:1fr; gap:18px; margin-top:16px; }
+@media(min-width:760px){ .dials{ grid-template-columns:1fr 1fr; } }
+.dialbox{ background:linear-gradient(160deg,#2b2717 0%, #1c1a10 100%); border:1px solid var(--panel-border); border-radius:8px; padding:12px; }
+.dialbox h3{ font-family:'Fraunces',serif; font-size:14px; text-align:center; margin:0 0 6px; color:var(--bronze-light); }
+svg.dial{ width:100%; height:auto; display:block; }
+
+.ring-face{ fill:#e9dfc4; }
+.ring-band{ fill:#d8ccaa; stroke:#6b5a34; stroke-width:.6; }
+.tick{ stroke:#4a3f22; stroke-width:.7; }
+.tick-major{ stroke:#2a2312; stroke-width:1.1; }
+.zod-label{ font-size:9px; fill:#2a2312; text-anchor:middle; }
+.cal-label{ font-size:6.5px; fill:#5a4c2c; text-anchor:middle; }
+.pointer-sun{ stroke:#b5842a; stroke-width:2; }
+.pointer-moon{ stroke:#7d7d8a; stroke-width:1.6; }
+.hub{ fill:#3a3220; stroke:#111; stroke-width:.8; }
+.spiral-line{ fill:none; stroke:#5a4c2c; stroke-width:1; }
+.spiral-tick{ stroke:#7a6a44; stroke-width:.5; }
+.spiral-pointer{ fill:#b5842a; stroke:#2a2312; stroke-width:.8; }
+.sub-dial-ring{ fill:#d8ccaa; stroke:#4a3f22; stroke-width:.7; }
+.sub-dial-pointer{ stroke:#8a1f1f; stroke-width:1.4; }
+.sub-label{ font-size:6px; fill:#4a3f22; text-anchor:middle; }
+.dial-title{ font-size:7.5px; fill:#4a3f22; text-anchor:middle; font-weight:700; }
+
+.readout{ background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:14px 16px; margin-top:16px; display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px 18px; font-size:12.5px; }
+.readout .rline{ display:flex; justify-content:space-between; border-bottom:1px solid var(--line); padding-bottom:5px; }
+.readout b{ color:var(--bronze-light); }
+
+.section{ margin-top:26px; }
+.section h2{ font-family:'Fraunces',serif; font-size:18px; margin:0 0 8px; color:var(--bronze-light); }
+.section p{ font-size:13px; line-height:1.6; color:var(--ink-soft); max-width:72ch; }
+
+footer{margin-top:26px; padding-top:14px; border-top:1px solid var(--line); font-size:11.5px; color:var(--ink-soft); line-height:1.6;}
+footer b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">JAZMI · Laboratorium Arkeoastronomi · Level 4</p>
+  <h1>Mekanisme Antikythera</h1>
+  <p class="sub">Replika digital dari kalkulator astronomi mekanis Yunani kuno (~150–100 SM), ditemukan
+  dari reruntuhan kapal karam di lepas pulau Antikythera tahun 1901 — sering disebut "komputer analog"
+  tertua yang diketahui manusia. Putar tanggalnya; semua penunjuk bergerak sesuai rasio roda gigi asli
+  yang sudah direkonstruksi peneliti dari pemindaian CT fragmen aslinya.</p>
+  </p>
+
+  <div class="intro">
+    <h2>Belajar dulu: apa yang dihitung alat ini</h2>
+    <p>Wajah depan menunjukkan posisi Matahari dan Bulan pada lingkaran zodiak, plus kalender sipil
+    Mesir 365 hari (12 bulan × 30 hari + 5 hari tambahan/epagomenal) — dan sebuah bola kecil yang
+    separuh berwarna menunjukkan fase Bulan, berputar sesuai selisih posisi Matahari-Bulan. Wajah
+    belakang punya dua spiral: <b>siklus Metonik</b> (235 bulan sinodik ≈ 19 tahun matahari — dasar
+    kalender lunisolar Yunani) dan <b>siklus Saros</b> (223 bulan sinodik ≈ 18 tahun 11 hari — untuk
+    memprediksi kapan gerhana kemungkinan terjadi lagi), masing-masing dengan dial kecil tambahan
+    (Callippic, Olympiad, Exeligmos) untuk koreksi & penanggalan Olimpiade.</p>
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <div class="field">
+        <label>Tanggal</label>
+        <input type="date" id="dateIn">
+      </div>
+      <div class="field" style="flex:0 0 auto;">
+        <label>&nbsp;</label>
+        <button class="ghost" id="playBtn">▶ Putar (harian)</button>
+      </div>
+    </div>
+    <div class="row jumprow">
+      <span style="font-size:11px; color:var(--ink-soft); align-self:center;">Lompat:</span>
+      <button class="ghost" id="jDay">+1 hari</button>
+      <button class="ghost" id="jMonth">+1 bulan sinodik</button>
+      <button class="ghost" id="jYear">+1 tahun</button>
+      <button class="ghost" id="jMeton">+1 siklus Metonik (19 th)</button>
+      <button class="ghost" id="jSaros">+1 siklus Saros (18 th 11 hr)</button>
+    </div>
+  </div>
+
+  <div class="dials">
+    <div class="dialbox">
+      <h3>Wajah Depan — Zodiak &amp; Kalender</h3>
+      <svg class="dial" id="frontSvg" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div class="dialbox">
+      <h3>Wajah Belakang — Metonik &amp; Saros</h3>
+      <svg class="dial" id="backSvg" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+  </div>
+
+  <div class="readout" id="readout"></div>
+
+  <div class="section">
+    <h2>Kenapa 19 tahun dan 18 tahun 11 hari?</h2>
+    <p>235 bulan sinodik (fase Bulan penuh ke Bulan penuh) ternyata hampir persis sama panjangnya
+    dengan 19 tahun matahari — selisihnya cuma sekitar 2 jam. Itu sebabnya kalender yang mencampur
+    bulan dan matahari (lunisolar, dipakai banyak peradaban kuno termasuk Yunani) bisa tetap akurat
+    selama puluhan tahun hanya dengan menambah bulan kabisat pada pola 19 tahun. Siklus Saros bekerja
+    dengan alasan serupa: 223 bulan sinodik hampir persis sama dengan bilangan bulat siklus gerhana
+    (bulan draconic), jadi geometri Matahari-Bumi-Bulan yang menyebabkan gerhana berulang lagi dengan
+    pola yang mirip setelah 18 tahun 11 hari.</p>
+  </div>
+
+  <footer>
+    <b>Batasan:</b> Ini simulasi fungsional berdasarkan panjang siklus astronomi yang sudah mapan
+    (bulan sinodik 29,530589 hari; siklus Metonik 6939,688 hari; siklus Saros 6585,3211 hari), bukan
+    replika ukir-per-ukir dari fragmen asli — jumlah gigi roda persis dan tata letak dial detail masih
+    jadi bahan penelitian arkeologi yang terus diperbarui (banyak diketahui lewat pemindaian CT sejak
+    2005). Posisi Bulan memakai rumus gerak rata-rata (mean motion), bukan model orbit elips penuh —
+    padahal justru salah satu capaian paling elegan mekanisme aslinya adalah roda gigi pasak-dan-alur
+    (pin-and-slot) yang meniru kecepatan Bulan yang tidak seragam itu; simulasi ini belum mereplikasi
+    detail mekanis itu. Epos referensi (tanggal "nol") memakai patokan sederhana, bukan kalibrasi
+    historis presisi terhadap penemuan tahun 1901. Nama dial Olympiad (Olympia/Nemea/Isthmia/Pythia)
+    mengikuti salah satu rekonstruksi ilmiah yang umum dikutip, bukan satu-satunya interpretasi yang
+    disepakati semua peneliti.
+  </footer>
+</div>
+
+<script>
+const EPOCH_JD = 2451545.0; // J2000.0, arbitrary reference for phase calc
+const SYN_MONTH = 29.530589;
+const METONIC_DAYS = 235*SYN_MONTH;
+const SAROS_DAYS = 223*SYN_MONTH;
+const CALLIPPIC_DAYS = 365.25*76;
+const EXELIGMOS_DAYS = 3*SAROS_DAYS;
+const OLYMPIAD_DAYS = 365.25*4;
+const EGYPT_MONTHS=['Thoth','Phaophi','Athyr','Choiak','Tybi','Mechir','Phamenoth','Pharmuthi','Pachons','Payni','Epiphi','Mesore'];
+const ZODIAC=['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+const GAMES=['Olympia','Nemea','Isthmia','Pythia'];
+
+function dateToJD(Y,M,D){
+  if(M<=2){Y-=1;M+=12;}
+  const A=Math.floor(Y/100), B=2-A+Math.floor(A/4);
+  return Math.floor(365.25*(Y+4716))+Math.floor(30.6001*(M+1))+D+B-1524.5;
+}
+function jdToDate(JD){
+  JD+=0.5; const Z=Math.floor(JD), F=JD-Z; let A;
+  if(Z<2299161){ A=Z; } else { const alpha=Math.floor((Z-1867216.25)/36524.25); A=Z+1+alpha-Math.floor(alpha/4); }
+  const B=A+1524, C=Math.floor((B-122.1)/365.25), D=Math.floor(365.25*C), E=Math.floor((B-D)/30.6001);
+  const day=B-D-Math.floor(30.6001*E)+F;
+  const month=(E<14)?E-1:E-13;
+  const year=(month>2)?C-4716:C-4715;
+  return {year,month,day:Math.floor(day)};
+}
+function sunLambda(jd){
+  const n=jd-2451545.0;
+  let L=(280.460+0.9856474*n)%360; if(L<0)L+=360;
+  let g=(357.528+0.9856003*n)%360; if(g<0)g+=360;
+  const gR=g*Math.PI/180;
+  let lam=(L+1.915*Math.sin(gR)+0.020*Math.sin(2*gR))%360; if(lam<0)lam+=360;
+  return lam;
+}
+function moonLambda(jd){
+  let m=(218.3164591+13.17639647*(jd-2451545.0))%360; if(m<0)m+=360;
+  return m;
+}
+
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs){const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); return e;}
+function pt(cx,cy,r,angDeg){ const a=angDeg*Math.PI/180; return {x:cx+r*Math.sin(a), y:cy-r*Math.cos(a)}; }
+
+function drawFront(jd){
+  const svg=document.getElementById('frontSvg'); svg.innerHTML='';
+  const cx=250,cy=250, rOuter=220, rZod=175, rCal=140, rHub=8;
+  svg.appendChild(el('circle',{cx,cy,r:rOuter,fill:'#3a3220',stroke:'#1a1610','stroke-width':4}));
+  svg.appendChild(el('circle',{cx,cy,r:rZod+18,class:'ring-face'}));
+  svg.appendChild(el('circle',{cx,cy,r:rZod,class:'ring-band'}));
+  svg.appendChild(el('circle',{cx,cy,r:rCal,class:'ring-band'}));
+  svg.appendChild(el('circle',{cx,cy,r:rCal-24,fill:'#efe6cc'}));
+
+  for(let i=0;i<12;i++){
+    const a=i*30;
+    const p1=pt(cx,cy,rZod+18,a), p2=pt(cx,cy,rZod,a);
+    svg.appendChild(el('line',{x1:p1.x,y1:p1.y,x2:p2.x,y2:p2.y,class:'tick-major'}));
+    const lp=pt(cx,cy,rZod+9,a+15);
+    const t=el('text',{x:lp.x,y:lp.y+3,class:'zod-label'}); t.textContent=ZODIAC[i].slice(0,3); svg.appendChild(t);
+  }
+  for(let d=0; d<365; d++){
+    const a=d*360/365;
+    const major = d%30===0;
+    const p1=pt(cx,cy,rCal,a), p2=pt(cx,cy,major?rCal-10:rCal-4,a);
+    svg.appendChild(el('line',{x1:p1.x,y1:p1.y,x2:p2.x,y2:p2.y,class:major?'tick-major':'tick'}));
+  }
+  EGYPT_MONTHS.forEach((name,i)=>{
+    const a=i*30+15;
+    const lp=pt(cx,cy,rCal-17,a);
+    const t=el('text',{x:lp.x,y:lp.y+2,class:'cal-label',transform:`rotate(${a} ${lp.x} ${lp.y})`}); t.textContent=name; svg.appendChild(t);
+  });
+
+  const sunLam=sunLambda(jd), moonLam=moonLambda(jd);
+  const egyptDay = ((jd-EPOCH_JD)%365+365)%365;
+  const egyptAngle = egyptDay*360/365;
+
+  const sp=pt(cx,cy,rZod+15,sunLam);
+  svg.appendChild(el('line',{x1:cx,y1:cy,x2:sp.x,y2:sp.y,class:'pointer-sun'}));
+  svg.appendChild(el('circle',{cx:sp.x,cy:sp.y,r:6,fill:'#e0a83e',stroke:'#7a4f0f','stroke-width':1}));
+
+  const mp=pt(cx,cy,rZod-5,moonLam);
+  svg.appendChild(el('line',{x1:cx,y1:cy,x2:mp.x,y2:mp.y,class:'pointer-moon'}));
+  const elong = ((moonLam-sunLam)%360+360)%360;
+  const ballG = el('g',{transform:`translate(${mp.x},${mp.y}) rotate(${elong})`});
+  ballG.appendChild(el('circle',{r:7,fill:'#f2ecda',stroke:'#333','stroke-width':.8}));
+  ballG.appendChild(el('path',{d:'M0,-7 A7,7 0 0,1 0,7 Z', fill:'#2a2a2a'}));
+  svg.appendChild(ballG);
+
+  const eg=pt(cx,cy,rCal-24,egyptAngle);
+  svg.appendChild(el('line',{x1:cx,y1:cy,x2:eg.x,y2:eg.y,stroke:'#6b5a34','stroke-width':1,'stroke-dasharray':'2 2'}));
+
+  svg.appendChild(el('circle',{cx,cy,r:rHub,class:'hub'}));
+  return {sunLam,moonLam,elong};
+}
+
+function spiralXY(cx,cy,turns,rStart,rEnd,frac){
+  const angle=frac*turns*2*Math.PI;
+  const r=rStart+(rEnd-rStart)*frac;
+  return {x:cx+r*Math.sin(angle), y:cy-r*Math.cos(angle)};
+}
+function spiralPathD(cx,cy,turns,rStart,rEnd,steps){
+  let d='';
+  for(let i=0;i<=steps;i++){
+    const f=i/steps; const p=spiralXY(cx,cy,turns,rStart,rEnd,f);
+    d+=(i===0?'M':'L')+p.x.toFixed(1)+','+p.y.toFixed(1)+' ';
+  }
+  return d;
+}
+
+function drawSubDial(svg,cx,cy,r,sectors,labels,fracPointer,title){
+  svg.appendChild(el('circle',{cx,cy,r,class:'sub-dial-ring'}));
+  for(let i=0;i<sectors;i++){
+    const a=i*360/sectors;
+    const p=pt(cx,cy,r,a);
+    svg.appendChild(el('line',{x1:cx,y1:cy,x2:p.x,y2:p.y,class:'tick'}));
+    if(labels){
+      const lp=pt(cx,cy,r*0.62,a+180/sectors);
+      const t=el('text',{x:lp.x,y:lp.y+2,class:'sub-label'}); t.textContent=labels[i]; svg.appendChild(t);
+    }
+  }
+  const pang=fracPointer*360;
+  const pp=pt(cx,cy,r*0.85,pang);
+  svg.appendChild(el('line',{x1:cx,y1:cy,x2:pp.x,y2:pp.y,class:'sub-dial-pointer'}));
+  svg.appendChild(el('circle',{cx,cy,r:2.5,fill:'#2a2312'}));
+  if(title){ const t=el('text',{x:cx,y:cy-r-4,class:'dial-title'}); t.textContent=title; svg.appendChild(t); }
+}
+
+function drawBack(jd){
+  const svg=document.getElementById('backSvg'); svg.innerHTML='';
+  svg.appendChild(el('circle',{cx:250,cy:250,r:230,fill:'#3a3220',stroke:'#1a1610','stroke-width':4}));
+  svg.appendChild(el('rect',{x:20,y:20,width:460,height:460,fill:'#241f14'}));
+
+  // Metonic spiral (upper)
+  const mcx=250, mcy=145, mTurns=5, mR0=16, mR1=110;
+  svg.appendChild(el('path',{d:spiralPathD(mcx,mcy,mTurns,mR0,mR1,600), class:'spiral-line'}));
+  const daysMod = ((jd-EPOCH_JD)%METONIC_DAYS+METONIC_DAYS)%METONIC_DAYS;
+  const monthsElapsed = daysMod/SYN_MONTH;
+  const metonFrac = monthsElapsed/235;
+  const mp = spiralXY(mcx,mcy,mTurns,mR0,mR1,metonFrac);
+  svg.appendChild(el('circle',{cx:mp.x,cy:mp.y,r:5,class:'spiral-pointer'}));
+  const t1=el('text',{x:mcx,y:mcy-mR1-14,class:'dial-title'}); t1.textContent='SIKLUS METONIK — 235 bulan / 19 tahun'; svg.appendChild(t1);
+
+  const totalDaysSince = jd-EPOCH_JD;
+  const callFrac = (((totalDaysSince%CALLIPPIC_DAYS)+CALLIPPIC_DAYS)%CALLIPPIC_DAYS)/CALLIPPIC_DAYS;
+  const olymFrac = (((totalDaysSince%OLYMPIAD_DAYS)+OLYMPIAD_DAYS)%OLYMPIAD_DAYS)/OLYMPIAD_DAYS;
+  drawSubDial(svg, mcx-55, mcy+8, 26, 4, ['I','II','III','IV'], callFrac, 'Callippic');
+  drawSubDial(svg, mcx+55, mcy+8, 26, 4, GAMES, olymFrac, 'Olympiad');
+
+  // Saros spiral (lower)
+  const scx=250, scy=370, sTurns=4, sR0=16, sR1=108;
+  svg.appendChild(el('path',{d:spiralPathD(scx,scy,sTurns,sR0,sR1,600), class:'spiral-line'}));
+  const sDaysMod=((jd-EPOCH_JD)%SAROS_DAYS+SAROS_DAYS)%SAROS_DAYS;
+  const sMonthsElapsed=sDaysMod/SYN_MONTH;
+  const sarosFrac=sMonthsElapsed/223;
+  const sp=spiralXY(scx,scy,sTurns,sR0,sR1,sarosFrac);
+  svg.appendChild(el('circle',{cx:sp.x,cy:sp.y,r:5,class:'spiral-pointer'}));
+  const t2=el('text',{x:scx,y:scy+sR1+18,class:'dial-title'}); t2.textContent='SIKLUS SAROS — 223 bulan / prediksi gerhana'; svg.appendChild(t2);
+
+  const exelFrac=(((totalDaysSince%EXELIGMOS_DAYS)+EXELIGMOS_DAYS)%EXELIGMOS_DAYS)/EXELIGMOS_DAYS;
+  drawSubDial(svg, scx, scy+8, 24, 3, ['1','2','3'], exelFrac, 'Exeligmos');
+
+  svg.appendChild(el('circle',{cx:250,cy:250,r:4,fill:'#8a1f1f'}));
+
+  return {metonFrac, sarosFrac, callFrac, olymFrac, exelFrac, monthsElapsed, sMonthsElapsed};
+}
+
+function render(){
+  const [Y,M,D]=document.getElementById('dateIn').value.split('-').map(Number);
+  const jd = dateToJD(Y,M,D);
+  const f = drawFront(jd);
+  const b = drawBack(jd);
+
+  const metonYear = Math.floor(b.monthsElapsed/12.368)+1;
+  const sarosNum = Math.floor((jd-EPOCH_JD)/SAROS_DAYS);
+
+  document.getElementById('readout').innerHTML = `
+    <div class="rline"><span>Posisi Matahari (zodiak)</span><b>${ZODIAC[Math.floor(f.sunLam/30)]} ${(f.sunLam%30).toFixed(1)}°</b></div>
+    <div class="rline"><span>Posisi Bulan (zodiak)</span><b>${ZODIAC[Math.floor(f.moonLam/30)]} ${(f.moonLam%30).toFixed(1)}°</b></div>
+    <div class="rline"><span>Elongasi Matahari-Bulan</span><b>${f.elong.toFixed(1)}°</b></div>
+    <div class="rline"><span>Bulan sinodik ke- (siklus Metonik)</span><b>${Math.floor(b.monthsElapsed)+1} / 235</b></div>
+    <div class="rline"><span>Bulan sinodik ke- (siklus Saros)</span><b>${Math.floor(b.sMonthsElapsed)+1} / 223</b></div>
+    <div class="rline"><span>Sektor Olympiad</span><b>${GAMES[Math.floor(b.olymFrac*4)]}</b></div>
+  `;
+}
+
+const dateIn=document.getElementById('dateIn');
+function addDays(n){
+  const [Y,M,D]=dateIn.value.split('-').map(Number);
+  const jd=dateToJD(Y,M,D)+n;
+  const {year,month,day}=jdToDate(jd);
+  dateIn.value = year+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+  render();
+}
+dateIn.addEventListener('input', render);
+document.getElementById('jDay').addEventListener('click', ()=>addDays(1));
+document.getElementById('jMonth').addEventListener('click', ()=>addDays(SYN_MONTH));
+document.getElementById('jYear').addEventListener('click', ()=>addDays(365.25));
+document.getElementById('jMeton').addEventListener('click', ()=>addDays(METONIC_DAYS));
+document.getElementById('jSaros').addEventListener('click', ()=>addDays(SAROS_DAYS));
+
+let playTimer=null;
+document.getElementById('playBtn').addEventListener('click', function(){
+  if(playTimer){ clearInterval(playTimer); playTimer=null; this.textContent='▶ Putar (harian)'; return; }
+  this.textContent='⏸ Berhenti';
+  playTimer=setInterval(()=>addDays(3), 90);
+});
+
+(function(){
+  const d=new Date();
+  dateIn.value = d.toISOString().slice(0,10);
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kesetimbangan & Statika</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#14171c; --panel2:#1b1f26; --line:#2a2f38;
+    --text:#e8e6df; --muted:#9aa1ab; --accent:#c9a24d; --accent2:#6fae8c;
+    --warn:#d98c5f; --danger:#c1595a; --blue:#7f9fe8; --font-d:'Georgia',serif; --font-b:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-b);margin:0;padding:0;line-height:1.6}
+  .wrap{max-width:840px;margin:0 auto;padding:28px 18px 80px}
+  header{border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:28px}
+  h1{font-family:var(--font-d);font-size:1.5rem;margin:0 0 8px;color:var(--accent)}
+  .tagline{color:var(--muted);font-size:.95rem}
+  h2{font-family:var(--font-d);font-size:1.2rem;color:var(--accent2);border-left:3px solid var(--accent2);padding-left:10px;margin-top:40px}
+  h3{color:var(--text);font-size:1rem;margin-top:0}
+  section{margin-bottom:10px}
+  p{color:#d7d5cd}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;margin:14px 0}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px}
+  @media(min-width:640px){.grid-2{grid-template-columns:1fr 1fr}}
+  @media(min-width:640px){.grid-3{grid-template-columns:1fr 1fr 1fr}}
+  .slider-field label{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);margin-bottom:6px}
+  .slider-field label b{color:var(--accent);font-weight:600}
+  .slider-field input[type=range]{width:100%;accent-color:var(--accent2)}
+  .slider-hint{font-size:.78rem;color:#767c85;margin-top:3px}
+  .massbox{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:12px}
+  .massbox-title{font-size:.85rem;font-weight:600;margin-bottom:10px}
+  .result{background:var(--panel2);border:1px solid var(--accent);border-radius:8px;padding:14px;margin-top:14px;font-size:1.02rem}
+  .result b{color:var(--accent)}
+  .verdict{border-radius:8px;padding:14px;margin-top:10px;font-size:.95rem}
+  .v-ok{background:#152a1f;border:1px solid var(--accent2);color:#bfe6cf}
+  .v-warn{background:#2a2416;border:1px solid var(--warn);color:#f0dcc4}
+  .note{font-size:.82rem;color:var(--muted);margin-top:6px}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:.86rem}
+  th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left}
+  th{color:var(--accent2)}
+  .wa{display:inline-block;margin-top:14px;background:#25D366;color:#04250f;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:600}
+  .limitbox{background:#241a14;border:1px solid var(--warn);border-radius:8px;padding:14px;color:#e8d3c1}
+  ul{color:#d7d5cd}
+  svg{width:100%;height:auto;background:var(--panel2);border-radius:8px;border:1px solid var(--line)}
+  .chartbox{margin-top:10px}
+  footer{margin-top:50px;border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:.8rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Kesetimbangan & Statika</h1>
+  <div class="tagline">Fondasi mekanika yang sering dilewati begitu saja saat orang buru-buru mengejar gerak — padahal justru inilah yang menjelaskan kenapa jembatan berdiri dan jungkat-jungkit bisa rata.</div>
+</header>
+
+<section>
+  <h2>1. Belajar — Dua Syarat, Bukan Satu</h2>
+  <p>Benda diam tidak cukup hanya karena "tidak ada yang mendorongnya". Ada dua syarat matematis terpisah yang harus SAMA-SAMA terpenuhi:</p>
+  <div class="card">
+    <p><b>ΣF = 0</b> — jumlah seluruh gaya (naik-turun, kiri-kanan) harus nol. Pada jungkat-jungkit, ini hampir selalu otomatis terpenuhi — tumpuan (fulcrum) menyediakan gaya reaksi ke atas persis sebesar total berat yang menekannya. Ini alasan jungkat-jungkit tidak pernah "jatuh" ke tanah walau beratnya tidak simetris.</p>
+    <p style="margin-bottom:0"><b>Στ = 0</b> — jumlah seluruh torsi (gaya dikali jarak tegak lurus dari titik putar) juga harus nol. Inilah syarat yang sebenarnya menentukan apakah jungkat-jungkit RATA atau MIRING — dan inilah yang sering dilewatkan orang yang cuma memikirkan "berat total", padahal <i>di mana</i> berat itu diletakkan sama pentingnya dengan <i>berapa besar</i> beratnya.</p>
+  </div>
+</section>
+
+<section>
+  <h2>2. Eksplorasi — Laboratorium Jungkat-Jungkit</h2>
+  <div class="card">
+    <div class="grid grid-2">
+      <div class="massbox">
+        <div class="massbox-title" style="color:var(--accent2)">⚫ Beban 1</div>
+        <div class="slider-field">
+          <label>Massa <b id="valM1">10</b> kg</label>
+          <input type="range" id="m1" min="0" max="50" step="1" value="10">
+        </div>
+        <div class="slider-field">
+          <label>Posisi dari tumpu <b id="valX1">-2.0</b> m</label>
+          <input type="range" id="x1" min="-3" max="3" step="0.1" value="-2">
+          <div class="slider-hint">Negatif = kiri, positif = kanan</div>
+        </div>
+      </div>
+      <div class="massbox">
+        <div class="massbox-title" style="color:var(--warn)">⚫ Beban 2</div>
+        <div class="slider-field">
+          <label>Massa <b id="valM2">10</b> kg</label>
+          <input type="range" id="m2" min="0" max="50" step="1" value="10">
+        </div>
+        <div class="slider-field">
+          <label>Posisi dari tumpu <b id="valX2">2.0</b> m</label>
+          <input type="range" id="x2" min="-3" max="3" step="0.1" value="2">
+        </div>
+      </div>
+    </div>
+    <div class="massbox">
+      <div class="massbox-title" style="color:var(--blue)">↕️ Gaya Tambahan (opsional — dorongan tangan, dsb.)</div>
+      <div class="grid grid-2">
+        <div class="slider-field">
+          <label>Besar gaya <b id="valF3">0</b> N <span class="note" style="display:inline">(+ = ke bawah, − = ke atas)</span></label>
+          <input type="range" id="f3" min="-100" max="100" step="1" value="0">
+        </div>
+        <div class="slider-field">
+          <label>Posisi gaya <b id="valX3">0.0</b> m</label>
+          <input type="range" id="x3" min="-3" max="3" step="0.1" value="0">
+        </div>
+      </div>
+    </div>
+
+    <div class="chartbox">
+      <svg id="chart" viewBox="0 0 600 260"></svg>
+    </div>
+
+    <div class="result">
+      <b>ΣF (vertikal):</b> <span id="hasilSigmaF"></span><br>
+      <b>Στ (terhadap tumpu):</b> <span id="hasilSigmaTau"></span>
+    </div>
+    <div class="verdict" id="verdict"></div>
+  </div>
+</section>
+
+<section>
+  <h2>3. Metode / Rumus</h2>
+  <div class="card">
+    <p><b>Gaya berat tiap beban:</b> W = m × g (g = 9,81 m/s²), arah selalu ke bawah</p>
+    <p><b>Torsi tiap gaya terhadap tumpu:</b> τᵢ = xᵢ × Fᵢ (xᵢ = posisi bertanda dari tumpu, Fᵢ = gaya ke bawah positif)</p>
+    <p><b>Gaya reaksi tumpu (memenuhi ΣF=0):</b> N = ΣW (ke atas, otomatis menyesuaikan agar total gaya vertikal nol)</p>
+    <p><b>Kondisi rata (seimbang):</b> Στ = Σ(xᵢ × Fᵢ) = 0</p>
+  </div>
+</section>
+
+<section>
+  <h2>4. Batasan</h2>
+  <div class="limitbox">
+    <ul>
+      <li><b>Kemiringan visual di diagram bersifat ilustratif</b> — sudut kemiringan yang ditampilkan proporsional terhadap besar Στ untuk memberi umpan balik visual kontinu, bukan simulasi dinamika rotasi sungguhan (jungkat-jungkit nyata yang tidak seimbang akan terus berputar sampai mentok, bukan berhenti di sudut tertentu).</li>
+      <li><b>Balok jungkat-jungkit diasumsikan tanpa massa &amp; kaku sempurna</b> — balok sungguhan punya berat sendiri yang juga berkontribusi ke Στ (meski jika tumpu tepat di tengah balok simetris, kontribusinya nol).</li>
+      <li>Gaya tambahan diasumsikan selalu vertikal (tegak lurus balok) — gaya pada sudut lain akan menghasilkan komponen torsi yang berbeda dari perhitungan sederhana τ=x×F di sini.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>5. Referensi</h2>
+  <ul>
+    <li>Hukum kesetimbangan statis benda tegar — mekanika klasik dasar (ΣF=0, Στ=0)</li>
+    <li>Prinsip tuas Archimedes — dasar historis hubungan gaya-jarak-torsi</li>
+  </ul>
+</section>
+
+<div class="card" style="text-align:center">
+  <p style="margin:0 0 8px">Ingin diskusi lebih lanjut soal topik ini?</p>
+  <a class="wa" id="waLink" href="#" target="_blank">Konsultasi via WhatsApp</a>
+</div>
+
+<footer>
+  Bagian dari Bank Alat JAZMI — Tier 1, Level 1–5 (Belajar → Eksplorasi → Metode → Batasan → Referensi).
+</footer>
+</div>
+
+<script>
+function fmt(x, d=2){
+  if(!isFinite(x)) return "-";
+  return parseFloat(x.toFixed(d)).toString();
+}
+
+const g = 9.81;
+const m1El=document.getElementById('m1'), x1El=document.getElementById('x1');
+const m2El=document.getElementById('m2'), x2El=document.getElementById('x2');
+const f3El=document.getElementById('f3'), x3El=document.getElementById('x3');
+
+function hitung(){
+  const m1=parseFloat(m1El.value), x1=parseFloat(x1El.value);
+  const m2=parseFloat(m2El.value), x2=parseFloat(x2El.value);
+  const F3=parseFloat(f3El.value), x3=parseFloat(x3El.value);
+
+  document.getElementById('valM1').textContent=m1;
+  document.getElementById('valX1').textContent=fmt(x1,1);
+  document.getElementById('valM2').textContent=m2;
+  document.getElementById('valX2').textContent=fmt(x2,1);
+  document.getElementById('valF3').textContent=F3;
+  document.getElementById('valX3').textContent=fmt(x3,1);
+
+  const W1=m1*g, W2=m2*g;
+  const totalDown = W1+W2+F3;
+  const N = totalDown; // reaksi tumpu, otomatis menyeimbangkan
+  const sigmaF = (N - totalDown); // selalu 0 by construction
+
+  const tau1 = x1*W1, tau2 = x2*W2, tau3 = x3*F3;
+  const sigmaTau = tau1+tau2+tau3;
+
+  document.getElementById('hasilSigmaF').innerHTML = `N (reaksi tumpu) − ΣW = ${fmt(N,1)} N − ${fmt(totalDown,1)} N = <b>${fmt(sigmaF,4)} N</b> (selalu nol — tumpuan otomatis menyesuaikan)`;
+  document.getElementById('hasilSigmaTau').innerHTML = `(${fmt(x1,1)}×${fmt(W1,1)}) + (${fmt(x2,1)}×${fmt(W2,1)}) + (${fmt(x3,1)}×${F3}) = <b>${fmt(sigmaTau,2)} N·m</b>`;
+
+  const verdict = document.getElementById('verdict');
+  if(Math.abs(sigmaTau) < 2){
+    verdict.className='verdict v-ok';
+    verdict.innerHTML = 'Στ ≈ 0 — jungkat-jungkit RATA/seimbang. Distribusi gaya dan jaraknya saling meniadakan.';
+  } else if(sigmaTau>0){
+    verdict.className='verdict v-warn';
+    
+    verdict.innerHTML = `Στ > 0 — jungkat-jungkit miring ke KANAN. Torsi dari sisi kanan (atau gaya ke bawah di posisi positif) lebih besar.`;
+  } else {
+    verdict.className='verdict v-warn';
+    
+    verdict.innerHTML = `Στ < 0 — jungkat-jungkit miring ke KIRI. Torsi dari sisi kiri lebih besar.`;
+  }
+
+  gambarChart(x1,m1,x2,m2,x3,F3,sigmaTau);
+}
+
+function gambarChart(x1,m1,x2,m2,x3,F3,sigmaTau){
+  const svg = document.getElementById('chart');
+  const W=600,H=260;
+  const cx=300, cy=180, scale=70; // px per meter
+  const maxTilt = 25; // derajat
+  const tiltScale = 300; // skala N.m ke derajat
+  let angle = Math.max(-maxTilt, Math.min(maxTilt, sigmaTau/tiltScale*maxTilt));
+  const rad = angle*Math.PI/180;
+
+  function posOnBeam(x){
+    // titik di sepanjang balok pada jarak x meter dari pivot, setelah dirotasi
+    const px = x*scale;
+    const rx = cx + px*Math.cos(rad);
+    const ry = cy - px*Math.sin(rad);
+    return [rx,ry];
+  }
+
+  const beamLeftEnd = posOnBeam(-3.3);
+  const beamRightEnd = posOnBeam(3.3);
+  const [p1x,p1y] = posOnBeam(x1);
+  const [p2x,p2y] = posOnBeam(x2);
+  const [p3x,p3y] = posOnBeam(x3);
+
+  const r1 = 8+Math.sqrt(m1)*2.2;
+  const r2 = 8+Math.sqrt(m2)*2.2;
+
+  let arrowF3 = '';
+  if(Math.abs(F3)>1){
+    const len = Math.min(60, Math.abs(F3)*0.5);
+    const dir = F3>0 ? 1 : -1; // ke bawah positif
+    arrowF3 = `<line x1="${p3x}" y1="${p3y-dir*len}" x2="${p3x}" y2="${p3y}" stroke="#7f9fe8" stroke-width="3" marker-end="url(#arrowhead)"/>`;
+  }
+
+  svg.innerHTML = `
+    <defs>
+      <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#7f9fe8"/>
+      </marker>
+    </defs>
+    <polygon points="${cx-25},${cy+40} ${cx+25},${cy+40} ${cx},${cy}" fill="#3a3428" stroke="#c9a24d" stroke-width="2"/>
+    <line x1="${beamLeftEnd[0]}" y1="${beamLeftEnd[1]}" x2="${beamRightEnd[0]}" y2="${beamRightEnd[1]}" stroke="#8b8672" stroke-width="8" stroke-linecap="round"/>
+    ${arrowF3}
+    <circle cx="${p1x}" cy="${p1y-r1}" r="${r1}" fill="#6fae8c"/>
+    <text x="${p1x}" y="${p1y-r1+4}" fill="#0b0d10" font-size="11" text-anchor="middle" font-weight="bold">${m1}</text>
+    <circle cx="${p2x}" cy="${p2y-r2}" r="${r2}" fill="#d98c5f"/>
+    <text x="${p2x}" y="${p2y-r2+4}" fill="#0b0d10" font-size="11" text-anchor="middle" font-weight="bold">${m2}</text>
+  `;
+}
+
+[m1El,x1El,m2El,x2El,f3El,x3El].forEach(el=>el.addEventListener('input', hitung));
+
+const waMsg = encodeURIComponent("Assalamu'alaikum, saya ingin diskusi terkait Kesetimbangan & Statika JAZMI.");
+document.getElementById('waLink').href = `https://wa.me/6281356572588?text=${waMsg}`;
+
+hitung();
+</script>
+</body>
+</html>

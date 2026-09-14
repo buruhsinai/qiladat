@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asah Logika!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fdf6e8; --card:#ffffff; --line:#f0e2c4;
+    --ink:#3a3226; --dim:#8a7c62;
+    --accent:#c9784f; --accent-soft:#f7e9df;
+    --good:#5a8a5a; --good-soft:#dff2df; --good-line:#8fc98f;
+    --bad:#b04a4a; --bad-soft:#fbdede; --bad-line:#dd9a9a;
+    --display:'Fredoka',sans-serif; --sans:'Quicksand',sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;}
+  .wrap{max-width:520px;margin:0 auto;padding:0 18px 70px;}
+
+  .hero{padding:36px 10px 18px;text-align:center;}
+  .hero h1{font-family:var(--display);font-weight:700;font-size:clamp(24px,6.5vw,32px);margin:0 0 8px;color:#8a4a2a;}
+  .hero p{color:var(--dim);font-size:14px;max-width:440px;margin:0 auto;}
+
+  .tab-nav{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:18px;}
+  .tab-btn{font-family:var(--display);font-weight:600;font-size:12px;background:#fff;border:2px solid var(--line);
+    color:var(--dim);padding:11px 3px;border-radius:12px;cursor:pointer;text-align:center;line-height:1.3;}
+  .tab-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  .card{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px 18px;margin-bottom:16px;}
+  .card p.desc{font-size:13.5px;color:var(--dim);margin:0 0 16px;}
+
+  .result-panel{background:var(--accent-soft);border-radius:14px;padding:14px;text-align:center;margin-bottom:16px;}
+  .compare-row{display:flex;justify-content:space-around;}
+  .compare-box .n{font-family:var(--display);font-weight:700;font-size:20px;color:#8a4a2a;}
+  .compare-box .l{font-size:10px;color:var(--dim);font-family:var(--mono);}
+
+  .situasi-box{background:var(--accent-soft);border-left:5px solid var(--accent);border-radius:10px;padding:14px 16px;
+    font-size:14px;color:var(--ink);margin-bottom:12px;}
+  .pertanyaan-txt{font-family:var(--display);font-weight:600;font-size:15px;color:var(--ink);margin-bottom:14px;}
+
+  .jawaban-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+  .jawaban-grid.satu-kolom{grid-template-columns:1fr;}
+  .jawaban-btn{background:#fff;border:2px solid var(--line);border-radius:12px;padding:13px 6px;text-align:center;
+    font-family:var(--display);font-weight:600;font-size:12.5px;color:var(--ink);cursor:pointer;
+    transition:transform .1s, background .2s, border-color .2s, color .2s;}
+  .jawaban-btn.pilihan-panjang{font-family:var(--sans);font-weight:600;font-size:13px;text-align:left;padding:13px 14px;}
+  .jawaban-btn:active{transform:scale(0.97);}
+  .jawaban-btn.correct{background:var(--good-soft);border-color:var(--good-line);color:var(--good);}
+  .jawaban-btn.wrong{background:var(--bad-soft);border-color:var(--bad-line);color:var(--bad);}
+  .jawaban-btn.disabled{pointer-events:none;opacity:0.55;}
+
+  .penjelasan-box{background:var(--accent-soft);border-radius:12px;padding:14px 16px;font-size:13px;color:#6b4a30;
+    margin-bottom:12px;display:none;}
+  .penjelasan-box.show{display:block;}
+  .penjelasan-box strong{color:#4a2e18;}
+
+  .lanjut-btn{width:100%;font-family:var(--display);font-weight:700;font-size:14.5px;padding:13px;border-radius:14px;
+    border:none;cursor:pointer;background:var(--accent);color:#fff;display:none;}
+  .lanjut-btn.show{display:block;}
+
+  .note-card{background:var(--accent-soft);border-radius:14px;padding:14px 16px;font-size:12.5px;color:#6b4a30;margin-top:14px;}
+  .note-card strong{color:#4a2e18;}
+
+  footer{text-align:center;padding-top:26px;color:#b9ad94;font-size:11.5px;font-family:var(--mono);}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>🔍 Asah Logika!</h1>
+    <p>Kalau ada sosok bernama <strong>Yasir</strong> yang "punya kaki", apakah kakinya pasti sama seperti kakimu? Belum tentu — kita belum tahu Yasir itu manusia, kucing, atau bahkan kipas angin kesayangan! Yuk latih kejelian sebelum buru-buru menyimpulkan.</p>
+  </div>
+
+  <div class="tab-nav">
+    <button class="tab-btn active" data-tab="cukup">❓ Info Cukup?</button>
+    <button class="tab-btn" data-tab="ciri">⚖️ Ciri & Kategori</button>
+    <button class="tab-btn" data-tab="tanya">💡 Tanya Tepat</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-cukup">
+    <div class="card">
+      <p class="desc">Dari cerita singkatnya, apakah pertanyaannya sudah bisa dijawab pasti — atau informasinya masih kurang?</p>
+      <div class="result-panel">
+        <div class="compare-row">
+          <div class="compare-box"><div class="n" id="cukupSkorN">0</div><div class="l">⭐ SKOR</div></div>
+          <div class="compare-box"><div class="n" id="cukupBeruntunN">0</div><div class="l">🔥 BERUNTUN</div></div>
+          <div class="compare-box"><div class="n" id="cukupTotalN">0</div><div class="l">📝 DIJAWAB</div></div>
+        </div>
+      </div>
+      <div class="situasi-box" id="cukupSituasi"></div>
+      <div class="pertanyaan-txt" id="cukupPertanyaan"></div>
+      <div class="jawaban-grid" id="cukupJawaban"></div>
+      <div class="penjelasan-box" id="cukupPenjelasan"></div>
+      <button class="lanjut-btn" id="cukupLanjutBtn" onclick="soalBerikutnya('cukup')">Lanjut ke Soal Berikutnya →</button>
+    </div>
+    <div class="note-card"><strong>Kenapa ada "Belum Bisa Dipastikan"?</strong> Ini bukan cuma soal ya-atau-tidak. Kadang jawaban jujurnya adalah "kita belum tahu" — dan menyadari itu sama pentingnya dengan tahu jawaban yang benar!</div>
+  </div>
+
+  <div class="tab-panel" id="tab-ciri">
+    <div class="card">
+      <p class="desc">Punya ciri yang sama bukan berarti termasuk kelompok yang sama — tapi kadang memang bisa dipastikan. Bisakah kamu membedakannya?</p>
+      <div class="result-panel">
+        <div class="compare-row">
+          <div class="compare-box"><div class="n" id="ciriSkorN">0</div><div class="l">⭐ SKOR</div></div>
+          <div class="compare-box"><div class="n" id="ciriBeruntunN">0</div><div class="l">🔥 BERUNTUN</div></div>
+          <div class="compare-box"><div class="n" id="ciriTotalN">0</div><div class="l">📝 DIJAWAB</div></div>
+        </div>
+      </div>
+      <div class="situasi-box" id="ciriSituasi"></div>
+      <div class="pertanyaan-txt" id="ciriPertanyaan"></div>
+      <div class="jawaban-grid" id="ciriJawaban"></div>
+      <div class="penjelasan-box" id="ciriPenjelasan"></div>
+      <button class="lanjut-btn" id="ciriLanjutBtn" onclick="soalBerikutnya('ciri')">Lanjut ke Soal Berikutnya →</button>
+    </div>
+    <div class="note-card"><strong>Ciri "kebetulan sama" vs "definisi asli":</strong> Berkaki empat itu cuma kebetulan dimiliki banyak hal (meja, kucing, kambing) — tapi "tiga sisi" itu memang definisi asli segitiga. Bedakan keduanya!</div>
+  </div>
+
+  <div class="tab-panel" id="tab-tanya">
+    <div class="card">
+      <p class="desc">Kalau ceritanya masih kurang jelas, pertanyaan apa yang paling tepat ditanyakan supaya kita bisa tahu pasti?</p>
+      <div class="result-panel">
+        <div class="compare-row">
+          <div class="compare-box"><div class="n" id="tanyaSkorN">0</div><div class="l">⭐ SKOR</div></div>
+          <div class="compare-box"><div class="n" id="tanyaBeruntunN">0</div><div class="l">🔥 BERUNTUN</div></div>
+          <div class="compare-box"><div class="n" id="tanyaTotalN">0</div><div class="l">📝 DIJAWAB</div></div>
+        </div>
+      </div>
+      <div class="situasi-box" id="tanyaSituasi"></div>
+      <div class="pertanyaan-txt" id="tanyaPertanyaan"></div>
+      <div class="jawaban-grid satu-kolom" id="tanyaJawaban"></div>
+      <div class="penjelasan-box" id="tanyaPenjelasan"></div>
+      <button class="lanjut-btn" id="tanyaLanjutBtn" onclick="soalBerikutnya('tanya')">Lanjut ke Soal Berikutnya →</button>
+    </div>
+    <div class="note-card"><strong>Kenapa ini penting?</strong> Menyadari kurangnya informasi saja belum cukup — anak yang kritis juga tahu <em>pertanyaan apa</em> yang harus ditanyakan supaya masalahnya jadi jelas.</div>
+  </div>
+
+  <footer>Laboratorium Dengar & Baca Anak — Bank Alat JAZMI/Qiladat</footer>
+</div>
+
+<script>
+  /* ============ TAB SWITCHING ============ */
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+
+  /* ============ DATA TAB 1: CUKUP INFORMASINYA? ============ */
+  const SOAL_CUKUP = [
+    { situasi:"Ada sosok bernama Yasir. Diceritakan bahwa Yasir punya kaki.", pertanyaan:"Apakah kaki Yasir pasti sama seperti kaki manusia?", jawaban:"belum", penjelasan:"Yasir bisa jadi manusia, tapi bisa juga kucing, kursi, atau bahkan kipas angin kesayangan yang diberi nama Yasir. Kita belum tahu Yasir itu apa." },
+    { situasi:"Ada benda bernama Kancil di rumah Fira. Kancil punya empat kaki dan bisa dipindah-pindahkan orang.", pertanyaan:"Apakah Kancil ini pasti seekor hewan?", jawaban:"belum", penjelasan:"Bisa saja Kancil adalah nama kursi atau meja kesayangan Fira, bukan hewan sungguhan." },
+    { situasi:"Bunga adalah nama adik Sinta. Bunga suka bermain ayunan di taman setiap sore.", pertanyaan:"Apakah Bunga di sini adalah tumbuhan?", jawaban:"tidak", penjelasan:"Sudah jelas dari ceritanya bahwa Bunga adalah nama orang (adik Sinta) — tumbuhan tidak bisa bermain ayunan." },
+    { situasi:"Ada makhluk bernama Kuda Laut. Ia hidup di dalam laut dan bernapas dengan insang.", pertanyaan:"Apakah Kuda Laut ini kemungkinan besar bukan kuda darat biasa?", jawaban:"ya", penjelasan:"Karena hidup di laut dan bernapas dengan insang, ini jelas bukan kuda darat biasa — ini sejenis hewan laut yang namanya kebetulan mengandung kata 'kuda'." },
+    { situasi:"Meja di ruang tamu punya empat kaki dari kayu.", pertanyaan:"Apakah meja itu adalah kucing?", jawaban:"tidak", penjelasan:"Sudah jelas disebutkan itu 'meja' — meja dan kucing berbeda, meskipun sama-sama bisa berkaki empat." },
+    { situasi:"Ada sosok bernama Elang di kelas Rio. Elang punya sayap dan bisa 'terbang' kalau dilempar ke udara.", pertanyaan:"Apakah Elang ini pasti burung sungguhan?", jawaban:"belum", penjelasan:"Elang di sini bisa jadi nama pesawat kertas mainan — 'punya sayap dan bisa dilempar ke udara' belum tentu berarti burung." },
+    { situasi:"Robot mainan milik Dimas diberi nama 'Harimau'. Robot itu bisa berjalan dan mengeluarkan suara auman.", pertanyaan:"Apakah 'Harimau' ini hewan sungguhan?", jawaban:"tidak", penjelasan:"Sudah disebutkan jelas bahwa itu robot mainan, bukan hewan sungguhan — meskipun namanya Harimau dan bisa mengaum." },
+    { situasi:"Ada sosok bernama Awan. Awan bisa berubah bentuk dan bergerak mengikuti arah angin.", pertanyaan:"Apakah Awan ini pasti gumpalan uap air di langit?", jawaban:"belum", penjelasan:"Awan bisa jadi nama kucing peliharaan berbulu putih, atau nama balon — bukan cuma gumpalan uap air di langit." },
+    { situasi:"Semua benda di kotak pensil Nadia berwarna biru. Penghapus ini juga berwarna biru.", pertanyaan:"Apakah penghapus itu pasti berasal dari kotak pensil Nadia?", jawaban:"belum", penjelasan:"Warna yang sama (biru) tidak membuktikan penghapus itu dari kotak pensil Nadia — bisa saja penghapus biru milik orang lain." },
+    { situasi:"Padi di sawah Pak Tono sudah menguning dan siap dipanen minggu depan.", pertanyaan:"Apakah padi itu sekarang sudah dipanen?", jawaban:"tidak", penjelasan:"Jelas disebutkan 'siap dipanen minggu depan', artinya sekarang belum dipanen." },
+    { situasi:"Ada sosok bernama Roda di bengkel Pak Karto. Roda itu bulat dan bisa berputar.", pertanyaan:"Apakah Roda ini pasti bagian dari mobil?", jawaban:"belum", penjelasan:"Bisa jadi Roda adalah roda sepeda, gerobak, atau bahkan nama panggilan orang — bulat dan berputar saja belum menentukan itu bagian mobil." },
+    { situasi:"Semua murid kelas 3B memakai seragam merah putih hari ini karena ada upacara.", pertanyaan:"Apakah semua anak berseragam merah putih hari ini pasti murid kelas 3B?", jawaban:"belum", penjelasan:"Kelas lain atau sekolah lain juga biasanya memakai seragam merah putih — seragam yang sama tidak berarti pasti murid 3B." },
+    { situasi:"Semua anggota tim sepak bola sekolah tingginya di atas 150 cm. Randi tingginya 155 cm.", pertanyaan:"Apakah Randi pasti anggota tim sepak bola sekolah?", jawaban:"belum", penjelasan:"Tinggi 155 cm memang cocok dengan syarat tim, tapi banyak orang lain juga tingginya di atas 150 cm tanpa menjadi anggota tim itu." },
+    { situasi:"Kunci rumah Budi selalu disimpan di dalam laci meja belajar.", pertanyaan:"Apakah ada kunci di dalam laci meja belajar Budi?", jawaban:"ya", penjelasan:"Sudah dinyatakan dengan jelas dan pasti bahwa kunci rumah selalu disimpan di sana." },
+    { situasi:"Ada sosok bernama Matahari — nama itu diberikan ibu untuk anak keduanya karena lahir pagi yang cerah.", pertanyaan:"Apakah Matahari ini benda langit yang bersinar?", jawaban:"tidak", penjelasan:"Sudah jelas dari cerita bahwa Matahari adalah nama seorang anak (manusia), bukan benda langit." },
+    { situasi:"Semua kucing di rumah Wati berbulu putih. Ada seekor kucing berbulu putih lewat di depan rumah Rudi.", pertanyaan:"Apakah kucing itu pasti kucing milik Wati?", jawaban:"belum", penjelasan:"Banyak kucing lain juga bisa berbulu putih — warna bulu yang sama tidak membuktikan itu kucing Wati." },
+    { situasi:"Ibu berkata, 'Semua baju di lemari sebelah kiri adalah baju sekolah adik.' Kaos ini diambil dari lemari sebelah kiri.", pertanyaan:"Apakah kaos ini pasti baju sekolah adik?", jawaban:"ya", penjelasan:"Karena sudah dipastikan semua baju di lemari itu adalah baju sekolah adik, dan kaos ini diambil dari lemari itu, jadi pasti benar." },
+    { situasi:"Pak guru berkata, 'Semua yang duduk di baris depan akan maju presentasi hari ini.' Sari duduk di baris depan.", pertanyaan:"Apakah Sari akan maju presentasi hari ini?", jawaban:"ya", penjelasan:"Aturannya jelas: semua yang duduk di baris depan pasti maju, dan Sari termasuk yang duduk di baris depan." }
+  ];
+
+  /* ============ DATA TAB 2: CIRI SAMA, KATEGORI BEDA ============ */
+  const SOAL_CIRI = [
+    { situasi:"Semua kucing berkaki empat. Meja di ruang tamu juga berkaki empat.", pertanyaan:"Apakah meja itu pasti kucing?", jawaban:"tidak", penjelasan:"Berkaki empat cuma kebetulan dimiliki banyak hal — meja dan kucing tetap dua hal yang berbeda." },
+    { situasi:"Semua ikan hidup di air dan berenang. Katak juga bisa hidup di air dan berenang.", pertanyaan:"Apakah katak itu pasti ikan?", jawaban:"tidak", penjelasan:"Katak adalah amfibi, bukan ikan — meskipun sama-sama bisa berenang di air." },
+    { situasi:"Semua mobil punya roda yang berputar. Sepeda juga punya roda yang berputar.", pertanyaan:"Apakah sepeda itu pasti mobil?", jawaban:"tidak", penjelasan:"Roda yang berputar dimiliki banyak kendaraan berbeda, bukan cuma mobil." },
+    { situasi:"Semua burung punya sayap. Kupu-kupu juga punya sayap.", pertanyaan:"Apakah kupu-kupu itu pasti burung?", jawaban:"tidak", penjelasan:"Kupu-kupu adalah serangga, bukan burung — meskipun sama-sama bersayap." },
+    { situasi:"Semua kucing adalah hewan. Si Belang adalah seekor kucing.", pertanyaan:"Apakah Si Belang pasti hewan?", jawaban:"ya", penjelasan:"Karena semua kucing memang termasuk hewan, dan Si Belang adalah kucing, jadi pasti Si Belang hewan." },
+    { situasi:"Semua segitiga punya tepat tiga sisi. Bentuk ini punya tepat tiga sisi.", pertanyaan:"Apakah bentuk ini pasti segitiga?", jawaban:"ya", penjelasan:"Tiga sisi adalah definisi asli segitiga (bukan cuma kebetulan) — jadi bentuk apa pun dengan tiga sisi pasti segitiga." },
+    { situasi:"Sebagian buah berwarna merah. Bola ini berwarna merah.", pertanyaan:"Apakah bola ini pasti buah?", jawaban:"tidak", penjelasan:"Sudah jelas disebut 'bola', bukan buah — lagipula warna merah dimiliki banyak benda, bukan cuma sebagian buah tadi." },
+    { situasi:"Semua manusia butuh makan setiap hari. Kucing juga butuh makan setiap hari.", pertanyaan:"Apakah kucing itu pasti manusia?", jawaban:"tidak", penjelasan:"Butuh makan setiap hari dimiliki banyak makhluk hidup, bukan cuma manusia." },
+    { situasi:"Semua siswa kelas 4A memakai dasi pada hari Senin. Made adalah siswa kelas 4A.", pertanyaan:"Apakah Made memakai dasi hari Senin?", jawaban:"ya", penjelasan:"Karena aturannya berlaku untuk semua siswa kelas 4A, dan Made termasuk kelas 4A, jadi pasti Made memakai dasi." },
+    { situasi:"Semua benda hidup butuh makanan. Robot mainan Dimas bisa bergerak sendiri seperti benda hidup.", pertanyaan:"Apakah robot itu pasti butuh makanan?", jawaban:"tidak", penjelasan:"Robot mainan bukan benda hidup, meskipun bisa bergerak sendiri — jadi aturan 'benda hidup butuh makanan' tidak berlaku untuknya." },
+    { situasi:"Sebagian mainan di kotak itu berwarna hijau. Ani mengambil satu mainan dari kotak itu.", pertanyaan:"Apakah mainan yang diambil Ani pasti berwarna hijau?", jawaban:"belum", penjelasan:"Karena cuma sebagian mainan yang hijau (bukan semua), mainan yang diambil Ani bisa hijau bisa juga bukan." },
+    { situasi:"Semua siswa yang nilainya 100 mendapat bintang emas. Rani mendapat bintang emas.", pertanyaan:"Apakah nilai Rani pasti 100?", jawaban:"belum", penjelasan:"Aturan itu cuma bilang 'nilai 100 pasti dapat bintang emas' — tapi tidak dijelaskan apakah bintang emas cuma bisa didapat dengan nilai 100 saja atau ada cara lain." },
+    { situasi:"Semua roda sepeda berbentuk bulat. Ban ini berbentuk bulat.", pertanyaan:"Apakah ban ini pasti roda sepeda?", jawaban:"belum", penjelasan:"Banyak benda lain juga berbentuk bulat — roda mobil, roda gerobak, dan lainnya — bukan cuma roda sepeda." },
+    { situasi:"Semua anak kelompok Pramuka Rani memakai topi cokelat hari ini. Dodi memakai topi cokelat hari ini.", pertanyaan:"Apakah Dodi pasti anggota kelompok Pramuka Rani?", jawaban:"belum", penjelasan:"Banyak orang lain bisa juga memakai topi cokelat karena alasan berbeda — bukan berarti pasti dari kelompok Rani." },
+    { situasi:"Semua persegi punya empat sisi sama panjang dan empat sudut siku-siku. Bentuk ini punya empat sisi sama panjang dan empat sudut siku-siku.", pertanyaan:"Apakah bentuk ini pasti persegi?", jawaban:"ya", penjelasan:"Empat sisi sama panjang DAN empat sudut siku-siku adalah definisi lengkap persegi, jadi ini pasti persegi." },
+    { situasi:"Cerita khayalan: semua penghuni Planet Zorb punya tiga mata. Kila adalah penghuni Planet Zorb.", pertanyaan:"Apakah Kila pasti punya tiga mata?", jawaban:"ya", penjelasan:"Karena aturan itu berlaku untuk SEMUA penghuni Planet Zorb, dan Kila salah satunya, jadi pasti Kila punya tiga mata." }
+  ];
+
+  /* ============ DATA TAB 3: PERTANYAAN YANG TEPAT ============ */
+  const SOAL_TANYA = [
+    { situasi:"Ada sosok bernama Yasir. Yasir punya kaki.", pertanyaan:"Pertanyaan mana yang paling membantu untuk tahu apakah kaki Yasir sama seperti kakimu?", pilihan:[
+        {text:"Berapa umur Yasir?", benar:false},
+        {text:"Yasir itu sebenarnya apa — manusia, hewan, atau benda?", benar:true},
+        {text:"Di mana Yasir tinggal?", benar:false},
+        {text:"Siapa yang memberi nama Yasir?", benar:false}
+      ]},
+    { situasi:"Ada benda bernama Kancil di rumah Fira. Kancil punya empat kaki.", pertanyaan:"Pertanyaan mana yang paling membantu memastikan apakah Kancil itu hewan atau bukan?", pilihan:[
+        {text:"Apa warna Kancil?", benar:false},
+        {text:"Kancil itu sebenarnya benda atau makhluk hidup?", benar:true},
+        {text:"Berapa harga Kancil?", benar:false},
+        {text:"Kapan Kancil dibeli?", benar:false}
+      ]},
+    { situasi:"Semua murid kelas 3B memakai seragam merah putih hari ini.", pertanyaan:"Untuk memastikan seorang anak berseragam merah putih itu murid kelas 3B atau bukan, pertanyaan apa yang paling membantu?", pilihan:[
+        {text:"Anak itu kelas berapa?", benar:true},
+        {text:"Baju itu dibeli di mana?", benar:false},
+        {text:"Anak itu suka warna apa?", benar:false},
+        {text:"Sudah berapa lama sekolah itu berdiri?", benar:false}
+      ]},
+    { situasi:"Ada sosok bernama Elang. Elang punya sayap dan bisa 'terbang' kalau dilempar.", pertanyaan:"Pertanyaan mana yang paling membantu memastikan apakah Elang itu burung sungguhan?", pilihan:[
+        {text:"Elang itu benda mati atau makhluk hidup?", benar:true},
+        {text:"Berapa lama Elang bisa terbang?", benar:false},
+        {text:"Siapa nama pemilik Elang?", benar:false},
+        {text:"Elang berwarna apa?", benar:false}
+      ]},
+    { situasi:"Rani mendapat bintang emas dari gurunya.", pertanyaan:"Untuk tahu apakah nilai Rani pasti 100, pertanyaan apa yang paling membantu?", pilihan:[
+        {text:"Apa saja cara mendapat bintang emas di kelas itu?", benar:true},
+        {text:"Bintang emas itu warnanya apa?", benar:false},
+        {text:"Sejak kapan Rani sekolah di sana?", benar:false},
+        {text:"Siapa nama guru Rani?", benar:false}
+      ]},
+    { situasi:"Ada seekor kucing berbulu putih lewat di depan rumah Rudi. Semua kucing Wati berbulu putih.", pertanyaan:"Untuk tahu apakah kucing itu kucing milik Wati, pertanyaan apa yang paling membantu?", pilihan:[
+        {text:"Berapa umur kucing itu?", benar:false},
+        {text:"Apakah kucing itu pernah terlihat masuk ke rumah Wati atau memakai tanda pengenal miliknya?", benar:true},
+        {text:"Kucing itu bulunya panjang atau pendek?", benar:false},
+        {text:"Kucing itu suka makan apa?", benar:false}
+      ]},
+    { situasi:"Ada mainan berwarna hijau diambil Ani dari kotak berisi campuran mainan warna-warni.", pertanyaan:"Untuk tahu persis mainan apa yang diambil Ani, pertanyaan apa yang paling langsung menjawab?", pilihan:[
+        {text:"Mainan apa yang diambil Ani tadi?", benar:true},
+        {text:"Kotak itu ada berapa mainan?", benar:false},
+        {text:"Kotak itu terbuat dari apa?", benar:false},
+        {text:"Ani suka warna apa?", benar:false}
+      ]},
+    { situasi:"Ada sosok bernama Matahari. Ibu memberi nama itu untuk sesuatu di rumahnya.", pertanyaan:"Untuk tahu apakah Matahari itu manusia, hewan, atau benda, pertanyaan apa yang paling membantu?", pilihan:[
+        {text:"Matahari itu nama untuk apa/siapa — anak, hewan peliharaan, atau benda?", benar:true},
+        {text:"Kapan nama itu diberikan?", benar:false},
+        {text:"Ibu suka nama itu karena apa?", benar:false},
+        {text:"Berapa huruf dalam nama Matahari?", benar:false}
+      ]},
+    { situasi:"Ada sosok bernama Roda di bengkel Pak Karto. Roda itu bulat dan bisa berputar.", pertanyaan:"Pertanyaan mana yang paling membantu memastikan Roda ini bagian dari mobil atau bukan?", pilihan:[
+        {text:"Roda itu dipasang di kendaraan apa, atau bukan kendaraan sama sekali?", benar:true},
+        {text:"Roda itu terbuat dari bahan apa?", benar:false},
+        {text:"Berapa lama Roda sudah ada di bengkel?", benar:false},
+        {text:"Siapa yang membuat Roda?", benar:false}
+      ]},
+    { situasi:"Semua anggota tim sepak bola sekolah tingginya di atas 150 cm. Randi tingginya 155 cm.", pertanyaan:"Untuk memastikan Randi anggota tim sepak bola atau bukan, pertanyaan apa yang paling membantu?", pilihan:[
+        {text:"Apakah Randi terdaftar sebagai anggota tim sepak bola sekolah?", benar:true},
+        {text:"Berapa berat badan Randi?", benar:false},
+        {text:"Randi suka pelajaran apa?", benar:false},
+        {text:"Randi tinggal di mana?", benar:false}
+      ]},
+    { situasi:"Ada makhluk bernama Kuda Laut yang hidup di laut dan bernapas dengan insang.", pertanyaan:"Kalau ingin tahu lebih pasti apa itu Kuda Laut, pertanyaan tambahan apa yang paling berguna?", pilihan:[
+        {text:"Kuda Laut itu termasuk kelompok hewan apa sebenarnya?", benar:true},
+        {text:"Laut mana tempat Kuda Laut tinggal?", benar:false},
+        {text:"Berapa banyak Kuda Laut yang ada?", benar:false},
+        {text:"Kuda Laut suka makan jam berapa?", benar:false}
+      ]},
+    { situasi:"Robot mainan Dimas diberi nama 'Harimau' dan bisa mengaum karena baterai di dalamnya.", pertanyaan:"Pertanyaan mana yang sebenarnya TIDAK perlu ditanyakan lagi karena sudah jelas jawabannya?", pilihan:[
+        {text:"Apakah 'Harimau' ini benda mati atau makhluk hidup? (sudah jelas robot mainan = benda mati)", benar:true},
+        {text:"Siapa yang membelikan robot itu untuk Dimas?", benar:false},
+        {text:"Robot itu warnanya apa?", benar:false},
+        {text:"Robot itu bisa berjalan berapa langkah dengan satu baterai?", benar:false}
+      ]}
+  ];
+
+  /* ============ ENGINE PERMAINAN (dipakai bersama 3 tab) ============ */
+  const GAMES = {
+    cukup: { pool: SOAL_CUKUP, bag: [], current: null, score: 0, streak: 0, total: 0, answered: false, tipe: 'tigapilihan' },
+    ciri:  { pool: SOAL_CIRI,  bag: [], current: null, score: 0, streak: 0, total: 0, answered: false, tipe: 'tigapilihan' },
+    tanya: { pool: SOAL_TANYA, bag: [], current: null, score: 0, streak: 0, total: 0, answered: false, tipe: 'multipilihan' }
+  };
+
+  function ambilDariKantong(game){
+    const g = GAMES[game];
+    if(g.bag.length === 0){
+      g.bag = shuffle(g.pool.map((_, i) => i));
+    }
+    return g.bag.pop();
+  }
+
+  function soalBerikutnya(game){
+    const g = GAMES[game];
+    const idx = ambilDariKantong(game);
+    g.current = g.pool[idx];
+    g.answered = false;
+    document.getElementById(game+'Situasi').textContent = g.current.situasi;
+    document.getElementById(game+'Pertanyaan').textContent = g.current.pertanyaan;
+    document.getElementById(game+'Penjelasan').classList.remove('show');
+    document.getElementById(game+'Penjelasan').textContent = '';
+    document.getElementById(game+'LanjutBtn').classList.remove('show');
+
+    const jawabanDiv = document.getElementById(game+'Jawaban');
+    jawabanDiv.innerHTML = '';
+
+    if(g.tipe === 'tigapilihan'){
+      const opsi = [
+        { value:'ya', label:'✅ Ya, Pasti' },
+        { value:'tidak', label:'❌ Tidak, Pasti Bukan' },
+        { value:'belum', label:'🤔 Belum Bisa Dipastikan' }
+      ];
+      opsi.forEach(o => {
+        const btn = document.createElement('div');
+        btn.className = 'jawaban-btn';
+        btn.textContent = o.label;
+        btn.dataset.value = o.value;
+        btn.addEventListener('click', () => jawabTigaPilihan(game, o.value, btn));
+        jawabanDiv.appendChild(btn);
+      });
+    } else {
+      const pilihanTeracak = shuffle(g.current.pilihan);
+      pilihanTeracak.forEach(p => {
+        const btn = document.createElement('div');
+        btn.className = 'jawaban-btn pilihan-panjang';
+        btn.textContent = p.text;
+        btn.dataset.benar = p.benar ? '1' : '0';
+        btn.addEventListener('click', () => jawabMultiPilihan(game, p.benar, btn));
+        jawabanDiv.appendChild(btn);
+      });
+    }
+  }
+
+  function kuncSemuaJawaban(game){
+    document.querySelectorAll('#'+game+'Jawaban .jawaban-btn').forEach(b => b.classList.add('disabled'));
+  }
+
+  function tampilkanPenjelasan(game){
+    const g = GAMES[game];
+    const box = document.getElementById(game+'Penjelasan');
+    box.innerHTML = '<strong>Kenapa?</strong> ' + g.current.penjelasan;
+    box.classList.add('show');
+    document.getElementById(game+'LanjutBtn').classList.add('show');
+  }
+
+  function updateSkor(game){
+    const g = GAMES[game];
+    document.getElementById(game+'SkorN').textContent = g.score;
+    document.getElementById(game+'BeruntunN').textContent = g.streak;
+    document.getElementById(game+'TotalN').textContent = g.total;
+  }
+
+  function jawabTigaPilihan(game, value, btnEl){
+    const g = GAMES[game];
+    if(g.answered) return;
+    g.answered = true;
+    g.total++;
+    const benar = (value === g.current.jawaban);
+    if(benar){
+      g.score++; g.streak++;
+      btnEl.classList.add('correct');
+    } else {
+      g.streak = 0;
+      btnEl.classList.add('wrong');
+      document.querySelectorAll('#'+game+'Jawaban .jawaban-btn').forEach(b => {
+        if(b.dataset.value === g.current.jawaban) b.classList.add('correct');
+      });
+    }
+    kuncSemuaJawaban(game);
+    updateSkor(game);
+    tampilkanPenjelasan(game);
+  }
+
+  function jawabMultiPilihan(game, benar, btnEl){
+    const g = GAMES[game];
+    if(g.answered) return;
+    g.answered = true;
+    g.total++;
+    if(benar){
+      g.score++; g.streak++;
+      btnEl.classList.add('correct');
+    } else {
+      g.streak = 0;
+      btnEl.classList.add('wrong');
+      document.querySelectorAll('#'+game+'Jawaban .jawaban-btn').forEach(b => {
+        if(b.dataset.benar === '1') b.classList.add('correct');
+      });
+    }
+    kuncSemuaJawaban(game);
+    updateSkor(game);
+    tampilkanPenjelasan(game);
+  }
+
+  /* ============ INIT ============ */
+  Object.keys(GAMES).forEach(game => {
+    updateSkor(game);
+    soalBerikutnya(game);
+  });
+</script>
+
+</body>
+</html>

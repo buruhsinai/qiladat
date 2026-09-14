@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adonan Kismis yang Mengembang</title>
+<style>
+  :root{--bg:#0b0d10;--panel:#14171c;--panel2:#1b1f26;--line:#2a2f38;--text:#e8e6df;--muted:#9aa1ab;--accent:#c9a24d;--accent2:#6fae8c;--font-d:'Georgia',serif;--font-b:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-b);margin:0;padding:0;line-height:1.6}
+  .wrap{max-width:760px;margin:0 auto;padding:26px 18px 60px}
+  h1{font-family:var(--font-d);font-size:1.4rem;color:var(--accent);margin:0 0 6px}
+  .tagline{color:var(--muted);font-size:.92rem;margin-bottom:24px}
+  h2{font-family:var(--font-d);font-size:1.1rem;color:var(--accent2);border-left:3px solid var(--accent2);padding-left:10px;margin-top:30px}
+  p{color:#d7d5cd}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;margin:12px 0}
+  .slider-field label{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);margin-bottom:6px}
+  .slider-field label b{color:var(--accent)}
+  input[type=range]{width:100%;accent-color:var(--accent2)}
+  svg{width:100%;max-width:320px;display:block;margin:12px auto;height:auto;background:var(--panel2);border-radius:8px;border:1px solid var(--line)}
+  .result{background:var(--panel2);border:1px solid var(--accent);border-radius:8px;padding:12px;margin-top:12px;font-size:.92rem}
+  .result b{color:var(--accent)}
+  table{width:100%;border-collapse:collapse;margin-top:8px;font-size:.85rem}
+  th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:left}
+  th{color:var(--accent2)}
+  .note{font-size:.8rem;color:var(--muted);margin-top:8px}
+  .limitbox{background:#241a14;border:1px solid #d98c5f;border-radius:8px;padding:12px;color:#e8d3c1;font-size:.88rem}
+  ul{color:#d7d5cd;margin:6px 0;padding-left:20px}
+  .wa{display:inline-block;margin-top:10px;background:#25D366;color:#04250f;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:600;font-size:.9rem}
+  footer{margin-top:36px;border-top:1px solid var(--line);padding-top:14px;color:var(--muted);font-size:.76rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Adonan Kismis yang Mengembang</h1>
+<div class="tagline">Analogi ketiga, versi dapur — dipakai Eddington (1933) untuk menjelaskan ekspansi alam semesta ke masyarakat awam, jauh sebelum internet ada video balon.</div>
+
+<h2>Belajar</h2>
+<p>Bayangkan adonan roti kismis sebelum dipanggang — kismisnya tersebar merata. Saat dipanggang, seluruh adonan mengembang ke segala arah. Dari sudut pandang satu kismis manapun, <b>semua kismis lain terlihat menjauh</b> — dan kismis yang awalnya lebih jauh, jaraknya bertambah lebih banyak daripada kismis yang berdekatan. Tidak ada kismis yang jadi "pusat pemuaian". Ini analogi yang sama persis dengan balon, hanya versi 2D/3D yang lebih mudah dibayangkan sehari-hari.</p>
+
+<h2>Eksplorasi — Panggang Adonannya</h2>
+<div class="card">
+  <div class="slider-field">
+    <label>Faktor pemuaian adonan <b id="valK">1.0</b>×</label>
+    <input type="range" id="k" min="1" max="3" step="0.05" value="1">
+  </div>
+  <svg id="adonan" viewBox="0 0 300 300"></svg>
+  <div class="result">
+    <table>
+      <tr><th>Pasangan kismis</th><th>Jarak</th></tr>
+      <tr><td>Berdekatan</td><td id="jarakDekat">-</td></tr>
+      <tr><td>Berjauhan</td><td id="jarakJauh">-</td></tr>
+    </table>
+  </div>
+  <p class="note">Rasio pertambahan jarak keduanya selalu sama dengan faktor pemuaian — persis logika di balik v=H₀d.</p>
+</div>
+
+<h2>Batasan</h2>
+<div class="limitbox">
+  <ul>
+    <li>Adonan mengembang dalam wadah (oven) yang bisa kita lihat dari luar — alam semesta, sejauh yang teramati, tidak mengembang "ke dalam" ruang yang lebih besar seperti itu. Analogi ini murni untuk intuisi pola jarak, bukan geometri sesungguhnya.</li>
+  </ul>
+</div>
+
+<div class="card" style="text-align:center">
+  <a class="wa" id="waLink" href="#" target="_blank">Konsultasi via WhatsApp</a>
+</div>
+
+<footer>Bagian dari Bank Alat JAZMI — trilogi analogi ringan pendamping "Hukum Hubble &amp; Ekspansi Alam Semesta" (bersama Karet Gelang &amp; Balon Mengembang).</footer>
+</div>
+
+<script>
+const kEl = document.getElementById('k');
+// posisi kismis relatif (base, sebelum dikali k), dari titik acuan (0,0) di tengah
+const kismis = [
+  {x:0, y:0, label:'A'},
+  {x:25, y:15, label:'B (dekat)'},
+  {x:-90, y:60, label:'C (jauh)'}
+];
+
+function hitung(){
+  const k = parseFloat(kEl.value);
+  document.getElementById('valK').textContent = k.toFixed(2);
+
+  const dAB = Math.hypot((kismis[1].x-kismis[0].x)*k, (kismis[1].y-kismis[0].y)*k);
+  const dAC = Math.hypot((kismis[2].x-kismis[0].x)*k, (kismis[2].y-kismis[0].y)*k);
+  document.getElementById('jarakDekat').textContent = dAB.toFixed(1);
+  document.getElementById('jarakJauh').textContent = dAC.toFixed(1);
+
+  gambar(k);
+}
+
+function gambar(k){
+  const svg = document.getElementById('adonan');
+  const cx=150, cy=150;
+  const warna=['#c9a24d','#6fae8c','#d98c5f'];
+  let dots='';
+  kismis.forEach((p,i)=>{
+    const x = cx+p.x*k, y = cy+p.y*k;
+    dots += `<circle cx="${x}" cy="${y}" r="7" fill="${warna[i]}"/><text x="${x}" y="${y-12}" fill="${warna[i]}" font-size="12" text-anchor="middle">${p.label}</text>`;
+  });
+  const boxSize = 120*k;
+  svg.innerHTML = `
+    <rect x="${cx-boxSize/2}" y="${cy-boxSize/2}" width="${boxSize}" height="${boxSize}" rx="16" fill="#3a2a1a" stroke="#d98c5f" stroke-width="2" opacity="0.4"/>
+    ${dots}
+  `;
+}
+
+kEl.addEventListener('input', hitung);
+document.getElementById('waLink').href = `https://wa.me/6281356572588?text=${encodeURIComponent("Assalamu'alaikum, saya ingin diskusi terkait Adonan Kismis yang Mengembang JAZMI.")}`;
+hitung();
+</script>
+</body>
+</html>

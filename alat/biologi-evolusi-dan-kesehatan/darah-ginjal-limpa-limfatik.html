@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perjalanan Darah — Ginjal, Limpa &amp; Sistem Limfatik</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#F4F7FB;--card:#FFFFFF;--ink:#1E293B;--soft:#64748B;--red:#DC2626;--blue:#3B82F6;--purple:#8B5CF6;--green:#16A34A;--orange:#F59E0B;--line:#E2E8F0;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Nunito',sans-serif;}
+  .wrap{max-width:740px;margin:0 auto;padding:28px 18px 60px;}
+  h1{font-size:1.55rem;font-weight:800;margin:0 0 8px;}
+  h2{font-size:1.12rem;font-weight:800;margin:0 0 8px;}
+  h3{font-size:1rem;font-weight:800;margin:14px 0 6px;}
+  p{color:var(--soft);font-size:0.94rem;margin:0 0 14px;}
+  .card{background:var(--card);border-radius:16px;padding:20px;margin-bottom:18px;box-shadow:0 1px 3px rgba(30,41,59,0.08);}
+  .tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+  .tabbtn{padding:10px 16px;border-radius:20px;border:2px solid var(--line);background:#fff;color:var(--soft);font-weight:800;cursor:pointer;font-size:0.9rem;}
+  .tabbtn.active{color:#fff;border-color:transparent;}
+  .tabbtn[data-t=komposisi].active{background:var(--ink);}
+  .tabbtn[data-t=ginjal].active{background:var(--red);}
+  .tabbtn[data-t=limpa].active{background:var(--purple);}
+  .tabbtn[data-t=limfatik].active{background:var(--green);}
+  .tabpage{display:none;} .tabpage.active{display:block;}
+
+  label{display:flex;justify-content:space-between;font-weight:700;font-size:0.86rem;color:var(--soft);margin-bottom:6px;}
+  label b{color:var(--ink);}
+  input[type=range]{width:100%;margin-bottom:14px;}
+  canvas{width:100%;display:block;border-radius:12px;background:#F8FAFC;margin-bottom:10px;}
+  .btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  button{border:none;border-radius:10px;padding:9px 15px;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.86rem;cursor:pointer;background:#EEF2F7;color:var(--ink);}
+  button.on{background:var(--purple);color:#fff;}
+
+  .statrow{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0;}
+  .stat{flex:1;min-width:130px;background:#F1F5F9;border-radius:12px;padding:10px 14px;text-align:center;}
+  .stat .n{font-size:1.25rem;font-weight:800;}
+  .stat .l{font-size:0.74rem;color:var(--soft);font-weight:700;}
+
+  .spleenrow{display:flex;justify-content:space-around;align-items:flex-end;margin:16px 0;}
+  .spleenbox{text-align:center;}
+  .spleenbox .lbl{font-size:0.82rem;font-weight:800;margin-top:8px;}
+
+  .callout{background:#F0F9FF;border-left:4px solid var(--blue);border-radius:0 12px 12px 0;padding:14px 16px;font-size:0.9rem;color:#0C4A6E;margin-top:10px;}
+  .callout.warn{background:#FFF7ED;border-color:var(--orange);color:#7C4A03;}
+  .callout b{color:inherit;}
+  .plain-list{margin:0;padding-left:1.2em;color:var(--soft);font-size:0.9rem;}
+  .plain-list li{margin-bottom:7px;}
+  .foot{font-size:0.8rem;color:var(--soft);text-align:center;margin-top:6px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🩸 Perjalanan Darah: Ginjal, Limpa &amp; Sistem Limfatik</h1>
+  <p>Tiga sistem yang jarang dilihat bersamaan, padahal saling terkait lewat satu hal yang sama: darah yang terus berputar di tubuhmu. Semua model di sini disederhanakan untuk membangun intuisi — bukan alat diagnosis, dan tubuh sungguhan jauh lebih rumit dari kurva mana pun di bawah.</p>
+
+  <div class="tabs" id="tabs"></div>
+
+  <!-- ================= KOMPOSISI ================= -->
+  <div class="tabpage active" id="page-komposisi">
+    <div class="card">
+      <h2>🩸 Dari apa sebenarnya darah tersusun</h2>
+      <p>Sebelum masuk ke tiga organ tadi, ada baiknya melihat dulu apa isi darah itu sendiri — karena tiap organ di tab lain sebenarnya bertugas mengurus satu bagian tertentu, bukan darah sebagai satu benda utuh.</p>
+      <canvas id="compChart" width="700" height="190"></canvas>
+      <p class="foot">Persentase mendekati kondisi rata-rata orang dewasa. Formed elements = sel &amp; keping darah; hampir semuanya (≈99%) adalah sel darah merah.</p>
+    </div>
+
+    <div class="card" style="border-left:4px solid var(--purple);">
+      <h3>🟣 Bagian sel — urusan Limpa</h3>
+      <p style="margin-bottom:0;">Sel darah merah (dan sel darah lain) itulah yang diperiksa dan disaring limpa — bukan berdasarkan apa yang dibawanya, tapi berdasarkan usia dan kelenturan sel itu sendiri. Rinciannya ada di tab Limpa.</p>
+    </div>
+
+    <div class="card" style="border-left:4px solid var(--red);">
+      <h3>🫘 Bagian cairan, sisi limbah — urusan Ginjal</h3>
+      <p style="margin-bottom:0;">Plasma membawa hasil sisa metabolisme sel di seluruh tubuh — bukan langsung "sampah dari pencernaan", tapi produk buangan setelah gizi yang diserap tadi benar-benar dipakai sel (urea dari pemecahan protein, dan sejenisnya). Ginjal menyaring plasma berulang kali, membuang sisa itu lewat urine sambil menjaga air &amp; garamnya tetap seimbang. Rinciannya ada di tab Ginjal.</p>
+    </div>
+
+    <div class="card" style="border-left:4px solid var(--green);">
+      <h3>🟢 Bagian cairan, sisi "tumpah" — urusan Sistem Limfatik</h3>
+      <p style="margin-bottom:0;">Saat plasma mengantar gizi ke tujuan akhirnya (sel-sel di seluruh jaringan), sebagian cairan &amp; proteinnya memang sengaja "ditumpahkan" keluar dari pembuluh terkecil supaya sampai ke sel yang tidak pernah disentuh darah secara langsung — bukan kebocoran yang salah, itu cara pengiriman paketnya bekerja. Sistem limfatik yang memungut kembali cairan &amp; protein yang tumpah itu. Rinciannya ada di tab Sistem Limfatik.</p>
+    </div>
+
+    <div class="card" style="border-left:4px solid var(--ink);">
+      <h3>🔗 Satu variabel yang menghubungkan ketiganya</h3>
+      <p>Tiga cerita di atas sengaja diceritakan terpisah dulu supaya masing-masing jelas. Tapi kalau benar darah yang bermasalah duluan, lalu organ-organ lain diam-diam menampung dampaknya — itu semestinya bisa digerakkan lewat satu tuas yang sama, bukan cuma diceritakan berulang di tiga tab berbeda.</p>
+      <label>Riwayat gula darah tinggi kronis <b id="masterVal">0%</b></label>
+      <input type="range" id="masterRange" min="0" max="100" step="1" value="0">
+      <div class="callout">Geser ke kanan, lalu buka tab Ginjal, Limpa, dan Sistem Limfatik satu per satu — kurva cadangan nefron, titik penyaringan sel darah merah di limpa, dan drainase limfatik semuanya ikut bergeser dari slider yang sama ini. Sesudahnya kamu tetap bisa menggeser slider di masing-masing tab secara terpisah untuk melihat kondisi lain.</div>
+    </div>
+  </div>
+
+  <!-- ================= GINJAL ================= -->
+  <div class="tabpage" id="page-ginjal">
+    <div class="card">
+      <h2>🫘 Saat tubuh "mengorbankan" ginjal</h2>
+      <p>Waktu kehilangan banyak darah atau syok berat, tubuh punya prioritas: otak dan jantung harus tetap dapat pasokan darah, apa pun risikonya. Ginjal, usus, dan kulit ada di urutan yang dikorbankan lebih dulu.</p>
+      <label>Tingkat kehilangan volume darah <b id="shockVal">0%</b></label>
+      <input type="range" id="shockRange" min="0" max="40" step="1" value="0">
+      <canvas id="shockChart" width="700" height="260"></canvas>
+      <div class="callout">Otak &amp; jantung punya mekanisme <b>autoregulasi</b> yang keras kepala mempertahankan aliran darahnya. Ginjal tidak seistimewa itu — begitu tubuh dalam tekanan, pembuluh menuju ginjal ikut menyempit lebih dulu supaya darah yang tersisa diprioritaskan ke atas.</div>
+    </div>
+
+    <div class="card">
+      <h2>🔍 Kenapa penyakit ginjal sering "diam-diam"</h2>
+      <p>Ini konsep yang berbeda dari syok akut di atas — ini soal cadangan. Ginjal punya jaringan penyaring (nefron) jauh lebih banyak dari yang benar-benar dibutuhkan sehari-hari.</p>
+      <label>Nefron yang masih berfungsi <b id="nephronVal">100%</b></label>
+      <input type="range" id="nephronRange" min="10" max="100" step="1" value="100">
+      <canvas id="nephronChart" width="700" height="240"></canvas>
+      <div class="statrow">
+        <div class="stat"><div class="n" id="gfrVal" style="color:var(--red);">100%</div><div class="l">fungsi yang KELIHATAN di lab</div></div>
+      </div>
+      <div class="callout warn"><b>Ini yang membuatnya licik:</b> geser ke kiri sampai sekitar 50–60% nefron tersisa — angka fungsi yang kelihatan di lab masih terlihat "normal saja". Kerusakan baru kelihatan jelas setelah cadangannya benar-benar menipis. Bukan berarti tubuh sengaja "memilih" ginjal untuk rusak — lebih tepatnya, ginjal punya begitu banyak cadangan sehingga kerusakan bertahun-tahun bisa bersembunyi di baliknya.</div>
+    </div>
+
+    <div class="card" style="border-left:4px solid var(--red);">
+      <h3>🎯 Kenapa yang jebol duluan bukan darahnya sendiri</h3>
+      <p>Ini titik yang gampang terlewat. Gula darah tinggi dan tekanan darah tinggi itu sendiri sebenarnya masalah pada <b style="color:var(--ink);">darah</b> — dan kalau darah itu yang rusak parah dan langsung, dampaknya terasa ke seluruh tubuh sekaligus, cepat dan berat: itulah krisis hipertensi, itulah ketoasidosis diabetik.</p>
+      <p>Tapi ginjal berdiri di antara "darah yang mulai rusak" dan "gejala yang biasa kita kenali sebagai sakit gula atau darah tinggi" — dan karena cadangannya nyaris berlebihan, ginjal menyerap pukulan itu duluan, diam-diam, bertahun-tahun, sebelum akhirnya menyerah.</p>
+      <p style="margin-bottom:0;">Jadi bukan "alih-alih kena darah tinggi atau gula, malah kena ginjal" — urutannya justru terbalik: darahnya sudah bermasalah sejak awal, hanya saja titik yang paling dulu kelihatan menyerah bukan darahnya (karena tubuh keras kepala menjaga angka itu tetap stabil), melainkan organ yang diam-diam menampung akibatnya selama ini. Badan yang masih terasa kuat bukan berarti bebas dari kerusakan — cuma berarti kerusakannya sedang ditampung di tempat yang jauh dari dugaan, sampai tempat itu sendiri kehabisan ruang.</p>
+    </div>
+
+    <div class="card" style="border-left:4px solid var(--orange);">
+      <h3>🔀 Lalu kenapa tidak semua orang begitu?</h3>
+      <p>Ini pertanyaan yang wajar muncul: kalau ceritanya selalu "ginjal duluan yang menyerah", kenapa ada orang yang justru langsung kena gula darah tinggi atau tekanan darah tinggi tanpa ginjalnya bermasalah lebih dulu? Jawabannya menunjuk ke satu titik yang belum disinggung di atas: <b style="color:var(--ink);">seberapa baik yang menyaring darah sebelum ia benar-benar beredar</b> — usus, lambung, dan terutama hati.</p>
+      <p>Semua yang diserap dari pencernaan singgah dulu lewat hati sebelum ikut beredar luas (aliran vena porta). Hati sehat menahan lonjakan gula, menyimpannya jadi cadangan, melepas pelan-pelan — sehingga darah yang akhirnya beredar ke seluruh tubuh sudah "diredam" duluan, stabil. Kalau hati atau pencernaannya sendiri yang bermasalah (perlemakan hati, kerja pankreas terganggu, atau memang apa yang masuk sudah kelewat ekstrem dan sesering apa), peredamnya sendiri jebol — darah yang beredar keluar dari hati sudah kacau dari sumbernya, bukan hasil olahan yang stabil lagi.</p>
+      <p style="margin-bottom:0;">Jadi dua pola berbeda, dua organ berbeda yang jadi titik lemahnya: kalau <b style="color:var(--ink);">peredam di hulu (pencernaan/hati)</b> yang lemah, darahnya sendiri yang langsung kacau dan gejalanya cepat terlihat sebagai "penyakit gula/darah tinggi". Kalau peredam di hulu itu masih kuat tapi <b style="color:var(--ink);">ginjal sendiri</b> yang punya titik lemah (bawaan, tekanan darah, dehidrasi berulang), darahnya tetap terlihat stabil di lab sementara ginjal diam-diam menampung kerusakannya sendiri. Bukan berarti salah satu orang "lebih sehat" — cuma titik lemahnya di rantai yang berbeda.</p>
+    </div>
+
+    <div class="card">
+      <h3>Kenapa makin banyak yang kena di usia muda?</h3>
+      <p>Bukan satu sebab tunggal, tapi tumpukan kebiasaan yang masing-masing kecil, terus-menerus melukai nefron yang tidak bisa tumbuh lagi:</p>
+      <ul class="plain-list">
+        <li>Gula darah yang sering tinggi (termasuk sebelum resmi jadi diabetes) merusak pembuluh kecil di penyaring ginjal.</li>
+        <li>Tekanan darah tinggi membuat penyaring ginjal bekerja di bawah tekanan berlebih terus-menerus.</li>
+        <li>Dehidrasi berulang (kurang minum, kerja di tempat panas) membuat ginjal berulang kali bekerja dengan aliran darah yang lebih sedikit dari seharusnya.</li>
+        <li>Obat pereda nyeri golongan NSAID yang dipakai sembarangan dalam jangka panjang.</li>
+      </ul>
+      <p style="margin-top:8px;">Karena nefron yang mati tidak diganti, semua ini <i>menumpuk</i> secara diam-diam persis seperti kurva cadangan di atas.</p>
+    </div>
+  </div>
+
+  <!-- ================= LIMPA ================= -->
+  <div class="tabpage" id="page-limpa">
+    <div class="card">
+      <h2>🟣 Kapan darahmu "wajib" singgah ke limpa</h2>
+      <p>Sel darah merah hidup rata-rata sekitar 120 hari. Limpa adalah pos pemeriksaan kualitas: setiap kali darah lewat, sel yang sudah terlalu tua atau kaku disaring dan dibongkar di sana.</p>
+      <label>Usia sel darah merah ini <b id="ageVal">0 hari</b></label>
+      <input type="range" id="ageRange" min="0" max="140" step="1" value="0">
+      <canvas id="spleenChart" width="700" height="260"></canvas>
+      <div class="statrow">
+        <div class="stat"><div class="n" id="filteredVal" style="color:var(--purple);">0%</div><div class="l">peluang sudah disaring keluar</div></div>
+        <div class="stat"><div class="n" id="freeVal" style="color:var(--blue);">100%</div><div class="l">peluang masih beredar bebas</div></div>
+      </div>
+      <h3 style="margin-top:18px;">🔄 Ke mana perginya sel yang sudah disaring</h3>
+      <p>Sel yang tidak lolos tes lentur di limpa bukan sekadar "hilang" — bagian-bagiannya didaur ulang, dan sebagian justru kembali ke tempat sel darah merah pertama kali dibuat. Titik penanda merah di bawah mengikuti slider usia yang sama seperti di atas.</p>
+      <canvas id="rbcCycleChart" width="700" height="270"></canvas>
+      <p class="foot" id="rbcStageLabel">Tahap saat ini: —</p>
+      <p class="foot">Model disederhanakan: peluang "disaring" naik tajam mendekati usia 110–120 hari — bukan kebetulan, itulah rata-rata umur sel darah merah.</p>
+    </div>
+
+    <div class="card" style="border-left:4px solid var(--purple);">
+      <h3>⚙️ Bukan diundi tiap hari — ini soal lolos-tidaknya tes fisik</h3>
+      <p>Kurva di atas gampang disalahpahami seolah tiap hari sel darah merah diundi, dan cuma soal waktu sampai undiannya berpihak padanya. Yang sebenarnya terjadi jauh lebih pasti dari itu.</p>
+      <p>Sel darah merah tidak cuma lewat limpa sekali di akhir hidupnya — ia disaring ulang <i>setiap kali darah bersirkulasi</i>, kira-kira tiap 1–2 menit, ribuan kali sepanjang usianya. Limpa punya celah sempit (selebar 2–3 mikrometer) yang cuma bisa dilewati sel yang masih lentur — sel harus melipat dirinya sendiri untuk muat. Sel yang muda gampang melipat karena cadangan energinya (ATP) dan luas membrannya masih utuh. Tiap kali lewat celah itu, sedikit membran dan energinya terkikis — kerusakan kecil yang tak bisa diperbaiki, menumpuk pelan setiap putaran.</p>
+      <p>Jadi bukan sel itu "mau-mau saja mengalah" di hari ke-120 — ia sudah diuji ribuan kali sebelumnya dan selalu lolos, sampai kelenturannya benar-benar habis dan untuk pertama (sekaligus terakhir) kalinya, ia tidak muat lagi. 120 hari bukan hitung mundur; itu rata-rata berapa lama sebuah sel bertahan lolos tes yang sama, diulang tanpa henti.</p>
+      <p>Soal darah yang katanya sebagian langsung menuju limpa dari jantung: benar — sekitar 5% darah yang dipompa jantung mengalir langsung lewat arteri limpa. Tapi ini bukan jalur khusus "menuju kematian sel", melainkan bagian dari sirkulasi biasa yang justru membuat pengujian tadi bisa terjadi sesering itu.</p>
+      <p>Sel yang habis disaring tadi tentu perlu terus digantikan — dan gantinya baru benar-benar diproduksi kalau ada lampu hijau dari organ lain. <b style="color:var(--ink);">Ginjal</b> yang memantau kadar oksigen darah: begitu kadarnya turun, ginjal melepas hormon <b style="color:var(--ink);">eritropoietin (EPO)</b> yang memberi sinyal ke sumsum tulang untuk mempercepat produksi sel darah merah baru. Rantai penyaringan di limpa dan rantai produksi di sumsum tulang jalan bersamaan, diatur dari organ ketiga.</p>
+      <p style="margin-bottom:0;">Limpa sendiri sebenarnya menyimpan kemampuan produksi itu sebagai cadangan yang jarang dipakai: pada orang dewasa sehat, sumsum tulang sudah sepenuhnya memegang tugas produksi sejak masa kanak-kanak — tapi kalau sumsum tulang terganggu berat, limpa bisa "menghidupkan kembali" fungsi produksinya sendiri, persis perannya semasa masih janin. Disebut <i>hematopoiesis ekstramedular</i> — bukti bahwa peran limpa dan sumsum tulang tidak sepenuhnya terpisah, cuma pembagian tugas yang biasanya dipegang teguh.</p>
+    </div>
+
+    <div class="card">
+      <h2>🌊 Bonus: kenapa limpa suku Bajau lebih besar</h2>
+      <p>Penelitian genetik tahun 2018 menemukan limpa masyarakat Bajau (penyelam tradisional Asia Tenggara) rata-rata <b>sekitar 50% lebih besar</b> dibanding tetangga mereka yang bukan penyelam — bahkan pada anggota keluarga yang sendiri tidak pernah menyelam.</p>
+      <div class="spleenrow">
+        <div class="spleenbox"><svg width="90" height="90"><circle cx="45" cy="45" r="32" fill="#C4B5FD"/></svg><div class="lbl">Limpa umum</div></div>
+        <div class="spleenbox"><svg width="90" height="90"><circle cx="45" cy="45" r="39" fill="#8B5CF6"/></svg><div class="lbl">Limpa suku Bajau</div></div>
+      </div>
+      <div class="callout">Limpa menyimpan cadangan sel darah merah kaya oksigen. Saat menyelam, limpa <b>berkontraksi</b> dan memeras cadangan itu masuk ke aliran darah — semacam "tangki oksigen tambahan" alami. Peneliti menemukan varian gen <b>PDE10A</b> pada suku Bajau yang menaikkan kadar hormon tiroid T4, dan T4 diketahui memperbesar ukuran limpa. Limpa yang lebih besar → cadangan darah kaya oksigen lebih banyak → napas tahan lebih lama saat menyelam.</div>
+    </div>
+  </div>
+
+  <!-- ================= LIMFATIK ================= -->
+  <div class="tabpage" id="page-limfatik">
+    <div class="card">
+      <h2>🟢 Saluran yang jarang disadari orang</h2>
+      <p>Selain pembuluh darah, tubuh punya jaringan saluran kedua yang mengalir sendiri (tidak dipompa jantung): sistem limfatik. Tugasnya menampung cairan yang bocor dari pembuluh darah kecil dan mengembalikannya ke aliran darah.</p>
+      <p style="margin-bottom:0;">Setiap hari, sekitar 2–3 liter cairan memang <i>sengaja</i> dibiarkan bocor keluar dari ujung pembuluh darah terkecil (kapiler) menuju jaringan — bukan kebocoran yang salah, itu justru cara sel-sel di jaringan mendapat oksigen dan gizinya, karena darah sendiri tidak pernah menyentuh langsung tiap sel. Sistem limfatik yang bertugas menangkap sisa cairan itu, plus protein dan partikel besar yang ikut terbawa tapi tidak muat masuk kembali langsung ke kapiler, lalu mengembalikannya lewat jalur sendiri — melewati ratusan <b style="color:var(--ink);">kelenjar getah bening</b> (tempat sel imun memeriksa apa saja yang lewat) sebelum akhirnya bermuara kembali ke pembuluh darah besar di dekat leher.</p>
+    </div>
+
+    <div class="card" style="border-left:4px solid var(--green);">
+      <h3>🚰 Saluran tanpa pompa sendiri</h3>
+      <p>Ini yang membuat sistem limfatik rapuh dengan caranya sendiri: ia tidak punya jantung. Cairannya bergerak karena diperas oleh kontraksi otot rangka di sekitarnya saat kita bergerak, ditambah gerak napas, dan katup satu-arah yang mencegahnya balik lagi — mirip cara darah balik dari kaki ke jantung lewat pembuluh vena. Tubuh yang lama tidak bergerak (duduk berjam-jam, tirah baring lama) membuat drainase ini melambat bukan karena salurannya rusak, tapi karena mesin pemompanya (otot di sekitarnya) sedang tidak dipakai.</p>
+      <p style="margin-bottom:0;">Segmen-segmen kecil pembuluh limfatik (disebut <i>limfangion</i>) sebenarnya juga bisa berkontraksi sendiri secara ritmis, seperti jantung-jantung kecil berjejer sepanjang saluran — inilah bagian yang, seperti akan terlihat di bawah, ikut kena dampak kalau darah yang lewat di sekitarnya terlalu manis terlalu lama.</p>
+    </div>
+
+    <div class="card">
+      <h2>🔧 Seberapa baik drainase limfatiknya berfungsi</h2>
+      <label>Fungsi drainase saat ini <b id="lymphVal">100%</b></label>
+      <input type="range" id="lymphRange" min="20" max="100" step="5" value="100">
+      <canvas id="lymphChart" width="700" height="220"></canvas>
+      <p>Ini juga menjawab pertanyaan yang sering muncul: kenapa kesemutan yang terasa begitu umum kadang memang bukan apa-apa, tapi kadang justru sinyal paling awal? Karena secara fisiologis dua-duanya bisa muncul dari level drainase yang sama — bedanya bukan pada gejalanya sendiri, tapi pada apakah drainase sedang benar-benar menurun atau tidak, baik karena pembuluh yang cedera langsung maupun secara diam-diam lewat kekakuan limfangion akibat gula darah tinggi berkepanjangan (dibahas di kartu bawah).</p>
+      <div class="callout" style="border-color:var(--green);background:#F0FDF4;color:#14532D;">
+        <b>Bagaimana tubuh terasa pada level ini:</b> <span id="symptomText">—</span>
+      </div>
+      <div class="callout warn">Geser ke kiri (mensimulasikan pembuluh limfatik yang rusak/terangkat, misalnya setelah operasi kanker payudara) — cairan yang seharusnya dikembalikan ke darah malah menumpuk di jaringan. Itulah <b>limfedema</b>: bengkak yang bertahan karena sistem drainasenya sendiri yang bermasalah, bukan karena pembuluh darahnya.</div>
+    </div>
+
+    <div class="card">
+      <h3>Gula, kolesterol, asam urat — lewat jalur mana?</h3>
+      <p>Ketiganya sering disebut bersamaan di cek darah, tapi jalurnya ke aliran darah sebenarnya berbeda-beda:</p>
+      <ul class="plain-list">
+        <li><b style="color:var(--ink);">Gula (glukosa)</b> — diserap langsung oleh pembuluh darah usus, masuk ke vena portal menuju hati. Sistem limfatik nyaris tidak terlibat di sini.</li>
+        <li><b style="color:var(--ink);">Kolesterol &amp; trigliserida (lemak)</b> — ini yang justru <i>benar-benar</i> lewat sistem limfatik: lemak dari makanan dibungkus jadi partikel (kilomikron) dan diserap lewat saluran limfatik usus (disebut lakteal) dulu, baru bermuara ke aliran darah — beda jalur dari gula.</li>
+        <li><b style="color:var(--ink);">Asam urat</b> — hasil sisa metabolisme purin (dari makanan tertentu maupun sel tubuh sendiri), beredar di darah lalu dibuang lewat ginjal. Ini lebih berkaitan dengan kemampuan ginjal membuang, bukan dengan organ pencernaan yang "lemah".</li>
+      </ul>
+      <div class="callout">Jadi bukan tepatnya "organ pencernaan lemah sehingga darah kena dampak langsung" — masing-masing zat ini punya jalur dan organ penanggung jawabnya sendiri: hati &amp; usus untuk lemak lewat limfatik, ginjal untuk asam urat, dan hati/pankreas (insulin) untuk gula.</div>
+    </div>
+
+    <div class="card" style="border-left:4px solid var(--green);">
+      <h3>💧 Kalau begitu, kalau cairan yang bocor itu sendiri membawa gula?</h3>
+      <p>Ini sebenarnya memang terjadi, dan bukan sesuatu yang aneh: cairan yang bocor dari pembuluh darah kecil ke jaringan — yang nantinya jadi getah bening — pada dasarnya adalah plasma darah yang tersaring. Wajar kalau di dalamnya ikut terbawa gula, garam, dan zat-zat kecil lain, persis kadar yang ada di darah saat itu. Bukan kebocoran khusus; memang begitu cara cairan ini terbentuk sejak awal.</p>
+      <p>Yang lebih menarik justru bukan soal apa yang ikut terbawa, tapi apa yang terjadi pada salurannya sendiri kalau kadar gula darah tinggi berkepanjangan. Gula berlebih yang terus-menerus menempel pada protein di dinding pembuluh — proses yang disebut <b style="color:var(--ink);">glikasi</b> — membuat dinding limfangion (segmen pemompa kecil tadi) makin kaku, persis cara gula berlebih merusak elastisitas pembuluh darah biasa. Pembuluh limfatik yang kaku memompa lebih lemah, drainasenya melambat, cairan mulai sedikit menumpuk di jaringan — bahkan tanpa operasi atau kerusakan mekanis apa pun seperti pada limfedema klasik.</p>
+      <p>Ini bisa berputar jadi lingkaran: cairan yang menumpuk membawa lebih banyak sel imun yang terjebak, jaringan sedikit meradang, peradangan ini sendiri lebih lanjut melemahkan kerja limfangion — sementara di permukaan tidak ada gejala mencolok selain mungkin kaki atau tangan yang terasa sedikit lebih berat di penghujung hari.</p>
+      <p style="margin-bottom:0;">Satu pola yang sama lagi dengan tab Ginjal: masalah yang sebenarnya ada di darah, dampaknya justru muncul lebih dulu di sistem lain yang diam-diam menampungnya — kali ini bukan ginjal, tapi saluran drainase cairan tubuh sendiri, dan seringkali <i>lebih dulu</i> daripada ginjal karena pembuluh limfatik jauh lebih halus dan lebih rendah tekanannya, sehingga lebih cepat terasa dampak kekakuan sekecil apa pun.</p>
+    </div>
+
+  </div>
+
+  <div class="card" style="border-left:4px solid #25D366;">
+    <h3>💬 Konsultasi &amp; Komunitas</h3>
+    <p>Kalau ada gejala atau kondisi pribadi yang ingin didiskusikan lebih lanjut dari model-model di atas, silakan hubungi langsung — ini bukan alat diagnosis, jadi keluhan nyata tetap paling baik dibicarakan dengan orang, bukan dengan slider.</p>
+    <div class="btnrow">
+      <button type="button" id="btnWhatsapp" style="background:#25D366;color:#fff;">💬 Konsultasi ke Tabib Alfian Muin</button>
+    </div>
+    <p class="foot">Tabib Alfian Muin — S1 Kesehatan Komplementer Dharma Usada</p>
+  </div>
+
+</div>
+
+<div id="waModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:1000;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:16px;padding:26px 22px;max-width:360px;width:100%;text-align:center;">
+    <div style="font-size:2.2rem;margin-bottom:8px;">📲</div>
+    <h3 style="margin:0 0 8px;">Sambil menunggu balasan…</h3>
+    <p style="margin:0 0 18px;color:var(--soft);font-size:0.9rem;">Gabung juga grup WhatsApp info kesehatan untuk update rutin seputar topik-topik seperti di atas.</p>
+    <a href="https://chat.whatsapp.com/IJOtyFQlt28IvNNSNauNks" target="_blank" rel="noopener" style="display:block;background:#25D366;color:#fff;text-decoration:none;font-weight:800;padding:12px;border-radius:10px;margin-bottom:10px;font-size:0.9rem;">Gabung Grup WhatsApp</a>
+    <button type="button" id="btnCloseModal" style="width:100%;background:#EEF2F7;color:#1E293B;">Nanti saja</button>
+  </div>
+</div>
+
+<script>
+/* ================= TABS ================= */
+const TABS=[{k:'komposisi',label:'🩸 Komposisi Darah'},{k:'ginjal',label:'🫘 Ginjal'},{k:'limpa',label:'🟣 Limpa'},{k:'limfatik',label:'🟢 Sistem Limfatik'}];
+function renderTabs(){
+  const el=document.getElementById('tabs');
+  el.innerHTML=TABS.map(t=>`<button type="button" class="tabbtn ${t.k==='komposisi'?'active':''}" data-t="${t.k}">${t.label}</button>`).join('');
+  el.querySelectorAll('.tabbtn').forEach(b=>b.addEventListener('click',()=>{
+    el.querySelectorAll('.tabbtn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.querySelectorAll('.tabpage').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-'+b.dataset.t).classList.add('active');
+  }));
+}
+
+/* ================= KOMPOSISI: diagram batang darah ================= */
+function drawCompChart(){
+  const c=document.getElementById('compChart'), ctx=c.getContext('2d');
+  const W=c.width,H=c.height,pad=20,barY=40,barH=46;
+  ctx.clearRect(0,0,W,H);
+  const segs=[
+    {label:'Plasma (air, protein, gizi, sisa metabolisme)', frac:0.55, color:'#3B82F6'},
+    {label:'Sel darah merah', frac:0.44, color:'#8B5CF6'},
+    {label:'Sel darah putih & keping darah', frac:0.01, color:'#F59E0B'},
+  ];
+  let x=pad;
+  const barW=W-2*pad;
+  ctx.font='12px Nunito, sans-serif';
+  segs.forEach(s=>{
+    const w=s.frac*barW;
+    ctx.fillStyle=s.color;
+    ctx.fillRect(x,barY,Math.max(w,1),barH);
+    ctx.fillStyle='#1E293B';
+    ctx.fillText((s.frac*100).toFixed(0)+'%', x+6, barY+barH+18);
+    x+=w;
+  });
+  // legend
+  let ly=barY+barH+38, lx=pad;
+  segs.forEach(s=>{
+    ctx.fillStyle=s.color; ctx.fillRect(lx,ly-9,10,10);
+    ctx.fillStyle='#64748B'; ctx.font='11px Nunito, sans-serif';
+    const wtxt=ctx.measureText(s.label).width;
+    ctx.fillText(s.label, lx+14, ly);
+    lx += 14+wtxt+18;
+    if(lx>W-pad-100){ lx=pad; ly+=18; }
+  });
+}
+
+/* ================= GINJAL: syok & redistribusi ================= */
+function drawShockChart(sev){
+  const c=document.getElementById('shockChart'), ctx=c.getContext('2d');
+  const W=c.width,H=c.height,pad=40;
+  ctx.clearRect(0,0,W,H);
+  const organs=[
+    {n:'Otak', base:15, min:13, color:'#3B82F6'},
+    {n:'Jantung', base:5, min:5, color:'#16A34A'},
+    {n:'Ginjal', base:20, min:5, color:'#DC2626'},
+    {n:'Usus/Hati', base:25, min:8, color:'#F59E0B'},
+    {n:'Kulit/Otot', base:35, min:12, color:'#8B5CF6'},
+  ];
+  const f = sev/40;
+  const vals = organs.map(o=> o.base - (o.base-o.min)*Math.pow(f, o.n==='Otak'||o.n==='Jantung' ? 3 : 1));
+  const barW=(W-2*pad)/organs.length;
+  ctx.fillStyle='#94A3B8'; ctx.font='12px Nunito, sans-serif';
+  organs.forEach((o,i)=>{
+    const h=(vals[i]/35)*(H-2*pad);
+    const x=pad+i*barW;
+    ctx.fillStyle=o.color;
+    ctx.fillRect(x+8, H-pad-h, barW-16, h);
+    ctx.fillStyle='#1E293B';
+    ctx.fillText(vals[i].toFixed(0)+'%', x+10, H-pad-h-6);
+    ctx.fillStyle='#64748B';
+    ctx.fillText(o.n, x+6, H-pad+16);
+  });
+  ctx.strokeStyle='#CBD5E1'; ctx.beginPath(); ctx.moveTo(pad,H-pad); ctx.lineTo(W-pad,H-pad); ctx.stroke();
+}
+document.getElementById('shockRange').addEventListener('input', e=>{
+  document.getElementById('shockVal').textContent=e.target.value+'%';
+  drawShockChart(+e.target.value);
+});
+
+/* ================= GINJAL: cadangan nefron ================= */
+function gfrFromNephron(n){
+  const threshold=60;
+  if(n>=threshold) return 100-(100-n)*0.4;
+  const atThreshold = 100-(100-threshold)*0.4;
+  return atThreshold*Math.pow(n/threshold, 1.6);
+}
+function drawNephronChart(current){
+  const c=document.getElementById('nephronChart'), ctx=c.getContext('2d');
+  const W=c.width,H=c.height,pad=36;
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='#CBD5E1'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad,H-pad); ctx.lineTo(W-pad,H-pad); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad,H-pad); ctx.lineTo(pad,pad); ctx.stroke();
+  ctx.fillStyle='#94A3B8'; ctx.font='11px Nunito, sans-serif';
+  ctx.fillText('nefron tersisa →', W-140, H-12);
+  ctx.save(); ctx.translate(14,pad+10); ctx.rotate(-Math.PI/2); ctx.fillText('fungsi terlihat (GFR%) →',0,0); ctx.restore();
+
+  ctx.strokeStyle='#DC2626'; ctx.lineWidth=2.5; ctx.beginPath();
+  for(let n=10;n<=100;n++){
+    const x = pad + (n/100)*(W-2*pad);
+    const y = H-pad - (gfrFromNephron(n)/100)*(H-2*pad);
+    if(n===10) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+
+  const gfr = gfrFromNephron(current);
+  const px = pad+(current/100)*(W-2*pad), py = H-pad-(gfr/100)*(H-2*pad);
+  ctx.fillStyle='#DC2626'; ctx.beginPath(); ctx.arc(px,py,6,0,7); ctx.fill();
+  document.getElementById('gfrVal').textContent = gfr.toFixed(0)+'%';
+}
+document.getElementById('nephronRange').addEventListener('input', e=>{
+  document.getElementById('nephronVal').textContent=e.target.value+'%';
+  drawNephronChart(+e.target.value);
+});
+
+/* ================= LIMPA: kurva penyaringan ================= */
+let spleenMidpoint = 110;
+function removalProb(day){ return 1/(1+Math.exp(-(day-spleenMidpoint)/10)); }
+function survivalAt(day){
+  let s=1;
+  for(let d=1; d<=day; d++) s *= (1-removalProb(d));
+  return s;
+}
+function drawSpleenChart(currentDay){
+  const c=document.getElementById('spleenChart'), ctx=c.getContext('2d');
+  const W=c.width,H=c.height,pad=36;
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='#CBD5E1'; ctx.beginPath(); ctx.moveTo(pad,H-pad); ctx.lineTo(W-pad,H-pad); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad,H-pad); ctx.lineTo(pad,pad); ctx.stroke();
+  ctx.fillStyle='#94A3B8'; ctx.font='11px Nunito, sans-serif';
+  ctx.fillText('usia sel darah merah (hari) →', W-190, H-12);
+
+  ctx.strokeStyle='#8B5CF6'; ctx.lineWidth=2.5; ctx.beginPath();
+  for(let d=0; d<=140; d+=2){
+    const s = survivalAt(d);
+    const x = pad + (d/140)*(W-2*pad), y = H-pad - s*(H-2*pad);
+    if(d===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+
+  const sNow = survivalAt(currentDay);
+  const px = pad+(currentDay/140)*(W-2*pad), py = H-pad - sNow*(H-2*pad);
+  ctx.fillStyle='#8B5CF6'; ctx.beginPath(); ctx.arc(px,py,6,0,7); ctx.fill();
+
+  document.getElementById('freeVal').textContent = (sNow*100).toFixed(1)+'%';
+  document.getElementById('filteredVal').textContent = ((1-sNow)*100).toFixed(1)+'%';
+}
+document.getElementById('ageRange').addEventListener('input', e=>{
+  document.getElementById('ageVal').textContent=e.target.value+' hari';
+  drawSpleenChart(+e.target.value);
+  drawRbcCycle(+e.target.value);
+});
+
+/* ================= LIMPA: siklus sumsum → darah → limpa → besi didaur ulang ================= */
+function rbcStage(day){
+  const f = day/140;
+  if(f < 0.07) return 'baru diproduksi di sumsum tulang';
+  if(f < 0.65) return 'bersirkulasi normal dalam darah';
+  if(f < 0.85) return 'mendekati limpa — kelenturan mulai diuji lebih ketat';
+  return 'disaring di limpa — zat besi mulai didaur ulang kembali ke sumsum tulang';
+}
+function drawRbcCycle(day){
+  const c=document.getElementById('rbcCycleChart'), ctx=c.getContext('2d');
+  const W=c.width,H=c.height, cx=W/2, cy=H/2-6, R=90;
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='#CBD5E1'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.stroke();
+
+  const stages=[
+    {label:'Sumsum tulang', sub:'(produksi)', ang:0},
+    {label:'Darah', sub:'(sirkulasi)', ang:90},
+    {label:'Limpa', sub:'(disaring)', ang:180},
+    {label:'Zat besi', sub:'(didaur ulang)', ang:270}
+  ];
+  ctx.textAlign='center';
+  stages.forEach(s=>{
+    const rad=(s.ang-90)*Math.PI/180;
+    const x=cx+Math.cos(rad)*R, y=cy+Math.sin(rad)*R;
+    const dy = s.ang===0 ? -16 : 28;
+    ctx.fillStyle='#94A3B8'; ctx.beginPath(); ctx.arc(x,y,6,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#1E293B'; ctx.font='12px Nunito, sans-serif';
+    ctx.fillText(s.label, x, y+dy);
+    ctx.fillStyle='#94A3B8'; ctx.font='10px Nunito, sans-serif';
+    ctx.fillText(s.sub, x, y+dy+12);
+  });
+  ctx.textAlign='left';
+
+  const f = Math.min(day/140,1);
+  const rad2 = (f*360-90)*Math.PI/180;
+  const mx=cx+Math.cos(rad2)*R, my=cy+Math.sin(rad2)*R;
+  ctx.fillStyle='#DC2626'; ctx.beginPath(); ctx.arc(mx,my,7,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
+
+  document.getElementById('rbcStageLabel').textContent = 'Tahap saat ini (usia '+day+' hari): '+rbcStage(day);
+}
+
+/* ================= LIMFATIK: keseimbangan cairan ================= */
+function drawLymphChart(func){
+  const c=document.getElementById('lymphChart'), ctx=c.getContext('2d');
+  const W=c.width,H=c.height,pad=34;
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='#CBD5E1'; ctx.beginPath(); ctx.moveTo(pad,H-pad); ctx.lineTo(W-pad,H-pad); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad,H-pad); ctx.lineTo(pad,pad); ctx.stroke();
+  ctx.fillStyle='#94A3B8'; ctx.font='11px Nunito, sans-serif';
+  ctx.fillText('jam →', W-40, H-12);
+  ctx.save(); ctx.translate(14,pad+10); ctx.rotate(-Math.PI/2); ctx.fillText('cairan menumpuk di jaringan →',0,0); ctx.restore();
+
+  const leakRate=3, drainRate = 3*(func/100);
+  const net = leakRate-drainRate;
+  ctx.strokeStyle='#16A34A'; ctx.lineWidth=2.5; ctx.beginPath();
+  const maxAccum = leakRate*48; // skala TETAP (skenario terburuk: drainase 0%) — bukan ikut nilai func saat ini, supaya tiap level benar-benar bisa dibandingkan
+  for(let h=0; h<=48; h++){
+    const accum = Math.max(0, net*h);
+    const x = pad+(h/48)*(W-2*pad), y = H-pad - (accum/maxAccum)*(H-2*pad);
+    if(h===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+}
+document.getElementById('lymphRange').addEventListener('input', e=>{
+  document.getElementById('lymphVal').textContent=e.target.value+'%';
+  drawLymphChart(+e.target.value);
+  updateSymptomText(+e.target.value);
+});
+
+function symptomForLymph(v){
+  if(v>=90) return 'Drainase optimal — tidak ada penumpukan cairan yang terasa. Ini kondisi dasar sebelum ada gangguan apa pun.';
+  if(v>=70) return 'Fungsi masih memadai. Kadang kaki/tangan terasa sedikit lebih berat di penghujung hari setelah duduk/berdiri lama — biasanya hilang sendiri semalaman, jarang disadari sebagai "gejala".';
+  if(v>=50) return 'Penumpukan cairan mulai konsisten walau belum terlihat sebagai bengkak. Sebagian orang mulai merasakan kesemutan ringan atau rasa "tebal" di ujung jari — sering diabaikan karena tidak mengganggu aktivitas, padahal ini titik paling awal tubuh mulai merespons cairan yang gagal ditarik kembali.';
+  if(v>=30) return 'Bengkak ringan mulai terlihat, biasanya di pergelangan kaki, memburuk sore hari. Kesemutan lebih sering terasa, kadang disertai kulit yang terasa sedikit kencang.';
+  return 'Mendekati gambaran limfedema: bengkak menetap, tidak sepenuhnya hilang semalaman, kulit di atasnya bisa terasa lebih tebal. Kesemutan dan rasa berat jadi lebih konsisten, bukan sekadar di penghujung hari.';
+}
+function updateSymptomText(v){
+  document.getElementById('symptomText').textContent = symptomForLymph(v);
+}
+
+/* ================= SLIDER INDUK (tab Komposisi) ================= */
+function applyMaster(v){
+  document.getElementById('masterVal').textContent = v+'%';
+
+  const nephronVal = Math.max(10, Math.round(100 - v*0.6));
+  document.getElementById('nephronRange').value = nephronVal;
+  document.getElementById('nephronVal').textContent = nephronVal+'%';
+  drawNephronChart(nephronVal);
+
+  spleenMidpoint = 110 - v*0.45;
+  const curAge = +document.getElementById('ageRange').value;
+  drawSpleenChart(curAge);
+  drawRbcCycle(curAge);
+
+  const lymphVal = Math.max(20, Math.round(100 - v*0.7));
+  document.getElementById('lymphRange').value = lymphVal;
+  document.getElementById('lymphVal').textContent = lymphVal+'%';
+  drawLymphChart(lymphVal);
+  updateSymptomText(lymphVal);
+}
+document.getElementById('masterRange').addEventListener('input', e=>{
+  applyMaster(+e.target.value);
+});
+
+/* ================= WHATSAPP: konsultasi + ajakan grup ================= */
+const WA_NUMBER = '6281356572588';
+const WA_MESSAGE = 'Assalamualaikum, saya ingin bertanya/konsultasi...';
+document.getElementById('btnWhatsapp').addEventListener('click', ()=>{
+  const url = 'https://wa.me/'+WA_NUMBER+'?text='+encodeURIComponent(WA_MESSAGE);
+  window.open(url, '_blank');
+  document.getElementById('waModal').style.display = 'flex';
+});
+document.getElementById('btnCloseModal').addEventListener('click', ()=>{
+  document.getElementById('waModal').style.display = 'none';
+});
+document.getElementById('waModal').addEventListener('click', e=>{
+  if(e.target.id==='waModal') e.target.style.display='none';
+});
+
+/* ================= INIT ================= */
+renderTabs();
+drawCompChart();
+drawShockChart(0);
+drawNephronChart(100);
+drawSpleenChart(0);
+drawRbcCycle(0);
+drawLymphChart(100);
+updateSymptomText(100);
+</script>
+</body>
+</html>

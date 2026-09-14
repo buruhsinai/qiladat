@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Waktu & Jarak — Mengikat yang Abstrak ke yang Fisik</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fdf6e8; --card:#ffffff; --line:#f0e2c4;
+    --ink:#3a3226; --dim:#8a7c62;
+    --accent:#4f86c6; --accent-soft:#e8f0fb;
+    --display:'Fredoka',sans-serif; --sans:'Quicksand',sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;}
+  .wrap{max-width:880px;margin:0 auto;padding:0 18px 70px;}
+
+  .hero{padding:40px 18px 28px;text-align:center;}
+  .hero h1{font-family:var(--display);font-weight:700;font-size:clamp(24px,5.5vw,36px);margin:0 0 10px;color:#2d4a6b;}
+  .hero p{max-width:520px;margin:0 auto;color:var(--dim);font-size:15px;}
+
+  .philo{background:var(--accent-soft);border-radius:16px;padding:18px 22px;margin:20px 0 30px;font-size:14.5px;color:#3a5a7d;}
+  .philo strong{color:#2d4a6b;}
+
+  .tab-nav{display:flex;gap:8px;margin-bottom:22px;}
+  .tab-btn{flex:1;font-family:var(--display);font-weight:600;font-size:15px;background:#fff;border:2px solid var(--line);
+    color:var(--dim);padding:14px;border-radius:14px;cursor:pointer;text-align:center;}
+  .tab-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  .card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:22px;margin-bottom:16px;}
+  .card h2{font-family:var(--display);font-size:19px;margin:0 0 6px;color:#2d4a6b;}
+  .card p.hint{color:var(--dim);font-size:13.5px;margin-top:0;}
+
+  .field-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px;}
+  @media(min-width:600px){.field-grid.two{grid-template-columns:1fr 1fr;}}
+  .field label{display:block;font-family:var(--mono);font-size:11.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px;}
+  .field input, .field select{
+    width:100%;padding:11px 13px;border:2px solid var(--line);border-radius:10px;font-family:var(--sans);
+    font-size:14.5px;color:var(--ink);background:#fffdf8;
+  }
+  .field input:focus, .field select:focus{outline:none;border-color:var(--accent);}
+
+  .swatch-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+  .swatch{width:38px;height:38px;border-radius:50%;border:3px solid transparent;cursor:pointer;}
+  .swatch.active{border-color:var(--ink);}
+
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;}
+  .btn{font-family:var(--display);font-weight:600;font-size:14px;padding:12px 20px;border-radius:12px;border:none;cursor:pointer;}
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-secondary{background:#fff;color:var(--accent);border:2px solid var(--accent);}
+
+  /* KALENDER PREVIEW */
+  #previewWaktu, #previewJarak{background:#fffdf8;border:2px dashed var(--line);border-radius:18px;padding:24px;margin-top:8px;}
+  .preview-title{font-family:var(--display);font-size:20px;text-align:center;margin:0 0 4px;color:#2d4a6b;}
+  .preview-sub{text-align:center;color:var(--dim);font-size:13.5px;margin-bottom:16px;}
+  .countdown{text-align:center;font-family:var(--display);font-size:15px;background:var(--accent-soft);color:#2d4a6b;
+    border-radius:10px;padding:10px;margin-bottom:18px;}
+
+  .grid-pekan, .grid-tahun{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
+  .grid-bulan{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .grid-tahun{grid-template-columns:repeat(4,1fr);}
+  .kotak-hari{border:2px solid var(--line);border-radius:10px;padding:10px 4px;text-align:center;font-size:12px;font-weight:600;color:var(--ink);min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .kotak-hari.lewat{background:#f2ede0;color:#b9ad94;text-decoration:line-through;border-color:#e6ddc6;}
+  .kotak-hari.target{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+  .kotak-hari .simbol{font-size:18px;margin-top:2px;}
+
+  .fisik-note{margin-top:18px;background:#fbf3df;border-radius:12px;padding:14px 16px;font-size:13.5px;color:#6b5c3e;}
+  .fisik-note strong{color:#4a3c22;}
+
+  /* JARAK TAB */
+  .peta-svg-wrap{overflow-x:auto;padding:10px 0;}
+  .peta-info{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;}
+  @media(max-width:520px){.peta-info{grid-template-columns:1fr;}}
+  .peta-info .pi-box{background:var(--accent-soft);border-radius:10px;padding:12px 14px;text-align:center;}
+  .peta-info .pi-num{font-family:var(--display);font-size:18px;color:#2d4a6b;}
+  .peta-info .pi-lbl{font-size:11.5px;color:var(--dim);}
+
+  .print-hint{font-size:12px;color:var(--dim);margin-top:10px;text-align:center;}
+
+  footer{text-align:center;padding-top:30px;color:#b9ad94;font-size:12px;font-family:var(--mono);}
+
+  /* PRINT */
+  @media print{
+    body{background:#fff;}
+    .hero, .philo, .tab-nav, .card, footer{display:none !important;}
+    #previewWaktu, #previewJarak{display:block !important;border:none;padding:0;}
+    .no-print{display:none !important;}
+    .wrap{max-width:100%;padding:0;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="hero">
+    <h1>Waktu &amp; Jarak,<br>Diikat ke yang Fisik</h1>
+    <p>Dua alat sederhana untuk membantu anak memahami bahwa waktu dan jarak bukan angka abstrak — keduanya bisa dirasakan lewat matahari, langkah kaki, dan kotak yang dicoret satu per satu.</p>
+  </div>
+
+  <div class="philo">
+    <strong>Kenapa diikat ke fisik?</strong> Anak belum bisa membayangkan "1 minggu" sebagai angka. Tapi ia bisa memahami "sudah berapa kali kamu bangun tidur sejak kemarin" atau "berapa kali matahari terbit dan tenggelam". Begitu juga jarak: "800 meter" tidak bermakna, tapi "kira-kira 2000 langkah kakimu" jauh lebih nyata. Dua alat di bawah ini dibangun di atas prinsip itu.
+  </div>
+
+  <div class="tab-nav no-print">
+    <button class="tab-btn active" data-tab="waktu">⏳ Konsep Waktu</button>
+    <button class="tab-btn" data-tab="jarak">🗺️ Konsep Jarak</button>
+  </div>
+
+  <!-- ======================= TAB WAKTU ======================= -->
+  <div class="tab-panel active" id="tab-waktu">
+    <div class="card no-print">
+      <h2>Kalender Penantian</h2>
+      <p class="hint">Tandai hari yang dinanti — setiap hari yang lewat dicoret, hari yang ditunggu diberi simbol.</p>
+
+      <div class="field-grid two">
+        <div class="field"><label>Nama Anak</label><input id="wNama" value="Adek"></div>
+        <div class="field"><label>Yang Dinanti</label><input id="wHadiah" value="Es Krim Coklat"></div>
+      </div>
+
+      <div class="field-grid two">
+        <div class="field">
+          <label>Skala Waktu</label>
+          <select id="wMode">
+            <option value="pekan">Satu Pekan (7 hari)</option>
+            <option value="bulan">Satu Bulan</option>
+            <option value="tahun">Satu Tahun</option>
+          </select>
+        </div>
+        <div class="field" id="wTargetWrap">
+          <label>Hari yang Ditunggu</label>
+          <select id="wHariTarget">
+            <option value="0">Minggu</option><option value="1">Senin</option><option value="2">Selasa</option>
+            <option value="3">Rabu</option><option value="4">Kamis</option><option value="5">Jumat</option>
+            <option value="6">Sabtu</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Tema Simbol</label>
+        <select id="wTema">
+          <option value="🍦">Es Krim</option>
+          <option value="🚗">Mobil</option>
+          <option value="🌸">Bunga</option>
+          <option value="🦖">Dinosaurus</option>
+          <option value="🌙">Bulan &amp; Bintang</option>
+          <option value="⚽">Bola</option>
+          <option value="🎂">Kue Ulang Tahun</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Warna Tema</label>
+        <div class="swatch-row" id="wSwatch">
+          <div class="swatch active" style="background:#4f86c6" data-color="#4f86c6"></div>
+          <div class="swatch" style="background:#e0699a" data-color="#e0699a"></div>
+          <div class="swatch" style="background:#5cb87a" data-color="#5cb87a"></div>
+          <div class="swatch" style="background:#a878d9" data-color="#a878d9"></div>
+          <div class="swatch" style="background:#e0a83f" data-color="#e0a83f"></div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="buatKalender()">Buat Kalender</button>
+        <button class="btn btn-secondary" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
+        <button class="btn btn-secondary" onclick="unduhPNG('previewWaktu','kalender-penantian.png')">⬇️ Unduh Gambar</button>
+      </div>
+    </div>
+
+    <div id="previewWaktu">
+      <div class="preview-title" id="wJudul">🍦 Kalender Penantian Adek 🍦</div>
+      <div class="preview-sub" id="wSub"></div>
+      <div class="countdown" id="wCountdown"></div>
+      <div id="wGrid"></div>
+      <div class="fisik-note" id="wFisikNote"></div>
+    </div>
+    <p class="print-hint no-print">Saat mencetak, pilih skala 100% (bukan "fit to page") agar hasilnya rapi.</p>
+  </div>
+
+  <!-- ======================= TAB JARAK ======================= -->
+  <div class="tab-panel" id="tab-jarak">
+    <div class="card no-print">
+      <h2>Peta Skala Sederhana</h2>
+      <p class="hint">Bukan peta detail seperti Google Maps — cuma garis dengan beberapa titik penting, digambar dengan skala yang benar-benar bisa diukur pakai penggaris di kertas.</p>
+
+      <div class="field-grid two">
+        <div class="field"><label>Titik Awal</label><input id="jTitikA" value="Rumah"></div>
+        <div class="field"><label>Titik Akhir</label><input id="jTitikB" value="Sekolah"></div>
+      </div>
+
+      <div class="field-grid two">
+        <div class="field"><label>Jarak Sungguhan (meter)</label><input id="jJarak" type="number" value="800" min="10"></div>
+        <div class="field">
+          <label>Skala Cetak</label>
+          <select id="jSkala">
+            <option value="50">1 cm = 50 meter</option>
+            <option value="100" selected>1 cm = 100 meter</option>
+            <option value="200">1 cm = 200 meter</option>
+            <option value="500">1 cm = 500 meter</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-grid two">
+        <div class="field"><label>Titik Tengah 1 (opsional)</label><input id="jTitik1" value="Jembatan"></div>
+        <div class="field"><label>Titik Tengah 2 (opsional)</label><input id="jTitik2" value="Masjid"></div>
+      </div>
+
+      <div class="field">
+        <label>Panjang Langkah Anak (cm)</label>
+        <input id="jLangkah" type="number" value="40" min="10">
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="buatPeta()">Buat Peta</button>
+        <button class="btn btn-secondary" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
+        <button class="btn btn-secondary" onclick="unduhPNG('previewJarak','peta-skala.png')">⬇️ Unduh Gambar</button>
+      </div>
+    </div>
+
+    <div id="previewJarak">
+      <div class="preview-title" id="jJudul">🗺️ Peta Petualangan</div>
+      <div class="preview-sub" id="jSub"></div>
+      <div class="peta-svg-wrap" id="jSvgWrap"></div>
+      <div class="peta-info" id="jInfo"></div>
+    </div>
+    <p class="print-hint no-print">Setelah dicetak (skala 100%), coba ukur garis peta dengan penggaris — panjangnya akan sesuai skala yang dipilih.</p>
+  </div>
+
+  <div class="card" style="margin-top:30px;">
+    <h2 style="font-size:16px;">Catatan untuk Orang Tua</h2>
+    <p class="hint" style="margin-bottom:0;">Kalender Penantian sengaja dimulai dari skala pekan (paling mudah dirasakan anak), baru naik ke bulan lalu tahun. Penjelasan fisiknya juga bertahap: matahari terbit-tenggelam untuk hari, siklus Bulan untuk bulan, dan perputaran Bumi mengelilingi Matahari untuk tahun — supaya konsep waktu tidak berhenti sebagai angka di kalender, tapi tersambung ke sesuatu yang benar-benar terjadi di langit. Peta Skala Sederhana sengaja tidak memakai data peta digital sungguhan — untuk anak kecil, satu garis dengan skala yang bisa diukur pakai penggaris jauh lebih mudah dipahami daripada peta detail. Setelah konsep skala ini melekat, barulah Google Maps sungguhan akan lebih mudah dipahami sebagai "peta yang sama, cuma lebih detail".</p>
+  </div>
+
+  <footer>Laboratorium Pendidikan Anak — bagian dari Bank Alat JAZMI/Qiladat</footer>
+</div>
+
+<script>
+  // ===== TAB SWITCHING =====
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ===== SWATCH SELECT =====
+  let warnaAktif = '#4f86c6';
+  document.querySelectorAll('#wSwatch .swatch').forEach(s => {
+    s.addEventListener('click', () => {
+      document.querySelectorAll('#wSwatch .swatch').forEach(x => x.classList.remove('active'));
+      s.classList.add('active');
+      warnaAktif = s.dataset.color;
+      document.documentElement.style.setProperty('--accent', warnaAktif);
+      buatKalender();
+    });
+  });
+
+  document.getElementById('wMode').addEventListener('change', () => {
+    document.getElementById('wTargetWrap').style.display = document.getElementById('wMode').value === 'pekan' ? 'block' : 'none';
+  });
+
+  // ===== KALENDER WAKTU =====
+  const namaHariPendek = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+  const namaBulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+
+  function buatKalender(){
+    const nama = document.getElementById('wNama').value || 'Adek';
+    const hadiah = document.getElementById('wHadiah').value || 'Hadiah';
+    const mode = document.getElementById('wMode').value;
+    const tema = document.getElementById('wTema').value;
+    const now = new Date();
+
+    document.getElementById('wJudul').textContent = `${tema} Kalender Penantian ${nama} ${tema}`;
+
+    let gridHtml = '';
+    let sub = '';
+    let fisikNote = '';
+    let countdownText = '';
+
+    if(mode === 'pekan'){
+      const hariTarget = parseInt(document.getElementById('wHariTarget').value);
+      const hariIni = now.getDay();
+      sub = `Menanti ${hadiah} setiap hari ${namaHariPendek[hariTarget] === namaHariPendek[hariIni] ? '' : ''}${['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][hariTarget]}`;
+      gridHtml = '<div class="grid-pekan">';
+      for(let i=0;i<7;i++){
+        let cls = '';
+        if(i < hariIni) cls = 'lewat';
+        if(i === hariTarget) cls = 'target';
+        gridHtml += `<div class="kotak-hari ${cls}">${namaHariPendek[i]}${i===hariTarget ? `<div class="simbol">${tema}</div>` : ''}</div>`;
+      }
+      gridHtml += '</div>';
+      let selisih = (hariTarget - hariIni + 7) % 7;
+      countdownText = selisih === 0 ? `Hari ini harinya, ${nama}! 🎉` : `Tinggal ${selisih} hari lagi!`;
+      fisikNote = `<strong>Kenapa 1 pekan = 7 hari?</strong> Setiap hari, Matahari terbit sekali dan tenggelam sekali — itu tandanya 1 hari sudah lewat. Hitung 7 kali matahari terbit-tenggelam, sampailah kita di hari yang ditunggu!`;
+    }
+
+    else if(mode === 'bulan'){
+      const tanggalTarget = 1; // will be recalculated below via select if present; default handled via prompt-free approach
+      const year = now.getFullYear(), month = now.getMonth();
+      const jumlahHari = new Date(year, month+1, 0).getDate();
+      const tanggalIni = now.getDate();
+      // pick target near end of month by default (e.g., last day) unless user picked one via wHariTarget reused? use separate logic:
+      const target = Math.min(jumlahHari, Math.max(tanggalIni+1, jumlahHari));
+      sub = `Menanti ${hadiah} di tanggal ${target} ${namaBulan[month]}`;
+      gridHtml = '<div class="grid-bulan">';
+      for(let d=1; d<=jumlahHari; d++){
+        let cls = '';
+        if(d < tanggalIni) cls = 'lewat';
+        if(d === target) cls = 'target';
+        gridHtml += `<div class="kotak-hari ${cls}">${d}${d===target ? `<div class="simbol">${tema}</div>` : ''}</div>`;
+      }
+      gridHtml += '</div>';
+      let selisih = target - tanggalIni;
+      countdownText = selisih <= 0 ? `Hari ini harinya, ${nama}! 🎉` : `Tinggal ${selisih} hari lagi!`;
+      fisikNote = `<strong>Kenapa ada bulan?</strong> Di langit malam, Bulan berubah bentuk — dari sabit tipis, membesar jadi purnama bulat, lalu mengecil lagi. Satu putaran penuh itu kira-kira sama dengan satu bulan di kalender kita.`;
+    }
+
+    else { // tahun
+      const bulanTarget = now.getMonth(); // default: current month highlighted as example; parent can reinterpret
+      const bulanIni = now.getMonth();
+      sub = `Menanti ${hadiah} — perjalanan satu tahun penuh`;
+      gridHtml = '<div class="grid-tahun">';
+      for(let b=0;b<12;b++){
+        let cls = '';
+        if(b < bulanIni) cls = 'lewat';
+        if(b === bulanTarget) cls = 'target';
+        gridHtml += `<div class="kotak-hari ${cls}">${namaBulan[b]}${b===bulanTarget ? `<div class="simbol">${tema}</div>` : ''}</div>`;
+      }
+      gridHtml += '</div>';
+      countdownText = `Setiap bulan yang lewat, kita satu langkah lebih dekat!`;
+      fisikNote = `<strong>Kenapa 1 tahun itu lama?</strong> Bumi tempat kita tinggal sedang mengelilingi Matahari. Satu kali putaran penuh mengelilingi Matahari itulah yang kita sebut 1 tahun.`;
+    }
+
+    document.getElementById('wSub').textContent = sub;
+    document.getElementById('wCountdown').textContent = countdownText;
+    document.getElementById('wGrid').innerHTML = gridHtml;
+    document.getElementById('wFisikNote').innerHTML = fisikNote;
+  }
+
+  // ===== PETA JARAK =====
+  function buatPeta(){
+    const titikA = document.getElementById('jTitikA').value || 'A';
+    const titikB = document.getElementById('jTitikB').value || 'B';
+    const jarak = parseFloat(document.getElementById('jJarak').value) || 100;
+    const skala = parseFloat(document.getElementById('jSkala').value);
+    const titik1 = document.getElementById('jTitik1').value;
+    const titik2 = document.getElementById('jTitik2').value;
+    const langkahCm = parseFloat(document.getElementById('jLangkah').value) || 40;
+
+    const panjangCm = jarak / skala; // cm sungguhan kalau dicetak
+    const langkahKaki = Math.round((jarak * 100) / langkahCm);
+
+    document.getElementById('jJudul').textContent = `🗺️ Peta ${titikA} ke ${titikB}`;
+    document.getElementById('jSub').textContent = `Skala: 1 cm kertas = ${skala} meter dunia nyata`;
+
+    // titik-titik di sepanjang jalur
+    const titikTengah = [titik1, titik2].filter(t => t && t.trim() !== '');
+    const semuaTitik = [titikA, ...titikTengah, titikB];
+    const n = semuaTitik.length;
+    const svgWidth = 700, svgHeight = 160, marginX = 60;
+    const usableWidth = svgWidth - marginX*2;
+
+    let points = [];
+    for(let i=0;i<n;i++){
+      const x = marginX + (usableWidth * i / (n-1));
+      points.push({x, y: 90, label: semuaTitik[i]});
+    }
+
+    let pathD = `M ${points[0].x} ${points[0].y}`;
+    for(let i=1;i<points.length;i++) pathD += ` L ${points[i].x} ${points[i].y}`;
+
+    let markersHtml = '';
+    const iconAwalAkhir = ['🏠','🏫'];
+    points.forEach((p, i) => {
+      const icon = i===0 ? '🏠' : (i===points.length-1 ? '🏫' : '📍');
+      markersHtml += `
+        <circle cx="${p.x}" cy="${p.y}" r="7" fill="#fff" stroke="#4f86c6" stroke-width="3"/>
+        <text x="${p.x}" y="${p.y - 18}" text-anchor="middle" font-size="20">${icon}</text>
+        <text x="${p.x}" y="${p.y + 30}" text-anchor="middle" font-family="Quicksand" font-size="12" fill="#3a3226" font-weight="600">${p.label}</text>
+      `;
+    });
+
+    const svg = `
+      <svg viewBox="0 0 ${svgWidth} ${svgHeight}" style="width:${Math.max(280, panjangCm*37.8)}px;max-width:100%;" xmlns="http://www.w3.org/2000/svg">
+        <path d="${pathD}" fill="none" stroke="#c9c0a4" stroke-width="4" stroke-dasharray="2 10" stroke-linecap="round"/>
+        ${markersHtml}
+      </svg>
+      <div class="print-scale-bar" style="width:${panjangCm}cm;height:6px;background:repeating-linear-gradient(90deg,#4f86c6 0 1cm,#fff 1cm 2cm);margin:14px auto 0;border-radius:3px;"></div>
+      <div style="text-align:center;font-family:'JetBrains Mono';font-size:11px;color:#8a7c62;margin-top:6px;">^ garis ini panjangnya ${panjangCm.toFixed(1)} cm kalau dicetak — coba ukur pakai penggaris!</div>
+    `;
+    document.getElementById('jSvgWrap').innerHTML = svg;
+
+    document.getElementById('jInfo').innerHTML = `
+      <div class="pi-box"><div class="pi-num">${jarak} m</div><div class="pi-lbl">jarak sungguhan</div></div>
+      <div class="pi-box"><div class="pi-num">${panjangCm.toFixed(1)} cm</div><div class="pi-lbl">panjang di kertas</div></div>
+      <div class="pi-box"><div class="pi-num">≈${langkahKaki.toLocaleString('id-ID')}</div><div class="pi-lbl">langkah kaki anak</div></div>
+      <div class="pi-box"><div class="pi-num">${titikTengah.length}</div><div class="pi-lbl">titik singgah</div></div>
+    `;
+  }
+
+  // ===== UNDUH PNG =====
+  function unduhPNG(elId, filename){
+    const el = document.getElementById(elId);
+    html2canvas(el, {backgroundColor:'#fffdf8', scale:2}).then(canvas => {
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+  }
+
+  buatKalender();
+  buatPeta();
+</script>
+
+</body>
+</html>

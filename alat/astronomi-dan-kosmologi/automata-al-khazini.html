@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Automata Al-Khazini — Bola Astronomi yang Berotasi Otomatis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --parchment:#e9d8ac;
+    --parchment-2:#dfc890;
+    --ink:#2b2013;
+    --ink-soft:#5d4d34;
+    --rule:#b39a5e;
+    --workshop:#14171f;
+    --workshop-2:#1c212c;
+    --workshop-line:#343c4c;
+    --brass:#c9973f;
+    --brass-bright:#eecb84;
+    --brass-dim:#8a6a35;
+    --patina:#7ea38c;
+    --rust:#c26a4d;
+    --starlight:#cdd8e6;
+    --shadow:rgba(20,14,4,0.35);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:#0d0f14;
+    color:var(--ink);
+    font-family:'Work Sans',sans-serif;
+    line-height:1.5;
+  }
+  h1,h2,h3,h4{ font-family:'Spectral',serif; margin:0; color:inherit; }
+  p{ margin:0 0 12px; }
+  .measure{ max-width:62ch; }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    background:
+      radial-gradient(ellipse at 30% 0%, rgba(201,151,63,0.18), transparent 60%),
+      linear-gradient(180deg,#0a0b0f 0%, #14161d 100%);
+    color:var(--parchment);
+    padding:64px 24px 56px;
+    text-align:center;
+    border-bottom:1px solid var(--workshop-line);
+  }
+  .hero .eyebrow{
+    font-family:'Spectral',serif; font-style:italic; font-weight:500;
+    color:var(--brass-bright); font-size:1.05rem; margin-bottom:10px;
+  }
+  .hero h1{
+    font-size:clamp(2rem,5vw,3.1rem); font-weight:700; letter-spacing:0.01em;
+    max-width:16ch; margin:0 auto 16px;
+  }
+  .hero .translit{
+    font-family:'Spectral',serif; font-style:italic; color:#a99a76;
+    font-size:1.05rem; max-width:44ch; margin:0 auto 20px; line-height:1.6;
+  }
+  .hero .frame{
+    max-width:56ch; margin:0 auto; color:#c9bd9d; font-size:1rem;
+  }
+
+  /* ---------- SECTIONS ---------- */
+  main{ max-width:1180px; margin:0 auto; padding:0 20px; }
+  section{ padding:52px 0; }
+  .section-title{ font-size:1.7rem; font-weight:600; margin-bottom:6px; color:var(--parchment); }
+  .section-kicker{ color:var(--brass-bright); font-family:'Spectral',serif; font-style:italic; margin-bottom:4px; }
+
+  .panel-paper{
+    background:
+      repeating-linear-gradient(0deg, rgba(0,0,0,0.015) 0 2px, transparent 2px 4px),
+      linear-gradient(160deg, var(--parchment) 0%, var(--parchment-2) 100%);
+    border:1px solid var(--rule);
+    border-radius:4px;
+    padding:32px 36px;
+    box-shadow:0 18px 40px -20px var(--shadow);
+    color:var(--ink);
+  }
+  .panel-paper h2{ color:var(--ink); }
+  .panel-paper h3{ color:var(--ink); }
+  .panel-paper p{ color:var(--ink-soft); }
+
+  /* context section sits directly on dark bg, framed like a manuscript excerpt */
+  .context-wrap{ padding-top:44px; }
+
+  /* ---------- LAB (workshop + controls) ---------- */
+  .lab-wrap{ padding-top:44px; }
+  .lab-grid{
+    display:grid; grid-template-columns:1.5fr 1fr; gap:22px; align-items:start;
+    margin-top:22px;
+  }
+  @media (max-width:920px){ .lab-grid{ grid-template-columns:1fr; } }
+
+  .workshop{
+    background:radial-gradient(ellipse at 50% -10%, #232838, var(--workshop) 65%);
+    border:1px solid var(--workshop-line);
+    border-radius:6px;
+    padding:18px 18px 20px;
+  }
+  .workshop canvas{ width:100%; height:auto; display:block; border-radius:4px; }
+  .transport{ display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
+  .stats-bar{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(128px,1fr));
+    gap:10px; margin-top:14px;
+  }
+  .stat{
+    background:var(--workshop-2); border:1px solid var(--workshop-line);
+    border-radius:4px; padding:10px 12px;
+  }
+  .stat .label{ font-size:0.72rem; color:#8b93a6; margin-bottom:3px; }
+  .stat .value{ font-family:'Spectral',serif; font-weight:600; font-size:1.05rem; color:var(--parchment); font-variant-numeric:tabular-nums; }
+  .stat.warn .value{ color:var(--rust); }
+  .stat.ok .value{ color:var(--patina); }
+
+  .btn{
+    font-family:'Work Sans',sans-serif; font-weight:600; font-size:0.86rem;
+    padding:10px 16px; border-radius:4px; border:1px solid var(--brass-dim);
+    background:transparent; color:var(--brass-bright); cursor:pointer;
+    transition:background 0.15s, color 0.15s;
+  }
+  .btn:hover{ background:rgba(201,151,63,0.12); }
+  .btn.primary{ background:var(--brass); color:#20160a; border-color:var(--brass); }
+  .btn.primary:hover{ background:var(--brass-bright); }
+  .btn:focus-visible, input:focus-visible, select:focus-visible{ outline:2px solid var(--brass-bright); outline-offset:2px; }
+
+  .controls{ }
+  .field{ margin-bottom:20px; }
+  .field:last-child{ margin-bottom:0; }
+  .field-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
+  .field-head label{ font-weight:600; font-size:0.88rem; }
+  .field-head .fval{ font-variant-numeric:tabular-nums; color:var(--ink-soft); font-size:0.85rem; }
+  input[type=range]{
+    width:100%; accent-color:var(--brass-dim); height:4px;
+  }
+  select{
+    width:100%; padding:8px 10px; border-radius:4px; border:1px solid var(--rule);
+    background:#f4e9cc; color:var(--ink); font-family:'Work Sans',sans-serif; font-size:0.86rem;
+  }
+  .toggle-row{ display:flex; gap:8px; }
+  .toggle-btn{
+    flex:1; padding:9px 8px; text-align:center; border-radius:4px; border:1px solid var(--rule);
+    background:#f4e9cc; color:var(--ink-soft); font-size:0.85rem; font-weight:600; cursor:pointer;
+  }
+  .toggle-btn.active{ background:var(--brass); color:#20160a; border-color:var(--brass-dim); }
+  .field-note{ font-size:0.76rem; color:var(--ink-soft); margin-top:6px; }
+  .calib-note{
+    margin-top:16px; padding:12px 14px; border-radius:4px; font-size:0.82rem;
+    background:rgba(178,106,77,0.12); border:1px solid var(--rust); color:#7a3d29; display:none;
+  }
+  .calib-note.show{ display:block; }
+  .calib-note.ok{ background:rgba(126,163,140,0.15); border-color:var(--patina); color:#2f4d3d; }
+
+  /* ---------- CHART ---------- */
+  .chart-card{
+    background:var(--workshop); border:1px solid var(--workshop-line); border-radius:6px;
+    padding:20px; margin-top:18px;
+  }
+  .chart-card canvas{ width:100%; height:auto; display:block; }
+  .chart-legend{ display:flex; gap:18px; margin-top:10px; font-size:0.8rem; color:#a7afc0; flex-wrap:wrap; }
+  .chart-legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .chart-legend .sw{ width:14px; height:3px; display:inline-block; }
+
+  /* ---------- LEARN (accordion) ---------- */
+  details{
+    border-top:1px solid var(--rule); padding:16px 0;
+  }
+  details:last-of-type{ border-bottom:1px solid var(--rule); }
+  summary{
+    cursor:pointer; font-family:'Spectral',serif; font-weight:600; font-size:1.08rem;
+    list-style:none; display:flex; justify-content:space-between; align-items:center; gap:12px;
+  }
+  summary::-webkit-details-marker{ display:none; }
+  summary .plus{ font-family:'Work Sans',sans-serif; font-weight:400; font-size:1.3rem; color:var(--brass-dim); flex-shrink:0; }
+  details[open] summary .plus{ transform:rotate(45deg); }
+  summary .plus{ transition:transform 0.15s; display:inline-block; }
+  .detail-body{ margin-top:12px; color:var(--ink-soft); font-size:0.94rem; }
+  .detail-body p{ color:var(--ink-soft); }
+
+  /* ---------- SOURCES ---------- */
+  .sources{ font-size:0.85rem; }
+  .sources ul{ margin:0; padding-left:20px; }
+  .sources li{ margin-bottom:10px; color:var(--ink-soft); }
+  .sources .caveat{
+    margin-top:16px; padding:14px 16px; background:rgba(178,106,77,0.1);
+    border-left:3px solid var(--rust); border-radius:2px; color:#7a3d29;
+  }
+
+  footer{ text-align:center; padding:36px 20px 48px; color:#697086; font-size:0.82rem; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="eyebrow">Naskah abad ke-12, Khurasan</div>
+  <h1>Automata Al-Khazini</h1>
+  <p class="translit">Maqāla fī ittikhādh kura tadūru bi-dhātihā bi-ḥaraka mutasāwiya li-ḥarakat al-falak — risalah tentang membuat bola yang berputar sendiri, dengan gerak yang sama dengan gerak langit.</p>
+  <p class="frame">Sebuah bola langit yang berputar sendiri, tepat satu putaran sehari, digerakkan bukan oleh roda gigi atau motor — melainkan oleh sebutir demi sebutir pasir yang jatuh. Geser parameter di bawah dan lihat sendiri kenapa pilihan bahan itu penting.</p>
+</header>
+
+<main>
+
+  <section class="context-wrap">
+    <div class="panel-paper">
+      <div class="section-kicker">Masalahnya</div>
+      <h2 class="section-title">Bagaimana caranya sesuatu berputar dengan kecepatan yang benar-benar tetap, tanpa listrik dan tanpa roda gigi presisi?</h2>
+      <p class="measure">Abu'l-Fath Abd al-Rahman al-Khazini — ilmuwan istana Sultan Sanjar di Khurasan pada awal abad ke-12, dan penulis <em>Kitab Mizan al-Hikma</em> (Kitab Neraca Kebijaksanaan) — menjawabnya dengan sebuah bola langit bertanda rasi bintang, ditopang setengah tenggelam dalam kotak, yang diputar oleh pemberat yang turun perlahan seiring pasir bocor keluar dari wadahnya. Satu putaran penuh, persis satu hari.</p>
+      <p class="measure">Kedengarannya sederhana. Tapi ini menyimpan satu keputusan teknik yang sangat halus: <strong>kenapa pasir, bukan air?</strong> Alat di bawah ini membiarkan Anda menguji sendiri jawabannya — ubah bahan, ukuran lubang, ukuran wadah, dan lihat apakah bola tetap sejajar dengan langit yang sebenarnya, atau perlahan tertinggal.</p>
+    </div>
+  </section>
+
+  <section class="lab-wrap">
+    <div class="section-kicker">Bengkelnya</div>
+    <h2 class="section-title" style="color:var(--parchment)">Laboratorium Rotasi</h2>
+    <p class="measure" style="color:#a7afc0;">Setiap kali Anda menggeser sesuatu, mesin ini menghitung ulang laju alirannya dari awal — bukan tabel yang sudah dihitung sebelumnya.</p>
+
+    <div class="lab-grid">
+      <div class="workshop">
+        <canvas id="labCanvas" width="900" height="420"></canvas>
+        <div class="transport">
+          <button class="btn primary" id="playBtn" type="button">▶ Mulai</button>
+          <button class="btn" id="resetBtn" type="button">↺ Atur Ulang</button>
+          <button class="btn" id="refillBtn" type="button">⟲ Isi Ulang &amp; Selaraskan</button>
+          <button class="btn" id="calibBtn" type="button">⚙ Kalibrasi Radius Otomatis</button>
+        </div>
+        <div class="stats-bar">
+          <div class="stat"><div class="label">Waktu simulasi berjalan</div><div class="value" id="statElapsed">0 dtk</div></div>
+          <div class="stat"><div class="label">Laju alir saat ini</div><div class="value" id="statFlow">—</div></div>
+          <div class="stat"><div class="label">Sisa media presisi</div><div class="value" id="statRemain">—</div></div>
+          <div class="stat" id="statDriftBox"><div class="label">Selisih dari langit sebenarnya</div><div class="value" id="statDrift">0°</div></div>
+        </div>
+      </div>
+
+      <div class="controls panel-paper">
+        <div class="field">
+          <div class="field-head"><label>Media pengatur waktu</label></div>
+          <div class="toggle-row">
+            <div class="toggle-btn active" id="mediaSand" data-media="sand">Pasir</div>
+            <div class="toggle-btn" id="mediaWater" data-media="water">Air</div>
+          </div>
+          <div class="field-note">Al-Khazini memakai pasir. Coba "Air" untuk melihat kenapa.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-head"><label for="rTank">Diameter wadah</label><span class="fval" id="rTankVal">10 cm</span></div>
+          <input type="range" id="rTank" min="5" max="20" step="0.5" value="10">
+        </div>
+
+        <div class="field">
+          <div class="field-head"><label for="rHeight">Tinggi media awal</label><span class="fval" id="rHeightVal">20 cm</span></div>
+          <input type="range" id="rHeight" min="10" max="30" step="1" value="20">
+        </div>
+
+        <div class="field">
+          <div class="field-head"><label for="rHole">Diameter lubang keluar</label><span class="fval" id="rHoleVal">1.5 mm</span></div>
+          <input type="range" id="rHole" min="0.5" max="5" step="0.1" value="1.5">
+        </div>
+
+        <div class="field" id="grainField">
+          <div class="field-head"><label for="rGrain">Ukuran butir pasir</label><span class="fval" id="rGrainVal">0.5 mm</span></div>
+          <input type="range" id="rGrain" min="0.1" max="1.5" step="0.05" value="0.5">
+        </div>
+
+        <div class="field">
+          <div class="field-head"><label for="rDrum">Radius drum/katrol</label><span class="fval" id="rDrumVal">5.8 cm</span></div>
+          <input type="range" id="rDrum" min="1" max="15" step="0.05" value="5.8">
+        </div>
+
+        <div class="field">
+          <div class="field-head"><label>Acuan hari</label></div>
+          <div class="toggle-row">
+            <div class="toggle-btn active" id="daySidereal" data-day="sidereal">Sideris (23j 56m)</div>
+            <div class="toggle-btn" id="daySolar" data-day="solar">Matahari (24j)</div>
+          </div>
+          <div class="field-note">Bola langit mengejar bintang, bukan matahari — makanya acuannya hari sideris.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-head"><label for="rSpeed">Kecepatan simulasi</label><span class="fval" id="rSpeedVal">600×</span></div>
+          <select id="rSpeed">
+            <option value="1">1× (waktu nyata)</option>
+            <option value="10">10×</option>
+            <option value="60">60×</option>
+            <option value="600" selected>600×</option>
+            <option value="1800">1.800×</option>
+            <option value="3600">3.600×</option>
+            <option value="10800">10.800×</option>
+          </select>
+        </div>
+
+        <div class="calib-note" id="calibNote"></div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <canvas id="driftChart" width="1100" height="220"></canvas>
+      <div class="chart-legend">
+        <span><span class="sw" style="background:var(--rust);"></span>Selisih sudut terhadap langit sebenarnya (derajat)</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="panel-paper">
+      <div class="section-kicker">Pelajari</div>
+      <h2 class="section-title">Cara kerjanya, dibongkar</h2>
+
+      <details open>
+        <summary>Kenapa jam air biasa sulit presisi <span class="plus">+</span></summary>
+        <div class="detail-body">
+          <p>Air yang mengalir keluar dari sebuah lubang punya laju yang bergantung pada tekanan di atasnya — makin tinggi permukaan air, makin deras alirannya (hukum Torricelli: kecepatan aliran sebanding dengan akar dari tinggi air). Begitu wadah mulai kosong, tekanan turun, dan alirannya melambat. Pemberat yang ditarik oleh air ini pun ikut melambat turunnya — bola langit yang diputarnya akan berputar makin lambat, padahal langit sungguhan tidak pernah melambat.</p>
+          <p>Coba pilih "Air" di panel kontrol, kalibrasikan radiusnya di awal, lalu jalankan — perhatikan grafik selisih di bawah kanvas: garisnya melengkung makin curam seiring waktu, bukan datar.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Kenapa pasir adalah jawabannya <span class="plus">+</span></summary>
+        <div class="detail-body">
+          <p>Butiran padat seperti pasir mengalir lewat lubang sempit dengan cara yang sama sekali berbeda dari cairan. Begitu kedalaman pasir di atas lubang cukup dalam, berat butiran-butiran di atas sebagian besar ditopang oleh gesekan pada dinding wadah, bukan diteruskan langsung ke lubang (efek ini dikenal sebagai efek Janssen, dan rumus laju alirnya dirumuskan Beverloo pada 1961). Akibatnya, laju keluarnya pasir <strong>hampir tidak bergantung pada seberapa penuh wadahnya</strong> — sama seperti jam pasir yang tetap konsisten dari menit pertama sampai terakhir. Yang justru menentukan laju alirnya adalah ukuran lubang dan ukuran butiran itu sendiri.</p>
+          <p>Inilah kemungkinan alasan al-Khazini memilih pasir untuk instrumen presisi ini — bahannya sendiri yang "mengatur diri", tanpa perlu katup atau mekanisme tambahan. Coba perkecil ukuran lubang mendekati ukuran butir pasirnya di alat simulasi — pada titik tertentu pasir akan macet total, persis seperti pasir sungguhan yang membentuk kubah di atas lubang sempit.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Hari sideris vs hari matahari <span class="plus">+</span></summary>
+        <div class="detail-body">
+          <p>Hari matahari (24 jam) adalah waktu Bumi berputar hingga matahari kembali ke posisi yang sama di langit. Tapi karena Bumi juga bergerak mengelilingi matahari, ia perlu berputar sedikit lebih jauh dari satu putaran penuh untuk mengejar posisi itu. Waktu untuk benar-benar berputar 360° terhadap bintang-bintang tetap — hari sideris — sedikit lebih pendek: 23 jam 56 menit 4 detik.</p>
+          <p>Bola langit yang menandai rasi bintang seharusnya mengejar bintang, bukan matahari — jadi acuan yang benar untuk instrumen semacam ini adalah hari sideris. Bedanya kecil per hari (sekitar 3 menit 56 detik), tapi terakumulasi: dalam sebulan, selisihnya sudah lebih dari satu jam penuh.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Dari gerak turun ke putaran: tali, katrol, dan drum <span class="plus">+</span></summary>
+        <div class="detail-body">
+          <p>Pemberat yang turun bergerak lurus; bola langit perlu berputar. Penghubung paling wajar antara keduanya adalah tali yang dililitkan pada sebuah drum di poros bola — setiap sentimeter tali yang tertarik turun memutar drum sejauh busur yang sama, dan radius drum itulah yang menentukan berapa derajat putaran per sentimeter penurunan.</p>
+          <p class="field-note" style="margin-top:10px;"><strong>Catatan kejujuran:</strong> mekanisme tali-katrol-drum ini adalah model teknik yang wajar untuk mengubah gerak turun jadi putaran tetap, dan dipakai di simulasi ini sebagai representasi yang masuk akal. Rincian transmisi yang sesungguhnya digambarkan dalam naskah asli (tali, roda gigi, atau susunan lain) belum saya verifikasi langsung dari sumber utamanya.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section>
+    <div class="panel-paper sources">
+      <div class="section-kicker">Sumber &amp; catatan verifikasi</div>
+      <h2 class="section-title" style="font-size:1.3rem;">Apa yang sudah dipastikan, dan apa yang belum</h2>
+      <ul>
+        <li>Judul traktat, penanggalan (al-Khazini aktif sekitar 1115–1131 M di istana Sultan Sanjar, Khurasan), serta lokasi naskah yang masih tersimpan (Damaskus, koleksi al-Zahiriya MS 4871; Oxford, MS Thurston 3) merujuk pada entri al-Khazini di <em>Biographical Encyclopedia of Astronomers</em> (McGill University, islamsci.mcgill.ca).</li>
+        <li>Kajian akademis khusus atas traktat ini: Richard Lorch, "Al-Khāzinī's Sphere That Rotates by Itself," <em>Journal for the History of Arabic Science</em> 4 (1980): 287–329 — sumber inilah yang saya jadikan pegangan bahwa mekanismenya berupa pemberat yang ditarik oleh wadah pasir yang bocor, bukan air.</li>
+        <li>Karya al-Khazini yang paling terkenal, <em>Kitab Mizan al-Hikma</em> (Kitab Neraca Kebijaksanaan, selesai 1121), serta reputasinya sebagai salah satu pembuat instrumen ilmiah paling presisi di zamannya, adalah fakta sejarah yang mapan dan banyak dikutip.</li>
+        <li>Hukum Torricelli (laju aliran cairan dari lubang) dan persamaan Beverloo (laju alir butiran granular, termasuk mengapa laju itu nyaris tak bergantung pada kedalaman tumpukan di atasnya) adalah hasil fisika/teknik yang sudah mapan dan diajarkan secara luas.</li>
+        <li>Panjang hari sideris (23 jam 56 menit 4,09 detik) dan hari matahari (24 jam) adalah konstanta astronomi standar.</li>
+      </ul>
+      <div class="caveat">
+        <strong>Yang belum saya verifikasi:</strong> rincian mekanisme transmisi yang sesungguhnya digambarkan dalam naskah (apakah benar-benar tali dan drum, atau susunan lain), dimensi asli alatnya, serta isi diagram pada dua manuskrip yang masih ada. Simulasi ini memodelkan <em>prinsip</em> yang didokumentasikan sumber di atas — pemberat yang ditarik oleh media yang bocor secara terkendali, memutar bola bertanda bintang sekali sehari — bukan rekonstruksi presisi dari gambar naskah aslinya.
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>Automata Al-Khazini — laboratorium interaktif, bukan replika bersertifikat naskah asli.</footer>
+
+<script>
+(function(){
+  'use strict';
+  const $ = id => document.getElementById(id);
+
+  // ---------------- constants ----------------
+  const G = 981; // cm/s^2
+  const T_SIDEREAL = 86164.0905; // s
+  const T_SOLAR = 86400; // s
+  const CD_WATER = 0.6;
+  const BEV_C = 0.58, BEV_K = 1.4;
+
+  // ---------------- DOM ----------------
+  const canvas = $('labCanvas'), ctx = canvas.getContext('2d');
+  const chartCanvas = $('driftChart'), chartCtx = chartCanvas.getContext('2d');
+  const playBtn = $('playBtn'), resetBtn = $('resetBtn'), refillBtn = $('refillBtn'), calibBtn = $('calibBtn');
+  const rTank=$('rTank'), rHeight=$('rHeight'), rHole=$('rHole'), rGrain=$('rGrain'), rDrum=$('rDrum'), rSpeed=$('rSpeed');
+  const rTankVal=$('rTankVal'), rHeightVal=$('rHeightVal'), rHoleVal=$('rHoleVal'), rGrainVal=$('rGrainVal'), rDrumVal=$('rDrumVal'), rSpeedVal=$('rSpeedVal');
+  const mediaSandBtn=$('mediaSand'), mediaWaterBtn=$('mediaWater');
+  const daySiderealBtn=$('daySidereal'), daySolarBtn=$('daySolar');
+  const grainField = $('grainField');
+  const statElapsed=$('statElapsed'), statFlow=$('statFlow'), statRemain=$('statRemain'), statDrift=$('statDrift'), statDriftBox=$('statDriftBox');
+  const calibNote = $('calibNote');
+
+  // ---------------- state ----------------
+  let media = 'sand'; // 'sand' | 'water'
+  let dayType = 'sidereal';
+  let playing = false;
+  let elapsed = 0; // simulated seconds since last reset/refill
+  let driftHistory = []; // {t, deg}
+
+  function params(){
+    return {
+      Dtank: parseFloat(rTank.value),      // cm
+      h0: parseFloat(rHeight.value),       // cm
+      Dhole: parseFloat(rHole.value)/10,   // cm (slider in mm)
+      grain: parseFloat(rGrain.value)/10,  // cm (slider in mm)
+      rDrum: parseFloat(rDrum.value),      // cm
+      speed: parseFloat(rSpeed.value),
+      Tday: dayType==='sidereal' ? T_SIDEREAL : T_SOLAR
+    };
+  }
+
+  function area(d){ return Math.PI*(d/2)*(d/2); }
+
+  // constant sand flow rate (Beverloo), or 0 if jammed
+  function sandFlow(p){
+    const eff = p.Dhole - BEV_K*p.grain;
+    if(eff <= 0) return 0;
+    return BEV_C*Math.sqrt(G)*Math.pow(eff,2.5); // cm^3/s
+  }
+
+  // returns {h, Q, phase, empty} at simulated time t (seconds), analytic
+  function stateAt(t, p){
+    const A = area(p.Dtank);
+    if(media==='sand'){
+      const Q = sandFlow(p);
+      if(Q<=0) return {h:p.h0, Q:0, phase:'macet', empty:false};
+      const hmin = Math.min(p.h0, 2*p.Dhole);
+      const t1 = Math.max(0,(p.h0-hmin))*A/Q;
+      if(t <= t1){
+        return {h:p.h0-(Q/A)*t, Q, phase:'stabil', empty:false};
+      }
+      // taper phase: linear ramp from hmin to 0 over t2
+      const t2 = hmin>0 ? (hmin*A)/(Q*0.5) : 0;
+      const tt = t-t1;
+      if(t2<=0 || tt>=t2) return {h:0, Q:0, phase:'habis', empty:true};
+      const h = hmin*(1-tt/t2);
+      const instQ = Q*(h/hmin || 0);
+      return {h, Q:instQ, phase:'menipis', empty:false};
+    } else {
+      const k = (CD_WATER*area(p.Dhole)/A)*Math.sqrt(2*G);
+      const tEmpty = k>0 ? 2*Math.sqrt(p.h0)/k : Infinity;
+      if(t >= tEmpty) return {h:0, Q:0, phase:'habis', empty:true};
+      const sq = Math.sqrt(p.h0) - (k/2)*t;
+      const h = sq*sq;
+      const Q = CD_WATER*area(p.Dhole)*Math.sqrt(2*G*Math.max(h,0));
+      return {h, Q, phase:'menurun', empty:false};
+    }
+  }
+
+  function descentAt(t,p){
+    const s = stateAt(t,p);
+    return p.h0 - s.h;
+  }
+
+  function automataAngle(t,p){
+    return descentAt(t,p)/p.rDrum; // radians
+  }
+  function skyAngle(t,p){
+    return (2*Math.PI/p.Tday)*t;
+  }
+
+  // sync offset so refill can re-align automata to sky without resetting sky clock
+  let syncOffset = 0; // radians added to automataAngle for display continuity across refills
+  let refillElapsedBase = 0; // elapsed value at last refill (so descent restarts from 0 each refill)
+
+  function currentAutomataAngle(){
+    const p = params();
+    return automataAngle(elapsed-refillElapsedBase, p) + syncOffset;
+  }
+  function currentSkyAngle(){
+    const p = params();
+    return skyAngle(elapsed, p);
+  }
+
+  // ---------------- UI sync ----------------
+  function fmtDuration(s){
+    if(!isFinite(s)) return '—';
+    s = Math.max(0,s);
+    const d = Math.floor(s/86400); s-=d*86400;
+    const h = Math.floor(s/3600); s-=h*3600;
+    const m = Math.floor(s/60); s-=m*60;
+    const sec = Math.floor(s);
+    let out=[];
+    if(d>0) out.push(d+' hr');
+    if(h>0||d>0) out.push(h+' j');
+    if(m>0||h>0||d>0) out.push(m+' mnt');
+    out.push(sec+' dtk');
+    return out.slice(0,3).join(' ');
+  }
+  function fmtFlow(q_cm3s){
+    if(!isFinite(q_cm3s)) return '—';
+    const mlmin = q_cm3s*60;
+    if(mlmin<1) return (mlmin*1000).toFixed(0)+' µL/mnt';
+    return mlmin.toFixed(2)+' mL/mnt';
+  }
+
+  function updateReadoutLabels(){
+    rTankVal.textContent = parseFloat(rTank.value).toFixed(1)+' cm';
+    rHeightVal.textContent = parseFloat(rHeight.value).toFixed(0)+' cm';
+    rHoleVal.textContent = parseFloat(rHole.value).toFixed(1)+' mm';
+    rGrainVal.textContent = parseFloat(rGrain.value).toFixed(2)+' mm';
+    rDrumVal.textContent = parseFloat(rDrum.value).toFixed(2)+' cm';
+    rSpeedVal.textContent = parseFloat(rSpeed.value).toLocaleString('id-ID')+'×';
+  }
+
+  function setMedia(m){
+    media = m;
+    mediaSandBtn.classList.toggle('active', m==='sand');
+    mediaWaterBtn.classList.toggle('active', m==='water');
+    grainField.style.display = m==='sand' ? '' : 'none';
+    hardReset();
+  }
+  function setDay(d){
+    dayType = d;
+    daySiderealBtn.classList.toggle('active', d==='sidereal');
+    daySolarBtn.classList.toggle('active', d==='solar');
+  }
+
+  mediaSandBtn.addEventListener('click', ()=>setMedia('sand'));
+  mediaWaterBtn.addEventListener('click', ()=>setMedia('water'));
+  daySiderealBtn.addEventListener('click', ()=>setDay('sidereal'));
+  daySolarBtn.addEventListener('click', ()=>setDay('solar'));
+
+  [rTank,rHeight,rHole,rGrain,rDrum,rSpeed].forEach(el=>{
+    el.addEventListener('input', ()=>{ updateReadoutLabels(); draw(); });
+  });
+
+  function hardReset(){
+    elapsed = 0; refillElapsedBase = 0; syncOffset = 0;
+    driftHistory = [];
+    playing = false; playBtn.textContent = '▶ Mulai';
+    calibNote.className = 'calib-note';
+    updateReadoutLabels();
+    updateStats();
+    draw(); drawChart();
+  }
+  resetBtn.addEventListener('click', hardReset);
+
+  refillBtn.addEventListener('click', ()=>{
+    // top up media, and re-synchronise automata angle to current sky angle
+    const skyNow = currentSkyAngle();
+    refillElapsedBase = elapsed;
+    syncOffset = skyNow; // automataAngle(0)=0 right after refill, so offset = skyNow keeps continuity
+    updateStats(); draw();
+  });
+
+  calibBtn.addEventListener('click', ()=>{
+    const p = params();
+    const A = area(p.Dtank);
+    let descentRate; // cm/s, the rate we want to match at t=0 (or constant, for sand)
+    if(media==='sand'){
+      const Q = sandFlow(p);
+      descentRate = Q/A;
+    } else {
+      const Q0 = CD_WATER*area(p.Dhole)*Math.sqrt(2*G*p.h0);
+      descentRate = Q0/A;
+    }
+    const targetOmega = 2*Math.PI/p.Tday;
+    const idealDrum = descentRate/targetOmega;
+    calibNote.classList.add('show');
+    if(idealDrum < parseFloat(rDrum.min) || idealDrum > parseFloat(rDrum.max)){
+      calibNote.classList.remove('ok');
+      calibNote.innerHTML = 'Radius drum ideal: <strong>'+idealDrum.toFixed(1)+' cm</strong> — di luar jangkauan wajar untuk instrumen meja. '+
+        (idealDrum>parseFloat(rDrum.max)
+          ? 'Perkecil lubang, perbesar wadah, atau perlambat kecepatan simulasi untuk mengamatinya.'
+          : 'Perbesar lubang atau perkecil wadah agar radius yang dibutuhkan lebih masuk akal.');
+    } else {
+      rDrum.value = idealDrum.toFixed(2);
+      updateReadoutLabels();
+      calibNote.classList.add('ok');
+      calibNote.innerHTML = 'Radius drum diatur ke <strong>'+idealDrum.toFixed(2)+' cm</strong>. '+
+        (media==='sand'
+          ? 'Karena pasir mengalir konstan, ini akan tetap sejajar dengan langit selama media belum menipis.'
+          : 'Ini hanya cocok pada saat t=0 — begitu air berkurang, alirannya melambat dan otomata akan mulai tertinggal.');
+    }
+    draw();
+  });
+
+  playBtn.addEventListener('click', ()=>{
+    playing = !playing;
+    playBtn.textContent = playing ? '⏸ Jeda' : '▶ Mulai';
+  });
+
+  // ---------------- stats ----------------
+  function updateStats(){
+    const p = params();
+    const s = stateAt(elapsed-refillElapsedBase, p);
+    statElapsed.textContent = fmtDuration(elapsed);
+    statFlow.textContent = s.empty ? 'Habis' : fmtFlow(s.Q);
+
+    if(media==='sand'){
+      const Q = sandFlow(p);
+      if(Q<=0){ statRemain.textContent = 'Macet'; }
+      else {
+        const A = area(p.Dtank);
+        const hmin = Math.min(p.h0,2*p.Dhole);
+        const t1 = Math.max(0,(p.h0-hmin))*A/Q;
+        const remain = Math.max(0, t1-(elapsed-refillElapsedBase));
+        statRemain.textContent = fmtDuration(remain);
+      }
+    } else {
+      const A = area(p.Dtank);
+      const k = (CD_WATER*area(p.Dhole)/A)*Math.sqrt(2*G);
+      const tEmpty = k>0 ? 2*Math.sqrt(p.h0)/k : Infinity;
+      const remain = Math.max(0, tEmpty-(elapsed-refillElapsedBase));
+      statRemain.textContent = fmtDuration(remain)+' (melambat)';
+    }
+
+    const drift = currentAutomataAngle() - currentSkyAngle();
+    const driftDeg = drift*180/Math.PI;
+    statDrift.textContent = driftDeg.toFixed(2)+'°';
+    const absDeg = Math.abs(driftDeg);
+    statDriftBox.className = 'stat ' + (absDeg<1 ? 'ok' : (absDeg>15 ? 'warn' : ''));
+  }
+
+  // ---------------- canvas: workshop drawing ----------------
+  function drawWorkshop(){
+    const W=canvas.width, H=canvas.height;
+    ctx.clearRect(0,0,W,H);
+
+    const p = params();
+    const s = stateAt(elapsed-refillElapsedBase, p);
+
+    // ---- tank geometry ----
+    const tankX = 70, tankW = 150, tankTop = 55, tankBottom = 340;
+    const tankH = tankBottom-tankTop;
+    const levelFrac = Math.max(0, Math.min(1, s.h/p.h0));
+
+    // tank outline
+    ctx.strokeStyle = '#5a6274'; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(tankX,tankTop); ctx.lineTo(tankX,tankBottom);
+    ctx.lineTo(tankX+tankW,tankBottom); ctx.lineTo(tankX+tankW,tankTop);
+    ctx.stroke();
+
+    // media fill
+    const fillH = tankH*levelFrac;
+    const fillY = tankBottom-fillH;
+    if(media==='sand'){
+      const grad = ctx.createLinearGradient(0,fillY,0,tankBottom);
+      grad.addColorStop(0,'#d8b878'); grad.addColorStop(1,'#b8925a');
+      ctx.fillStyle = grad;
+      ctx.fillRect(tankX+2, fillY, tankW-4, fillH);
+      // grain texture dots
+      ctx.fillStyle = 'rgba(90,65,30,0.25)';
+      for(let i=0;i<Math.min(90,fillH*0.6);i++){
+        const gx = tankX+6+((i*37)%(tankW-12));
+        const gy = fillY+4+((i*53)%Math.max(1,fillH-8));
+        ctx.beginPath(); ctx.arc(gx,gy,1.1,0,7); ctx.fill();
+      }
+    } else {
+      const grad = ctx.createLinearGradient(0,fillY,0,tankBottom);
+      grad.addColorStop(0,'rgba(120,170,210,0.85)'); grad.addColorStop(1,'rgba(70,120,165,0.9)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(tankX+2, fillY, tankW-4, fillH);
+      ctx.fillStyle = 'rgba(230,245,255,0.35)';
+      ctx.fillRect(tankX+6, fillY+2, 6, fillH-4);
+    }
+
+    // weight sitting on the surface
+    const weightW=46, weightH=14;
+    const weightX = tankX+tankW/2-weightW/2;
+    const weightY = Math.max(tankTop-2, fillY-weightH+2);
+    ctx.fillStyle = '#c9973f';
+    ctx.fillRect(weightX,weightY,weightW,weightH);
+    ctx.strokeStyle='#5a3f18'; ctx.lineWidth=1; ctx.strokeRect(weightX,weightY,weightW,weightH);
+
+    // pulley + drum
+    const pulleyX=tankX+tankW/2, pulleyY=30;
+    const drumX=250, drumY=30, drumR=16;
+    ctx.strokeStyle='#8b93a6'; ctx.lineWidth=2;
+    // cord: weight -> pulley -> drum
+    ctx.beginPath();
+    ctx.moveTo(pulleyX,weightY);
+    ctx.lineTo(pulleyX,pulleyY);
+    ctx.lineTo(drumX,drumY);
+    ctx.stroke();
+    ctx.beginPath(); ctx.arc(pulleyX,pulleyY,7,0,7);
+    ctx.fillStyle='#3a4152'; ctx.fill(); ctx.strokeStyle='#8b93a6'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(drumX,drumY,drumR,0,7);
+    ctx.fillStyle='#c9973f'; ctx.fill(); ctx.strokeStyle='#5a3f18'; ctx.lineWidth=1.5; ctx.stroke();
+
+    // dashed line to automata dial
+    ctx.strokeStyle='rgba(238,203,132,0.45)'; ctx.setLineDash([4,5]); ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(drumX+drumR,drumY); ctx.lineTo(455,190); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='rgba(238,203,132,0.7)'; ctx.font='12px "Work Sans",sans-serif';
+    ctx.fillText('ke Bola Astronomi', drumX+20, 18);
+
+    // drip / outlet
+    const outletX = tankX+tankW/2;
+    ctx.fillStyle = media==='sand' ? '#c9a25c' : '#7ab0d8';
+    if(!s.empty && s.Q>0){
+      const dripPhase = (elapsed*4)%1;
+      ctx.beginPath(); ctx.arc(outletX, tankBottom+8+dripPhase*14, 2.4, 0, 7); ctx.fill();
+    }
+    // basin
+    ctx.strokeStyle='#5a6274'; ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.ellipse(outletX, tankBottom+40, 34, 8, 0, 0, Math.PI*2);
+    ctx.stroke();
+
+    // labels for tank
+    ctx.fillStyle = '#a7afc0'; ctx.font='13px "Work Sans",sans-serif';
+    ctx.fillText('Wadah '+(media==='sand'?'pasir':'air'), tankX-2, tankTop-14);
+    ctx.fillText('Pemberat', weightX+weightW+8, weightY+10);
+
+    // ---- dials: automata vs sky ----
+    drawDial(455,190,120,currentAutomataAngle(),'#eecb84','Bola Otomata');
+    drawDial(720,190,120,currentSkyAngle(),'#cdd8e6','Langit Sebenarnya');
+
+    // drift arc annotation between pointer tips is handled inside stats bar/chart
+  }
+
+  function drawDial(cx,cy,r,angle,color,label){
+    // rim
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.strokeStyle='#3a4152'; ctx.lineWidth=10; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.strokeStyle='rgba(201,151,63,0.55)'; ctx.lineWidth=2; ctx.stroke();
+    // ticks
+    for(let i=0;i<12;i++){
+      const a = i*Math.PI/6;
+      const len = (i%3===0) ? 12 : 6;
+      const x1=cx+Math.cos(a)*(r-2), y1=cy+Math.sin(a)*(r-2);
+      const x2=cx+Math.cos(a)*(r-2-len), y2=cy+Math.sin(a)*(r-2-len);
+      ctx.strokeStyle='rgba(167,175,192,0.6)'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    }
+    // pointer (angle measured from top, clockwise)
+    const a = -Math.PI/2 + angle;
+    ctx.strokeStyle = color; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(a)*(r-16), cy+Math.sin(a)*(r-16)); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx+Math.cos(a)*(r-16), cy+Math.sin(a)*(r-16), 5, 0, 7);
+    ctx.fillStyle = color; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx,cy,4,0,7); ctx.fillStyle='#8b93a6'; ctx.fill();
+    // label
+    ctx.fillStyle='#a7afc0'; ctx.font='13px "Work Sans",sans-serif'; ctx.textAlign='center';
+    ctx.fillText(label, cx, cy+r+24);
+    ctx.textAlign='left';
+  }
+
+  function draw(){ drawWorkshop(); }
+
+  // ---------------- drift chart ----------------
+  function drawChart(){
+    const W=chartCanvas.width, H=chartCanvas.height;
+    chartCtx.clearRect(0,0,W,H);
+    chartCtx.strokeStyle='#343c4c'; chartCtx.lineWidth=1;
+    chartCtx.beginPath(); chartCtx.moveTo(40,H-30); chartCtx.lineTo(W-20,H-30); chartCtx.stroke();
+    chartCtx.beginPath(); chartCtx.moveTo(40,10); chartCtx.lineTo(40,H-30); chartCtx.stroke();
+    if(driftHistory.length<2){
+      chartCtx.fillStyle='#697086'; chartCtx.font='13px "Work Sans",sans-serif';
+      chartCtx.fillText('Mulai simulasi untuk melihat selisih terakumulasi di sini', 50, H/2);
+      return;
+    }
+    const maxT = driftHistory[driftHistory.length-1].t || 1;
+    let maxAbs = 1;
+    driftHistory.forEach(d=>{ maxAbs = Math.max(maxAbs, Math.abs(d.deg)); });
+    const x0=40, x1=W-20, y0=H-30, y1=10;
+    const midY = (y0+y1)/2;
+    function xOf(t){ return x0 + (t/maxT)*(x1-x0); }
+    function yOf(deg){ return midY - (deg/maxAbs)*((y0-y1)/2-6); }
+    chartCtx.strokeStyle='#c26a4d'; chartCtx.lineWidth=2;
+    chartCtx.beginPath();
+    driftHistory.forEach((d,i)=>{
+      const x=xOf(d.t), y=yOf(d.deg);
+      if(i===0) chartCtx.moveTo(x,y); else chartCtx.lineTo(x,y);
+    });
+    chartCtx.stroke();
+    chartCtx.fillStyle='#697086'; chartCtx.font='12px "Work Sans",sans-serif';
+    chartCtx.fillText('0', 26, midY+4);
+    chartCtx.fillText(maxAbs.toFixed(1)+'°', 2, y1+10);
+    chartCtx.fillText('-'+maxAbs.toFixed(1)+'°', 2, y0);
+  }
+
+  // ---------------- animation loop ----------------
+  let lastTs = null;
+  function tick(ts){
+    if(lastTs===null) lastTs = ts;
+    const realDt = Math.min(0.25,(ts-lastTs)/1000);
+    lastTs = ts;
+    if(playing){
+      const p = params();
+      elapsed += realDt*p.speed;
+      const drift = (currentAutomataAngle()-currentSkyAngle())*180/Math.PI;
+      driftHistory.push({t:elapsed, deg:drift});
+      if(driftHistory.length>400) driftHistory.shift();
+      updateStats();
+      draw();
+      drawChart();
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // ---------------- init ----------------
+  updateReadoutLabels();
+  updateStats();
+  draw();
+  drawChart();
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>

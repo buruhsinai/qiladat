@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cek Izin Aplikasi — Bank Alat JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#141922; --panel:#1b2230; --panel-line:#2c3547;
+    --brass:#c19a5b; --brass-bright:#dab476;
+    --azure:#5f8fae; --ember:#c1795a; --sage:#7fae8c; --violet:#9b8ec4;
+    --danger:#c1595a;
+    --text:#e9e5da; --text-dim:#8d94a3;
+  }
+  *{box-sizing:border-box;}
+  body{ background:var(--ink); color:var(--text); font-family:'Karla',sans-serif; margin:0; padding:0 0 60px; }
+  .wrap{ max-width:640px; margin:0 auto; padding:0 20px; }
+  header{ padding:36px 0 22px; border-bottom:1px solid var(--panel-line); margin-bottom:22px; }
+  .eyebrow{ color:var(--brass); font-size:0.88rem; margin-bottom:10px; }
+  h1{ font-family:'Fraunces',serif; font-weight:600; font-size:1.4rem; margin:0 0 8px; }
+  .tagline{ color:var(--text-dim); font-size:0.9rem; }
+
+  .topbar{ display:flex; align-items:center; gap:12px; margin-bottom:18px; flex-wrap:wrap; }
+  .score-pill{ background:var(--panel); border:1px solid var(--panel-line); border-radius:999px; padding:7px 14px; font-size:0.84rem; color:var(--text-dim); }
+  .score-pill b{ color:var(--brass-bright); }
+  .restart-btn{ margin-left:auto; background:none; border:1px solid var(--panel-line); color:var(--text-dim); padding:7px 14px; border-radius:999px; font-size:0.8rem; cursor:pointer; font-family:inherit; }
+  .restart-btn:hover{ border-color:var(--brass); color:var(--text); }
+
+  .app-card{ background:var(--panel); border:1px solid var(--panel-line); border-radius:12px; padding:18px 20px; margin-bottom:16px; }
+  .app-head{ display:flex; gap:12px; align-items:center; margin-bottom:6px; }
+  .app-icon{ font-size:2rem; }
+  .app-name{ font-family:'Fraunces',serif; font-weight:600; font-size:1.1rem; color:var(--text); }
+  .app-cat{ font-size:0.74rem; color:var(--ember); text-transform:uppercase; letter-spacing:.03em; }
+  .app-desc{ color:var(--text-dim); font-size:0.86rem; margin-top:8px; }
+
+  .perm-row{ background:var(--panel); border:1px solid var(--panel-line); border-radius:10px; padding:12px 14px; margin-bottom:10px; }
+  .perm-row.correct{ border-color:var(--sage); }
+  .perm-row.wrong{ border-color:var(--danger); }
+  .perm-top{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .perm-icon{ font-size:1.2rem; }
+  .perm-name{ font-weight:700; color:var(--text); font-size:0.92rem; }
+  .perm-guess{ display:flex; gap:8px; }
+  .guess-btn{
+    flex:1; background:#12161d; border:1px solid var(--panel-line); color:var(--text-dim);
+    padding:8px; border-radius:7px; font-size:0.82rem; cursor:pointer; font-family:inherit;
+  }
+  .guess-btn.picked-wajar{ background:var(--sage); border-color:var(--sage); color:#0d1a14; font-weight:700; }
+  .guess-btn.picked-curiga{ background:var(--danger); border-color:var(--danger); color:#1a0d0d; font-weight:700; }
+  .guess-btn:disabled{ cursor:default; opacity:0.7; }
+  .perm-reason{ display:none; margin-top:10px; padding-top:10px; border-top:1px dashed var(--panel-line); font-size:0.84rem; color:var(--text-dim); }
+  .perm-row.revealed .perm-reason{ display:block; }
+  .verdict-tag{ font-weight:700; }
+  .verdict-tag.wajar{ color:var(--sage); }
+  .verdict-tag.curiga{ color:var(--danger); }
+  .match-tag{ float:right; font-size:0.76rem; }
+  .match-tag.ok{ color:var(--sage); }
+  .match-tag.no{ color:var(--danger); }
+
+  .controls{ display:flex; gap:10px; margin-top:6px; }
+  .btn{ background:var(--panel); border:1px solid var(--panel-line); color:var(--text); padding:11px 18px; border-radius:8px; font-size:0.88rem; cursor:pointer; font-family:inherit; }
+  .btn:hover{ border-color:var(--brass); }
+  .btn-primary{ background:var(--azure); border-color:var(--azure); color:#0d1520; font-weight:700; }
+  .btn:disabled{ opacity:0.4; cursor:default; }
+  .progress{ margin-left:auto; color:var(--text-dim); font-size:0.82rem; align-self:center; }
+
+  .final-card{ background:var(--panel); border:1px solid var(--brass); border-radius:12px; padding:24px; text-align:center; }
+  .final-card h2{ font-family:'Fraunces',serif; color:var(--brass-bright); margin:0 0 10px; }
+
+  footer{ margin-top:40px; padding-top:16px; border-top:1px solid var(--panel-line); color:var(--text-dim); font-size:0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">🛡️ Bank Alat JAZMI — Modul Keamanan Siber</div>
+    <h1>Cek Izin Aplikasi</h1>
+    <div class="tagline">Tiap aplikasi meminta beberapa izin — tebak dulu mana yang wajar dan mana yang mencurigakan untuk fungsi aplikasi itu, baru lihat jawabannya.</div>
+  </header>
+
+  <div class="topbar">
+    <div class="score-pill">Skor tebakan: <b id="scoreText">0 / 0</b></div>
+    <button class="restart-btn" id="restartBtn">🔀 Acak &amp; Ulangi dari Awal</button>
+  </div>
+
+  <div id="stage"></div>
+
+  <footer>Bagian dari Bank Alat JAZMI. Pola izin di sini disederhanakan untuk latihan menebak — aplikasi sungguhan bisa punya alasan tambahan yang tidak tercakup di sini.</footer>
+</div>
+
+<script>
+const APPS = [
+  { icon:'🔦', name:'Senter Plus', cat:'Utilitas — Senter', desc:'Aplikasi sederhana untuk menyalakan lampu kilat HP sebagai senter.',
+    perms:[
+      {icon:'📷', name:'Kamera', verdict:'wajar', reason:'Wajar — aplikasi senter memang mengendalikan lampu kilat lewat modul kamera, jadi izin ini dipakai langsung untuk fungsi utamanya.'},
+      {icon:'💬', name:'SMS', verdict:'curiga', reason:'Curiga — tidak ada hubungannya sama sekali dengan menyalakan lampu. Sering dipakai malware untuk mencegat OTP.'},
+      {icon:'👥', name:'Kontak', verdict:'curiga', reason:'Curiga — senter tidak pernah butuh tahu siapa saja kontak Anda.'},
+      {icon:'🎙️', name:'Mikrofon', verdict:'curiga', reason:'Curiga — tidak ada fitur senter yang butuh merekam suara.'},
+      {icon:'📍', name:'Lokasi', verdict:'curiga', reason:'Curiga — senter menyala di mana pun tanpa perlu tahu lokasi Anda.'}
+    ]},
+  { icon:'🗺️', name:'Peta Navigasi', cat:'Perjalanan — Peta', desc:'Aplikasi penunjuk arah &amp; navigasi jalan.',
+    perms:[
+      {icon:'📍', name:'Lokasi', verdict:'wajar', reason:'Wajar — ini fungsi inti aplikasi peta, tidak bisa menunjukkan arah tanpa tahu posisi Anda.'},
+      {icon:'💾', name:'Penyimpanan', verdict:'wajar', reason:'Wajar — dipakai untuk menyimpan peta offline supaya bisa dipakai tanpa koneksi internet.'},
+      {icon:'🔔', name:'Notifikasi', verdict:'wajar', reason:'Wajar — dipakai untuk memberi tahu kapan harus belok atau kalau ada rute lebih cepat.'},
+      {icon:'👥', name:'Kontak', verdict:'curiga', reason:'Curiga — tidak ada alasan jelas peta perlu membaca seluruh daftar kontak Anda.'},
+      {icon:'📷', name:'Kamera', verdict:'curiga', reason:'Curiga — kecuali aplikasi punya fitur navigasi AR yang disebutkan jelas, ini tidak diperlukan.'}
+    ]},
+  { icon:'🧮', name:'Kalkulator Ringkas', cat:'Utilitas — Kalkulator', desc:'Aplikasi kalkulator dasar untuk hitung-hitungan sehari-hari.',
+    perms:[
+      {icon:'👥', name:'Kontak', verdict:'curiga', reason:'Curiga — kalkulator tidak pernah butuh akses ke kontak Anda.'},
+      {icon:'💬', name:'SMS', verdict:'curiga', reason:'Curiga — tidak ada hubungan sama sekali dengan menghitung angka.'},
+      {icon:'📷', name:'Kamera', verdict:'curiga', reason:'Curiga — kecuali ada fitur "kalkulator kamera" yang memang jelas disebutkan, ini janggal.'},
+      {icon:'📍', name:'Lokasi', verdict:'curiga', reason:'Curiga — hasil 2+2 sama di mana pun Anda berada.'},
+      {icon:'🎙️', name:'Mikrofon', verdict:'curiga', reason:'Curiga — kalkulator sederhana tidak butuh merekam suara apa pun.'}
+    ]},
+  { icon:'💬', name:'Obrolan Keluarga', cat:'Komunikasi — Pesan', desc:'Aplikasi pesan &amp; panggilan untuk mengobrol dengan keluarga dan teman.',
+    perms:[
+      {icon:'👥', name:'Kontak', verdict:'wajar', reason:'Wajar — dipakai untuk mencari &amp; menyambungkan Anda dengan teman/keluarga yang juga memakai aplikasi ini.'},
+      {icon:'🎙️', name:'Mikrofon', verdict:'wajar', reason:'Wajar — dibutuhkan untuk fitur panggilan suara.'},
+      {icon:'📷', name:'Kamera', verdict:'wajar', reason:'Wajar — dibutuhkan untuk panggilan video &amp; mengirim foto.'},
+      {icon:'💾', name:'Penyimpanan', verdict:'wajar', reason:'Wajar — dipakai menyimpan foto/video yang dikirim atau diterima.'},
+      {icon:'📍', name:'Lokasi', verdict:'wajar', reason:'Wajar — banyak aplikasi pesan punya fitur opsional "bagikan lokasi saya" ke kontak tertentu.'}
+    ]},
+  { icon:'🎮', name:'Puzzle Santai', cat:'Permainan — Puzzle Offline', desc:'Permainan puzzle sederhana yang bisa dimainkan tanpa koneksi internet.',
+    perms:[
+      {icon:'💾', name:'Penyimpanan', verdict:'wajar', reason:'Wajar — dipakai menyimpan progres permainan Anda di perangkat.'},
+      {icon:'👥', name:'Kontak', verdict:'curiga', reason:'Curiga — permainan puzzle offline tidak butuh tahu siapa kontak Anda.'},
+      {icon:'💬', name:'SMS', verdict:'curiga', reason:'Curiga — tidak ada fitur permainan yang butuh membaca SMS.'},
+      {icon:'🎙️', name:'Mikrofon', verdict:'curiga', reason:'Curiga — permainan puzzle sederhana tidak butuh merekam suara.'},
+      {icon:'📍', name:'Lokasi', verdict:'curiga', reason:'Curiga — permainan offline bisa dimainkan di mana saja tanpa perlu tahu lokasi Anda.'}
+    ]},
+  { icon:'🎥', name:'Rapat Video Kerja', cat:'Produktivitas — Video Konferensi', desc:'Aplikasi video call untuk rapat &amp; kerja jarak jauh.',
+    perms:[
+      {icon:'📷', name:'Kamera', verdict:'wajar', reason:'Wajar — fungsi inti aplikasi video call.'},
+      {icon:'🎙️', name:'Mikrofon', verdict:'wajar', reason:'Wajar — dibutuhkan supaya lawan bicara bisa mendengar Anda.'},
+      {icon:'👥', name:'Kontak', verdict:'wajar', reason:'Wajar — dipakai untuk mengundang rekan kerja ke rapat lewat kontak yang tersimpan.'},
+      {icon:'🔔', name:'Notifikasi', verdict:'wajar', reason:'Wajar — memberi tahu Anda saat rapat akan dimulai.'},
+      {icon:'📍', name:'Lokasi', verdict:'curiga', reason:'Curiga — rapat video tidak butuh tahu di mana Anda berada secara fisik.'}
+    ]},
+  { icon:'🏦', name:'Bank Digital Resmi', cat:'Keuangan — Perbankan', desc:'Aplikasi resmi bank untuk transfer, cek saldo, dan transaksi.',
+    perms:[
+      {icon:'📷', name:'Kamera', verdict:'wajar', reason:'Wajar — dipakai untuk memindai QR pembayaran atau memotret cek untuk setor.'},
+      {icon:'📍', name:'Lokasi', verdict:'wajar', reason:'Wajar — dipakai untuk deteksi transaksi mencurigakan (mis. transaksi dari lokasi tak biasa) &amp; mencari ATM/kantor cabang terdekat.'},
+      {icon:'👆', name:'Sidik Jari / Biometrik', verdict:'wajar', reason:'Wajar — dipakai sebagai cara masuk yang lebih aman dibanding cuma PIN/password.'},
+      {icon:'💬', name:'SMS', verdict:'curiga', reason:'Curiga — meski beberapa bank resmi memang meminta ini untuk auto-isi OTP, sebaiknya tetap ditolak &amp; masukkan OTP secara manual. Akses baca-semua-SMS tetap berisiko kalau HP Anda kena malware lain.'},
+      {icon:'👥', name:'Kontak', verdict:'curiga', reason:'Curiga — transfer ke nomor rekening tidak butuh akses baca seluruh daftar kontak Anda.'}
+    ]},
+  { icon:'🧘', name:'Musik Tidur Tenang', cat:'Kesehatan — Relaksasi', desc:'Aplikasi pemutar suara alam &amp; musik untuk membantu tidur.',
+    perms:[
+      {icon:'💾', name:'Penyimpanan', verdict:'wajar', reason:'Wajar — dipakai untuk mengunduh file audio supaya bisa didengarkan tanpa internet.'},
+      {icon:'🎙️', name:'Mikrofon', verdict:'curiga', reason:'Curiga — kecuali ada fitur "rekam dengkuran" yang jelas disebutkan, aplikasi suara tidur tidak butuh mikrofon.'},
+      {icon:'👥', name:'Kontak', verdict:'curiga', reason:'Curiga — tidak ada alasan aplikasi relaksasi butuh kontak Anda.'},
+      {icon:'📷', name:'Kamera', verdict:'curiga', reason:'Curiga — memutar suara tidak butuh kamera sama sekali.'},
+      {icon:'📍', name:'Lokasi', verdict:'curiga', reason:'Curiga — suara hujan terdengar sama di mana pun Anda berada.'}
+    ]},
+  { icon:'🛍️', name:'Belanja Cepat Online', cat:'Belanja — E-Commerce', desc:'Aplikasi belanja online untuk memesan &amp; melacak pengiriman barang.',
+    perms:[
+      {icon:'📷', name:'Kamera', verdict:'wajar', reason:'Wajar — dipakai untuk memindai barcode produk atau mengunggah foto saat komplain/retur barang.'},
+      {icon:'📍', name:'Lokasi', verdict:'wajar', reason:'Wajar — dipakai untuk menentukan alamat pengiriman &amp; menampilkan toko/promo terdekat.'},
+      {icon:'💾', name:'Penyimpanan', verdict:'wajar', reason:'Wajar — dipakai menyimpan foto bukti produk atau struk transaksi.'},
+      {icon:'👥', name:'Kontak', verdict:'curiga', reason:'Curiga — fitur "kirim hadiah ke teman" cukup lewat nomor yang diketik manual, bukan akses baca semua kontak.'},
+      {icon:'🎙️', name:'Mikrofon', verdict:'curiga', reason:'Curiga — kecuali fitur pencarian suara disebutkan jelas, ini tidak diperlukan untuk belanja.'}
+    ]},
+  { icon:'🎙️', name:'Rekam Suara Praktis', cat:'Produktivitas — Perekam', desc:'Aplikasi untuk merekam catatan suara &amp; memo pribadi.',
+    perms:[
+      {icon:'🎙️', name:'Mikrofon', verdict:'wajar', reason:'Wajar — ini fungsi utama aplikasi perekam suara.'},
+      {icon:'💾', name:'Penyimpanan', verdict:'wajar', reason:'Wajar — dipakai menyimpan file rekaman di perangkat.'},
+      {icon:'👥', name:'Kontak', verdict:'curiga', reason:'Curiga — merekam suara tidak butuh akses ke daftar kontak Anda.'},
+      {icon:'📍', name:'Lokasi', verdict:'curiga', reason:'Curiga — kecuali fitur "tandai lokasi rekaman" disebutkan jelas, ini tidak perlu.'},
+      {icon:'📷', name:'Kamera', verdict:'curiga', reason:'Curiga — aplikasi rekam suara tidak butuh kamera.'}
+    ]},
+  { icon:'🖼️', name:'Wallpaper HD Cantik', cat:'Personalisasi — Wallpaper', desc:'Aplikasi koleksi wallpaper HD untuk mempercantik layar HP.',
+    perms:[
+      {icon:'💾', name:'Penyimpanan', verdict:'wajar', reason:'Wajar — dipakai menyimpan &amp; memasang gambar wallpaper yang dipilih.'},
+      {icon:'👥', name:'Kontak', verdict:'curiga', reason:'Curiga — mengganti wallpaper tidak ada hubungannya dengan daftar kontak Anda.'},
+      {icon:'💬', name:'SMS', verdict:'curiga', reason:'Curiga — ini salah satu pola paling klasik aplikasi kosmetik yang ternyata malware.'},
+      {icon:'📍', name:'Lokasi', verdict:'curiga', reason:'Curiga — gambar wallpaper terlihat sama di mana pun Anda berada.'},
+      {icon:'🎙️', name:'Mikrofon', verdict:'curiga', reason:'Curiga — tidak ada fitur wallpaper yang butuh merekam suara.'}
+    ]}
+];
+
+let order = APPS.map((_,i)=>i);
+let appPos = 0;
+let guesses = {};
+let revealed = false;
+let score = {correct:0, total:0};
+
+const stage = document.getElementById('stage');
+
+function shuffleOrder(){
+  for(let i=order.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [order[i],order[j]] = [order[j],order[i]];
+  }
+}
+
+function updateScorePill(){
+  document.getElementById('scoreText').textContent = `${score.correct} / ${score.total}`;
+}
+
+function renderApp(){
+  if(appPos >= order.length){ renderFinal(); return; }
+  const app = APPS[order[appPos]];
+  guesses = {}; revealed = false;
+
+  let html = `<div class="app-card">
+      <div class="app-head"><span class="app-icon">${app.icon}</span>
+        <div><div class="app-name">${app.name}</div><div class="app-cat">${app.cat}</div></div>
+      </div>
+      <div class="app-desc">${app.desc}</div>
+    </div>`;
+
+  app.perms.forEach((p,i)=>{
+    html += `<div class="perm-row" id="perm-${i}">
+        <div class="perm-top"><span class="perm-icon">${p.icon}</span><span class="perm-name">Minta akses: ${p.name}</span></div>
+        <div class="perm-guess">
+          <button class="guess-btn" onclick="pickGuess(${i},'wajar')">✅ Wajar</button>
+          <button class="guess-btn" onclick="pickGuess(${i},'curiga')">🚩 Curiga</button>
+        </div>
+        <div class="perm-reason">
+          <span class="verdict-tag ${p.verdict}">${p.verdict==='wajar'?'✅ WAJAR':'🚩 CURIGA'}</span>
+          <span class="match-tag" id="match-${i}"></span>
+          <div style="margin-top:6px;">${p.reason}</div>
+        </div>
+      </div>`;
+  });
+
+  html += `<div class="controls">
+      <button class="btn btn-primary" id="revealBtn" onclick="reveal()">Lihat Jawaban</button>
+      <button class="btn" id="nextBtn" onclick="nextApp()" disabled>Aplikasi Berikutnya ➡</button>
+      <div class="progress">Aplikasi ${appPos+1} dari ${order.length}</div>
+    </div>`;
+
+  stage.innerHTML = html;
+}
+
+function pickGuess(i, val){
+  if(revealed) return;
+  guesses[i] = val;
+  const row = document.getElementById('perm-'+i);
+  row.querySelectorAll('.guess-btn').forEach(b=>b.classList.remove('picked-wajar','picked-curiga'));
+  row.querySelectorAll('.guess-btn')[val==='wajar'?0:1].classList.add('picked-'+val);
+}
+
+function reveal(){
+  const app = APPS[order[appPos]];
+  revealed = true;
+  app.perms.forEach((p,i)=>{
+    const row = document.getElementById('perm-'+i);
+    row.classList.add('revealed');
+    row.querySelectorAll('.guess-btn').forEach(b=>b.disabled=true);
+    const g = guesses[i];
+    const matchEl = document.getElementById('match-'+i);
+    score.total++;
+    if(g === p.verdict){
+      row.classList.add('correct');
+      matchEl.textContent = '✓ Tebakan Anda benar';
+      matchEl.classList.add('ok');
+      score.correct++;
+    } else if(g){
+      row.classList.add('wrong');
+      matchEl.textContent = '✕ Tebakan Anda meleset';
+      matchEl.classList.add('no');
+    } else {
+      row.classList.add('wrong');
+      matchEl.textContent = '— belum ditebak';
+      matchEl.classList.add('no');
+    }
+  });
+  updateScorePill();
+  document.getElementById('revealBtn').disabled = true;
+  document.getElementById('nextBtn').disabled = false;
+}
+
+function nextApp(){
+  appPos++;
+  renderApp();
+}
+
+function renderFinal(){
+  const pct = score.total ? Math.round((score.correct/score.total)*100) : 0;
+  stage.innerHTML = `<div class="final-card">
+      <h2>Selesai!</h2>
+      <p>Anda menebak benar <b>${score.correct}</b> dari <b>${score.total}</b> izin (${pct}%) di seluruh ${order.length} aplikasi.</p>
+      <button class="btn btn-primary" onclick="restart()">🔀 Acak &amp; Ulangi dari Awal</button>
+    </div>`;
+}
+
+function restart(){
+  shuffleOrder();
+  appPos = 0;
+  score = {correct:0, total:0};
+  updateScorePill();
+  renderApp();
+}
+
+document.getElementById('restartBtn').addEventListener('click', restart);
+
+shuffleOrder();
+renderApp();
+</script>
+</body>
+</html>

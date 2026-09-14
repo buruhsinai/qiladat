@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Radius Bumi dari Satu Gunung — Al-Biruni</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root{
+    --bg:#141210; --panel:#1c1916; --panel2:#211d19;
+    --gold:#c9a24b; --gold-soft:#8a7440; --text:#e8e0d0; --text-dim:#a89a80;
+    --line:#3a332a; --danger:#c25c4a; --ok:#6f9e6a; --blue:#6a91c2;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Georgia,'Times New Roman',serif;line-height:1.6;}
+  .container{max-width:900px;margin:0 auto;padding:24px 16px 60px;}
+  header{text-align:center;margin-bottom:26px;border-bottom:1px solid var(--line);padding-bottom:18px;}
+  header h1{font-size:1.4rem;color:var(--gold);margin:0 0 6px;}
+  header p{color:var(--text-dim);margin:0;font-size:0.9rem;font-style:italic;}
+  h2{color:var(--gold);font-size:1.08rem;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+  h2 .num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;
+    border:1px solid var(--gold-soft);border-radius:50%;font-size:0.78rem;color:var(--gold);flex-shrink:0;}
+  h3{color:var(--gold);font-size:0.95rem;margin:14px 0 8px;}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:16px;}
+  p{margin:0 0 9px;font-size:0.92rem;} p:last-child{margin-bottom:0;}
+  .dim{color:var(--text-dim);font-size:0.84rem;}
+  ul{margin:6px 0;padding-left:20px;} li{margin-bottom:5px;font-size:0.9rem;}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;flex-wrap:wrap;}
+  .row label{font-size:0.88rem;flex:1;min-width:190px;display:flex;justify-content:space-between;}
+  .row label span.val{color:var(--gold);font-weight:bold;}
+  input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:var(--line);outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+    background:var(--gold);cursor:pointer;border:2px solid var(--bg);}
+  svg.canvas{width:100%;height:auto;background:#0d0c0a;border-radius:8px;border:1px solid var(--line);}
+  .readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px;}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;}
+  .stat .label{font-size:0.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.4px;}
+  .stat .value{font-size:1.05rem;color:var(--gold);margin-top:2px;}
+  .formula{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:10px 14px;
+    font-family:'Courier New',monospace;font-size:0.84rem;margin:8px 0;overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:0.87rem;}
+  th,td{padding:7px 6px;text-align:center;border-bottom:1px solid var(--line);}
+  th{color:var(--gold-soft);font-size:0.72rem;text-transform:uppercase;}
+  .flag{background:rgba(194,92,74,0.1);border:1px solid var(--danger);border-radius:8px;padding:10px 12px;
+    font-size:0.85rem;margin-bottom:8px;color:var(--danger);}
+  .refs li{font-size:0.82rem;color:var(--text-dim);}
+  footer{text-align:center;color:var(--text-dim);font-size:0.76rem;margin-top:22px;}
+
+  .panel3d{margin-top:18px;padding-top:16px;border-top:1px dashed var(--line);}
+  .panel3d h3{margin-top:0;}
+  .panel3d .sub{color:var(--text-dim);font-size:0.82rem;margin:-4px 0 10px;}
+  #earth3d{width:100%;height:340px;border-radius:8px;border:1px solid var(--line);background:#0d0c0a;
+    cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;position:relative;}
+  #earth3d.grabbing{cursor:grabbing;}
+  .hint3d{font-size:0.76rem;color:var(--text-dim);margin-top:6px;text-align:center;}
+  .legend3d{display:flex;flex-wrap:wrap;gap:12px 18px;font-size:0.78rem;color:var(--text-dim);margin-top:10px;justify-content:center;}
+  .legend3d span{display:inline-flex;align-items:center;gap:6px;}
+  .sw3d{width:10px;height:10px;border-radius:50%;display:inline-block;}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Radius Bumi dari Satu Gunung</h1>
+  <p>Metode Al-Biruni (~1020 M) — tanpa perjalanan jauh, hanya satu titik dan trigonometri</p>
+</header>
+
+<section id="belajar">
+  <h2><span class="num">1</span>Belajar</h2>
+  <p>Metode klasik mengukur ukuran Bumi (Eratosthenes, ~240 SM) membutuhkan JARAK antara dua kota yang jauh terpisah plus perbedaan sudut bayangan Matahari di keduanya. Al-Biruni, saat berada di Benteng Nandana (kini Pakistan) sekitar tahun 1020 M, menemukan cara yang jauh lebih elegan: <strong>cukup satu gunung saja</strong>.</p>
+  <p>Idenya: berdiri di puncak gunung setinggi h, cakrawala (horizon) yang terlihat sedikit "menurun" di bawah garis horizontal sejati — sudut penurunan ini disebut <em>dip angle</em> (θ). Garis pandang ke cakrawala itu sebenarnya menyinggung (tangen) permukaan bulat Bumi. Ini membentuk segitiga siku-siku raksasa: pusat Bumi (C), puncak gunung (B), dan titik cakrawala (S) — dan segitiga inilah yang bisa dipecahkan dengan trigonometri sederhana untuk mendapatkan radius Bumi.</p>
+  <p>Sebelum itu, ia juga perlu tahu tinggi gunung h — diukur tanpa perlu naik dulu, lewat dua kali pengukuran sudut elevasi puncak dari dua titik berjarak diketahui di dataran (metode segitiga dasar).</p>
+  <p>Hasil aslinya di Nandana: sudut dip 34 menit busur (0,57°), memberi radius Bumi ≈6.335 km — hanya berbeda ~1% dari nilai modern (6.371 km). Sangat mengesankan untuk pengukuran 1000 tahun lalu tanpa alat elektronik.</p>
+</section>
+
+<section id="pertanyaan">
+  <h2><span class="num">2</span>Pertanyaan Ilmiah</h2>
+  <ul>
+    <li>Kenapa cukup satu gunung dan satu sudut kecil bisa memberi radius seluruh Bumi?</li>
+    <li>Seberapa sensitif hasilnya terhadap kesalahan pengukuran sudut yang sangat kecil ini?</li>
+  </ul>
+</section>
+
+<section id="simulator">
+  <h2><span class="num">3</span>Simulator</h2>
+  <div class="row">
+    <label>Tinggi gunung (meter) <span class="val" id="v_h">305</span></label>
+    <input type="range" id="h" min="50" max="3000" value="305">
+  </div>
+  <div class="row">
+    <label>Sudut penurunan cakrawala θ (menit busur) <span class="val" id="v_theta">34</span></label>
+    <input type="range" id="theta" min="5" max="90" step="0.5" value="34">
+  </div>
+
+  <svg id="canvas" class="canvas" viewBox="0 0 500 350" xmlns="http://www.w3.org/2000/svg"></svg>
+
+  <div class="readout">
+    <div class="stat"><div class="label">Radius Bumi terhitung</div><div class="value" id="out_R">—</div></div>
+    <div class="stat"><div class="label">Radius sebenarnya</div><div class="value">6.371 km</div></div>
+    <div class="stat"><div class="label">Selisih</div><div class="value" id="out_selisih">—</div></div>
+  </div>
+
+  <div class="panel3d">
+    <h3>Visualisasi 3D</h3>
+    <p class="sub">Model interaktif segitiga C–B–S di atas bola Bumi. Sudut &amp; tinggi gunung digambar diperbesar agar terlihat jelas — sama seperti pada diagram 2D di atas, ini mengikuti slider yang sama.</p>
+    <div id="earth3d"></div>
+    <p class="hint3d">seret = putar tampilan · scroll / cubit 2 jari = zoom</p>
+    <div class="legend3d">
+      <span><span class="sw3d" style="background:#8a7440;"></span>C — pusat Bumi</span>
+      <span><span class="sw3d" style="background:#c9a24b;"></span>B — puncak gunung</span>
+      <span><span class="sw3d" style="background:#8fc9e8;"></span>S — cakrawala &amp; lingkaran horizon</span>
+    </div>
+  </div>
+</section>
+
+<section id="sensitivitas">
+  <h2><span class="num">4</span>Uji Kejujuran: Seberapa Genting Presisinya?</h2>
+  <p>Dengan tinggi gunung tetap (305m, seperti Nandana), lihat apa yang terjadi kalau sudut dip meleset sedikit saja:</p>
+  <table id="tabelSensitivitas"></table>
+  <div class="flag">
+    Perhatikan lompatannya: selisih 2 menit busur saja (sekitar 0,033°) mengubah hasil dari ~8.000 km menjadi ~5.000 km! Ini bukan kelemahan Al-Biruni — justru menunjukkan betapa luar biasa presisi pengukuran astrolabnya sampai bisa mendekati nilai benar. Beberapa sejarawan sains modern mencatat: akurasi hasilnya yang sangat dekat dengan nilai modern sebagian juga soal keberuntungan presisi alat pada saat itu, bukan cuma soal kecerdasan metodenya semata — metodenya brilian, tapi hasilnya rapuh terhadap kesalahan sekecil apa pun.
+  </div>
+</section>
+
+<section id="metode">
+  <h2><span class="num">5</span>Metode &amp; Rumus</h2>
+  <p>Segitiga siku-siku C (pusat Bumi) - B (puncak gunung) - S (titik cakrawala), siku-siku di S (karena garis pandang menyinggung permukaan Bumi):</p>
+  <div class="formula">cos(θ) = R / (R + h)
+→ R = h × cos(θ) / (1 − cos(θ))</div>
+  <p class="dim">Verifikasi: dengan h=310m dan θ=34 menit busur, rumus ini memberi R=6.335km — cocok persis dengan nilai yang tercatat dalam sejarah untuk pengukuran Nandana.</p>
+</section>
+
+<section id="batasan">
+  <h2><span class="num">6</span>Batasan</h2>
+  <ul>
+    <li>Mengasumsikan Bumi bola sempurna (mengabaikan kepepatan kutub).</li>
+    <li>Tidak memodelkan refraksi atmosfer — cahaya yang melewati atmosfer sedikit membelok mengikuti kelengkungan Bumi, yang bisa sedikit mengubah sudut dip yang teramati (efek ini nyata dan didokumentasikan dalam analisis modern atas metode ini).</li>
+    <li>Simulator mengasumsikan pengukuran tinggi gunung (h) sudah akurat — kenyataannya tahap ini sendiri (butuh dua pengukuran sudut elevasi dari titik berjarak diketahui) juga rawan kesalahan yang merambat ke hasil akhir.</li>
+  </ul>
+</section>
+
+<section id="referensi">
+  <h2><span class="num">7</span>Referensi</h2>
+  <ul class="refs">
+    <li>Al-Biruni, <em>Tahdid Nihayat al-Amakin</em> (Penentuan Koordinat Kota-kota) — pengukuran di Benteng Nandana.</li>
+    <li>ThatsMaths, "Al Biruni and the Size of the Earth" — analisis modern metode dan akurasinya.</li>
+    <li>Owlcation, "Al-Biruni's Classic Experiment: How to Calculate the Radius of the Earth".</li>
+  </ul>
+</section>
+
+<footer>Bagian dari Laboratorium Sains &amp; Sejarah — Bank Ide Qiladat/JAZMI.</footer>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const R_ACTUAL = 6371;
+
+  function hitungR(h_m, thetaArcmin){
+    const theta = (thetaArcmin/60)*Math.PI/180;
+    const h_km = h_m/1000;
+    return h_km*Math.cos(theta)/(1-Math.cos(theta));
+  }
+
+  function hitung(){
+    const h = parseFloat($('h').value);
+    const theta = parseFloat($('theta').value);
+    $('v_h').textContent = h;
+    $('v_theta').textContent = theta;
+
+    const R = hitungR(h, theta);
+    $('out_R').textContent = R.toFixed(1)+' km';
+    const selisihPct = ((R-R_ACTUAL)/R_ACTUAL*100);
+    $('out_selisih').textContent = (selisihPct>=0?'+':'')+selisihPct.toFixed(1)+'%';
+
+    drawDiagram(h, theta, R);
+    if(three3D) three3D.update(h, theta);
+  }
+
+  function drawDiagram(h, thetaArcmin, R){
+    const cx=250, cy=320;
+    const dispR = 120;
+    const theta = (thetaArcmin/60)*Math.PI/180;
+
+    let svg = `<rect x="0" y="0" width="500" height="350" fill="#0d0c0a"/>`;
+    svg += `<circle cx="${cx}" cy="${cy}" r="${dispR}" fill="none" stroke="#3a332a" stroke-width="1.5"/>`;
+    svg += `<circle cx="${cx}" cy="${cy}" r="2" fill="#8a7440"/>`;
+    svg += `<text x="${cx+6}" y="${cy+4}" fill="#8a7440" font-size="11" font-family="Georgia,serif">C</text>`;
+
+    const Bx = cx, By = cy-dispR-25; // puncak gunung (tinggi digambar tetap utk kejelasan visual)
+    svg += `<line x1="${cx}" y1="${cy-dispR}" x2="${Bx}" y2="${By}" stroke="#c9a24b" stroke-width="3"/>`;
+    svg += `<text x="${Bx+8}" y="${By+5}" fill="#c9a24b" font-size="12" font-family="Georgia,serif">B (gunung, h)</text>`;
+
+    // titik singgung S: dihitung dari sudut theta di B relatif garis horizontal
+    // sudut di pusat (angle BCS) = theta juga (secara geometris, utk visual dibesar-besarkan agar terlihat)
+    const dispTheta = theta*8; // diperbesar utk visibilitas (asli terlalu kecil utk digambar)
+    const Sx = cx + dispR*Math.sin(dispTheta), Sy = cy - dispR*Math.cos(dispTheta);
+    svg += `<circle cx="${Sx}" cy="${Sy}" r="4" fill="#8fc9e8"/>`;
+    svg += `<text x="${Sx+8}" y="${Sy}" fill="#8fc9e8" font-size="11" font-family="Georgia,serif">S (cakrawala)</text>`;
+
+    svg += `<line x1="${Bx}" y1="${By}" x2="${Sx}" y2="${Sy}" stroke="#e8956a" stroke-width="1.5"/>`;
+    svg += `<line x1="${cx}" y1="${cy}" x2="${Sx}" y2="${Sy}" stroke="#3a332a" stroke-width="1" stroke-dasharray="3,3"/>`;
+    svg += `<line x1="${cx}" y1="${cy}" x2="${Bx}" y2="${By}" stroke="#3a332a" stroke-width="1" stroke-dasharray="3,3"/>`;
+    // garis horizontal di B utk menunjukkan sudut dip
+    svg += `<line x1="${Bx-60}" y1="${By}" x2="${Bx+10}" y2="${By}" stroke="#6f9e6a" stroke-width="1" stroke-dasharray="2,2"/>`;
+    svg += `<text x="${Bx-65}" y="${By-6}" fill="#6f9e6a" font-size="10" text-anchor="end" font-family="Georgia,serif">horizontal</text>`;
+
+    svg += `<text x="10" y="20" fill="#a89a80" font-size="10" font-family="Georgia,serif">(sudut θ digambar diperbesar agar terlihat — aslinya sangat kecil)</text>`;
+
+    $('canvas').innerHTML = svg;
+  }
+
+  // ===== Panel 3D (tambahan — tidak mengubah diagram 2D di atas) =====
+  let three3D = null;
+  function initThree3D(){
+    const container = $('earth3d');
+    if(!container || typeof THREE === 'undefined') return;
+    const w = container.clientWidth, h0 = container.clientHeight;
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0d0c0a);
+
+    const camera = new THREE.PerspectiveCamera(45, w/h0, 0.1, 1000);
+    const target = new THREE.Vector3(0,0,0);
+    let radius = 58, camTheta = Math.PI*0.32, phi = 1.05;
+
+    const renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setSize(w, h0);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    container.appendChild(renderer.domElement);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+    const sun = new THREE.DirectionalLight(0xffffff, 0.75);
+    sun.position.set(40,60,30);
+    scene.add(sun);
+
+    const EARTH_R = 20;
+    const earth = new THREE.Mesh(
+      new THREE.SphereGeometry(EARTH_R, 48, 32),
+      new THREE.MeshStandardMaterial({color:0x24425a, roughness:0.85})
+    );
+    scene.add(earth);
+    const wireOverlay = new THREE.Mesh(
+      new THREE.SphereGeometry(EARTH_R*1.002, 24, 16),
+      new THREE.MeshBasicMaterial({color:0x8fc9e8, wireframe:true, transparent:true, opacity:0.14})
+    );
+    scene.add(wireOverlay);
+
+    const cDot = new THREE.Mesh(new THREE.SphereGeometry(0.4,10,10), new THREE.MeshBasicMaterial({color:0x8a7440}));
+    scene.add(cDot);
+
+    let mountain = new THREE.Mesh(new THREE.ConeGeometry(1.3,1,16), new THREE.MeshStandardMaterial({color:0xc9a24b}));
+    scene.add(mountain);
+    const bDot = new THREE.Mesh(new THREE.SphereGeometry(0.4,10,10), new THREE.MeshBasicMaterial({color:0xc9a24b}));
+    scene.add(bDot);
+    const sDot = new THREE.Mesh(new THREE.SphereGeometry(0.4,10,10), new THREE.MeshBasicMaterial({color:0x8fc9e8}));
+    scene.add(sDot);
+
+    const tangentLine = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
+      new THREE.LineBasicMaterial({color:0xe8956a})
+    );
+    scene.add(tangentLine);
+
+    function dashedLine(){
+      const line = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
+        new THREE.LineDashedMaterial({color:0x6a5f4a, dashSize:0.6, gapSize:0.4})
+      );
+      scene.add(line);
+      return line;
+    }
+    const lineCB = dashedLine();
+    const lineCS = dashedLine();
+
+    let ring = new THREE.Mesh(new THREE.TorusGeometry(1,0.07,8,64), new THREE.MeshBasicMaterial({color:0x8fc9e8, transparent:true, opacity:0.55}));
+    scene.add(ring);
+
+    function update(h_m, thetaArcmin){
+      const thetaRad = (thetaArcmin/60)*Math.PI/180;
+      const dispTheta = Math.min(thetaRad*25, Math.PI*0.46); // eksagerasi visual, sama semangatnya dgn diagram 2D
+
+      const mtnH = 1.6 + (h_m-50)/(3000-50)*4.4;
+      mountain.geometry.dispose();
+      mountain.geometry = new THREE.ConeGeometry(1.3, mtnH, 16);
+      const Btop = new THREE.Vector3(0, EARTH_R+mtnH, 0);
+      mountain.position.set(0, EARTH_R+mtnH/2, 0);
+      bDot.position.copy(Btop);
+
+      const S = new THREE.Vector3(EARTH_R*Math.sin(dispTheta), EARTH_R*Math.cos(dispTheta), 0);
+      sDot.position.copy(S);
+
+      tangentLine.geometry.setFromPoints([Btop, S]);
+      lineCB.geometry.setFromPoints([new THREE.Vector3(0,0,0), Btop]);
+      lineCB.computeLineDistances();
+      lineCS.geometry.setFromPoints([new THREE.Vector3(0,0,0), S]);
+      lineCS.computeLineDistances();
+
+      ring.geometry.dispose();
+      const ringRadius = Math.max(EARTH_R*Math.sin(dispTheta), 0.15);
+      ring.geometry = new THREE.TorusGeometry(ringRadius, 0.07, 8, 64);
+      ring.position.y = EARTH_R*Math.cos(dispTheta);
+      ring.rotation.x = Math.PI/2;
+    }
+
+    function updateCamera(){
+      camera.position.x = target.x + radius*Math.sin(phi)*Math.sin(camTheta);
+      camera.position.z = target.z + radius*Math.sin(phi)*Math.cos(camTheta);
+      camera.position.y = target.y + radius*Math.cos(phi);
+      camera.lookAt(target);
+    }
+    updateCamera();
+
+    let dragging=false, lastX=0, lastY=0;
+    renderer.domElement.addEventListener('pointerdown', e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;container.classList.add('grabbing');});
+    window.addEventListener('pointerup', ()=>{dragging=false;container.classList.remove('grabbing');});
+    window.addEventListener('pointermove', e=>{
+      if(!dragging) return;
+      camTheta -= (e.clientX-lastX)*0.006;
+      phi -= (e.clientY-lastY)*0.006;
+      phi = Math.max(0.2, Math.min(1.5, phi));
+      lastX=e.clientX; lastY=e.clientY;
+      updateCamera();
+    });
+    renderer.domElement.addEventListener('wheel', e=>{
+      e.preventDefault();
+      radius = Math.max(30, Math.min(150, radius+e.deltaY*0.05));
+      updateCamera();
+    }, {passive:false});
+
+    let pinchDist = null;
+    function touchDist(t0,t1){ return Math.hypot(t1.clientX-t0.clientX, t1.clientY-t0.clientY); }
+    renderer.domElement.addEventListener('touchstart', e=>{
+      if(e.touches.length===2){ pinchDist = touchDist(e.touches[0], e.touches[1]); dragging=false; }
+    }, {passive:true});
+    renderer.domElement.addEventListener('touchmove', e=>{
+      if(e.touches.length===2 && pinchDist!==null){
+        e.preventDefault();
+        const d = touchDist(e.touches[0], e.touches[1]);
+        radius = Math.max(30, Math.min(150, radius-(d-pinchDist)*0.1));
+        pinchDist = d;
+        updateCamera();
+      }
+    }, {passive:false});
+    renderer.domElement.addEventListener('touchend', e=>{ if(e.touches.length<2) pinchDist = null; }, {passive:true});
+
+    function onResize(){
+      const w2 = container.clientWidth, h2 = container.clientHeight;
+      if(!w2||!h2) return;
+      camera.aspect = w2/h2; camera.updateProjectionMatrix();
+      renderer.setSize(w2, h2);
+    }
+    window.addEventListener('resize', onResize);
+
+    function loop(){ requestAnimationFrame(loop); renderer.render(scene, camera); }
+    loop();
+
+    three3D = { update };
+  }
+
+  ['h','theta'].forEach(id=> $(id).addEventListener('input', hitung));
+  initThree3D();
+  hitung();
+
+  // Tabel sensitivitas
+  let html='<tr><th>Sudut Dip</th><th>Radius Terhitung</th><th>Selisih dari Nilai Asli</th></tr>';
+  [30,32,34,36,38].forEach(dip=>{
+    const R = hitungR(305,dip);
+    const pct = ((R-R_ACTUAL)/R_ACTUAL*100);
+    html += `<tr><td>${dip}'</td><td style="color:var(--gold);">${R.toFixed(0)} km</td><td style="color:${Math.abs(pct)>20?'var(--danger)':'var(--ok)'};">${pct>=0?'+':''}${pct.toFixed(1)}%</td></tr>`;
+  });
+  $('tabelSensitivitas').innerHTML = html;
+})();
+</script>
+</body>
+</html>

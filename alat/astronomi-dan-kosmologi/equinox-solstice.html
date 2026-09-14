@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Equinox & Solstice — Laboratorium JAZMI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&display=swap');
+
+:root{
+  --bg:#FBF3E1; --bg-panel:#FFFBF0; --panel-border:#E3D2A8;
+  --ink:#2B241A; --ink-soft:#6b5f47; --line:rgba(43,36,26,.16); --line-strong:rgba(43,36,26,.32);
+  --spring:#7E9B5A; --summer:#E0972E; --autumn:#B5651D; --winter:#4C7A93;
+  --accent:#B8863B;
+}
+*{box-sizing:border-box;} html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(circle at 85% -10%, rgba(224,151,46,0.18), transparent 45%),
+    radial-gradient(circle at -10% 105%, rgba(76,122,147,0.15), transparent 45%),
+    var(--bg);
+  color:var(--ink); font-family:'Karla',sans-serif; min-height:100vh;
+}
+.wrap{max-width:960px; margin:0 auto; padding:20px 14px 44px;}
+.eyebrow{font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft); margin:0 0 4px;}
+h1{font-family:'Fraunces',serif; font-weight:700; font-size:clamp(24px,5.5vw,34px); margin:0 0 6px;}
+.sub{font-size:13.5px; color:var(--ink-soft); max-width:66ch; line-height:1.55;}
+
+.wheel-deco{ display:flex; justify-content:center; margin:14px 0 4px; }
+.wheel-deco svg{ width:140px; height:140px; }
+
+.controls{
+  background:var(--bg-panel); border:1px solid var(--panel-border); border-radius:6px;
+  padding:16px; margin-top:10px; display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;
+}
+.field{display:flex; flex-direction:column; gap:4px;}
+.field label{font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft);}
+.field input{
+  background:#fff; border:1px solid var(--line-strong); color:var(--ink);
+  border-radius:4px; padding:7px 8px; font-family:'Karla',sans-serif; font-size:13px; width:110px;
+}
+button{
+  font-family:'Karla',sans-serif; font-weight:700; font-size:12.5px;
+  background:var(--accent); color:#fff; border:none; border-radius:999px; padding:9px 18px; cursor:pointer;
+}
+button:hover{ filter:brightness(1.08); }
+
+.cards{ display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:12px; margin-top:16px; }
+.card{ border-radius:6px; padding:14px 15px; border:1px solid var(--line-strong); background:#fff; position:relative; overflow:hidden;}
+.card::before{ content:''; position:absolute; left:0; top:0; bottom:0; width:5px; }
+.card.spring::before{ background:var(--spring); } .card.summer::before{ background:var(--summer); }
+.card.autumn::before{ background:var(--autumn); } .card.winter::before{ background:var(--winter); }
+.card-label{ font-size:10.5px; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-soft); }
+.card h3{ font-family:'Fraunces',serif; font-size:18px; margin:3px 0 8px; }
+.card .dt{ font-size:20px; font-weight:700; font-family:'Fraunces',serif; }
+.card .tm{ font-size:13px; color:var(--ink-soft); margin-top:2px; }
+.card .note{ font-size:11.5px; color:var(--ink-soft); margin-top:8px; line-height:1.5; }
+
+.section{ margin-top:26px; }
+.section h2{ font-family:'Fraunces',serif; font-size:19px; margin:0 0 8px; }
+.section p{ font-size:13px; line-height:1.6; color:var(--ink); max-width:70ch; }
+
+.wobble-table{ width:100%; border-collapse:collapse; font-size:12.5px; margin-top:8px; }
+.wobble-table th, .wobble-table td{ text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); }
+.wobble-table th{ font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); }
+.wobble-table tr.this-year{ background:rgba(184,134,59,0.08); font-weight:700; }
+
+.daylen-stage{ margin-top:10px; background:var(--bg-panel); border:1px solid var(--panel-border); border-radius:6px; padding:10px; }
+svg.dl{ width:100%; height:auto; display:block; }
+.dl-axis{ stroke:var(--line-strong); stroke-width:1; }
+.dl-grid{ stroke:var(--line); stroke-width:1; }
+.dl-label{ font-size:9.5px; fill:var(--ink-soft); }
+.dl-curve{ fill:none; stroke:var(--accent); stroke-width:2; }
+.dl-marker{ stroke-width:1; stroke-dasharray:3 2; }
+.dl-marker.spring{stroke:var(--spring);} .dl-marker.summer{stroke:var(--summer);}
+.dl-marker.autumn{stroke:var(--autumn);} .dl-marker.winter{stroke:var(--winter);}
+.dl-marker-label{ font-size:9px; font-weight:700; }
+
+footer{margin-top:26px; padding-top:14px; border-top:1px solid var(--line); font-size:11.5px; color:var(--ink-soft); line-height:1.6;}
+footer b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">JAZMI · Laboratorium Astronomi · Level 4</p>
+  <h1>Equinox &amp; Solstice</h1>
+  <p class="sub">Tanggal dan jam pasti (UTC) titik balik matahari untuk tahun manapun, plus grafik
+  panjang siang sepanjang tahun untuk lintang pilihan Anda — dua hal yang sama-sama lahir dari satu
+  besaran: deklinasi Matahari.</p>
+
+  <div class="wheel-deco">
+    <svg viewBox="0 0 140 140">
+      <circle cx="70" cy="70" r="60" fill="none" stroke="#00000018" stroke-width="1"/>
+      <path d="M70,10 A60,60 0 0,1 130,70 L70,70 Z" fill="var(--summer)" opacity="0.35"/>
+      <path d="M130,70 A60,60 0 0,1 70,130 L70,70 Z" fill="var(--autumn)" opacity="0.35"/>
+      <path d="M70,130 A60,60 0 0,1 10,70 L70,70 Z" fill="var(--winter)" opacity="0.35"/>
+      <path d="M10,70 A60,60 0 0,1 70,10 L70,70 Z" fill="var(--spring)" opacity="0.35"/>
+      <circle cx="70" cy="70" r="4" fill="var(--accent)"/>
+    </svg>
+  </div>
+
+  <div class="controls">
+    <div class="field"><label>Tahun</label><input type="number" id="yearIn" value="2026"></div>
+    <div class="field"><label>Lintang untuk grafik (°)</label><input type="number" id="latIn" step="0.1" value="-6.2"></div>
+    <div class="field"><label>UTC lokal (jam)</label><input type="number" id="tzIn" step="0.5" value="7"></div>
+    <button id="calcBtn">Hitung</button>
+  </div>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="section">
+    <h2>Kenapa tanggalnya bergeser tiap tahun?</h2>
+    <p>Satu tahun tropis (waktu Matahari kembali ke titik equinox yang sama) panjangnya sekitar
+    365,2422 hari — bukan bilangan bulat. Kalender Masehi membulatkannya jadi 365 hari (366 di tahun
+    kabisat), jadi setiap tahun titik equinox/solstice "molor" sekitar 6 jam lebih lambat, lalu
+    dikoreksi mundur ~1 hari tiap kali tahun kabisat datang. Itu sebabnya tanggalnya bisa geser antara
+    19–21 Maret, 20–22 Juni, dan seterusnya, bukan selalu tanggal yang sama persis.</p>
+    <table class="wobble-table" id="wobbleTable"></table>
+  </div>
+
+  <div class="section">
+    <h2>Panjang siang sepanjang tahun</h2>
+    <p>Dihitung dari deklinasi Matahari harian untuk lintang yang Anda isi di atas. Garis putus-putus
+    menandai keempat titik balik. Di lintang tinggi (lebih dari ~66,5°), grafik ini bisa menyentuh 24
+    jam (siang polar) atau 0 jam (malam polar) — itu bukan bug, itu benar secara astronomis.</p>
+    <div class="daylen-stage">
+      <svg id="dl" class="dl" viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+  </div>
+
+  <footer>
+    <b>Batasan:</b> Tanggal/jam equinox &amp; solstice dihitung dari rumus polinomial Jean Meeus
+    (tanpa 24 suku koreksi periodik presisi tinggi), jadi akurasinya berkisar dalam hitungan jam,
+    bukan menit — cukup untuk keperluan edukasi dan dakwah, tapi bukan untuk kalibrasi instrumen
+    presisi. Konversi TT→UT memakai perkiraan ΔT≈69 detik untuk era saat ini. Deklinasi Matahari
+    harian memakai rumus pendekatan sederhana (akurasi sekitar ±1°), bukan model orbit penuh — grafik
+    panjang siang karenanya juga perkiraan, bukan tabel almanak presisi tinggi.
+  </footer>
+</div>
+
+<script>
+function dateToJD(Y,M,D){
+  if(M<=2){Y-=1;M+=12;}
+  const A=Math.floor(Y/100), B=2-A+Math.floor(A/4);
+  return Math.floor(365.25*(Y+4716))+Math.floor(30.6001*(M+1))+D+B-1524.5;
+}
+function jdToDate(JD){
+  JD+=0.5;
+  const Z=Math.floor(JD), F=JD-Z;
+  let A;
+  if(Z<2299161){ A=Z; } else {
+    const alpha=Math.floor((Z-1867216.25)/36524.25);
+    A=Z+1+alpha-Math.floor(alpha/4);
+  }
+  const B=A+1524, C=Math.floor((B-122.1)/365.25), D=Math.floor(365.25*C), E=Math.floor((B-D)/30.6001);
+  const day=B-D-Math.floor(30.6001*E)+F;
+  const month=(E<14)?E-1:E-13;
+  const year=(month>2)?C-4716:C-4715;
+  return {year,month,day};
+}
+function equinoxSolsticeJDE(year,type){
+  const Y=(year-2000)/1000, Y2=Y*Y, Y3=Y2*Y, Y4=Y3*Y;
+  if(type==='marEq') return 2451623.80984+365242.37404*Y+0.05169*Y2-0.00411*Y3-0.00057*Y4;
+  if(type==='junSol') return 2451716.56767+365241.62603*Y+0.00325*Y2+0.00888*Y3-0.00030*Y4;
+  if(type==='sepEq') return 2451810.21715+365242.01767*Y-0.11575*Y2+0.00337*Y3+0.00078*Y4;
+  if(type==='decSol') return 2451900.05952+365242.74049*Y-0.06223*Y2-0.00823*Y3+0.00032*Y4;
+}
+const DELTA_T_DAYS = 69/86400; // approx ΔT for current era
+
+function fmtEvent(year,type,tzOffset){
+  const jde = equinoxSolsticeJDE(year,type);
+  const jdUt = jde - DELTA_T_DAYS;
+  const {year:y,month:m,day:d} = jdToDate(jdUt);
+  const dayInt = Math.floor(d);
+  const fracMin = Math.round((d-dayInt)*24*60);
+  const hhUtc = Math.floor(fracMin/60), mmUtc = fracMin%60;
+  const dUtc = new Date(Date.UTC(y,m-1,dayInt,hhUtc,mmUtc));
+  const dLocal = new Date(dUtc.getTime() + tzOffset*3600000);
+  function pad(n){return String(n).padStart(2,'0');}
+  return {
+    utcStr: y+'-'+pad(m)+'-'+pad(dayInt)+' '+pad(hhUtc)+':'+pad(mmUtc)+' UTC',
+    localStr: dLocal.getUTCFullYear()+'-'+pad(dLocal.getUTCMonth()+1)+'-'+pad(dLocal.getUTCDate())+' '+pad(dLocal.getUTCHours())+':'+pad(dLocal.getUTCMinutes())+' (UTC'+(tzOffset>=0?'+':'')+tzOffset+')',
+    dateShort: pad(dayInt)+'/'+pad(m)
+  };
+}
+
+function solarDec(dayOfYear){
+  return -23.44*Math.cos((360/365.25)*(dayOfYear+10)*Math.PI/180);
+}
+function dayLengthHours(latDeg, decDeg){
+  const latR=latDeg*Math.PI/180, decR=decDeg*Math.PI/180;
+  const cosH0=-Math.tan(latR)*Math.tan(decR);
+  if(cosH0<=-1) return 24;
+  if(cosH0>=1) return 0;
+  const H0=Math.acos(cosH0);
+  return H0*2*180/Math.PI/15;
+}
+
+const EVENTS=[
+  {key:'marEq', label:'Equinox Maret', cat:'spring', desc:'Siang dan malam hampir sama panjang di seluruh dunia — Matahari terbit tepat di timur, terbenam tepat di barat.'},
+  {key:'junSol', label:'Solstice Juni', cat:'summer', desc:'Siang terpanjang untuk belahan bumi utara, malam terpanjang untuk belahan bumi selatan.'},
+  {key:'sepEq', label:'Equinox September', cat:'autumn', desc:'Siang dan malam kembali hampir sama panjang — kebalikan musim dari equinox Maret.'},
+  {key:'decSol', label:'Solstice Desember', cat:'winter', desc:'Siang terpendek untuk belahan bumi utara, siang terpanjang untuk belahan bumi selatan.'}
+];
+
+function render(){
+  const year=parseInt(document.getElementById('yearIn').value);
+  const lat=parseFloat(document.getElementById('latIn').value);
+  const tz=parseFloat(document.getElementById('tzIn').value);
+
+  const cardsEl=document.getElementById('cards'); cardsEl.innerHTML='';
+  EVENTS.forEach(ev=>{
+    const r=fmtEvent(year,ev.key,tz);
+    const div=document.createElement('div'); div.className='card '+ev.cat;
+    div.innerHTML = `<div class="card-label">${ev.cat==='spring'||ev.cat==='autumn' ? 'Equinox' : 'Solstice'}</div>
+      <h3>${ev.label} ${year}</h3>
+      <div class="dt">${r.localStr}</div>
+      <div class="tm">${r.utcStr}</div>
+      <div class="note">${ev.desc}</div>`;
+    cardsEl.appendChild(div);
+  });
+
+  const tbl=document.getElementById('wobbleTable');
+  let html='<tr><th>Tahun</th><th>Equinox Maret</th><th>Solstice Juni</th><th>Equinox September</th><th>Solstice Desember</th></tr>';
+  for(let y=year-2; y<=year+2; y++){
+    const me=fmtEvent(y,'marEq',tz), js=fmtEvent(y,'junSol',tz), se=fmtEvent(y,'sepEq',tz), ds=fmtEvent(y,'decSol',tz);
+    html += `<tr class="${y===year?'this-year':''}"><td>${y}</td><td>${me.dateShort}</td><td>${js.dateShort}</td><td>${se.dateShort}</td><td>${ds.dateShort}</td></tr>`;
+  }
+  tbl.innerHTML=html;
+
+  drawDayLength(year, lat);
+}
+
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs){const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); return e;}
+
+function drawDayLength(year, lat){
+  const svg=document.getElementById('dl'); svg.innerHTML='';
+  const X0=40,X1=780,Y0=20,Y1=280;
+  const isLeap = (year%4===0 && year%100!==0) || year%400===0;
+  const totalDays = isLeap?366:365;
+
+  svg.appendChild(el('line',{x1:X0,y1:Y1,x2:X1,y2:Y1,class:'dl-axis'}));
+  svg.appendChild(el('line',{x1:X0,y1:Y0,x2:X0,y2:Y1,class:'dl-axis'}));
+  [0,6,12,18,24].forEach(h=>{
+    const y=Y1-(h/24)*(Y1-Y0);
+    svg.appendChild(el('line',{x1:X0,y1:y,x2:X1,y2:y,class:'dl-grid'}));
+    const t=el('text',{x:X0-6,y:y+3,class:'dl-label','text-anchor':'end'}); t.textContent=h+'j'; svg.appendChild(t);
+  });
+  const monthStarts=[1,32,60,91,121,152,182,213,244,274,305,335];
+  const monthNames=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  monthStarts.forEach((d,i)=>{
+    const x=X0+(d/totalDays)*(X1-X0);
+    const t=el('text',{x:x,y:Y1+14,class:'dl-label'}); t.textContent=monthNames[i]; svg.appendChild(t);
+  });
+
+  let pathD='';
+  for(let d=1; d<=totalDays; d++){
+    const dec=solarDec(d);
+    const hrs=dayLengthHours(lat,dec);
+    const x=X0+(d/totalDays)*(X1-X0);
+    const y=Y1-(hrs/24)*(Y1-Y0);
+    pathD += (d===1?'M':'L')+x.toFixed(1)+','+y.toFixed(1)+' ';
+  }
+  svg.appendChild(el('path',{d:pathD, class:'dl-curve'}));
+
+  EVENTS.forEach(ev=>{
+    const jde=equinoxSolsticeJDE(year,ev.key);
+    const {year:y,month:m,day:d}=jdToDate(jde-DELTA_T_DAYS);
+    const jdThis=dateToJD(y,m,Math.floor(d));
+    const jdJan1=dateToJD(year,1,1);
+    const doy=Math.round(jdThis-jdJan1)+1;
+    const x=X0+(doy/totalDays)*(X1-X0);
+    svg.appendChild(el('line',{x1:x,y1:Y0,x2:x,y2:Y1,class:'dl-marker '+ev.cat}));
+    const t=el('text',{x:x,y:Y0-4,class:'dl-marker-label','text-anchor':'middle',fill:'var(--'+ev.cat+')'});
+    t.textContent=ev.label.split(' ')[1];
+    svg.appendChild(t);
+  });
+}
+
+document.getElementById('calcBtn').addEventListener('click', render);
+render();
+</script>
+</body>
+</html>

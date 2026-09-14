@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peta Etnomedis — Laboratorium JAZMI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&display=swap');
+
+:root{
+  --bg: #EFE6D0;
+  --bg-deep: #E6DABE;
+  --ink: #2B241A;
+  --ink-soft: #6b5f47;
+  --line: rgba(43,36,26,0.28);
+  --line-strong: rgba(43,36,26,0.45);
+  --accent: #A9762F;
+  --panel-bg: #FBF6E9;
+  --panel-border: #d8c8a0;
+  --land: #DACB9E;
+  --land-stroke: #55492f;
+
+  --c-india: #C9752B;
+  --c-tibet: #8B3A3A;
+  --c-china: #4A7C59;
+  --c-arab: #2A6F77;
+  --c-aztec: #A6501F;
+  --c-related: #8C7A4E;
+  --c-precursor: #8a8271;
+}
+
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+body{
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Karla', sans-serif;
+  min-height:100vh;
+}
+
+.wrap{ max-width: 960px; margin:0 auto; padding: 18px 14px 40px; }
+
+header{ margin-bottom: 14px; }
+.eyebrow{
+  font-family:'Karla',sans-serif; font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+  color: var(--ink-soft); margin:0 0 4px;
+}
+h1{
+  font-family:'Fraunces', serif; font-weight:700; font-size: clamp(22px,5vw,32px);
+  margin: 0 0 6px; line-height:1.15;
+}
+.sub{ font-size:13.5px; color: var(--ink-soft); max-width: 64ch; line-height:1.5; }
+
+.toolbar{
+  display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+  margin: 14px 0 10px; font-size:12px;
+}
+.toolbar button{
+  font-family:'Karla',sans-serif; font-size:12px; font-weight:500;
+  border:1px solid var(--line-strong); background: var(--panel-bg); color: var(--ink);
+  padding:6px 11px; border-radius:999px; cursor:pointer;
+}
+.toolbar button.active{ background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.toolbar .divider{ width:1px; height:16px; background:var(--line-strong); margin:0 4px; }
+
+.stage{
+  position:relative;
+  border:1px solid var(--panel-border);
+  border-radius: 4px;
+  background: #E3D6B0;
+  overflow:hidden;
+}
+
+svg{ display:block; width:100%; height:auto; }
+
+.grat-ring{ fill:none; stroke: var(--line); stroke-width:1; }
+.grat-ring.edge{ stroke: var(--land-stroke); stroke-width:1.4; }
+.grat-radial{ stroke: var(--line); stroke-width:1; }
+.grat-label{ font-family:'Karla',sans-serif; font-size:9px; fill: var(--ink-soft); }
+.land{ fill: var(--land); stroke: var(--land-stroke); stroke-width:1; stroke-linejoin:round; }
+.ocean-label{ font-family:'Fraunces',serif; font-style:italic; font-size:11px; fill: #8a7d5c; }
+.center-mark{ fill: var(--accent); }
+.center-label{ font-family:'Fraunces',serif; font-size:11px; font-weight:600; fill:var(--ink); }
+
+.pin{ cursor:pointer; }
+.pin circle.halo{ fill:none; stroke-width:6; opacity:0; transition:opacity .15s; }
+.pin:hover circle.halo, .pin.selected circle.halo{ opacity:.28; }
+.pin circle.dot{ stroke:#2B241A; stroke-width:1; }
+.pin.selected circle.dot{ stroke-width:2.5; }
+.pin-label{
+  font-family:'Karla',sans-serif; font-size:10.5px; font-weight:700;
+  fill: var(--ink); pointer-events:none;
+  paint-order: stroke; stroke: var(--land); stroke-width:3px;
+}
+.pin-label.region{ font-weight:400; font-size:9px; fill: var(--ink-soft); stroke: var(--land); stroke-width:3px;}
+.pin.dim{ opacity:.22; }
+
+.legend{
+  display:flex; flex-wrap:wrap; gap:10px 16px; font-size:11px; color:var(--ink-soft);
+  margin: 10px 2px 0;
+}
+.legend span{ display:inline-flex; align-items:center; gap:5px; }
+.legend i{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+
+.panel{
+  margin-top: 14px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  padding: 16px 18px 18px;
+  display:none;
+}
+.panel.open{ display:block; }
+.panel-cat{
+  font-size:10px; letter-spacing:.1em; text-transform:uppercase; font-weight:700;
+}
+.panel h2{
+  font-family:'Fraunces',serif; font-size:22px; margin: 3px 0 2px; line-height:1.15;
+}
+.panel .region{ font-size:12.5px; color:var(--ink-soft); margin-bottom:10px; }
+.panel .era{
+  display:inline-block; font-family:'Karla',sans-serif; font-size:11px; font-weight:700;
+  background: var(--bg-deep); border:1px solid var(--line-strong); border-radius:3px;
+  padding:3px 8px; margin-bottom:12px;
+}
+.panel p{ font-size:13.5px; line-height:1.6; margin: 0 0 10px; }
+.panel h3{
+  font-family:'Karla',sans-serif; font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+  color: var(--ink-soft); margin: 14px 0 5px; border-top:1px solid var(--line); padding-top:10px;
+}
+.panel ul{ margin:0; padding-left:18px; font-size:13px; line-height:1.55; }
+.panel .limit{
+  font-size:12px; font-style:italic; color: var(--ink-soft); background: var(--bg-deep);
+  border-left:3px solid var(--c-precursor); padding:8px 10px; margin-top:12px; border-radius:2px;
+}
+.close-btn{
+  float:right; background:none; border:1px solid var(--line-strong); border-radius:999px;
+  width:26px; height:26px; cursor:pointer; font-size:14px; color:var(--ink);
+}
+
+.timeline{ margin-top: 18px; }
+.timeline h3{
+  font-family:'Karla',sans-serif; font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+  color: var(--ink-soft); margin: 0 0 8px;
+}
+.tl-svg{ width:100%; height:auto; display:block; }
+.tl-axis-label{ font-family:'Karla',sans-serif; font-size:9px; fill:var(--ink-soft); }
+.tl-bar{ cursor:pointer; }
+.tl-bar rect{ stroke:#2B241A; stroke-width:.6; }
+.tl-bar.dim{ opacity:.3; }
+.tl-name{ font-family:'Karla',sans-serif; font-size:9.5px; fill:var(--ink); }
+
+footer{
+  margin-top: 22px; padding-top: 14px; border-top:1px solid var(--line);
+  font-size: 11.5px; color: var(--ink-soft); line-height:1.6;
+}
+footer b{ color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">JAZMI · Laboratorium Etnomedis · Level 4</p>
+    <h1>Peta Etnomedis Dunia</h1>
+    <p class="sub">Proyeksi <b>azimuthal equidistant berpusat Kutub Utara</b> — proyeksi yang sama
+    dipakai pada lambang PBB. Sifatnya: jarak dari Kutub Utara ke titik manapun akurat, garis bujur
+    berupa garis lurus dari pusat, garis lintang berupa lingkaran konsentris. Peta dipotong pada
+    60°LS (seperti lambang PBB) supaya Antarktika — yang jadi cincin raksasa terdistorsi ekstrem di
+    tepi proyeksi ini — tidak digambar.</p>
+  </header>
+
+  <div class="toolbar">
+    <button data-filter="all" class="active">Semua</button>
+    <button data-filter="core">5 Sistem Terstruktur</button>
+    <button data-filter="related">Terkait / Turunan</button>
+    <button data-filter="precursor">Akar (Yunani–Mesir)</button>
+    <div class="divider"></div>
+    <button id="btn-precursor-toggle">Tampilkan lapisan akar</button>
+  </div>
+
+  <div class="stage">
+    <svg id="map" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="legend">
+    <span><i style="background:var(--c-india)"></i>India (Ayurveda)</span>
+    <span><i style="background:var(--c-tibet)"></i>Tibet (Sowa Rigpa)</span>
+    <span><i style="background:var(--c-china)"></i>China (TCM)</span>
+    <span><i style="background:var(--c-arab)"></i>Arab (Unani/Islam)</span>
+    <span><i style="background:var(--c-aztec)"></i>Aztek/Mesoamerika</span>
+    <span><i style="background:var(--c-related)"></i>Terkait/turunan</span>
+    <span><i style="background:var(--c-precursor)"></i>Akar (opsional)</span>
+  </div>
+
+  <div class="panel" id="panel">
+    <button class="close-btn" id="panel-close">✕</button>
+    <div class="panel-cat" id="p-cat"></div>
+    <h2 id="p-title"></h2>
+    <div class="region" id="p-region"></div>
+    <div class="era" id="p-era"></div>
+    <p id="p-summary"></p>
+    <h3>Yang menonjol</h3>
+    <ul id="p-facts"></ul>
+    <div class="limit" id="p-limit"></div>
+  </div>
+
+  <div class="timeline">
+    <h3>Garis Waktu (perkiraan, ~1600 SM – 1600 M)</h3>
+    <svg id="tl" class="tl-svg" viewBox="0 0 800 260" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <footer>
+    <b>Batasan:</b> Garis pantai di peta ini disusun manual dari pengetahuan geografi umum (poligon
+    sederhana, bukan data survei/GeoJSON — tidak ada akses internet saat alat ini dibuat), jadi
+    bentuknya cukup dikenali tapi tidak presisi kartografis. Grid lintang/bujur dan posisi titik
+    tradisi dihitung matematis sungguhan dari rumus azimuthal equidistant, jadi jarak dan arah
+    dari Kutub Utara akurat. Tanggal era adalah perkiraan kasar dari sumber sekunder, sering
+    diperdebatkan sejarawan. Kategori "terkait/turunan" menandai hubungan genealogis, bukan
+    penilaian nilai. Alat ini adalah bantu-belajar, bukan rujukan akademik tunggal.
+  </footer>
+</div>
+
+<script>
+const CX = 400, CY = 400, MAXR = 370;
+const CROP_LAT = -60; // map edge latitude
+const COLAT_MAX = 90 - CROP_LAT; // 150 degrees
+
+function toRad(d){ return d*Math.PI/180; }
+
+// North-pole-centered azimuthal equidistant: simple polar form
+function project(lat, lon){
+  const colat = 90 - lat; // degrees from north pole
+  const r = (colat / COLAT_MAX) * MAXR;
+  const rad = toRad(lon);
+  const x = CX - r*Math.sin(rad);
+  const y = CY - r*Math.cos(rad);
+  return {x, y};
+}
+
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs){
+  const e = document.createElementNS(NS, tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+function pathFromPoints(points){
+  return points.map((p,i)=>{
+    const xy = project(p[0], p[1]);
+    return (i===0?'M':'L') + xy.x.toFixed(1) + ',' + xy.y.toFixed(1);
+  }).join(' ') + ' Z';
+}
+
+// Hand-simplified coastline polygons (approximate, low-resolution — see Batasan)
+const LAND = [
+  { name:"Afrika", pts:[[37,10],[31,32],[22,37],[15,40],[12,43],[11.5,51],[2,46],[-2,41],[-6,39],[-15,40],[-25,35],[-30,31],[-34,20],[-34,18.5],[-29,17],[-23,14],[-8,13],[-6,12],[0,9],[4,6],[5,-3],[7,-13],[14.7,-17.5],[21,-17],[27,-13],[32,-9],[35,-6],[37,10]] },
+  { name:"Eropa-Asia (Eurasia)", pts:[
+      [37,-9],[43,-9],[47,-2],[50,2],[53,8],[55,12],[58,11],[63,10],[68,15],[71,25],[71,45],[73,60],[75,90],[73,120],[70,140],[66,170],[62,178],[55,165],[50,156],[46,142],[40,132],[35,127],[30,122],[22,113],[16,108],[10,107],[6,103],[2,102],[6,98],[9,93],[16,94],[22,90],[19,84],[13,80],[8,77],[13,74],[19,72],[24,67],[26,56],[15,52],[13,45],[16,42],[20,39],[25,35],[30,33],[33,35],[36,32],[38,26],[38,22],[40,19],[42,16],[45,13],[46,9],[44,8],[43,7],[43,3],[41,0],[37,-9]
+  ]},
+  { name:"Britania Raya", pts:[[58,-3],[57,-6],[52,-5],[50,-5],[51,1],[55,-1],[58,-3]] },
+  { name:"Jepang", pts:[[45,142],[43,145],[38,141],[35,140],[34,132],[33,130],[35,133],[38,138],[41,140],[45,142]] },
+  { name:"Sri Lanka", pts:[[9.8,80],[8,81.5],[6,80.5],[7,79.8],[9.8,80]] },
+  { name:"Madagaskar", pts:[[-12,49],[-16,50],[-22,48],[-25,45],[-20,43.5],[-15,45],[-12,49]] },
+  { name:"Sumatra", pts:[[5.5,95.3],[2,97],[-1,101],[-5.5,105],[-3,102],[0,99],[3,97],[5.5,95.3]] },
+  { name:"Jawa", pts:[[-6,106],[-6.5,108.5],[-7,112],[-8.2,114.5],[-8,111],[-6.8,107.5],[-6,106]] },
+  { name:"Amerika Utara", pts:[[66,-168],[70,-155],[70,-120],[68,-100],[63,-80],[60,-65],[52,-56],[47,-53],[44,-67],[40,-74],[34,-77],[25,-80],[29,-90],[29,-95],[22,-97],[18,-95],[19,-88],[21,-87],[16,-88],[8,-80],[9,-84],[13,-87],[16,-93],[16,-98],[19,-105],[23,-110],[27,-113],[31,-116],[34,-120],[38,-123],[42,-124],[46,-124],[49,-125],[54,-130],[58,-135],[60,-146],[60,-152],[63,-165],[66,-168]] },
+  { name:"Amerika Selatan", pts:[[8,-77],[11,-72],[11,-64],[8,-60],[4,-52],[-1,-49],[-5,-35],[-9,-35],[-13,-38],[-16,-39],[-23,-43],[-26,-48],[-30,-50],[-34,-54],[-38,-58],[-42,-64],[-49,-68],[-53,-68],[-55,-68],[-54,-71],[-50,-75],[-45,-73],[-38,-73],[-33,-72],[-27,-71],[-20,-70],[-14,-76],[-6,-81],[-3,-80],[0,-80],[3,-77],[5,-77],[8,-77]] },
+  { name:"Greenland", pts:[[60,-45],[65,-53],[70,-55],[76,-68],[80,-65],[83,-35],[80,-20],[76,-20],[70,-25],[65,-38],[60,-45]] },
+  { name:"Australia", pts:[[-11,132],[-12,142],[-16,145],[-20,149],[-25,153],[-28,153],[-33,151],[-38,148],[-38,143],[-38,141],[-35,138],[-35,136],[-32,127],[-32,122],[-25,114],[-20,114],[-16,123],[-14,126],[-12,131],[-11,132]] }
+];
+
+const svg = document.getElementById('map');
+const clip = el('clipPath', {id:'mapClip'});
+clip.appendChild(el('circle',{cx:CX,cy:CY,r:MAXR}));
+svg.appendChild(clip);
+
+const mapGroup = el('g', {'clip-path':'url(#mapClip)'});
+svg.appendChild(mapGroup);
+
+// ocean background disc
+mapGroup.appendChild(el('circle',{cx:CX,cy:CY,r:MAXR,fill:'#E3D6B0'}));
+
+// land
+LAND.forEach(land=>{
+  mapGroup.appendChild(el('path',{ d: pathFromPoints(land.pts), class:'land' }));
+});
+
+// graticule: parallels (latitude circles) every 30 deg
+[60,30,0,-30,-60].forEach(lat=>{
+  const colat = 90-lat;
+  const r = (colat/COLAT_MAX)*MAXR;
+  const ring = el('circle', {cx:CX, cy:CY, r:r, class: lat===-60 ? 'grat-ring edge':'grat-ring'});
+  mapGroup.appendChild(ring);
+  const lbl = el('text', {x:CX+4, y:CY-r-3, class:'grat-label'});
+  lbl.textContent = lat+'°';
+  mapGroup.appendChild(lbl);
+});
+// meridians every 30 deg, straight lines from center to edge
+for(let lon=0; lon<360; lon+=30){
+  const rad = toRad(lon);
+  const x2 = CX - MAXR*Math.sin(rad), y2 = CY - MAXR*Math.cos(rad);
+  mapGroup.appendChild(el('line',{x1:CX,y1:CY,x2:x2,y2:y2,class:'grat-radial'}));
+  const lx = CX - (MAXR-14)*Math.sin(rad), ly = CY - (MAXR-14)*Math.cos(rad);
+  const llbl = el('text',{x:lx, y:ly, class:'grat-label', 'text-anchor':'middle'});
+  llbl.textContent = (lon<=180? lon : lon-360)+'°';
+  mapGroup.appendChild(llbl);
+}
+mapGroup.appendChild(el('circle',{cx:CX,cy:CY,r:4,class:'center-mark'}));
+const npLabel = el('text',{x:CX+8,y:CY+4,class:'center-label'});
+npLabel.textContent = "Kutub Utara";
+mapGroup.appendChild(npLabel);
+
+const pinGroup = el('g', {id:'pins'});
+mapGroup.appendChild(pinGroup);
+
+const DATA = [
+  {
+    id:"india", cat:"core", color:"var(--c-india)", name:"Ayurveda",
+    region:"India (lembah Gangga)", lat:22, lon:79,
+    era:"~1500 SM – 200 M", eraStart:-1500, eraEnd:200,
+    summary:"Akar lisan pada tradisi Weda (~1500 SM), disistematisasi lewat teks Charaka Samhita dan Sushruta Samhita (kira-kira 400 SM–200 M). Berpusat pada teori tridosha (Vata–Pitta–Kapha) sebagai kerangka diagnosis.",
+    facts:["Teori tridosha (Vata, Pitta, Kapha) sebagai kerangka diagnosis utama","Sushruta Samhita memuat teknik bedah yang tercatat cukup maju untuk masanya","Masih diregulasi dan dipraktikkan resmi di India hingga sekarang"],
+    limit:"Tanggal Weda dan penulisan Samhita masih diperdebatkan rentangnya oleh sejarawan; angka di atas adalah kisaran yang umum dikutip."
+  },
+  {
+    id:"tibet", cat:"core", color:"var(--c-tibet)", name:"Sowa Rigpa (Tibet)",
+    region:"Dataran Tinggi Tibet", lat:29.65, lon:91.1,
+    era:"~700–800 M", eraStart:700, eraEnd:800,
+    summary:"Disistematisasi di bawah patronase kerajaan sekitar abad 7–8 M. Teks intinya, rGyud bzhi (Empat Tantra), memadukan unsur Ayurveda, kedokteran Tiongkok, dan kosmologi Bon/Buddha.",
+    facts:["rGyud bzhi (Empat Tantra) sebagai teks rujukan inti, disunting ulang berabad-abad","Sintesis eksplisit tiga arus: India, Tiongkok, dan Bon/Buddha lokal","Diagnosis nadi (denyut) dan urin sebagai metode ciri khas"],
+    limit:"Tanggal penyusunan rGyud bzhi diperdebatkan — sebagian sumber menempatkannya lebih akhir (abad 12) sebagai redaksi final."
+  },
+  {
+    id:"china", cat:"core", color:"var(--c-china)", name:"Kedokteran Tiongkok (TCM)",
+    region:"Tiongkok tengah", lat:34, lon:108,
+    era:"~300–200 SM (dasar teori)", eraStart:-300, eraEnd:-100,
+    summary:"Fondasi teoretisnya, Huangdi Neijing, disusun sekitar abad 3–2 SM dari praktik lisan/divinasi yang lebih tua. Berpusat pada Yin-Yang, Lima Unsur, Qi, dan jalur meridian.",
+    facts:["Huangdi Neijing sebagai fondasi teori Yin-Yang dan Lima Unsur","Shennong Bencao Jing — katalog materia medica tertua yang tercatat","Akupunktur dan sistem meridian sebagai ciri khas diagnosis-terapi"],
+    limit:"Praktik lisan/proto-medis jauh mendahului 300 SM; tanggal di atas menandai kodifikasi teoretis, bukan awal mula praktik."
+  },
+  {
+    id:"arab", cat:"core", color:"var(--c-arab)", name:"Kedokteran Islam (Unani)",
+    region:"Baghdad & dunia Islam", lat:33.3, lon:44.4,
+    era:"~750–1250 M", eraStart:750, eraEnd:1250,
+    summary:"Sintesis besar Zaman Keemasan Islam: menyerap teori humoral Yunani serta masukan Persia dan India, lalu diformalkan lewat institusi seperti Bait al-Hikmah di Baghdad.",
+    facts:["Al-Razi (Rhazes) — al-Hawi, ensiklopedia klinis besar","Ibnu Sina (Avicenna) — al-Qanun fi al-Tibb (~1025 M), dipakai sebagai rujukan medis Eropa hingga abad 17","Menstandarkan farmakologi lewat penerjemahan sistematis teks Yunani-Suryani"],
+    limit:"Disebut 'kedokteran Arab' secara konvensional, tapi kontributornya lintas etnis (Persia, Suryani, dsb.) di bawah payung bahasa dan institusi Islam."
+  },
+  {
+    id:"aztec", cat:"core", color:"var(--c-aztec)", name:"Pengobatan Aztek/Mesoamerika",
+    region:"Meksiko tengah (Tenochtitlan)", lat:19.4, lon:-99.1,
+    era:"Praktik pra-1500, tercatat 1552 M", eraStart:1552, eraEnd:1552,
+    summary:"Tradisi lisan-ritual yang jauh lebih tua dari catatan yang selamat. Dokumentasi utama yang bertahan, Codex Badianus (1552, ditulis dalam bahasa Nahuatl oleh tabib Aztek Martín de la Cruz), baru muncul setelah kontak Eropa.",
+    facts:["Codex Badianus (Libellus de Medicinalibus Indorum Herbis, 1552) — farmakope herbal ekstensif","Temazcal (pemandian uap ritual) sebagai praktik terapi-spiritual","Codex Florentine (Sahagún, ~1575) sebagai sumber pendamping"],
+    limit:"Naskah pra-kontak sebagian besar musnah dalam pembakaran era kolonial — kelangkaan sumber adalah akibat sejarah, bukan bukti tradisi yang dangkal."
+  },
+  {
+    id:"jamu", cat:"related", color:"var(--c-related)", name:"Jamu",
+    region:"Jawa, Indonesia", lat:-7.6, lon:110.2,
+    era:"Bukti sejak ~abad 9 M", eraStart:825, eraEnd:900,
+    summary:"Relief peracik jamu sudah tergambar di Borobudur (~abad 9 M). Genealogisnya dekat dengan Ayurveda lewat jalur kontak Hindu-Buddha, tapi materia medica-nya endemik khas Nusantara.",
+    facts:["Relief Borobudur menggambarkan peracik jamu — bukti materiil tertua","Kunyit, asam jawa, dan tanaman endemik lain sebagai bahan ciri khas","Dipengaruhi kuat oleh Ayurveda, tapi bukan salinannya"],
+    limit:"Kategori 'terkait' di sini menandai kedekatan genealogis dengan Ayurveda — bukan penilaian bahwa Jamu kurang orisinal."
+  },
+  {
+    id:"vodun", cat:"related", color:"var(--c-related)", name:"Pengobatan Vodun",
+    region:"Afrika Barat (Benin, Togo, Ghana, Nigeria Selatan)", lat:7.2, lon:1.98,
+    era:"Akar tak tercatat; etnografi luar ~abad 18–19", eraStart:1750, eraEnd:1850,
+    summary:"Sistem medis yang menyatu erat dengan kosmologi religius Vodun — diagnosis dan terapi dimediasi lewat kerangka spiritual, dipadukan farmakope herbal.",
+    facts:["Diagnosis dan terapi terjalin dengan kosmologi spiritual Vodun","Kemungkinan berakar sangat tua secara lisan, jauh sebelum catatan luar ada","Sumber kolonial cenderung melabeli sistem ini 'perdukunan', yang menekan dokumentasi serius"],
+    limit:"Kelangkaan sumber tertulis di sini terutama akibat bagaimana sistem ini direkam pihak luar, bukan bukti ia dangkal atau muda."
+  },
+  {
+    id:"thai", cat:"related", color:"var(--c-related)", name:"Pijat Thailand (Nuad Boran)",
+    region:"Thailand", lat:15, lon:101,
+    era:"Atribusi legendaris ~abad 5 SM", eraStart:-500, eraEnd:-500,
+    summary:"Secara tradisional dinisbatkan ke Jivaka Komarabhacca, tabib legendaris yang disebut sezaman dengan Buddha. Menunjukkan pengaruh Ayurveda dan Tiongkok lewat jalur perdagangan.",
+    facts:["Atribusi ke Jivaka Komarabhacca — legenda, bukan fakta sejarah terverifikasi ketat","Menggabungkan unsur akupresur, peregangan, dan garis energi (mirip meridian)","Praktik tunggal yang dikenal luas, bukan sistem teks besar seperti Ayurveda/TCM"],
+    limit:"Detail historis pendirinya tidak terverifikasi ketat — ini dicatat sebagai catatan epistemik, bukan fakta pasti."
+  },
+  {
+    id:"europe", cat:"related", color:"var(--c-related)", name:"Herbalisme Eropa",
+    region:"Salerno, Italia", lat:40.68, lon:14.77,
+    era:"~abad 9–12 M", eraStart:850, eraEnd:1200,
+    summary:"Tidak ada satu aliran indigenus terstruktur yang bertahan setara Ayurveda/TCM. Praktik abad pertengahan sebagian besar melanjutkan teori humoral Yunani lewat kedokteran biara, mis. Schola Medica Salernitana (~abad 9), sekolah kedokteran Eropa tertua.",
+    facts:["Schola Medica Salernitana — sekolah kedokteran Eropa abad pertengahan tertua","Melanjutkan teori humoral Yunani (Hippocrates–Galen), bukan sistem asli baru","Hildegard von Bingen (abad 12) sebagai salah satu penulis herbal biara terkenal"],
+    limit:"Ditandai 'terkait' karena kelanjutan langsung dari teori Yunani, bukan tradisi indigenus mandiri."
+  },
+  {
+    id:"persia", cat:"related", color:"var(--c-related)", name:"Persia (hub transit)",
+    region:"Gondeshapur, Persia (kini Iran)", lat:31.3, lon:48.7,
+    era:"~250–700 M (Akademi Gondeshapur)", eraStart:250, eraEnd:700,
+    summary:"Bukan aliran bernama, melainkan simpul transit: Akademi Gondeshapur memadukan pengetahuan Yunani, Nestorian-Suryani, dan India sebelum mengalir ke Zaman Keemasan Islam. Ditandai lewat tokoh individu, bukan mazhab.",
+    facts:["Akademi Gondeshapur sebagai titik pertemuan Yunani–Nestorian–India","Al-Razi (Rhazes) dan Ibnu Sina (Avicenna) — tokoh Persia yang jadi raksasa kedokteran Islam","Tidak ada 'aliran Persia' bernama yang berdiri sendiri — polanya per-tokoh"],
+    limit:"Diklasifikasikan terpisah dari 'Arab' di sini semata untuk menandai perannya sebagai jembatan sejarah."
+  },
+  {
+    id:"egypt", cat:"precursor", color:"var(--c-precursor)", name:"Kedokteran Mesir Kuno",
+    region:"Luxor/Thebes, Mesir", lat:25.7, lon:32.6,
+    era:"~1550 SM (Papirus Ebers)", eraStart:-1550, eraEnd:-1550,
+    summary:"Papirus Ebers (~1550 SM) adalah salah satu naskah medis tertua yang bertahan. Dianggap di sini sebagai akar yang diserap ke dalam sintesis Yunani lalu Islam, bukan garis mandiri yang bertahan terpisah.",
+    facts:["Papirus Ebers — salah satu teks medis tertua yang bertahan","Pengetahuan anatomi dari praktik pembalseman","Pengaruhnya mengalir ke tradisi Yunani, lalu ke sintesis Islam"],
+    limit:"Lapisan opsional — dikeluarkan dari 5 sistem utama karena tidak bertahan sebagai garis mandiri."
+  },
+  {
+    id:"greek", cat:"precursor", color:"var(--c-precursor)", name:"Kedokteran Yunani",
+    region:"Kos, Yunani", lat:36.9, lon:27.15,
+    era:"~400 SM – 200 M (Hippocrates–Galen)", eraStart:-400, eraEnd:200,
+    summary:"Korpus Hippocrates (~abad 5–4 SM) dan Galen (abad 2 M) meletakkan teori humoral. Sebagian besar diserap ke dalam kedokteran Islam, bukan bertahan sebagai garis mandiri.",
+    facts:["Korpus Hippocrates meletakkan dasar teori humoral (empat cairan tubuh)","Galen (abad 2 M) mensistematisasi dan mendominasi pemikiran medis berabad-abad","Diserap besar-besaran ke dalam sintesis Islam abad 8–13 M"],
+    limit:"Lapisan opsional — perannya sebagai akar sudah tercakup di catatan 'Kedokteran Islam', ditampilkan terpisah hanya untuk konteks sejarah."
+  }
+];
+
+const CAT_LABEL = { core:"5 Sistem Terstruktur", related:"Terkait / Turunan", precursor:"Akar Sejarah (opsional)" };
+
+DATA.forEach(d=>{
+  const p = project(d.lat, d.lon);
+  const g = el('g', {class:'pin', 'data-id':d.id, 'data-cat':d.cat});
+  g.appendChild(el('circle',{class:'halo', cx:p.x, cy:p.y, r:12, stroke:d.color}));
+  g.appendChild(el('circle',{class:'dot', cx:p.x, cy:p.y, r:6, fill:d.color}));
+  const nameLbl = el('text',{class:'pin-label', x:p.x+9, y:p.y-6});
+  nameLbl.textContent = d.name;
+  g.appendChild(nameLbl);
+  const regLbl = el('text',{class:'pin-label region', x:p.x+9, y:p.y+7});
+  regLbl.textContent = d.region.split(' (')[0].split(',')[0];
+  g.appendChild(regLbl);
+  g.addEventListener('click', ()=> selectItem(d.id));
+  pinGroup.appendChild(g);
+});
+
+const panel = document.getElementById('panel');
+function selectItem(id){
+  const d = DATA.find(x=>x.id===id);
+  if(!d) return;
+  document.querySelectorAll('.pin').forEach(p=>p.classList.toggle('selected', p.dataset.id===id));
+  document.getElementById('p-cat').textContent = CAT_LABEL[d.cat];
+  document.getElementById('p-cat').style.color = d.color;
+  document.getElementById('p-title').textContent = d.name;
+  document.getElementById('p-region').textContent = d.region;
+  document.getElementById('p-era').textContent = d.era;
+  document.getElementById('p-summary').textContent = d.summary;
+  const ul = document.getElementById('p-facts'); ul.innerHTML='';
+  d.facts.forEach(f=>{ const li=document.createElement('li'); li.textContent=f; ul.appendChild(li); });
+  document.getElementById('p-limit').textContent = "Batasan: " + d.limit;
+  panel.classList.add('open');
+  panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+  highlightTimeline(id);
+}
+document.getElementById('panel-close').addEventListener('click', ()=>{
+  panel.classList.remove('open');
+  document.querySelectorAll('.pin').forEach(p=>p.classList.remove('selected'));
+  document.querySelectorAll('.tl-bar').forEach(b=>b.classList.remove('selected'));
+});
+
+let precursorOn = false;
+function applyFilter(f){
+  document.querySelectorAll('.pin').forEach(p=>{
+    const cat = p.dataset.cat;
+    let show = (f==='all') ? true : (cat===f);
+    if(cat==='precursor' && !precursorOn) show = false;
+    p.classList.toggle('dim', !show);
+    p.style.display = (cat==='precursor' && !precursorOn) ? 'none' : '';
+  });
+  document.querySelectorAll('.tl-bar').forEach(b=>{
+    const cat = b.dataset.cat;
+    let show = (f==='all') ? true : (cat===f);
+    if(cat==='precursor' && !precursorOn) show = false;
+    b.style.display = (cat==='precursor' && !precursorOn) ? 'none' : (show ? '' : 'none');
+  });
+}
+document.querySelectorAll('.toolbar button[data-filter]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.toolbar button[data-filter]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    applyFilter(btn.dataset.filter);
+  });
+});
+document.getElementById('btn-precursor-toggle').addEventListener('click', function(){
+  precursorOn = !precursorOn;
+  this.classList.toggle('active', precursorOn);
+  this.textContent = precursorOn ? "Sembunyikan lapisan akar" : "Tampilkan lapisan akar";
+  const activeFilter = document.querySelector('.toolbar button[data-filter].active').dataset.filter;
+  applyFilter(activeFilter);
+});
+applyFilter('all');
+
+const tl = document.getElementById('tl');
+const TL_MIN = -1600, TL_MAX = 1600, TL_X0 = 20, TL_X1 = 780, TL_TOP = 20;
+function txOf(year){ return TL_X0 + (year-TL_MIN)/(TL_MAX-TL_MIN)*(TL_X1-TL_X0); }
+tl.appendChild(el('line',{x1:TL_X0,y1:TL_TOP,x2:TL_X1,y2:TL_TOP,stroke:'var(--line-strong)','stroke-width':1}));
+[-1600,-1200,-800,-400,0,400,800,1200,1600].forEach(y=>{
+  const x = txOf(y);
+  tl.appendChild(el('line',{x1:x,y1:TL_TOP-4,x2:x,y2:TL_TOP+4,stroke:'var(--line-strong)','stroke-width':1}));
+  const t = el('text',{x:x, y:TL_TOP-8, 'text-anchor':'middle', class:'tl-axis-label'});
+  t.textContent = y<0 ? (Math.abs(y)+' SM') : (y===0? '0' : y+' M');
+  tl.appendChild(t);
+});
+DATA.forEach((d,i)=>{
+  const rowY = TL_TOP + 26 + i*20;
+  const x0 = txOf(d.eraStart), x1 = txOf(Math.max(d.eraEnd, d.eraStart+14));
+  const g = el('g',{class:'tl-bar', 'data-id':d.id, 'data-cat':d.cat});
+  g.appendChild(el('rect',{x:x0, y:rowY-6, width:Math.max(x1-x0,6), height:12, rx:3, fill:d.color, opacity:.85}));
+  const label = el('text',{x:x1+6, y:rowY+4, class:'tl-name'});
+  label.textContent = d.name;
+  g.appendChild(label);
+  g.addEventListener('click', ()=> selectItem(d.id));
+  tl.appendChild(g);
+});
+tl.setAttribute('viewBox', `0 0 800 ${TL_TOP + 40 + DATA.length*20}`);
+
+function highlightTimeline(id){
+  document.querySelectorAll('.tl-bar').forEach(b=>b.classList.toggle('selected', b.dataset.id===id));
+}
+</script>
+</body>
+</html>

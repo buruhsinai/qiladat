@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mesin Turing Mini — Fondasi Segala Komputer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#10141A; --panel:#171D25; --panel-2:#1D2530;
+    --border:rgba(232,236,244,0.09); --border-strong:rgba(232,236,244,0.17);
+    --text:#ECEFF3; --muted:#8C97A6;
+    --gold:#E0A94D;
+    --true:#4FBF8A; --true-dim: 79,191,138;
+    --lose:#D9677A; --lose-dim: 217,103,122;
+    --warn-dim: 224,169,77;
+    --tape-cell:#1D2530; --tape-active: 224,169,77;
+    --radius:4px;
+  }
+  *{box-sizing:border-box;}
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'Karla',sans-serif; font-size:16px; line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{ font-family:'Fraunces',serif; font-weight:500; letter-spacing:-0.01em; margin:0; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+  .wrap{ max-width:960px; margin:0 auto; padding:0 22px 80px; }
+  .rule{ height:1px; background:var(--border); margin:48px 0; }
+
+  header.top{ padding:56px 0 8px; }
+  header.top .kicker{ font-size:13px; color:var(--muted); margin:0 0 14px; }
+  header.top h1{ font-size:clamp(30px,5vw,42px); margin-bottom:10px; }
+  header.top p.lede{ color:var(--muted); max-width:62ch; font-size:16px; margin:0; }
+
+  section .section-head{ margin-bottom:6px; }
+  section h2{ font-size:clamp(22px,3.4vw,28px); }
+  section > p.desc{ color:var(--muted); max-width:66ch; margin:8px 0 20px; font-size:15px; }
+  .eyebrow-num{ font-family:'Fraunces',serif; font-style:italic; color:var(--gold); font-size:15px; margin:0 0 10px; }
+
+  .contrast{ display:grid; grid-template-columns:1fr 1fr; gap:0; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin:22px 0; }
+  @media (max-width:620px){ .contrast{ grid-template-columns:1fr; } }
+  .contrast > div{ padding:20px 22px; }
+  .contrast .calc{ background:rgba(140,151,166,0.06); border-right:1px solid var(--border); }
+  @media (max-width:620px){ .contrast .calc{ border-right:none; border-bottom:1px solid var(--border); } }
+  .contrast .rules{ background:rgba(79,191,138,0.06); }
+  .contrast h4{ font-family:'Karla',sans-serif; font-size:12.5px; font-weight:700; margin:0 0 10px; color:var(--muted); }
+  .contrast .rules h4{ color:var(--true); }
+  .contrast .flowline{ font-family:'JetBrains Mono',monospace; font-size:14px; color:var(--text); margin:0 0 12px; }
+  .contrast p{ font-size:14.5px; color:var(--text); margin:0; }
+
+  .pseudo{
+    font-family:'JetBrains Mono',monospace; font-size:14px; line-height:1.9;
+    background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
+    padding:18px 20px; margin:18px 0; color:#D7DEE8; white-space:pre-wrap;
+  }
+  .pseudo .kw{ color: var(--gold); }
+  .pseudo .neg{ color: var(--lose); }
+
+  .flow{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:20px 0; }
+  .flow .step{ font-size:13px; font-weight:600; padding:8px 13px; background:var(--panel-2); border:1px solid var(--border); border-radius:3px; }
+  .flow .arrow{ color:var(--muted); font-size:14px; }
+
+  dl.term{ margin:0; }
+  dl.term > div{ margin:18px 0; padding-left:16px; border-left:2px solid var(--border-strong); }
+  dl.term dt{ font-family:'Fraunces',serif; font-size:16.5px; color:var(--text); margin-bottom:4px; }
+  dl.term dd{ margin:0; color:var(--muted); font-size:14.5px; }
+  .concept-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 32px; }
+  @media (max-width:680px){ .concept-grid{ grid-template-columns:1fr; } }
+
+  .lab{ display:flex; flex-direction:column; gap:18px; }
+  .stage{ background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  .stage-head{ padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .stage-head .stage-num{ font-family:'Fraunces',serif; font-style:italic; color:var(--gold); font-size:14px; margin-right:8px; }
+  .stage-head h3{ font-size:16px; display:inline; }
+  .stage-body{ padding:20px 22px; }
+
+  .preset-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:6px; }
+  @media (max-width:640px){ .preset-grid{ grid-template-columns:1fr; } }
+  .preset-btn{ text-align:left; padding:11px 14px; background:var(--panel-2); border:1px solid var(--border); border-radius:3px; cursor:pointer; font-size:13.5px; color:var(--text); font-family:'Karla',sans-serif; }
+  .preset-btn:hover{ border-color:var(--gold); }
+  .preset-btn.active{ border-color:var(--gold); }
+  .preset-btn span{ display:block; font-size:12px; color:var(--muted); margin-top:2px; }
+
+  .table-input{
+    width:100%; min-height:150px; background:var(--panel-2); border:1px solid var(--border-strong);
+    border-radius:3px; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:13px;
+    line-height:1.7; padding:12px 14px; resize:vertical; white-space:pre; overflow-x:auto;
+  }
+  .table-input:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  .tape-input{
+    width:100%; background:var(--panel-2); border:1px solid var(--border-strong);
+    border-radius:3px; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:15px;
+    padding:10px 14px; letter-spacing:0.08em;
+  }
+  .field-row{ display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+  .field-row label{ font-size:12.5px; color:var(--muted); font-weight:600; }
+  .row-actions{ display:flex; align-items:center; gap:12px; margin:12px 0 4px; flex-wrap:wrap; }
+  .btn{
+    font-family:'Karla',sans-serif; font-size:13.5px; font-weight:700; color:#10141A;
+    background:var(--gold); border:none; border-radius:3px; padding:9px 18px; cursor:pointer;
+  }
+  .btn:hover{ filter:brightness(1.08); }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; filter:none; }
+  .btn.secondary{ color:var(--text); background:transparent; border:1px solid var(--border-strong); font-weight:600; }
+  .btn.secondary:hover{ border-color:var(--gold); }
+  .parse-error{ font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--lose); margin-top:8px; white-space:pre-wrap; }
+
+  .run-controls{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
+  .speed-row{ display:flex; align-items:center; gap:10px; font-size:13px; color:var(--muted); margin-bottom:16px; }
+  .speed-row input[type=range]{ width:140px; }
+  .status-pill{
+    font-family:'JetBrains Mono',monospace; font-size:12px; padding:4px 10px; border-radius:100px;
+    background:rgba(140,151,166,0.16); color:var(--muted); border:1px solid transparent;
+  }
+  .status-pill.running{ background:rgba(var(--true-dim),0.16); color:var(--true); }
+  .status-pill.accept{ background:rgba(var(--true-dim),0.2); color:var(--true); }
+  .status-pill.reject{ background:rgba(var(--lose-dim),0.2); color:var(--lose); }
+  .status-pill.stuck{ background:rgba(var(--lose-dim),0.16); color:var(--lose); }
+
+  /* ---- tape ---- */
+  .tape-frame{ background:#05070A; border:1px solid var(--border-strong); border-radius:3px; padding:20px 10px; overflow:hidden; margin-bottom:18px; }
+  .tape-track{ display:flex; justify-content:center; align-items:center; gap:4px; }
+  .tape-cell{
+    width:34px; height:38px; flex:0 0 auto; display:flex; align-items:center; justify-content:center;
+    background:var(--tape-cell); border:1px solid var(--border); border-radius:2px;
+    font-family:'JetBrains Mono',monospace; font-size:15px; color:var(--text); position:relative;
+  }
+  .tape-cell.head{ border-color:var(--gold); background:rgba(var(--tape-active),0.16); color:var(--gold); font-weight:700; }
+  .tape-cell.head::after{
+    content:'▲'; position:absolute; top:-17px; left:50%; transform:translateX(-50%); color:var(--gold); font-size:11px;
+  }
+  .tape-cell.blank{ color:var(--muted); }
+  .tape-idx{ text-align:center; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); margin-top:8px; }
+
+  .state-row{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
+  .state-badge{
+    font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:600; padding:8px 16px;
+    background:var(--panel-2); border:1px solid var(--border-strong); border-radius:3px; color:var(--gold);
+  }
+  .rule-applied{ font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--muted); }
+  .rule-applied b{ color:var(--text); font-weight:600; }
+
+  .debug-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:10px; }
+  @media (max-width:640px){ .debug-grid{ grid-template-columns:1fr; } }
+  .debug-block h4{ font-size:12px; font-weight:700; color:var(--muted); margin:0 0 8px; }
+  .stat-line{ font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text); margin:4px 0; }
+  .stat-line .l{ color:var(--muted); margin-right:6px; }
+  .error-box{ border:1px solid rgba(var(--lose-dim),0.5); background:rgba(var(--lose-dim),0.08); border-radius:var(--radius); padding:14px 16px; margin-top:14px; }
+  .error-stage{ font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:600; color:var(--lose); margin-bottom:6px; }
+  .error-msg{ font-size:14px; color:var(--text); }
+  .accept-box{ border:1px solid rgba(var(--true-dim),0.5); background:rgba(var(--true-dim),0.08); border-radius:var(--radius); padding:14px 16px; margin-top:14px; font-size:14px; color:var(--text); }
+
+  ol.steps{ padding-left:20px; }
+  ol.steps li{ margin-bottom:10px; max-width:64ch; }
+  ol.steps li::marker{ color:var(--gold); font-family:'Fraunces',serif; }
+
+  table.semantics{ width:100%; border-collapse:collapse; margin:18px 0; font-size:14px; }
+  table.semantics th, table.semantics td{ text-align:left; padding:9px 12px; border-top:1px solid var(--border); }
+  table.semantics th{ color:var(--muted); font-size:12.5px; font-weight:700; }
+  table.semantics td.v{ font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--gold); }
+
+  .misconception{ display:grid; grid-template-columns:1fr 1fr; gap:0; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin:20px 0; }
+  @media (max-width:620px){ .misconception{ grid-template-columns:1fr; } }
+  .misconception > div{ padding:18px 20px; }
+  .misconception .lim{ background:rgba(var(--lose-dim),0.07); border-right:1px solid var(--border); }
+  @media (max-width:620px){ .misconception .lim{ border-right:none; border-bottom:1px solid var(--border); } }
+  .misconception h4{ font-size:12.5px; font-weight:700; color:var(--muted); margin:0 0 8px; }
+  .misconception p{ font-size:14.5px; margin:0; color:var(--text); }
+
+  .ref-list{ list-style:none; padding:0; margin:16px 0; }
+  .ref-list li{ padding:14px 0; border-top:1px solid var(--border); font-size:15px; color:var(--muted); }
+  .ref-list li:last-child{ border-bottom:1px solid var(--border); }
+  .ref-list .who{ color:var(--text); }
+
+  footer{ padding-top:46px; font-size:13px; color:var(--muted); max-width:66ch; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <p class="kicker">Laboratorium Qiladat / JAZMI — Proyek 4: Fondasi Segala Komputer</p>
+    <h1>Mesin Turing Mini</h1>
+    <p class="lede">CHIP-8 (proyek sebelumnya) adalah mesin <em>konkret</em> — memori byte, register nyata, spesifikasi perangkat keras tahun 1970-an. Mesin Turing adalah kebalikannya: mesin <em>abstrak</em> paling minimal yang bisa dibayangkan (satu pita, satu kepala baca-tulis, satu tabel aturan) — namun secara matematis terbukti mampu menghitung apa pun yang bisa dihitung komputer manapun. Ini adalah cetak biru di balik semua komputer, termasuk CHIP-8 itu sendiri.</p>
+  </header>
+
+  <div class="rule"></div>
+
+  <!-- ============ 1. KONSEP ============ -->
+  <section id="konsep">
+    <p class="eyebrow-num">1 — Konsep</p>
+    <h2>Mesin paling sederhana yang tetap "selengkap" komputer manapun</h2>
+    <p class="desc">Alan Turing merumuskan mesin ini pada 1936 — bertahun-tahun sebelum komputer elektronik pertama dibangun — untuk menjawab pertanyaan matematis murni: <em>apa sebenarnya artinya "menghitung"?</em> Jawabannya ternyata mengejutkan sederhana: cukup sebuah pita tak terbatas berisi simbol, satu kepala yang bisa membaca/menulis satu sel dan bergerak satu langkah, dan satu tabel aturan berhingga.</p>
+
+    <div class="contrast">
+      <div class="calc">
+        <h4>CHIP-8 (MESIN KONKRET)</h4>
+        <p class="flowline">memori 4096 byte, 16 register, PC, stack</p>
+        <p>Dirancang untuk perangkat keras nyata (COSMAC VIP, 1977). Punya banyak register serbaguna yang bisa diakses langsung dalam satu instruksi — cepat, tapi arsitekturnya adalah pilihan rekayasa, bukan kebutuhan matematis mendasar.</p>
+      </div>
+      <div class="rules">
+        <h4>MESIN TURING (MESIN ABSTRAK)</h4>
+        <p class="flowline">satu pita, satu kepala, satu tabel aturan</p>
+        <p>Tidak dirancang untuk dibangun secara fisik — dirancang untuk dianalisis secara matematis. Sengaja minimal: hanya dengan komponen sesedikit ini, sudah bisa dibuktikan mampu mensimulasikan mesin apa pun yang "bisa dihitung" — termasuk CHIP-8, termasuk laptop Anda.</p>
+      </div>
+    </div>
+
+    <p>Siklusnya mirip CHIP-8, tapi lebih sederhana lagi — tidak ada fetch dua-byte, tidak ada register:</p>
+    <div class="flow">
+      <span class="step">BACA simbol di bawah kepala</span><span class="arrow">→</span>
+      <span class="step">CARI aturan (state, simbol)</span><span class="arrow">→</span>
+      <span class="step">TULIS &amp; GERAK &amp; GANTI STATE</span><span class="arrow">→</span>
+      <span class="step">(ulangi)</span>
+    </div>
+
+    <div class="concept-grid">
+      <dl class="term">
+        <div><dt>Pita (tape)</dt><dd>Deretan sel tak terbatas ke kiri maupun kanan, tiap sel menyimpan satu simbol. Di alat ini direpresentasikan sebagai peta jarang (sparse) — sel yang belum pernah ditulis dianggap kosong (blank, "_"), bukan dialokasikan sungguhan, sehingga pita bisa "meluas" seolah tak terbatas.</dd></div>
+        <div><dt>Kepala (head)</dt><dd>Penunjuk satu posisi di pita, bisa membaca simbol di posisi itu, menuliskan simbol baru menimpanya, lalu bergerak satu sel ke kiri (L), ke kanan (R), atau diam (S).</dd></div>
+      </dl>
+      <dl class="term">
+        <div><dt>State</dt><dd>"Ingatan" mesin saat ini — nama bebas (mis. "scan", "carry", "q1") yang menentukan aturan mana yang berlaku untuk simbol yang sedang dibaca. Berbeda dari register CHIP-8: state bukan angka yang diproses, hanya label posisi dalam tabel aturan.</dd></div>
+        <div><dt>Tabel transisi</dt><dd>Seluruh "program" mesin Turing hanyalah tabel: (state sekarang, simbol yang dibaca) → (simbol yang ditulis, arah gerak, state berikutnya). Tidak ada instruksi lain — hanya ini, dan ini sudah cukup untuk menghitung apa pun yang bisa dihitung.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ 2. EKSPLORASI ============ -->
+  <section id="eksplorasi">
+    <p class="eyebrow-num">2 — Eksplorasi Interaktif</p>
+    <h2>Tiga program, diverifikasi habis-habisan</h2>
+    <p class="desc">Tiga program di bawah bukan hanya diuji dengan beberapa contoh tangan — ketiganya diverifikasi lewat pencocokan brute-force terhadap seluruh 8191 kemungkinan string biner sepanjang 0–12 karakter (untuk dua pengenal bahasa) dan 2001 bilangan berurutan (untuk penambah biner), dibandingkan terhadap implementasi rujukan biasa di luar mesin Turing ini — nol penyimpangan. Anda juga bisa menulis tabel transisi Anda sendiri di preset "Kosong".</p>
+
+    <div class="lab">
+
+      <div class="stage">
+        <div class="stage-head"><div><span class="stage-num">01</span><h3>PROGRAM &amp; PITA AWAL</h3></div></div>
+        <div class="stage-body">
+          <div class="preset-grid">
+            <button class="preset-btn active" data-p="increment">Tambah 1 (Biner)<span>scan kanan → carry kiri, verifikasi: 0–2000 ✓</span></button>
+            <button class="preset-btn" data-p="eqcount">Cocokkan 0ⁿ1ⁿ<span>cek urutan → coret berpasangan, verifikasi: 8191 string ✓</span></button>
+            <button class="preset-btn" data-p="palindrome">Palindrom Biner<span>bandingkan ujung, tandai bertemu di tengah, verifikasi: 8191 string ✓</span></button>
+            <button class="preset-btn" data-p="blank">Kosong (kustom)<span>tulis tabel transisi Anda sendiri</span></button>
+          </div>
+          <div style="margin-top:16px;">
+            <div class="field-row">
+              <label for="tableInput">Tabel transisi — format: <span class="mono">state,simbol -&gt; tulis,gerak,state_baru</span> (gerak: L/R/S)</label>
+              <textarea id="tableInput" class="table-input" spellcheck="false"></textarea>
+              <div id="parseError" class="parse-error"></div>
+            </div>
+            <div class="field-row">
+              <label for="tapeInput">Isi pita awal (dari posisi 0 ke kanan)</label>
+              <input type="text" id="tapeInput" class="tape-input" value="1011">
+            </div>
+            <div class="field-row">
+              <label for="startState">State awal</label>
+              <input type="text" id="startState" class="tape-input" value="scan" style="max-width:200px;">
+            </div>
+          </div>
+          <div class="row-actions">
+            <button class="btn" id="btnLoad">Muat Program ▸</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage">
+        <div class="stage-head"><div><span class="stage-num">02</span><h3>MESIN — pita &amp; kendali eksekusi</h3></div></div>
+        <div class="stage-body">
+          <div class="run-controls">
+            <button class="btn" id="btnRun">Jalankan ▸</button>
+            <button class="btn secondary" id="btnPause">Jeda ⏸</button>
+            <button class="btn secondary" id="btnStep">Satu Langkah ⏵|</button>
+            <span class="status-pill" id="runStatus">siap</span>
+          </div>
+          <div class="speed-row">
+            <label for="speedSlider">Kecepatan (langkah/frame):</label>
+            <input type="range" id="speedSlider" min="1" max="40" value="3">
+            <span id="speedLabel" class="mono">3</span>
+          </div>
+
+          <div class="state-row">
+            <span class="stat-line"><span class="l">State:</span></span>
+            <span class="state-badge" id="stateBadge">—</span>
+            <span class="rule-applied" id="ruleApplied">belum ada langkah dijalankan</span>
+          </div>
+
+          <div class="tape-frame">
+            <div class="tape-track" id="tapeTrack"></div>
+          </div>
+          <div class="tape-idx" id="tapeIdxRow"></div>
+
+          <div class="debug-grid">
+            <div class="debug-block">
+              <h4>STATUS</h4>
+              <div class="stat-line"><span class="l">Langkah:</span><span id="stepCount">0</span></div>
+              <div class="stat-line"><span class="l">Posisi kepala:</span><span id="headPos">0</span></div>
+              <div class="stat-line"><span class="l">Hasil pita (dipangkas blank):</span><span id="tapeResult" class="mono">—</span></div>
+            </div>
+            <div class="debug-block" id="haltInfoBlock"><h4>KETERANGAN</h4><div class="stat-line" style="color:var(--muted);">Tekan "Jalankan" atau "Satu Langkah" untuk mulai.</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ 3. METODE ============ -->
+  <section id="metode">
+    <p class="eyebrow-num">3 — Metode</p>
+    <h2>Bagaimana ketiga program ini sungguh bekerja</h2>
+    <ol class="steps">
+      <li><b>Tambah 1 (Biner) — dua fase: SCAN lalu CARRY.</b> Fase <span class="mono">scan</span> menyapu ke kanan tanpa mengubah apa pun sampai menemukan blank (ujung bilangan), lalu mundur satu langkah dan masuk fase <span class="mono">carry</span>: kalau simbolnya "1", tulis "0" dan lanjut carry ke kiri (efek pinjam-meminjam biner); kalau simbolnya "0", tulis "1" dan langsung berhenti (tidak ada carry lagi). Kalau carry sampai ke ujung kiri (semua digit adalah 1, mis. "111"), mesin menulis "1" baru di situ — persis bagaimana 111+1=1000 menambah satu digit.</li>
+      <li><b>Cocokkan 0ⁿ1ⁿ — dua fase: cek URUTAN lalu cocokkan JUMLAH.</b> Kesalahan paling umum saat merancang mesin ini adalah langsung mencocokkan jumlah 0 dan 1 tanpa memastikan urutannya benar — string seperti "0101" punya jumlah 0 dan 1 yang sama tapi <em>bukan</em> berbentuk 0ⁿ1ⁿ (bukan "semua 0 dahulu, baru semua 1"). Karena itu fase pertama (<span class="mono">order0/order1</span>) menyapu sekali dari kiri: begitu ketemu "1", tidak boleh lagi ketemu "0" sesudahnya — kalau terjadi, langsung ditolak. Baru fase kedua mencocokkan jumlahnya dengan mencoret sepasang 0-1 tiap putaran (ditandai X dan Y) sampai pita habis (diterima) atau ada sisa tak berpasangan (ditolak).</li>
+      <li><b>Palindrom Biner — bandingkan ujung, menyusut ke tengah.</b> Simbol paling kiri yang belum ditandai dibandingkan dengan simbol paling kanan yang belum ditandai; kalau sama, keduanya ditandai "*" (satu tanda untuk kedua nilai — nilai aslinya tidak perlu diingat lagi setelah dipastikan cocok) lalu mesin kembali ke ujung kiri untuk pasangan berikutnya. Titik krusial yang sempat jadi bug saat alat ini dibuat: saat mencari ujung kanan yang masih aktif, kepala harus <em>berhenti begitu bertemu tanda "*" dari putaran sebelumnya</em> — bukan terus menerabasnya mencari blank fisik di ujung pita, karena itu akan salah membandingkan dengan sel yang sudah "kadaluarsa" dari putaran lalu.</li>
+      <li><b>UNKNOWN vs FALSE, lagi.</b> Sama seperti Rule Engine Mini dan CHIP-8: kalau kombinasi (state, simbol) tidak ada di tabel, mesin berhenti dengan alasan eksplisit ("tidak ada aturan cocok") — ini bagaimana <span class="mono">qaccept</span>/<span class="mono">qreject</span> sebenarnya bekerja: keduanya bukan instruksi khusus, hanya nama state biasa yang <em>sengaja tidak diberi aturan lanjutan</em>, sehingga begitu mesin sampai ke sana, ia otomatis berhenti.</li>
+    </ol>
+    <div class="pseudo">fungsi <span class="kw">step</span>(mesin, tabel):
+  simbol = bacaPita(mesin, mesin.kepala)
+  aturan = tabel[mesin.state + ',' + simbol]
+  jika aturan tidak ada:
+      mesin.berhenti = benar; catat (state, simbol) yang tidak dikenal   <span class="neg">// tidak pernah diam-diam dilewati</span>
+      kembalikan
+  tulisPita(mesin, mesin.kepala, aturan.tulis)
+  jika aturan.gerak == 'L': mesin.kepala -= 1
+  jika aturan.gerak == 'R': mesin.kepala += 1
+  <span class="neg">// gerak 'S' berarti diam di tempat</span>
+  mesin.state = aturan.stateBaru</div>
+
+    <table class="semantics">
+      <tr><th>Ketentuan</th><th>Keputusan versi mini ini</th></tr>
+      <tr><td>Representasi pita</td><td class="v">peta jarang (objek), bukan larik tetap — bisa "meluas" ke indeks negatif</td></tr>
+      <tr><td>Simbol kosong (blank)</td><td class="v">"_", dibaca otomatis untuk sel yang belum pernah ditulis</td></tr>
+      <tr><td>(state, simbol) tanpa aturan</td><td class="v">berhenti eksplisit — inilah cara qaccept/qreject bekerja</td></tr>
+      <tr><td>Non-determinisme</td><td class="v">tidak didukung — satu (state, simbol) hanya boleh satu aturan</td></tr>
+      <tr><td>Pita ganda / multi-track</td><td class="v">tidak didukung — satu pita, satu kepala saja</td></tr>
+    </table>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ 4. BATASAN ============ -->
+  <section id="batasan">
+    <p class="eyebrow-num">4 — Batasan</p>
+    <h2>Apa yang belum dilakukan mesin ini</h2>
+    <div class="misconception">
+      <div class="lim">
+        <h4>BELUM ADA DI SINI</h4>
+        <p>Mesin Turing non-deterministik (banyak aturan sekaligus untuk satu (state, simbol), lalu "mencoba semua cabang"), mesin multi-pita, mesin universal (mesin Turing yang mensimulasikan mesin Turing lain dari deskripsinya sendiri di pita — konsep di balik "program tersimpan" komputer modern), deteksi otomatis kalau program tidak akan pernah berhenti (justru inilah masalah keberhentian / <em>halting problem</em> yang Turing buktikan sendiri mustahil dipecahkan secara umum), dan validasi bahwa tabel transisi yang ditulis pengguna benar-benar deterministik sebelum dijalankan.</p>
+      </div>
+      <div>
+        <h4>KENAPA ITU PENTING DIKETAHUI</h4>
+        <p>Kalau Anda menulis tabel kustom yang tidak sengaja membuat mesin berputar selamanya (mis. lupa mengarahkan ke state tanpa aturan), alat ini akan terus berjalan tanpa henti kalau ditekan "Jalankan" — sama seperti mesin Turing sungguhan, tidak ada cara umum untuk mendeteksi ini lebih dulu tanpa menjalankannya (itulah inti <em>halting problem</em>). Gunakan "Satu Langkah" untuk menelusuri tabel kustom yang mencurigakan, bukan "Jalankan" langsung.</p>
+      </div>
+    </div>
+    <p>Prinsip "spesifikasi dulu, verifikasi brute-force, baru dipercaya" yang dipakai di tiga program ini adalah metode yang sama yang akan dipakai lagi kalau laboratorium naik kelas ke mesin Turing universal atau ke CPU von Neumann sungguhan — kesederhanaan mesin Turing membuatnya ideal untuk melatih metode itu sebelum diterapkan ke mesin yang jauh lebih rumit untuk diverifikasi selengkap ini.</p>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ 5. REFERENSI ============ -->
+  <section id="referensi">
+    <p class="eyebrow-num">5 — Referensi</p>
+    <h2>Sumber &amp; bacaan lanjutan</h2>
+    <ul class="ref-list">
+      <li><span class="who">Alan Turing — "On Computable Numbers, with an Application to the Entscheidungsproblem" (1936).</span> Makalah asli yang memperkenalkan mesin ini, awalnya sebagai alat pembuktian matematis (menjawab bahwa tidak ada metode umum untuk memutuskan apakah suatu pernyataan matematis bisa dibuktikan), bukan sebagai cetak biru perangkat keras.</li>
+      <li><span class="who">Michael Sipser — "Introduction to the Theory of Computation".</span> Buku ajar standar yang memuat konstruksi tabel transisi untuk bahasa seperti 0ⁿ1ⁿ dan palindrom — dua program di atas mengikuti gaya konstruksi khas buku ini (menandai simbol yang sudah diproses, memindai bolak-balik).</li>
+      <li><span class="who">Church–Turing Thesis.</span> Dugaan (bukan teorema yang bisa dibuktikan formal, karena "bisa dihitung secara intuitif" bukan konsep matematis) bahwa segala sesuatu yang bisa dihitung secara intuitif oleh manusia/mesin apa pun, bisa dihitung oleh mesin Turing — inilah alasan mesin sesederhana ini dianggap "cukup" sebagai patokan definisi komputasi.</li>
+    </ul>
+    <p class="desc" style="margin-top:6px;">Halaman ini mengikuti struktur "Konsep → Eksplorasi → Metode → Batasan → Referensi" yang sama dengan CHIP-8 Mini, Rule Engine Mini, dan Interpreter Mini sebelumnya di laboratorium Qiladat/JAZMI.</p>
+  </section>
+
+  <footer>
+    Alat edukasi — dibangun untuk memperlihatkan cara kerja mesin Turing sesederhana mungkin (satu pita, satu kepala, satu tabel aturan), bukan mesin Turing universal maupun alat pembuktian formal.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ============ MESIN TURING — CORE ENGINE ============
+  var BLANK = '_';
+
+  function createMachine(initialState, tapeStr){
+    var tape = {};
+    for(var i=0;i<tapeStr.length;i++){ tape[i] = tapeStr[i]; }
+    return { tape: tape, head: 0, state: initialState, steps: 0, halted: false, haltInfo: null, lastRule: null };
+  }
+  function readTape(m, pos){ var v = m.tape[pos]; return v===undefined ? BLANK : v; }
+
+  function step(m, table){
+    if(m.halted) return false;
+    var sym = readTape(m, m.head);
+    var key = m.state + ',' + sym;
+    var rule = table[key];
+    if(!rule){ m.halted = true; m.haltInfo = { state: m.state, symbol: sym, reason: 'no-rule' }; return false; }
+    var fromState = m.state;
+    m.tape[m.head] = rule.write;
+    if(rule.move === 'L') m.head -= 1;
+    else if(rule.move === 'R') m.head += 1;
+    m.state = rule.next;
+    m.steps++;
+    m.lastRule = { fromState: fromState, symbol: sym, write: rule.write, move: rule.move, toState: rule.next };
+    return true;
+  }
+
+  function tapeToTrimmedString(m){
+    var keys = Object.keys(m.tape).map(Number);
+    if(keys.length===0) return '';
+    var lo = Math.min.apply(null, keys), hi = Math.max.apply(null, keys);
+    while(lo<=hi && readTape(m,lo)===BLANK) lo++;
+    while(hi>=lo && readTape(m,hi)===BLANK) hi--;
+    if(lo>hi) return '';
+    var out='';
+    for(var i=lo;i<=hi;i++) out += readTape(m,i);
+    return out;
+  }
+
+  function parseTable(text){
+    var table = {}; var errors = [];
+    text.split('\n').forEach(function(line, idx){
+      var trimmed = line.replace(/#.*$/,'').trim();
+      if(trimmed === '') return;
+      var parts = trimmed.split('->');
+      if(parts.length !== 2){ errors.push('Baris '+(idx+1)+': format harus "state,simbol -> tulis,gerak,state_baru"'); return; }
+      var left = parts[0].split(',').map(function(s){ return s.trim(); });
+      var right = parts[1].split(',').map(function(s){ return s.trim(); });
+      if(left.length !== 2 || right.length !== 3){ errors.push('Baris '+(idx+1)+': jumlah kolom tidak sesuai'); return; }
+      var state=left[0], symbol=left[1], write=right[0], move=right[1].toUpperCase(), next=right[2];
+      if(['L','R','S'].indexOf(move)===-1){ errors.push('Baris '+(idx+1)+': gerak harus L, R, atau S (dapat "'+move+'")'); return; }
+      if(symbol.length!==1 || write.length!==1){ errors.push('Baris '+(idx+1)+': simbol & tulisan harus tepat 1 karakter'); return; }
+      table[state+','+symbol] = { write: write, move: move, next: next };
+    });
+    return { table: table, errors: errors };
+  }
+
+  // ============ PRESETS (tabel transisi, diverifikasi brute-force di Node sebelum ditempel) ============
+  var PRESETS = {
+    increment: {
+      label: 'Tambah 1 (Biner)', start: 'scan', tape: '1011',
+      table: "scan,0 -> 0,R,scan\nscan,1 -> 1,R,scan\nscan,_ -> _,L,carry\ncarry,0 -> 1,S,done\ncarry,1 -> 0,L,carry\ncarry,_ -> 1,S,done"
+    },
+    eqcount: {
+      label: 'Cocokkan 0ⁿ1ⁿ', start: 'order0', tape: '000111',
+      table: "order0,0 -> 0,R,order0\norder0,1 -> 1,R,order1\norder0,_ -> _,L,rewind\norder1,1 -> 1,R,order1\norder1,0 -> 0,S,qreject\norder1,_ -> _,L,rewind\nrewind,0 -> 0,L,rewind\nrewind,1 -> 1,L,rewind\nrewind,_ -> _,R,q1\nq1,X -> X,R,q1\nq1,0 -> X,R,q2\nq1,Y -> Y,R,q1\nq1,1 -> 1,S,qreject\nq1,_ -> _,S,qaccept\nq2,0 -> 0,R,q2\nq2,Y -> Y,R,q2\nq2,1 -> Y,L,q3\nq2,_ -> _,S,qreject\nq3,0 -> 0,L,q3\nq3,1 -> 1,L,q3\nq3,X -> X,L,q3\nq3,Y -> Y,L,q3\nq3,_ -> _,R,q1"
+    },
+    palindrome: {
+      label: 'Palindrom Biner', start: 'findLeft', tape: '10011001',
+      table: "findLeft,* -> *,R,findLeft\nfindLeft,_ -> _,S,qaccept\nfindLeft,0 -> *,R,seekRight0\nfindLeft,1 -> *,R,seekRight1\nseekRight0,0 -> 0,R,seekRight0\nseekRight0,1 -> 1,R,seekRight0\nseekRight0,* -> *,L,checkRight0\nseekRight0,_ -> _,L,checkRight0\nseekRight1,0 -> 0,R,seekRight1\nseekRight1,1 -> 1,R,seekRight1\nseekRight1,* -> *,L,checkRight1\nseekRight1,_ -> _,L,checkRight1\ncheckRight0,0 -> *,L,backToStart\ncheckRight0,1 -> 1,S,qreject\ncheckRight0,* -> *,S,qaccept\ncheckRight1,1 -> *,L,backToStart\ncheckRight1,0 -> 0,S,qreject\ncheckRight1,* -> *,S,qaccept\nbackToStart,0 -> 0,L,backToStart\nbackToStart,1 -> 1,L,backToStart\nbackToStart,* -> *,L,backToStart\nbackToStart,_ -> _,R,findLeft"
+    },
+    blank: {
+      label: 'Kosong (kustom)', start: 'q0', tape: '',
+      table: "# Tulis aturan Anda sendiri, satu per baris:\n# state,simbol -> tulis,gerak,state_baru   (gerak: L / R / S)\nq0,_ -> _,S,qaccept"
+    }
+  };
+
+  // ============ RUNTIME ============
+  var machine = null;
+  var currentTable = {};
+  var running = false;
+  var rafId = null;
+  var stepsPerFrame = 3;
+
+  var tableInput = document.getElementById('tableInput');
+  var tapeInput = document.getElementById('tapeInput');
+  var startStateInput = document.getElementById('startState');
+  var parseErrorBox = document.getElementById('parseError');
+  var runStatus = document.getElementById('runStatus');
+  var speedSlider = document.getElementById('speedSlider');
+  var speedLabel = document.getElementById('speedLabel');
+  var tapeTrack = document.getElementById('tapeTrack');
+  var tapeIdxRow = document.getElementById('tapeIdxRow');
+  var stateBadge = document.getElementById('stateBadge');
+  var ruleApplied = document.getElementById('ruleApplied');
+  var stepCountEl = document.getElementById('stepCount');
+  var headPosEl = document.getElementById('headPos');
+  var tapeResultEl = document.getElementById('tapeResult');
+  var haltInfoBlock = document.getElementById('haltInfoBlock');
+
+  function loadPreset(key){
+    var p = PRESETS[key];
+    tableInput.value = p.table;
+    tapeInput.value = p.tape;
+    startStateInput.value = p.start;
+    document.querySelectorAll('.preset-btn').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-p')===key); });
+  }
+
+  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function powerOn(){
+    var parsed = parseTable(tableInput.value);
+    if(parsed.errors.length){
+      parseErrorBox.textContent = parsed.errors.join('\n');
+      return false;
+    }
+    parseErrorBox.textContent = '';
+    currentTable = parsed.table;
+    machine = createMachine(startStateInput.value.trim() || 'q0', tapeInput.value);
+    running = false;
+    renderAll();
+    return true;
+  }
+
+  function renderTape(){
+    var WINDOW = 10; // sel di kiri & kanan kepala yang ditampilkan
+    var h = machine.head;
+    tapeTrack.innerHTML = '';
+    tapeIdxRow.innerHTML = '';
+    var cellsHtml = '', idxHtml = '';
+    for(var i=h-WINDOW; i<=h+WINDOW; i++){
+      var sym = readTape(machine, i);
+      var isHead = (i===h);
+      var isBlank = (sym===BLANK);
+      cellsHtml += '<div class="tape-cell'+(isHead?' head':'')+(isBlank?' blank':'')+'">'+escapeHtml(sym)+'</div>';
+    }
+    tapeTrack.innerHTML = cellsHtml;
+  }
+
+  function renderDebug(){
+    stateBadge.textContent = machine.state;
+    stepCountEl.textContent = machine.steps;
+    headPosEl.textContent = machine.head;
+    var trimmed = tapeToTrimmedString(machine);
+    tapeResultEl.textContent = trimmed === '' ? '(kosong)' : trimmed;
+
+    if(machine.lastRule){
+      var r = machine.lastRule;
+      ruleApplied.innerHTML = 'Aturan terakhir: <b>('+escapeHtml(r.fromState)+', '+escapeHtml(r.symbol)+')</b> → tulis <b>'+escapeHtml(r.write)+'</b>, gerak <b>'+r.move+'</b>, ke <b>'+escapeHtml(r.toState)+'</b>';
+    } else {
+      ruleApplied.textContent = 'belum ada langkah dijalankan';
+    }
+
+    if(machine.halted){
+      if(machine.haltInfo){
+        haltInfoBlock.innerHTML = '<h4>KETERANGAN</h4><div class="error-box"><div class="error-stage">Berhenti — tidak ada aturan untuk (state, simbol) ini</div><div class="error-msg">State <b class="mono">'+escapeHtml(machine.haltInfo.state)+'</b>, simbol <b class="mono">'+escapeHtml(machine.haltInfo.symbol)+'</b> tidak terdaftar di tabel. Kalau state ini memang dimaksudkan sebagai "qaccept"/"qreject", ini normal — itulah cara mesin berhenti.</div></div>';
+      } else {
+        var isAccept = /accept/i.test(machine.state);
+        var isReject = /reject/i.test(machine.state);
+        var boxClass = isReject ? 'error-box' : 'accept-box';
+        var label = isAccept ? 'DITERIMA' : (isReject ? 'DITOLAK' : 'BERHENTI');
+        haltInfoBlock.innerHTML = '<h4>KETERANGAN</h4><div class="'+boxClass+'">'+(isReject?'<div class="error-stage">'+label+'</div>':'<b>'+label+'</b>')+' — mesin berada di state <b class="mono">'+escapeHtml(machine.state)+'</b> yang tidak punya aturan lanjutan.</div>';
+      }
+    } else {
+      haltInfoBlock.innerHTML = '<h4>KETERANGAN</h4><div class="stat-line" style="color:var(--muted);">Mesin masih berjalan.</div>';
+    }
+  }
+
+  function updateRunStatusPill(){
+    var cls = 'status-pill', txt = 'siap';
+    if(machine.halted){
+      if(/accept/i.test(machine.state)){ cls += ' accept'; txt = 'diterima'; }
+      else if(/reject/i.test(machine.state)){ cls += ' reject'; txt = 'ditolak'; }
+      else { cls += ' stuck'; txt = 'berhenti'; }
+    } else if(running){ cls += ' running'; txt = 'berjalan'; }
+    runStatus.className = cls;
+    runStatus.textContent = txt;
+  }
+
+  function renderAll(){ renderTape(); renderDebug(); updateRunStatusPill(); }
+
+  function frameLoop(){
+    if(!running) return;
+    for(var i=0;i<stepsPerFrame;i++){
+      if(machine.halted) break;
+      step(machine, currentTable);
+    }
+    renderAll();
+    if(machine.halted){ running=false; return; }
+    rafId = requestAnimationFrame(frameLoop);
+  }
+
+  function doRun(){ if(!machine || machine.halted) return; running=true; updateRunStatusPill(); rafId=requestAnimationFrame(frameLoop); }
+  function doPause(){ running=false; if(rafId) cancelAnimationFrame(rafId); if(machine) updateRunStatusPill(); }
+  function doStep(){
+    running=false; if(rafId) cancelAnimationFrame(rafId);
+    if(machine && !machine.halted){ step(machine, currentTable); }
+    if(machine) renderAll();
+  }
+
+  document.getElementById('btnLoad').addEventListener('click', function(){ doPause(); powerOn(); });
+  document.getElementById('btnRun').addEventListener('click', doRun);
+  document.getElementById('btnPause').addEventListener('click', doPause);
+  document.getElementById('btnStep').addEventListener('click', doStep);
+  speedSlider.addEventListener('input', function(){ stepsPerFrame = parseInt(speedSlider.value,10); speedLabel.textContent = stepsPerFrame; });
+  document.querySelectorAll('.preset-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      loadPreset(btn.getAttribute('data-p'));
+      doPause();
+      powerOn();
+    });
+  });
+
+  // ============ INIT ============
+  loadPreset('increment');
+  powerOn();
+
+})();
+</script>
+</body>
+</html>
