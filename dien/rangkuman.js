@@ -7,7 +7,10 @@
    scroll, 3) muat & filter Bahan Belajar (data/bahan.json),
    4) muat Khutbah Jumat (data/khutbah.json), 5) muat Kajian &
    Taklim (data/kajian.json), 6) penanda data demo (tidak
-   menyajikan data contoh sebagai konten resmi JAZMI).
+   menyajikan data contoh sebagai konten resmi JAZMI), 7) BARU —
+   deep-link filter lewat query string ?tipe= (dipakai tautan
+   "Lihat Modul →" di dien/kajian/index.html), pola sama dengan
+   ?kategori= di artikel/js/artikel.js.
    ========================================================= */
 
 (function () {
@@ -100,6 +103,32 @@
         const cocok = tipe === "semua" || item.dataset.tipe === tipe;
         item.hidden = !cocok;
       });
+    });
+  }
+
+  // Deep-link tipe dari luar halaman lewat query string ?tipe=,
+  // pola sama dengan paramKategori di artikel/js/artikel.js. Tautan
+  // "Lihat Modul →" di dien/kajian/index.html kini menuju
+  // /arsip/modul/ (bukan lagi ke sini), tapi fungsi ini tetap
+  // berguna untuk deep-link internal lain yang mungkin memakainya.
+  function terapkanFilterTipeDariURL() {
+    const filterWrap = document.getElementById("bahanFilter");
+    const list = document.getElementById("bahanList");
+    if (!filterWrap || !list) return;
+
+    const paramTipe = new URLSearchParams(window.location.search).get("tipe");
+    if (!paramTipe) return;
+
+    const btn = filterWrap.querySelector(`.rangkuman-filter-btn[data-tipe="${paramTipe}"]`);
+    if (!btn) return;
+
+    filterWrap.querySelectorAll(".rangkuman-filter-btn").forEach((b) => {
+      b.classList.remove("is-active");
+    });
+    btn.classList.add("is-active");
+
+    list.querySelectorAll(".material-item").forEach((item) => {
+      item.hidden = item.dataset.tipe !== paramTipe;
     });
   }
 
@@ -302,7 +331,7 @@
     initNavigasiMobile();
     initRevealOnScroll();
     initFilterBahan();
-    muatBahanBelajar();
+    muatBahanBelajar().then(terapkanFilterTipeDariURL);
     muatKhutbah();
     muatKajian();
   }
