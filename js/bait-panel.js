@@ -156,7 +156,11 @@
         if (pemisah) pemisah.style.display = "none";
       }
 
-      if (elTautan) elTautan.href = bait.tautanDetail;
+      // Selalu menuju Penjelasan Hari Ini di dien/syair.html — sama
+      // seperti fallback demo di js/main.js (lihat catatan di sana).
+      // bait.tautanDetail (outputTerkait.halamanDetail) tidak lagi
+      // dipakai untuk tombol ini.
+      if (elTautan) elTautan.href = "dien/syair.html#penjelasan-hari-ini";
 
       // Bank sudah aktif — catatan "contoh/demo" di bawah kartu
       // tidak relevan lagi begitu ada bait sungguhan yang tampil.

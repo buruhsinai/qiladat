@@ -110,7 +110,12 @@
         if (pemisah) pemisah.style.display = "none";
       }
 
-      if (elTautan) elTautan.href = bait.tautanDetail || "#";
+      // Selalu menuju Penjelasan Hari Ini di dien/syair.html — TIDAK
+      // lagi memakai bait.tautanDetail per-bait, karena mekanisme
+      // penjelasan sekarang berbasis tanggal (satu penjelasan per
+      // hari untuk bait yang tampil hari itu), bukan per-ID bait.
+      // Lihat dien/data/penjelasan-syair.json & dien/syair.js.
+      if (elTautan) elTautan.href = "dien/syair.html#penjelasan-hari-ini";
     } catch (err) {
       console.error("[JAZMI] Gagal memuat Bait Syair Hari Ini:", err);
       if (elArab) elArab.textContent = "";
