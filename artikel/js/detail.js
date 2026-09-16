@@ -47,6 +47,26 @@
     return res.json();
   }
 
+  // Kunci pengurutan artikel: utamakan tanggal asli bila ada, kalau belum
+  // ada tanggal publikasi resmi pakai field "urutan" (angka manual, makin
+  // besar = makin baru) sebagai cadangan. Lihat catatan skema di
+  // data/articles.json._catatan / artikel/js/artikel.js.
+  const URUTAN_OFFSET = new Date("2099-01-01T00:00:00").getTime();
+  function kunciUrutanArtikel(a) {
+    if (a && a.tanggal) {
+      const t = new Date(a.tanggal + "T00:00:00").getTime();
+      if (!isNaN(t)) return t;
+    }
+    if (a && typeof a.urutan === "number") return URUTAN_OFFSET + a.urutan;
+    return 0;
+  }
+
+  function labelWaktuArtikel(a) {
+    if (a && a.tanggal) return formatTanggalIndonesia(a.tanggal);
+    if (a && a.seri) return a.seri;
+    return "";
+  }
+
   /* ---------------------------------------------------------
      identitas artikel dari URL
      --------------------------------------------------------- */
@@ -106,9 +126,7 @@
 
     const tanggalEl = document.getElementById("articleDate");
     if (tanggalEl) {
-      tanggalEl.textContent = artikel.tanggal
-        ? formatTanggalIndonesia(artikel.tanggal)
-        : "";
+      tanggalEl.textContent = labelWaktuArtikel(artikel);
     }
 
     const bodyEl = document.getElementById("articleBody");
@@ -127,28 +145,59 @@
     }
   }
 
-  function renderArtikelTerkait(artikelSaatIni, semuaArtikel) {
+  // Tag relasi otomatis (menggantikan filter kategori polos lama) —
+  // dihitung LIVE dari data/articles.json lewat js/relasi-artikel.js
+  // (JazmiRelasi), lihat HANDOFF-TAG-LABEL-ARTIKEL.md §1.1.
+  function renderTagRelasi(artikelSaatIni, semuaArtikel) {
     const section = document.getElementById("relatedSection");
     const list = document.getElementById("relatedList");
     if (!section || !list) return;
 
-    const terkait = semuaArtikel
-      .filter((a) => a.id !== artikelSaatIni.id && a.kategori === artikelSaatIni.kategori)
-      .sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal))
-      .slice(0, 3);
+    const relasi = (window.JazmiRelasi && typeof window.JazmiRelasi.hitungTagRelasiArtikel === "function")
+      ? window.JazmiRelasi.hitungTagRelasiArtikel(artikelSaatIni, semuaArtikel)
+      : [];
 
-    if (!terkait.length) {
+    if (!relasi.length) {
       section.hidden = true;
       return;
     }
 
-    list.innerHTML = terkait.map((a) => `
-      <li class="article-item">
-        <span class="article-date">${escapeHTML(formatTanggalIndonesia(a.tanggal))}</span>
+    const labelTipe = (window.JazmiRelasi && window.JazmiRelasi.LABEL_TIPE_TAG) || {};
+
+    list.innerHTML = relasi.map(({ tipe, artikel: a }) => `
+      <li class="article-item tag-relasi-item">
+        <span class="tag-type-badge" data-tipe="${escapeHTML(tipe)}">${escapeHTML(labelTipe[tipe] || tipe)}</span>
         <div class="article-body">
           <a class="article-title" href="${escapeHTML(a.tautan || ("detail.html?slug=" + encodeURIComponent(a.slug || a.id)))}">${escapeHTML(a.judul)}</a>
           ${a.kategori ? `<span class="article-category">${escapeHTML(a.kategori)}</span>` : ""}
         </div>
+      </li>
+    `).join("");
+
+    section.hidden = false;
+  }
+
+  // Label taksonomi topik untuk artikel ini — dicocokkan LIVE lewat
+  // js/label-utils.js (JazmiLabel), lihat HANDOFF §1.2. Ditandai
+  // sebagai draf selama data/labels.json._catatan masih berisi
+  // penanda draf (diteruskan lewat parameter catatanDraf).
+  function renderLabelArtikel(artikelSaatIni, daftarLabel) {
+    const section = document.getElementById("labelSection");
+    const list = document.getElementById("labelChipList");
+    if (!section || !list) return;
+
+    const cocok = (window.JazmiLabel && typeof window.JazmiLabel.cariLabelUntukArtikel === "function")
+      ? window.JazmiLabel.cariLabelUntukArtikel(artikelSaatIni, daftarLabel)
+      : [];
+
+    if (!cocok.length) {
+      section.hidden = true;
+      return;
+    }
+
+    list.innerHTML = cocok.map((lbl) => `
+      <li>
+        <a class="label-chip" href="../arsip/label/index.html?slug=${encodeURIComponent(lbl.slug)}">${escapeHTML(lbl.nama)}</a>
       </li>
     `).join("");
 
@@ -201,6 +250,7 @@
     tampilkanKeadaan("loading");
 
     let data;
+    let dataLabel = { label: [] };
     try {
       data = await ambilData("../data/articles.json");
     } catch (err) {
@@ -208,8 +258,16 @@
       tampilkanKeadaan("error");
       return;
     }
+    try {
+      dataLabel = await ambilData("../data/labels.json");
+    } catch (err) {
+      // labels.json gagal dimuat tidak boleh menggagalkan halaman artikel
+      // itu sendiri — cukup tidak menampilkan section Label.
+      console.error("[JAZMI] Gagal memuat data/labels.json:", err);
+    }
 
     const semuaArtikel = data.artikel || [];
+    const daftarLabel = Array.isArray(dataLabel.label) ? dataLabel.label : [];
     const pengenal = ambilSlugDariURL();
     const artikel = cariArtikel(semuaArtikel, pengenal);
 
@@ -219,7 +277,8 @@
     }
 
     renderArtikel(artikel);
-    renderArtikelTerkait(artikel, semuaArtikel);
+    renderTagRelasi(artikel, semuaArtikel);
+    renderLabelArtikel(artikel, daftarLabel);
     tampilkanKeadaan("artikel");
   }
 

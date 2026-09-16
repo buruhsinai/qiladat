@@ -49,6 +49,32 @@
     return res.json();
   }
 
+  // Kunci pengurutan artikel: utamakan tanggal asli bila ada (makin baru
+  // makin besar). Kalau artikel belum diberi tanggal publikasi resmi
+  // (field "tanggal" kosong/null), pakai field "urutan" (angka manual,
+  // makin besar = makin baru) sebagai cadangan, ditambah offset jauh ke
+  // depan supaya konten yang memang belum bertanggal tetap tampil sebagai
+  // yang terbaru dibanding data demo/placeholder lama. Dipakai di semua
+  // halaman yang mengurutkan artikel — lihat catatan skema di
+  // data/articles.json._catatan.
+  const URUTAN_OFFSET = new Date("2099-01-01T00:00:00").getTime();
+  function kunciUrutanArtikel(a) {
+    if (a && a.tanggal) {
+      const t = new Date(a.tanggal + "T00:00:00").getTime();
+      if (!isNaN(t)) return t;
+    }
+    if (a && typeof a.urutan === "number") return URUTAN_OFFSET + a.urutan;
+    return 0;
+  }
+
+  // Label waktu/rubrik yang ditampilkan di kartu artikel: tanggal asli bila
+  // ada, kalau tidak pakai nama seri sebagai gantinya (bukan tanggal palsu).
+  function labelWaktuArtikel(a) {
+    if (a && a.tanggal) return formatTanggalIndonesia(a.tanggal);
+    if (a && a.seri) return a.seri;
+    return "";
+  }
+
   function tampilkanPesanKosong(container, pesan) {
     if (!container) return;
     container.innerHTML = `<p class="data-empty-note">${escapeHTML(pesan)}</p>`;
@@ -85,7 +111,7 @@
 
   function artikelTersaring() {
     const diurutkan = semuaArtikel.slice()
-      .sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+      .sort((a, b) => kunciUrutanArtikel(b) - kunciUrutanArtikel(a));
     if (kategoriAktif === "Semua") return diurutkan;
     return diurutkan.filter((a) => a.kategori === kategoriAktif);
   }
@@ -123,7 +149,7 @@
 
     list.innerHTML = ditampilkan.map((a) => `
       <li class="article-item">
-        <span class="article-date">${escapeHTML(formatTanggalIndonesia(a.tanggal))}</span>
+        <span class="article-date">${escapeHTML(labelWaktuArtikel(a))}</span>
         <div class="article-body">
           <a class="article-title" href="${escapeHTML(a.tautan || "#")}">${escapeHTML(a.judul)}</a>
           ${a.kategori ? `<span class="article-category">${escapeHTML(a.kategori)}</span>` : ""}
@@ -152,6 +178,12 @@
       if (!semuaArtikel.length) {
         tampilkanPesanKosong(list, "Belum ada artikel untuk ditampilkan.");
         return;
+      }
+
+      // Deep-link kategori dari halaman ranah (mis. /artikel/?kategori=Kesehatan)
+      const paramKategori = new URLSearchParams(window.location.search).get("kategori");
+      if (paramKategori && semuaArtikel.some((a) => a.kategori === paramKategori)) {
+        kategoriAktif = paramKategori;
       }
 
       renderFilterBar();
