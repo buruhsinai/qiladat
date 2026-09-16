@@ -16,6 +16,86 @@
      1. NAVIGASI MOBILE
      --------------------------------------------------------- */
 
+  const JUMLAH_ARTIKEL_PREVIEW = 3;
+
+  function escapeHTML(str) {
+    if (str === null || str === undefined) return "";
+    const div = document.createElement("div");
+    div.textContent = String(str);
+    return div.innerHTML;
+  }
+
+  function formatTanggalIndonesia(isoDate) {
+    try {
+      const bulan = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+      const d = new Date(isoDate + "T00:00:00");
+      if (isNaN(d.getTime())) return isoDate;
+      return `${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()}`;
+    } catch (e) {
+      return isoDate;
+    }
+  }
+
+  // Kunci pengurutan artikel: utamakan tanggal asli bila ada, kalau belum
+  // ada tanggal publikasi resmi pakai field "urutan" (angka manual, makin
+  // besar = makin baru) sebagai cadangan. Label tanggal jatuh ke nama seri
+  // bila tanggal belum ada (bukan tanggal palsu). Lihat catatan skema di
+  // data/articles.json._catatan / artikel/js/artikel.js.
+  const URUTAN_OFFSET = new Date("2099-01-01T00:00:00").getTime();
+  function kunciUrutanArtikel(a) {
+    if (a && a.tanggal) {
+      const t = new Date(a.tanggal + "T00:00:00").getTime();
+      if (!isNaN(t)) return t;
+    }
+    if (a && typeof a.urutan === "number") return URUTAN_OFFSET + a.urutan;
+    return 0;
+  }
+
+  function labelWaktuArtikel(a) {
+    if (a && a.tanggal) return formatTanggalIndonesia(a.tanggal);
+    if (a && a.seri) return a.seri;
+    return "";
+  }
+
+  /* ---------------------------------------------------------
+     0. ARTIKEL TERBARU RANAH SAINS (kurasi kategori "Astronomi")
+     --------------------------------------------------------- */
+
+  async function muatArtikelSains() {
+    const list = document.getElementById("sainsArtikelPreview");
+    if (!list) return;
+
+    try {
+      const res = await fetch("../data/articles.json");
+      if (!res.ok) throw new Error("Gagal memuat articles.json: " + res.status);
+      const data = await res.json();
+      let artikel = (data.artikel || []).slice();
+      artikel.sort((a, b) => kunciUrutanArtikel(b) - kunciUrutanArtikel(a));
+
+      const sains = artikel.filter((a) => a.kategori === "Astronomi" || a.kategori === "Sains");
+      const lainnya = artikel.filter((a) => a.kategori !== "Astronomi" && a.kategori !== "Sains");
+      const pilihan = sains.concat(lainnya).slice(0, JUMLAH_ARTIKEL_PREVIEW);
+
+      if (!pilihan.length) {
+        list.innerHTML = `<p class="access-note">Belum ada artikel untuk ditampilkan.</p>`;
+        return;
+      }
+
+      list.innerHTML = pilihan.map((a) => `
+        <li class="article-item">
+          <span class="article-date">${escapeHTML(labelWaktuArtikel(a))}</span>
+          <div class="article-body">
+            <a class="article-title" href="/artikel/${escapeHTML(a.tautan || "#")}">${escapeHTML(a.judul)}</a>
+            ${a.kategori ? `<span class="article-category">${escapeHTML(a.kategori)}</span>` : ""}
+          </div>
+        </li>
+      `).join("");
+    } catch (err) {
+      console.error("[JAZMI] Gagal memuat Artikel Sains:", err);
+      list.innerHTML = `<p class="access-note">Artikel terbaru belum dapat dimuat saat ini.</p>`;
+    }
+  }
+
   function initNavigasiMobile() {
     const toggle = document.getElementById("navToggle");
     const nav = document.getElementById("primaryNav");
@@ -93,6 +173,7 @@
   function init() {
     initNavigasiMobile();
     initRevealOnScroll();
+    muatArtikelSains();
   }
 
   if (document.readyState === "loading") {
