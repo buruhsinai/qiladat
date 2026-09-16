@@ -307,6 +307,124 @@
   }
 
   /* ---------------------------------------------------------
+     5b. PENJELASAN HARI INI & ARTIKEL SYAIR (arsip)
+        Sumber: dien/data/penjelasan-syair.json — OPSIONAL dan
+        terpisah total dari syair-bank/ dan pilihan.json. Satu
+        entri per tanggal, ditulis manual oleh pengelola.
+
+        Entri bertanggal HARI INI → tampil di section
+        "Penjelasan Hari Ini" DAN menjadi tujuan tombol
+        "Baca penjelasan bait ini" di HOME (index.html#baitTautan,
+        lihat js/bait-panel.js & js/main.js).
+
+        Entri bertanggal SEBELUM hari ini → otomatis pindah jadi
+        arsip "Artikel Syair" di bawah, begitu saja tanpa perlu
+        diedit manual — dan turut muncul di /artikel/ dengan
+        kategori "Syair" (lihat artikel/js/artikel.js), tapi
+        SENGAJA TIDAK PERNAH muncul di /dien/artikel/ karena
+        bukan bagian dari data/articles.json.
+
+        Belum ada entri untuk hari ini → tampilkan status jujur
+        "sedang disiapkan", bukan konten kosong/rusak.
+     --------------------------------------------------------- */
+
+  const PENJELASAN_PATH = "data/penjelasan-syair.json";
+
+  function tanggalHariIniISO() {
+    // Tanggal LOKAL perangkat pengunjung (bukan UTC) — konsisten
+    // dengan cara pilihBaitHariIniDariHimpunan() & bait-panel.js
+    // menentukan "hari ini" dari getFullYear/getMonth/getDate.
+    const s = new Date();
+    const bulan = String(s.getMonth() + 1).padStart(2, "0");
+    const tgl = String(s.getDate()).padStart(2, "0");
+    return `${s.getFullYear()}-${bulan}-${tgl}`;
+  }
+
+  function formatTanggalIndonesia(isoDate) {
+    try {
+      const bulan = [
+        "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+      ];
+      const d = new Date(isoDate + "T00:00:00");
+      if (isNaN(d.getTime())) return isoDate;
+      return `${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()}`;
+    } catch (e) {
+      return isoDate;
+    }
+  }
+
+  async function muatPenjelasanSyair() {
+    const data = await ambilDataOpsional(PENJELASAN_PATH);
+    const daftar = (data && Array.isArray(data.penjelasan)) ? data.penjelasan : [];
+    return daftar.filter((p) => p && typeof p.tanggal === "string");
+  }
+
+  function renderPenjelasanHariIni(daftarPenjelasan) {
+    const container = document.getElementById("penjelasanHariIniWrap");
+    if (!container) return;
+
+    const hariIni = tanggalHariIniISO();
+    const entri = daftarPenjelasan.find((p) => p.tanggal === hariIni) || null;
+
+    if (!entri) {
+      tampilkanStatus(
+        container,
+        "Penjelasan untuk bait hari ini sedang disiapkan. Silakan kembali lagi nanti, atau lihat Artikel Syair yang sudah terbit di bawah.",
+        "Sedang disiapkan"
+      );
+      return;
+    }
+
+    const paragraf = Array.isArray(entri.isi) && entri.isi.length
+      ? entri.isi
+      : (entri.ringkasan ? [entri.ringkasan] : []);
+
+    container.innerHTML = `
+      <div class="syair-penjelasan-card">
+        <p class="syair-penjelasan-tanggal">${escapeHTML(formatTanggalIndonesia(entri.tanggal))}</p>
+        <h3 class="syair-penjelasan-judul">${escapeHTML(entri.judul || "Penjelasan Bait Hari Ini")}</h3>
+        <div class="syair-penjelasan-isi">
+          ${paragraf.length ? paragraf.map((p) => `<p>${escapeHTML(p)}</p>`).join("") : `<p class="data-empty-note">Isi penjelasan belum tersedia.</p>`}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderArtikelSyair(daftarPenjelasan) {
+    const container = document.getElementById("artikelSyairWrap");
+    if (!container) return;
+
+    const hariIni = tanggalHariIniISO();
+    const arsip = daftarPenjelasan
+      .filter((p) => p.tanggal < hariIni)
+      .sort((a, b) => (a.tanggal < b.tanggal ? 1 : -1));
+
+    if (!arsip.length) {
+      tampilkanStatus(
+        container,
+        "Belum ada Artikel Syair yang terbit. Penjelasan hari ini akan pindah ke sini secara otomatis begitu tanggalnya berlalu.",
+        "Belum ada arsip"
+      );
+      return;
+    }
+
+    container.innerHTML = `
+      <ul class="article-list syair-artikel-list">
+        ${arsip.map((p) => `
+          <li class="article-item">
+            <span class="article-date">${escapeHTML(formatTanggalIndonesia(p.tanggal))}</span>
+            <div class="article-body">
+              <a class="article-title" href="syair-artikel.html?tanggal=${encodeURIComponent(p.tanggal)}">${escapeHTML(p.judul || "Penjelasan Bait")}</a>
+              <span class="article-category">Syair</span>
+            </div>
+          </li>
+        `).join("")}
+      </ul>
+    `;
+  }
+
+  /* ---------------------------------------------------------
      6. JELAJAHI SYAIR — Kitab / Penyair / Tag / Series.
         Gate: BAIT.status === "dipublikasikan" (BUKAN
         KITAB.status — sesuai C01-SY-07). Independen dari
@@ -537,6 +655,13 @@
 
     renderSyairPilihan(lolos, idx, pilihanTersedia);
     renderBaitHariIni(lolos, idx);
+
+    // Penjelasan Hari Ini & Artikel Syair — independen dari Bank/
+    // pilihan.json, jadi tetap dijalankan meski keduanya gagal
+    // (sudah di-return lebih awal lewat blok adaFileGagal di atas).
+    const daftarPenjelasan = await muatPenjelasanSyair();
+    renderPenjelasanHariIni(daftarPenjelasan);
+    renderArtikelSyair(daftarPenjelasan);
   }
 
   if (document.readyState === "loading") {
