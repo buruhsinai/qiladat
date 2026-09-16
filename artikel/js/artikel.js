@@ -10,7 +10,15 @@
   "use strict";
 
   const PAGE_SIZE = 6;
-  const KATEGORI_URUTAN = ["Semua", "Agama", "Kesehatan", "Sains", "Astronomi", "Pendidikan"];
+  // "Astronomi" sengaja dihapus dari daftar filter (bukan kategori
+  // resmi — kesalahan lama pada data demo, lihat data/articles.json;
+  // artikel dengan kategori itu tetap tampil di bawah "Semua",
+  // hanya tombol filternya yang tidak dimunculkan).
+  // "Syair" ditambahkan di akhir — sumbernya BUKAN data/articles.json,
+  // melainkan digabung saat memuat dari dien/data/penjelasan-syair.json
+  // (lihat muatArsipSyair()), karena Artikel Syair adalah model
+  // tersendiri yang tidak pernah masuk /dien/artikel/.
+  const KATEGORI_URUTAN = ["Semua", "Agama", "Kesehatan", "Sains", "Pendidikan", "Syair"];
 
   let semuaArtikel = [];
   let kategoriAktif = "Semua";
@@ -165,6 +173,47 @@
   }
 
   /* ---------------------------------------------------------
+     arsip Syair — digabung dari dien/data/penjelasan-syair.json,
+     BUKAN dari data/articles.json. Hanya entri bertanggal SUDAH
+     BERLALU (bukan hari ini) yang dianggap artikel terbit; lihat
+     aturan yang sama di dien/syair.js (renderArtikelSyair) dan
+     dien/syair-artikel.js. Kegagalan memuat file ini dianggap
+     wajar ("belum ada Syair") — tidak boleh menggagalkan seluruh
+     halaman Artikel.
+     --------------------------------------------------------- */
+
+  function tanggalHariIniISO() {
+    const s = new Date();
+    const bulan = String(s.getMonth() + 1).padStart(2, "0");
+    const tgl = String(s.getDate()).padStart(2, "0");
+    return `${s.getFullYear()}-${bulan}-${tgl}`;
+  }
+
+  async function muatArsipSyair() {
+    try {
+      const res = await fetch("../dien/data/penjelasan-syair.json", { cache: "no-store" });
+      if (!res.ok) return [];
+      const data = await res.json();
+      const daftar = Array.isArray(data.penjelasan) ? data.penjelasan : [];
+      const hariIni = tanggalHariIniISO();
+
+      return daftar
+        .filter((p) => p && typeof p.tanggal === "string" && p.tanggal < hariIni)
+        .map((p) => ({
+          id: `syair-${p.tanggal}`,
+          judul: p.judul || "Penjelasan Bait",
+          tanggal: p.tanggal,
+          kategori: "Syair",
+          ringkasan: p.ringkasan || (Array.isArray(p.isi) ? p.isi[0] : "") || "",
+          tautan: `../dien/syair-artikel.html?tanggal=${encodeURIComponent(p.tanggal)}`
+        }));
+    } catch (e) {
+      console.error("[JAZMI] Gagal memuat arsip Syair:", e);
+      return [];
+    }
+  }
+
+  /* ---------------------------------------------------------
      muat data
      --------------------------------------------------------- */
 
@@ -173,7 +222,8 @@
 
     try {
       const data = await ambilData("../data/articles.json");
-      semuaArtikel = data.artikel || [];
+      const arsipSyair = await muatArsipSyair();
+      semuaArtikel = (data.artikel || []).concat(arsipSyair);
 
       if (!semuaArtikel.length) {
         tampilkanPesanKosong(list, "Belum ada artikel untuk ditampilkan.");
