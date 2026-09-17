@@ -20,6 +20,7 @@
     artikel: 5,
     bahan: 3,
     visual: 6,
+    videoPilihan: 2,
     video: 3,
     audio: 3
   };
@@ -157,6 +158,21 @@
     if (a && a.tanggal) return formatTanggalIndonesia(a.tanggal);
     if (a && a.seri) return a.seri;
     return "";
+  }
+
+  // Kunci urutan generik untuk item bertanggal (video, audio, dll):
+  // sama seperti kunciUrutanArtikel — utamakan "tanggal", fallback ke
+  // "urutan" (angka manual, makin besar makin baru) bila tanggal belum
+  // diisi. Dipakai supaya "Video Terbaru"/"Audio Terbaru" otomatis
+  // urut terbaru-dulu HANYA dengan mengisi field tanggal di JSON —
+  // tidak perlu menaruh entri baru di posisi teratas array secara manual.
+  function kunciUrutanItem(item) {
+    if (item && item.tanggal) {
+      const t = new Date(item.tanggal + "T00:00:00").getTime();
+      if (!isNaN(t)) return t;
+    }
+    if (item && typeof item.urutan === "number") return URUTAN_OFFSET + item.urutan;
+    return 0;
   }
 
   async function muatArtikelTerbaru() {
@@ -355,41 +371,75 @@
   }
 
   /* ---------------------------------------------------------
-     7. VIDEO TERBARU
+     7. VIDEO PILIHAN, VIDEO TERBARU & AUDIO TERBARU
+     (satu sumber data — data/media.json — diambil sekali)
      --------------------------------------------------------- */
 
   const IKON_PLAY = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>`;
 
-  async function muatVideoTerbaru() {
+  // Video Pilihan: video yang ditandai "unggulan": true pada
+  // media.json. TIDAK mengeluarkan video itu dari daftar Video
+  // Terbaru — keduanya membaca array "video" yang sama, cuma
+  // disaring/diurutkan berbeda. Kalau tidak ada yang ditandai
+  // unggulan, panel ini disembunyikan dengan rapi (tidak ada
+  // kotak kosong).
+  function renderVideoPilihan(daftarVideo) {
+    const container = document.getElementById("videoPilihan");
+    if (!container) return;
+
+    const pilihan = daftarVideo
+      .filter((v) => v && v.unggulan === true)
+      .sort((a, b) => kunciUrutanItem(b) - kunciUrutanItem(a))
+      .slice(0, LIMIT.videoPilihan);
+
+    if (!pilihan.length) {
+      container.hidden = true;
+      container.innerHTML = "";
+      return;
+    }
+
+    container.hidden = false;
+    const kartu = pilihan.map((v) => `
+      <a class="video-card video-card-pilihan" href="${escapeHTML(v.tautanYoutube || "#")}" target="_blank" rel="noopener">
+        <div class="video-thumb">
+          <span class="video-play">${IKON_PLAY}</span>
+        </div>
+        <p class="video-title">${escapeHTML(v.judul)}</p>
+      </a>
+    `).join("");
+
+    container.innerHTML = `
+      <p class="video-pilihan-label">Video Pilihan</p>
+      <div class="video-pilihan-grid">${kartu}</div>
+    `;
+  }
+
+  // Video Terbaru: SELURUH video, diurutkan tanggal terbaru dulu,
+  // dipotong ke LIMIT.video — termasuk video yang juga tampil di
+  // Video Pilihan.
+  function renderVideoTerbaru(daftarVideo) {
     const grid = document.getElementById("videoGrid");
     if (!grid) return;
 
-    try {
-      const data = await ambilData("data/media.json");
-      const video = (data.video || []).slice(0, LIMIT.video);
+    const video = daftarVideo
+      .slice()
+      .sort((a, b) => kunciUrutanItem(b) - kunciUrutanItem(a))
+      .slice(0, LIMIT.video);
 
-      if (!video.length) {
-        tampilkanPesanKosong(grid, "Belum ada video untuk ditampilkan.");
-        return;
-      }
-
-      grid.innerHTML = video.map((v) => `
-        <a class="video-card" href="${escapeHTML(v.tautanYoutube || "#")}" target="_blank" rel="noopener">
-          <div class="video-thumb">
-            <span class="video-play">${IKON_PLAY}</span>
-          </div>
-          <p class="video-title">${escapeHTML(v.judul)}</p>
-        </a>
-      `).join("");
-    } catch (err) {
-      console.error("[JAZMI] Gagal memuat Video Terbaru:", err);
-      tampilkanPesanKosong(grid, "Video terbaru belum dapat dimuat saat ini.");
+    if (!video.length) {
+      tampilkanPesanKosong(grid, "Belum ada video untuk ditampilkan.");
+      return;
     }
-  }
 
-  /* ---------------------------------------------------------
-     8. AUDIO TERBARU
-     --------------------------------------------------------- */
+    grid.innerHTML = video.map((v) => `
+      <a class="video-card" href="${escapeHTML(v.tautanYoutube || "#")}" target="_blank" rel="noopener">
+        <div class="video-thumb">
+          <span class="video-play">${IKON_PLAY}</span>
+        </div>
+        <p class="video-title">${escapeHTML(v.judul)}</p>
+      </a>
+    `).join("");
+  }
 
   const TINGGI_BAR_AUDIO = ["40%", "70%", "100%", "55%", "30%"];
 
@@ -399,29 +449,61 @@
       .join("");
   }
 
-  async function muatAudioTerbaru() {
+  function renderAudioTerbaru(daftarAudio) {
     const list = document.getElementById("audioList");
     if (!list) return;
 
+    const audio = daftarAudio
+      .slice()
+      .sort((a, b) => kunciUrutanItem(b) - kunciUrutanItem(a))
+      .slice(0, LIMIT.audio);
+
+    if (!audio.length) {
+      tampilkanPesanKosong(list, "Belum ada audio untuk ditampilkan.");
+      return;
+    }
+
+    list.innerHTML = audio.map((a) => `
+      <li class="audio-item">
+        <a class="audio-play" href="${escapeHTML(a.tautanSoundcloud || "#")}" target="_blank" rel="noopener" aria-label="Dengarkan di SoundCloud">${IKON_PLAY}</a>
+        <span class="audio-bars" aria-hidden="true">${buatBarsAudio()}</span>
+        <span class="audio-title">${escapeHTML(a.judul)}</span>
+      </li>
+    `).join("");
+  }
+
+  async function muatVideoDanAudio() {
+    const videoPilihanEl = document.getElementById("videoPilihan");
+    const videoGridEl = document.getElementById("videoGrid");
+    const audioListEl = document.getElementById("audioList");
+
+    let data;
     try {
-      const data = await ambilData("data/media.json");
-      const audio = (data.audio || []).slice(0, LIMIT.audio);
-
-      if (!audio.length) {
-        tampilkanPesanKosong(list, "Belum ada audio untuk ditampilkan.");
-        return;
-      }
-
-      list.innerHTML = audio.map((a) => `
-        <li class="audio-item">
-          <a class="audio-play" href="${escapeHTML(a.tautanSoundcloud || "#")}" target="_blank" rel="noopener" aria-label="Dengarkan di SoundCloud">${IKON_PLAY}</a>
-          <span class="audio-bars" aria-hidden="true">${buatBarsAudio()}</span>
-          <span class="audio-title">${escapeHTML(a.judul)}</span>
-        </li>
-      `).join("");
+      data = await ambilData("data/media.json");
     } catch (err) {
-      console.error("[JAZMI] Gagal memuat Audio Terbaru:", err);
-      tampilkanPesanKosong(list, "Audio terbaru belum dapat dimuat saat ini.");
+      console.error("[JAZMI] Gagal memuat data/media.json (Video Pilihan, Video Terbaru, Audio Terbaru):", err);
+      if (videoPilihanEl) { videoPilihanEl.hidden = true; videoPilihanEl.innerHTML = ""; }
+      tampilkanPesanKosong(videoGridEl, "Video terbaru belum dapat dimuat saat ini.");
+      tampilkanPesanKosong(audioListEl, "Audio terbaru belum dapat dimuat saat ini.");
+      return;
+    }
+
+    try {
+      renderVideoPilihan(data.video || []);
+    } catch (err) {
+      console.error("[JAZMI] Gagal menampilkan Video Pilihan:", err);
+    }
+    try {
+      renderVideoTerbaru(data.video || []);
+    } catch (err) {
+      console.error("[JAZMI] Gagal menampilkan Video Terbaru:", err);
+      tampilkanPesanKosong(videoGridEl, "Video terbaru belum dapat dimuat saat ini.");
+    }
+    try {
+      renderAudioTerbaru(data.audio || []);
+    } catch (err) {
+      console.error("[JAZMI] Gagal menampilkan Audio Terbaru:", err);
+      tampilkanPesanKosong(audioListEl, "Audio terbaru belum dapat dimuat saat ini.");
     }
   }
 
@@ -517,8 +599,7 @@
     muatBahanTerbaru();
     muatKhutbahTerbaru();
     muatKajianTerbaru();
-    muatVideoTerbaru();
-    muatAudioTerbaru();
+    muatVideoDanAudio();
   }
 
   if (document.readyState === "loading") {
