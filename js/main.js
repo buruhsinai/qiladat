@@ -132,6 +132,33 @@
      2. ARTIKEL TERBARU
      --------------------------------------------------------- */
 
+  // Kunci pengurutan artikel: utamakan tanggal asli bila ada (makin baru
+  // makin besar). Kalau artikel belum diberi tanggal publikasi resmi
+  // (field "tanggal" kosong/null), pakai field "urutan" (angka manual,
+  // makin besar = makin baru) sebagai cadangan, ditambah offset jauh ke
+  // depan supaya konten yang memang belum bertanggal tetap tampil sebagai
+  // yang terbaru dibanding artikel lama yang sudah bertanggal. Disamakan
+  // dengan kunciUrutanArtikel() di artikel/js/artikel.js supaya urutan
+  // "Artikel Terbaru" di Home konsisten dengan halaman Artikel.
+  const URUTAN_OFFSET = new Date("2099-01-01T00:00:00").getTime();
+  function kunciUrutanArtikel(a) {
+    if (a && a.tanggal) {
+      const t = new Date(a.tanggal + "T00:00:00").getTime();
+      if (!isNaN(t)) return t;
+    }
+    if (a && typeof a.urutan === "number") return URUTAN_OFFSET + a.urutan;
+    return 0;
+  }
+
+  // Label waktu/rubrik: tanggal asli bila ada, kalau tidak pakai nama
+  // seri sebagai gantinya (bukan tanggal palsu) — sama seperti di
+  // artikel/js/artikel.js.
+  function labelWaktuArtikel(a) {
+    if (a && a.tanggal) return formatTanggalIndonesia(a.tanggal);
+    if (a && a.seri) return a.seri;
+    return "";
+  }
+
   async function muatArtikelTerbaru() {
     const list = document.getElementById("articleList");
     if (!list) return;
@@ -140,8 +167,8 @@
       const data = await ambilData("data/articles.json");
       let artikel = (data.artikel || []).slice();
 
-      // Urutkan berdasarkan tanggal, terbaru di atas.
-      artikel.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+      // Urutkan berdasarkan tanggal/urutan, terbaru di atas.
+      artikel.sort((a, b) => kunciUrutanArtikel(b) - kunciUrutanArtikel(a));
       artikel = artikel.slice(0, LIMIT.artikel);
 
       if (!artikel.length) {
@@ -151,7 +178,7 @@
 
       list.innerHTML = artikel.map((a) => `
         <li class="article-item">
-          <span class="article-date">${escapeHTML(formatTanggalIndonesia(a.tanggal))}</span>
+          <span class="article-date">${escapeHTML(labelWaktuArtikel(a))}</span>
           <div class="article-body">
             <a class="article-title" href="${escapeHTML(a.tautan || "#")}">${escapeHTML(a.judul)}</a>
             ${a.kategori ? `<span class="article-category">${escapeHTML(a.kategori)}</span>` : ""}
@@ -168,13 +195,19 @@
      3. KARYA VISUAL TERBARU (slider)
      --------------------------------------------------------- */
 
+  function labelTipeVisual(tipe) {
+    if (tipe === "infografik") return "Infografik";
+    if (tipe === "sinematik") return "Sinematik";
+    return "";
+  }
+
   async function muatKaryaVisual() {
     const slider = document.getElementById("visualSlider");
     if (!slider) return;
 
     try {
-      const data = await ambilData("data/media.json");
-      const visual = (data.visual || []).slice(0, LIMIT.visual);
+      const data = await ambilData("arsip/gambar/data/gambar.json");
+      const visual = (data.gambar || []).slice(0, LIMIT.visual);
 
       if (!visual.length) {
         tampilkanPesanKosong(slider, "Belum ada karya visual untuk ditampilkan.");
@@ -182,11 +215,14 @@
       }
 
       slider.innerHTML = visual.map((v) => {
-        const tone = [1, 2, 3, 4].includes(v.thumbTone) ? v.thumbTone : 1;
+        const label = labelTipeVisual(v.tipe);
         return `
-          <a class="visual-card" href="${escapeHTML(v.tautan || "#")}">
-            <div class="visual-thumb visual-thumb-${tone}">Contoh Visual</div>
-            <p class="visual-caption">${escapeHTML(v.judul)}</p>
+          <a class="visual-card" href="/arsip/gambar/">
+            <div class="visual-thumb visual-thumb-img">
+              <img src="${escapeHTML("arsip/gambar/" + v.file)}" alt="${escapeHTML(v.alt || v.seri)}" loading="lazy">
+              ${label ? `<span class="visual-thumb-tipe">${escapeHTML(label)}</span>` : ""}
+            </div>
+            <p class="visual-caption">${escapeHTML(v.seri)}</p>
           </a>
         `;
       }).join("");
