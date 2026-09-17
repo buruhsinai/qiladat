@@ -21,7 +21,7 @@
     bahan: 3,
     visual: 6,
     videoPilihan: 2,
-    video: 3,
+    video: 8,
     audio: 3
   };
 
@@ -175,6 +175,16 @@
     return 0;
   }
 
+  // Link artikel dari HOME (root) harus diarahkan ke folder /artikel/,
+  // karena detail.html hanya ada di sana — beda dengan link yang sama
+  // dipakai di dalam /artikel/index.html sendiri (sudah benar tanpa
+  // prefix, lihat artikel/js/artikel.js). Pola sama dipakai dien.js
+  // (prefix "../artikel/") untuk kasus dari folder satu tingkat.
+  function tautanArtikelDariHome(a) {
+    if (!a || !a.tautan) return "#";
+    return "artikel/" + a.tautan;
+  }
+
   async function muatArtikelTerbaru() {
     const list = document.getElementById("articleList");
     if (!list) return;
@@ -196,7 +206,7 @@
         <li class="article-item">
           <span class="article-date">${escapeHTML(labelWaktuArtikel(a))}</span>
           <div class="article-body">
-            <a class="article-title" href="${escapeHTML(a.tautan || "#")}">${escapeHTML(a.judul)}</a>
+            <a class="article-title" href="${escapeHTML(tautanArtikelDariHome(a))}">${escapeHTML(a.judul)}</a>
             ${a.kategori ? `<span class="article-category">${escapeHTML(a.kategori)}</span>` : ""}
           </div>
         </li>
@@ -377,6 +387,54 @@
 
   const IKON_PLAY = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>`;
 
+  // Ambil ID video dari berbagai bentuk URL YouTube yang lazim
+  // dipakai (youtu.be/ID, youtube.com/watch?v=ID, .../embed/ID).
+  // Mengembalikan null kalau bentuknya tidak dikenali, supaya
+  // pemanggil bisa jatuh kembali ke perilaku lama (buka tab baru).
+  function ambilIdYoutube(url) {
+    if (!url) return null;
+    try {
+      const u = new URL(url, window.location.href);
+      const host = u.hostname.replace(/^www\./, "");
+      if (host === "youtu.be") {
+        return u.pathname.split("/").filter(Boolean)[0] || null;
+      }
+      if (host === "youtube.com" || host === "m.youtube.com") {
+        if (u.searchParams.get("v")) return u.searchParams.get("v");
+        const cocok = u.pathname.match(/\/(?:embed|shorts)\/([^/?]+)/);
+        if (cocok) return cocok[1];
+      }
+    } catch (e) {
+      // URL tidak valid — biarkan kembalikan null di bawah.
+    }
+    return null;
+  }
+
+  // Kartu video dipakai bersama oleh Video Pilihan & Video Terbaru.
+  // Berupa <div>, BUKAN <a> lagi — supaya klik pada tombol putar
+  // tidak berpindah halaman, melainkan memuat pemutar YouTube
+  // langsung di tempat (lihat initPemutarVideoInline). Thumbnail
+  // diambil otomatis dari ID video (img.i.ytimg.com), bukan lagi
+  // placeholder gradasi — gradasi tetap jadi latar cadangan kalau
+  // ID tidak berhasil dikenali dari tautan.
+  function buatKartuVideo(v, kelasEkstra) {
+    const id = ambilIdYoutube(v.tautanYoutube);
+    const kelas = kelasEkstra ? `video-card ${kelasEkstra}` : "video-card";
+    const thumbImg = id
+      ? `<img class="video-thumb-img" src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" alt="" loading="lazy">`
+      : "";
+
+    return `
+      <div class="${kelas}" data-youtube-id="${escapeHTML(id || "")}" data-youtube-url="${escapeHTML(v.tautanYoutube || "#")}">
+        <div class="video-thumb">
+          ${thumbImg}
+          <button type="button" class="video-play" aria-label="Putar video: ${escapeHTML(v.judul)}">${IKON_PLAY}</button>
+        </div>
+        <p class="video-title">${escapeHTML(v.judul)}</p>
+      </div>
+    `;
+  }
+
   // Video Pilihan: video yang ditandai "unggulan": true pada
   // media.json. TIDAK mengeluarkan video itu dari daftar Video
   // Terbaru — keduanya membaca array "video" yang sama, cuma
@@ -399,14 +457,7 @@
     }
 
     container.hidden = false;
-    const kartu = pilihan.map((v) => `
-      <a class="video-card video-card-pilihan" href="${escapeHTML(v.tautanYoutube || "#")}" target="_blank" rel="noopener">
-        <div class="video-thumb">
-          <span class="video-play">${IKON_PLAY}</span>
-        </div>
-        <p class="video-title">${escapeHTML(v.judul)}</p>
-      </a>
-    `).join("");
+    const kartu = pilihan.map((v) => buatKartuVideo(v, "video-card-pilihan")).join("");
 
     container.innerHTML = `
       <p class="video-pilihan-label">Video Pilihan</p>
@@ -431,14 +482,36 @@
       return;
     }
 
-    grid.innerHTML = video.map((v) => `
-      <a class="video-card" href="${escapeHTML(v.tautanYoutube || "#")}" target="_blank" rel="noopener">
-        <div class="video-thumb">
-          <span class="video-play">${IKON_PLAY}</span>
-        </div>
-        <p class="video-title">${escapeHTML(v.judul)}</p>
-      </a>
-    `).join("");
+    grid.innerHTML = video.map((v) => buatKartuVideo(v)).join("");
+  }
+
+  // Klik tombol putar → ganti isi .video-thumb dengan <iframe>
+  // YouTube yang autoplay, TANPA pindah halaman. Satu delegasi
+  // event di document supaya berlaku untuk kartu Video Pilihan
+  // maupun Video Terbaru, termasuk yang dirender ulang nanti.
+  // Kalau ID video tidak berhasil dikenali dari tautan, jatuh
+  // kembali ke perilaku lama: buka tautan YouTube di tab baru.
+  function initPemutarVideoInline() {
+    document.addEventListener("click", (e) => {
+      const tombol = e.target.closest(".video-play");
+      if (!tombol) return;
+      const kartu = tombol.closest(".video-card");
+      const thumb = kartu ? kartu.querySelector(".video-thumb") : null;
+      if (!kartu || !thumb) return;
+
+      e.preventDefault();
+
+      const id = kartu.getAttribute("data-youtube-id");
+      if (!id) {
+        const url = kartu.getAttribute("data-youtube-url");
+        if (url && url !== "#") window.open(url, "_blank", "noopener");
+        return;
+      }
+
+      const judulEl = kartu.querySelector(".video-title");
+      const judul = judulEl ? judulEl.textContent : "Video";
+      thumb.innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0" title="${escapeHTML(judul)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+    });
   }
 
   const TINGGI_BAR_AUDIO = ["40%", "70%", "100%", "55%", "30%"];
@@ -590,6 +663,7 @@
   function init() {
     initNavigasiMobile();
     initRevealOnScroll();
+    initPemutarVideoInline();
 
     // Setiap bagian dimuat independen — jika satu gagal,
     // bagian lain tetap tampil (lihat try/catch di masing-masing).
