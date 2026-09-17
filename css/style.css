@@ -831,14 +831,24 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; color: var(--emerald-d
    Video
    ========================================================= */
 .video-grid {
-  display: grid;
+  display: flex;
   gap: 1.25rem;
-  grid-template-columns: 1fr;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 0.75rem;
+  margin: 0 calc(var(--gutter) * -1);
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+  -webkit-overflow-scrolling: touch;
 }
-@media (min-width: 640px) {
-  .video-grid { grid-template-columns: repeat(3, 1fr); }
+.video-grid::-webkit-scrollbar { height: 6px; }
+.video-grid::-webkit-scrollbar-thumb { background: var(--brass-soft); border-radius: 3px; }
+.video-card {
+  display: block;
+  flex: 0 0 auto;
+  width: min(78vw, 320px);
+  scroll-snap-align: start;
 }
-.video-card { display: block; }
 .video-thumb {
   position: relative;
   aspect-ratio: 16 / 9;
@@ -846,18 +856,48 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; color: var(--emerald-d
   background: linear-gradient(155deg, #0F3D2E, #1C5C42);
   display: grid;
   place-items: center;
+  overflow: hidden;
+}
+/* Thumbnail asli dari YouTube (diambil otomatis dari ID video). */
+.video-thumb-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* Setelah tombol putar diklik, .video-thumb diisi <iframe> ini
+   lewat main.js — mengisi penuh kotak yang sama, tidak berpindah
+   halaman/layout. */
+.video-thumb iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
 }
 .video-play {
+  position: relative;
+  z-index: 1;
   width: 3rem;
   height: 3rem;
+  border: none;
+  padding: 0;
   border-radius: 50%;
   background: rgba(246, 241, 228, 0.92);
   display: grid;
   place-items: center;
+  cursor: pointer;
+  font: inherit;
   transition: transform 0.2s var(--ease);
 }
 .video-card:hover .video-play,
-.video-card-pilihan:hover .video-play { transform: scale(1.08); }
+.video-card-pilihan:hover .video-play,
+.video-play:focus-visible { transform: scale(1.08); }
+.video-play:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+}
 .video-play svg { width: 1.1rem; height: 1.1rem; fill: var(--emerald-deep); margin-left: 2px; }
 .video-title {
   margin-top: 0.65rem;
