@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pohon Nasab Bahasa Mesin — JAZMI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+:root{
+  --bg:#12141c; --bg-panel:#1b1f2b; --bg-panel-2:#20263a;
+  --line:#333a4f; --text:#eee7d6; --text-dim:#a9a6ac;
+  --gold:#c9a15a; --gold-soft:#8a713c; --teal:#5a9c92; --radius:10px;
+  --c-sistem:#5a9c92; --c-web:#c9a15a; --c-mobile:#6f9bd1; --c-ai:#9a7fc2;
+  --c-db:#c98a5a; --c-historis:#7f7f8a; --c-robot:#b06a4a;
+}
+*{box-sizing:border-box;}
+body{ margin:0; background:var(--bg); color:var(--text); font-family:'Karla',sans-serif; line-height:1.6; }
+h1,h2,h3{ font-family:'Fraunces',serif; font-weight:600; margin:0 0 0.5em; }
+code, .mono{ font-family:'JetBrains Mono', monospace; }
+.wrap{ max-width:900px; margin:0 auto; padding:0 20px; }
+
+.hero{ padding:48px 0 30px; border-bottom:1px solid var(--line); text-align:center; }
+.hero .eyebrow{ text-transform:uppercase; font-size:0.7rem; letter-spacing:2.5px; color:var(--gold); margin-bottom:12px; }
+.hero h1{ font-size:clamp(1.5rem,4.6vw,2.2rem); color:#fff; }
+.hero p.tag{ color:var(--text-dim); max-width:580px; margin:10px auto 0; font-size:0.94rem; }
+
+section{ padding:34px 0; border-bottom:1px solid var(--line); }
+section:last-of-type{ border-bottom:none; }
+.kicker{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.kicker .num{ font-family:'Fraunces',serif; color:var(--gold); font-size:0.8rem; border:1px solid var(--gold-soft); border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.kicker h2{ font-size:1.15rem; margin:0; color:#fff; }
+p{ color:var(--text); }
+p.dim{ color:var(--text-dim); font-size:0.88rem; }
+.panel{ background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin-top:14px; }
+
+/* LEGEND */
+.legend{ display:flex; flex-wrap:wrap; gap:10px 16px; font-size:0.76rem; color:var(--text-dim); margin-top:10px; }
+.legend span.dot{ display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; }
+
+/* TREE */
+.tree-actions{ display:flex; gap:10px; margin-bottom:10px; }
+.tree-actions a{ font-size:0.78rem; color:var(--teal); cursor:pointer; text-decoration:underline; }
+ul.tree{ list-style:none; margin:0; padding-left:16px; border-left:1px dashed var(--line); }
+ul.tree.root{ padding-left:0; border-left:none; }
+li.node{ margin:3px 0; position:relative; }
+.node-row{ display:flex; align-items:center; gap:6px; cursor:pointer; padding:5px 8px; border-radius:6px; }
+.node-row:hover{ background:var(--bg-panel-2); }
+.node-row.aktif{ background:rgba(201,161,90,0.15); outline:1px solid var(--gold-soft); }
+.toggle{ width:16px; text-align:center; color:var(--text-dim); font-size:0.7rem; flex-shrink:0; }
+.toggle.leaf{ visibility:hidden; }
+.dot-kat{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.node-nama{ font-weight:700; font-size:0.9rem; }
+.node-tahun{ font-size:0.72rem; color:var(--text-dim); margin-left:2px; }
+.children{ display:block; }
+.children.collapsed{ display:none; }
+
+/* DETAIL PANEL */
+.detail{ margin-top:16px; padding:20px; border-radius:var(--radius); background:var(--bg-panel-2); border:1px solid var(--gold-soft); }
+.detail .dnama{ font-size:1.3rem; color:#fff; margin-bottom:2px; }
+.detail .dtahun{ color:var(--gold); font-size:0.85rem; margin-bottom:14px; }
+.detail .drow{ display:flex; gap:10px; padding:8px 0; border-top:1px dashed var(--line); font-size:0.86rem; }
+.detail .drow:first-of-type{ border-top:none; }
+.detail .drow .label{ color:var(--text-dim); min-width:110px; flex-shrink:0; }
+.detail .drow .val{ color:var(--text); }
+.detail .kisah{ margin-top:14px; padding-top:14px; border-top:1px solid var(--line); font-size:0.9rem; color:var(--text); font-style:italic; }
+.badge{ display:inline-block; font-size:0.68rem; padding:2px 8px; border-radius:10px; margin-left:6px; }
+.badge.impl{ background:rgba(90,156,146,0.2); color:var(--teal); }
+.badge.pengaruh{ background:rgba(154,127,194,0.2); color:var(--c-ai); }
+
+ul{ padding-left:20px; }
+.refs li{ margin-bottom:10px; font-size:0.9rem; color:var(--text-dim); }
+.consult{ background:linear-gradient(135deg,var(--bg-panel-2),var(--bg-panel)); border:1px solid var(--gold-soft); border-radius:var(--radius); padding:22px; text-align:center; }
+.consult a.wa{ display:inline-block; margin-top:14px; background:var(--teal); color:#0e1017; text-decoration:none; font-weight:700; padding:12px 26px; border-radius:30px; }
+footer{ text-align:center; padding:26px 0; color:var(--text-dim); font-size:0.8rem; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">JAZMI · Sains Komputasi</div>
+    <h1>Pohon Nasab Bahasa Mesin</h1>
+    <p class="tag">Dari satu nenek moyang — kode biner — bahasa-bahasa pemrograman bercabang selama 80 tahun. Sentuh nama bahasa mana pun untuk melihat kisah kelahirannya: siapa penciptanya, kenapa ia lahir, dan ke mana ia dipakai sekarang.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <div class="kicker"><div class="num">1</div><h2>Cara Membaca Pohon Ini</h2></div>
+    <p>Sebuah bahasa bisa berhubungan dengan leluhurnya lewat dua jalan berbeda, dan pohon ini membedakan keduanya lewat lencana kecil di panel detail:</p>
+    <ul>
+      <li><span class="badge impl">implementasi</span> — bahasa itu benar-benar <em>dibangun di atas</em> leluhurnya (mis. interpreter Python ditulis dalam bahasa C).</li>
+      <li><span class="badge pengaruh">pengaruh</span> — bahasa itu <em>meminjam gagasan/sintaksis</em> dari leluhurnya, tapi tidak dibangun langsung di atasnya (mis. Python meminjam gaya penulisan dari bahasa ABC).</li>
+    </ul>
+    <p class="dim">Perbedaan ini penting — supaya "pohon keluarga" ini tidak menyesatkan seolah semua hubungan sama derajatnya.</p>
+    <div class="legend">
+      <div><span class="dot" style="background:var(--c-historis)"></span>Historis/Akar</div>
+      <div><span class="dot" style="background:var(--c-sistem)"></span>Sistem/Infrastruktur</div>
+      <div><span class="dot" style="background:var(--c-web)"></span>Web</div>
+      <div><span class="dot" style="background:var(--c-mobile)"></span>Mobile</div>
+      <div><span class="dot" style="background:var(--c-ai)"></span>AI/Fungsional</div>
+      <div><span class="dot" style="background:var(--c-db)"></span>Bisnis/Basis Data</div>
+      <div><span class="dot" style="background:var(--c-robot)"></span>Robotika/Perangkat Keras</div>
+    </div>
+  </section>
+
+  <section id="pohon">
+    <div class="kicker"><div class="num">2</div><h2>Pohon Keluarga (37 bahasa)</h2></div>
+    <div class="panel">
+      <div class="tree-actions">
+        <a onclick="bukaSemua(true)">Buka semua cabang</a>
+        <a onclick="bukaSemua(false)">Tutup semua cabang</a>
+      </div>
+      <div id="tree-container"></div>
+
+      <div class="detail" id="detail-panel">
+        <div class="dnama" id="d-nama">— Pilih satu bahasa di atas —</div>
+        <div class="dtahun" id="d-tahun"></div>
+        <div id="d-body"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="referensi">
+    <div class="kicker"><div class="num">3</div><h2>Referensi</h2></div>
+    <ul class="refs">
+      <li>Dokumentasi &amp; situs sejarah resmi tiap bahasa (python.org, rust-lang.org, go.dev, kotlinlang.org, swift.org, dsb.)</li>
+      <li>Ritchie, D. — <em>"The Development of the C Language"</em>, riwayat resmi jalur BCPL → B → C di Bell Labs.</li>
+      <li>Flake, Moorby, dkk., <em>"Verilog HDL and its ancestors and descendants"</em>, HOPL IV (2020) — sejarah teknis Verilog.</li>
+      <li>Riwayat PLC/Ladder Logic — dokumentasi sejarah Modicon &amp; Dick Morley (proyek General Motors, 1968).</li>
+      <li>Situs "Programming Language Family Tree" &amp; catatan sejarah HOPL (History of Programming Languages) sebagai rujukan silang garis keturunan.</li>
+    </ul>
+  </section>
+
+  <section id="konsultasi">
+    <div class="consult">
+      <h3 style="color:#fff;">Ada bahasa yang menurut Anda perlu ditambahkan?</h3>
+      <p class="dim">Alat ini masih pengembangan versi awal — 37 bahasa adalah pilihan kurasi, bukan daftar lengkap seluruh bahasa yang pernah ada. Silakan hubungi kami untuk usulan atau koreksi.</p>
+      <a class="wa" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20bertanya%20seputar%20Pohon%20Nasab%20Bahasa%20Mesin%20JAZMI." target="_blank">Hubungi via WhatsApp</a>
+    </div>
+  </section>
+
+</div>
+<footer>JAZMI — Laboratorium Pengetahuan Digital · Prototipe, belum masuk struktur menu utama.</footer>
+
+<script>
+const DATA = [
+{id:'root', parent:null, nama:'Kode Mesin (Biner)', tahun:'1940-an', kategori:'historis', tipe:'akar',
+ pencipta:'Konsep dasar arsitektur komputer elektronik digital (era von Neumann dkk.)',
+ dominasi:'Fondasi mutlak seluruh komputasi — setiap bahasa di pohon ini akhirnya diterjemahkan kembali ke sini.',
+ popularitas:'Universal dan tidak pernah punah.',
+ kisah:'Prosesor hanya mengenal dua keadaan sirkuit: ada arus listrik (1) atau tidak ada (0). Secantik apa pun sintaksis sebuah bahasa, ujungnya selalu pola ini.'},
+
+{id:'asm', parent:'root', nama:'Bahasa Rakitan (Assembly)', tahun:'akhir 1940-an', kategori:'historis', tipe:'implementasi',
+ pencipta:'Beberapa kelompok independen, di antaranya tim EDSAC Cambridge (Kathleen Booth dkk.)',
+ dominasi:'Firmware, driver, kode inti sistem tertanam, optimasi performa kritis.',
+ popularitas:'Masih dipakai di titik-titik sangat spesifik meski jarang dipakai untuk aplikasi biasa.',
+ kisah:'Memberi nama simbolik (mnemonic) untuk tiap instruksi biner — supaya manusia tak perlu menghafal pola 0/1 satu per satu.'},
+
+{id:'fortran', parent:'asm', nama:'FORTRAN', tahun:'1957', kategori:'sistem', tipe:'implementasi',
+ pencipta:'John Backus, IBM',
+ dominasi:'Komputasi ilmiah, numerik, simulasi cuaca/fisika di superkomputer.',
+ popularitas:'Masih dipakai di sains komputasi kelas berat setelah hampir 70 tahun.',
+ kisah:'IBM ingin sebuah compiler yang bisa menghasilkan kode secepat assembly tulisan tangan, agar ilmuwan tak perlu lagi menulis assembly sendiri untuk hitungan numerik.'},
+
+{id:'lisp', parent:'asm', nama:'LISP', tahun:'1958', kategori:'ai', tipe:'implementasi',
+ pencipta:'John McCarthy, MIT',
+ dominasi:'Kecerdasan buatan, pemrosesan simbolik, riset bahasa pemrograman.',
+ popularitas:'Bahasa itu sendiri niche, tapi dialek modernnya (Clojure, Racket, Scheme) tetap dipakai.',
+ kisah:'Representasi "kode sebagai data" terinspirasi notasi lambda calculus milik Alonzo Church, dirancang untuk penelitian kecerdasan buatan awal.'},
+
+{id:'cobol', parent:'asm', nama:'COBOL', tahun:'1959', kategori:'db', tipe:'implementasi',
+ pencipta:'Tim komite CODASYL, sangat dipengaruhi karya Grace Hopper (compiler FLOW-MATIC)',
+ dominasi:'Sistem perbankan, asuransi, dan pemerintahan skala besar.',
+ popularitas:'Jarang diajarkan lagi, tapi diam-diam masih menjalankan sebagian besar transaksi perbankan dunia.',
+ kisah:'Sengaja ditulis mirip bahasa Inggris sehari-hari, supaya manajer bisnis non-programmer pun bisa membaca alur programnya.'},
+
+{id:'algol', parent:'asm', nama:'ALGOL', tahun:'1958–1960', kategori:'historis', tipe:'implementasi',
+ pencipta:'Komite ilmuwan Eropa &amp; Amerika bersama',
+ dominasi:'Fondasi akademik — jarang dipakai langsung hari ini.',
+ popularitas:'Bahasanya nyaris punah, tapi pengaruhnya ada di hampir semua bahasa modern.',
+ kisah:'Dirancang sebagai notasi algoritma standar internasional, memperkenalkan struktur blok (begin...end) yang menjadi cetak biru banyak bahasa sesudahnya.'},
+
+{id:'prolog', parent:'asm', nama:'Prolog', tahun:'1972', kategori:'ai', tipe:'implementasi',
+ pencipta:'Alain Colmerauer &amp; Philippe Roussel, Marseille, Prancis',
+ dominasi:'Sistem pakar, AI simbolik berbasis logika/aturan.',
+ popularitas:'Niche akademik, tapi berpengaruh besar pada bahasa logika lain.',
+ kisah:'Lahir dari riset pembuktian teorema otomatis — programnya ditulis sebagai kumpulan fakta dan aturan logika, bukan urutan perintah seperti bahasa lain.'},
+
+{id:'scheme', parent:'lisp', nama:'Scheme', tahun:'1975', kategori:'ai', tipe:'implementasi',
+ pencipta:'Guy Steele &amp; Gerald Sussman, MIT',
+ dominasi:'Edukasi ilmu komputer (buku legendaris SICP), riset bahasa.',
+ popularitas:'Niche akademik, dipakai untuk mengajarkan konsep pemrograman fundamental.',
+ kisah:'Penyederhanaan radikal dari LISP untuk mengeksplorasi konsep closure dan pemrograman fungsional secara murni.'},
+
+{id:'clojure', parent:'lisp', nama:'Clojure', tahun:'2007', kategori:'ai', tipe:'pengaruh',
+ pencipta:'Rich Hickey',
+ dominasi:'Backend, sistem data konkuren, pemrosesan aliran data.',
+ popularitas:'Niche tapi loyal, dipakai beberapa perusahaan teknologi besar.',
+ kisah:'Hickey ingin menghidupkan kembali filosofi elegan LISP, tapi berjalan di atas platform Java (JVM) yang sudah matang dipakai industri.'},
+
+{id:'haskell', parent:'lisp', nama:'Haskell', tahun:'1990', kategori:'ai', tipe:'pengaruh',
+ pencipta:'Komite akademik internasional (mengacu tradisi ML &amp; Miranda, dipengaruhi ide LISP)',
+ dominasi:'Riset bahasa, analisis risiko keuangan, sistem yang menuntut kebenaran matematis tinggi.',
+ popularitas:'Niche, tapi sangat berpengaruh terhadap desain bahasa-bahasa lain.',
+ kisah:'Komunitas riset pemrograman fungsional lelah punya puluhan bahasa berbeda yang tak saling kompatibel, lalu sepakat menyatukannya jadi satu standar bersama.'},
+
+{id:'erlang', parent:'prolog', nama:'Erlang', tahun:'1986', kategori:'sistem', tipe:'implementasi',
+ pencipta:'Joe Armstrong dkk., Ericsson, Swedia',
+ dominasi:'Sistem telekomunikasi dan aplikasi yang wajib menyala tanpa henti (WhatsApp memakainya).',
+ popularitas:'Niche tapi sangat dihormati untuk sistem kritis tahan-gagal.',
+ kisah:'Ericsson butuh bahasa untuk mesin switch telepon yang harus hidup bertahun-tahun tanpa henti — prototipe pertamanya bahkan ditulis di atas bahasa Prolog.'},
+
+{id:'pascal', parent:'algol', nama:'Pascal', tahun:'1970', kategori:'historis', tipe:'implementasi',
+ pencipta:'Niklaus Wirth',
+ dominasi:'Edukasi pemrograman terstruktur.',
+ popularitas:'Menurun drastis, tapi turunannya (Object Pascal/Delphi) masih dipakai di ceruk tertentu.',
+ kisah:'Dirancang khusus untuk mengajarkan disiplin pemrograman terstruktur ke mahasiswa, sesuai namanya diambil dari matematikawan Blaise Pascal.'},
+
+{id:'ada', parent:'pascal', nama:'Ada', tahun:'1980', kategori:'robot', tipe:'implementasi',
+ pencipta:'Jean Ichbiah, ditugaskan Departemen Pertahanan Amerika Serikat',
+ dominasi:'Sistem safety-critical: avionik pesawat, kereta, dan persenjataan.',
+ popularitas:'Niche, tapi wajib dipakai di industri dengan regulasi keselamatan sangat ketat.',
+ kisah:'Militer AS ingin satu bahasa standar untuk menggantikan ratusan bahasa berbeda yang dipakai ribuan kontraktor mereka saat itu.'},
+
+{id:'bcpl', parent:'algol', nama:'BCPL', tahun:'1966', kategori:'historis', tipe:'implementasi',
+ pencipta:'Martin Richards, Universitas Cambridge',
+ dominasi:'Historis — jembatan menuju bahasa B lalu C.',
+ popularitas:'Nyaris tidak dipakai lagi.',
+ kisah:'Disederhanakan dari bahasa CPL yang dianggap terlalu rumit, supaya lebih praktis dipakai untuk menulis compiler.'},
+
+{id:'b', parent:'bcpl', nama:'B', tahun:'1969', kategori:'historis', tipe:'implementasi',
+ pencipta:'Ken Thompson, Bell Labs',
+ dominasi:'Historis — awal mula sistem operasi Unix.',
+ popularitas:'Sudah tidak dipakai, sepenuhnya digantikan C.',
+ kisah:'Thompson menyederhanakan lagi BCPL agar muat di memori sangat kecil komputer PDP-7, tempat Unix versi paling awal dikembangkan.'},
+
+{id:'c', parent:'b', nama:'C', tahun:'1972', kategori:'sistem', tipe:'implementasi',
+ pencipta:'Dennis Ritchie, Bell Labs',
+ dominasi:'Sistem operasi, firmware, driver perangkat keras — "bahasa ibu" hampir semua bahasa modern.',
+ popularitas:'Tetap salah satu bahasa paling dipakai di dunia setelah lebih dari 50 tahun.',
+ kisah:'Dibuat untuk menulis ulang sistem operasi Unix supaya portabel ke berbagai jenis komputer, tidak terikat satu mesin tertentu seperti assembly.'},
+
+{id:'cpp', parent:'c', nama:'C++', tahun:'1985', kategori:'sistem', tipe:'implementasi',
+ pencipta:'Bjarne Stroustrup, Bell Labs',
+ dominasi:'Game engine, software performa tinggi, sistem tertanam.',
+ popularitas:'Tetap salah satu bahasa terpopuler untuk perangkat lunak berat.',
+ kisah:'Stroustrup ingin menambahkan konsep object-oriented dari Simula ke dalam kecepatan mentah bahasa C.'},
+
+{id:'java', parent:'cpp', nama:'Java', tahun:'1995', kategori:'sistem', tipe:'pengaruh',
+ pencipta:'James Gosling, Sun Microsystems',
+ dominasi:'Aplikasi enterprise, backend perusahaan, dulunya juga Android (kini bersama Kotlin).',
+ popularitas:'Salah satu bahasa paling dipakai di dunia kerja korporat.',
+ kisah:'Dirancang untuk semboyan "tulis sekali, jalankan di mana saja" lewat mesin virtual (JVM) — awalnya untuk perangkat elektronik konsumen, sebelum akhirnya beralih fokus ke web/enterprise.'},
+
+{id:'kotlin', parent:'java', nama:'Kotlin', tahun:'2011', kategori:'mobile', tipe:'implementasi',
+ pencipta:'JetBrains',
+ dominasi:'Pengembangan aplikasi Android modern.',
+ popularitas:'Bahasa resmi utama Android sejak Google I/O 2017/2019.',
+ kisah:'JetBrains lelah dengan keterbatasan Java saat membangun IDE mereka sendiri, lalu merancang bahasa JVM yang lebih ringkas dan lebih aman.'},
+
+{id:'csharp', parent:'cpp', nama:'C#', tahun:'2000', kategori:'sistem', tipe:'pengaruh',
+ pencipta:'Anders Hejlsberg, Microsoft',
+ dominasi:'Game (mesin Unity), aplikasi Windows, ekosistem .NET/enterprise.',
+ popularitas:'Sangat luas terutama di industri game dan ekosistem Microsoft.',
+ kisah:'Jawaban Microsoft terhadap Java, dibangun berdampingan dengan platform .NET untuk menyatukan banyak bahasa dalam satu runtime.'},
+
+{id:'objc', parent:'cpp', nama:'Objective-C', tahun:'1984', kategori:'mobile', tipe:'pengaruh',
+ pencipta:'Brad Cox &amp; Tom Love',
+ dominasi:'Pengembangan iOS/macOS sebelum era Swift.',
+ popularitas:'Menurun tajam sejak Swift dirilis 2014.',
+ kisah:'Menggabungkan kecepatan sintaksis C dengan konsep pesan-antar-objek (messaging) yang dipinjam dari Smalltalk.'},
+
+{id:'swift', parent:'objc', nama:'Swift', tahun:'2014', kategori:'mobile', tipe:'pengaruh',
+ pencipta:'Chris Lattner, Apple',
+ dominasi:'Pengembangan iOS, macOS, watchOS masa kini.',
+ popularitas:'Bahasa utama ekosistem Apple sekarang, sepenuhnya menggantikan Objective-C.',
+ kisah:'Apple ingin bahasa yang jauh lebih aman dan modern daripada Objective-C, tanpa kehilangan kecepatan kode native.'},
+
+{id:'python', parent:'c', nama:'Python', tahun:'1991', kategori:'ai', tipe:'implementasi',
+ pencipta:'Guido van Rossum, CWI Belanda',
+ dominasi:'Sains data, kecerdasan buatan/machine learning, skrip umum, edukasi pemrograman.',
+ popularitas:'Salah satu bahasa paling populer di dunia saat ini.',
+ kisah:'Interpreter rujukannya (CPython) ditulis dalam bahasa C. Van Rossum menulis Python di sela libur Natal 1989, ingin bahasa skrip yang jauh lebih mudah dibaca daripada bahasa ABC yang ia kerjakan sebelumnya.'},
+
+{id:'perl', parent:'c', nama:'Perl', tahun:'1987', kategori:'sistem', tipe:'pengaruh',
+ pencipta:'Larry Wall',
+ dominasi:'Pemrosesan teks, administrasi sistem Unix.',
+ popularitas:'Menurun drastis, sebagian besar digantikan Python.',
+ kisah:'Wall (juga seorang ahli bahasa/linguist) butuh alat pemrosesan teks fleksibel untuk pekerjaannya sebagai admin sistem, meminjam ide dari C, sed/awk, dan shell sekaligus.'},
+
+{id:'php', parent:'perl', nama:'PHP', tahun:'1995', kategori:'web', tipe:'pengaruh',
+ pencipta:'Rasmus Lerdorf',
+ dominasi:'Pengembangan web backend (WordPress dan sejenisnya).',
+ popularitas:'Menjalankan mayoritas situs web dunia meski reputasinya sering diremehkan.',
+ kisah:'Awalnya kumpulan skrip Perl pribadi Lerdorf untuk melacak siapa yang mengunjungi resume online-nya — lama-lama berkembang jadi bahasa tersendiri.'},
+
+{id:'ruby', parent:'perl', nama:'Ruby', tahun:'1995', kategori:'web', tipe:'pengaruh',
+ pencipta:'Yukihiro "Matz" Matsumoto, Jepang',
+ dominasi:'Pengembangan web lewat framework Ruby on Rails.',
+ popularitas:'Sangat populer era 2005–2015, kini menurun tapi tetap dipakai luas.',
+ kisah:'Matsumoto ingin bahasa yang membuat programmer bahagia, sengaja menggabungkan hal yang ia sukai dari Perl, Smalltalk, dan Lisp sekaligus.'},
+
+{id:'javascript', parent:'c', nama:'JavaScript', tahun:'1995', kategori:'web', tipe:'pengaruh',
+ pencipta:'Brendan Eich, Netscape',
+ dominasi:'Pemrograman web frontend, kini juga backend lewat Node.js.',
+ popularitas:'Bahasa yang paling banyak dipakai developer di dunia bertahun-tahun berturut-turut.',
+ kisah:'Netscape butuh bahasa skrip ringan agar halaman web interaktif — dikerjakan Eich hanya dalam waktu sekitar 10 hari. Namanya sengaja dibuat mirip "Java" demi pemasaran, meski keduanya nyaris tak berhubungan secara teknis.'},
+
+{id:'typescript', parent:'javascript', nama:'TypeScript', tahun:'2012', kategori:'web', tipe:'implementasi',
+ pencipta:'Anders Hejlsberg, Microsoft',
+ dominasi:'Pengembangan web skala besar/enterprise.',
+ popularitas:'Makin dominan, terutama di proyek perusahaan besar.',
+ kisah:'Menambahkan sistem tipe statis di atas JavaScript, supaya proyek berskala besar lebih mudah dijaga dan kesalahan terdeteksi sebelum program dijalankan.'},
+
+{id:'go', parent:'c', nama:'Go (Golang)', tahun:'2009', kategori:'sistem', tipe:'pengaruh',
+ pencipta:'Robert Griesemer, Rob Pike, &amp; Ken Thompson, Google',
+ dominasi:'Layanan cloud, sistem terdistribusi, infrastruktur (Docker &amp; Kubernetes ditulis dengan Go).',
+ popularitas:'Sangat populer di dunia backend dan cloud modern.',
+ kisah:'Insinyur Google frustrasi dengan lambatnya waktu kompilasi C++ untuk sistem raksasa mereka, ingin bahasa sederhana yang tetap cepat — menariknya, salah satu penciptanya (Ken Thompson) sama dengan pencipta bahasa B, leluhur C.'},
+
+{id:'rust', parent:'cpp', nama:'Rust', tahun:'2010 (mulai 2006)', kategori:'sistem', tipe:'pengaruh',
+ pencipta:'Graydon Hoare, Mozilla',
+ dominasi:'Sistem, mesin peramban, aplikasi yang menuntut keamanan memori tinggi.',
+ popularitas:'Bertahun-tahun dinobatkan "bahasa paling disukai developer" di survei Stack Overflow.',
+ kisah:'Hoare ingin bahasa secepat C++ tapi mustahil membuat bug kebocoran memori, lewat sistem "kepemilikan" (ownership) yang diperiksa saat kompilasi, bukan saat program berjalan.'},
+
+{id:'simula', parent:'algol', nama:'Simula', tahun:'1962–1967', kategori:'historis', tipe:'implementasi',
+ pencipta:'Ole-Johan Dahl &amp; Kristen Nygaard, Norwegia',
+ dominasi:'Historis — cikal bakal pemrograman berorientasi objek (OOP).',
+ popularitas:'Bahasanya sendiri sudah tak dipakai, tapi konsepnya ada di hampir semua bahasa modern.',
+ kisah:'Dibuat untuk mensimulasikan sistem dunia nyata (antrean, lalu lintas) — memperkenalkan konsep "objek" dan "kelas" untuk pertama kalinya dalam sejarah pemrograman.'},
+
+{id:'smalltalk', parent:'simula', nama:'Smalltalk', tahun:'1972', kategori:'historis', tipe:'pengaruh',
+ pencipta:'Alan Kay, Xerox PARC',
+ dominasi:'Penelitian; pengaruh besar ke desain GUI &amp; OOP modern.',
+ popularitas:'Jarang dipakai langsung, tapi filosofinya membentuk hampir semua bahasa OOP sesudahnya.',
+ kisah:'Alan Kay membayangkan komputer sebagai alat kreatif untuk semua orang, termasuk anak-anak — dengan prinsip "semuanya adalah objek yang saling mengirim pesan."'},
+
+{id:'sql', parent:'root', nama:'SQL', tahun:'1974', kategori:'db', tipe:'implementasi',
+ pencipta:'Donald Chamberlin &amp; Raymond Boyce, IBM',
+ dominasi:'Hampir semua basis data relasional di dunia.',
+ popularitas:'Salah satu bahasa paling universal dan bertahan lama di industri.',
+ kisah:'Dibuat untuk mengimplementasikan model data relasional yang baru diusulkan Edgar Codd, sintaksisnya sengaja dibuat mirip bahasa Inggris agar non-programmer pun bisa memakainya.'},
+
+{id:'ladder', parent:'root', nama:'Ladder Logic', tahun:'1968–1969', kategori:'robot', tipe:'implementasi',
+ pencipta:'Dick Morley, Bedford Associates (kemudian menjadi Modicon)',
+ dominasi:'Otomasi pabrik, PLC (Programmable Logic Controller), lini produksi &amp; robot industri.',
+ popularitas:'Masih standar industri otomasi hingga sekarang.',
+ kisah:'Dibuat memenuhi permintaan General Motors untuk pengganti sistem relay listrik — sengaja dirancang terlihat seperti diagram relay yang sudah dipahami teknisi pabrik, supaya mereka tak perlu belajar pemrograman dari nol.'},
+
+{id:'gcode', parent:'root', nama:'G-code', tahun:'1950-an', kategori:'robot', tipe:'implementasi',
+ pencipta:'MIT Servomechanisms Laboratory (kemudian distandarkan EIA sebagai RS-274)',
+ dominasi:'Mesin CNC, printer 3D, robot penggerak presisi.',
+ popularitas:'Masih jadi bahasa "gerakan" standar mesin manufaktur dan printer 3D hobi hingga kini.',
+ kisah:'Lahir dari proyek mesin fabrikasi otomatis era awal komputer — tiap baris berisi koordinat dan instruksi gerak yang dibaca langsung oleh motor mesin.'},
+
+{id:'vhdl', parent:'root', nama:'VHDL', tahun:'1980 (standar IEEE 1987)', kategori:'robot', tipe:'implementasi',
+ pencipta:'Program VHSIC, Departemen Pertahanan Amerika Serikat',
+ dominasi:'Desain sirkuit terpadu/chip dan FPGA.',
+ popularitas:'Standar industri desain chip, berdampingan dengan Verilog.',
+ kisah:'Militer AS butuh cara terdokumentasi dan bisa disimulasikan untuk mendeskripsikan chip kompleks yang dipesan dari banyak vendor berbeda, supaya semua "berbicara" dalam format yang sama.'},
+
+{id:'verilog', parent:'root', nama:'Verilog', tahun:'1983–1984', kategori:'robot', tipe:'implementasi',
+ pencipta:'Phil Moorby &amp; Prabhu Goel, Gateway Design Automation',
+ dominasi:'Desain &amp; simulasi chip elektronik, alternatif VHDL bergaya lebih prosedural.',
+ popularitas:'Dipakai mayoritas desainer chip dunia, berdampingan dengan VHDL.',
+ kisah:'Dirancang sebagai bahasa simulasi rangkaian logika yang lebih praktis bagi insinyur hardware — gayanya lebih mirip bahasa pemrograman biasa dibanding VHDL yang lebih formal-deklaratif.'},
+];
+
+const KATEGORI_VAR = {
+  historis:'--c-historis', sistem:'--c-sistem', web:'--c-web', mobile:'--c-mobile',
+  ai:'--c-ai', db:'--c-db', robot:'--c-robot'
+};
+
+function bangunPohon(){
+  const map = {};
+  DATA.forEach(n=> map[n.id] = {...n, anak:[]});
+  const akar = [];
+  DATA.forEach(n=>{
+    if(n.parent && map[n.parent]) map[n.parent].anak.push(map[n.id]);
+    else if(!n.parent) akar.push(map[n.id]);
+  });
+  return {map, akar};
+}
+
+const {map: NODE_MAP, akar: AKAR} = bangunPohon();
+
+function buatElemenNode(node, level){
+  const li = document.createElement('li');
+  li.className = 'node';
+
+  const row = document.createElement('div');
+  row.className = 'node-row';
+  row.dataset.id = node.id;
+
+  const toggle = document.createElement('span');
+  toggle.className = 'toggle' + (node.anak.length===0 ? ' leaf' : '');
+  toggle.textContent = node.anak.length ? '▾' : '';
+  row.appendChild(toggle);
+
+  const dot = document.createElement('span');
+  dot.className = 'dot-kat';
+  dot.style.background = 'var(' + (KATEGORI_VAR[node.kategori] || '--c-historis') + ')';
+  row.appendChild(dot);
+
+  const nama = document.createElement('span');
+  nama.className = 'node-nama';
+  nama.textContent = node.nama;
+  row.appendChild(nama);
+
+  const tahun = document.createElement('span');
+  tahun.className = 'node-tahun';
+  tahun.textContent = node.tahun;
+  row.appendChild(tahun);
+
+  li.appendChild(row);
+
+  if(node.anak.length){
+    const ul = document.createElement('ul');
+    ul.className = 'tree children';
+    node.anak.forEach(child=> ul.appendChild(buatElemenNode(child, level+1)));
+    li.appendChild(ul);
+
+    toggle.onclick = (e)=>{
+      e.stopPropagation();
+      ul.classList.toggle('collapsed');
+      toggle.textContent = ul.classList.contains('collapsed') ? '▸' : '▾';
+    };
+  }
+
+  row.onclick = ()=> tampilkanDetail(node.id);
+
+  return li;
+}
+
+function renderPohon(){
+  const container = document.getElementById('tree-container');
+  container.innerHTML = '';
+  const ulRoot = document.createElement('ul');
+  ulRoot.className = 'tree root';
+  AKAR.forEach(n=> ulRoot.appendChild(buatElemenNode(n, 0)));
+  container.appendChild(ulRoot);
+}
+
+function tampilkanDetail(id){
+  document.querySelectorAll('.node-row').forEach(r=>r.classList.remove('aktif'));
+  const row = document.querySelector('.node-row[data-id="'+id+'"]');
+  if(row) row.classList.add('aktif');
+
+  const node = NODE_MAP[id];
+  document.getElementById('d-nama').textContent = node.nama;
+  document.getElementById('d-tahun').textContent = 'Lahir: ' + node.tahun;
+
+  const tipeLabel = node.tipe === 'akar' ? '' :
+    '<span class="badge ' + (node.tipe==='implementasi' ? 'impl' : 'pengaruh') + '">' + node.tipe + ' dari induknya</span>';
+
+  document.getElementById('d-body').innerHTML =
+    '<div class="drow"><div class="label">Pencipta</div><div class="val">'+node.pencipta+' '+tipeLabel+'</div></div>' +
+    '<div class="drow"><div class="label">Dominasi pakai</div><div class="val">'+node.dominasi+'</div></div>' +
+    '<div class="drow"><div class="label">Popularitas</div><div class="val">'+node.popularitas+'</div></div>' +
+    '<div class="kisah">'+node.kisah+'</div>';
+
+  document.getElementById('detail-panel').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function bukaSemua(buka){
+  document.querySelectorAll('.children').forEach(ul=> ul.classList.toggle('collapsed', !buka));
+  document.querySelectorAll('.toggle:not(.leaf)').forEach(t=> t.textContent = buka ? '▾' : '▸');
+}
+
+renderPohon();
+tampilkanDetail('root');
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

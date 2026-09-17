@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generator Astrolab — Alat JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12151a; --bg-panel:#1a1e25; --bg-panel-2:#20242c; --line:#2c313b;
+    --text:#e9e6df; --text-dim:#9aa1ad;
+    --gold:#c9a24b; --gold-soft:#e3c988;
+    --ok:#4f9c94; --warn:#e3766a; --blue:#5b8fc9;
+    --font-display:"Fraunces",serif; --font-body:"Karla",sans-serif; --font-mono:"JetBrains Mono",monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;}
+  .wrap{max-width:980px;margin:0 auto;padding:0 20px 80px;}
+  header.hero{padding:56px 20px 40px;text-align:center;border-bottom:1px solid var(--line);
+    background:radial-gradient(ellipse at 50% 0%, rgba(201,162,75,0.08), transparent 60%);}
+  .eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;}
+  h1{font-family:var(--font-display);font-weight:600;font-size:clamp(26px,5vw,40px);margin:0 0 12px;}
+  .subtitle{color:var(--text-dim);font-size:15px;max-width:660px;margin:0 auto;}
+  section{padding:40px 0;border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  h2{font-family:var(--font-display);font-weight:600;font-size:22px;color:var(--gold-soft);margin:0 0 6px;display:flex;align-items:baseline;gap:10px;}
+  h2 .num{font-family:var(--font-mono);font-size:13px;color:var(--text-dim);font-weight:400;}
+  p{font-size:15.5px;} p.dim{color:var(--text-dim);font-size:14px;}
+  ul{padding-left:20px;} li{margin-bottom:8px;font-size:15px;}
+  .panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:24px;}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px;margin-bottom:18px;}
+  @media (max-width:640px){ .row{grid-template-columns:1fr;} }
+  .field label{display:block;font-size:12.5px;color:var(--text-dim);margin-bottom:8px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.04em;}
+  .field select, .field input{width:100%;background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);
+    padding:9px 10px;border-radius:6px;font-family:var(--font-body);font-size:14px;}
+  .opt-select{display:flex;gap:8px;flex-wrap:wrap;}
+  .opt-btn{background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text-dim);
+    padding:9px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
+  .opt-btn.active{border-color:var(--gold);color:var(--gold-soft);background:rgba(201,162,75,0.08);}
+  .opt-btn:hover{border-color:var(--gold);}
+  .preview-wrap{margin-top:20px;background:#0d0f13;border-radius:10px;border:1px solid var(--line);padding:16px;overflow:auto;text-align:center;}
+  svg.preview{max-width:420px;width:100%;height:auto;}
+  .print-actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+  .cta{background:var(--gold);color:#1a1608;font-weight:700;padding:12px 18px;border-radius:8px;
+    border:none;cursor:pointer;font-size:13.5px;}
+  .cta:hover{background:var(--gold-soft);}
+  .note-box{margin-top:16px;background:var(--bg-panel-2);border:1px dashed var(--gold);border-radius:8px;padding:14px 18px;font-size:13.5px;color:var(--text-dim);}
+  .assembly p{font-size:14px;margin:8px 0;}
+  .controls-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:18px;}
+  .field2 label{display:flex;justify-content:space-between;font-size:12px;color:var(--text-dim);margin-bottom:6px;font-family:var(--font-mono);text-transform:uppercase;}
+  .field2 label .val{color:var(--gold-soft);}
+  .results{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px;}
+  .result-card{background:var(--bg-panel-2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;}
+  .result-card .l{font-family:var(--font-mono);font-size:10.5px;color:var(--text-dim);text-transform:uppercase;}
+  .result-card .v{font-family:var(--font-display);font-size:19px;color:var(--gold-soft);}
+  .benefit-list{display:grid;gap:10px;}
+  .benefit-item{background:var(--bg-panel);border:1px solid var(--line);border-radius:8px;padding:14px 18px;}
+  .benefit-item .btitle{font-weight:700;color:var(--gold-soft);font-size:15px;margin-bottom:4px;}
+  .limit-item{background:var(--bg-panel);border:1px solid var(--line);border-left:3px solid var(--warn);
+    padding:12px 16px;border-radius:6px;margin-bottom:8px;font-size:14.5px;color:var(--text-dim);}
+  table.refs{width:100%;border-collapse:collapse;font-size:14px;}
+  table.refs td{padding:8px 4px;border-bottom:1px solid var(--line);color:var(--text-dim);vertical-align:top;}
+  table.refs td:first-child{color:var(--text);width:32%;font-weight:600;}
+  footer{text-align:center;padding:36px 20px 10px;color:var(--text-dim);font-size:12.5px;}
+  @media print{
+    body *{ visibility:hidden; }
+    #printSheet, #printSheet *{ visibility:visible; }
+    #printSheet{ position:absolute; left:0; top:0; margin:0; }
+    @page{ margin:8mm; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="eyebrow">JAZMI · Alat · Ilmu Falak</div>
+  <h1>Generator Astrolab</h1>
+  <p class="subtitle">Astrolab planispheric biasa — bukan yang universal. Setiap pelat khusus untuk SATU garis lintang, sehingga instrumen sejati ini punya banyak varian: satu per kota. Fokus alat ini pada generator; simulatornya sengaja hanya satu fungsi paling umum.</p>
+</header>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <h2><span class="num">01</span> Belajar</h2>
+    <p>Astrolab planispheric klasik tersusun dari 4 lapisan: <strong>Mater</strong> (piringan induk dengan lingkar skala derajat/jam di tepinya), <strong>Pelat/Safiha</strong> (proyeksi stereografis lingkaran ketinggian &amp; azimuth — khusus untuk SATU garis lintang), <strong>Rete</strong> (peta bintang &amp; ekliptika yang berputar di atas pelat), dan <strong>Aturan</strong> (penggaris pembidik).</p>
+    <p><strong>Beda mendasar dari Astrolab Universal (Safiha Zarqaliyya)</strong> yang sudah kita buat sebelumnya: proyeksi di sini dilakukan dari Kutub Langit Selatan ke bidang ekuator, sehingga lingkaran ketinggian (almukantarat) SANGAT bergantung garis lintang pengamat — pelat untuk Baghdad tidak bisa dipakai di Jakarta. Sebaliknya, satu Safiha Zarqaliyya bisa dipakai di lintang berapa pun.</p>
+    <p class="dim">Justru di sinilah kelemahan astrolab biasa paling terasa: makin dekat garis lintang ke khatulistiwa, lingkaran ufuknya makin melebar tak wajar pada proyeksi (secara matematis mendekati tak berhingga persis di lintang 0°) — salah satu alasan historis mengapa astrolab universal diciptakan.</p>
+  </section>
+
+  <section id="generator">
+    <h2><span class="num">02</span> Generator (fokus utama)</h2>
+    <div class="panel">
+      <div class="row">
+        <div class="field">
+          <label>Kota / Garis Lintang</label>
+          <select id="citySelect">
+            <option value="21.4225">Makkah (21,4225° LU)</option>
+            <option value="33.3">Baghdad (33,3° LU)</option>
+            <option value="30.0">Kairo (30,0° LU)</option>
+            <option value="41.0">Istanbul (41,0° LU)</option>
+            <option value="37.9">Cordoba (37,9° LU)</option>
+            <option value="5.55">Aceh (5,55° LU)</option>
+            <option value="-6.2">Jakarta (6,2° LS)</option>
+            <option value="-7.8">Yogyakarta (7,8° LS)</option>
+            <option value="manual">— Masukkan lintang manual —</option>
+          </select>
+        </div>
+        <div class="field" id="manualLatField" style="display:none;">
+          <label>Lintang manual (° · positif = LU, negatif = LS)</label>
+          <input type="number" id="manualLat" step="0.01" value="0">
+        </div>
+        <div class="field">
+          <label>Tema / Corak</label>
+          <div class="opt-select" id="themeSelect">
+            <button class="opt-btn active" data-theme="perkamen">Klasik Perkamen</button>
+            <button class="opt-btn" data-theme="emas">Emas Kuno</button>
+            <button class="opt-btn" data-theme="nusantara">Naskah Nusantara</button>
+            <button class="opt-btn" data-theme="minimalis">Modern Minimalis</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Diameter piringan rencana (mm)</label>
+          <input type="number" id="genDiameter" value="180" min="60" max="500" step="10">
+        </div>
+      </div>
+
+      <div class="preview-wrap">
+        <svg class="preview" id="svgPreview" viewBox="0 0 400 400"></svg>
+      </div>
+      <p class="dim" id="latWarning" style="margin-top:8px;"></p>
+
+      <div class="print-actions">
+        <button class="cta" id="btnPrintMater">🖨️ Cetak Mater (Piringan Induk)</button>
+        <button class="cta" id="btnPrintPlate">🖨️ Cetak Pelat (khusus lintang ini)</button>
+        <button class="cta" id="btnPrintRete">🖨️ Cetak Rete (bintang &amp; ekliptika)</button>
+        <button class="cta" id="btnPrintBack">🖨️ Cetak Bagian Belakang</button>
+      </div>
+      <p class="dim" style="margin-top:8px;">Setiap tombol mencetak SATU lapisan pada skala fisik sesuai diameter di atas. Pastikan skala cetak 100% (bukan "fit to page").</p>
+
+      <div class="assembly">
+        <h3 style="font-family:var(--font-display); color:var(--gold-soft); font-size:17px; margin-top:24px;">Cara Merakit</h3>
+        <p><strong>1.</strong> Cetak Mater pada karton tebal — inilah rangka luar yang menampung semua lapisan lain.</p>
+        <p><strong>2.</strong> Cetak Pelat (khusus lintang pilihan Anda) &amp; tempel/pasang di dalam cekungan Mater.</p>
+        <p><strong>3.</strong> Cetak Rete pada bahan tembus pandang (atau gunting habis area kosongnya) — taruh di atas Pelat.</p>
+        <p><strong>4.</strong> Lubangi tepat di tanda pusat SEMUA lapisan, satukan dengan paku payung agar Rete bebas berputar di atas Pelat &amp; Mater.</p>
+        <p><strong>5.</strong> Cetak Bagian Belakang pada sisi lain Mater — pasang jarum alidade sederhana (sedotan/lidi + benang berbandul) di pusatnya untuk membidik ketinggian benda langit.</p>
+      </div>
+
+      <div class="note-box">
+        <strong>Metode &amp; Batasan Geometri:</strong> proyeksi dihitung numerik langsung dari rumus konversi horizon-ekuator (bukan tabel rujukan historis) — benar secara matematis, namun belum dikalibrasi terhadap satu instrumen asli tervalidasi. Bagian lingkaran ketinggian yang jatuh di luar batas Tropic Capricorn (tepi pelat) sengaja tidak digambar.
+      </div>
+    </div>
+  </section>
+
+  <section id="simulator">
+    <h2><span class="num">03</span> Simulator: Menentukan Waktu dari Tinggi Matahari</h2>
+    <div class="panel">
+      <p class="dim">Sengaja hanya satu fungsi — yang paling umum &amp; paling mudah dipahami: membidik Matahari, lalu membaca jamnya dari posisi bayangannya pada pelat.</p>
+      <div class="controls-row">
+        <div class="field2"><label>Tanggal</label><input type="date" id="simDate"></div>
+        <div class="field2"><label>Jam (waktu setempat)</label><input type="number" id="simTime" min="0" max="24" step="0.1" value="9"></div>
+        <div class="field2"><label>Bujur (°)</label><input type="number" id="simLon" step="0.01" value="106.8"></div>
+        <div class="field2"><label>Zona (bujur standar °)</label><input type="number" id="simZone" step="1" value="105"></div>
+      </div>
+      <p class="dim">Lintang &amp; pelat mengikuti pilihan kota pada Generator di atas.</p>
+      <div class="preview-wrap">
+        <svg class="preview" id="svgSim" viewBox="0 0 400 400"></svg>
+      </div>
+      <div class="results">
+        <div class="result-card"><div class="l">Deklinasi Matahari</div><div class="v" id="rDecSim">–</div></div>
+        <div class="result-card"><div class="l">Tinggi Matahari</div><div class="v" id="rAltSim">–</div></div>
+        <div class="result-card"><div class="l">Azimuth Matahari</div><div class="v" id="rAzSim">–</div></div>
+      </div>
+      <div class="note-box">Titik emas menandai posisi Matahari pada pelat — lihat lingkaran ketinggian (almukantarat) mana yang paling dekat dilewatinya, itulah cara astrolab sungguhan "membaca" jam dari tinggi Matahari.</div>
+    </div>
+  </section>
+
+  <section id="manfaat">
+    <h2><span class="num">04</span> Manfaat &amp; Kegunaan</h2>
+    <div class="benefit-list">
+      <div class="benefit-item"><div class="btitle">Memahami kenapa astrolab historis dijual dengan banyak pelat</div>Pedagang/musafir era klasik membawa beberapa pelat lintang sekaligus — persis seperti generator ini bisa membuatkan pelat baru untuk kota tujuan berbeda.</div>
+      <div class="benefit-item"><div class="btitle">Kontras langsung dengan astrolab universal</div>Menjadi bahan perbandingan konkret dengan Safiha Zarqaliyya yang sudah dibuat sebelumnya — instrumen mana yang lebih praktis untuk musafir lintas lintang.</div>
+      <div class="benefit-item"><div class="btitle">Media belajar proyeksi stereografis</div>Menunjukkan bagaimana satu prinsip matematis (proyeksi dari kutub) menghasilkan tampilan sangat berbeda hanya karena mengubah satu variabel: garis lintang.</div>
+    </div>
+  </section>
+
+  <section id="batasan">
+    <h2><span class="num">05</span> Batasan</h2>
+    <div class="limit-item">Lingkaran almukantarat &amp; azimuth dihitung numerik (bukan konstruksi geometris tradisional) — hasil secara matematis benar, namun berbeda dari cara tukang instrumen klasik menggambarnya dengan jangka &amp; penggaris.</div>
+    <div class="limit-item">Pelat untuk lintang sangat dekat khatulistiwa (mis. Jakarta, Aceh) menghasilkan lingkaran ufuk yang sangat melebar/terpotong tepi pelat — ini bukan bug, melainkan keterbatasan matematis nyata dari desain astrolab non-universal di lintang rendah.</div>
+    <div class="limit-item">Katalog bintang pada Rete memakai koordinat RA/Dek perkiraan (bukan katalog presisi tinggi) — cukup untuk ilustrasi, bukan navigasi presisi.</div>
+    <div class="limit-item">Simulator sengaja dibatasi pada satu fungsi (waktu dari tinggi Matahari) — fungsi lain astrolab (tinggi bintang, kalender zodiak, dsb.) belum disimulasikan di alat ini.</div>
+  </section>
+
+  <section id="referensi">
+    <h2><span class="num">06</span> Referensi</h2>
+    <table class="refs">
+      <tr><td>James E. Morrison</td><td>The Astrolabe — rujukan modern standar konstruksi &amp; matematika astrolab planispheric</td></tr>
+      <tr><td>D.A. King</td><td>Studi akademik instrumen astronomi Islam abad pertengahan</td></tr>
+      <tr><td>Proyeksi Stereografis Standar</td><td>Konversi horizon-ekuator untuk lingkaran almukantarat &amp; azimuth</td></tr>
+    </table>
+  </section>
+
+</div>
+
+<footer>Bagian dari Bank Alat JAZMI — Laboratorium Ilmu Falak. Pasangan dari Astrolab Universal (Safiha Zarqaliyya).</footer>
+
+<div id="printSheet" style="position:fixed; left:-9999px; top:0;"></div>
+
+<script>
+(function(){
+  const el = id => document.getElementById(id);
+  const toRad=d=>d*Math.PI/180, toDeg=r=>r*180/Math.PI;
+  const svgNS = "http://www.w3.org/2000/svg";
+  function svgEl(tag, attrs){ const e=document.createElementNS(svgNS,tag); for(const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+
+  const THEMES = {
+    perkamen:  { bg:"#f3ead1", major:"#5a4326", minor:"#9c8459", arc:"#3d2c17", text:"#3d2c17", font:"Fraunces, serif" },
+    emas:      { bg:"#221a0e", major:"#c9a24b", minor:"#7a5f2e", arc:"#e3c988", text:"#e3c988", font:"Fraunces, serif" },
+    nusantara: { bg:"#f1ece1", major:"#1e355c", minor:"#7f93b3", arc:"#7a2e2e", text:"#1e355c", font:"Amiri, serif" },
+    minimalis: { bg:"#ffffff", major:"#111111", minor:"#bbbbbb", arc:"#111111", text:"#111111", font:"Karla, sans-serif" }
+  };
+  let activeTheme = 'perkamen';
+
+  const STARS = [
+    {name:'Aldebaran', ra:68.98, dec:16.51},
+    {name:'Sirius', ra:101.29, dec:-16.72},
+    {name:'Capella', ra:79.17, dec:46.0},
+    {name:'Rigel', ra:78.63, dec:-8.20},
+    {name:'Vega', ra:279.23, dec:38.78},
+    {name:'Altair', ra:297.70, dec:8.87},
+    {name:'Regulus', ra:152.09, dec:11.97},
+    {name:'Spica', ra:201.30, dec:-11.16},
+    {name:'Antares', ra:247.35, dec:-26.43},
+    {name:'Betelgeuse', ra:88.79, dec:7.41},
+  ];
+
+  const R_EQ = 100;
+  const R_BOUND = R_EQ*Math.tan(toRad(45+23.44/2));
+
+  function projectR(decDeg){ return R_EQ*Math.tan(toRad(45-decDeg/2)); }
+  function toXY(r, angleDeg, cx, cy){ const a=toRad(angleDeg); return [cx+r*Math.sin(a), cy-r*Math.cos(a)]; }
+
+  function almucantarPath(latDeg, altDeg, cx, cy, scale, n){
+    n = n||90;
+    const pts=[];
+    for(let i=0;i<=n;i++){
+      const A = i*360/n;
+      const Ar=toRad(A), latr=toRad(latDeg), altr=toRad(altDeg);
+      let sindec = Math.sin(latr)*Math.sin(altr)+Math.cos(latr)*Math.cos(altr)*Math.cos(Ar);
+      sindec = Math.max(-1,Math.min(1,sindec));
+      const dec = toDeg(Math.asin(sindec));
+      const sinH = -Math.sin(Ar)*Math.cos(altr)/Math.cos(toRad(dec));
+      const cosH = (Math.sin(altr)-Math.sin(toRad(dec))*Math.sin(latr))/(Math.cos(toRad(dec))*Math.cos(latr));
+      const H = toDeg(Math.atan2(sinH, Math.max(-1,Math.min(1,cosH))));
+      const r = projectR(dec);
+      if(r>R_BOUND*1.02) { pts.push(null); continue; }
+      pts.push(toXY(r*scale, H, cx, cy));
+    }
+    return pts;
+  }
+  function azimuthPath(latDeg, azDeg, cx, cy, scale, n){
+    n=n||45;
+    const pts=[];
+    for(let i=0;i<=n;i++){
+      const alt = i*90/n;
+      const Ar=toRad(azDeg), latr=toRad(latDeg), altr=toRad(alt);
+      let sindec = Math.sin(latr)*Math.sin(altr)+Math.cos(latr)*Math.cos(altr)*Math.cos(Ar);
+      sindec = Math.max(-1,Math.min(1,sindec));
+      const dec = toDeg(Math.asin(sindec));
+      const sinH = -Math.sin(Ar)*Math.cos(altr)/Math.cos(toRad(dec));
+      const cosH = (Math.sin(altr)-Math.sin(toRad(dec))*Math.sin(latr))/(Math.cos(toRad(dec))*Math.cos(latr));
+      const H = toDeg(Math.atan2(sinH, Math.max(-1,Math.min(1,cosH))));
+      const r = projectR(dec);
+      if(r>R_BOUND*1.02){ pts.push(null); continue; }
+      pts.push(toXY(r*scale, H, cx, cy));
+    }
+    return pts;
+  }
+  function pointsToPath(pts){
+    let d=''; let started=false;
+    pts.forEach(p=>{
+      if(p===null){ started=false; return; }
+      d += (started?'L':'M')+p[0].toFixed(2)+','+p[1].toFixed(2)+' ';
+      started=true;
+    });
+    return d;
+  }
+
+  function drawPlate(g, latDeg, cx, cy, scale, T){
+    // tropics & equator
+    [{dec:23.44,label:'Tropic Cancer'},{dec:0,label:'Ekuator'},{dec:-23.44,label:'Tropic Capricorn'}].forEach(c=>{
+      const r = projectR(c.dec)*scale;
+      g.appendChild(svgEl('circle',{cx,cy,r, fill:'none', stroke:T.minor, 'stroke-width':0.6, 'stroke-dasharray': c.dec===0?'none':'2,2'}));
+    });
+    // almucantars
+    const altLevels = [10,20,30,40,50,60,70,80];
+    altLevels.forEach(alt=>{
+      const pts = almucantarPath(latDeg, alt, cx, cy, scale);
+      g.appendChild(svgEl('path',{d:pointsToPath(pts), fill:'none', stroke:T.minor, 'stroke-width':0.5}));
+    });
+    // horizon (tebal)
+    g.appendChild(svgEl('path',{d:pointsToPath(almucantarPath(latDeg,0,cx,cy,scale)), fill:'none', stroke:T.major, 'stroke-width':1.4}));
+    // twilight -18
+    g.appendChild(svgEl('path',{d:pointsToPath(almucantarPath(latDeg,-18,cx,cy,scale)), fill:'none', stroke:T.arc, 'stroke-width':0.8, 'stroke-dasharray':'3,2'}));
+    // azimuth lines
+    for(let az=0; az<360; az+=30){
+      const pts = azimuthPath(latDeg, az, cx, cy, scale);
+      g.appendChild(svgEl('path',{d:pointsToPath(pts), fill:'none', stroke:T.minor, 'stroke-width':0.4}));
+    }
+    // zenith marker
+    const zpt = toXY(projectR(latDeg)*scale, 0, cx, cy);
+    g.appendChild(svgEl('circle',{cx:zpt[0], cy:zpt[1], r:2, fill:T.arc}));
+  }
+
+  function drawRete(g, cx, cy, scale, T){
+    // ecliptic ring
+    const eps=23.44;
+    let pts=[];
+    for(let lam=0; lam<=360; lam+=3){
+      const dec = toDeg(Math.asin(Math.sin(toRad(eps))*Math.sin(toRad(lam))));
+      const ra = toDeg(Math.atan2(Math.cos(toRad(eps))*Math.sin(toRad(lam)), Math.cos(toRad(lam))));
+      const r = projectR(dec);
+      if(r>R_BOUND*1.02){ pts.push(null); continue; }
+      pts.push(toXY(r*scale, -((ra%360+360)%360), cx, cy));
+    }
+    g.appendChild(svgEl('path',{d:pointsToPath(pts), fill:'none', stroke:T.arc, 'stroke-width':1.6}));
+    // zodiac ticks every 30 deg longitude
+    for(let lam=0; lam<360; lam+=30){
+      const dec = toDeg(Math.asin(Math.sin(toRad(eps))*Math.sin(toRad(lam))));
+      const ra = toDeg(Math.atan2(Math.cos(toRad(eps))*Math.sin(toRad(lam)), Math.cos(toRad(lam))));
+      const r = projectR(dec);
+      if(r>R_BOUND*1.02) continue;
+      const p = toXY(r*scale, -((ra%360+360)%360), cx, cy);
+      g.appendChild(svgEl('circle',{cx:p[0],cy:p[1],r:2.2, fill:T.arc}));
+    }
+    // stars: pointer dari pusat + tanda silang di ujung
+    STARS.forEach(s=>{
+      const r = projectR(s.dec);
+      if(r>R_BOUND*1.02) return;
+      const p = toXY(r*scale, -s.ra, cx, cy);
+      g.appendChild(svgEl('line',{x1:cx,y1:cy,x2:p[0],y2:p[1], stroke:T.minor, 'stroke-width':0.6, opacity:0.8}));
+      g.appendChild(svgEl('path',{d:`M${p[0]-3},${p[1]} L${p[0]+3},${p[1]} M${p[0]},${p[1]-3} L${p[0]},${p[1]+3}`, stroke:T.text, 'stroke-width':1.3}));
+      const lbl = svgEl('text',{x:p[0]+5, y:p[1]-4, 'font-size':6.5, fill:T.text, 'font-family':T.font});
+      lbl.textContent = s.name;
+      g.appendChild(lbl);
+    });
+  }
+
+  function drawMater(g, cx, cy, R, T){
+    g.appendChild(svgEl('circle',{cx,cy,r:R, fill:'none', stroke:T.major, 'stroke-width':2}));
+    for(let d=0; d<360; d+=6){
+      const major = d%30===0, med=d%10===0;
+      const len = major?12:(med?8:4);
+      const a = toRad(d-90);
+      g.appendChild(svgEl('line',{x1:cx+(R-len)*Math.cos(a), y1:cy+(R-len)*Math.sin(a), x2:cx+R*Math.cos(a), y2:cy+R*Math.sin(a), stroke:T.major, 'stroke-width': major?1.4:0.6}));
+    }
+    // jam (24 pembagian)
+    for(let h=0; h<24; h++){
+      const a = toRad(h*15-90);
+      const rr = R-20;
+      const p = [cx+rr*Math.cos(a), cy+rr*Math.sin(a)];
+      const lbl = svgEl('text',{x:p[0], y:p[1], 'font-size':8, fill:T.text, 'text-anchor':'middle', 'font-family':T.font});
+      lbl.textContent = h;
+      g.appendChild(lbl);
+    }
+    g.appendChild(svgEl('circle',{cx,cy,r:3,fill:'none',stroke:T.arc,'stroke-width':1,'stroke-dasharray':'2,2'}));
+  }
+
+  function drawBack(g, cx, cy, R, T){
+    // kalender zodiak-tanggal (cincin luar)
+    g.appendChild(svgEl('circle',{cx,cy,r:R, fill:'none', stroke:T.major, 'stroke-width':1.5}));
+    g.appendChild(svgEl('circle',{cx,cy,r:R-18, fill:'none', stroke:T.minor, 'stroke-width':1}));
+    const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    for(let m=0;m<12;m++){
+      const a0 = toRad(m*30-90), a1=toRad((m+1)*30-90);
+      const p0=[cx+R*Math.cos(a0), cy+R*Math.sin(a0)];
+      g.appendChild(svgEl('line',{x1:p0[0],y1:p0[1],x2:cx+(R-18)*Math.cos(a0),y2:cy+(R-18)*Math.sin(a0), stroke:T.major,'stroke-width':1}));
+      const mid=toRad(m*30+15-90);
+      const lp=[cx+(R-9)*Math.cos(mid), cy+(R-9)*Math.sin(mid)];
+      const lbl=svgEl('text',{x:lp[0],y:lp[1],'font-size':7,fill:T.text,'text-anchor':'middle','font-family':T.font});
+      lbl.textContent=months[m];
+      g.appendChild(lbl);
+    }
+    // kotak bayangan (shadow square) di tengah bawah
+    const sqSize = R*0.7, sx=cx-sqSize/2, sy=cy+ R*1.15 - sqSize;
+    g.appendChild(svgEl('rect',{x:sx,y:sy,width:sqSize,height:sqSize, fill:'none', stroke:T.major,'stroke-width':1.2}));
+    for(let i=1;i<12;i++){
+      const off = sqSize*i/12;
+      g.appendChild(svgEl('line',{x1:sx+off,y1:sy,x2:sx+off,y2:sy+sqSize, stroke:T.minor,'stroke-width':0.35}));
+      g.appendChild(svgEl('line',{x1:sx,y1:sy+off,x2:sx+sqSize,y2:sy+off, stroke:T.minor,'stroke-width':0.35}));
+    }
+    const lbl2=svgEl('text',{x:cx,y:sy-6,'font-size':8,fill:T.text,'text-anchor':'middle','font-family':T.font});
+    lbl2.textContent='Kotak Bayangan (12×12)';
+    g.appendChild(lbl2);
+  }
+
+  /* ============ PREVIEW ============ */
+  function getLat(){
+    const sel = el('citySelect').value;
+    return sel==='manual' ? parseFloat(el('manualLat').value)||0 : parseFloat(sel);
+  }
+
+  function renderPreview(){
+    const lat = getLat();
+    const T = THEMES[activeTheme];
+    const cx=200, cy=200, scale=0.9;
+    const svg = el('svgPreview');
+    svg.innerHTML='';
+    svg.appendChild(svgEl('circle',{cx,cy,r:R_BOUND*scale, fill:T.bg}));
+    const clipId='clipPreview';
+    const clip = svgEl('clipPath',{id:clipId});
+    clip.appendChild(svgEl('circle',{cx,cy,r:R_BOUND*scale}));
+    svg.appendChild(clip);
+    const g = svgEl('g',{'clip-path':`url(#${clipId})`});
+    svg.appendChild(g);
+    drawPlate(g, lat, cx, cy, scale, T);
+    drawRete(g, cx, cy, scale, T);
+    svg.appendChild(svgEl('circle',{cx,cy,r:R_BOUND*scale, fill:'none', stroke:T.major,'stroke-width':1.5}));
+
+    const warn = el('latWarning');
+    if(Math.abs(lat) < 12){
+      warn.textContent = '⚠ Lintang dekat khatulistiwa — lingkaran ufuk melebar ekstrem & sebagian terpotong tepi pelat (lihat catatan Batasan).';
+    } else warn.textContent = '';
+  }
+
+  document.querySelectorAll('#themeSelect .opt-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('#themeSelect .opt-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active'); activeTheme = btn.dataset.theme; renderPreview();
+    });
+  });
+  el('citySelect').addEventListener('change', ()=>{
+    el('manualLatField').style.display = el('citySelect').value==='manual' ? '' : 'none';
+    renderPreview();
+  });
+  el('manualLat').addEventListener('input', renderPreview);
+
+  /* ============ CETAK ============ */
+  function buildPrintSVG(kind, diameterMM){
+    const lat = getLat();
+    const T = THEMES[activeTheme];
+    const cx=300, cy=300, R=260, scale=150/(R_EQ);
+    const mmPerUnit = diameterMM/(R*2);
+    const totalMM = (600*mmPerUnit).toFixed(2);
+    const svg = svgEl('svg',{viewBox:'0 0 600 640', width:totalMM+'mm', height:(640*mmPerUnit).toFixed(2)+'mm'});
+
+    if(kind==='mater'){
+      svg.appendChild(svgEl('circle',{cx,cy,r:R, fill:T.bg}));
+      drawMater(svg, cx, cy, R, T);
+    } else if(kind==='plate'){
+      svg.appendChild(svgEl('circle',{cx,cy,r:R, fill:T.bg}));
+      const clip=svgEl('clipPath',{id:'clipPlatePrint'}); clip.appendChild(svgEl('circle',{cx,cy,r:R-10})); svg.appendChild(clip);
+      const g=svgEl('g',{'clip-path':'url(#clipPlatePrint)'}); svg.appendChild(g);
+      drawPlate(g, lat, cx, cy, scale, T);
+      svg.appendChild(svgEl('circle',{cx,cy,r:3,fill:'none',stroke:T.arc,'stroke-width':1.2,'stroke-dasharray':'2,2'}));
+    } else if(kind==='rete'){
+      svg.appendChild(svgEl('circle',{cx,cy,r:R, fill:'none', stroke:T.minor,'stroke-width':1,'stroke-dasharray':'5,4'}));
+      const clip=svgEl('clipPath',{id:'clipRetePrint'}); clip.appendChild(svgEl('circle',{cx,cy,r:R-10})); svg.appendChild(clip);
+      const g=svgEl('g',{'clip-path':'url(#clipRetePrint)'}); svg.appendChild(g);
+      drawRete(g, cx, cy, scale, T);
+      svg.appendChild(svgEl('circle',{cx,cy,r:3,fill:T.arc}));
+    } else if(kind==='back'){
+      svg.appendChild(svgEl('circle',{cx,cy,r:R, fill:T.bg}));
+      drawBack(svg, cx, cy, R-10, T);
+      svg.appendChild(svgEl('circle',{cx,cy,r:3,fill:'none',stroke:T.arc,'stroke-width':1.2,'stroke-dasharray':'2,2'}));
+    }
+    const title = svgEl('text',{x:cx,y:R*2+56,'text-anchor':'middle','font-size':13, fill:'#4A5568','font-family':'Cormorant Garamond, serif'});
+    title.textContent = {mater:'Mater (Piringan Induk)', plate:`Pelat — lintang ${lat.toFixed(2)}°`, rete:'Rete — bintang & ekliptika', back:'Bagian Belakang — kalender & kotak bayangan'}[kind] + ` · Ø ${diameterMM}mm`;
+    svg.appendChild(title);
+    return svg;
+  }
+
+  function printPart(kind){
+    const diameterMM = parseFloat(el('genDiameter').value)||180;
+    const svg = buildPrintSVG(kind, diameterMM);
+    const container = el('printSheet');
+    container.innerHTML=''; container.appendChild(svg);
+    setTimeout(()=>window.print(), 50);
+  }
+  el('btnPrintMater').addEventListener('click', ()=>printPart('mater'));
+  el('btnPrintPlate').addEventListener('click', ()=>printPart('plate'));
+  el('btnPrintRete').addEventListener('click', ()=>printPart('rete'));
+  el('btnPrintBack').addEventListener('click', ()=>printPart('back'));
+
+  /* ============ SIMULATOR ============ */
+  function solarLambda(date){
+    const j2000 = new Date(Date.UTC(2000,0,1,12,0,0));
+    const n = (date - j2000)/86400000;
+    const L = (280.460 + 0.9856474*n) % 360;
+    const g = toRad((357.528 + 0.9856003*n) % 360);
+    let lam = L + 1.915*Math.sin(g) + 0.020*Math.sin(2*g);
+    return ((lam%360)+360)%360;
+  }
+  function declinationFromLambda(lamDeg){
+    const eps=23.4366; const lam=toRad(lamDeg), e=toRad(eps);
+    return toDeg(Math.asin(Math.sin(e)*Math.sin(lam)));
+  }
+  function dayOfYear(date){ const start=new Date(Date.UTC(date.getUTCFullYear(),0,0)); return Math.floor((date-start)/86400000); }
+  function eotMinutes(doy){ const B=toRad(360/365*(doy-81)); return 9.87*Math.sin(2*B)-7.53*Math.cos(B)-1.5*Math.sin(B); }
+  function altAzFromH(Hdeg, decDeg, latDeg){
+    const H=toRad(Hdeg), dec=toRad(decDeg), lat=toRad(latDeg);
+    const alt = Math.asin(Math.sin(dec)*Math.sin(lat)+Math.cos(dec)*Math.cos(lat)*Math.cos(H));
+    const cosAz = (Math.sin(dec)-Math.sin(alt)*Math.sin(lat))/(Math.cos(alt)*Math.cos(lat));
+    let az = toDeg(Math.acos(Math.max(-1,Math.min(1,cosAz))));
+    if(Math.sin(H) > 0) az = 360-az;
+    return { alt: toDeg(alt), az };
+  }
+
+  function renderSimulator(){
+    const lat = getLat();
+    const T = THEMES[activeTheme];
+    const cx=200, cy=200, scale=0.9;
+    const svg = el('svgSim');
+    svg.innerHTML='';
+    svg.appendChild(svgEl('circle',{cx,cy,r:R_BOUND*scale, fill:T.bg}));
+    const clipId='clipSim';
+    const clip=svgEl('clipPath',{id:clipId}); clip.appendChild(svgEl('circle',{cx,cy,r:R_BOUND*scale})); svg.appendChild(clip);
+    const g = svgEl('g',{'clip-path':`url(#${clipId})`});
+    svg.appendChild(g);
+    drawPlate(g, lat, cx, cy, scale, T);
+    svg.appendChild(svgEl('circle',{cx,cy,r:R_BOUND*scale, fill:'none', stroke:T.major,'stroke-width':1.5}));
+
+    const dStr = el('simDate').value;
+    const jam = parseFloat(el('simTime').value);
+    const lon = parseFloat(el('simLon').value);
+    const zone = parseFloat(el('simZone').value);
+    const d = new Date(dStr+'T00:00:00Z');
+    const doy = dayOfYear(d);
+    const lam = solarLambda(new Date(d.getTime()+jam*3600000));
+    const dec = declinationFromLambda(lam);
+    const eot = eotMinutes(doy);
+    const trueSolar = jam + eot/60 - (zone-lon)/15;
+    const H = 15*(trueSolar-12);
+    const {alt,az} = altAzFromH(H, dec, lat);
+
+    el('rDecSim').textContent = dec.toFixed(2)+'°';
+    el('rAltSim').textContent = alt.toFixed(2)+'°';
+    el('rAzSim').textContent = az.toFixed(2)+'°';
+
+    if(alt>-2){
+      const r = projectR(Math.max(-89,Math.min(89,dec)));
+      if(r<=R_BOUND*1.02){
+        const p = toXY(r*scale, H, cx, cy);
+        g.appendChild(svgEl('circle',{cx:p[0],cy:p[1],r:5, fill:T.arc, stroke:'#fff','stroke-width':1}));
+      }
+    }
+  }
+  ['simDate','simTime','simLon','simZone'].forEach(id=>el(id).addEventListener('input', renderSimulator));
+  el('citySelect').addEventListener('change', renderSimulator);
+  el('manualLat').addEventListener('input', renderSimulator);
+  document.querySelectorAll('#themeSelect .opt-btn').forEach(b=>b.addEventListener('click', renderSimulator));
+
+  el('simDate').value = new Date().toISOString().slice(0,10);
+  renderPreview();
+  renderSimulator();
+})();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

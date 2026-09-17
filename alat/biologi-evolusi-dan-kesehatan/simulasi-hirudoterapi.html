@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulasi Hirudoterapi — JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --emerald-deep:#0F3D2E; --emerald-mid:#1D5C43; --ivory:#FAF6ED; --ivory-soft:#F1EADA;
+    --ink:#1C2B24; --gold:#B8934A; --gold-soft:#E7D2A0; --line:rgba(15,61,46,0.14);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--ivory);color:var(--ink);font-family:'Karla',sans-serif;line-height:1.65;}
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;color:var(--emerald-deep);letter-spacing:-0.01em;}
+  .wrap{max-width:820px;margin:0 auto;padding:0 24px;}
+
+  .versi-awal{background:var(--emerald-deep);color:var(--ivory);padding:14px 24px;}
+  .versi-awal .wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap;max-width:820px;}
+  .versi-awal .badge{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;background:var(--gold);color:var(--emerald-deep);padding:4px 9px;border-radius:2px;flex-shrink:0;}
+  .versi-awal p{margin:0;font-size:14px;color:rgba(250,246,237,0.92);flex:1;min-width:220px;}
+  .versi-awal a.wa-inline{color:var(--gold-soft);font-weight:700;text-decoration:underline;white-space:nowrap;}
+
+  .crumb{padding:20px 24px 0;max-width:820px;margin:0 auto;font-size:13px;letter-spacing:0.04em;text-transform:uppercase;color:var(--emerald-mid);opacity:0.75;}
+  .crumb span{color:var(--ink);opacity:0.4;margin:0 6px;}
+
+  .hero{padding:32px 0 24px;}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:14px;}
+  .eyebrow::before{content:"";width:18px;height:1px;background:var(--gold);display:inline-block;}
+  .hero h1{font-size:clamp(24px,4.5vw,32px);margin:0 0 12px;line-height:1.2;}
+  .hero p.lede{font-size:16px;color:var(--emerald-deep);opacity:0.85;max-width:62ch;margin:0;}
+
+  section{padding:32px 0;border-top:1px solid var(--line);}
+  section:first-of-type{border-top:none;}
+  .label{font-size:12px;letter-spacing:0.09em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:10px;}
+  section h2{font-size:20px;margin:0 0 14px;}
+  section p{margin:0 0 12px;font-size:15px;}
+  ul.plain{margin:0 0 12px;padding-left:20px;}
+  ul.plain li{margin-bottom:8px;font-size:15px;}
+
+  .mitos-box{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0;}
+  @media (max-width:560px){.mitos-box{grid-template-columns:1fr;}}
+  .mitos-item{border-radius:4px;padding:14px 16px;font-size:14px;}
+  .mitos-item.mitos{background:rgba(199,123,91,0.12);border-left:3px solid #C77B5B;}
+  .mitos-item.fakta{background:rgba(123,174,143,0.12);border-left:3px solid #7BAE8F;}
+  .mitos-item .judul{font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;margin-bottom:5px;}
+  .mitos-item.mitos .judul{color:#C77B5B;}
+  .mitos-item.fakta .judul{color:#5B8F6F;}
+
+  .anatomi-box{background:var(--ivory-soft);border-radius:4px;padding:18px 20px;margin:14px 0;}
+  .anatomi-box .baris{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px;}
+  .anatomi-box .baris:last-child{border-bottom:none;}
+  .anatomi-box .baris strong{min-width:130px;color:var(--emerald-deep);flex-shrink:0;}
+
+  .kartu{background:var(--emerald-deep);color:var(--ivory);border-radius:4px;padding:26px;margin-bottom:16px;}
+  .kartu h3{color:var(--ivory);margin:0 0 4px;font-size:16.5px;}
+  .kartu .sublabel{font-size:12px;color:rgba(250,246,237,0.55);margin-bottom:16px;}
+
+  .toggle-mode{display:flex;gap:2px;margin-bottom:18px;background:rgba(250,246,237,0.08);padding:3px;border-radius:4px;}
+  .toggle-mode button{flex:1;padding:11px;border:none;background:transparent;color:rgba(250,246,237,0.7);font-family:'Karla',sans-serif;font-weight:700;font-size:13.5px;border-radius:3px;cursor:pointer;}
+  .toggle-mode button.aktif{background:var(--gold);color:var(--emerald-deep);}
+
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:13px;margin-bottom:6px;color:var(--gold-soft);}
+  .field select, .field input{width:100%;padding:10px 12px;border-radius:3px;border:1px solid rgba(231,210,160,0.35);background:rgba(250,246,237,0.06);color:var(--ivory);font-family:'Karla',sans-serif;font-size:14.5px;}
+  .field .hint{font-size:11.5px;color:rgba(250,246,237,0.5);margin-top:5px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media (max-width:560px){.grid2{grid-template-columns:1fr;}}
+
+  button.hitung{width:100%;padding:14px;border:none;border-radius:3px;background:var(--gold);color:var(--emerald-deep);font-family:'Karla',sans-serif;font-weight:700;font-size:15px;cursor:pointer;margin-top:6px;}
+  button.hitung:hover{background:var(--gold-soft);}
+
+  .hasil-box{display:none;margin-top:22px;}
+  .hasil-box.tampil{display:block;}
+
+  .timeline{position:relative;padding-left:24px;margin-top:10px;}
+  .timeline::before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:rgba(231,210,160,0.3);}
+  .fase-item{position:relative;margin-bottom:20px;padding-top:2px;}
+  .fase-item::before{content:"";position:absolute;left:-24px;top:4px;width:11px;height:11px;border-radius:50%;background:var(--gold);border:2px solid var(--emerald-deep);}
+  .fase-item .waktu{font-family:'Fraunces',serif;color:var(--gold-soft);font-size:14px;margin-bottom:3px;}
+  .fase-item .judul-fase{font-weight:700;color:var(--ivory);margin-bottom:5px;font-size:14.5px;}
+  .fase-item .senyawa-tag{display:inline-block;background:rgba(250,246,237,0.1);padding:2px 8px;border-radius:2px;font-size:11.5px;margin:2px 4px 2px 0;color:var(--gold-soft);}
+  .fase-item p{font-size:13.5px;color:rgba(250,246,237,0.85);margin:6px 0 0;}
+
+  .senyawa-tabel{width:100%;border-collapse:collapse;margin-top:10px;font-size:13.5px;}
+  .senyawa-tabel th{text-align:left;padding:8px 10px;border-bottom:2px solid rgba(231,210,160,0.3);color:var(--gold-soft);font-size:12px;text-transform:uppercase;}
+  .senyawa-tabel td{padding:9px 10px;border-bottom:1px solid rgba(231,210,160,0.15);color:rgba(250,246,237,0.9);vertical-align:top;}
+
+  .peringatan-mitos{
+    background:rgba(199,123,91,0.15);border:1px solid rgba(199,123,91,0.4);border-radius:4px;
+    padding:14px 16px;margin-top:14px;font-size:13.5px;color:rgba(250,246,237,0.9);
+  }
+
+  .batasan-item{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start;}
+  .batasan-item .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:8px;flex-shrink:0;}
+  .disclaimer-box{background:var(--ivory-soft);border-left:3px solid var(--gold);padding:14px 16px;border-radius:2px;font-size:14px;margin-top:14px;}
+
+  .tradisi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0;}
+  @media (max-width:640px){.tradisi-grid{grid-template-columns:1fr;}}
+  .tradisi-item{background:var(--ivory-soft);border-radius:4px;padding:14px 16px;font-size:13.5px;}
+  .tradisi-item .judul{font-weight:700;color:var(--emerald-deep);margin-bottom:5px;font-size:13px;}
+
+  .konsultasi{margin-top:8px;padding:20px;border:1px dashed var(--line);border-radius:4px;text-align:center;}
+  .konsultasi p{font-size:14px;margin-bottom:12px;color:var(--emerald-deep);}
+  .btn-konsul{display:inline-block;padding:10px 22px;border-radius:3px;background:var(--emerald-mid);color:var(--ivory);font-family:'Karla',sans-serif;font-weight:600;font-size:14px;cursor:pointer;text-decoration:none;}
+
+  footer{padding:24px 24px 50px;font-size:13px;color:var(--emerald-mid);opacity:0.7;max-width:820px;margin:0 auto;}
+</style>
+</head>
+<body>
+
+<div class="versi-awal">
+  <div class="wrap">
+    <span class="badge">Versi Awal — Edukasi, Bukan Panduan Terapi</span>
+    <p>Hirudoterapi nyata memakai lintah medis steril di bawah pengawasan tenaga medis. Alat ini murni edukasi biokimia — bukan panduan melakukan terapi sendiri.</p>
+    <a class="wa-inline" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20diskusi%20terkait%20Simulasi%20Hirudoterapi%20JAZMI." target="_blank" rel="noopener">Diskusikan via WhatsApp →</a>
+  </div>
+</div>
+
+<div class="crumb">JAZMI <span>/</span> Alat <span>/</span> Hirudoterapi</div>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">Alat — Sains Biokimia</div>
+    <h1>Simulasi Hirudoterapi</h1>
+    <p class="lede">Menelusuri apa yang sebenarnya terjadi saat lintah medis menggigit — senyawa apa saja yang dikeluarkan, kenapa urutannya masuk akal secara biologis, dan kenapa lintah hidup tidak sepenuhnya bisa digantikan ekstraknya.</p>
+  </div>
+
+  <section id="belajar" style="border-top:none;padding-top:0;">
+    <div class="label">01 — Belajar</div>
+    <h2>Meluruskan klaim populer</h2>
+    <div class="mitos-box">
+      <div class="mitos-item mitos"><div class="judul">Klaim populer</div>Liur lintah mengandung zat anestesi sehingga gigitannya tidak terasa sakit.</div>
+      <div class="mitos-item fakta"><div class="judul">Temuan riset terkontrol</div>Studi Rigbi dkk. (1987) yang secara khusus menguji efek ini pada kulit manusia <strong>tidak menemukan efek anestesi yang terdeteksi</strong> — meski klaim ini masih sering diulang di banyak sumber populer. Rendahnya rasa sakit lebih mungkin karena ketajaman gigi mikroskopis lintah, bukan zat kimia anestesi yang terbukti.</div>
+
+      <div class="mitos-item mitos"><div class="judul">Klaim populer</div>Ekstrak/serum hirudin bisa menggantikan terapi lintah hidup sepenuhnya.</div>
+      <div class="mitos-item fakta"><div class="judul">Temuan literatur</div>Liur lintah mengandung sekitar 100 senyawa bioaktif yang bekerja bersama (sinergis). Sampai saat ini, upaya mengekstrak/mengisolasi belum berhasil mereplikasi efek lintah hidup secara utuh — kecuali untuk hirudin murni sebagai antikoagulan tunggal. Ekstrak encer liur juga tidak stabil disimpan; harus segera dipakai atau aktivitasnya hilang.</div>
+    </div>
+  </section>
+
+  <section id="anatomi">
+    <div class="label">02 — Anatomi & Spesies</div>
+    <h2>Dari bagian tubuh mana senyawa ini keluar?</h2>
+    <div class="anatomi-box">
+      <div class="baris"><strong>Kelenjar ludah</strong>Sel-sel kelenjar ludah uniseluler tersebar di bagian anterior (depan) tubuh lintah, di antara serat otot yang menghubungkan rahang dengan dinding tubuh — bukan satu kelenjar besar tunggal, melainkan banyak sel kecil.</div>
+      <div class="baris"><strong>Saluran keluar</strong>Setiap sel kelenjar punya satu saluran sendiri menuju rahang, bermuara di lubang kecil dekat gigi — sehingga sekresi langsung tercampur air liur saat rahang menyayat kulit.</div>
+      <div class="baris"><strong>Rahang</strong>Tiga rahang tersusun radial dengan gigi-gigi mikroskopis, menghasilkan sayatan berbentuk Y (triradiate) — proses ini murni mekanis, terjadi sebelum sekresi kimiawi bekerja.</div>
+      <div class="baris"><strong>Pemulihan</strong>Sel kelenjar ludah mengisi ulang cadangan sekresinya dalam waktu sekitar 7 hari setelah makan darah — karena itu lintah medis tidak dipakai berulang dalam waktu dekat.</div>
+    </div>
+
+    <h2 style="margin-top:24px;">Spesies</h2>
+    <ul class="plain">
+      <li><strong>Hirudo medicinalis</strong> (lintah medis Eropa) — spesies klasik, sumber hirudin asli yang pertama diisolasi.</li>
+      <li><strong>Hirudo verbana &amp; Hirudo orientalis</strong> — kerabat dekat H. medicinalis, secara genetik dan biokimia mirip, sering digunakan bergantian dalam riset.</li>
+      <li><strong>Hirudinaria manillensis</strong> (lintah kerbau Asia) — bukan genus Hirudo; senyawa antikoagulan utamanya bernama <em>bufrudin</em>, bukan hirudin — struktur berbeda meski fungsi serupa.</li>
+      <li><strong>Hirudo nipponia</strong> (Shui Zhi/水蛭) — dipakai luas dalam Pengobatan Tradisional Tiongkok, tercatat dalam Farmakope RRT, mengandung lebih dari 34 senyawa aktif teridentifikasi.</li>
+    </ul>
+    <div class="peringatan-mitos">⚠ Tidak semua lintah aman dipakai untuk terapi medis. Lintah liar sering membawa bakteri <em>Aeromonas</em> di usus mereka yang bisa menyebabkan infeksi serius pada luka manusia. Lintah yang disetujui untuk terapi medis (termasuk yang disetujui sebagai alat medis oleh FDA Amerika) adalah galur yang dibudidayakan khusus dalam kondisi steril — bukan lintah tangkapan liar.</div>
+  </section>
+
+  <section id="senyawa">
+    <div class="label">03 — Katalog Senyawa</div>
+    <h2>Apa saja yang ada di liur lintah, dan untuk apa</h2>
+    <table class="senyawa-tabel" style="background:var(--emerald-deep);border-radius:4px;padding:4px;">
+      <thead><tr><th style="padding-left:16px;">Senyawa</th><th>Fungsi</th></tr></thead>
+      <tbody>
+        <tr><td style="padding-left:16px;"><strong>Hirudin</strong></td><td>Penghambat trombin langsung — antikoagulan paling kuat dan paling dikenal, mencegah darah membeku selama proses makan.</td></tr>
+        <tr><td style="padding-left:16px;"><strong>Calin</strong></td><td>Menghalangi ikatan faktor von Willebrand dengan kolagen, mencegah trombosit menempel di luka.</td></tr>
+        <tr><td style="padding-left:16px;"><strong>Destabilase</strong></td><td>Sifat trombolitik ringan — membantu melarutkan monomer fibrin, mendukung efek antikoagulan lain.</td></tr>
+        <tr><td style="padding-left:16px;"><strong>Hyaluronidase (orgelase)</strong></td><td>"Faktor penyebar" — memecah asam hialuronat di jaringan ikat, membantu senyawa lain berdifusi lebih dalam ke jaringan.</td></tr>
+        <tr><td style="padding-left:16px;"><strong>Kolagenase</strong></td><td>Memecah kolagen jaringan, mendukung penetrasi senyawa lain.</td></tr>
+        <tr><td style="padding-left:16px;"><strong>Apyrase</strong></td><td>Memecah ADP, turut menghambat agregasi trombosit dari jalur berbeda dengan calin.</td></tr>
+        <tr><td style="padding-left:16px;"><strong>Eglin &amp; Bdellin</strong></td><td>Penghambat protease dengan efek anti-inflamasi — mengurangi respons peradangan lokal di sekitar gigitan.</td></tr>
+        <tr><td style="padding-left:16px;"><strong>Penghambat komplemen</strong></td><td>Meredam respons imun bawaan lokal, membantu lintah "bersembunyi" dari sistem pertahanan tubuh inang sementara.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="simulasi">
+    <div class="label">04 — Eksplorasi</div>
+    <div class="kartu">
+      <h3>Simulasi Tahapan Gigitan</h3>
+      <div class="sublabel">Berbasis tahapan proses makan yang terdokumentasi — bukan waktu presisi tiap senyawa (lihat catatan kejujuran di bagian Metode)</div>
+
+      <div class="toggle-mode">
+        <button id="tabGigitan" class="aktif" onclick="pilihMode('gigitan')">Gigitan Langsung (Lintah Hidup)</button>
+        <button id="tabEkstraksi" onclick="pilihMode('ekstraksi')">Ekstraksi/Serum Terisolasi</button>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="spesiesPilih">Spesies</label>
+          <select id="spesiesPilih">
+            <option value="hirudo">Hirudo medicinalis (klasik Eropa)</option>
+            <option value="hirudinaria">Hirudinaria manillensis (Asia, bufrudin)</option>
+            <option value="nipponia">Hirudo nipponia (TCM/Shui Zhi)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="kondisiPembekuan">Kondisi pembekuan darah orang yang digigit</label>
+          <select id="kondisiPembekuan">
+            <option value="normal">Normal</option>
+            <option value="pengencer">Sedang memakai obat pengencer darah</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="hitung" onclick="tampilkanSimulasi()">Lihat Simulasi</button>
+
+      <div class="hasil-box" id="hasilBox">
+        <div class="timeline" id="timelineBox"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="metode">
+    <div class="label">05 — Metode</div>
+    <h2>Catatan kejujuran soal presisi waktu</h2>
+    <p>Saya cari literatur yang menyebutkan <strong>urutan detik-per-detik</strong> tiap senyawa liur lintah — dan tidak menemukan data setegas itu. Yang benar-benar terdokumentasi dalam riset adalah: (1) tahapan proses makan secara keseluruhan (perlekatan mekanis → sekresi aktif selama makan → lepas sendiri → efek residu pasca-gigitan), dan (2) sel kelenjar ludah "mengosongkan sebagian atau seluruh" isinya selama satu kali makan — bukan mengeluarkan senyawa satu-per-satu dengan jadwal presisi.</p>
+    <p>Karena itu, timeline di atas saya susun berdasarkan <strong>fase proses makan yang memang terdokumentasi durasinya</strong> (perlekatan, isapan aktif ~20-45 menit, pelepasan diri, efek residu berjam-jam), dengan penempatan senyawa di tiap fase berdasarkan <em>penalaran fungsional yang masuk akal</em> (misalnya: senyawa penghambat pembekuan darah logis diperlukan sejak awal isapan, bukan di akhir) — bukan hasil pengukuran laboratorium yang mencatat senyawa mana keluar di detik ke berapa. Ini saya tandai jujur di simulasi, karena mengklaim presisi yang tidak ada dasarnya lebih buruk daripada mengakui keterbatasan data.</p>
+  </section>
+
+  <section id="tradisi">
+    <div class="label">06 — Lintas Peradaban</div>
+    <h2>Terapi lintah bukan penemuan modern</h2>
+    <div class="tradisi-grid">
+      <div class="tradisi-item"><div class="judul">Ayurveda (India)</div>Dikenal sebagai <em>Jalaukavacharana</em>, dibahas satu bab penuh dalam <em>Sushruta Samhita</em> — salah satu teks bedah tertua yang masih ada.</div>
+      <div class="tradisi-item"><div class="judul">Kedokteran Unani/Arab-Islam</div>Ibnu Sina membahas penggunaan lintah dalam <em>Al-Qanun fi al-Tibb</em> (Canon of Medicine), dipandang mampu menarik darah dari jaringan lebih dalam dibanding bekam permukaan.</div>
+      <div class="tradisi-item"><div class="judul">Tiongkok</div>Dikenal sebagai <em>Shui Zhi</em> (水蛭), pertama tercatat dalam <em>Shen-Nong-Ben-Cao-Jing</em> (~100 M), masih masuk Farmakope RRT modern untuk kondisi trombosis.</div>
+    </div>
+    <p>Catatan penting: penggunaan tradisional ini historis dan budaya secara luas terdokumentasi — bukan berarti semua klaim indikasi tradisionalnya otomatis terbukti secara uji klinis modern. Indikasi yang benar-benar disetujui secara medis modern saat ini jauh lebih sempit (terutama kongesti vena pasca bedah rekonstruksi/replantasi).</p>
+  </section>
+
+  <section id="batasan">
+    <div class="label">07 — Batasan</div>
+    <h2>Yang paling penting untuk dipahami</h2>
+    <div class="batasan-item"><div class="dot"></div><p>Indikasi medis modern yang benar-benar disetujui untuk lintah hidup jauh lebih sempit dari klaim tradisional — terutama untuk kongesti vena pasca bedah mikrovaskular/replantasi jaringan.</p></div>
+    <div class="batasan-item"><div class="dot"></div><p>Risiko nyata: infeksi dari bakteri di usus lintah (terutama jika bukan galur medis steril), anemia akibat kehilangan darah, infeksi sekunder pada luka.</p></div>
+    <div class="batasan-item"><div class="dot"></div><p>Orang dengan gangguan pembekuan darah atau sedang memakai obat pengencer darah punya risiko lebih tinggi dari efek antikoagulan lintah — perlu pengawasan medis ketat.</p></div>
+    <div class="batasan-item"><div class="dot"></div><p>Timeline di simulasi ini adalah rekonstruksi edukatif berbasis fase yang terdokumentasi + penalaran fungsional — bukan hasil pengukuran detik-presisi dari laboratorium.</p></div>
+    <div class="disclaimer-box">Alat ini murni edukasi biokimia dan sejarah. Hirudoterapi nyata harus dilakukan dengan lintah medis steril di bawah pengawasan tenaga medis terlatih — bukan dipraktikkan sendiri berdasarkan alat ini.</div>
+  </section>
+
+  <section id="konsultasi">
+    <div class="konsultasi">
+      <p>Ingin mendalami satu spesies tertentu, atau menambah konteks tradisi lain?</p>
+      <a class="btn-konsul" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20diskusi%20terkait%20Simulasi%20Hirudoterapi%20JAZMI." target="_blank" rel="noopener">Diskusikan via WhatsApp</a>
+    </div>
+  </section>
+
+  <footer>
+    <p>Bagian dari Laboratorium Alat JAZMI. Prototipe berdiri sendiri — belum terhubung ke Beranda atau modul lain.</p>
+  </footer>
+</div>
+
+<script>
+const NAMA_SPESIES = {
+  hirudo: 'Hirudo medicinalis',
+  hirudinaria: 'Hirudinaria manillensis',
+  nipponia: 'Hirudo nipponia'
+};
+const SENYAWA_UTAMA = {
+  hirudo: 'hirudin',
+  hirudinaria: 'bufrudin (analog hirudin)',
+  nipponia: 'hirudin-HN (varian hirudin)'
+};
+
+let modeAktif = 'gigitan';
+function pilihMode(mode){
+  modeAktif = mode;
+  document.getElementById('tabGigitan').classList.toggle('aktif', mode==='gigitan');
+  document.getElementById('tabEkstraksi').classList.toggle('aktif', mode==='ekstraksi');
+  document.getElementById('hasilBox').classList.remove('tampil');
+}
+
+function tampilkanSimulasi(){
+  const spesies = document.getElementById('spesiesPilih').value;
+  const pengencer = document.getElementById('kondisiPembekuan').value === 'pengencer';
+  const namaSpesies = NAMA_SPESIES[spesies];
+  const senyawaUtama = SENYAWA_UTAMA[spesies];
+
+  let fase = [];
+
+  if (modeAktif === 'gigitan'){
+    fase = [
+      { waktu:'Menit 0', judul:'Perlekatan & Insisi Mekanis', tag:[], teks:`${namaSpesies} melekat dengan alat isap, tiga rahang bergigi mikroskopis menyayat kulit membentuk pola Y (triradiate). Tahap ini murni mekanis — belum ada sekresi kimiawi aktif.` },
+      { waktu:'Menit 1-5 (Awal Isapan)', judul:'Membuka Jalur Darah', tag:['Vasodilator','Hirudin/'+senyawaUtama+' (awal)'], teks:'Secara fungsional masuk akal senyawa pembuka aliran darah dan antikoagulan awal mulai bekerja sejak dini — tanpa ini, darah akan membeku dalam hitungan detik dan menghentikan proses makan sebelum dimulai.' },
+      { waktu:'Menit 5-30/45 (Isapan Aktif)', judul:'Sekresi Penuh Berlangsung', tag:['Hirudin/'+senyawaUtama,'Calin','Destabilase','Hyaluronidase','Kolagenase','Apyrase','Eglin/Bdellin'], teks:'Selama fase makan aktif, sel kelenjar ludah mengeluarkan sebagian besar isi sekresinya — kombinasi antikoagulan, "faktor penyebar" (hyaluronidase) yang membantu senyawa lain menembus jaringan, dan senyawa anti-inflamasi. Bukti ilmiah tidak mendukung urutan presisi per-senyawa dalam fase ini.' },
+      { waktu:'Menit 20-45', judul:'Pelepasan Diri', tag:[], teks:'Lintah kenyang (bisa menghisap 5-15 ml darah, hingga 10x berat tubuhnya) dan melepaskan diri sendiri dari inang.' },
+      { waktu:'Jam ke-1 hingga 24-48+ jam', judul:'Efek Residu Pasca-Gigitan', tag:['Sisa Hirudin/'+senyawaUtama], teks:'Luka terus mengeluarkan darah selama berjam-jam akibat sisa antikoagulan di jaringan — inilah efek yang justru dimanfaatkan secara klinis modern untuk meredakan kongesti vena pasca bedah rekonstruksi.' + (pengencer ? ' <strong>Catatan: pada orang yang sudah memakai obat pengencer darah, efek residu ini berpotensi lebih lama/lebih banyak — perlu pengawasan medis ekstra.</strong>' : '') },
+    ];
+  } else {
+    fase = [
+      { waktu:'Proses Ekstraksi', judul:'Isolasi Senyawa Tunggal', tag:[senyawaUtama.split(' ')[0]], teks:`Ekstraksi (baik dari kelenjar ludah maupun dengan memeras lintah) pada praktiknya hampir selalu hanya menghasilkan satu senyawa terisolasi — paling sering ${senyawaUtama} murni sebagai antikoagulan.` },
+      { waktu:'Yang Hilang', judul:'Efek Sinergis ~100 Senyawa', tag:['Calin','Hyaluronidase','Eglin/Bdellin','dll. (tidak terikutkan)'], teks:'Senyawa-senyawa pendukung yang bekerja bersama secara sinergis dalam liur asli (anti-inflamasi, faktor penyebar jaringan, dll.) umumnya tidak ikut terekstraksi atau hilang aktivitasnya dalam proses isolasi/penyimpanan.' },
+      { waktu:'Stabilitas', judul:'Keterbatasan Penyimpanan', tag:[], teks:'Ekstrak liur encer harus segera dipakai — percobaan pengeringan-beku (lyophilization) untuk penyimpanan jangka panjang dilaporkan mengurangi atau menghilangkan sama sekali aktivitas terapeutiknya.' },
+      { waktu:'Hasil Klinis', judul:'Manfaat Lebih Sempit', tag:[], teks:`${senyawaUtama} murni tetap bermanfaat sebagai antikoagulan (dipakai dalam pengembangan obat), tapi efek luas seperti pada gigitan lintah hidup (anti-inflamasi, penetrasi jaringan, dll.) tidak sepenuhnya tereplikasi.` },
+    ];
+  }
+
+  const box = document.getElementById('timelineBox');
+  box.innerHTML = fase.map(f => `
+    <div class="fase-item">
+      <div class="waktu">${f.waktu}</div>
+      <div class="judul-fase">${f.judul}</div>
+      ${f.tag.map(t => `<span class="senyawa-tag">${t}</span>`).join('')}
+      <p>${f.teks}</p>
+    </div>
+  `).join('');
+
+  document.getElementById('hasilBox').classList.add('tampil');
+}
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geometri Gerhana — Laboratorium JAZMI</title>
+<style>
+  :root{
+    --bg:#0a1512; --bg2:#0f1e19; --card:#122420; --card2:#16302a; --line:#1f3d34;
+    --emerald:#22c98a; --emerald-dim:#0e6b4f; --gold:#e0b354; --text:#e9f3ee;
+    --muted:#8fada0; --danger:#e07a5f; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:'Georgia',serif; line-height:1.65;}
+  .sans{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;}
+  header{padding:32px 20px 22px; text-align:center; background:radial-gradient(ellipse at top, #113b2e 0%, var(--bg) 70%); border-bottom:1px solid var(--line);}
+  header .kicker{font-family:-apple-system,sans-serif; letter-spacing:.14em; text-transform:uppercase; font-size:12px; color:var(--gold); margin-bottom:10px;}
+  header h1{font-size:1.4rem; margin:0 0 10px; font-weight:600; line-height:1.35;}
+  header p{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px; max-width:660px; margin:0 auto;}
+  nav.tabs{position:sticky; top:0; z-index:10; display:flex; overflow-x:auto; gap:6px; padding:10px 14px; background:rgba(10,21,18,.96); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); font-family:-apple-system,sans-serif; -webkit-overflow-scrolling:touch;}
+  nav.tabs a{flex:0 0 auto; padding:7px 13px; border-radius:999px; font-size:12.5px; color:var(--muted); text-decoration:none; border:1px solid var(--line); white-space:nowrap;}
+  main{max-width:800px; margin:0 auto; padding:8px 18px 60px;}
+  section{padding:30px 0; border-bottom:1px solid var(--line);}
+  section:last-child{border-bottom:none;}
+  h2{font-size:1.1rem; color:var(--emerald); margin:0 0 6px; display:flex; align-items:center; gap:8px;}
+  h2 .num{font-family:-apple-system,sans-serif; font-size:11px; background:var(--emerald-dim); color:#dff7ec; padding:2px 8px; border-radius:6px;}
+  h3{color:var(--gold); font-size:1rem; margin:20px 0 8px;}
+  p{margin:0 0 14px; font-size:15.5px;}
+  .lead{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px;}
+  .qbox{background:var(--card2); border-left:3px solid var(--gold); border-radius:8px; padding:14px 16px; margin:16px 0; font-style:italic; color:#f0e6cc; font-size:14.5px;}
+  ul{padding-left:20px; margin:10px 0;} li{margin-bottom:7px; font-size:15px;}
+  .sourceline{font-family:-apple-system,sans-serif; font-size:11.5px; color:var(--muted); margin-top:6px; padding-top:6px; border-top:1px dashed var(--line);}
+  .warn{background:#241407; border:1px solid #5c3a12; border-radius:10px; padding:14px 16px; margin:14px 0; font-family:-apple-system,sans-serif; font-size:13.5px; color:#f0d3a8;}
+  .insight{background:#0e2a20; border-left:3px solid var(--emerald); border-radius:8px; padding:14px 16px; margin:14px 0; font-family:-apple-system,sans-serif; font-size:14px; color:#dff7ec;}
+  .insight .lbl{color:var(--emerald); font-size:11px; text-transform:uppercase; letter-spacing:.08em; display:block; margin-bottom:6px; font-weight:700;}
+  .eq{font-family:Georgia,serif; text-align:center; font-size:1.15rem; background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:16px; margin:14px 0; color:var(--emerald);}
+  .eq small{display:block; font-family:-apple-system,sans-serif; font-size:11px; color:var(--muted); margin-top:8px;}
+
+  .sim-card{font-family:-apple-system,sans-serif; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin:14px 0;}
+  .sim-card label{font-size:13px; color:var(--muted); display:block; margin-bottom:6px;}
+  .sim-card input[type=range]{width:100%; accent-color:var(--emerald); margin-bottom:14px;}
+  .val{color:var(--gold); font-weight:700;}
+  .plot-wrap{background:#050a08; border-radius:10px; border:1px solid var(--line); padding:8px;}
+  .plot-wrap svg{width:100%; height:auto;}
+  .result-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;}
+  .result-box{background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:12px; text-align:center;}
+  .result-box .rlabel{font-size:11px; color:var(--muted); text-transform:uppercase;}
+  .result-box .rval{font-size:1.15rem; color:var(--emerald); font-weight:800; margin-top:4px;}
+  .status-banner{margin-top:12px; padding:12px; border-radius:8px; text-align:center; font-weight:700; font-size:14px;}
+
+  .aryabox{font-family:-apple-system,sans-serif; background:var(--card); border:1.5px solid var(--gold); border-radius:var(--radius); padding:16px; margin:14px 0;}
+  .aryabox h4{color:var(--gold); margin:0 0 10px; font-size:14px;}
+  .compare-row{display:flex; gap:10px; margin-bottom:10px;}
+  .compare-box{flex:1; background:var(--bg2); border:1px solid var(--line); border-radius:8px; padding:10px; text-align:center;}
+  .compare-box .clabel{font-size:11px; color:var(--muted);}
+  .compare-box .cval{font-size:1.05rem; color:var(--emerald); font-weight:800;}
+
+  table.compare{width:100%; border-collapse:collapse; font-family:-apple-system,sans-serif; font-size:12.5px; margin:14px 0;}
+  table.compare th, table.compare td{padding:8px 9px; border-bottom:1px solid var(--line); text-align:left;}
+  table.compare th{color:var(--gold); font-size:11px;}
+
+  .refs{font-family:-apple-system,sans-serif; font-size:12.5px; color:var(--muted);} .refs li{margin-bottom:8px;}
+  footer{text-align:center; padding:28px 20px; color:var(--muted); font-family:-apple-system,sans-serif; font-size:12px;}
+  @media(max-width:480px){ .result-grid,.compare-row{grid-template-columns:1fr; flex-direction:column;} }
+
+  .view3d-toggle{display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;}
+  .v3btn{background:var(--bg2); border:1px solid var(--line); color:var(--muted); padding:7px 12px; border-radius:8px; font-size:12.5px; cursor:pointer; font-family:-apple-system,sans-serif;}
+  .v3btn.active{background:var(--emerald-dim); color:#dff7ec; border-color:var(--emerald);}
+  #three3dWrap{position:relative; min-height:360px; display:flex; align-items:center; justify-content:center;}
+  #three3d{width:100%; height:360px; touch-action:none; cursor:grab; border-radius:10px; overflow:hidden;}
+  .loadBtn{background:var(--emerald-dim); color:#dff7ec; border:1px solid var(--emerald); padding:11px 18px; border-radius:10px; font-size:13.5px; cursor:pointer; font-family:-apple-system,sans-serif;}
+  .legend3d{display:flex; flex-wrap:wrap; gap:10px 14px; font-family:-apple-system,sans-serif; font-size:11.5px; color:var(--muted); margin-top:10px;}
+  .legend3d span.dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:5px; vertical-align:middle;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kicker">Laboratorium JAZMI · Astronomi · Geometri Gerhana</div>
+  <h1>Geometri Gerhana: Kerucut Bayangan, Aryabhatta, dan Besselian Elements</h1>
+  <p>Eksplorasi Epistemologi Geometri: Menyingkap bagaimana jenis gerhana ditentukan secara fungsional oleh rasio sudut tampak, serta menguji status variabel jarak absolut (3D) dalam kalkulasi astronomi modern vs metode klasik Aryabhatta.</p>
+</header>
+
+<nav class="tabs">
+  <a href="#belajar">Belajar</a>
+  <a href="#pertanyaan">Pertanyaan Ilmiah</a>
+  <a href="#geometri">Geometri Kerucut</a>
+  <a href="#simulator">Simulator</a>
+  <a href="#model3d">Model 3D</a>
+  <a href="#aryabhatta">Metode Aryabhatta</a>
+  <a href="#besselian">Besselian Elements</a>
+  <a href="#batasan">Batasan</a>
+  <a href="#referensi">Referensi</a>
+</nav>
+
+<main>
+
+  <section id="belajar">
+    <h2><span class="num">01</span>Belajar</h2>
+    <p>Kenapa kadang gerhana matahari total (Bulan menutupi Matahari sepenuhnya), kadang cincin/annular (Bulan tampak lebih kecil dari Matahari, menyisakan cincin cahaya), dan kadang cuma sebagian? Jawabannya murni geometri kerucut bayangan — dan yang menarik, jawabannya bisa didapat dua cara berbeda: lewat jarak mutlak dalam kilometer, atau lewat <strong>rasio sudut tampak</strong> saja tanpa perlu tahu jarak sama sekali.</p>
+    <div class="qbox">"Aryabhatta di abad ke-5 sudah bisa membedakan gerhana cincin dari gerhana total tanpa satu pun angka jarak dalam kilometer — cukup rasio sudut. Itu bukan kebetulan; itu karena yang benar-benar menentukan jenis gerhana memang rasio, bukan jarak mutlaknya."</div>
+  </section>
+
+  <section id="pertanyaan">
+    <h2><span class="num">02</span>Pertanyaan Ilmiah</h2>
+    <ul>
+      <li>Apa itu kerucut umbra dan penumbra, dan bagaimana bentuknya ditentukan geometri Matahari-Bulan-Bumi?</li>
+      <li>Kenapa jenis gerhana bisa berubah dari total ke cincin hanya karena jarak Bumi-Bulan berubah sedikit (orbit Bulan elips)?</li>
+      <li>Bagaimana Aryabhatta bisa menentukan jenis gerhana tanpa alat ukur jarak modern?</li>
+      <li>Apa itu Besselian Elements, dan kenapa astronom memilih memproyeksikan geometri 3D ke bidang 2D untuk memprediksi gerhana?</li>
+    </ul>
+  </section>
+
+  <section id="geometri">
+    <h2><span class="num">03</span>Geometri Kerucut Bayangan</h2>
+    <p>Karena Matahari jauh lebih besar dari Bulan, bayangan Bulan berbentuk <strong>kerucut yang mengecil</strong> — bukan silinder. Ada dua kerucut:</p>
+    <ul>
+      <li><strong>Umbra</strong> — kerucut bayangan gelap total, mengecil hingga ke satu titik (apeks), lalu "terbalik" jadi antumbra yang melebar lagi.</li>
+      <li><strong>Penumbra</strong> — bayangan sebagian di sekelilingnya, tempat gerhana parsial teramati.</li>
+    </ul>
+    <div class="eq">
+      L = D · rₘ / (r_s − rₘ)
+      <small>L = panjang kerucut umbra dari pusat Bulan · D = jarak Matahari-Bulan · rₘ = radius Bulan · r_s = radius Matahari</small>
+    </div>
+    <p>Kalau ujung kerucut umbra ini jatuh <strong>sebelum</strong> mencapai permukaan Bumi (L lebih pendek dari jarak Bulan-Bumi), yang sampai ke Bumi adalah antumbra yang sudah melebar lagi — itulah gerhana cincin. Kalau ujung kerucutnya jatuh <strong>setelah/tepat di</strong> permukaan Bumi, gerhana total yang terjadi.</p>
+  </section>
+
+  <section id="simulator">
+    <h2><span class="num">04</span>Simulator: Total, Cincin, atau Sebagian?</h2>
+    <p class="lead">Geser jarak Bumi-Bulan (orbitnya elips, jadi jaraknya berubah-ubah) dan jarak Bumi-Matahari.</p>
+    <div class="sim-card">
+      <label>Jarak Bumi–Bulan: <span class="val" id="dmVal">384.400 km</span></label>
+      <input type="range" id="dmRange" min="356500" max="406700" step="100" value="384400">
+
+      <label>Jarak Bumi–Matahari: <span class="val" id="dsVal">149.600.000 km</span></label>
+      <input type="range" id="dsRange" min="147100000" max="152100000" step="10000" value="149600000">
+
+      <div class="plot-wrap">
+        <svg id="eclipseSVG" viewBox="0 0 380 160" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-box"><div class="rlabel">Panjang Kerucut Umbra</div><div class="rval" id="umbraLenVal">– km</div></div>
+        <div class="result-box"><div class="rlabel">Jarak Bulan ke Bumi</div><div class="rval" id="moonEarthVal">– km</div></div>
+      </div>
+      <div class="status-banner" id="statusBanner"></div>
+    </div>
+  </section>
+
+  <section id="model3d">
+    <h2><span class="num">05</span>Model 3D Interaktif: Kerucut Bayangan dalam Ruang</h2>
+    <p class="lead">Model ini disinkronkan langsung dengan dua slider di Simulator (§04) — geser jarak di atas, lalu lihat bagaimana posisi apeks kerucut umbra bergeser relatif terhadap Bumi di sini, dalam ruang 3D yang bisa diputar dan di-zoom.</p>
+    <div class="warn">
+      ⚠️ <strong>Model 3D ini TIDAK berskala nyata — ini ditegaskan secara eksplisit, bukan disembunyikan di catatan kecil.</strong> Dibandingkan data resmi astronomi (radius &amp; jarak rata-rata dari IAU/NASA JPL yang sama dengan konstanta <code>R_MOON</code>/<code>R_SUN</code> di skrip halaman ini):
+      <ul style="margin:8px 0 4px 18px; padding:0;">
+        <li>Radius asli — Matahari <strong>696.000 km</strong>, Bulan <strong>1.737,4 km</strong>, Bumi <strong>6.371 km</strong>. Rasio radius Matahari:Bulan ≈ <strong>400:1</strong>.</li>
+        <li>Jarak asli — Bumi–Matahari rata-rata <strong>149,6 juta km</strong>, Bumi–Bulan rata-rata <strong>384.400 km</strong>. Rasio jarak Matahari:Bulan ≈ <strong>389:1</strong> — hampir sama dengan rasio radius di atas, itulah sebab kebetulan kosmis kenapa gerhana total bisa terjadi sama sekali (dibahas di §06 Aryabhatta).</li>
+        <li>Di model ini, radius Bumi/Bulan/Matahari &amp; lebar kerucut sengaja <strong>diperbesar ±4×</strong> dari skala jarak yang dipakai, dan jarak Bumi–Matahari sengaja <strong>dipadatkan (lihat angka faktor pemadatan otomatis di bawah setelah model dimuat)</strong> — supaya seluruh sistem termuat dalam satu layar kecil dan tetap bisa diputar-putar.</li>
+      </ul>
+      Satu-satunya bagian yang presisi tanpa distorsi: <strong>posisi apeks kerucut umbra di sepanjang sumbu</strong> (menentukan total vs cincin) dan <strong>rasio sudut tampak Matahari–Bulan dari Bumi</strong> — keduanya dihitung dari rumus asli yang sama dengan §04 dan §06, bukan digambar ulang secara bebas.
+    </div>
+    <div class="sim-card" id="model3dCard">
+      <label style="margin-bottom:8px;">Parameter Skala — geser manual untuk merasakan transisinya, atau tekan tombol untuk lompat langsung ke titik acuan:</label>
+      <div class="view3d-toggle" id="scaleModeToggle" style="align-items:center;">
+        <button type="button" id="btnScaleNice" class="v3btn">🎨 Enak Dipandang</button>
+        <input type="range" id="scaleBlendRange" min="0" max="100" value="0" step="1" style="flex:1 1 140px; margin:0 4px;">
+        <button type="button" id="btnScaleReal" class="v3btn">🔬 Skala Nyata (Sains)</button>
+      </div>
+      <div class="sourceline" id="scaleModeStatus" style="margin-bottom:12px;">Mode aktif: <strong>Skala Enak Dipandang</strong> (0%) — radius Bumi/Bulan/Matahari diperbesar ±4×, jarak Matahari dipadatkan supaya seluruh sistem termuat di satu layar.</div>
+      <div class="view3d-toggle">
+        <button type="button" id="btnOrbit" class="v3btn active">🔄 Orbit Bebas</button>
+        <button type="button" id="btnEarthView" class="v3btn">🌍 Sudut Pandang Bumi</button>
+        <button type="button" id="btnResetView" class="v3btn">↺ Reset</button>
+      </div>
+      <div class="sourceline" style="margin-bottom:0;">💡 Zoom sekarang eksponensial (scroll/pinch) — bisa menjangkau dari jarak dekat Bumi hingga jarak asli Matahari (ribuan unit) tanpa perlu ratusan kali scroll.</div>
+      <div style="height:6px;"></div>
+      <div id="three3dWrap" class="plot-wrap">
+        <button type="button" id="loadModel3D" class="loadBtn">▶ Muat Model 3D (WebGL)</button>
+        <div id="three3d" style="display:none;"></div>
+      </div>
+      <div class="legend3d">
+        <div><span class="dot" style="background:#2f7dc0;"></span>Bumi</div>
+        <div><span class="dot" style="background:#b9b9b9;"></span>Bulan</div>
+        <div><span class="dot" style="background:#ffd94a;"></span>Matahari</div>
+        <div><span class="dot" style="background:#0a0a0a; border:1px solid #444;"></span>Kerucut umbra</div>
+        <div><span class="dot" style="background:#cfcfcf; opacity:0.5;"></span>Kerucut penumbra</div>
+        <div><span class="dot" style="background:#e0b354;"></span>Bidang fundamental (§06)</div>
+      </div>
+      <div class="result-grid" style="margin-top:12px;">
+        <div class="result-box"><div class="rlabel">Jarak Apeks Umbra dari Bulan</div><div class="rval" id="apexDistVal3D">– km</div></div>
+        <div class="result-box"><div class="rlabel">Status Apeks vs Bumi</div><div class="rval" id="apexStatusVal3D">–</div></div>
+        <div class="result-box"><div class="rlabel">Faktor Pemadatan Jarak Matahari</div><div class="rval" id="compressFactorVal3D">–</div></div>
+        <div class="result-box"><div class="rlabel">Faktor Pembesaran Radius</div><div class="rval" id="exagFactorVal3D">–</div></div>
+      </div>
+      <div class="result-grid" style="margin-top:10px;">
+        <div class="result-box"><div class="rlabel">Jarak Nyata Matahari (skala adegan)</div><div class="rval" id="realSunDistVal3D">– unit</div></div>
+      </div>
+      <div class="sourceline">Catatan render: radius Bumi/Bulan/Matahari serta lebar kerucut diperbesar ±4× demi keterlihatan (jarak aslinya membuat kerucut nyaris seperti jarum tipis). <strong>Posisi apeks kerucut di sepanjang sumbu, dan rasio ukuran sudut Matahari–Bulan, dihitung persis dari rumus yang sama dengan simulator §04 dan metode Aryabhatta di bawah</strong> — bukan direka ulang secara visual. Matahari digambar pada jarak yang dipadatkan (bukan skala asli, supaya termuat di layar), tapi radiusnya disesuaikan agar ukuran sudutnya sebagaimana dilihat dari Bumi tetap presis sama dengan nilai aslinya — prinsip yang sama dengan rasio sudut Aryabhatta di §05.</div>
+    </div>
+  </section>
+
+  <section id="aryabhatta">
+    <h2><span class="num">06</span>Metode Aryabhatta: Rasio Sudut Saja, Tanpa Jarak Mutlak</h2>
+    <p>Aryabhatta (476–550 M) menunjukkan sesuatu yang elegan: jenis gerhana bisa ditentukan murni dari <strong>rasio sudut tampak</strong> (angular size) Matahari dan Bulan dari Bumi — dua besaran yang bisa langsung diukur di langit tanpa perlu tahu jarak sebenarnya dalam satuan panjang apa pun.</p>
+    <div class="aryabox">
+      <h4>Bandingkan Dua Metode — Hasilnya Harus Sama</h4>
+      <div class="compare-row">
+        <div class="compare-box"><div class="clabel">Sudut Tampak Bulan</div><div class="cval" id="moonAngVal">–′</div></div>
+        <div class="compare-box"><div class="clabel">Sudut Tampak Matahari</div><div class="cval" id="sunAngVal">–′</div></div>
+      </div>
+      <div class="status-banner" id="aryaBanner"></div>
+      <div class="insight" style="margin-top:12px;">
+        <span class="lbl">Implikasi Kausal &amp; Epistemologis</span>
+        Kesepakatan antara simulator berbasis kilometer dan metode Aryabhatta membuktikan satu hal mendasar: <strong>parameter yang secara kausal menentukan fenomena gerhana bersifat relasional-angular (rasio sudut tampak), bukan spatial-absolut.</strong> Fakta bahwa Aryabhatta di abad ke-5 mampu memprediksi jenis gerhana secara presisi tanpa angka jarak kilometer menunjukkan bahwa angka jarak absolut modern bukanlah <i>sebab primer</i> terjadinya fenomena, melainkan parameter intermediate/model yang disusun belakangan untuk kecukupan empiris (empirical adequacy).
+      </div>
+    </div>
+  </section>
+
+  <section id="besselian">
+    <h2><span class="num">07</span>Besselian Elements: Memampatkan 3D ke 2D</h2>
+    <p>Untuk memprediksi jalur gerhana di permukaan Bumi secara presisi, astronom sejak abad ke-19 (Friedrich Bessel) menyadari bahwa perhitungan 3D absolut bersifat tidak praktis. Mereka mengompresi dan mentransformasikan ruang 3D menjadi koordinat 2D pada <strong>bidang fundamental</strong> (fundamental plane) yang tegak lurus terhadap sumbu bayangan.</p>
+    <ul>
+      <li>Posisi sumbu bayangan di bidang ini diwakili koordinat <strong>x, y</strong> (bukan lagi jarak 3D penuh).</li>
+      <li>Radius umbra &amp; penumbra di bidang itu diwakili <strong>l₁, l₂</strong>.</li>
+      <li>Semua nilai ini dinyatakan sebagai polinomial terhadap waktu — sehingga posisi bayangan di menit mana pun bisa dihitung cepat lewat interpolasi, tanpa mengulang perhitungan 3D penuh.</li>
+    </ul>
+    <div class="insight">
+      <span class="lbl">Status Epistemologis: Transformasi Koordinat vs Realitas Ontologis</span>
+      Penggunaan <i>Besselian Elements</i> menunjukkan bagaimana astronomi komputasional memperlakukan jarak: <strong>sebagai parameter fungsional yang dikondensasikan demi tujuan prediktif spesifik, bukan sebagai entitas ontologis yang kaku.</strong>
+      <br><br>
+      Ketika jarak 3D dikompresi menjadi parameter bidang proyeksi (<i>x, y, l₁, l₂</i>), sains arus utama secara operasional membuktikan bahwa nilai numerik jarak absolut bersifat instrumentalis. Model modern seperti JPL DE440 memang mengunci angka jarak melalui <i>fitted parameters</i> (seperti waktu tempuh laser LLR), namun validitas angka tersebut diuji dari kemampuannya menghasilkan ketepatan prediksi empiris (<i>empirical adequacy</i>), bukan dari akses ontologis langsung terhadap struktur sejati ruang kosmis.
+    </div>
+    <div class="sourceline">Sumber: Espenak & Meeus, "Five Millennium Canon of Solar Eclipses" (NASA); Explanatory Supplement to the Astronomical Almanac (metodologi Besselian Elements).</div>
+  </section>
+
+  <section id="batasan">
+    <h2><span class="num">08</span>Batasan</h2>
+    <ul>
+      <li>Simulator menyederhanakan geometri jadi kasus Matahari-Bulan-Bumi persis segaris (konjungsi ideal) — gerhana sungguhan juga bergantung pada garis lintang/deklinasi (kemiringan orbit Bulan 5° terhadap ekliptika), tidak dimodelkan di sini.</li>
+      <li>Perhitungan "apakah umbra mencapai Bumi" membandingkan panjang kerucut langsung ke jarak Bulan-Bumi tanpa mengoreksi radius Bumi (~6.371 km) — koreksi ini mengubah nilai batas secara halus, tidak fatal untuk tujuan edukasi tapi bukan presisi observatorium.</li>
+      <li>Bagian Besselian Elements bersifat konseptual/penjelasan prinsip — bukan implementasi kalkulator koefisien polinomial NASA yang sesungguhnya (itu butuh puluhan koefisien per gerhana, di luar cakupan alat edukatif ini).</li>
+      <li>Radius Matahari &amp; Bulan dianggap konstan (bola sempurna) — variasi kecil akibat rotasi/oblateness diabaikan.</li>
+      <li>Model 3D (§05) memperbesar radius Bumi/Bulan/Matahari dan lebar kerucut ±4× dari skala jarak aslinya demi keterlihatan, serta memadatkan jarak Bumi-Matahari agar termuat di layar — hanya dimensi <em>radial/melintang</em> yang diperbesar; posisi apeks kerucut di sepanjang sumbu dan rasio sudut Matahari-Bulan tetap dihitung dari rumus asli tanpa distorsi.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <h2><span class="num">09</span>Referensi</h2>
+    <ul class="refs">
+      <li>Espenak, F. & Meeus, J. — "Five Millennium Canon of Solar Eclipses: -1999 to +3000" (NASA/TP-2006-214141).</li>
+      <li>Explanatory Supplement to the Astronomical Almanac — bab metodologi Besselian Elements.</li>
+      <li>Aryabhatiya (Aryabhatta, ~499 M) — bab Golapada, perhitungan gerhana lewat geometri sudut.</li>
+      <li>Meeus, J. — "Astronomical Algorithms" (geometri kerucut umbra/penumbra, formula standar).</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  Laboratorium JAZMI — Jalinan Zamrud Islamiah · Belajar → Model → Uji → Tool<br>
+  Versi pengembangan awal. Silakan diperiksa ulang &amp; dikembangkan lebih lanjut.
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const R_MOON = 1737.4;   // km
+const R_SUN = 696000;    // km
+const R_EARTH = 6371;    // km
+
+const dmRange = document.getElementById('dmRange');
+const dsRange = document.getElementById('dsRange');
+
+/* ===================================================================
+   MODEL 3D (Three.js r128) — kerucut umbra & penumbra dalam ruang,
+   disinkronkan langsung dengan slider Dm/Ds di atas. Lazy-init: baru
+   dibuat saat tombol "Muat Model 3D" diklik.
+   =================================================================== */
+const SCALE3D = 30 / 384400;     // unit adegan per km — kalibrasi: jarak Bumi-Bulan rerata ≈ 30 unit
+const EXAG_NICE = 4;             // faktor pembesaran RADIUS pada mode "Enak Dipandang"
+const EXAG_REAL = 1;             // TANPA pembesaran radius pada mode "Skala Nyata (Sains)"
+const SUN_COMPRESSED_DIST = 60;  // unit adegan; jarak Matahari dipadatkan (hanya dipakai mode "Enak Dipandang")
+const PENUMBRA_FAR_FACTOR = 1.3; // seberapa jauh kerucut penumbra digambar melewati Bumi
+
+let scaleBlend = 0;   // 0 = enak dipandang ... 1 = skala nyata sains — parameter kontinu, bisa digeser manual ATAU dilompat via tombol
+let three3d = null; // lazy init
+
+function currentExag(){ return EXAG_NICE + (EXAG_REAL - EXAG_NICE) * scaleBlend; } // interpolasi linear radius
+
+// radius adegan utk objek yg sudut tampaknya dari Bumi harus presis (Matahari & Bulan):
+// exag * (radius_asli/jarak_asli_dari_Bumi) * jarak_adegan_dari_Bumi
+function angularSceneRadius(trueRadius, trueDistFromEarth, sceneDistFromEarth, exag){
+  return exag * (trueRadius/trueDistFromEarth) * sceneDistFromEarth;
+}
+
+function initThree3D(){
+  if(three3d) return;
+  const container = document.getElementById('three3d');
+  const w = container.clientWidth, h = container.clientHeight || 360;
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x050a08);
+
+  // bintang latar (murni dekoratif)
+  const starGeo = new THREE.BufferGeometry();
+  const starCount = 380, starPos = new Float32Array(starCount*3);
+  for(let i=0;i<starCount;i++){
+    starPos[i*3]   = (Math.random()-0.5)*260;
+    starPos[i*3+1] = (Math.random()-0.5)*160;
+    starPos[i*3+2] = (Math.random()-0.5)*260 - 40;
+  }
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos,3));
+  scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color:0x3f5a50, size:0.35})));
+
+  const camera = new THREE.PerspectiveCamera(45, w/h, 0.05, 60000); // far-plane dinaikkan agar Matahari di skala nyata (±11.900 unit) tetap terlihat
+  const target = new THREE.Vector3(0,0,-15);
+  let radius = 55, theta = 0.55, phi = 1.15;
+  let radiusMin = 0.4, radiusMax = 20000; // clamp zoom — lebar sekali agar mencakup jarak dekat Bumi s/d jarak asli Matahari
+
+  const renderer = new THREE.WebGLRenderer({antialias:true});
+  renderer.setSize(w,h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  container.appendChild(renderer.domElement);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+
+  const earth = new THREE.Mesh(new THREE.SphereGeometry(1,32,32), new THREE.MeshStandardMaterial({color:0x2f7dc0, roughness:0.8}));
+  scene.add(earth);
+  const moon = new THREE.Mesh(new THREE.SphereGeometry(1,28,28), new THREE.MeshStandardMaterial({color:0xb9b9b9, roughness:0.95}));
+  scene.add(moon);
+  const sun = new THREE.Mesh(new THREE.SphereGeometry(1,28,28), new THREE.MeshBasicMaterial({color:0xffd94a}));
+  scene.add(sun);
+  const sunLight = new THREE.PointLight(0xfff3d0, 1.4, 0, 0);
+  sun.add(sunLight);
+
+  const umbraMat = new THREE.MeshBasicMaterial({color:0x0a0a0a, transparent:true, opacity:0.6, side:THREE.DoubleSide});
+  const penumbraMat = new THREE.MeshBasicMaterial({color:0xcfcfcf, transparent:true, opacity:0.14, side:THREE.DoubleSide});
+  let umbraMesh = null, penumbraMesh = null;
+
+  // bidang fundamental (§06 Besselian) — di lokasi Bumi, tegak lurus sumbu bayangan
+  const fundPlane = new THREE.Mesh(new THREE.CircleGeometry(6,40), new THREE.MeshBasicMaterial({color:0xe0b354, transparent:true, opacity:0.10, side:THREE.DoubleSide}));
+  scene.add(fundPlane);
+  const planeRing = new THREE.Mesh(new THREE.RingGeometry(5.85,6,40), new THREE.MeshBasicMaterial({color:0xe0b354, transparent:true, opacity:0.55, side:THREE.DoubleSide}));
+  scene.add(planeRing);
+
+  function updateCamera(){
+    camera.position.x = target.x + radius*Math.sin(phi)*Math.sin(theta);
+    camera.position.z = target.z + radius*Math.sin(phi)*Math.cos(theta);
+    camera.position.y = target.y + radius*Math.cos(phi);
+    camera.lookAt(target);
+  }
+  updateCamera();
+
+  // kontrol orbit manual: drag=putar, wheel/pinch=zoom (nonaktif saat mode="earth")
+  let dragging=false, lastX=0, lastY=0;
+  renderer.domElement.addEventListener('pointerdown', e=>{ dragging=true; lastX=e.clientX; lastY=e.clientY; renderer.domElement.style.cursor='grabbing'; });
+  window.addEventListener('pointerup', ()=>{ dragging=false; renderer.domElement.style.cursor='grab'; });
+  window.addEventListener('pointermove', e=>{
+    if(!dragging || three3d.mode!=='orbit') return;
+    theta -= (e.clientX-lastX)*0.006;
+    phi   -= (e.clientY-lastY)*0.006;
+    phi = Math.max(0.15, Math.min(Math.PI-0.15, phi));
+    lastX=e.clientX; lastY=e.clientY;
+    updateCamera();
+  });
+  renderer.domElement.addEventListener('wheel', e=>{
+    if(three3d.mode!=='orbit') return;
+    e.preventDefault();
+    const zoom = Math.exp(e.deltaY*0.0015); // eksponensial: tetap terasa proporsional di radius 0.4 maupun 20000
+    radius = Math.max(radiusMin, Math.min(radiusMax, radius*zoom));
+    updateCamera();
+  }, {passive:false});
+  let pinchDist=null;
+  function touchDist(t0,t1){ return Math.hypot(t1.clientX-t0.clientX, t1.clientY-t0.clientY); }
+  renderer.domElement.addEventListener('touchstart', e=>{ if(e.touches.length===2){ pinchDist=touchDist(e.touches[0],e.touches[1]); dragging=false; } }, {passive:true});
+  renderer.domElement.addEventListener('touchmove', e=>{
+    if(e.touches.length===2 && pinchDist!==null && three3d.mode==='orbit'){
+      e.preventDefault();
+      const d=touchDist(e.touches[0],e.touches[1]);
+      const zoom = pinchDist/d; // rasio: jari menjauh (d naik) → zoom in → radius mengecil
+      radius = Math.max(radiusMin, Math.min(radiusMax, radius*zoom));
+      pinchDist=d; updateCamera();
+    }
+  }, {passive:false});
+  renderer.domElement.addEventListener('touchend', e=>{ if(e.touches.length<2) pinchDist=null; }, {passive:true});
+
+  function onResize(){
+    const w2 = container.clientWidth, h2 = container.clientHeight || 360;
+    camera.aspect = w2/h2; camera.updateProjectionMatrix();
+    renderer.setSize(w2,h2);
+  }
+  window.addEventListener('resize', onResize);
+
+  function loop(){ requestAnimationFrame(loop); renderer.render(scene, camera); }
+  loop();
+
+  three3d = {
+    scene, camera, target, earth, moon, sun, umbraMat, penumbraMat,
+    getUmbra:()=>umbraMesh, setUmbra:m=>umbraMesh=m,
+    getPenumbra:()=>penumbraMesh, setPenumbra:m=>penumbraMesh=m,
+    fundPlane, planeRing, mode:'orbit',
+    setOrbitParams:(r,t,p)=>{ radius=r; theta=t; phi=p; updateCamera(); },
+    setRadiusClamp:(min,max)=>{ radiusMin=min; radiusMax=max; radius=Math.max(radiusMin, Math.min(radiusMax, radius)); updateCamera(); },
+  };
+}
+
+// dipanggil setiap kali slider Dm/Ds berubah (lewat update()) — no-op kalau 3D belum dimuat
+function syncModel3D(Dm, Ds, umbraLen, totalPossible){
+  if(!three3d) return;
+  const exag = currentExag();
+  const sceneDm = Dm*SCALE3D;
+  const moonZ = -sceneDm;
+
+  three3d.earth.position.set(0,0,0);
+  three3d.earth.scale.setScalar(exag*SCALE3D*R_EARTH);
+  three3d.moon.position.set(0,0,moonZ);
+  const moonR = exag*SCALE3D*R_MOON;
+  three3d.moon.scale.setScalar(moonR);
+
+  // Matahari: blend=0 → jarak dipadatkan (nice); blend=1 → jarak sungguhan (Ds*SCALE3D), TANPA pemadatan.
+  // Radius selalu dihitung agar sudut tampak dari Bumi persis = aslinya (prinsip Aryabhatta §06).
+  const niceSunDist = sceneDm + SUN_COMPRESSED_DIST;
+  const realSunDist = Ds*SCALE3D;
+  const sunSceneDist = niceSunDist + (realSunDist - niceSunDist) * scaleBlend;
+  three3d.sun.position.set(0,0,-sunSceneDist);
+  three3d.sun.scale.setScalar(angularSceneRadius(R_SUN, Ds, sunSceneDist, exag));
+
+  // transparansi penuh: berapa kali jarak Matahari di model ini "dipadatkan" dibanding aslinya
+  const sunEquivalentKm = sunSceneDist/SCALE3D; // jarak Matahari SEHARUSNYA sejauh ini kalau memakai skala Bumi-Bulan yg sama
+  const compressionFactor = Ds/sunEquivalentKm;
+  const compressEl = document.getElementById('compressFactorVal3D');
+  if(compressEl) compressEl.textContent = compressionFactor <= 1.01 ? 'Tidak dipadatkan (skala nyata)' : (compressionFactor.toFixed(0)+'× lebih dekat');
+
+  const exagEl = document.getElementById('exagFactorVal3D');
+  if(exagEl) exagEl.textContent = exag <= 1.001 ? '1× (radius asli)' : ('±'+exag.toFixed(2)+'×');
+
+  const realSunDistEl = document.getElementById('realSunDistVal3D');
+  if(realSunDistEl) realSunDistEl.textContent = fmt(Ds*SCALE3D)+' unit';
+
+  // kerucut UMBRA — tinggi = posisi apeks hasil rumus L=D·rm/(rs-rm), sama persis dgn §04
+  const apexDistScene = Math.max(umbraLen*SCALE3D, 0.001);
+  if(three3d.getUmbra()){ three3d.scene.remove(three3d.getUmbra()); three3d.getUmbra().geometry.dispose(); }
+  const umbraGeo = new THREE.ConeGeometry(moonR, apexDistScene, 40, 1, true);
+  const umbraMesh = new THREE.Mesh(umbraGeo, three3d.umbraMat);
+  umbraMesh.rotation.x = Math.PI/2;
+  umbraMesh.position.set(0,0, moonZ + apexDistScene/2);
+  three3d.scene.add(umbraMesh);
+  three3d.setUmbra(umbraMesh);
+
+  // kerucut PENUMBRA — melebar dari radius Bulan, rumus segitiga sebangun serupa (apeks di sisi Matahari)
+  const Dsm = Ds - Dm;
+  const farRealD = Dm*PENUMBRA_FAR_FACTOR;
+  const penumbraFarRadiusReal = R_MOON + farRealD*(R_SUN+R_MOON)/Dsm;
+  const penFarScene = exag*SCALE3D*penumbraFarRadiusReal;
+  const penHeightScene = Math.max(farRealD*SCALE3D, 0.001);
+  if(three3d.getPenumbra()){ three3d.scene.remove(three3d.getPenumbra()); three3d.getPenumbra().geometry.dispose(); }
+  const penGeo = new THREE.CylinderGeometry(penFarScene, moonR, penHeightScene, 40, 1, true);
+  const penMesh = new THREE.Mesh(penGeo, three3d.penumbraMat);
+  penMesh.rotation.x = Math.PI/2;
+  penMesh.position.set(0,0, moonZ + penHeightScene/2);
+  three3d.scene.add(penMesh);
+  three3d.setPenumbra(penMesh);
+
+  three3d.fundPlane.position.set(0,0,0.02);
+  three3d.planeRing.position.set(0,0,0.02);
+
+  const apexDistEl = document.getElementById('apexDistVal3D');
+  const apexStatusEl = document.getElementById('apexStatusVal3D');
+  if(apexDistEl) apexDistEl.textContent = fmt(umbraLen)+' km';
+  if(apexStatusEl){
+    apexStatusEl.textContent = totalPossible ? 'Melewati/mencapai Bumi (Total)' : 'Jatuh sebelum Bumi (Cincin)';
+    apexStatusEl.style.color = totalPossible ? 'var(--emerald)' : 'var(--gold)';
+  }
+}
+
+const scaleBlendRange = document.getElementById('scaleBlendRange');
+function applyScaleBlend(v){
+  scaleBlend = Math.max(0, Math.min(100, v))/100;
+  scaleBlendRange.value = Math.round(scaleBlend*100);
+  const pct = Math.round(scaleBlend*100);
+  const statusEl = document.getElementById('scaleModeStatus');
+  if(pct===0){
+    statusEl.innerHTML = 'Mode aktif: <strong>Skala Enak Dipandang</strong> (0%) — radius Bumi/Bulan/Matahari diperbesar ±4×, jarak Matahari dipadatkan supaya seluruh sistem termuat di satu layar.';
+  } else if(pct===100){
+    statusEl.innerHTML = 'Mode aktif: <strong>Skala Nyata (Sains)</strong> (100%) — radius Bumi/Bulan/Matahari TANPA pembesaran, jarak Bumi–Matahari TANPA pemadatan (data resmi IAU/NASA JPL). Zoom-out jauh untuk merasakan betapa kosongnya ruang di antara mereka.';
+  } else {
+    statusEl.innerHTML = `Transisi <strong>${pct}%</strong> menuju skala nyata — geser terus untuk merasakan bagaimana Bumi, Bulan &amp; Matahari "menyusut" relatif terhadap jarak sebenarnya. Kamera tidak ikut bergerak otomatis — silakan zoom/putar manual sendiri.`;
+  }
+  update(); // re-sync3D dengan exag & jarak Matahari baru; posisi kamera TIDAK disentuh
+}
+scaleBlendRange.addEventListener('input', ()=> applyScaleBlend(parseFloat(scaleBlendRange.value)));
+document.getElementById('btnScaleNice').addEventListener('click', ()=> applyScaleBlend(0));
+document.getElementById('btnScaleReal').addEventListener('click', ()=> applyScaleBlend(100));
+document.getElementById('loadModel3D').addEventListener('click', ()=>{
+  document.getElementById('loadModel3D').style.display='none';
+  document.getElementById('three3d').style.display='block';
+  initThree3D();
+  update(); // re-render skrip biar syncModel3D dapat nilai terbaru dari slider
+});
+document.getElementById('btnOrbit').addEventListener('click', ()=>{
+  document.getElementById('btnOrbit').classList.add('active');
+  document.getElementById('btnEarthView').classList.remove('active');
+  if(three3d){ three3d.mode='orbit'; three3d.setOrbitParams(55,0.55,1.15); }
+});
+document.getElementById('btnEarthView').addEventListener('click', ()=>{
+  document.getElementById('btnEarthView').classList.add('active');
+  document.getElementById('btnOrbit').classList.remove('active');
+  if(three3d){
+    three3d.mode='earth';
+    const r = three3d.earth.scale.x;
+    three3d.camera.position.set(0.15, r*0.2, r*1.5);
+    three3d.target.set(0,0,-40);
+    three3d.camera.lookAt(three3d.target);
+  }
+});
+document.getElementById('btnResetView').addEventListener('click', ()=>{ document.getElementById('btnOrbit').click(); });
+
+function fmt(n){ return Math.round(n).toLocaleString('id-ID'); }
+
+function update(){
+  const Dm = parseFloat(dmRange.value);   // jarak Bumi-Bulan
+  const Ds = parseFloat(dsRange.value);   // jarak Bumi-Matahari
+  document.getElementById('dmVal').textContent = fmt(Dm)+' km';
+  document.getElementById('dsVal').textContent = fmt(Ds)+' km';
+
+  const Dsm = Ds - Dm; // jarak Matahari-Bulan (aproksimasi segaris)
+  const umbraLen = Dsm * R_MOON / (R_SUN - R_MOON);
+  document.getElementById('umbraLenVal').textContent = fmt(umbraLen)+' km';
+  document.getElementById('moonEarthVal').textContent = fmt(Dm)+' km';
+
+  const totalPossible = umbraLen >= Dm;
+  const banner = document.getElementById('statusBanner');
+  if(totalPossible){
+    banner.style.background = '#0e2a20'; banner.style.color = 'var(--emerald)';
+    banner.textContent = '☀ GERHANA TOTAL — ujung kerucut umbra mencapai/melewati Bumi.';
+  } else {
+    banner.style.background = '#241407'; banner.style.color = 'var(--gold)';
+    banner.textContent = '💍 GERHANA CINCIN (ANNULAR) — ujung kerucut umbra jatuh sebelum Bumi, antumbra yang melebar lagi yang mencapai Bumi.';
+  }
+
+  // sudut tampak (arcmin) - metode Aryabhatta
+  const moonAngRad = 2*Math.asin(R_MOON/Dm);
+  const sunAngRad = 2*Math.asin(R_SUN/Ds);
+  const moonAngMin = moonAngRad*180/Math.PI*60;
+  const sunAngMin = sunAngRad*180/Math.PI*60;
+  document.getElementById('moonAngVal').textContent = moonAngMin.toFixed(1)+'′';
+  document.getElementById('sunAngVal').textContent = sunAngMin.toFixed(1)+'′';
+  const aryaBanner = document.getElementById('aryaBanner');
+  const aryaTotal = moonAngMin >= sunAngMin;
+  if(aryaTotal){
+    aryaBanner.style.background = '#0e2a20'; aryaBanner.style.color = 'var(--emerald)';
+    aryaBanner.textContent = 'Bulan lebih besar dari Matahari di langit → GERHANA TOTAL (sepakat dengan simulator di atas)';
+  } else {
+    aryaBanner.style.background = '#241407'; aryaBanner.style.color = 'var(--gold)';
+    aryaBanner.textContent = 'Bulan lebih kecil dari Matahari di langit → GERHANA CINCIN (sepakat dengan simulator di atas)';
+  }
+
+  // visual
+  const W=380,H=160,cy=80;
+  const moonX = 120, sunX=30;
+  const moonR = 14, sunR = 22;
+  const apexX = totalPossible ? 340 : (moonX + (umbraLen/Dm)*(380-moonX));
+  let html = `<circle cx="${sunX}" cy="${cy}" r="${sunR}" fill="#ffd94a"/>`;
+  html += `<text x="${sunX}" y="${cy+sunR+14}" font-size="9" fill="#8fada0" text-anchor="middle" font-family="sans-serif">Matahari</text>`;
+  html += `<circle cx="${moonX}" cy="${cy}" r="${moonR}" fill="#c7c7c7"/>`;
+  html += `<text x="${moonX}" y="${cy+moonR+14}" font-size="9" fill="#8fada0" text-anchor="middle" font-family="sans-serif">Bulan</text>`;
+  const apexXClamped = Math.min(apexX, 375);
+  html += `<line x1="${moonX}" y1="${cy-moonR}" x2="${apexXClamped}" y2="${cy}" stroke="#22c98a" stroke-width="1.5" opacity="0.8"/>`;
+  html += `<line x1="${moonX}" y1="${cy+moonR}" x2="${apexXClamped}" y2="${cy}" stroke="#22c98a" stroke-width="1.5" opacity="0.8"/>`;
+  html += `<line x1="360" y1="${cy-30}" x2="360" y2="${cy+30}" stroke="#7fa8d8" stroke-width="4"/>`;
+  html += `<text x="360" y="${cy+46}" font-size="9" fill="#8fada0" text-anchor="middle" font-family="sans-serif">Bumi</text>`;
+  document.getElementById('eclipseSVG').innerHTML = html;
+
+  syncModel3D(Dm, Ds, umbraLen, totalPossible);
+}
+dmRange.addEventListener('input', update);
+dsRange.addEventListener('input', update);
+update();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

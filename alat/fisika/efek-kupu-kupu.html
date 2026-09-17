@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Efek Kupu-Kupu — Laboratorium Sensitivitas Kondisi Awal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0B1220;
+    --panel: #121B2E;
+    --panel-2: #182338;
+    --border: rgba(232,236,244,0.10);
+    --border-strong: rgba(232,236,244,0.18);
+    --text: #E9EDF5;
+    --muted: #93A0B8;
+    --amber: #E8A33D;
+    --amber-dim: #8A6A32;
+    --cyan: #55C2CF;
+    --cyan-dim: #33707A;
+    --rose: #D9506B;
+    --rose-dim: 217,80,107;
+    --radius: 4px;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html{ scroll-behavior: smooth; }
+
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Karla', sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection{ background: rgba(232,163,61,0.35); }
+
+  h1,h2,h3{ font-family: 'Fraunces', serif; font-weight: 500; letter-spacing: -0.01em; }
+
+  a{ color: var(--amber); }
+
+  .wrap{
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  .rule{
+    height:1px;
+    background: var(--border);
+    margin: 64px 0;
+  }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    padding: 72px 0 40px;
+    position: relative;
+  }
+  .hero .kicker{
+    font-size: 14px;
+    color: var(--muted);
+    margin: 0 0 18px;
+  }
+  .hero h1{
+    font-size: clamp(38px, 6vw, 60px);
+    line-height: 1.05;
+    margin: 0 0 20px;
+    max-width: 11ch;
+  }
+  .hero p.lede{
+    font-size: 19px;
+    color: var(--muted);
+    max-width: 56ch;
+    margin: 0 0 8px;
+  }
+  .hero .quote-source{
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .hero-canvas-frame{
+    margin-top: 40px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, var(--panel), var(--bg));
+    padding: 4px;
+  }
+  #heroCanvas{
+    display:block;
+    width: 100%;
+    height: auto;
+    border-radius: 2px;
+  }
+  .hero-caption{
+    display:flex;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--muted);
+    padding: 10px 4px 2px;
+    flex-wrap: wrap;
+  }
+  .legend-dot{
+    display:inline-block;
+    width:8px; height:8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    position: relative;
+    top: -1px;
+  }
+
+  /* ---------- SECTIONS ---------- */
+  section{ padding: 8px 0 8px; }
+  .eyebrow-num{
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    color: var(--amber);
+    font-size: 15px;
+    margin: 0 0 10px;
+  }
+  h2{
+    font-size: clamp(26px, 4vw, 34px);
+    margin: 0 0 22px;
+    max-width: 20ch;
+  }
+  section p{ max-width: 66ch; color: var(--text); }
+  section p.muted{ color: var(--muted); }
+
+  .two-col{
+    display:grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 36px;
+    align-items: start;
+  }
+  @media (max-width: 720px){
+    .two-col{ grid-template-columns: 1fr; }
+  }
+
+  blockquote{
+    margin: 28px 0;
+    padding: 4px 0 4px 22px;
+    border-left: 2px solid var(--amber-dim);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 21px;
+    line-height: 1.5;
+    color: #F1D9AE;
+  }
+  blockquote cite{
+    display:block;
+    font-family: 'Karla', sans-serif;
+    font-style: normal;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 10px;
+  }
+
+  .card{
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+  }
+
+  .term{
+    margin: 22px 0;
+    padding-left: 16px;
+    border-left: 2px solid var(--border-strong);
+  }
+  .term dt{
+    font-family: 'Fraunces', serif;
+    font-size: 17px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .term dd{
+    margin: 0;
+    color: var(--muted);
+    font-size: 15px;
+  }
+
+  /* ---------- EKSPLORASI / CONTROLS ---------- */
+  .lab{
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .lab-visual{
+    padding: 18px 18px 6px;
+  }
+  .canvas-row{
+    display:grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 720px){
+    .canvas-row{ grid-template-columns: 1fr; }
+  }
+  .canvas-box{
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 8px;
+  }
+  .canvas-box h3{
+    font-size: 13px;
+    font-family: 'Karla', sans-serif;
+    font-weight: 600;
+    color: var(--muted);
+    margin: 2px 4px 8px;
+  }
+  canvas{ width:100%; height:auto; display:block; }
+
+  .readout{
+    display:flex;
+    gap: 22px;
+    flex-wrap: wrap;
+    padding: 14px 22px 18px;
+    font-size: 13.5px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    margin-top: 10px;
+  }
+  .readout b{ color: var(--text); font-weight: 600; }
+  .readout .num{ font-variant-numeric: tabular-nums; color: var(--amber); }
+
+  .lab-controls{
+    border-top: 1px solid var(--border);
+    padding: 22px 24px 26px;
+    background: var(--panel-2);
+  }
+  .controls-title{
+    font-size: 13px;
+    text-transform: none;
+    color: var(--muted);
+    margin: 0 0 16px;
+    font-weight: 600;
+  }
+  .slider-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 28px;
+  }
+  @media (max-width: 620px){
+    .slider-grid{ grid-template-columns: 1fr; }
+  }
+  .slider-item label{
+    display:flex;
+    justify-content: space-between;
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+  .slider-item label .val{
+    font-variant-numeric: tabular-nums;
+    color: var(--amber);
+    font-weight: 600;
+  }
+  input[type=range]{
+    -webkit-appearance: none;
+    width: 100%;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--border-strong);
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance: none;
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    background: var(--amber);
+    cursor: pointer;
+    border: 2px solid #0B1220;
+  }
+  input[type=range]::-moz-range-thumb{
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    background: var(--amber);
+    cursor: pointer;
+    border: 2px solid #0B1220;
+  }
+  .slider-item .hint{
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 5px;
+  }
+  input[type=range]:focus-visible{ outline: 2px solid var(--amber); outline-offset: 4px; }
+
+  .btn-row{
+    display:flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 22px;
+  }
+  button{
+    font-family: 'Karla', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: 3px;
+    padding: 9px 16px;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  button:hover{ border-color: var(--amber); }
+  button:focus-visible{ outline: 2px solid var(--amber); outline-offset: 2px; }
+  button.primary{
+    background: var(--amber);
+    color: #17110A;
+    border-color: var(--amber);
+  }
+  button.primary:hover{ background: #f0b25a; }
+  .preset-row{
+    display:flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+  button.preset{
+    font-size: 13px;
+    padding: 7px 12px;
+    color: var(--muted);
+  }
+  button.preset:hover{ color: var(--text); }
+
+  .regime-note{
+    margin-top: 18px;
+    font-size: 13.5px;
+    color: var(--muted);
+    padding: 12px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+  }
+  .regime-note b{ color: var(--text); }
+
+  /* ---------- METODE ---------- */
+  .eq{
+    font-family: 'Fraunces', serif;
+    font-size: 19px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin: 20px 0;
+    line-height: 2;
+  }
+  .eq .line{ display:block; }
+  .eq .comment{ font-family:'Karla',sans-serif; font-size: 13px; color: var(--muted); }
+
+  ol.steps{
+    padding-left: 20px;
+    color: var(--text);
+  }
+  ol.steps li{ margin-bottom: 10px; max-width: 62ch; }
+  ol.steps li::marker{ color: var(--amber); font-family:'Fraunces',serif; }
+
+  pre{
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 16px 18px;
+    font-size: 13px;
+    overflow-x: auto;
+    color: #CBD5E6;
+    line-height: 1.6;
+  }
+
+  /* ---------- BATASAN ---------- */
+  .warn-card{
+    border: 1px solid rgba(var(--rose-dim),0.35);
+    background: rgba(var(--rose-dim),0.08);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin: 18px 0;
+  }
+  .warn-card h3{
+    font-size: 17px;
+    color: #F0B7C2;
+    margin: 0 0 8px;
+  }
+  .warn-card p{ color: var(--text); margin: 0; }
+
+  .misconception{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow:hidden;
+    margin: 24px 0;
+  }
+  @media (max-width: 620px){ .misconception{ grid-template-columns: 1fr; } }
+  .misconception > div{ padding: 20px 22px; }
+  .misconception .no{ background: rgba(var(--rose-dim),0.08); border-right: 1px solid var(--border); }
+  @media (max-width: 620px){ .misconception .no{ border-right:none; border-bottom: 1px solid var(--border); } }
+  .misconception .yes{ background: rgba(85,194,207,0.06); }
+  .misconception h4{
+    font-family:'Karla',sans-serif;
+    font-size: 12.5px;
+    font-weight: 700;
+    margin: 0 0 10px;
+    color: var(--muted);
+  }
+  .misconception .no h4{ color: #E48E9E; }
+  .misconception .yes h4{ color: var(--cyan); }
+  .misconception p{ font-size: 15px; margin:0; color: var(--text); }
+
+  /* ---------- REFERENSI ---------- */
+  .ref-list{ list-style:none; padding:0; margin: 20px 0; }
+  .ref-list li{
+    padding: 14px 0;
+    border-top: 1px solid var(--border);
+    font-size: 15px;
+    color: var(--muted);
+  }
+  .ref-list li:last-child{ border-bottom: 1px solid var(--border); }
+  .ref-list .who{ color: var(--text); }
+
+  footer{
+    padding: 50px 0 70px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .methodnote{
+    font-size: 13px;
+    color: var(--muted);
+    border-left: 2px solid var(--border-strong);
+    padding-left: 14px;
+    margin-top: 40px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <p class="kicker">Laboratorium Qiladat / JAZMI — Sains Sistem Dinamik</p>
+    <h1>Efek Kupu-Kupu</h1>
+    <p class="lede">Mengapa perbedaan sekecil apa pun pada kondisi awal sebuah sistem bisa tumbuh menjadi hasil akhir yang sepenuhnya berbeda — dijelaskan lewat matematika yang sesungguhnya melahirkan ungkapan ini, bukan sekadar dongeng populer.</p>
+    <div class="hero-canvas-frame">
+      <canvas id="heroCanvas" width="1200" height="480"></canvas>
+    </div>
+    <div class="hero-caption">
+      <span><span class="legend-dot" style="background:var(--amber)"></span>Lintasan A</span>
+      <span><span class="legend-dot" style="background:var(--cyan)"></span>Lintasan B — titik awal berbeda 0.00001</span>
+      <span id="heroStatus">Kedua lintasan dimulai nyaris berhimpit, lalu berpisah tanpa bisa disatukan kembali.</span>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ 1. KONSEP ============ -->
+  <section id="konsep">
+    <p class="eyebrow-num">1 — Asal-usul & Konsep</p>
+    <h2>Dari galat pembulatan menjadi metafora ilmiah</h2>
+
+    <p>Pada tahun 1961, ahli meteorologi Edward Lorenz di MIT sedang menjalankan model cuaca sederhana di komputer. Untuk menghemat waktu, ia mengulang sebagian simulasi dengan memasukkan kembali angka dari cetakan sebelumnya — tetapi cetakan itu membulatkan 0.506127 menjadi 0.506. Selisihnya kurang dari satu banding seribu.</p>
+
+    <p>Ia menyangka hasilnya akan hampir sama. Yang terjadi justru sebaliknya: setelah beberapa langkah simulasi, pola cuaca yang dihasilkan sama sekali tidak mirip dengan simulasi awal. Selisih sekecil itu tidak meredam, tetapi membesar terus-menerus sampai kedua hasil tidak lagi punya hubungan yang bisa dikenali.</p>
+
+    <p>Sebelas tahun kemudian, dalam sebuah ceramah di American Association for the Advancement of Science, Lorenz merangkum temuan ini lewat judul yang kemudian menjadi sangat populer:</p>
+
+    <blockquote>
+      Apakah kepakan sayap kupu-kupu di Brasil dapat menimbulkan tornado di Texas?
+      <cite>Judul ceramah Edward Lorenz, 1972 — dirangkum, bukan kutipan verbatim</cite>
+    </blockquote>
+
+    <p>Perlu digarisbawahi sejak awal: itu sebuah pertanyaan retoris, bukan klaim bahwa hal itu benar-benar terjadi dan bisa dilacak sebab-akibatnya. Yang ingin ditunjukkan Lorenz adalah sifat matematis dari sistem yang ia pelajari, yang sekarang disebut <b>sensitivitas terhadap kondisi awal</b> (sensitive dependence on initial conditions) — salah satu ciri utama sistem yang disebut kacau (chaotic) dalam teori sistem dinamik.</p>
+
+    <div class="two-col">
+      <div>
+        <dl class="term">
+          <dt>Sistem dinamik</dt>
+          <dd>Sistem yang keadaannya berubah mengikuti aturan tertentu seiring waktu — misalnya posisi udara, suhu, dan tekanan di atmosfer yang berubah menurut hukum fisika.</dd>
+        </dl>
+        <dl class="term">
+          <dt>Deterministik</dt>
+          <dd>Aturan perubahan keadaan sudah pasti dan tidak mengandung unsur acak. Jika keadaan awal persis sama, hasil ke depannya juga akan persis sama — selalu.</dd>
+        </dl>
+      </div>
+      <div>
+        <dl class="term">
+          <dt>Kacau (chaos)</dt>
+          <dd>Sistem deterministik yang hasil jangka panjangnya tetap tidak bisa diprediksi, karena perbedaan sekecil apa pun pada keadaan awal tumbuh secara eksponensial seiring waktu.</dd>
+        </dl>
+        <dl class="term">
+          <dt>Eksponen Lyapunov (λ)</dt>
+          <dd>Ukuran seberapa cepat dua lintasan yang berdekatan saling menjauh. Semakin besar λ, semakin cepat perbedaan kecil membesar dan semakin pendek jangka waktu yang masih bisa diprediksi.</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ 2. EKSPLORASI ============ -->
+  <section id="eksplorasi">
+    <p class="eyebrow-num">2 — Eksplorasi Interaktif</p>
+    <h2>Coba sendiri: dua lintasan, satu selisih kecil</h2>
+    <p class="muted">Simulasi di bawah menjalankan sistem persamaan yang sama yang dipakai Lorenz untuk memodelkan aliran udara secara sangat disederhanakan — dikenal sebagai <b style="color:var(--text)">sistem Lorenz</b>. Dua titik yang hampir berhimpit dijalankan bersamaan. Geser parameter, lalu perhatikan kapan dan seberapa cepat keduanya berpisah.</p>
+
+    <div class="lab">
+      <div class="lab-visual">
+        <div class="canvas-row">
+          <div class="canvas-box">
+            <h3>Proyeksi lintasan (bidang X–Z) — bentuk "sayap kupu-kupu"</h3>
+            <canvas id="attractorCanvas" width="720" height="520"></canvas>
+          </div>
+          <div class="canvas-box">
+            <h3>Jarak antar-lintasan seiring waktu (skala logaritmik)</h3>
+            <canvas id="divergenceCanvas" width="520" height="520"></canvas>
+          </div>
+        </div>
+        <div class="readout">
+          <span>waktu simulasi: <b class="num" id="roTime">0.00</b></span>
+          <span>jarak A–B saat ini: <b class="num" id="roDist">0.00000</b></span>
+          <span>estimasi λ (Lyapunov): <b class="num" id="roLyap">—</b></span>
+          <span>rezim: <b class="num" id="roRegime">—</b></span>
+        </div>
+      </div>
+
+      <div class="lab-controls">
+        <p class="controls-title">Parameter sistem</p>
+        <div class="slider-grid">
+          <div class="slider-item">
+            <label>σ — laju perpindahan panas (Prandtl) <span class="val" id="vSigma">10.0</span></label>
+            <input type="range" id="sSigma" min="1" max="25" step="0.5" value="10">
+            <div class="hint">Semakin besar σ, semakin cepat udara mengaduk secara horizontal.</div>
+          </div>
+          <div class="slider-item">
+            <label>ρ — perbedaan suhu atas–bawah (Rayleigh) <span class="val" id="vRho">28.0</span></label>
+            <input type="range" id="sRho" min="0" max="60" step="0.5" value="28">
+            <div class="hint">Parameter paling menentukan: kecil = tenang, besar = kacau.</div>
+          </div>
+          <div class="slider-item">
+            <label>β — rasio geometri sel konveksi <span class="val" id="vBeta">2.67</span></label>
+            <input type="range" id="sBeta" min="0.3" max="6" step="0.05" value="2.667">
+            <div class="hint">Terkait bentuk/aspek dari sel udara yang berputar.</div>
+          </div>
+          <div class="slider-item">
+            <label>Δ₀ — selisih titik awal (log₁₀) <span class="val" id="vDelta">10⁻⁵</span></label>
+            <input type="range" id="sDelta" min="-8" max="-1" step="0.1" value="-5">
+            <div class="hint">Ini "kepakan sayap kupu-kupu"-nya: seberapa kecil gangguan awal.</div>
+          </div>
+        </div>
+
+        <div class="regime-note" id="regimeNote">
+          Dengan σ=10, ρ=28, β≈2.67 (nilai klasik yang dipakai Lorenz), sistem berada jauh di atas ambang kekacauan — dua lintasan akan berpisah dengan cepat dan tidak akan pernah bertemu lagi.
+        </div>
+
+        <div class="btn-row">
+          <button class="primary" id="btnPlay">Jeda</button>
+          <button id="btnReset">Atur ulang titik awal</button>
+          <div class="slider-item" style="flex:1; min-width:180px; margin:0;">
+            <label>kecepatan simulasi <span class="val" id="vSpeed">1×</span></label>
+            <input type="range" id="sSpeed" min="1" max="8" step="1" value="2">
+          </div>
+        </div>
+        <div class="preset-row">
+          <button class="preset" data-preset="damped">Preset: teredam (ρ = 0.5)</button>
+          <button class="preset" data-preset="stable">Preset: stabil (ρ = 20)</button>
+          <button class="preset" data-preset="classic">Preset: kacau klasik (ρ = 28)</button>
+          <button class="preset" data-preset="extreme">Preset: sangat kacau (ρ = 50)</button>
+        </div>
+      </div>
+    </div>
+
+    <p style="margin-top:22px;" class="muted">Cara membaca grafik kanan: jika sistem tidak kacau, jarak A–B akan menurun atau menetap rendah — kurva mendatar atau turun. Jika sistem kacau, kurva pada mulanya naik hampir lurus di skala logaritmik (tanda pertumbuhan eksponensial), sebelum akhirnya melengkung dan menjenuh karena kedua lintasan sudah sama-sama berputar di dalam ruang atraktor yang terbatas.</p>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ 3. METODE ============ -->
+  <section id="metode">
+    <p class="eyebrow-num">3 — Metode & Matematika</p>
+    <h2>Bagaimana simulasi ini sungguh-sungguh dihitung</h2>
+
+    <p>Model yang digunakan adalah <b>sistem Lorenz</b>, tiga persamaan diferensial biasa yang pada 1963 disusun sebagai penyederhanaan ekstrem dari konveksi udara antara lapisan hangat di bawah dan dingin di atas:</p>
+
+    <div class="eq">
+      <span class="line">dx/dt = σ (y − x)</span>
+      <span class="line">dy/dt = x (ρ − z) − y</span>
+      <span class="line">dz/dt = xy − β z</span>
+      <span class="comment">x: laju konveksi &nbsp;·&nbsp; y: perbedaan suhu horizontal &nbsp;·&nbsp; z: penyimpangan profil suhu vertikal dari kondisi linear</span>
+    </div>
+
+    <p>Ketiganya bukan koordinat ruang, melainkan tiga besaran yang meringkas keadaan aliran udara pada satu saat. Karena persamaan ini nonlinear — ada perkalian antar-variabel seperti <i>xz</i> dan <i>xy</i> — sistem tidak bisa diselesaikan dengan rumus tertutup, sehingga harus dihitung selangkah demi selangkah secara numerik.</p>
+
+    <ol class="steps">
+      <li><b>Diskritisasi waktu.</b> Waktu dibagi menjadi langkah-langkah kecil Δt = 0.01. Simulasi ini memakai metode Runge–Kutta orde 4 (RK4), yang mengevaluasi kemiringan sistem di empat titik berbeda dalam setiap langkah lalu menggabungkannya — jauh lebih akurat daripada metode Euler sederhana untuk sistem yang sensitif seperti ini.</li>
+      <li><b>Dua lintasan sejajar.</b> Lintasan A dimulai dari (1, 1, 1). Lintasan B dimulai dari (1+Δ₀, 1, 1), dengan Δ₀ sekecil yang diatur pada slider. Keduanya diintegrasikan dengan persamaan dan parameter yang <i>identik</i> — satu-satunya perbedaan adalah titik berangkat.</li>
+      <li><b>Jarak antar-lintasan.</b> Pada setiap langkah dihitung d(t) = √[(x_A−x_B)² + (y_A−y_B)² + (z_A−z_B)²] — jarak Euclidean tiga dimensi antara kedua keadaan.</li>
+      <li><b>Estimasi eksponen Lyapunov.</b> Selama d(t) masih jauh lebih kecil daripada ukuran atraktor, pertumbuhannya mendekati eksponensial: d(t) ≈ d(0) · e^(λt). Simulasi ini mengambil segmen sebelum penjenuhan, lalu mencari kemiringan garis ln[d(t)] terhadap t lewat regresi linear sederhana — kemiringan itulah estimasi λ.</li>
+    </ol>
+
+    <pre>fungsi langkahRK4(keadaan, dt, σ, ρ, β):
+    k1 = lorenz(keadaan)
+    k2 = lorenz(keadaan + dt/2 · k1)
+    k3 = lorenz(keadaan + dt/2 · k2)
+    k4 = lorenz(keadaan + dt   · k3)
+    kembalikan keadaan + dt/6 · (k1 + 2k2 + 2k3 + k4)
+
+fungsi lorenz([x, y, z]):
+    kembalikan [ σ(y−x),  x(ρ−z)−y,  xy−βz ]</pre>
+
+    <p class="muted">Untuk σ dan β klasik (σ=10, β=8/3), ada rumus ambang kekacauan yang diturunkan dari analisis kestabilan titik tetap sistem ini: ρ<sub>c</sub> = σ(σ+β+3) / (σ−β−1). Di bawah ρ<sub>c</sub>, dua titik tetap simetris bersifat stabil dan lintasan akan berputar lalu menetap di salah satunya. Melewati ρ<sub>c</sub>, kedua titik tetap kehilangan kestabilannya dan lahirlah atraktor aneh (strange attractor) yang tidak pernah berulang persis — bentuk yang divisualisasikan pada bagian eksplorasi di atas, dan yang menyerupai sepasang sayap.</p>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ 4. BATASAN ============ -->
+  <section id="batasan">
+    <p class="eyebrow-num">4 — Batasan & Miskonsepsi</p>
+    <h2>Apa yang <i>tidak</i> dikatakan oleh "efek kupu-kupu"</h2>
+
+    <p>Karena ungkapannya begitu populer, "efek kupu-kupu" sering dipahami secara keliru. Bagian ini sengaja dipisahkan agar alat ini tidak menyesatkan.</p>
+
+    <div class="misconception">
+      <div class="no">
+        <h4>SERING DISALAHPAHAMI</h4>
+        <p>Satu kepakan sayap kupu-kupu tertentu, di tempat dan waktu tertentu, benar-benar menyebabkan satu badai tertentu — dan hubungan sebab-akibat itu bisa ditelusuri.</p>
+      </div>
+      <div class="yes">
+        <h4>YANG SEBENARNYA DIMAKSUD</h4>
+        <p>Gangguan sekecil apa pun pada sistem yang kacau membuat prediksi jangka panjang mustahil secara prinsip — bukan klaim bahwa satu peristiwa kecil tertentu terbukti memicu satu peristiwa besar tertentu. Sumber ketidakpastian nyatanya bisa berasal dari jutaan hal sekecil kepakan sayap, bukan hanya kupu-kupu itu sendiri.</p>
+      </div>
+    </div>
+    <div class="misconception">
+      <div class="no">
+        <h4>SERING DISALAHPAHAMI</h4>
+        <p>Sistem "kacau" berarti acak — tidak mengikuti hukum apa pun, sehingga tidak ada gunanya dipelajari secara matematis.</p>
+      </div>
+      <div class="yes">
+        <h4>YANG SEBENARNYA DIMAKSUD</h4>
+        <p>Sistem ini sepenuhnya deterministik: dengan keadaan awal yang <i>persis</i> sama, hasilnya akan <i>persis</i> sama setiap kali diulang — buktinya justru tiga persamaan tetap yang dipakai di atas. Yang mustahil bukan menghitungnya, melainkan mengukur keadaan awal dunia nyata dengan presisi tak terhingga.</p>
+      </div>
+    </div>
+    <div class="misconception">
+      <div class="no">
+        <h4>SERING DISALAHPAHAMI</h4>
+        <p>Karena simulasi ini memakai persamaan yang sama dengan model cuaca Lorenz, alat ini bisa dipakai untuk meramalkan cuaca sungguhan.</p>
+      </div>
+      <div class="yes">
+        <h4>YANG SEBENARNYA DIMAKSUD</h4>
+        <p>Sistem Lorenz hanya tiga variabel — penyederhanaan drastis untuk keperluan ilustrasi matematis. Atmosfer nyata dimodelkan dengan jutaan variabel dalam persamaan Navier–Stokes dan termodinamika. Prinsip sensitivitasnya sama, tetapi angka dari alat ini bukan prakiraan cuaca.</p>
+      </div>
+    </div>
+
+    <div class="warn-card">
+      <h3>Mengapa prakiraan cuaca punya batas waktu</h3>
+      <p>Prinsip yang sama membuat model cuaca modern — betapa pun canggihnya komputer yang dipakai — memiliki batas waktu prediksi yang teoretis, sering disebut sekitar dua minggu. Ini bukan keterbatasan teknologi yang akan hilang seiring komputer makin cepat, melainkan konsekuensi matematis dari sifat kacau atmosfer itu sendiri: ketidakpastian pengukuran awal, sekecil apa pun, akan membesar melewati batas kegunaan prediksi dalam waktu yang terbatas.</p>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ 5. REFERENSI ============ -->
+  <section id="referensi">
+    <p class="eyebrow-num">5 — Referensi</p>
+    <h2>Sumber & bacaan lanjutan</h2>
+    <ul class="ref-list">
+      <li><span class="who">Lorenz, E. N. (1963).</span> Deterministic Nonperiodic Flow. <i>Journal of the Atmospheric Sciences</i>, 20(2), 130–141 — makalah asli yang memperkenalkan sistem persamaan yang disimulasikan pada halaman ini.</li>
+      <li><span class="who">Lorenz, E. N. (1972).</span> Ceramah di pertemuan American Association for the Advancement of Science, yang judulnya kemudian melahirkan istilah "efek kupu-kupu" secara populer.</li>
+      <li><span class="who">Gleick, J. (1987).</span> <i>Chaos: Making a New Science.</i> Viking — buku populer yang merunut sejarah dan penerimaan teori chaos, termasuk kisah Lorenz.</li>
+      <li><span class="who">Strogatz, S. H. (1994).</span> <i>Nonlinear Dynamics and Chaos.</i> — rujukan standar untuk turunan ambang kestabilan ρ<sub>c</sub> dan analisis titik tetap sistem Lorenz yang dipakai pada Bagian 3.</li>
+    </ul>
+
+    <p class="methodnote">Halaman ini disusun mengikuti struktur "Belajar → Eksplorasi → Perhitungan/Metode → Batasan → Referensi" yang dipakai untuk setiap alat di laboratorium Qiladat/JAZMI — supaya setiap alat merupakan perwujudan dari pemahaman yang dibangun lebih dulu, bukan sekadar kalkulator yang kebetulan bisa dibuat.</p>
+  </section>
+
+  <footer>
+    Alat edukasi — dibangun untuk menjelaskan konsep, bukan untuk prakiraan cuaca sungguhan.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  function lorenzDeriv(s, sigma, rho, beta){
+    var x=s[0], y=s[1], z=s[2];
+    return [ sigma*(y-x), x*(rho-z)-y, x*y-beta*z ];
+  }
+  function addScaled(a,b,f){ return [a[0]+f*b[0], a[1]+f*b[1], a[2]+f*b[2]]; }
+  function rk4(state, dt, sigma, rho, beta){
+    var k1 = lorenzDeriv(state, sigma, rho, beta);
+    var k2 = lorenzDeriv(addScaled(state,k1,dt/2), sigma, rho, beta);
+    var k3 = lorenzDeriv(addScaled(state,k2,dt/2), sigma, rho, beta);
+    var k4 = lorenzDeriv(addScaled(state,k3,dt), sigma, rho, beta);
+    return [
+      state[0] + dt/6*(k1[0]+2*k2[0]+2*k3[0]+k4[0]),
+      state[1] + dt/6*(k1[1]+2*k2[1]+2*k3[1]+k4[1]),
+      state[2] + dt/6*(k1[2]+2*k2[2]+2*k3[2]+k4[2])
+    ];
+  }
+  function dist3(a,b){
+    var dx=a[0]-b[0], dy=a[1]-b[1], dz=a[2]-b[2];
+    return Math.sqrt(dx*dx+dy*dy+dz*dz);
+  }
+
+  // ---------- shared engine builder ----------
+  function makeEngine(){
+    return {
+      sigma: 10, rho: 28, beta: 8/3,
+      delta: 1e-5,
+      dt: 0.01,
+      t: 0,
+      A: [1,1,1],
+      B: [1+1e-5,1,1],
+      trailA: [], trailB: [],
+      distHistory: [], // {t, d}
+      maxTrail: 3200,
+      reset: function(){
+        this.t = 0;
+        this.A = [1,1,1];
+        this.B = [1+this.delta, 1, 1];
+        this.trailA = [this.A.slice()];
+        this.trailB = [this.B.slice()];
+        this.distHistory = [{t:0, d: this.delta}];
+      },
+      step: function(n){
+        for(var i=0;i<n;i++){
+          this.A = rk4(this.A, this.dt, this.sigma, this.rho, this.beta);
+          this.B = rk4(this.B, this.dt, this.sigma, this.rho, this.beta);
+          this.t += this.dt;
+          this.trailA.push(this.A.slice());
+          this.trailB.push(this.B.slice());
+          if(this.trailA.length > this.maxTrail){ this.trailA.shift(); this.trailB.shift(); }
+          var d = dist3(this.A, this.B);
+          this.distHistory.push({t:this.t, d:d});
+          if(this.distHistory.length > 6000){ this.distHistory.shift(); }
+        }
+      }
+    };
+  }
+
+  // ================= HERO (autoplay, fixed classic params) =================
+  var hero = makeEngine();
+  hero.delta = 1e-5;
+  hero.reset();
+  var heroCanvas = document.getElementById('heroCanvas');
+  var hctx = heroCanvas.getContext('2d');
+
+  function drawTrail(ctx, trail, colorA, w, h, xr, zr, pad){
+    ctx.beginPath();
+    for(var i=0;i<trail.length;i++){
+      var px = pad + (trail[i][0]-xr[0])/(xr[1]-xr[0]) * (w-2*pad);
+      var py = h - pad - (trail[i][2]-zr[0])/(zr[1]-zr[0]) * (h-2*pad);
+      if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.strokeStyle = colorA;
+    ctx.lineWidth = 1.3;
+    ctx.globalAlpha = 0.85;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  function heroFrame(){
+    var w = heroCanvas.width, h = heroCanvas.height;
+    hctx.fillStyle = '#0B1220';
+    hctx.fillRect(0,0,w,h);
+    var xr = [-22,22], zr=[0,50];
+    drawTrail(hctx, hero.trailA, '#E8A33D', w,h,xr,zr,26);
+    drawTrail(hctx, hero.trailB, '#55C2CF', w,h,xr,zr,26);
+    hero.step(6);
+    var st = document.getElementById('heroStatus');
+    var d = hero.distHistory[hero.distHistory.length-1].d;
+    if(hero.t < 6){
+      st.textContent = 'Kedua lintasan dimulai nyaris berhimpit (selisih 0.00001)…';
+    } else if(d < 5){
+      st.textContent = 'Jarak antar-lintasan masih kecil, tetapi sedang tumbuh secara eksponensial.';
+    } else {
+      st.textContent = 'Kedua lintasan kini sepenuhnya berbeda — tidak mungkin lagi disatukan hanya dengan menunggu.';
+    }
+    if(hero.t > 40){ hero.reset(); }
+    requestAnimationFrame(heroFrame);
+  }
+  requestAnimationFrame(heroFrame);
+
+  // ================= LAB (interactive) =================
+  var lab = makeEngine();
+  lab.reset();
+  var playing = true;
+  var speedMult = 2;
+
+  var attractorCanvas = document.getElementById('attractorCanvas');
+  var actx = attractorCanvas.getContext('2d');
+  var divergenceCanvas = document.getElementById('divergenceCanvas');
+  var dctx = divergenceCanvas.getContext('2d');
+
+  var sSigma = document.getElementById('sSigma');
+  var sRho = document.getElementById('sRho');
+  var sBeta = document.getElementById('sBeta');
+  var sDelta = document.getElementById('sDelta');
+  var sSpeed = document.getElementById('sSpeed');
+  var vSigma = document.getElementById('vSigma');
+  var vRho = document.getElementById('vRho');
+  var vBeta = document.getElementById('vBeta');
+  var vDelta = document.getElementById('vDelta');
+  var vSpeed = document.getElementById('vSpeed');
+  var roTime = document.getElementById('roTime');
+  var roDist = document.getElementById('roDist');
+  var roLyap = document.getElementById('roLyap');
+  var roRegime = document.getElementById('roRegime');
+  var regimeNote = document.getElementById('regimeNote');
+  var btnPlay = document.getElementById('btnPlay');
+  var btnReset = document.getElementById('btnReset');
+
+  function rhoCritical(sigma, beta){
+    var denom = sigma - beta - 1;
+    if(denom <= 0) return null;
+    return sigma*(sigma+beta+3)/denom;
+  }
+
+  function updateRegimeNote(){
+    var rc = rhoCritical(lab.sigma, lab.beta);
+    var rho = lab.rho;
+    var text, regime;
+    if(rho < 1){
+      regime = 'teredam';
+      text = 'ρ < 1: satu-satunya titik tetap (asal) stabil. Semua lintasan meluruh menuju keadaan diam — perbedaan awal justru mengecil seiring waktu.';
+    } else if(rc && rho < rc){
+      regime = 'stabil';
+      text = 'ρ berada di bawah ambang ρ_c ≈ ' + rc.toFixed(2) + '. Sistem punya dua titik tetap stabil; lintasan A dan B akan berputar sebentar lalu menetap — bisa jadi di titik yang sama atau berbeda, tetapi tidak terus-menerus menjauh.';
+    } else if(rc){
+      regime = 'kacau';
+      text = 'ρ melewati ambang ρ_c ≈ ' + rc.toFixed(2) + '. Kedua titik tetap tidak stabil, muncul atraktor aneh, dan dua lintasan yang berdekatan akan berpisah secara eksponensial — inilah rezim "efek kupu-kupu" yang sesungguhnya.';
+    } else {
+      regime = 'tak tentu';
+      text = 'Untuk kombinasi σ dan β ini, rumus ambang klasik tidak berlaku langsung (σ ≤ β+1). Amati langsung dari grafik jarak di sebelah kanan.';
+    }
+    regimeNote.textContent = text;
+    roRegime.textContent = regime;
+  }
+
+  function syncSliders(){
+    lab.sigma = parseFloat(sSigma.value);
+    lab.rho = parseFloat(sRho.value);
+    lab.beta = parseFloat(sBeta.value);
+    lab.delta = Math.pow(10, parseFloat(sDelta.value));
+    speedMult = parseInt(sSpeed.value,10);
+    vSigma.textContent = lab.sigma.toFixed(1);
+    vRho.textContent = lab.rho.toFixed(1);
+    vBeta.textContent = lab.beta.toFixed(2);
+    var exp = parseFloat(sDelta.value);
+    vDelta.textContent = '10^' + exp.toFixed(1);
+    vSpeed.textContent = speedMult + '×';
+    updateRegimeNote();
+  }
+
+  [sSigma,sRho,sBeta].forEach(function(el){
+    el.addEventListener('input', function(){
+      syncSliders();
+      lab.reset();
+    });
+  });
+  sDelta.addEventListener('input', function(){
+    syncSliders();
+    lab.reset();
+  });
+  sSpeed.addEventListener('input', syncSliders);
+
+  btnPlay.addEventListener('click', function(){
+    playing = !playing;
+    btnPlay.textContent = playing ? 'Jeda' : 'Lanjutkan';
+  });
+  btnReset.addEventListener('click', function(){
+    lab.reset();
+  });
+
+  var presets = {
+    damped:  {sigma:10, rho:0.5,  beta:8/3},
+    stable:  {sigma:10, rho:20,   beta:8/3},
+    classic: {sigma:10, rho:28,   beta:8/3},
+    extreme: {sigma:10, rho:50,   beta:8/3}
+  };
+  document.querySelectorAll('button.preset').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var p = presets[btn.getAttribute('data-preset')];
+      sSigma.value = p.sigma; sRho.value = p.rho; sBeta.value = p.beta;
+      syncSliders();
+      lab.reset();
+    });
+  });
+
+  function estimateLyapunov(){
+    var hist = lab.distHistory;
+    if(hist.length < 30) return null;
+    // ambil segmen di mana d masih di bawah ambang jenuh relatif terhadap skala atraktor
+    var satCap = 8; // batas kasar sebelum kurva melengkung/menjenuh
+    var pts = [];
+    for(var i=0;i<hist.length;i++){
+      var d = hist[i].d;
+      if(d > 0 && d < satCap){ pts.push([hist[i].t, Math.log(d)]); }
+    }
+    if(pts.length < 20) return null;
+    // regresi linear sederhana
+    var n = pts.length, sx=0, sy=0, sxx=0, sxy=0;
+    for(var j=0;j<n;j++){ sx+=pts[j][0]; sy+=pts[j][1]; sxx+=pts[j][0]*pts[j][0]; sxy+=pts[j][0]*pts[j][1]; }
+    var denom = (n*sxx - sx*sx);
+    if(Math.abs(denom) < 1e-9) return null;
+    var slope = (n*sxy - sx*sy)/denom;
+    return slope;
+  }
+
+  function drawAttractor(){
+    var w = attractorCanvas.width, h = attractorCanvas.height, pad = 28;
+    actx.fillStyle = '#0B1220';
+    actx.fillRect(0,0,w,h);
+    var zMax = Math.max(50, lab.rho + 22);
+    var xr = [-26,26], zr=[0, zMax];
+    drawTrail(actx, lab.trailA, '#E8A33D', w,h,xr,zr,pad);
+    drawTrail(actx, lab.trailB, '#55C2CF', w,h,xr,zr,pad);
+    // titik saat ini
+    function dot(state, color){
+      var px = pad + (state[0]-xr[0])/(xr[1]-xr[0]) * (w-2*pad);
+      var py = h - pad - (state[2]-zr[0])/(zr[1]-zr[0]) * (h-2*pad);
+      actx.beginPath();
+      actx.arc(px,py,3.4,0,Math.PI*2);
+      actx.fillStyle = color;
+      actx.fill();
+    }
+    dot(lab.A, '#F4C271');
+    dot(lab.B, '#8BDEE8');
+  }
+
+  function drawDivergence(){
+    var w = divergenceCanvas.width, h = divergenceCanvas.height, pad = 34;
+    dctx.fillStyle = '#0B1220';
+    dctx.fillRect(0,0,w,h);
+    var hist = lab.distHistory;
+    if(hist.length < 2) return;
+    var tMax = Math.max(hist[hist.length-1].t, 1);
+    var logMin = -8, logMax = 3; // rentang log10(d) yang ditampilkan
+    // gridlines
+    dctx.strokeStyle = 'rgba(232,236,244,0.08)';
+    dctx.lineWidth = 1;
+    dctx.font = '11px Karla, sans-serif';
+    dctx.fillStyle = '#93A0B8';
+    for(var lv=logMin; lv<=logMax; lv+=2){
+      var py = h - pad - (lv-logMin)/(logMax-logMin) * (h-2*pad);
+      dctx.beginPath(); dctx.moveTo(pad,py); dctx.lineTo(w-8,py); dctx.stroke();
+      dctx.fillText('10^'+lv, 4, py+3);
+    }
+    // curve
+    dctx.beginPath();
+    for(var i=0;i<hist.length;i++){
+      var d = hist[i].d;
+      var log10d = Math.log(Math.max(d,1e-9))/Math.LN10;
+      var clipped = Math.max(logMin, Math.min(logMax, log10d));
+      var px = pad + (hist[i].t/tMax) * (w-pad-8);
+      var py = h - pad - (clipped-logMin)/(logMax-logMin) * (h-2*pad);
+      if(i===0) dctx.moveTo(px,py); else dctx.lineTo(px,py);
+    }
+    dctx.strokeStyle = '#F0B7C2';
+    dctx.lineWidth = 1.6;
+    dctx.stroke();
+
+    var lyap = estimateLyapunov();
+    roLyap.textContent = lyap===null ? '(menunggu data)' : lyap.toFixed(3) + ' /satuan waktu';
+  }
+
+  function labFrame(){
+    if(playing){
+      lab.step(speedMult*2);
+    }
+    drawAttractor();
+    drawDivergence();
+    roTime.textContent = lab.t.toFixed(2);
+    roDist.textContent = lab.distHistory[lab.distHistory.length-1].d.toExponential(3);
+    requestAnimationFrame(labFrame);
+  }
+
+  syncSliders();
+  requestAnimationFrame(labFrame);
+
+})();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

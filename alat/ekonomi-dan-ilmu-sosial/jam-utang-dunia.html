@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jam Utang Dunia — Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12151a; --bg-panel:#1a1e25; --bg-panel-2:#20242c; --line:#2c313b;
+    --text:#e9e6df; --text-dim:#9aa1ad;
+    --gold:#c9a24b; --gold-soft:#e3c988;
+    --ok:#4f9c94; --warn:#e3766a; --blue:#5b8fc9;
+    --font-display:"Fraunces",serif; --font-body:"Karla",sans-serif; --font-mono:"JetBrains Mono",monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px 80px;}
+  header.hero{padding:56px 20px 40px;text-align:center;border-bottom:1px solid var(--line);
+    background:radial-gradient(ellipse at 50% 0%, rgba(227,118,106,0.10), transparent 60%);}
+  .eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--warn);margin-bottom:14px;}
+  h1{font-family:var(--font-display);font-weight:600;font-size:clamp(26px,5vw,40px);margin:0 0 12px;}
+  .subtitle{color:var(--text-dim);font-size:15px;max-width:640px;margin:0 auto;}
+  section{padding:36px 0;border-bottom:1px solid var(--line);} section:last-of-type{border-bottom:none;}
+  h2{font-family:var(--font-display);font-weight:600;font-size:22px;color:var(--gold-soft);margin:0 0 6px;display:flex;align-items:baseline;gap:10px;}
+  h2 .num{font-family:var(--font-mono);font-size:13px;color:var(--text-dim);font-weight:400;}
+  h3{font-family:var(--font-display);font-size:16px;color:var(--text);margin:20px 0 8px;}
+  p{font-size:15.5px;} p.dim{color:var(--text-dim);font-size:14px;}
+  ul{padding-left:20px;} li{margin-bottom:6px;font-size:14.5px;}
+
+  .panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:24px;}
+  .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0;}
+  @media(max-width:640px){.compare-grid{grid-template-columns:1fr;}}
+  .compare-card{background:var(--bg-panel-2);border:1px solid var(--line);border-radius:8px;padding:16px 18px;}
+  .compare-card.left{border-left:3px solid var(--warn);}
+  .compare-card.right{border-left:3px solid var(--blue);}
+  .compare-card .ctitle{font-weight:700;font-size:14.5px;margin-bottom:6px;}
+  .compare-card.left .ctitle{color:var(--warn);}
+  .compare-card.right .ctitle{color:var(--blue);}
+  .compare-card p{font-size:13.5px;color:var(--text-dim);margin:0;}
+
+  /* jam utang */
+  .clock-box{background:var(--bg-panel-2);border:1px solid var(--line);border-radius:10px;padding:22px;text-align:center;margin-bottom:20px;}
+  .clock-label{font-family:var(--font-mono);font-size:11.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;}
+  .clock-num{font-family:var(--font-mono);font-size:clamp(26px,6vw,44px);color:var(--warn);font-weight:500;letter-spacing:.02em;}
+  .clock-sub{font-size:12.5px;color:var(--text-dim);margin-top:6px;}
+  .clock-mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:14px;}
+  .clock-mini .m{background:var(--bg-panel);border:1px solid var(--line);border-radius:6px;padding:8px 10px;}
+  .clock-mini .m .l{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);text-transform:uppercase;}
+  .clock-mini .m .v{font-family:var(--font-display);font-size:15.5px;color:var(--gold-soft);}
+
+  .controls-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-bottom:18px;}
+  .field label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--text-dim);margin-bottom:6px;font-family:var(--font-mono);text-transform:uppercase;}
+  .field label .val{color:var(--gold-soft);}
+  .field input[type=range]{width:100%;accent-color:var(--warn);}
+  .field .hint{font-size:11.5px;color:var(--text-dim);margin-top:4px;font-style:italic;}
+
+  svg.chart{width:100%;height:auto;display:block;background:var(--bg-panel-2);border-radius:8px;border:1px solid var(--line);}
+  .results{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px;}
+  .result-card{background:var(--bg-panel-2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;}
+  .result-card .l{font-family:var(--font-mono);font-size:10.5px;color:var(--text-dim);text-transform:uppercase;}
+  .result-card .v{font-family:var(--font-display);font-size:19px;color:var(--gold-soft);}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:12.5px;color:var(--text-dim);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .swatch{width:14px;height:3px;border-radius:2px;display:inline-block;}
+  .insight-box{margin-top:16px;background:var(--bg-panel-2);border:1px dashed var(--warn);border-radius:8px;padding:14px 18px;font-size:14px;color:var(--text);}
+  .insight-box b{color:var(--gold-soft);}
+
+  .owner-bar{display:flex;width:100%;height:34px;border-radius:6px;overflow:hidden;border:1px solid var(--line);margin-top:10px;}
+  .owner-bar div{display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:11px;color:#12151a;font-weight:600;transition:width .2s;}
+
+  .benefit-list{display:grid;gap:10px;}
+  .benefit-item{background:var(--bg-panel);border:1px solid var(--line);border-radius:8px;padding:14px 18px;}
+  .benefit-item .btitle{font-weight:700;color:var(--gold-soft);font-size:15px;margin-bottom:4px;}
+  .limit-item{background:var(--bg-panel);border:1px solid var(--line);border-left:3px solid var(--warn);
+    padding:12px 16px;border-radius:6px;margin-bottom:8px;font-size:14.5px;color:var(--text-dim);}
+  table.refs{width:100%;border-collapse:collapse;font-size:14px;}
+  table.refs td{padding:8px 4px;border-bottom:1px solid var(--line);color:var(--text-dim);vertical-align:top;}
+  table.refs td:first-child{color:var(--text);width:32%;font-weight:600;}
+  footer{text-align:center;padding:36px 20px 10px;color:var(--text-dim);font-size:12.5px;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="eyebrow">Ilmu Ekonomi Murni · Ekonomi Makro &amp; Fiskal</div>
+  <h1>Jam Utang Dunia</h1>
+  <p class="subtitle">Kenapa utang negara divisualisasikan sebagai "jam" yang terus berdetak, siapa sebenarnya memiliki utang itu, dan apakah negara yang berutang otomatis lebih lemah dari yang meminjamkannya. Murni ilmu ekonomi fiskal-moneter — tanpa menyimpulkan siapa "lebih adikuasa".</p>
+</header>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <h2><span class="num">01</span> Belajar</h2>
+    <p><strong>Kenapa disebut "jam" dan bukan sekadar angka?</strong> Karena secara matematis memang tepat begitu: anggaran pemerintah biasanya defisit (belanja &gt; pendapatan) di hampir setiap detik tahun berjalan, dan utang lama terus berbunga. Dua proses ini — defisit baru &amp; bunga majemuk atas utang lama — berjalan kontinu, sehingga total utang benar-benar naik nyaris tanpa jeda. Merepresentasikannya sebagai jam yang berdetak bukan gimmick visual, tapi cocok dengan sifat matematis dari akumulasi utang itu sendiri.</p>
+    <p><strong>Siapa pemilik situs "jam utang" yang terkenal (usdebtclock.org)?</strong> Situs itu bukan milik pemerintah AS maupun lembaga internasional — ia adalah proyek pribadi milik seorang akuntan bernama Ed Hall bersama putra-putranya, dimulai akhir era 1980-an sebagai keprihatinan pribadi atas utang yang terus membesar. Angka yang ditampilkannya sendiri diambil/diestimasi dari data resmi <strong>Departemen Keuangan AS</strong> (U.S. Treasury, dataset "Debt to the Penny") dan proyeksi <strong>Congressional Budget Office (CBO)</strong> — situs itu hanya visualisasi pihak ketiga, bukan sumber data primer.</p>
+    <p><strong>Utang vs Defisit.</strong> Defisit adalah <em>arus</em> — kekurangan anggaran dalam satu tahun tertentu. Utang adalah <em>stok</em> — akumulasi total dari seluruh defisit sepanjang sejarah, dikurangi pelunasan (yang jarang terjadi). Setiap tahun defisit terjadi, ia menambah stok utang.</p>
+    <h3>Siapa sebenarnya "memiliki" utang itu?</h3>
+    <p class="dim">Kesalahpahaman umum: utang negara seolah semuanya "dipinjam dari luar negeri". Faktanya (data AS, 2026), mayoritas justru dipegang oleh pihak domestik sendiri:</p>
+    <div class="compare-grid">
+      <div class="compare-card left">
+        <div class="ctitle">≈ 70% Domestik</div>
+        <p>Bank sentral (The Fed) memegang sekitar 14% lewat neracanya sendiri; sisanya dipegang dana pensiun, reksadana, bank, perusahaan asuransi, dan rumah tangga AS sendiri — termasuk dana jaminan sosial (Social Security Trust Fund). Bunga yang dibayar ke kelompok ini pada dasarnya berputar kembali di dalam perekonomian AS sendiri.</p>
+      </div>
+      <div class="compare-card right">
+        <div class="ctitle">≈ 30% Asing</div>
+        <p>Dipegang pemerintah &amp; investor luar negeri. Jepang adalah pemegang asing terbesar (&gt;1 triliun dolar), diikuti Inggris, lalu Tiongkok — yang kepemilikannya justru terus menurun sejak puncaknya di awal 2010-an. Bunga ke kelompok ini adalah aliran dana riil yang keluar dari ekonomi AS.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="pertanyaan">
+    <h2><span class="num">02</span> Pertanyaan Ilmiah</h2>
+    <p class="dim" style="font-style:italic;">Kalau negara A berutang ke negara B, apakah B otomatis lebih "berkuasa" atas A — seperti rentenir atas peminjamnya? Kenapa negara yang mencetak mata uang sendiri (seperti AS dengan dolar) tidak bisa "bangkrut" dengan cara yang sama seperti rumah tangga yang gagal bayar KPR? Kalau kreditur terbesar menjual seluruh obligasinya sekaligus sebagai bentuk tekanan, siapa yang sebenarnya lebih dirugikan oleh langkah itu?</p>
+  </section>
+
+  <section id="eksplorasi">
+    <h2><span class="num">03</span> Eksplorasi &amp; Perhitungan</h2>
+    <div class="panel">
+
+      <div class="clock-box">
+        <div class="clock-label">Simulasi Jam Utang — bertambah langsung di depan Anda</div>
+        <div class="clock-num" id="clockNum">$0</div>
+        <div class="clock-sub">berdasarkan parameter yang Anda geser di bawah — bukan data langsung, ini simulasi edukatif</div>
+        <div class="clock-mini">
+          <div class="m"><div class="l">Bertambah / detik</div><div class="v" id="mPerSec">$0</div></div>
+          <div class="m"><div class="l">Bertambah / hari</div><div class="v" id="mPerDay">$0</div></div>
+          <div class="m"><div class="l">Beban / warga saat ini</div><div class="v" id="mPerCapita">$0</div></div>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <div class="field"><label>Rasio Utang Awal (% PDB) <span class="val" id="vD0">123</span></label><input type="range" id="inD0" min="50" max="180" step="1" value="123"></div>
+        <div class="field"><label>Defisit Primer, di luar bunga (% PDB) <span class="val" id="vPD">2.6</span></label><input type="range" id="inPD" min="-4" max="8" step="0.1" value="2.6">
+          <div class="hint">Negatif = surplus primer (pendapatan &gt; belanja di luar bunga).</div>
+        </div>
+        <div class="field"><label>Bunga Efektif atas Utang (%/th) <span class="val" id="vR">3.4</span></label><input type="range" id="inR" min="0" max="8" step="0.1" value="3.4"></div>
+        <div class="field"><label>Pertumbuhan PDB Nominal (%/th) <span class="val" id="vG">4.5</span></label><input type="range" id="inG" min="0" max="8" step="0.1" value="4.5"></div>
+        <div class="field"><label>Tahun Proyeksi <span class="val" id="vYears">20</span></label><input type="range" id="inYears" min="5" max="50" step="1" value="20"></div>
+        <div class="field"><label>Porsi Kepemilikan Asing (%) <span class="val" id="vForeign">30</span></label><input type="range" id="inForeign" min="0" max="60" step="1" value="30"></div>
+      </div>
+
+      <svg class="chart" id="svgChart" viewBox="0 0 620 340"></svg>
+      <div class="legend">
+        <span><span class="swatch" style="background:#e3766a"></span> Rasio Utang / PDB</span>
+        <span><span class="swatch" style="background:#3a4150"></span> Garis 100% PDB</span>
+        <span><span class="swatch" style="background:#5b8fc9;opacity:.6"></span> Puncak era Perang Dunia II (~106%, 1946)</span>
+      </div>
+
+      <h3>Komposisi Kepemilikan Utang (skenario Anda)</h3>
+      <div class="owner-bar" id="ownerBar"></div>
+
+      <div class="results" id="resultsGrid"></div>
+      <div class="insight-box" id="insightBox"></div>
+    </div>
+  </section>
+
+  <section id="manfaat">
+    <h2><span class="num">04</span> Manfaat &amp; Kegunaan</h2>
+    <div class="benefit-list">
+      <div class="benefit-item"><div class="btitle">Memahami dinamika utang, bukan cuma angkanya</div>Rumus <code>rasio utang baru = rasio lama × (1+bunga)/(1+pertumbuhan PDB) + defisit primer</code> menunjukkan kenapa negara dengan ekonomi yang tumbuh cepat bisa "menumbuhkan diri keluar" dari rasio utang tinggi, sementara yang stagnan tidak bisa — terlepas dari niat baik kebijakan fiskalnya.</div>
+      <div class="benefit-item"><div class="btitle">Memisahkan fakta dari framing "utang = kelemahan"</div>Memberi kerangka netral untuk menilai klaim populer seperti "negara X memegang utang kita jadi mereka bisa mengendalikan kita" — dengan mempertimbangkan denominasi mata uang, ukuran pasar obligasi, dan insentif kedua pihak.</div>
+      <div class="benefit-item"><div class="btitle">Relevan untuk debat kebijakan aktual</div>Kerangka rasio utang/PDB yang sama dipakai IMF, CBO, dan lembaga rating kredit untuk menilai risiko fiskal negara mana pun, tidak hanya AS.</div>
+    </div>
+  </section>
+
+  <section id="batasan">
+    <h2><span class="num">05</span> Batasan</h2>
+    <div class="limit-item">Mengasumsikan defisit primer &amp; bunga efektif konstan sepanjang periode proyeksi — pada kenyataannya keduanya berubah mengikuti siklus ekonomi, suku bunga acuan bank sentral, dan keputusan politik anggaran tahun demi tahun.</div>
+    <div class="limit-item">Ambang batas "berbahaya" seperti 90% PDB (dipopulerkan studi Reinhart-Rogoff) adalah temuan yang <strong>diperdebatkan secara akademis</strong> — riset aslinya pernah dikritik karena kesalahan metodologi/spreadsheet, dan negara seperti Jepang bertahan puluhan tahun dengan rasio &gt;200% tanpa krisis utang klasik.</div>
+    <div class="limit-item">Tidak memodelkan reaksi pasar (kenaikan yield obligasi) yang bisa terjadi kalau investor mulai meragukan kesehatan fiskal — model ini murni aritmetika akumulasi, bukan model kepercayaan pasar.</div>
+    <div class="limit-item">Fokusnya sengaja hanya pada mekanisme ekonomi murni (arus dana, siapa memegang apa) — bukan pada penilaian geopolitik siapa "lebih berkuasa", yang melibatkan faktor militer, diplomatik, dan politik di luar cakupan ilmu ekonomi semata.</div>
+  </section>
+
+  <section id="referensi">
+    <h2><span class="num">06</span> Referensi</h2>
+    <table class="refs">
+      <tr><td>U.S. Treasury Fiscal Data</td><td>Dataset "Debt to the Penny" — sumber resmi angka utang harian pemerintah AS</td></tr>
+      <tr><td>Congressional Budget Office (CBO)</td><td>The Budget and Economic Outlook 2026–2036 — proyeksi defisit &amp; rasio utang/PDB resmi</td></tr>
+      <tr><td>Congressional Research Service</td><td>Foreign Holdings of Federal Debt (RS22331) — rincian kepemilikan asing per negara</td></tr>
+      <tr><td>Reinhart &amp; Rogoff</td><td>This Time is Different (2009) — asal-usul ambang batas 90% PDB, beserta kontroversi akademisnya</td></tr>
+      <tr><td>Olivier Blanchard</td><td>Kerangka standar dinamika rasio utang (debt dynamics equation) dipakai di bagian Eksplorasi</td></tr>
+    </table>
+  </section>
+
+</div>
+
+<footer>Simulator edukasi ilmu ekonomi fiskal murni. Angka awal mengikuti estimasi publik 2026 (Treasury, CBO, IMF); parameter di atas sepenuhnya bisa Anda ubah.</footer>
+
+<script>
+(function(){
+  const el = id => document.getElementById(id);
+  const state = { d0:123, pd:2.6, r:3.4, g:4.5, years:20, foreignPct:30 };
+  const GDP0 = 32.5; // triliun USD, PDB nominal awal (estimasi 2026), dipakai sebagai basis dolar
+  const POP = 335;   // juta jiwa, estimasi populasi AS 2026, dipakai untuk beban per warga
+
+  const inD0=el('inD0'), inPD=el('inPD'), inR=el('inR'), inG=el('inG'), inYears=el('inYears'), inForeign=el('inForeign');
+  [inD0,inPD,inR,inG,inYears,inForeign].forEach(inp=>inp.addEventListener('input', ()=>{
+    state.d0=+inD0.value; state.pd=+inPD.value; state.r=+inR.value; state.g=+inG.value; state.years=+inYears.value; state.foreignPct=+inForeign.value;
+    recompute();
+  }));
+
+  function fmt(n,d){ return Number(n.toFixed(d)); }
+  function fmtUSD(n){
+    if(Math.abs(n)>=1e12) return '$'+fmt(n/1e12,2)+'T';
+    if(Math.abs(n)>=1e9) return '$'+fmt(n/1e9,2)+'B';
+    if(Math.abs(n)>=1e6) return '$'+fmt(n/1e6,2)+'M';
+    return '$'+fmt(n,0);
+  }
+
+  // --- proyeksi rasio utang/PDB pakai persamaan dinamika utang standar ---
+  function debtSeries(d0,pd,r,g,years){
+    const series = [d0];
+    let d = d0;
+    for(let t=1;t<=years;t++){
+      d = d*(1+r/100)/(1+g/100) + pd;
+      series.push(d);
+    }
+    return series;
+  }
+
+  let clockSeconds = 0, clockTimer = null, ratePerSecond = 0, clockBase = 0;
+
+  function recompute(){
+    const {d0,pd,r,g,years,foreignPct} = state;
+    const series = debtSeries(d0,pd,r,g,years);
+
+    const W=620,H=340, padL=54,padR=20,padT=20,padB=36;
+    const plotW=W-padL-padR, plotH=H-padT-padB;
+    const maxD = Math.max(...series, 130)*1.1;
+    const minD = Math.min(...series, 0);
+    function xOf(t){ return padL + (t/years)*plotW; }
+    function yOf(v){ return H-padB - (v-minD)/(maxD-minD)*plotH; }
+
+    let svg = '';
+    svg += `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-padB}" stroke="#3a4150" stroke-width="1"/>`;
+    svg += `<line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#3a4150" stroke-width="1"/>`;
+    svg += `<text x="${W-padR}" y="${H-padB+18}" fill="#9aa1ad" font-size="11" text-anchor="end" font-family="JetBrains Mono, monospace">Tahun</text>`;
+    svg += `<text x="${padL-8}" y="${padT+4}" fill="#9aa1ad" font-size="11" text-anchor="end" font-family="JetBrains Mono, monospace">% PDB</text>`;
+
+    // garis referensi 100%
+    if(100>=minD && 100<=maxD){
+      const y100=yOf(100);
+      svg += `<line x1="${padL}" y1="${y100}" x2="${W-padR}" y2="${y100}" stroke="#3a4150" stroke-width="1" stroke-dasharray="3,3"/>`;
+      svg += `<text x="${padL+4}" y="${y100-4}" fill="#9aa1ad" font-size="10" font-family="JetBrains Mono, monospace">100%</text>`;
+    }
+    // garis referensi puncak WWII ~106%
+    if(106>=minD && 106<=maxD){
+      const yW=yOf(106);
+      svg += `<line x1="${padL}" y1="${yW}" x2="${W-padR}" y2="${yW}" stroke="#5b8fc9" stroke-width="1" stroke-dasharray="2,4" opacity="0.6"/>`;
+    }
+
+    let d = '';
+    series.forEach((v,t)=>{ d += (t===0?'M':'L') + xOf(t) + ',' + yOf(v) + ' '; });
+    svg += `<path d="${d.trim()}" fill="none" stroke="#e3766a" stroke-width="2.5"/>`;
+    svg += `<circle cx="${xOf(years)}" cy="${yOf(series[series.length-1])}" r="4" fill="#e3766a"/>`;
+
+    el('svgChart').innerHTML = svg;
+
+    // --- komposisi kepemilikan (dolar, tahun awal) ---
+    const debtDollar0 = d0/100 * GDP0; // triliun USD
+    const foreignDollar = debtDollar0 * foreignPct/100;
+    const domesticDollar = debtDollar0 - foreignDollar;
+    el('ownerBar').innerHTML = `
+      <div style="width:${100-foreignPct}%;background:#4f9c94;">Domestik ${fmt(100-foreignPct,0)}% (${fmt(domesticDollar,1)}T)</div>
+      <div style="width:${foreignPct}%;background:#c9a24b;">Asing ${fmt(foreignPct,0)}% (${fmt(foreignDollar,1)}T)</div>`;
+
+    // --- jam utang: laju penambahan dolar per detik dari defisit total tahun awal ---
+    const totalDeficitPctGDP = pd + (r/100)*d0; // defisit primer + beban bunga tahun berjalan, % PDB
+    const totalDeficitDollar = totalDeficitPctGDP/100 * GDP0 * 1e12; // USD
+    ratePerSecond = totalDeficitDollar / (365*24*3600);
+    clockBase = debtDollar0*1e12;
+    el('mPerSec').textContent = fmtUSD(ratePerSecond);
+    el('mPerDay').textContent = fmtUSD(ratePerSecond*86400);
+    el('mPerCapita').textContent = fmtUSD(clockBase/(POP*1e6));
+
+    const dEnd = series[series.length-1];
+    const results = [
+      {l:'Rasio Awal', v:fmt(d0,1)+'% PDB'},
+      {l:'Rasio Akhir ('+years+' th)', v:fmt(dEnd,1)+'% PDB'},
+      {l:'Utang Awal (USD)', v:fmt(debtDollar0,1)+'T'},
+      {l:'Bunga/Tahun (USD)', v:fmt((r/100)*debtDollar0,2)+'T'},
+    ];
+    el('resultsGrid').innerHTML = results.map(r=>`<div class="result-card"><div class="l">${r.l}</div><div class="v">${r.v}</div></div>`).join('');
+
+    const arah = dEnd>d0 ? 'terus MEMBESAR' : (dEnd<d0 ? 'justru MENGECIL' : 'relatif STABIL');
+    const sebab = r>g ? 'karena bunga utang lebih tinggi dari pertumbuhan ekonomi — sekecil apa pun defisit primernya, rasio punya kecenderungan naik dengan sendirinya (efek bola salju)' : 'karena ekonomi tumbuh lebih cepat dari bunga utang — ruang untuk defisit primer tanpa membuat rasio meledak jadi lebih lebar';
+    el('insightBox').innerHTML = `Dengan bunga efektif ${fmt(r,1)}% vs pertumbuhan PDB ${fmt(g,1)}%, rasio utang/PDB ${arah} dalam ${years} tahun ke depan (dari ${fmt(d0,1)}% menjadi ${fmt(dEnd,1)}%) — ${sebab}. Dari total utang ${fmt(debtDollar0,1)} triliun dolar di skenario ini, ${fmt(foreignDollar,1)} triliun (${foreignPct}%) mengalir sebagai beban bunga ke pemegang asing, sisanya berputar kembali di dalam perekonomian domestik.`;
+
+    el('vD0').textContent=fmt(d0,1); el('vPD').textContent=fmt(pd,1); el('vR').textContent=fmt(r,1);
+    el('vG').textContent=fmt(g,1); el('vYears').textContent=years; el('vForeign').textContent=foreignPct;
+  }
+
+  function tickClock(){
+    clockBase += ratePerSecond/10; // update tiap 100ms
+    el('clockNum').textContent = fmtUSD(clockBase);
+  }
+
+  recompute();
+  clockTimer = setInterval(tickClock, 100);
+})();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

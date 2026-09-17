@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jejak di Padang Pasir — Koloni Semut &amp; Jalur Sanad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=Karla:wght@400;500;600;700&family=Amiri:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#161320; --night-2:#1e1a2c; --night-line:#39324a; --parchment:#f1e6cf; --ink:#241d15; --ink-dim:#6b5f4a;
+  --sand:#d9b98a; --gold:#c98a3d; --gold-deep:#a56a26; --terracotta:#a6512f; --sage:#4f6b47; --ant:#17140f;
+  --paper:#f6efe0; --line:#d8c9a7; --stone:#8a8272;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--night);color:var(--parchment);font-family:'Karla',sans-serif;line-height:1.55;}
+.amiri{font-family:'Amiri',serif;}
+header{padding:26px 28px 18px;border-bottom:1px solid var(--night-line);position:relative;overflow:hidden;}
+header::before{content:"الجادّة";position:absolute;right:-4px;top:-22px;font-family:'Amiri',serif;font-size:5.2rem;color:rgba(201,138,61,0.08);white-space:nowrap;}
+header .eyebrow{color:var(--gold);font-family:'Amiri',serif;font-size:1.05rem;margin-bottom:6px;}
+header h1{font-family:'Fraunces',serif;font-weight:600;font-size:1.75rem;line-height:1.2;margin:0 0 10px;max-width:26ch;}
+header p{color:#c9bfa8;max-width:64ch;margin:0;font-size:0.92rem;}
+
+.tabbar{display:flex;border-bottom:1px solid var(--night-line);background:var(--night-2);}
+.tabbtn{flex:1 1 auto;padding:13px 16px;text-align:center;font-family:'Fraunces',serif;font-size:0.95rem;font-weight:600;color:#a89b7f;background:transparent;border:none;border-right:1px solid var(--night-line);cursor:pointer;}
+.tabbtn:last-child{border-right:none;}
+.tabbtn .sub{display:block;font-family:'Karla',sans-serif;font-size:10.5px;font-weight:500;color:#847a64;margin-top:2px;}
+.tabbtn.active{background:var(--night);color:var(--gold);}
+.tabbtn.active .sub{color:#c9bfa8;}
+
+.scene{display:none;}
+.scene.active{display:block;}
+.stage{position:relative;background:#0d0c14;}
+.stage canvas{display:block;}
+.three3d{width:100%;height:min(72vh,620px);display:block;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;}
+.three3d.grabbing{cursor:grabbing;}
+.hint{position:absolute;bottom:10px;right:14px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#8f8672;pointer-events:none;}
+
+.controls{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-end;padding:16px 28px;background:var(--night-2);border-bottom:1px solid var(--night-line);}
+.ctrl{display:flex;flex-direction:column;gap:4px;min-width:180px;}
+.ctrl label{font-size:11.5px;color:#b6ac96;display:flex;justify-content:space-between;}
+.ctrl label b{color:var(--parchment);font-family:'IBM Plex Mono',monospace;font-weight:500;}
+input[type=range]{width:100%;accent-color:var(--gold);}
+.chk{display:flex;align-items:center;gap:7px;font-size:12.5px;color:#b6ac96;}
+.btn{font-family:'Karla',sans-serif;font-weight:600;font-size:12.5px;padding:9px 16px;border-radius:20px;border:1px solid var(--gold-deep);background:transparent;color:var(--gold);cursor:pointer;align-self:flex-end;}
+.btn:hover{background:rgba(201,138,61,0.12);}
+.speedgrp{display:flex;gap:6px;}
+.speedbtn{font-family:'IBM Plex Mono',monospace;font-size:11.5px;padding:6px 10px;border-radius:6px;border:1px solid var(--night-line);background:transparent;color:#b6ac96;cursor:pointer;}
+.speedbtn.active{background:var(--gold);border-color:var(--gold);color:#241a08;font-weight:600;}
+.simtime{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#b6ac96;}
+
+main{background:var(--paper);color:var(--ink);}
+.panel{max-width:900px;margin:0 auto;padding:26px 22px 34px;}
+.legend{display:flex;flex-wrap:wrap;gap:16px 22px;font-size:12.5px;margin-bottom:18px;}
+.legend span{display:inline-flex;align-items:center;gap:7px;}
+.sw{width:11px;height:11px;border-radius:50%;display:inline-block;flex:0 0 auto;}
+.panel h2{font-family:'Fraunces',serif;font-weight:600;font-size:1.15rem;margin:0 0 8px;}
+.panel p{font-size:0.92rem;color:#42392a;max-width:66ch;margin:0 0 12px;}
+.note{border-top:1px dashed var(--line);margin-top:16px;padding-top:14px;font-size:0.84rem;color:var(--ink-dim);}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow amiri">الجادّة — jalur yang ramai dilalui</div>
+  <h1>Jejak di Padang Pasir</h1>
+  <p>Ilustrasi koloni semut (Ant Colony Optimization): dilihat dari sangat tinggi, para perawi hanya tampak sebagai siluet hitam kecil yang mondar-mandir meninggalkan jejak kaki di pasir. Semakin ramai jalur dilalui, semakin jelas bekasnya.</p>
+</header>
+
+<div class="tabbar">
+  <button class="tabbtn active" data-tab="a">Padang Terbuka<span class="sub">titik-titik setara, jalur bebas</span></button>
+  <button class="tabbtn" data-tab="b">Menuju Guru<span class="sub">medan berbatu, dua tujuan</span></button>
+  <button class="tabbtn" data-tab="c">Kawanan Burung<span class="sub">tanpa jejak, tak pernah menyatu</span></button>
+</div>
+
+<!-- ===== TAB A: padang terbuka (versi awal) ===== -->
+<div class="scene active" id="scene-a">
+  <div class="controls">
+    <div class="ctrl">
+      <label>Algoritma perawi</label>
+      <div class="speedgrp" id="algoGrpA"></div>
+    </div>
+    <div class="ctrl">
+      <label>Jumlah perawi <b id="antsVal">14</b></label>
+      <input id="antsRange" type="range" min="6" max="28" value="14" step="1">
+    </div>
+    <div class="ctrl" id="ctrlRhoA">
+      <label>Laju pudarnya jejak sepi <b id="rhoVal">0.15</b></label>
+      <input id="rhoRange" type="range" min="5" max="40" value="15" step="1">
+    </div>
+    <div class="ctrl chk" id="ctrlGlowA">
+      <input id="glowChk" type="checkbox" checked>
+      <label for="glowChk" style="margin:0;">Tampilkan garis jalur (jādah)</label>
+    </div>
+    <div class="ctrl">
+      <label>Percepat simulasi</label>
+      <div class="speedgrp" id="speedGrp"></div>
+    </div>
+    <div class="ctrl">
+      <label>Waktu simulasi berlalu</label>
+      <span class="simtime" id="simTimeVal">0:00</span>
+    </div>
+    <button class="btn" id="resetBtn">Atur ulang jejak</button>
+  </div>
+  <div class="stage">
+    <div class="three3d" id="three3d-a"></div>
+    <div class="hint">seret = putar &amp; miringkan · gulir/cubit = zoom</div>
+  </div>
+</div>
+
+<!-- ===== TAB B: medan berbatu menuju dua target ===== -->
+<div class="scene" id="scene-b">
+  <div class="controls">
+    <div class="ctrl">
+      <label>Algoritma perawi</label>
+      <div class="speedgrp" id="algoGrp"></div>
+    </div>
+    <div class="ctrl">
+      <label>Peziarah baru / menit <b id="spawnVal">10</b></label>
+      <input id="spawnRange" type="range" min="3" max="24" value="10" step="1">
+    </div>
+    <div class="ctrl" id="ctrlRho2">
+      <label>Laju pudarnya jejak sepi <b id="rhoVal2">0.15</b></label>
+      <input id="rhoRange2" type="range" min="5" max="40" value="15" step="1">
+    </div>
+    <div class="ctrl chk" id="ctrlGlow2">
+      <input id="glowChk2" type="checkbox" checked>
+      <label for="glowChk2" style="margin:0;">Tampilkan garis jalur (jādah)</label>
+    </div>
+    <div class="ctrl">
+      <label>Percepat simulasi</label>
+      <div class="speedgrp" id="speedGrp2"></div>
+    </div>
+    <div class="ctrl">
+      <label>Waktu simulasi berlalu</label>
+      <span class="simtime" id="simTimeVal2">0:00</span>
+    </div>
+    <button class="btn" id="resetBtn2">Atur ulang jejak</button>
+  </div>
+  <div class="stage">
+    <div class="three3d" id="three3d-b"></div>
+    <div class="hint">seret = putar &amp; miringkan · gulir/cubit = zoom</div>
+  </div>
+</div>
+
+<!-- ===== TAB C: kawanan burung (boids) di atas padang pasir yang sama ===== -->
+<div class="scene" id="scene-c">
+  <div class="controls">
+    <div class="ctrl">
+      <label>Jumlah burung <b id="birdsVal">36</b></label>
+      <input id="birdsRange" type="range" min="10" max="70" value="36" step="1">
+    </div>
+    <div class="ctrl">
+      <label>Radius pandang tetangga <b id="visVal">14</b></label>
+      <input id="visRange" type="range" min="6" max="30" value="14" step="1">
+    </div>
+    <div class="ctrl">
+      <label>Percepat simulasi</label>
+      <div class="speedgrp" id="speedGrp3"></div>
+    </div>
+    <div class="ctrl">
+      <label>Waktu simulasi berlalu</label>
+      <span class="simtime" id="simTimeVal3">0:00</span>
+    </div>
+    <button class="btn" id="resetBtn3">Sebar ulang kawanan</button>
+  </div>
+  <div class="stage">
+    <div class="three3d" id="three3d-c"></div>
+    <div class="hint">seret = putar &amp; miringkan · gulir/cubit = zoom</div>
+  </div>
+</div>
+
+<main>
+  <div class="panel">
+    <div class="legend" id="legend-a">
+      <span><i class="sw" style="background:var(--ant)"></i>Perawi (siluet semut)</span>
+      <span><i class="sw" style="background:var(--gold)"></i>Jejak / jalur yang sering dilalui</span>
+      <span><i class="sw" style="background:var(--terracotta);border-radius:2px"></i>Bangunan — titik pertemuan</span>
+      <span><i class="sw" style="background:var(--sage)"></i>Oase — titik pertemuan</span>
+    </div>
+    <div class="legend" id="legend-b" style="display:none">
+      <span><i class="sw" style="background:var(--ant)"></i>Perawi (siluet semut)</span>
+      <span><i class="sw" style="background:var(--gold)"></i>Jejak / jalur yang sering dilalui</span>
+      <span><i class="sw" style="background:var(--stone);border-radius:2px"></i>Bukit batu — penyekat jalan</span>
+      <span><i class="sw" style="background:var(--terracotta);border-radius:2px"></i>Rumah &amp; gubuk — tujuan akhir, tempat menetap</span>
+    </div>
+    <div class="legend" id="legend-c" style="display:none">
+      <span><i class="sw" style="background:var(--ant)"></i>Burung (dilihat dari atas)</span>
+      <span><i class="sw" style="background:#00000055;border-radius:50%"></i>Bayangan di pasir — menunjukkan ketinggian terbang</span>
+      <span><i class="sw" style="background:var(--terracotta);border-radius:2px"></i>Bangunan &amp; oase — sekadar latar, bukan tujuan</span>
+    </div>
+    <h2>Kenapa modelnya begini</h2>
+    <p>Tiap perawi berjalan dari satu titik ke titik lain lalu memilih tujuan berikutnya secara acak berbobot: jalur yang sudah lebih dulu ramai (feromon/jejak tinggi) dan jaraknya masuk akal lebih besar peluangnya dipilih — persis logika <i>tau</i>×<i>eta</i> pada algoritma semut klasik. Jejak yang jarang dilalui perlahan memudar tersapu angin (evaporasi), sedangkan jalur yang terus-menerus dilalui banyak orang tetap tebal dan jelas. Kedua tab bergerak ("Padang Terbuka" dan "Menuju Guru") punya tombol "Algoritma perawi" untuk membandingkan langsung dengan mode Kawanan Partikel (PSO): alih-alih mengikuti jejak, tiap perawi tertarik ke posisi terbaik yang pernah ia sendiri temukan dan posisi terbaik yang pernah ditemukan siapa pun di kelompok — tidak peduli jejak sama sekali.</p>
+    <p id="descB" style="display:none">Pada tab "Menuju Guru", medannya diperluas dan diberi bukit-bukit batu yang menyekat jalan lurus, sehingga perawi harus berbelok mengikuti celah-celah yang ada — pergerakannya jadi tampak berpencar dan tidak beraturan (kocar-kacir), bukan barisan rapi menuju satu arah. Ada dua tujuan akhir: sebuah rumah berpekarangan dan sebuah gubuk kecil. Begitu seorang perawi sampai, ia menetap di situ (tidak kembali berjalan) — seiring waktu, perhatikan saja sendiri di titik mana lebih banyak orang yang akhirnya menetap. Tombol "Algoritma perawi" mengganti cara mereka bergerak: mode Semut (ACO) memakai jejak/feromon di sepanjang celah jalan seperti dijelaskan di atas, sedangkan mode Kawanan Partikel (PSO) membuat tiap perawi tertarik ke posisi terbaik yang pernah ia temukan sendiri dan posisi terbaik yang pernah ditemukan siapa pun dalam kelompok — tidak peduli jejak sama sekali, dan cenderung menyerbu satu titik terbaik (biasanya rumah, karena "daya tariknya" lebih tinggi) alih-alih menyebar mengikuti keramaian jalur.</p>
+    <p id="descC" style="display:none">Tab "Kawanan Burung" memakai padang pasir yang sama, tapi aturannya kebalikan total dari semut: tidak ada jejak yang ditinggalkan sama sekali, dan tidak ada komunikasi lewat lingkungan. Tiap burung hanya bereaksi terhadap tetangga-tetangga terdekatnya lewat tiga dorongan sederhana — menjauh kalau terlalu rapat, menyamakan arah terbang, dan mendekat kalau terlalu renggang. Tidak ada "tujuan akhir" atau satu jalur yang disepakati; kawanan bisa pecah jadi beberapa kelompok kecil lalu menyatu lagi, terus-menerus, tanpa pernah benar-benar selesai. Coba perkecil radius pandang tetangga untuk melihat kawanan lebih mudah pecah, atau perbesar supaya cenderung menyatu jadi satu gerombolan besar.</p>
+    <p>Metafora ini dipakai untuk menggambarkan gagasan bahwa riwayat yang ditempuh oleh keumuman perawi — jalur yang "ramai jejak kakinya" — lebih dipegang, sementara riwayat yang menyendiri dan jarang ditempuh siapa pun (gharib) wajar dipandang lebih hati-hati.</p>
+    <div class="note">Catatan: ini ilustrasi sederhana untuk membantu membayangkan idenya secara visual, bukan representasi metodologi ilmu hadis yang sesungguhnya. Klasifikasi gharib/aziz/masyhur hanyalah soal jumlah jalur riwayat pada tiap tingkatan sanad, bukan vonis lemah — kualitas sanad sebenarnya dinilai satu-per-satu lewat kritik perawi ('adil, dhabit, sanad bersambung, tidak syadz, tidak ber-'illah), bukan lewat "seberapa ramai" jalur itu dilalui.</div>
+  </div>
+</main>
+
+<script>
+/* Fungsi bantu bersama: buang geometry/material saat mesh dihapus, agar tidak bocor memori GPU pada reset berulang */
+function disposeObject3D(root){
+  root.traverse(obj=>{
+    if(obj.geometry) obj.geometry.dispose();
+    if(obj.material){ (Array.isArray(obj.material)?obj.material:[obj.material]).forEach(m=>m.dispose()); }
+  });
+}
+
+/* ====================================================================
+   TAB A — Padang Terbuka (titik-titik setara, graf lengkap)
+   ==================================================================== */
+(function(){
+const HALF = 65;
+const NODES = [
+  {x:-40,z:-30,type:'building'}, {x:12,z:-48,type:'oasis'}, {x:45,z:-22,type:'building'},
+  {x:-16,z:-4,type:'oasis'},     {x:30,z:14,type:'building'}, {x:-46,z:20,type:'oasis'},
+  {x:2,z:42,type:'building'},    {x:48,z:40,type:'oasis'},    {x:-24,z:48,type:'building'}
+];
+const N = NODES.length;
+function dist(i,j){ return Math.hypot(NODES[i].x-NODES[j].x, NODES[i].z-NODES[j].z); }
+const DIST = Array.from({length:N},(_,i)=>Array.from({length:N},(_,j)=> i===j?0:dist(i,j)));
+const ETA  = Array.from({length:N},(_,i)=>Array.from({length:N},(_,j)=> i===j?0:1/DIST[i][j]));
+let TAU = Array.from({length:N},()=>new Array(N).fill(1));
+const ALPHA=1.0, BETA=2.2, TAU_MIN=0.15;
+let RHO = 0.15;
+
+function chooseNext(cur){
+  let total=0; const probs=new Array(N).fill(0);
+  for(let j=0;j<N;j++){ if(j===cur) continue; const p=Math.pow(TAU[cur][j],ALPHA)*Math.pow(ETA[cur][j],BETA); probs[j]=p; total+=p; }
+  let r = Math.random()*total;
+  for(let j=0;j<N;j++){ if(j===cur) continue; r-=probs[j]; if(r<=0) return j; }
+  return (cur+1)%N;
+}
+function depositPheromone(i,j){ const amt=42/DIST[i][j]; TAU[i][j]+=amt; TAU[j][i]+=amt; }
+function evaporate(){ for(let i=0;i<N;i++) for(let j=0;j<N;j++) if(i!==j) TAU[i][j]=Math.max(TAU[i][j]*(1-RHO),TAU_MIN); }
+
+const CV = document.createElement('canvas'); CV.width=CV.height=1024;
+const cx2d = CV.getContext('2d');
+function paintDunes(){
+  cx2d.fillStyle='#d9b98a'; cx2d.fillRect(0,0,CV.width,CV.height);
+  cx2d.globalAlpha=0.5;
+  for(let i=0;i<70;i++){
+    const r=40+Math.random()*140, gx=Math.random()*CV.width, gy=Math.random()*CV.height;
+    cx2d.fillStyle = Math.random()>0.5 ? '#c8a677' : '#e7cd9e';
+    cx2d.beginPath(); cx2d.ellipse(gx,gy,r,r*0.4,Math.random()*Math.PI,0,Math.PI*2); cx2d.fill();
+  }
+  cx2d.globalAlpha=1;
+}
+paintDunes();
+function toCanvas(x,z){ return [ (x+HALF)/(2*HALF)*CV.width, (z+HALF)/(2*HALF)*CV.height ]; }
+function drawFootprint(x,z){ const [cx,cy]=toCanvas(x,z); cx2d.fillStyle='rgba(70,50,28,0.05)'; cx2d.beginPath(); cx2d.ellipse(cx,cy,7,7,0,0,Math.PI*2); cx2d.fill(); }
+function fadeSand(){ cx2d.fillStyle='rgba(217,185,138,0.05)'; cx2d.fillRect(0,0,CV.width,CV.height); }
+
+const container = document.getElementById('three3d-a');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xcbb488);
+scene.fog = new THREE.Fog(0xcbb488, 90, 260);
+const camera = new THREE.PerspectiveCamera(38, container.clientWidth/container.clientHeight, 0.5, 900);
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xfff2d8,0x8a6b3f,0.9));
+const sun = new THREE.DirectionalLight(0xfff0d0,1.0); sun.position.set(60,120,40); scene.add(sun);
+sun.castShadow=true; sun.shadow.mapSize.set(2048,2048);
+sun.shadow.camera.left=-HALF; sun.shadow.camera.right=HALF; sun.shadow.camera.top=HALF; sun.shadow.camera.bottom=-HALF;
+sun.shadow.camera.near=10; sun.shadow.camera.far=260; sun.shadow.bias=-0.0015;
+const groundTex = new THREE.CanvasTexture(CV);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(HALF*2,HALF*2), new THREE.MeshStandardMaterial({map:groundTex, roughness:1}));
+ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
+
+function buildBuilding(node){
+  const g=new THREE.Group();
+  const w=4+Math.random()*2, h=3+Math.random()*2;
+  const body=new THREE.Mesh(new THREE.BoxGeometry(w,h,w), new THREE.MeshStandardMaterial({color:0xa6512f,roughness:0.9}));
+  body.position.y=h/2; body.castShadow=true; body.receiveShadow=true; g.add(body);
+  const roof=new THREE.Mesh(new THREE.ConeGeometry(w*0.8,1.8,4), new THREE.MeshStandardMaterial({color:0x7a3a1f,roughness:0.9}));
+  roof.position.y=h+0.9; roof.rotation.y=Math.PI/4; roof.castShadow=true; g.add(roof);
+  g.position.set(node.x,0,node.z); return g;
+}
+function buildOasis(node){
+  const g=new THREE.Group();
+  const pool=new THREE.Mesh(new THREE.CircleGeometry(2.6,24), new THREE.MeshStandardMaterial({color:0x2f5c52,roughness:0.4}));
+  pool.rotation.x=-Math.PI/2; pool.position.y=0.02; pool.receiveShadow=true; g.add(pool);
+  const palmCount=3+Math.floor(Math.random()*2);
+  for(let i=0;i<palmCount;i++){
+    const a=(i/palmCount)*Math.PI*2+Math.random()*0.6, r=2.4+Math.random()*1.4;
+    const trunk=new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.22,3.4,6), new THREE.MeshStandardMaterial({color:0x6b4a2f}));
+    trunk.position.set(Math.cos(a)*r,1.7,Math.sin(a)*r); trunk.rotation.z=Math.sin(a)*0.15; trunk.castShadow=true; g.add(trunk);
+    const frond=new THREE.Mesh(new THREE.ConeGeometry(1.3,1.6,6), new THREE.MeshStandardMaterial({color:0x4f6b47}));
+    frond.position.set(Math.cos(a)*r,3.6,Math.sin(a)*r); frond.castShadow=true; g.add(frond);
+  }
+  g.position.set(node.x,0,node.z); return g;
+}
+NODES.forEach(n=> scene.add(n.type==='building' ? buildBuilding(n) : buildOasis(n)));
+
+const edgeGroup=new THREE.Group(); scene.add(edgeGroup);
+const edgeLines=[];
+for(let i=0;i<N;i++) for(let j=i+1;j<N;j++){
+  const geo=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(NODES[i].x,0.15,NODES[i].z), new THREE.Vector3(NODES[j].x,0.15,NODES[j].z)]);
+  const mat=new THREE.LineBasicMaterial({color:0xc98a3d, transparent:true, opacity:0});
+  const line=new THREE.Line(geo,mat); edgeGroup.add(line); edgeLines.push({i,j,line});
+}
+
+let ants=[];
+function makeAnt(){
+  const g=new THREE.Group();
+  const shadow=new THREE.Mesh(new THREE.CircleGeometry(0.55,10), new THREE.MeshBasicMaterial({color:0x1a1208, transparent:true, opacity:0.35}));
+  shadow.rotation.x=-Math.PI/2; shadow.position.y=0.03; g.add(shadow);
+  const body=new THREE.Mesh(new THREE.SphereGeometry(0.42,8,6), new THREE.MeshStandardMaterial({color:0x17140f,roughness:0.8}));
+  body.scale.set(1,0.65,1.5); body.position.y=0.34; body.castShadow=true; g.add(body);
+  return g;
+}
+function rebuildAnts(count){
+  ants.forEach(a=>{ scene.remove(a.mesh); disposeObject3D(a.mesh); }); ants=[];
+  for(let k=0;k<count;k++){
+    const cur=Math.floor(Math.random()*N), nxt=chooseNext(cur);
+    const mesh=makeAnt(); scene.add(mesh);
+    ants.push({mesh,cur,nxt,t:Math.random(),dur:DIST[cur][nxt]/2.6+4, lastFoot:0, bobPhase:Math.random()*10});
+  }
+}
+rebuildAnts(14);
+
+/* --- lanskap "nektar" untuk mode PSO: 9 puncak setara di posisi titik yang sama --- */
+const PEAKS_A = NODES.map(n=>({x:n.x,z:n.z,h:8,w:18}));
+function fitnessA(x,z){ let t=0; for(const p of PEAKS_A){ const d2=(x-p.x)**2+(z-p.z)**2; t += p.h*Math.exp(-d2/(2*p.w*p.w)); } return t; }
+const APSO_W=0.7, APSO_C1=1.5, APSO_C2=1.5, APSO_VMAX=6, APSO_TICK=0.6, APSO_BOUND=HALF-6;
+let particlesA=[], gbestPosA={x:0,z:0}, gbestFitA=-Infinity, psoTickAccA=0;
+function rebuildParticlesA(count){
+  particlesA.forEach(p=>{ scene.remove(p.mesh); disposeObject3D(p.mesh); }); particlesA=[];
+  gbestFitA=-Infinity; gbestPosA={x:0,z:0};
+  for(let k=0;k<count;k++){
+    const pos={x:(Math.random()*2-1)*APSO_BOUND, z:(Math.random()*2-1)*APSO_BOUND};
+    const fit=fitnessA(pos.x,pos.z);
+    const mesh=makeAnt(); scene.add(mesh); mesh.position.set(pos.x,0.06,pos.z);
+    particlesA.push({mesh, vel:{x:0,z:0}, pbest:{x:pos.x,z:pos.z}, pbestFit:fit, renderFrom:{x:pos.x,z:pos.z}, renderTo:{x:pos.x,z:pos.z}, bobPhase:Math.random()*10, lastFoot:0});
+    if(fit>gbestFitA){ gbestFitA=fit; gbestPosA={x:pos.x,z:pos.z}; }
+  }
+}
+rebuildParticlesA(14);
+function runPsoIterationA(){
+  for(const p of particlesA){
+    for(const dim of ['x','z']){
+      const r1=Math.random(), r2=Math.random();
+      let v = APSO_W*p.vel[dim] + APSO_C1*r1*(p.pbest[dim]-p.renderTo[dim]) + APSO_C2*r2*(gbestPosA[dim]-p.renderTo[dim]);
+      p.vel[dim] = Math.max(-APSO_VMAX, Math.min(APSO_VMAX, v));
+    }
+    let nx=p.renderTo.x+p.vel.x*APSO_TICK, nz=p.renderTo.z+p.vel.z*APSO_TICK;
+    if(nx<-APSO_BOUND){ nx=-APSO_BOUND; p.vel.x*=-0.5; } if(nx>APSO_BOUND){ nx=APSO_BOUND; p.vel.x*=-0.5; }
+    if(nz<-APSO_BOUND){ nz=-APSO_BOUND; p.vel.z*=-0.5; } if(nz>APSO_BOUND){ nz=APSO_BOUND; p.vel.z*=-0.5; }
+    p.renderFrom={x:p.renderTo.x,z:p.renderTo.z}; p.renderTo={x:nx,z:nz};
+    const fit=fitnessA(nx,nz);
+    if(fit>p.pbestFit){ p.pbestFit=fit; p.pbest={x:nx,z:nz}; }
+    if(fit>gbestFitA){ gbestFitA=fit; gbestPosA={x:nx,z:nz}; }
+  }
+}
+
+let theta=0.6, phi=0.28, radius=145;
+const target=new THREE.Vector3(0,0,0);
+function updateCamera(){
+  camera.position.x=target.x+radius*Math.sin(phi)*Math.sin(theta);
+  camera.position.z=target.z+radius*Math.sin(phi)*Math.cos(theta);
+  camera.position.y=target.y+radius*Math.cos(phi);
+  camera.lookAt(target);
+}
+updateCamera();
+let dragging=false,lastX=0,lastY=0;
+renderer.domElement.addEventListener('pointerdown', e=>{ dragging=true; lastX=e.clientX; lastY=e.clientY; container.classList.add('grabbing'); });
+window.addEventListener('pointerup', ()=>{ dragging=false; container.classList.remove('grabbing'); });
+window.addEventListener('pointermove', e=>{
+  if(!dragging || !container.offsetParent) return;
+  theta-=(e.clientX-lastX)*0.005; phi-=(e.clientY-lastY)*0.004; phi=Math.max(0.08,Math.min(1.3,phi));
+  lastX=e.clientX; lastY=e.clientY; updateCamera();
+});
+renderer.domElement.addEventListener('wheel', e=>{ e.preventDefault(); radius=Math.max(30,Math.min(260,radius+e.deltaY*0.06)); updateCamera(); }, {passive:false});
+let pinchDist=null;
+function touchDist(a,b){ return Math.hypot(b.clientX-a.clientX,b.clientY-a.clientY); }
+renderer.domElement.addEventListener('touchstart', e=>{ if(e.touches.length===2){ pinchDist=touchDist(e.touches[0],e.touches[1]); dragging=false; } }, {passive:true});
+renderer.domElement.addEventListener('touchmove', e=>{ if(e.touches.length===2 && pinchDist!==null){ e.preventDefault(); const d=touchDist(e.touches[0],e.touches[1]); radius=Math.max(30,Math.min(260,radius-(d-pinchDist)*0.1)); pinchDist=d; updateCamera(); } }, {passive:false});
+renderer.domElement.addEventListener('touchend', e=>{ if(e.touches.length<2) pinchDist=null; }, {passive:true});
+function onResize(){ if(!container.offsetParent) return; const w=container.clientWidth,h=container.clientHeight; if(!w||!h) return; camera.aspect=w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h); }
+window.addEventListener('resize', onResize);
+
+const clock=new THREE.Clock();
+let evapAcc=0, texAcc=0, edgeAcc=0, fadeAcc=0, maxTauSeen=2, showGlow=true, rafId=null, timeScale=1, simTime=0, simTimeAcc=0;
+let MODE_A='aco';
+function fmtTime(s){ const m=Math.floor(s/60), ss=Math.floor(s%60); return m+':'+String(ss).padStart(2,'0'); }
+function frame(){
+  rafId=requestAnimationFrame(frame);
+  const dt=Math.min(clock.getDelta(),0.1)*timeScale; const now=performance.now();
+
+  if(MODE_A==='aco'){
+    ants.forEach(a=>{
+      a.t+=dt/a.dur; a.bobPhase+=dt;
+      if(a.t>=1){ depositPheromone(a.cur,a.nxt); a.cur=a.nxt; a.nxt=chooseNext(a.cur); a.t=0; a.dur=DIST[a.cur][a.nxt]/2.6+4+Math.random()*1.5; }
+      const e=a.t<0.5?2*a.t*a.t:1-Math.pow(-2*a.t+2,2)/2;
+      const p0=NODES[a.cur],p1=NODES[a.nxt];
+      const x=p0.x+(p1.x-p0.x)*e, z=p0.z+(p1.z-p0.z)*e;
+      a.mesh.position.set(x, 0.06+Math.abs(Math.sin(a.bobPhase*2.4))*0.05, z);
+      a.mesh.rotation.y=Math.atan2(p1.x-p0.x,p1.z-p0.z);
+      if(now-a.lastFoot>220/timeScale){ drawFootprint(x,z); a.lastFoot=now; }
+    });
+    evapAcc+=dt;
+    if(evapAcc>1.6){ evaporate(); evapAcc=0; }
+    edgeAcc+=dt;
+    if(edgeAcc>0.3){
+      edgeAcc=0;
+      edgeLines.forEach(e=>{ maxTauSeen=Math.max(maxTauSeen,TAU[e.i][e.j]); const norm=(TAU[e.i][e.j]-1)/Math.max(maxTauSeen-1,1); e.line.material.opacity = showGlow ? Math.max(0,Math.min(norm*0.85,0.85)) : 0; });
+    }
+  } else {
+    psoTickAccA += dt;
+    if(psoTickAccA >= APSO_TICK){ psoTickAccA -= APSO_TICK; runPsoIterationA(); }
+    const frac = Math.min(1, psoTickAccA/APSO_TICK);
+    const e = frac<0.5?2*frac*frac:1-Math.pow(-2*frac+2,2)/2;
+    particlesA.forEach(p=>{
+      p.bobPhase+=dt;
+      const x=p.renderFrom.x+(p.renderTo.x-p.renderFrom.x)*e, z=p.renderFrom.z+(p.renderTo.z-p.renderFrom.z)*e;
+      p.mesh.position.set(x, 0.06+Math.abs(Math.sin(p.bobPhase*2.4))*0.05, z);
+      const dx=p.renderTo.x-p.renderFrom.x, dz=p.renderTo.z-p.renderFrom.z;
+      if(Math.hypot(dx,dz)>0.02) p.mesh.rotation.y=Math.atan2(dx,dz);
+      if(now-p.lastFoot>220/timeScale){ drawFootprint(x,z); p.lastFoot=now; }
+    });
+  }
+
+  texAcc+=dt; simTimeAcc+=dt; simTime+=dt; fadeAcc+=dt;
+  if(fadeAcc>1.6){ fadeAcc=0; fadeSand(); }
+  if(texAcc>0.15){ groundTex.needsUpdate=true; texAcc=0; }
+  if(simTimeAcc>0.4){ simTimeAcc=0; document.getElementById('simTimeVal').textContent=fmtTime(simTime); }
+  renderer.render(scene,camera);
+}
+function start(){ if(rafId===null){ onResize(); frame(); } }
+function stop(){ if(rafId!==null){ cancelAnimationFrame(rafId); rafId=null; } }
+start();
+
+document.getElementById('antsRange').addEventListener('input', e=>{
+  const v=parseInt(e.target.value,10);
+  document.getElementById('antsVal').textContent=v;
+  if(MODE_A==='aco') rebuildAnts(v); else rebuildParticlesA(v);
+});
+document.getElementById('rhoRange').addEventListener('input', e=>{ RHO=parseInt(e.target.value,10)/100; document.getElementById('rhoVal').textContent=RHO.toFixed(2); });
+document.getElementById('glowChk').addEventListener('change', e=>{ showGlow=e.target.checked; });
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  paintDunes(); groundTex.needsUpdate=true;
+  const v=parseInt(document.getElementById('antsRange').value,10);
+  if(MODE_A==='aco'){ TAU=Array.from({length:N},()=>new Array(N).fill(1)); maxTauSeen=2; rebuildAnts(v); }
+  else { rebuildParticlesA(v); psoTickAccA=0; }
+  simTime=0; document.getElementById('simTimeVal').textContent='0:00';
+});
+
+const SPEEDS=[{v:1,l:'1×'},{v:6,l:'6×'},{v:20,l:'20×'},{v:60,l:'60×'}];
+const speedGrp=document.getElementById('speedGrp');
+SPEEDS.forEach((s,idx)=>{
+  const b=document.createElement('button'); b.className='speedbtn'+(idx===0?' active':''); b.textContent=s.l; b.type='button';
+  b.addEventListener('click', ()=>{ timeScale=s.v; speedGrp.querySelectorAll('.speedbtn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); });
+  speedGrp.appendChild(b);
+});
+
+function setModeA(m){
+  MODE_A=m;
+  ants.forEach(a=>a.mesh.visible = (m==='aco'));
+  particlesA.forEach(p=>p.mesh.visible = (m==='pso'));
+  edgeGroup.visible = (m==='aco');
+  document.getElementById('ctrlRhoA').style.display = m==='aco' ? '' : 'none';
+  document.getElementById('ctrlGlowA').style.display = m==='aco' ? '' : 'none';
+}
+const ALGOS_A=[{v:'aco',l:'Semut (ACO)'},{v:'pso',l:'Kawanan Partikel (PSO)'}];
+const algoGrpA=document.getElementById('algoGrpA');
+ALGOS_A.forEach((a,idx)=>{
+  const b=document.createElement('button'); b.className='speedbtn'+(idx===0?' active':''); b.textContent=a.l; b.type='button';
+  b.addEventListener('click', ()=>{ setModeA(a.v); algoGrpA.querySelectorAll('.speedbtn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); });
+  algoGrpA.appendChild(b);
+});
+setModeA('aco');
+
+window.__tabA = {start, stop, onResize};
+})();
+
+/* ====================================================================
+   TAB B — Menuju Guru: medan berbatu, graf jarak-pandang, dua tujuan
+   ==================================================================== */
+(function(){
+const HALF = 160; // ~2.5x lebih luas dari tab A
+const ATTRACT = {rumah:3.0, gubuk:1.1}; // daya tarik relatif tujuan (ide "banyak murid", tak dituliskan di layar)
+
+/* --- bukit batu (dipakai untuk render & untuk menyekat garis pandang) --- */
+const ROCKS = [
+  {x:-60,z:-70,r:28}, {x:30,z:-90,r:24}, {x:110,z:-40,r:30}, {x:-120,z:0,r:26},
+  {x:-20,z:30,r:22},  {x:90,z:70,r:28},  {x:-60,z:110,r:26}, {x:0,z:130,r:20},
+  {x:130,z:-120,r:22},{x:-130,z:-110,r:20}
+];
+
+/* --- titik: 6 gerbang masuk (spawn) + 12 titik antara + 2 tujuan --- */
+const SPAWNS = [
+  {x:-140,z:-140},{x:140,z:-140},{x:150,z:0},{x:130,z:140},{x:-20,z:150},{x:-150,z:20}
+].map(p=>({...p,type:'spawn'}));
+const WAYS = [
+  {x:-90,z:-100},{x:-20,z:-100},{x:70,z:-70},{x:130,z:-70},{x:-140,z:-50},{x:-90,z:-20},
+  {x:60,z:20},{x:120,z:100},{x:-50,z:90},{x:20,z:70},{x:-100,z:120},{x:70,z:150}
+].map(p=>({...p,type:'way'}));
+const DESTS = [
+  {x:30,z:-10,type:'dest',kind:'rumah'},
+  {x:-90,z:60,type:'dest',kind:'gubuk'}
+];
+const NODES2 = [...SPAWNS, ...WAYS, ...DESTS];
+const N2 = NODES2.length;
+const SPAWN_IDX = SPAWNS.map((_,i)=>i);
+const DEST_IDX = [N2-2, N2-1];
+
+function dist2(i,j){ return Math.hypot(NODES2[i].x-NODES2[j].x, NODES2[i].z-NODES2[j].z); }
+function segBlockedByRock(p0,p1,rock){
+  const dx=p1.x-p0.x, dz=p1.z-p0.z, len2=dx*dx+dz*dz;
+  let t = len2>0 ? ((rock.x-p0.x)*dx+(rock.z-p0.z)*dz)/len2 : 0;
+  t = Math.max(0,Math.min(1,t));
+  const cx=p0.x+dx*t, cz=p0.z+dz*t;
+  return Math.hypot(cx-rock.x, cz-rock.z) < (rock.r+6);
+}
+const ADJ = Array.from({length:N2},()=>[]);
+const MAXLEN = 95;
+for(let i=0;i<N2;i++) for(let j=i+1;j<N2;j++){
+  const d = dist2(i,j);
+  if(d > MAXLEN) continue;
+  const blocked = ROCKS.some(r=> segBlockedByRock(NODES2[i],NODES2[j],r));
+  if(!blocked){ ADJ[i].push(j); ADJ[j].push(i); }
+}
+// jaring pengaman: sambungkan simpul yang terisolasi ke tetangga terdekat
+for(let i=0;i<N2;i++){
+  if(ADJ[i].length) continue;
+  let best=-1, bd=Infinity;
+  for(let j=0;j<N2;j++){ if(j===i) continue; const d=dist2(i,j); if(d<bd){ bd=d; best=j; } }
+  if(best>=0){ ADJ[i].push(best); ADJ[best].push(i); }
+}
+let TAU2 = Array.from({length:N2},()=>new Array(N2).fill(1));
+const ALPHA2=1.0, BETA2=2.0, TAU2_MIN=0.15;
+let RHO2 = 0.15;
+
+function chooseNext2(cur, prev){
+  const neigh = ADJ[cur];
+  const cand = neigh.length>1 ? neigh.filter(j=>j!==prev) : neigh; // hindari langsung balik kanan kalau ada pilihan lain
+  let total=0; const probs=cand.map(j=>{
+    const d = dist2(cur,j);
+    let p = Math.pow(TAU2[cur][j],ALPHA2) * Math.pow(1/d,BETA2);
+    if(NODES2[j].type==='dest') p *= ATTRACT[NODES2[j].kind];
+    total+=p; return p;
+  });
+  let r = Math.random()*total;
+  for(let k=0;k<cand.length;k++){ r-=probs[k]; if(r<=0) return cand[k]; }
+  return cand[cand.length-1];
+}
+function depositPheromone2(i,j){ const amt=55/dist2(i,j); TAU2[i][j]+=amt; TAU2[j][i]+=amt; }
+function evaporate2(){ for(let i=0;i<N2;i++) for(const j of ADJ[i]) TAU2[i][j]=Math.max(TAU2[i][j]*(1-RHO2),TAU2_MIN); }
+
+/* --- kanvas jejak --- */
+const CV2 = document.createElement('canvas'); CV2.width=CV2.height=1536;
+const c2 = CV2.getContext('2d');
+function paintDunes2(){
+  c2.fillStyle='#d3b482'; c2.fillRect(0,0,CV2.width,CV2.height);
+  c2.globalAlpha=0.5;
+  for(let i=0;i<160;i++){
+    const r=50+Math.random()*220, gx=Math.random()*CV2.width, gy=Math.random()*CV2.height;
+    c2.fillStyle = Math.random()>0.5 ? '#c2a172' : '#e2c795';
+    c2.beginPath(); c2.ellipse(gx,gy,r,r*0.4,Math.random()*Math.PI,0,Math.PI*2); c2.fill();
+  }
+  c2.globalAlpha=1;
+}
+paintDunes2();
+function toCanvas2(x,z){ return [ (x+HALF)/(2*HALF)*CV2.width, (z+HALF)/(2*HALF)*CV2.height ]; }
+function drawFootprint2(x,z){ const [cx,cy]=toCanvas2(x,z); c2.fillStyle='rgba(70,50,28,0.045)'; c2.beginPath(); c2.ellipse(cx,cy,8,8,0,0,Math.PI*2); c2.fill(); }
+function fadeSand2(){ c2.fillStyle='rgba(211,180,130,0.045)'; c2.fillRect(0,0,CV2.width,CV2.height); }
+
+const container2 = document.getElementById('three3d-b');
+const scene2 = new THREE.Scene();
+scene2.background = new THREE.Color(0xcbb488);
+scene2.fog = new THREE.Fog(0xcbb488, 160, 560);
+const camera2 = new THREE.PerspectiveCamera(38, 1, 0.5, 1600);
+const renderer2 = new THREE.WebGLRenderer({antialias:true});
+renderer2.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer2.shadowMap.enabled = true; renderer2.shadowMap.type = THREE.PCFSoftShadowMap;
+container2.appendChild(renderer2.domElement);
+scene2.add(new THREE.HemisphereLight(0xfff2d8,0x8a6b3f,0.9));
+const sun2=new THREE.DirectionalLight(0xfff0d0,1.0); sun2.position.set(120,220,80); scene2.add(sun2);
+sun2.castShadow=true; sun2.shadow.mapSize.set(2048,2048);
+sun2.shadow.camera.left=-HALF; sun2.shadow.camera.right=HALF; sun2.shadow.camera.top=HALF; sun2.shadow.camera.bottom=-HALF;
+sun2.shadow.camera.near=20; sun2.shadow.camera.far=560; sun2.shadow.bias=-0.0015;
+const groundTex2 = new THREE.CanvasTexture(CV2);
+const ground2 = new THREE.Mesh(new THREE.PlaneGeometry(HALF*2,HALF*2), new THREE.MeshStandardMaterial({map:groundTex2, roughness:1}));
+ground2.rotation.x=-Math.PI/2; ground2.receiveShadow=true; scene2.add(ground2);
+
+/* --- bukit-bukit batu: kelompok batu tak beraturan sebagai penyekat --- */
+ROCKS.forEach(rock=>{
+  const g=new THREE.Group();
+  const count=4+Math.floor(Math.random()*4);
+  for(let i=0;i<count;i++){
+    const a=Math.random()*Math.PI*2, rr=Math.random()*rock.r*0.55;
+    const size=rock.r*(0.35+Math.random()*0.4);
+    const geo=new THREE.IcosahedronGeometry(size, 0);
+    const pos = geo.attributes.position;
+    for(let v=0; v<pos.count; v++){
+      const jitter = 0.82+Math.random()*0.3;
+      pos.setXYZ(v, pos.getX(v)*jitter, pos.getY(v)*jitter, pos.getZ(v)*jitter);
+    }
+    geo.computeVertexNormals();
+    const mat=new THREE.MeshStandardMaterial({color: Math.random()>0.5?0x8a8272:0x746c5c, roughness:1, flatShading:true});
+    const mesh=new THREE.Mesh(geo,mat);
+    mesh.position.set(rock.x+Math.cos(a)*rr, size*0.4, rock.z+Math.sin(a)*rr);
+    mesh.rotation.set(Math.random()*Math.PI,Math.random()*Math.PI,Math.random()*Math.PI);
+    mesh.castShadow=true; mesh.receiveShadow=true;
+    g.add(mesh);
+  }
+  scene2.add(g);
+});
+
+/* --- gerbang masuk (tanda kecil di titik spawn) --- */
+SPAWNS.forEach(s=>{
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.25,0.3,3.6,6), new THREE.MeshStandardMaterial({color:0x5c4a34}));
+  pole.position.set(s.x,1.8,s.z); pole.castShadow=true; scene2.add(pole);
+  const flag=new THREE.Mesh(new THREE.ConeGeometry(1.1,1.6,3), new THREE.MeshStandardMaterial({color:0x93765a}));
+  flag.rotation.z=Math.PI/2; flag.position.set(s.x+0.9,3.1,s.z); flag.castShadow=true; scene2.add(flag);
+});
+
+/* --- tujuan: rumah besar berpekarangan, dan gubuk kecil --- */
+function buildRumah(node){
+  const g=new THREE.Group();
+  const yardR = 12;
+  const wallMat = new THREE.MeshStandardMaterial({color:0xb99a6e, roughness:1});
+  const segs=16;
+  for(let i=0;i<segs;i++){
+    const a0=(i/segs)*Math.PI*2, a1=((i+1)/segs)*Math.PI*2;
+    if(i%5===0) continue; // sisakan celah sebagai pintu pekarangan
+    const seg=new THREE.Mesh(new THREE.BoxGeometry(yardR*2*Math.PI/segs*1.15,1.4,0.6), wallMat);
+    const am=(a0+a1)/2;
+    seg.position.set(Math.cos(am)*yardR,0.7,Math.sin(am)*yardR);
+    seg.rotation.y=-am+Math.PI/2;
+    seg.castShadow=true; seg.receiveShadow=true;
+    g.add(seg);
+  }
+  const w=8,h=5.2;
+  const body=new THREE.Mesh(new THREE.BoxGeometry(w,h,w), new THREE.MeshStandardMaterial({color:0xa6512f,roughness:0.9}));
+  body.position.y=h/2; body.castShadow=true; body.receiveShadow=true; g.add(body);
+  const roof=new THREE.Mesh(new THREE.ConeGeometry(w*0.82,3.2,4), new THREE.MeshStandardMaterial({color:0x7a3a1f,roughness:0.9}));
+  roof.position.y=h+1.6; roof.rotation.y=Math.PI/4; roof.castShadow=true; g.add(roof);
+  g.position.set(node.x,0,node.z);
+  return {group:g, yardR, houseR:w*0.75};
+}
+function buildGubuk(node){
+  const g=new THREE.Group();
+  const w=3.4,h=2.2;
+  const body=new THREE.Mesh(new THREE.BoxGeometry(w,h,w*0.85), new THREE.MeshStandardMaterial({color:0x8a6b46,roughness:1}));
+  body.position.y=h/2; body.castShadow=true; body.receiveShadow=true; g.add(body);
+  const roof=new THREE.Mesh(new THREE.BoxGeometry(w*1.25,0.3,w*1.05), new THREE.MeshStandardMaterial({color:0x5c4a30,roughness:1}));
+  roof.position.y=h+0.15; roof.rotation.z=0.18; roof.castShadow=true; g.add(roof);
+  g.position.set(node.x,0,node.z);
+  return {group:g, yardR:5, houseR:w*0.7};
+}
+const rumahInfo = buildRumah(DESTS[0]); scene2.add(rumahInfo.group);
+const gubukInfo = buildGubuk(DESTS[1]); scene2.add(gubukInfo.group);
+const DEST_INFO = [rumahInfo, gubukInfo];
+
+/* --- lanskap "nektar" untuk mode PSO: rumah = puncak tinggi, gubuk = puncak rendah --- */
+const PEAKS = [ {x:DESTS[0].x,z:DESTS[0].z,h:10,w:26}, {x:DESTS[1].x,z:DESTS[1].z,h:4,w:20} ];
+function fitness2(x,z){ let t=0; for(const p of PEAKS){ const d2=(x-p.x)**2+(z-p.z)**2; t += p.h*Math.exp(-d2/(2*p.w*p.w)); } return t; }
+const PSO_W=0.7, PSO_C1=1.5, PSO_C2=1.5, PSO_VMAX=8, PSO_TICK=0.6, PSO_BOUND=HALF-12;
+
+const edgeGroup2=new THREE.Group(); scene2.add(edgeGroup2);
+const edgeLines2=[];
+for(let i=0;i<N2;i++) for(const j of ADJ[i]){ if(j<i) continue;
+  const geo=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(NODES2[i].x,0.2,NODES2[i].z), new THREE.Vector3(NODES2[j].x,0.2,NODES2[j].z)]);
+  const mat=new THREE.LineBasicMaterial({color:0xc98a3d, transparent:true, opacity:0});
+  const line=new THREE.Line(geo,mat); edgeGroup2.add(line); edgeLines2.push({i,j,line});
+}
+
+function makeAnt2(){
+  const g=new THREE.Group();
+  const shadow=new THREE.Mesh(new THREE.CircleGeometry(0.55,10), new THREE.MeshBasicMaterial({color:0x1a1208, transparent:true, opacity:0.35}));
+  shadow.rotation.x=-Math.PI/2; shadow.position.y=0.03; g.add(shadow);
+  const body=new THREE.Mesh(new THREE.SphereGeometry(0.42,8,6), new THREE.MeshStandardMaterial({color:0x17140f,roughness:0.8}));
+  body.scale.set(1,0.65,1.5); body.position.y=0.34; body.castShadow=true; g.add(body);
+  return g;
+}
+let ants2=[], settledCount=[0,0];
+function spawnAnt(){
+  const cur = SPAWN_IDX[Math.floor(Math.random()*SPAWN_IDX.length)];
+  const nxt = chooseNext2(cur,-1);
+  const mesh = makeAnt2(); scene2.add(mesh);
+  ants2.push({mesh,cur,nxt,prev:-1,t:0,dur:dist2(cur,nxt)/3+3, lastFoot:0, bobPhase:Math.random()*10, wig:Math.random()*10, settled:false});
+}
+function resetAnts2(){
+  ants2.forEach(a=>{ scene2.remove(a.mesh); disposeObject3D(a.mesh); }); ants2=[]; settledCount=[0,0];
+  for(let k=0;k<10;k++) spawnAnt();
+}
+resetAnts2();
+
+/* --- populasi mode PSO (Kawanan Partikel): tertarik ke pbest & gbest, bukan jejak --- */
+let particles2=[], settledCountPSO=[0,0], gbestPos={x:0,z:0}, gbestFit=-Infinity;
+function spawnParticle(){
+  const s = SPAWNS[Math.floor(Math.random()*SPAWNS.length)];
+  const pos={x:s.x,z:s.z};
+  const fit=fitness2(pos.x,pos.z);
+  const mesh=makeAnt2(); scene2.add(mesh); mesh.position.set(pos.x,0.06,pos.z);
+  particles2.push({mesh, vel:{x:0,z:0}, pbest:{x:pos.x,z:pos.z}, pbestFit:fit, renderFrom:{x:pos.x,z:pos.z}, renderTo:{x:pos.x,z:pos.z}, settled:false, bobPhase:Math.random()*10, lastFoot:0});
+  if(fit>gbestFit){ gbestFit=fit; gbestPos={x:pos.x,z:pos.z}; }
+}
+function resetParticles2(){
+  particles2.forEach(p=>{ scene2.remove(p.mesh); disposeObject3D(p.mesh); }); particles2=[]; settledCountPSO=[0,0];
+  gbestFit=-Infinity; gbestPos={x:0,z:0};
+  for(let k=0;k<10;k++) spawnParticle();
+}
+resetParticles2();
+function runPsoIteration(){
+  for(const p of particles2){
+    if(p.settled) continue;
+    for(const dim of ['x','z']){
+      const r1=Math.random(), r2=Math.random();
+      let v = PSO_W*p.vel[dim] + PSO_C1*r1*(p.pbest[dim]-p.renderTo[dim]) + PSO_C2*r2*(gbestPos[dim]-p.renderTo[dim]);
+      p.vel[dim] = Math.max(-PSO_VMAX, Math.min(PSO_VMAX, v));
+    }
+    for(const rock of ROCKS){
+      const dx=p.renderTo.x-rock.x, dz=p.renderTo.z-rock.z, d=Math.hypot(dx,dz), minD=rock.r+5;
+      if(d<minD && d>0.001){ const push=(minD-d)*0.6; p.vel.x += (dx/d)*push; p.vel.z += (dz/d)*push; }
+    }
+    let nx=p.renderTo.x+p.vel.x*PSO_TICK, nz=p.renderTo.z+p.vel.z*PSO_TICK;
+    if(nx<-PSO_BOUND){ nx=-PSO_BOUND; p.vel.x*=-0.5; } if(nx>PSO_BOUND){ nx=PSO_BOUND; p.vel.x*=-0.5; }
+    if(nz<-PSO_BOUND){ nz=-PSO_BOUND; p.vel.z*=-0.5; } if(nz>PSO_BOUND){ nz=PSO_BOUND; p.vel.z*=-0.5; }
+    p.renderFrom={x:p.renderTo.x,z:p.renderTo.z}; p.renderTo={x:nx,z:nz};
+    const fit=fitness2(nx,nz);
+    if(fit>p.pbestFit){ p.pbestFit=fit; p.pbest={x:nx,z:nz}; }
+    if(fit>gbestFit){ gbestFit=fit; gbestPos={x:nx,z:nz}; }
+    DEST_INFO.forEach((info,di)=>{
+      if(p.settled) return;
+      const dnode=DESTS[di], d=Math.hypot(nx-dnode.x,nz-dnode.z);
+      if(d<info.yardR-2){
+        settledCountPSO[di]++;
+        const rr=2.2+Math.random()*(info.yardR-2.8), aa=Math.random()*Math.PI*2;
+        p.settled=true; p.renderTo={x:dnode.x+Math.cos(aa)*rr, z:dnode.z+Math.sin(aa)*rr};
+        p.mesh.position.set(p.renderTo.x,0.06,p.renderTo.z); p.mesh.rotation.y=Math.random()*Math.PI*2;
+      }
+    });
+  }
+}
+
+let theta2=0.55, phi2=0.22, radius2=340;
+const target2=new THREE.Vector3(0,0,0);
+function updateCamera2(){
+  camera2.position.x=target2.x+radius2*Math.sin(phi2)*Math.sin(theta2);
+  camera2.position.z=target2.z+radius2*Math.sin(phi2)*Math.cos(theta2);
+  camera2.position.y=target2.y+radius2*Math.cos(phi2);
+  camera2.lookAt(target2);
+}
+updateCamera2();
+let dragging2=false,lastX2=0,lastY2=0;
+renderer2.domElement.addEventListener('pointerdown', e=>{ dragging2=true; lastX2=e.clientX; lastY2=e.clientY; container2.classList.add('grabbing'); });
+window.addEventListener('pointerup', ()=>{ dragging2=false; container2.classList.remove('grabbing'); });
+window.addEventListener('pointermove', e=>{
+  if(!dragging2 || !container2.offsetParent) return;
+  theta2-=(e.clientX-lastX2)*0.005; phi2-=(e.clientY-lastY2)*0.004; phi2=Math.max(0.08,Math.min(1.3,phi2));
+  lastX2=e.clientX; lastY2=e.clientY; updateCamera2();
+});
+renderer2.domElement.addEventListener('wheel', e=>{ e.preventDefault(); radius2=Math.max(60,Math.min(620,radius2+e.deltaY*0.14)); updateCamera2(); }, {passive:false});
+let pinchDist2=null;
+function touchDist2(a,b){ return Math.hypot(b.clientX-a.clientX,b.clientY-a.clientY); }
+renderer2.domElement.addEventListener('touchstart', e=>{ if(e.touches.length===2){ pinchDist2=touchDist2(e.touches[0],e.touches[1]); dragging2=false; } }, {passive:true});
+renderer2.domElement.addEventListener('touchmove', e=>{ if(e.touches.length===2 && pinchDist2!==null){ e.preventDefault(); const d=touchDist2(e.touches[0],e.touches[1]); radius2=Math.max(60,Math.min(620,radius2-(d-pinchDist2)*0.22)); pinchDist2=d; updateCamera2(); } }, {passive:false});
+renderer2.domElement.addEventListener('touchend', e=>{ if(e.touches.length<2) pinchDist2=null; }, {passive:true});
+function onResize2(){ if(!container2.offsetParent) return; const w=container2.clientWidth,h=container2.clientHeight; if(!w||!h) return; camera2.aspect=w/h; camera2.updateProjectionMatrix(); renderer2.setSize(w,h); }
+window.addEventListener('resize', onResize2);
+
+const clock2=new THREE.Clock();
+let evapAcc2=0, texAcc2=0, edgeAcc2=0, fadeAcc2=0, spawnAcc2=0, maxTauSeen2=2, showGlow2=true, spawnPerMin=10, rafId2=null, timeScale2=1, simTime2=0, simTimeAcc2=0;
+let MODE='aco', psoTickAcc2=0;
+function fmtTime2(s){ const m=Math.floor(s/60), ss=Math.floor(s%60); return m+':'+String(ss).padStart(2,'0'); }
+
+function frame2(){
+  rafId2=requestAnimationFrame(frame2);
+  const dt=Math.min(clock2.getDelta(),0.1)*timeScale2; const now=performance.now();
+
+  if(MODE==='aco'){
+  ants2.forEach(a=>{
+    if(a.settled) return;
+    a.t+=dt/a.dur; a.bobPhase+=dt; a.wig+=dt;
+    if(a.t>=1){
+      depositPheromone2(a.cur,a.nxt);
+      const arrivedAt = NODES2[a.nxt];
+      if(arrivedAt.type==='dest'){
+        const di = DEST_IDX.indexOf(a.nxt);
+        settledCount[di]++;
+        const info = DEST_INFO[di];
+        const rr = 2.2 + Math.random()*(info.yardR-2.8);
+        const aa = Math.random()*Math.PI*2;
+        a.settled = true;
+        a.mesh.position.set(arrivedAt.x+Math.cos(aa)*rr, 0.06, arrivedAt.z+Math.sin(aa)*rr);
+        a.mesh.rotation.y = Math.random()*Math.PI*2;
+        return;
+      }
+      a.prev=a.cur; a.cur=a.nxt; a.nxt=chooseNext2(a.cur,a.prev); a.t=0;
+      a.dur=dist2(a.cur,a.nxt)/3+3+Math.random()*1.2;
+    }
+    const e=a.t<0.5?2*a.t*a.t:1-Math.pow(-2*a.t+2,2)/2;
+    const p0=NODES2[a.cur],p1=NODES2[a.nxt];
+    const dx=p1.x-p0.x, dz=p1.z-p0.z, segLen=Math.hypot(dx,dz)||1;
+    const nx=-dz/segLen, nz=dx/segLen; // arah tegak lurus, untuk goyangan "kocar-kacir"
+    const wig = Math.sin(a.wig*1.6)*0.9;
+    const x=p0.x+dx*e+nx*wig, z=p0.z+dz*e+nz*wig;
+    a.mesh.position.set(x, 0.06+Math.abs(Math.sin(a.bobPhase*2.4))*0.05, z);
+    a.mesh.rotation.y=Math.atan2(dx,dz);
+    if(now-a.lastFoot>220/timeScale2){ drawFootprint2(x,z); a.lastFoot=now; }
+  });
+
+  spawnAcc2+=dt;
+  const interval = 60/Math.max(spawnPerMin,1);
+  if(spawnAcc2>interval){ spawnAcc2=0; spawnAnt(); }
+
+  evapAcc2+=dt;
+  if(evapAcc2>1.6){ evaporate2(); evapAcc2=0; }
+  edgeAcc2+=dt;
+  if(edgeAcc2>0.3){
+    edgeAcc2=0;
+    edgeLines2.forEach(e=>{ maxTauSeen2=Math.max(maxTauSeen2,TAU2[e.i][e.j]); const norm=(TAU2[e.i][e.j]-1)/Math.max(maxTauSeen2-1,1); e.line.material.opacity = showGlow2 ? Math.max(0,Math.min(norm*0.85,0.85)) : 0; });
+  }
+  } else {
+    psoTickAcc2 += dt;
+    if(psoTickAcc2 >= PSO_TICK){ psoTickAcc2 -= PSO_TICK; runPsoIteration(); }
+    const frac = Math.min(1, psoTickAcc2/PSO_TICK);
+    const e = frac<0.5?2*frac*frac:1-Math.pow(-2*frac+2,2)/2;
+    particles2.forEach(p=>{
+      if(p.settled) return;
+      p.bobPhase+=dt;
+      const x=p.renderFrom.x+(p.renderTo.x-p.renderFrom.x)*e, z=p.renderFrom.z+(p.renderTo.z-p.renderFrom.z)*e;
+      p.mesh.position.set(x, 0.06+Math.abs(Math.sin(p.bobPhase*2.4))*0.05, z);
+      const dx=p.renderTo.x-p.renderFrom.x, dz=p.renderTo.z-p.renderFrom.z;
+      if(Math.hypot(dx,dz)>0.02) p.mesh.rotation.y=Math.atan2(dx,dz);
+      if(now-p.lastFoot>220/timeScale2){ drawFootprint2(x,z); p.lastFoot=now; }
+    });
+
+    spawnAcc2+=dt;
+    const interval = 60/Math.max(spawnPerMin,1);
+    if(spawnAcc2>interval){ spawnAcc2=0; spawnParticle(); }
+  }
+
+  texAcc2+=dt; simTimeAcc2+=dt; simTime2+=dt; fadeAcc2+=dt;
+  if(fadeAcc2>1.6){ fadeAcc2=0; fadeSand2(); }
+  if(texAcc2>0.15){ groundTex2.needsUpdate=true; texAcc2=0; }
+  if(simTimeAcc2>0.4){ simTimeAcc2=0; document.getElementById('simTimeVal2').textContent=fmtTime2(simTime2); }
+
+  renderer2.render(scene2,camera2);
+}
+function start2(){ if(rafId2===null){ onResize2(); frame2(); } }
+function stop2(){ if(rafId2!==null){ cancelAnimationFrame(rafId2); rafId2=null; } }
+
+document.getElementById('spawnRange').addEventListener('input', e=>{ spawnPerMin=parseInt(e.target.value,10); document.getElementById('spawnVal').textContent=spawnPerMin; });
+document.getElementById('rhoRange2').addEventListener('input', e=>{ RHO2=parseInt(e.target.value,10)/100; document.getElementById('rhoVal2').textContent=RHO2.toFixed(2); });
+document.getElementById('glowChk2').addEventListener('change', e=>{ showGlow2=e.target.checked; });
+document.getElementById('resetBtn2').addEventListener('click', ()=>{
+  paintDunes2(); groundTex2.needsUpdate=true;
+  if(MODE==='aco'){ TAU2=Array.from({length:N2},()=>new Array(N2).fill(1)); maxTauSeen2=2; resetAnts2(); }
+  else { resetParticles2(); psoTickAcc2=0; }
+  simTime2=0; document.getElementById('simTimeVal2').textContent='0:00';
+});
+
+function setMode(m){
+  MODE=m;
+  ants2.forEach(a=>a.mesh.visible = (m==='aco'));
+  particles2.forEach(p=>p.mesh.visible = (m==='pso'));
+  edgeGroup2.visible = (m==='aco');
+  document.getElementById('ctrlRho2').style.display = m==='aco' ? '' : 'none';
+  document.getElementById('ctrlGlow2').style.display = m==='aco' ? '' : 'none';
+}
+const ALGOS=[{v:'aco',l:'Semut (ACO)'},{v:'pso',l:'Kawanan Partikel (PSO)'}];
+const algoGrp=document.getElementById('algoGrp');
+ALGOS.forEach((a,idx)=>{
+  const b=document.createElement('button'); b.className='speedbtn'+(idx===0?' active':''); b.textContent=a.l; b.type='button';
+  b.addEventListener('click', ()=>{ setMode(a.v); algoGrp.querySelectorAll('.speedbtn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); });
+  algoGrp.appendChild(b);
+});
+setMode('aco');
+
+const SPEEDS2=[{v:1,l:'1×'},{v:6,l:'6×'},{v:20,l:'20×'},{v:60,l:'60×'}];
+const speedGrp2=document.getElementById('speedGrp2');
+SPEEDS2.forEach((s,idx)=>{
+  const b=document.createElement('button'); b.className='speedbtn'+(idx===0?' active':''); b.textContent=s.l; b.type='button';
+  b.addEventListener('click', ()=>{ timeScale2=s.v; speedGrp2.querySelectorAll('.speedbtn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); });
+  speedGrp2.appendChild(b);
+});
+
+window.__tabB = {start:start2, stop:stop2, onResize:onResize2};
+})();
+
+/* ====================================================================
+   TAB C — Kawanan Burung (Boids/Reynolds): tanpa jejak, tanpa konsensus
+   ==================================================================== */
+(function(){
+const HALF = 65; // padang pasir yang sama seperti tab A
+const NODES = [
+  {x:-40,z:-30,type:'building'}, {x:12,z:-48,type:'oasis'}, {x:45,z:-22,type:'building'},
+  {x:-16,z:-4,type:'oasis'},     {x:30,z:14,type:'building'}, {x:-46,z:20,type:'oasis'},
+  {x:2,z:42,type:'building'},    {x:48,z:40,type:'oasis'},    {x:-24,z:48,type:'building'}
+];
+
+const CV3 = document.createElement('canvas'); CV3.width=CV3.height=1024;
+const c3 = CV3.getContext('2d');
+(function paintDunes3(){
+  c3.fillStyle='#d9b98a'; c3.fillRect(0,0,CV3.width,CV3.height);
+  c3.globalAlpha=0.5;
+  for(let i=0;i<70;i++){
+    const r=40+Math.random()*140, gx=Math.random()*CV3.width, gy=Math.random()*CV3.height;
+    c3.fillStyle = Math.random()>0.5 ? '#c8a677' : '#e7cd9e';
+    c3.beginPath(); c3.ellipse(gx,gy,r,r*0.4,Math.random()*Math.PI,0,Math.PI*2); c3.fill();
+  }
+  c3.globalAlpha=1;
+})();
+
+const container3 = document.getElementById('three3d-c');
+const scene3 = new THREE.Scene();
+scene3.background = new THREE.Color(0xcbb488);
+scene3.fog = new THREE.Fog(0xcbb488, 90, 260);
+const camera3 = new THREE.PerspectiveCamera(38, 1, 0.5, 900);
+const renderer3 = new THREE.WebGLRenderer({antialias:true});
+renderer3.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer3.shadowMap.enabled = true; renderer3.shadowMap.type = THREE.PCFSoftShadowMap;
+container3.appendChild(renderer3.domElement);
+scene3.add(new THREE.HemisphereLight(0xfff2d8,0x8a6b3f,0.9));
+const sun3=new THREE.DirectionalLight(0xfff0d0,1.0); sun3.position.set(60,120,40); scene3.add(sun3);
+sun3.castShadow=true; sun3.shadow.mapSize.set(2048,2048);
+sun3.shadow.camera.left=-HALF; sun3.shadow.camera.right=HALF; sun3.shadow.camera.top=HALF; sun3.shadow.camera.bottom=-HALF;
+sun3.shadow.camera.near=10; sun3.shadow.camera.far=260; sun3.shadow.bias=-0.0015;
+const ground3 = new THREE.Mesh(new THREE.PlaneGeometry(HALF*2,HALF*2), new THREE.MeshStandardMaterial({map:new THREE.CanvasTexture(CV3), roughness:1}));
+ground3.rotation.x=-Math.PI/2; ground3.receiveShadow=true; scene3.add(ground3);
+
+function buildBuilding3(node){
+  const g=new THREE.Group();
+  const w=4+Math.random()*2, h=3+Math.random()*2;
+  const body=new THREE.Mesh(new THREE.BoxGeometry(w,h,w), new THREE.MeshStandardMaterial({color:0xa6512f,roughness:0.9}));
+  body.position.y=h/2; body.castShadow=true; body.receiveShadow=true; g.add(body);
+  const roof=new THREE.Mesh(new THREE.ConeGeometry(w*0.8,1.8,4), new THREE.MeshStandardMaterial({color:0x7a3a1f,roughness:0.9}));
+  roof.position.y=h+0.9; roof.rotation.y=Math.PI/4; roof.castShadow=true; g.add(roof);
+  g.position.set(node.x,0,node.z); return g;
+}
+function buildOasis3(node){
+  const g=new THREE.Group();
+  const pool=new THREE.Mesh(new THREE.CircleGeometry(2.6,24), new THREE.MeshStandardMaterial({color:0x2f5c52,roughness:0.4}));
+  pool.rotation.x=-Math.PI/2; pool.position.y=0.02; pool.receiveShadow=true; g.add(pool);
+  const palmCount=3+Math.floor(Math.random()*2);
+  for(let i=0;i<palmCount;i++){
+    const a=(i/palmCount)*Math.PI*2+Math.random()*0.6, r=2.4+Math.random()*1.4;
+    const trunk=new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.22,3.4,6), new THREE.MeshStandardMaterial({color:0x6b4a2f}));
+    trunk.position.set(Math.cos(a)*r,1.7,Math.sin(a)*r); trunk.rotation.z=Math.sin(a)*0.15; trunk.castShadow=true; g.add(trunk);
+    const frond=new THREE.Mesh(new THREE.ConeGeometry(1.3,1.6,6), new THREE.MeshStandardMaterial({color:0x4f6b47}));
+    frond.position.set(Math.cos(a)*r,3.6,Math.sin(a)*r); frond.castShadow=true; g.add(frond);
+  }
+  g.position.set(node.x,0,node.z); return g;
+}
+NODES.forEach(n=> scene3.add(n.type==='building' ? buildBuilding3(n) : buildOasis3(n)));
+
+/* --- burung: badan pipih segitiga + sepasang sayap, dan bayangan di pasir --- */
+function makeBird(){
+  const g=new THREE.Group();
+  const shadow=new THREE.Mesh(new THREE.CircleGeometry(0.7,8), new THREE.MeshBasicMaterial({color:0x1a1208, transparent:true, opacity:0.22}));
+  shadow.rotation.x=-Math.PI/2; g.add(shadow);
+  const bodyShape=new THREE.Shape();
+  bodyShape.moveTo(0,1.1); bodyShape.lineTo(0.85,-0.7); bodyShape.lineTo(0,-0.25); bodyShape.lineTo(-0.85,-0.7); bodyShape.closePath();
+  const body=new THREE.Mesh(new THREE.ShapeGeometry(bodyShape), new THREE.MeshStandardMaterial({color:0x17140f, side:THREE.DoubleSide, roughness:0.8}));
+  body.rotation.x=-Math.PI/2; body.castShadow=true;
+  const wrap=new THREE.Group(); wrap.add(body);
+  g.add(wrap);
+  g.userData.wrap = wrap;
+  g.userData.shadow = shadow;
+  return g;
+}
+let birds=[], visRadius=14;
+const BOUND=HALF*0.92, ALT_MIN=7, ALT_MAX=28;
+function rebuildBirds(count){
+  birds.forEach(b=>{ scene3.remove(b.mesh); disposeObject3D(b.mesh); }); birds=[];
+  for(let k=0;k<count;k++){
+    const mesh=makeBird(); scene3.add(mesh);
+    const pos=new THREE.Vector3((Math.random()*2-1)*BOUND*0.6, ALT_MIN+Math.random()*(ALT_MAX-ALT_MIN), (Math.random()*2-1)*BOUND*0.6);
+    const ang=Math.random()*Math.PI*2;
+    const vel=new THREE.Vector3(Math.cos(ang), (Math.random()-0.5)*0.2, Math.sin(ang)).multiplyScalar(6);
+    mesh.position.copy(pos);
+    birds.push({mesh,pos,vel, gust:Math.random()*100});
+  }
+}
+rebuildBirds(36);
+
+const MAXSPEED=9, MINSPEED=4;
+function stepBoids(dt){
+  const vr2 = visRadius*visRadius;
+  for(let i=0;i<birds.length;i++){
+    const b=birds[i];
+    let sepX=0,sepZ=0,sepY=0, aliX=0,aliZ=0,aliY=0, cohX=0,cohZ=0,cohY=0, count=0;
+    for(let j=0;j<birds.length;j++){
+      if(i===j) continue;
+      const o=birds[j];
+      const dx=b.pos.x-o.pos.x, dy=b.pos.y-o.pos.y, dz=b.pos.z-o.pos.z;
+      const d2=dx*dx+dy*dy+dz*dz;
+      if(d2 < vr2 && d2>0.0001){
+        count++;
+        const d=Math.sqrt(d2);
+        if(d<3.2){ sepX+=dx/d; sepY+=dy/d; sepZ+=dz/d; }
+        aliX+=o.vel.x; aliY+=o.vel.y; aliZ+=o.vel.z;
+        cohX+=o.pos.x; cohY+=o.pos.y; cohZ+=o.pos.z;
+      }
+    }
+    const acc=new THREE.Vector3();
+    if(count>0){
+      acc.x += sepX*1.7; acc.y += sepY*1.7; acc.z += sepZ*1.7;
+      acc.x += (aliX/count - b.vel.x)*0.09; acc.y += (aliY/count - b.vel.y)*0.09; acc.z += (aliZ/count - b.vel.z)*0.09;
+      acc.x += (cohX/count - b.pos.x)*0.018; acc.y += (cohY/count - b.pos.y)*0.018; acc.z += (cohZ/count - b.pos.z)*0.018;
+    }
+    // angin/gerak acak lembut supaya kawanan bisa pecah & menyatu ulang
+    b.gust += dt;
+    acc.x += Math.sin(b.gust*0.7+i)*0.5;
+    acc.z += Math.cos(b.gust*0.6+i*1.3)*0.5;
+    // dorongan lembut kembali ke area & pita ketinggian terbang (bukan tembok keras)
+    if(b.pos.x>BOUND) acc.x -= (b.pos.x-BOUND)*0.25;
+    if(b.pos.x<-BOUND) acc.x -= (b.pos.x+BOUND)*0.25;
+    if(b.pos.z>BOUND) acc.z -= (b.pos.z-BOUND)*0.25;
+    if(b.pos.z<-BOUND) acc.z -= (b.pos.z+BOUND)*0.25;
+    if(b.pos.y>ALT_MAX) acc.y -= (b.pos.y-ALT_MAX)*0.3;
+    if(b.pos.y<ALT_MIN) acc.y -= (b.pos.y-ALT_MIN)*0.3;
+
+    b.vel.addScaledVector(acc, dt);
+    const sp=b.vel.length();
+    if(sp>MAXSPEED) b.vel.multiplyScalar(MAXSPEED/sp);
+    else if(sp<MINSPEED && sp>0.001) b.vel.multiplyScalar(MINSPEED/sp);
+    b.pos.addScaledVector(b.vel, dt);
+  }
+  birds.forEach(b=>{
+    b.mesh.position.copy(b.pos);
+    b.mesh.userData.shadow.position.set(0,-b.pos.y+0.04,0);
+    const horiz=Math.hypot(b.vel.x,b.vel.z)||0.001;
+    b.mesh.rotation.y = Math.atan2(b.vel.x,b.vel.z);
+    b.mesh.userData.wrap.rotation.z = Math.max(-0.6,Math.min(0.6,-b.vel.y/horiz*0.9));
+    const flap = Math.sin(b.gust*9)*0.18;
+    b.mesh.userData.wrap.rotation.x = flap;
+  });
+}
+
+let theta3=0.6, phi3=0.42, radius3=118;
+const target3=new THREE.Vector3(0,6,0);
+function updateCamera3(){
+  camera3.position.x=target3.x+radius3*Math.sin(phi3)*Math.sin(theta3);
+  camera3.position.z=target3.z+radius3*Math.sin(phi3)*Math.cos(theta3);
+  camera3.position.y=target3.y+radius3*Math.cos(phi3);
+  camera3.lookAt(target3);
+}
+updateCamera3();
+let dragging3=false,lastX3=0,lastY3=0;
+renderer3.domElement.addEventListener('pointerdown', e=>{ dragging3=true; lastX3=e.clientX; lastY3=e.clientY; container3.classList.add('grabbing'); });
+window.addEventListener('pointerup', ()=>{ dragging3=false; container3.classList.remove('grabbing'); });
+window.addEventListener('pointermove', e=>{
+  if(!dragging3 || !container3.offsetParent) return;
+  theta3-=(e.clientX-lastX3)*0.005; phi3-=(e.clientY-lastY3)*0.004; phi3=Math.max(0.1,Math.min(1.3,phi3));
+  lastX3=e.clientX; lastY3=e.clientY; updateCamera3();
+});
+renderer3.domElement.addEventListener('wheel', e=>{ e.preventDefault(); radius3=Math.max(30,Math.min(260,radius3+e.deltaY*0.06)); updateCamera3(); }, {passive:false});
+let pinchDist3=null;
+function touchDist3(a,b){ return Math.hypot(b.clientX-a.clientX,b.clientY-a.clientY); }
+renderer3.domElement.addEventListener('touchstart', e=>{ if(e.touches.length===2){ pinchDist3=touchDist3(e.touches[0],e.touches[1]); dragging3=false; } }, {passive:true});
+renderer3.domElement.addEventListener('touchmove', e=>{ if(e.touches.length===2 && pinchDist3!==null){ e.preventDefault(); const d=touchDist3(e.touches[0],e.touches[1]); radius3=Math.max(30,Math.min(260,radius3-(d-pinchDist3)*0.1)); pinchDist3=d; updateCamera3(); } }, {passive:false});
+renderer3.domElement.addEventListener('touchend', e=>{ if(e.touches.length<2) pinchDist3=null; }, {passive:true});
+function onResize3(){ if(!container3.offsetParent) return; const w=container3.clientWidth,h=container3.clientHeight; if(!w||!h) return; camera3.aspect=w/h; camera3.updateProjectionMatrix(); renderer3.setSize(w,h); }
+window.addEventListener('resize', onResize3);
+
+const clock3=new THREE.Clock();
+let rafId3=null, timeScale3=1, simTime3=0, simTimeAcc3=0;
+function fmtTime3(s){ const m=Math.floor(s/60), ss=Math.floor(s%60); return m+':'+String(ss).padStart(2,'0'); }
+function frame3(){
+  rafId3=requestAnimationFrame(frame3);
+  const dt=Math.min(clock3.getDelta(),0.1)*timeScale3;
+  stepBoids(dt);
+  simTimeAcc3+=dt; simTime3+=dt;
+  if(simTimeAcc3>0.4){ simTimeAcc3=0; document.getElementById('simTimeVal3').textContent=fmtTime3(simTime3); }
+  renderer3.render(scene3,camera3);
+}
+function start3(){ if(rafId3===null){ onResize3(); frame3(); } }
+function stop3(){ if(rafId3!==null){ cancelAnimationFrame(rafId3); rafId3=null; } }
+
+document.getElementById('birdsRange').addEventListener('input', e=>{ document.getElementById('birdsVal').textContent=e.target.value; rebuildBirds(parseInt(e.target.value,10)); });
+document.getElementById('visRange').addEventListener('input', e=>{ visRadius=parseInt(e.target.value,10); document.getElementById('visVal').textContent=visRadius; });
+document.getElementById('resetBtn3').addEventListener('click', ()=>{ rebuildBirds(parseInt(document.getElementById('birdsRange').value,10)); simTime3=0; document.getElementById('simTimeVal3').textContent='0:00'; });
+
+const SPEEDS3=[{v:1,l:'1×'},{v:4,l:'4×'},{v:10,l:'10×'}];
+const speedGrp3=document.getElementById('speedGrp3');
+SPEEDS3.forEach((s,idx)=>{
+  const b=document.createElement('button'); b.className='speedbtn'+(idx===0?' active':''); b.textContent=s.l; b.type='button';
+  b.addEventListener('click', ()=>{ timeScale3=s.v; speedGrp3.querySelectorAll('.speedbtn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); });
+  speedGrp3.appendChild(b);
+});
+
+window.__tabC = {start:start3, stop:stop3, onResize:onResize3};
+})();
+
+/* ====================================================================
+   Sakelar tab
+   ==================================================================== */
+const ALL_TABS = ['a','b','c'];
+document.querySelectorAll('.tabbtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const tab = btn.getAttribute('data-tab');
+    document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('active', b===btn));
+    ALL_TABS.forEach(t=>{
+      document.getElementById('scene-'+t).classList.toggle('active', t===tab);
+      document.getElementById('legend-'+t).style.display = t===tab ? '' : 'none';
+    });
+    document.getElementById('descB').style.display = tab==='b' ? '' : 'none';
+    document.getElementById('descC').style.display = tab==='c' ? '' : 'none';
+    window.__tabA.stop(); window.__tabB.stop(); window.__tabC.stop();
+    if(tab==='a') window.__tabA.start();
+    else if(tab==='b') window.__tabB.start();
+    else window.__tabC.start();
+  });
+});
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

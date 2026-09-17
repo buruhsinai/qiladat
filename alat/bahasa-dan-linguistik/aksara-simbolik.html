@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aksara Simbolik & Logografik — Laboratorium JAZMI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&display=swap');
+:root{
+  --bg:#EBE2CC; --panel:#F7F1E1; --panel-border:#cdbb92;
+  --ink:#2b2417; --ink-soft:#6b5f43; --accent:#8a6a2e;
+  --line:rgba(43,36,23,.15); --line-strong:rgba(43,36,23,.3);
+  --c-full:#4E8C6C; --c-partial:#D4A017; --c-none:#C0703A; --c-disputed:#A83A2C;
+}
+*{box-sizing:border-box;} html,body{margin:0;padding:0;}
+body{ background:var(--bg); color:var(--ink); font-family:'Karla',sans-serif; }
+.wrap{max-width:980px; margin:0 auto; padding:20px 14px 44px;}
+.eyebrow{font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); margin:0 0 4px;}
+h1{font-family:'Fraunces',serif; font-weight:700; font-size:clamp(24px,5.5vw,34px); margin:0 0 6px;}
+.sub{font-size:13.5px; color:var(--ink-soft); max-width:72ch; line-height:1.55;}
+
+.intro{ background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:16px 18px; margin-top:16px; font-size:13px; line-height:1.65; }
+.intro b{ color:var(--accent); }
+
+.legend{ display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; }
+.lchip{ display:flex; align-items:center; gap:6px; background:var(--panel); border:1px solid var(--panel-border); border-radius:999px; padding:7px 13px; font-size:12px; cursor:pointer; }
+.lchip.active{ outline:2px solid var(--ink); }
+.lchip i{ width:10px; height:10px; border-radius:50%; display:inline-block; }
+.lchip[data-s="all"] i{ background:linear-gradient(90deg,var(--c-full),var(--c-partial),var(--c-none),var(--c-disputed)); }
+
+.search{ margin-top:10px; }
+.search input{ width:100%; padding:9px 12px; border-radius:6px; border:1px solid var(--panel-border); background:var(--panel); color:var(--ink); font-family:'Karla',sans-serif; font-size:13px; }
+
+.grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:10px; margin-top:14px; }
+.card{ background:var(--panel); border:1px solid var(--panel-border); border-left:4px solid var(--ink); border-radius:6px; padding:11px 13px; cursor:pointer; }
+.card .cname{ font-family:'Fraunces',serif; font-weight:600; font-size:15px; }
+.card .cregion{ font-size:11.5px; color:var(--ink-soft); margin-top:2px; }
+.card .cstatus{ display:inline-block; font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:3px; margin-top:6px; color:#fff; }
+
+.statrow{ font-size:12px; color:var(--ink-soft); margin-top:10px; }
+
+.modal-overlay{ display:none; position:fixed; inset:0; background:rgba(20,16,8,.6); z-index:50; align-items:center; justify-content:center; padding:16px; }
+.modal-overlay.show{ display:flex; }
+.modal{ background:var(--panel); border-radius:8px; max-width:520px; width:100%; max-height:85vh; overflow-y:auto; padding:20px 22px; position:relative; }
+.modal .close{ position:absolute; top:12px; right:12px; background:none; border:1px solid var(--line-strong); border-radius:999px; width:26px; height:26px; cursor:pointer; }
+.modal h2{ font-family:'Fraunces',serif; font-size:21px; margin:4px 0 2px; }
+.modal .region{ font-size:12.5px; color:var(--ink-soft); margin-bottom:8px; }
+.modal p{ font-size:13.5px; line-height:1.6; margin:0 0 8px; }
+.modal .statuslong{ font-size:12px; font-style:italic; padding:8px 10px; border-radius:4px; margin-top:8px; }
+
+footer{margin-top:26px; padding-top:14px; border-top:1px solid var(--line); font-size:11.5px; color:var(--ink-soft); line-height:1.6;}
+footer b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">JAZMI · Laboratorium Aksara · Level 4</p>
+  <h1>Aksara Simbolik &amp; Logografik</h1>
+  <p class="sub">Aksara yang tandanya mewakili kata/konsep (logogram), bukan bunyi — dari Hanzi yang
+  masih dipakai miliaran orang hari ini, sampai simbol yang bahkan setelah 150 tahun diteliti, tak
+  ada yang tahu pasti apakah itu benar-benar tulisan.</p>
+
+  <div class="intro">
+    Status di bawah ini punya empat tingkatan, dari yang paling pasti ke paling misterius:
+    <b>Terbaca Penuh</b> (aksara & bahasanya sudah dipahami), <b>Terbaca Sebagian</b> (ada
+    kemajuan tapi belum tuntas atau masih diperdebatkan detailnya), <b>Belum Terpecahkan</b>
+    (tak seorang pun tahu artinya, tapi diyakini ini tulisan), dan <b>Diperdebatkan Sebagai
+    Tulisan</b> (bahkan status "apakah ini tulisan sungguhan" masih jadi perdebatan ilmiah).
+  </div>
+
+  <div class="legend" id="legend">
+    <span class="lchip active" data-s="all"><i></i>Semua</span>
+    <span class="lchip" data-s="full"><i style="background:var(--c-full)"></i>Terbaca Penuh</span>
+    <span class="lchip" data-s="partial"><i style="background:var(--c-partial)"></i>Terbaca Sebagian</span>
+    <span class="lchip" data-s="none"><i style="background:var(--c-none)"></i>Belum Terpecahkan</span>
+    <span class="lchip" data-s="disputed"><i style="background:var(--c-disputed)"></i>Diperdebatkan Sebagai Tulisan</span>
+  </div>
+  <div class="search"><input type="text" id="search" placeholder="Cari nama, wilayah, atau kata kunci..."></div>
+
+  <div class="grid" id="grid"></div>
+  <div class="statrow" id="statrow"></div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <button class="close" id="modalClose">✕</button>
+      <div class="region" id="m_region"></div>
+      <h2 id="m_name"></h2>
+      <p id="m_desc"></p>
+      <div class="statuslong" id="m_status"></div>
+    </div>
+  </div>
+
+  <footer>
+    <b>Batasan:</b> Status decipherment berubah seiring waktu — beberapa entri di sini adalah subjek
+    penelitian aktif dan bisa saja "naik kelas" statusnya di masa depan (atau sebaliknya, klaim
+    dekripsi yang pernah diajukan bisa dibantah). Untuk entri di kategori "Terbaca Sebagian" dan
+    "Belum Terpecahkan", saya rangkum konsensus umum saat pengetahuan saya terbentuk — bukan jaminan
+    status terkini di tahun Anda membaca ini. Daftar ini berfokus pada aksara yang sifatnya
+    logografik/simbolik (mewakili kata/konsep); aksara fonetik murni (alfabet, silabis) sengaja
+    tidak dimasukkan meski beberapa entri di sini (Maya, Mesir, Cuneiform) sebenarnya sistem
+    campuran logo-fonetik, bukan logografik murni 100%.
+  </footer>
+</div>
+
+<script>
+const DATA=[
+ {name:"Hanzi", region:"Tiongkok", era:"~1250 SM \u2013 sekarang", status:"full",
+  desc:"Aksara logografik yang dipakai terus-menerus paling lama di dunia, dari skrip tulang ramalan (oracle bone) hingga bahasa Tionghoa modern. Miliaran orang masih memakainya aktif hari ini.",
+  statusNote:"Terbaca penuh \u2014 tak ada keraguan berarti soal makna maupun bunyinya."},
+ {name:"Kanji", region:"Jepang", era:"~abad 5 M \u2013 sekarang", status:"full",
+  desc:"Aksara logografik Jepang, diadaptasi dari Hanzi Tiongkok, dipakai berdampingan dengan aksara fonetik hiragana & katakana.",
+  statusNote:"Terbaca penuh \u2014 diturunkan langsung dari sistem Hanzi yang sudah dipahami."},
+ {name:"Hieroglif Mesir", region:"Mesir Kuno", era:"~3200 SM \u2013 394 M", status:"full",
+  desc:"Kombinasi logogram & tanda fonetik, dipecahkan Jean-Fran\u00e7ois Champollion tahun 1822 lewat Batu Rosetta (teks trilingual Mesir-Yunani).",
+  statusNote:"Terbaca penuh sejak 1822 \u2014 salah satu dekripsi paling terkenal dalam sejarah."},
+ {name:"Cuneiform Sumeria/Akkadia", region:"Mesopotamia", era:"~3200 SM \u2013 abad 1 M", status:"full",
+  desc:"Berawal logografik piktografik, berkembang jadi sistem logo-suku kata. Dipecahkan abad ke-19 lewat Prasasti Behistun trilingual (Henry Rawlinson dkk).",
+  statusNote:"Terbaca penuh \u2014 ribuan tablet sudah diterjemahkan."},
+ {name:"Aksara Maya", region:"Mesoamerika", era:"~abad 3 SM \u2013 abad 16 M", status:"full",
+  desc:"Sistem logo-suku kata yang sangat rumit, dipecahkan bertahap sepanjang abad ke-20 \u2014 terobosan besar oleh Yuri Knorozov (1950-an) dan David Stuart dkk (1980-90an).",
+  statusNote:"Terbaca penuh untuk sebagian besar korpus, meski penelitian detail masih berlanjut."},
+ {name:"Tangut", region:"Kekaisaran Xia Barat (Tiongkok)", era:"1036 M \u2013 abad 16", status:"full",
+  desc:"Diciptakan atas perintah kaisar, terinspirasi struktur visual Han tapi bukan turunan langsung. Sempat punah total, dipecahkan kembali abad ke-20.",
+  statusNote:"Terbaca penuh setelah rekonstruksi ilmiah abad ke-20."},
+ {name:"Naxi Dongba", region:"Yunnan, Tiongkok (etnis Naxi)", era:"~abad 7 M \u2013 sekarang", status:"full",
+  desc:"Salah satu dari sedikit aksara benar-benar piktografik (gambar langsung, bukan simbol abstrak) yang masih dipakai \u2014 secara seremonial oleh pendeta Dongba.",
+  statusNote:"Terbaca penuh oleh komunitas & peneliti yang mempelajarinya."},
+ {name:"Sui (Shuishu)", region:"Guizhou, Tiongkok (etnis Sui)", era:"tidak pasti \u2013 sekarang", status:"full",
+  desc:"Aksara logografik ritual, masih dipakai dukun/pendeta Sui untuk teks keagamaan dan ramalan.",
+  statusNote:"Terbaca oleh pewaris tradisi & peneliti, meski korpusnya relatif kecil."},
+ {name:"Zhuang Sawndip", region:"Guangxi, Tiongkok (etnis Zhuang)", era:"~abad 7\u201313 M \u2013 sekarang", status:"full",
+  desc:"Aksara logografik untuk bahasa Zhuang, dibangun dari komponen aksara Han dengan prinsip serupa tapi bahasa berbeda.",
+  statusNote:"Terbaca penuh, meski penggunaannya kini banyak digantikan alfabet Latin resmi."},
+ {name:"Zapotec", region:"Oaxaca, Meksiko", era:"~600 SM \u2013 abad 13 M", status:"partial",
+  desc:"Salah satu aksara Mesoamerika tertua, mendahului Maya. Sebagian tanda kalender & nama sudah dipahami, tapi sebagian besar korpus masih belum terbaca penuh.",
+  statusNote:"Terbaca sebagian \u2014 kemajuan lambat karena korpus prasasti relatif sedikit."},
+ {name:"Epi-Olmec", region:"Meksiko (Stela La Mojarra)", era:"~abad 2 SM \u2013 abad 2 M", status:"partial",
+  desc:"Diklaim terpecahkan oleh John Justeson & Terrence Kaufman tahun 1990-an, tapi klaim dekripsi ini ditolak/diragukan sejumlah ahli lain.",
+  statusNote:"Terbaca sebagian \u2014 status \"terpecahkan\" masih diperdebatkan komunitas ilmiah."},
+ {name:"Khitan Aksara Besar", region:"Mongolia/Tiongkok Utara", era:"920 M \u2013 abad 12", status:"partial",
+  desc:"Berbeda dari Khitan Aksara Kecil yang lebih fonetik. Aksara Besar ini logografik, terinspirasi Han, penelitian dekripsinya masih berlangsung aktif.",
+  statusNote:"Terbaca sebagian, kemajuan bertahap dalam beberapa dekade terakhir."},
+ {name:"Jurchen", region:"Manchuria", era:"~1119 M \u2013 abad 16", status:"partial",
+  desc:"Aksara logografik untuk bahasa Jurchen (leluhur bahasa Manchu), terinspirasi model Khitan & Han.",
+  statusNote:"Terbaca sebagian \u2014 korpus prasasti yang bertahan relatif terbatas."},
+ {name:"Meroitic Hieroglyphs/Cursive", region:"Kerajaan Kush/Mero\u00eb, Sudan", era:"~200 SM \u2013 400 M", status:"partial",
+  desc:"Kasus unik: bunyinya sudah bisa dibaca (fonetik terpecahkan) tapi bahasanya sendiri sebagian besar masih belum dipahami \u2014 \"bisa dibaca tapi tak dimengerti\".",
+  statusNote:"Terbaca sebagian dengan cara yang tidak biasa: aksaranya terpecahkan, bahasanya belum."},
+ {name:"Aksara Lembah Indus (Harappan)", region:"Pakistan/India Barat Laut", era:"~2600\u20131900 SM", status:"none",
+  desc:"Ribuan prasasti pendek pada segel & tembikar, belum ada satupun yang berhasil dibaca. Bahkan keluarga bahasanya (Dravida? lainnya?) masih diperdebatkan.",
+  statusNote:"Belum terpecahkan \u2014 salah satu misteri aksara paling terkenal di dunia."},
+ {name:"Rongorongo", region:"Pulau Paskah (Rapa Nui)", era:"tidak pasti, kemungkinan abad 18\u201319", status:"none",
+  desc:"Tanda-tanda terukir di papan kayu. Belum terpecahkan sama sekali \u2014 dan bahkan asal-usulnya diperdebatkan: sebagian ahli menduga muncul terinspirasi setelah masyarakat setempat melihat tulisan Eropa, bukan tradisi asli pra-kontak.",
+  statusNote:"Belum terpecahkan, dengan lapisan ketidakpastian tambahan soal usianya sendiri."},
+ {name:"Proto-Elam", region:"Iran (Susa)", era:"~3200\u20132900 SM", status:"none",
+  desc:"Tanda numerik & logografik dari salah satu peradaban tertua di dataran tinggi Iran, sezaman dengan cuneiform awal Mesopotamia.",
+  statusNote:"Belum terpecahkan, meski sistem angkanya sudah cukup dipahami."},
+ {name:"Linear A", region:"Kreta (peradaban Minoa)", era:"~1800\u20131450 SM", status:"none",
+  desc:"Berbeda dari Linear B turunannya (yang SUDAH terpecahkan sebagai bahasa Yunani Mikenai kuno oleh Michael Ventris 1952), Linear A sendiri masih misteri total.",
+  statusNote:"Belum terpecahkan \u2014 bahasa Minoa yang mendasarinya tidak diketahui."},
+ {name:"Hieroglif Kreta", region:"Kreta (peradaban Minoa)", era:"~2100\u20131700 SM", status:"none",
+  desc:"Sistem tersendiri, berbeda dari Linear A meski sezaman & wilayah sama. Kemungkinan mendahului Linear A.",
+  statusNote:"Belum terpecahkan."},
+ {name:"Cakram Phaistos", region:"Kreta", era:"~1700 SM", status:"none",
+  desc:"Satu artefak unik berbentuk cakram tanah liat dengan simbol dicap-stempel spiral \u2014 tidak ada bandingan lain yang ditemukan hingga kini.",
+  statusNote:"Belum terpecahkan \u2014 bahkan fungsi artefaknya sendiri (kalender? teks ritual?) masih spekulasi."},
+ {name:"Blok Cascajal / Aksara Olmec", region:"Veracruz, Meksiko", era:"~900 SM", status:"none",
+  desc:"Kandidat aksara tertua yang diketahui di Amerika, mendahului Zapotec & Maya. Ditemukan 1999, dipublikasikan 2006.",
+  statusNote:"Belum terpecahkan, dan sebagian ahli masih memperdebatkan apakah ini benar tulisan penuh atau simbol seremonial."},
+ {name:"Aksara Bagam", region:"Kamerun (dataran tinggi Bamum)", era:"diperkirakan pra-abad 20", status:"none",
+  desc:"Ditemukan relatif baru di sebuah buku catatan tua, sistem tandanya belum pernah dicocokkan dengan bahasa mana pun yang diketahui.",
+  statusNote:"Belum terpecahkan, dan korpusnya sangat terbatas (satu sumber utama)."},
+ {name:"Simbol Vinca", region:"Balkan/Lembah Danube (Eropa)", era:"~5300\u20134000 SM", status:"disputed",
+  desc:"Kalau ini benar sistem tulisan, usianya mendahului cuneiform Mesopotamia \u2014 klaim besar yang bikin sebagian besar ahli skeptis. Mayoritas menganggapnya simbol kepemilikan/keagamaan, bukan sistem bahasa penuh.",
+  statusNote:"Sangat diperdebatkan bahkan soal status \"apakah ini tulisan\", bukan cuma soal artinya."},
+ {name:"Lempeng Tartaria", region:"Rumania (terkait budaya Vinca)", era:"~5300 SM (diperdebatkan)", status:"disputed",
+  desc:"Tiga lempeng tanah liat dengan simbol mirip Vinca, ditemukan 1961. Bahkan konteks penggalian & penanggalannya sendiri dipertanyakan sejumlah arkeolog.",
+  statusNote:"Sangat diperdebatkan \u2014 baik soal maknanya maupun keaslian konteks temuannya."},
+ {name:"Simbol Jiahu", region:"Henan, Tiongkok", era:"~6600 SM", status:"disputed",
+  desc:"Ukiran simbol tertua yang ditemukan di Tiongkok, pada cangkang kura-kura. Hubungannya dengan Hanzi yang muncul ribuan tahun kemudian sangat diperdebatkan \u2014 kemungkinan besar tidak berkaitan langsung.",
+  statusNote:"Sangat diperdebatkan sebagai \"cikal bakal\" tulisan; banyak ahli menilainya simbol ritual terpisah."},
+ {name:"Tablet Dispilio", region:"Yunani (Danau Kastoria)", era:"Neolitikum, ~5200 SM (diperdebatkan)", status:"disputed",
+  desc:"Tablet kayu dengan tanda-tanda yang diklaim penemunya sebagai bentuk tulisan Eropa tertua.",
+  statusNote:"Sangat diperdebatkan \u2014 klaim usia & statusnya sebagai tulisan belum diterima luas komunitas arkeologi."}
+];
+
+const STATUS_LABEL={full:"Terbaca Penuh", partial:"Terbaca Sebagian", none:"Belum Terpecahkan", disputed:"Diperdebatkan Sebagai Tulisan"};
+const STATUS_COLOR={full:"var(--c-full)", partial:"var(--c-partial)", none:"var(--c-none)", disputed:"var(--c-disputed)"};
+
+DATA.sort((a,b)=>a.name.localeCompare(b.name,'en',{sensitivity:'base'}));
+
+let activeStatus='all', query='';
+const legend=document.getElementById('legend');
+legend.addEventListener('click',(e)=>{
+  const chip=e.target.closest('.lchip'); if(!chip) return;
+  activeStatus=chip.dataset.s;
+  [...legend.children].forEach(c=>c.classList.toggle('active', c===chip));
+  render();
+});
+document.getElementById('search').addEventListener('input',(e)=>{ query=e.target.value.toLowerCase().trim(); render(); });
+
+function render(){
+  const grid=document.getElementById('grid'); grid.innerHTML='';
+  const filtered=DATA.filter(d=>{
+    if(activeStatus!=='all' && d.status!==activeStatus) return false;
+    if(query){
+      const hay=(d.name+' '+d.region+' '+d.desc).toLowerCase();
+      if(!hay.includes(query)) return false;
+    }
+    return true;
+  });
+  filtered.forEach(d=>{
+    const card=document.createElement('div');
+    card.className='card';
+    card.style.borderLeftColor=STATUS_COLOR[d.status];
+    card.innerHTML=`<div class="cname">${d.name}</div>
+      <div class="cregion">${d.region} \u00b7 ${d.era}</div>
+      <span class="cstatus" style="background:${STATUS_COLOR[d.status]}">${STATUS_LABEL[d.status]}</span>`;
+    card.addEventListener('click', ()=>openModal(d));
+    grid.appendChild(card);
+  });
+  document.getElementById('statrow').textContent = `Menampilkan ${filtered.length} dari ${DATA.length} aksara simbolik/logografik`;
+}
+
+const overlay=document.getElementById('modalOverlay');
+function openModal(d){
+  document.getElementById('m_region').textContent=d.region+' \u00b7 '+d.era;
+  document.getElementById('m_name').textContent=d.name;
+  document.getElementById('m_desc').textContent=d.desc;
+  const s=document.getElementById('m_status');
+  s.textContent=d.statusNote;
+  s.style.background=STATUS_COLOR[d.status]+'22';
+  s.style.color=STATUS_COLOR[d.status];
+  s.style.borderLeft='3px solid '+STATUS_COLOR[d.status];
+  overlay.classList.add('show');
+}
+document.getElementById('modalClose').addEventListener('click', ()=>overlay.classList.remove('show'));
+overlay.addEventListener('click',(e)=>{ if(e.target===overlay) overlay.classList.remove('show'); });
+
+render();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

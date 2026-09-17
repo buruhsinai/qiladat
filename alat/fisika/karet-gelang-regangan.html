@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Karet Gelang & Regangan Gelombang</title>
+<style>
+  :root{--bg:#0b0d10;--panel:#14171c;--panel2:#1b1f26;--line:#2a2f38;--text:#e8e6df;--muted:#9aa1ab;--accent:#c9a24d;--accent2:#6fae8c;--font-d:'Georgia',serif;--font-b:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-b);margin:0;padding:0;line-height:1.6}
+  .wrap{max-width:760px;margin:0 auto;padding:26px 18px 60px}
+  h1{font-family:var(--font-d);font-size:1.4rem;color:var(--accent);margin:0 0 6px}
+  .tagline{color:var(--muted);font-size:.92rem;margin-bottom:24px}
+  h2{font-family:var(--font-d);font-size:1.1rem;color:var(--accent2);border-left:3px solid var(--accent2);padding-left:10px;margin-top:30px}
+  p{color:#d7d5cd}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;margin:12px 0}
+  .slider-field label{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);margin-bottom:6px}
+  .slider-field label b{color:var(--accent)}
+  input[type=range]{width:100%;accent-color:var(--accent2)}
+  svg{width:100%;height:auto;background:var(--panel2);border-radius:8px;border:1px solid var(--line);margin-top:12px}
+  .result{background:var(--panel2);border:1px solid var(--accent);border-radius:8px;padding:12px;margin-top:12px;font-size:.95rem}
+  .result b{color:var(--accent)}
+  .note{font-size:.8rem;color:var(--muted);margin-top:8px}
+  .limitbox{background:#241a14;border:1px solid #d98c5f;border-radius:8px;padding:12px;color:#e8d3c1;font-size:.88rem}
+  ul{color:#d7d5cd;margin:6px 0;padding-left:20px}
+  .wa{display:inline-block;margin-top:10px;background:#25D366;color:#04250f;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:600;font-size:.9rem}
+  footer{margin-top:36px;border-top:1px solid var(--line);padding-top:14px;color:var(--muted);font-size:.76rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Karet Gelang & Regangan Gelombang</h1>
+<div class="tagline">Versi paling sederhana dari redshift kosmologis — tanpa galaksi, cukup karet gelang bergambar gelombang yang ditarik.</div>
+
+<h2>Belajar</h2>
+<p>Bayangkan gambar gelombang sinus digambar di atas karet gelang kendur. Saat karet itu ditarik meregang, jarak antar-puncak gelombangnya ikut merenggang — <b>panjang gelombangnya bertambah</b>, meski gelombangnya sendiri tidak "bergerak" ke mana pun relatif terhadap karetnya. Inilah inti redshift kosmologis: cahaya galaksi jauh memanjang panjang gelombangnya (bergeser ke merah) karena <i>ruang itu sendiri meregang</i> selama cahaya menempuh perjalanan miliaran tahun — bukan karena galaksinya "lari" menjauh secepat itu.</p>
+
+<h2>Eksplorasi — Regangkan Sendiri</h2>
+<div class="card">
+  <div class="slider-field">
+    <label>Faktor regangan <b id="valK">1.0</b>×</label>
+    <input type="range" id="k" min="1" max="4" step="0.05" value="1">
+  </div>
+  <svg id="chart" viewBox="0 0 600 140"></svg>
+  <div class="result">
+    Panjang gelombang teregang: <b id="hasil">-</b>
+  </div>
+  <p class="note">Warna garis ikut memerah saat regangan membesar — analogi visual sederhana dari pergeseran-merah (redshift), bukan simulasi spektrum warna presisi.</p>
+</div>
+
+<h2>Batasan</h2>
+<div class="limitbox">
+  <ul>
+    <li>Ini analogi mekanis (karet fisik meregang), bukan simulasi metrik ruang-waktu — berguna untuk intuisi, tidak untuk perhitungan kosmologis presisi (lihat alat "Hukum Hubble & Ekspansi Alam Semesta" untuk versi kuantitatifnya).</li>
+    <li>Perubahan warna di sini murni ilustratif, tidak mengikuti perhitungan panjang gelombang cahaya tampak yang sesungguhnya.</li>
+  </ul>
+</div>
+
+<div class="card" style="text-align:center">
+  <a class="wa" id="waLink" href="#" target="_blank">Konsultasi via WhatsApp</a>
+</div>
+
+<footer>Bagian dari Bank Alat JAZMI — pendamping ringan "Hukum Hubble & Ekspansi Alam Semesta".</footer>
+</div>
+
+<script>
+const kEl = document.getElementById('k');
+function hitung(){
+  const k = parseFloat(kEl.value);
+  document.getElementById('valK').textContent = k.toFixed(2);
+  const lambda0 = 40;
+  const lambda = lambda0*k;
+  document.getElementById('hasil').innerHTML = `λ = ${lambda.toFixed(1)} (satuan relatif) — regangan ${((k-1)*100).toFixed(0)}%`;
+  gambar(k);
+}
+function gambar(k){
+  const svg = document.getElementById('chart');
+  const W=600,H=140,cy=70,amp=40;
+  const lambda0=40, lambda=lambda0*k;
+  let path='';
+  for(let x=0;x<=W;x+=2){
+    const y = cy - amp*Math.sin((2*Math.PI*x)/lambda);
+    path += (x===0?'M':'L')+x+','+y.toFixed(1);
+  }
+  const hue = 210 - Math.min(210, (k-1)/3*210); // biru->merah
+  svg.innerHTML = `<path d="${path}" fill="none" stroke="hsl(${hue},70%,60%)" stroke-width="3"/>`;
+}
+kEl.addEventListener('input', hitung);
+document.getElementById('waLink').href = `https://wa.me/6281356572588?text=${encodeURIComponent("Assalamu'alaikum, saya ingin diskusi terkait Karet Gelang & Regangan Gelombang JAZMI.")}`;
+hitung();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

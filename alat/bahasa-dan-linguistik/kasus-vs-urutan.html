@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Siapa Melakukan Apa kepada Siapa? — Kasus vs Urutan Kata</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Karla:wght@400;500;600&family=Amiri:wght@400;700&display=swap');
+
+:root{
+  --ink: #1B1F2B;
+  --ink-soft: #232838;
+  --ink-line: #363C4E;
+  --paper: #F0E6D2;
+  --paper-line: #C9BFA0;
+  --arab: #4E9B85;
+  --arab-deep: #2F6F5E;
+  --id: #D2794F;
+  --id-deep: #B0492D;
+  --text: #E8E3D8;
+  --text-muted: #9CA3B5;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+  background:var(--ink);
+  color:var(--text);
+  font-family:'Karla',sans-serif;
+  line-height:1.6;
+}
+
+.stage{
+  max-width:640px;
+  margin:0 auto;
+  padding:0 24px;
+}
+
+section{
+  padding:80px 0;
+  border-bottom:1px solid var(--ink-line);
+}
+section:last-child{border-bottom:none;}
+
+h1,h2{
+  font-family:'Fraunces',serif;
+  font-weight:500;
+  line-height:1.15;
+}
+
+/* HEADER */
+.site-header{
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+  padding:26px 0 0;
+  flex-wrap:wrap;
+}
+.wordmark{
+  font-family:'Fraunces',serif;
+  font-weight:600;
+  font-size:1.05em;
+  letter-spacing:0.02em;
+}
+.tagline{
+  color:var(--text-muted);
+  font-size:0.88em;
+}
+
+/* SLIDER */
+.slider-scene h2{margin-bottom:6px;}
+.slider{
+  position:relative;
+  margin-top:28px;
+}
+.slide{
+  display:none;
+  border:1px solid var(--ink-line);
+  border-radius:10px;
+  padding:30px 20px;
+  background:var(--ink-soft);
+}
+.slide.active{display:block;}
+.slide .id-line{
+  text-align:center;
+  font-size:1.1em;
+  margin-bottom:6px;
+}
+.slide .id-line .subj{color:var(--id);font-weight:600;}
+.slide .id-line .obj{color:var(--id);font-weight:600;}
+.slide .ar-line{
+  text-align:center;
+  direction:rtl;
+  font-family:'Amiri',serif;
+  font-size:1.4em;
+  margin:14px 0 8px;
+}
+.slide .ar-line .subj{color:var(--arab-deep);font-weight:700;}
+.slide .ar-line .obj{color:var(--arab-deep);font-weight:700;}
+.slide .slide-note{
+  text-align:center;
+  color:var(--text-muted);
+  font-size:0.85em;
+  margin-top:10px;
+}
+.slider-nav{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:18px;
+  margin-top:18px;
+}
+.slider-arrow{
+  background:transparent;
+  border:1px solid var(--ink-line);
+  color:var(--text);
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  cursor:pointer;
+  font-size:1em;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:border-color 0.2s ease;
+}
+.slider-arrow:hover{border-color:var(--paper-line);}
+.slider-dots{
+  display:flex;
+  gap:7px;
+}
+.dot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:var(--ink-line);
+  cursor:pointer;
+  border:none;
+  padding:0;
+}
+.dot.active{background:var(--id);}
+
+/* EXPLANATION (collapsible) */
+.explain{
+  border:1px solid var(--ink-line);
+  border-radius:10px;
+  padding:4px 22px;
+}
+.explain summary{
+  cursor:pointer;
+  padding:18px 0;
+  font-family:'Fraunces',serif;
+  font-size:1.05em;
+  list-style:none;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.explain summary::-webkit-details-marker{display:none;}
+.explain summary::after{
+  content:'+';
+  font-size:1.3em;
+  color:var(--text-muted);
+  transition:transform 0.2s ease;
+}
+.explain[open] summary::after{content:'–';}
+.explain .explain-body{
+  padding-bottom:24px;
+  color:var(--text-muted);
+  font-size:0.95em;
+}
+.explain .explain-body p{margin-bottom:14px;}
+.explain .explain-body p:last-child{margin-bottom:0;}
+.explain .explain-body strong{color:var(--text);}
+
+/* HERO */
+.hero{
+  min-height:88vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  border-bottom:1px solid var(--ink-line);
+}
+.hero h1{
+  font-size:clamp(2.1em,7vw,3.2em);
+  letter-spacing:-0.01em;
+}
+.hero p{
+  margin-top:22px;
+  color:var(--text-muted);
+  font-size:1.05em;
+  max-width:32ch;
+}
+.scroll-hint{
+  margin-top:60px;
+  font-size:1.4em;
+  color:var(--text-muted);
+  animation:bob 2.2s ease-in-out infinite;
+}
+@keyframes bob{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(8px);}
+}
+
+/* SCENE HEADERS */
+.scene h2{
+  font-size:1.5em;
+  margin-bottom:6px;
+}
+.scene .translation{
+  color:var(--text-muted);
+  font-style:italic;
+  margin-bottom:32px;
+}
+.lead{
+  font-size:1.05em;
+  margin-bottom:32px;
+  max-width:52ch;
+}
+
+/* WORD ROWS */
+.word-row{
+  display:flex;
+  justify-content:center;
+  align-items:stretch;
+  gap:14px;
+  flex-wrap:wrap;
+  margin:28px 0;
+}
+.word-block{
+  background:var(--paper);
+  color:#2A2416;
+  border-radius:6px;
+  padding:16px 22px;
+  font-weight:600;
+  font-size:1.15em;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+  min-width:88px;
+  text-align:center;
+  will-change:transform;
+}
+.id-verb, .ar-verb{
+  background:transparent;
+  color:var(--text-muted);
+  font-weight:400;
+  font-style:italic;
+  font-size:1em;
+  align-self:center;
+  padding:16px 8px;
+}
+
+.slot-labels{
+  display:flex;
+  justify-content:center;
+  gap:14px;
+  margin-top:2px;
+}
+.slot-label{
+  min-width:88px;
+  text-align:center;
+  font-size:0.82em;
+  color:var(--id);
+  letter-spacing:0.02em;
+}
+.slot-label.spacer{color:transparent;padding:0 8px;min-width:auto;flex:0 0 auto;}
+
+/* ARABIC */
+.arabic-row{direction:rtl;}
+.ar-word{font-family:'Amiri',serif;}
+.ar-text{
+  font-size:1.5em;
+  line-height:1;
+}
+.ar-ending{
+  color:var(--arab-deep);
+  display:inline-block;
+  transition:transform 0.25s ease, opacity 0.25s ease;
+}
+.ar-ending.exploding{
+  transform:scale(2.4);
+  opacity:0;
+}
+.ar-role{
+  font-family:'Karla',sans-serif;
+  font-size:0.68em;
+  color:var(--arab-deep);
+  font-weight:600;
+  transition:opacity 0.2s ease;
+}
+.ar-role.fading{opacity:0;}
+
+/* CONTROLS */
+.controls{
+  display:flex;
+  justify-content:center;
+  margin:26px 0 14px;
+}
+.btn{
+  border:1.5px solid var(--paper-line);
+  background:transparent;
+  color:var(--text);
+  font-family:'Karla',sans-serif;
+  font-weight:600;
+  font-size:0.95em;
+  padding:11px 26px;
+  border-radius:30px;
+  cursor:pointer;
+  transition:background 0.2s ease, border-color 0.2s ease;
+}
+.btn-id{border-color:var(--id);}
+.btn-id:hover{background:rgba(210,121,79,0.14);}
+.btn-ar{border-color:var(--arab);}
+.btn-ar:hover{background:rgba(78,155,133,0.14);}
+
+.meaning-readout{
+  text-align:center;
+  font-size:1.05em;
+  margin-top:18px;
+  min-height:1.6em;
+}
+.meaning-readout .highlight{
+  color:var(--id);
+  font-weight:600;
+}
+.meaning-readout .highlight.ar{color:var(--arab);}
+
+.insight{
+  text-align:center;
+  color:var(--text-muted);
+  font-size:0.92em;
+  margin-top:14px;
+  max-width:38ch;
+  margin-left:auto;
+  margin-right:auto;
+}
+
+/* SYNTHESIS DIAGRAM */
+.synthesis{
+  text-align:center;
+}
+.synthesis-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+  margin-top:36px;
+}
+.synthesis-col{
+  border:1px solid var(--ink-line);
+  border-radius:8px;
+  padding:22px 14px;
+}
+.synthesis-col h3{
+  font-family:'Fraunces',serif;
+  font-weight:500;
+  font-size:1.05em;
+  margin-bottom:10px;
+}
+.synthesis-col.id-col h3{color:var(--id);}
+.synthesis-col.ar-col h3{color:var(--arab);}
+.synthesis-col p{
+  font-size:0.88em;
+  color:var(--text-muted);
+}
+
+/* REFLECTION */
+.reflection{
+  text-align:center;
+  padding:100px 0 120px;
+}
+.reflection p{
+  font-family:'Fraunces',serif;
+  font-style:italic;
+  font-size:1.25em;
+  line-height:1.65;
+  max-width:34ch;
+  margin:0 auto 26px;
+  color:var(--text);
+}
+.reflection p:last-of-type{margin-bottom:0;}
+.footnote{
+  text-align:center;
+  color:var(--text-muted);
+  font-size:0.78em;
+  margin-top:60px;
+  max-width:46ch;
+  margin-left:auto;
+  margin-right:auto;
+}
+
+@media(max-width:480px){
+  section{padding:60px 0;}
+  .word-block{min-width:74px;padding:13px 16px;font-size:1em;}
+  .synthesis-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <header class="site-header">
+    <span class="wordmark">JAZMI</span>
+    <span class="tagline">— laboratorium bahasa Qiladat</span>
+  </header>
+
+  <section class="hero">
+    <h1>Siapa melakukan apa<br>kepada siapa?</h1>
+    <p>Setiap bahasa harus menjawab pertanyaan ini. Yang berbeda adalah caranya.</p>
+    <div class="scroll-hint">↓</div>
+  </section>
+
+  <section class="scene" id="scene-indonesia">
+    <h2>Ahmad memukul Zaid.</h2>
+    <p class="translation">Ahmad adalah pelaku. Zaid adalah yang dikenai.</p>
+
+    <div class="word-row" id="id-row">
+      <div class="word-block id-word" id="id-w1">Ahmad</div>
+      <div class="word-block id-verb">memukul</div>
+      <div class="word-block id-word" id="id-w2">Zaid</div>
+    </div>
+    <div class="slot-labels">
+      <span class="slot-label">pelaku</span>
+      <span class="slot-label spacer">·</span>
+      <span class="slot-label">sasaran</span>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-id" id="swap-id-btn">Tukar posisi kata</button>
+    </div>
+    <p class="meaning-readout" id="id-meaning">Ahmad memukul Zaid.</p>
+    <p class="insight">Dalam bahasa Indonesia, tempat sebuah kata berdiri dalam kalimat itulah yang menentukan perannya.</p>
+  </section>
+
+  <section class="scene" id="scene-arab-order">
+    <h2 dir="rtl" lang="ar">ضَرَبَ زَيْدٌ عَمْرًا</h2>
+    <p class="translation">Zaid memukul Amr.</p>
+    <p class="lead">Sekarang kalimat yang sama, dalam bahasa Arab. Perhatikan tanda kecil di ujung setiap nama.</p>
+
+    <div class="word-row arabic-row" id="ar-order-row" dir="rtl">
+      <div class="word-block ar-word" id="ar-o-zaid">
+        <span class="ar-text">زَيْد<span class="ar-ending">ٌ</span></span>
+        <span class="ar-role">فاعل — pelaku</span>
+      </div>
+      <div class="ar-verb">ضَرَبَ</div>
+      <div class="word-block ar-word" id="ar-o-amr">
+        <span class="ar-text">عَمْر<span class="ar-ending">ًا</span></span>
+        <span class="ar-role">مفعول به — sasaran</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-ar" id="swap-ar-order-btn">Tukar posisi kata</button>
+    </div>
+    <p class="meaning-readout" id="ar-order-meaning">Zaid tetap pelaku. Amr tetap sasaran.</p>
+    <p class="insight">Kata boleh berpindah tempat. Tandanya ikut berpindah bersama kata itu — jadi maknanya tidak berubah.</p>
+  </section>
+
+  <section class="scene" id="scene-arab-case">
+    <h2>Sekarang, kata-katanya diam.</h2>
+    <p class="lead">Posisi tidak akan disentuh sama sekali. Yang berubah hanya tanda di ujung kata.</p>
+
+    <div class="word-row arabic-row" id="ar-case-row" dir="rtl">
+      <div class="word-block ar-word" id="ar-c-zaid">
+        <span class="ar-text">زَيْد<span class="ar-ending" id="ending-zaid">ٌ</span></span>
+        <span class="ar-role" id="role-zaid">فاعل — pelaku</span>
+      </div>
+      <div class="ar-verb">ضَرَبَ</div>
+      <div class="word-block ar-word" id="ar-c-amr">
+        <span class="ar-text">عَمْر<span class="ar-ending" id="ending-amr">ًا</span></span>
+        <span class="ar-role" id="role-amr">مفعول به — sasaran</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-ar" id="toggle-case-btn">Tukar tanda kasus</button>
+    </div>
+    <p class="meaning-readout" id="ar-case-meaning">Zaid memukul Amr.</p>
+    <p class="insight">Kata tidak bergerak sejengkal pun. Tapi begitu tandanya berubah, siapa memukul siapa ikut terbalik.</p>
+  </section>
+
+  <section class="scene slider-scene" id="scene-slider">
+    <h2>Pola yang sama, kalimat lain</h2>
+    <p class="translation">Empat kalimat lagi, tanda yang sama persis.</p>
+
+    <div class="slider" id="example-slider">
+      <div class="slide active">
+        <p class="id-line"><span class="subj">Seorang anak</span> membaca <span class="obj">buku</span>.</p>
+        <p class="ar-line" dir="rtl">قَرَأَ <span class="subj">وَلَدٌ</span> <span class="obj">كِتَابًا</span></p>
+        <p class="slide-note">وَلَدٌ berakhiran ـٌ karena pelaku. كِتَابًا berakhiran ـً karena sasaran.</p>
+      </div>
+      <div class="slide">
+        <p class="id-line"><span class="subj">Seekor kucing</span> mengejar <span class="obj">tikus</span>.</p>
+        <p class="ar-line" dir="rtl">طَارَدَ <span class="subj">قِطٌّ</span> <span class="obj">فَأْرًا</span></p>
+        <p class="slide-note">Urutan katanya boleh sama seperti di atas — tandanya yang bekerja, bukan tempatnya.</p>
+      </div>
+      <div class="slide">
+        <p class="id-line"><span class="subj">Seorang petani</span> menanam <span class="obj">pohon</span>.</p>
+        <p class="ar-line" dir="rtl">زَرَعَ <span class="subj">فَلَّاحٌ</span> <span class="obj">شَجَرَةً</span></p>
+        <p class="slide-note">Coba tutup terjemahannya — tanda akhir kata Arab saja sudah cukup memberi tahu siapa menanam apa.</p>
+      </div>
+      <div class="slide">
+        <p class="id-line"><span class="subj">Seorang murid</span> menulis <span class="obj">surat</span>.</p>
+        <p class="ar-line" dir="rtl">كَتَبَ <span class="subj">طَالِبٌ</span> <span class="obj">رِسَالَةً</span></p>
+        <p class="slide-note">Pola yang berulang: ـٌ untuk pelaku, ـً atau ـةً untuk sasaran.</p>
+      </div>
+
+      <div class="slider-nav">
+        <button class="slider-arrow" id="slider-prev" aria-label="Contoh sebelumnya">‹</button>
+        <div class="slider-dots" id="slider-dots"></div>
+        <button class="slider-arrow" id="slider-next" aria-label="Contoh berikutnya">›</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene">
+    <details class="explain">
+      <summary>Mengapa justru dhammah untuk pelaku?</summary>
+      <div class="explain-body">
+        <p>Ini penjelasan yang sering dipakai untuk mengingat — bukan aturan pasti yang mengikat, tapi cara merasakan kewajaran sistem ini.</p>
+        <p><strong>Dhammah (ـُ)</strong> diucapkan dengan bibir dimonyongkan — sedikit lebih berat dibanding harakat lain. Ia dipasangkan pada <strong>fa'il</strong>, pelaku utama kalimat, yang jumlahnya memang sedikit: dalam satu kalimat biasanya hanya ada satu pelaku dan satu predikat/kata kerja. Sesuatu yang langka pantas mendapat tanda yang lebih berat.</p>
+        <p><strong>Fathah (ـَ)</strong> jauh lebih ringan diucapkan — mulut hanya terbuka biasa. Ia dipasangkan pada unsur-unsur selain pelaku dan predikat: objek, keterangan, dan tambahan lain yang jumlahnya bisa lebih dari satu dalam sebuah kalimat. Sesuatu yang lebih banyak pantas mendapat tanda yang lebih ringan.</p>
+        <p>Jadi bebannya sebanding: yang sedikit dapat tanda yang berat, yang banyak dapat tanda yang ringan.</p>
+      </div>
+    </details>
+  </section>
+
+  <section class="synthesis">
+    <h2>Dua jalan, satu pertanyaan</h2>
+    <div class="synthesis-grid">
+      <div class="synthesis-col id-col">
+        <h3>Indonesia</h3>
+        <p>Kata tetap, posisi yang berbicara. Pindahkan kata, dan perannya ikut berubah.</p>
+      </div>
+      <div class="synthesis-col ar-col">
+        <h3>Arab</h3>
+        <p>Posisi boleh bebas, kata yang membawa tandanya sendiri. Ubah tandanya, dan perannya ikut berubah.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="reflection">
+    <p>Setiap bahasa sedang menjawab pertanyaan yang sama: siapa melakukan apa kepada siapa.</p>
+    <p>Yang satu meletakkan jawabannya pada tempat kata itu berdiri. Yang lain menitipkannya pada bentuk kata itu sendiri.</p>
+    <p>Dua cara. Satu keinginan yang sama: supaya orang yang mendengar tahu siapa berbuat pada siapa.</p>
+    <div class="footnote">Catatan: contoh di atas disederhanakan untuk menunjukkan pola intinya. Kaidah i'rab dalam bahasa Arab dan susunan kalimat dalam bahasa Indonesia keduanya memiliki banyak variasi dan pengecualian di luar yang ditampilkan di sini.</div>
+  </section>
+
+</div>
+
+<script>
+function swapWords(row, elA, elB){
+  const oldA = elA.getBoundingClientRect();
+  const oldB = elB.getBoundingClientRect();
+  const aNext = elA.nextSibling;
+  const bNext = elB.nextSibling;
+  if (aNext === elB){
+    row.insertBefore(elB, elA);
+  } else {
+    row.insertBefore(elB, aNext);
+    row.insertBefore(elA, bNext);
+  }
+  const newA = elA.getBoundingClientRect();
+  const newB = elB.getBoundingClientRect();
+  [[elA, oldA, newA], [elB, oldB, newB]].forEach(([el, o, n])=>{
+    const dx = o.left - n.left;
+    el.style.transition = 'none';
+    el.style.transform = `translateX(${dx}px)`;
+  });
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      [elA, elB].forEach(el=>{
+        el.style.transition = 'transform 0.6s cubic-bezier(.4,0,.2,1)';
+        el.style.transform = '';
+      });
+    });
+  });
+}
+
+/* --- Scene 1: Indonesia --- */
+const idRow = document.getElementById('id-row');
+const idW1 = document.getElementById('id-w1');
+const idW2 = document.getElementById('id-w2');
+const idMeaning = document.getElementById('id-meaning');
+const idVerb = idRow.querySelector('.id-verb');
+
+document.getElementById('swap-id-btn').addEventListener('click', ()=>{
+  swapWords(idRow, idW1, idW2);
+  setTimeout(()=>{
+    const children = Array.from(idRow.children).filter(c=>c.classList.contains('id-word'));
+    const subj = children[0].textContent;
+    const obj = children[1].textContent;
+    idMeaning.innerHTML = `${subj} memukul ${obj}. <span class="highlight">Makna berubah — sekarang ${subj} pelakunya.</span>`;
+  }, 620);
+});
+
+/* --- Scene 2: Arab, word order --- */
+const arOrderRow = document.getElementById('ar-order-row');
+const arOZaid = document.getElementById('ar-o-zaid');
+const arOAmr = document.getElementById('ar-o-amr');
+const arOrderMeaning = document.getElementById('ar-order-meaning');
+let orderSwapped = false;
+
+document.getElementById('swap-ar-order-btn').addEventListener('click', ()=>{
+  swapWords(arOrderRow, arOZaid, arOAmr);
+  orderSwapped = !orderSwapped;
+  setTimeout(()=>{
+    arOrderMeaning.innerHTML = `Zaid tetap pelaku. Amr tetap sasaran. <span class="highlight ar">Makna tidak berubah.</span>`;
+  }, 620);
+});
+
+/* --- Scene 3: Arab, case marking --- */
+const endingZaid = document.getElementById('ending-zaid');
+const endingAmr = document.getElementById('ending-amr');
+const roleZaid = document.getElementById('role-zaid');
+const roleAmr = document.getElementById('role-amr');
+const arCaseMeaning = document.getElementById('ar-case-meaning');
+let caseFlipped = false;
+
+const ENDINGS = { subj:'ٌ', obj:'ًا' };
+const ROLES = { subj:'فاعل — pelaku', obj:'مفعول به — sasaran' };
+
+document.getElementById('toggle-case-btn').addEventListener('click', ()=>{
+  const els = [endingZaid, endingAmr, roleZaid, roleAmr];
+  els.forEach(el=>el.classList.add(el.classList.contains('ar-role') ? 'fading' : 'exploding'));
+
+  setTimeout(()=>{
+    caseFlipped = !caseFlipped;
+    if (caseFlipped){
+      endingZaid.textContent = ENDINGS.obj;
+      endingAmr.textContent = ENDINGS.subj;
+      roleZaid.textContent = ROLES.obj;
+      roleAmr.textContent = ROLES.subj;
+      arCaseMeaning.innerHTML = `Amr memukul Zaid. <span class="highlight ar">Peran terbalik, posisi kata tak bergeser.</span>`;
+    } else {
+      endingZaid.textContent = ENDINGS.subj;
+      endingAmr.textContent = ENDINGS.obj;
+      roleZaid.textContent = ROLES.subj;
+      roleAmr.textContent = ROLES.obj;
+      arCaseMeaning.textContent = 'Zaid memukul Amr.';
+    }
+    els.forEach(el=>el.classList.remove('exploding','fading'));
+  }, 260);
+});
+
+/* --- Slider: contoh tambahan --- */
+const slider = document.getElementById('example-slider');
+const slides = Array.from(slider.querySelectorAll('.slide'));
+const dotsWrap = document.getElementById('slider-dots');
+let current = 0;
+
+slides.forEach((_, i)=>{
+  const dot = document.createElement('button');
+  dot.className = 'dot' + (i === 0 ? ' active' : '');
+  dot.setAttribute('aria-label', `Contoh ${i + 1}`);
+  dot.addEventListener('click', ()=>goToSlide(i));
+  dotsWrap.appendChild(dot);
+});
+const dots = Array.from(dotsWrap.querySelectorAll('.dot'));
+
+function goToSlide(i){
+  slides[current].classList.remove('active');
+  dots[current].classList.remove('active');
+  current = (i + slides.length) % slides.length;
+  slides[current].classList.add('active');
+  dots[current].classList.add('active');
+}
+
+document.getElementById('slider-prev').addEventListener('click', ()=>goToSlide(current - 1));
+document.getElementById('slider-next').addEventListener('click', ()=>goToSlide(current + 1));
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

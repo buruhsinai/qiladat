@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="id" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generator Tashrif — Qiladat/JAZMI</title>
+<style>
+  :root{
+    --bg:#141210; --panel:#1c1916; --panel2:#211d19;
+    --gold:#c9a24b; --gold-soft:#8a7440; --text:#e8e0d0; --text-dim:#a89a80;
+    --line:#3a332a; --danger:#c25c4a; --ok:#6f9e6a; --blue:#6a91c2;
+    --r1:#e8956a; --r2:#8fc9e8; --r3:#a8d98a;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Georgia,'Times New Roman',serif;line-height:1.6;}
+  .container{max-width:900px;margin:0 auto;padding:24px 16px 60px;}
+  header{text-align:center;margin-bottom:26px;border-bottom:1px solid var(--line);padding-bottom:18px;}
+  header h1{font-size:1.45rem;color:var(--gold);margin:0 0 6px;}
+  header p{color:var(--text-dim);margin:0;font-size:0.9rem;font-style:italic;}
+  h2{color:var(--gold);font-size:1.08rem;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+  h2 .num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;
+    border:1px solid var(--gold-soft);border-radius:50%;font-size:0.78rem;color:var(--gold);flex-shrink:0;}
+  h3{color:var(--gold);font-size:0.95rem;margin:14px 0 8px;}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:16px;}
+  p{margin:0 0 9px;font-size:0.92rem;} p:last-child{margin-bottom:0;}
+  .dim{color:var(--text-dim);font-size:0.84rem;}
+  ul{margin:6px 0;padding-left:20px;} li{margin-bottom:5px;font-size:0.9rem;}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;flex-wrap:wrap;}
+  input[type=text]{background:var(--panel2);border:1px solid var(--gold-soft);color:var(--text);
+    border-radius:6px;padding:9px 12px;font-family:'Traditional Arabic','Scheherazade New',serif;font-size:1.3rem;
+    text-align:center;width:140px;direction:rtl;}
+  select{background:var(--panel2);border:1px solid var(--gold-soft);color:var(--text);
+    border-radius:6px;padding:8px 10px;font-family:inherit;font-size:0.85rem;width:100%;}
+  button.primary{background:var(--gold-soft);color:#1a1712;padding:12px 18px;font-weight:bold;font-size:0.92rem;
+    width:100%;margin-top:10px;border:none;border-radius:8px;cursor:pointer;}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:0.82rem;margin-top:8px;}
+  .legend span{display:inline-flex;align-items:center;gap:5px;}
+  .legend i{width:12px;height:12px;border-radius:3px;display:inline-block;}
+  .arword{font-family:'Traditional Arabic','Scheherazade New',serif;font-size:1.5rem;direction:rtl;unicode-bidi:isolate;}
+  .r1{color:var(--r1);} .r2{color:var(--r2);} .r3{color:var(--r3);}
+  table.tashrif{width:100%;border-collapse:collapse;margin-top:10px;font-size:0.9rem;}
+  table.tashrif th,table.tashrif td{padding:8px 6px;text-align:center;border-bottom:1px solid var(--line);}
+  table.tashrif th{color:var(--gold-soft);font-size:0.72rem;text-transform:uppercase;}
+  table.tashrif td.person{color:var(--text-dim);font-size:0.78rem;text-align:left;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;}
+  @media(max-width:520px){.grid2{grid-template-columns:1fr;}}
+  .card{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;text-align:center;}
+  .card .lbl{font-size:0.75rem;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px;}
+  .flag{background:rgba(194,92,74,0.1);border:1px solid var(--danger);border-radius:8px;padding:10px 12px;
+    font-size:0.85rem;margin-bottom:8px;color:var(--danger);}
+  .flag.info{background:rgba(106,145,194,0.1);border-color:var(--blue);color:var(--blue);}
+  .formula{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:10px 14px;
+    font-size:0.86rem;margin:8px 0;}
+  .refs li{font-size:0.82rem;color:var(--text-dim);}
+  footer{text-align:center;color:var(--text-dim);font-size:0.76rem;margin-top:22px;}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Generator Tashrif (Konjugasi Sharf)</h1>
+  <p>Masukkan akar kata apa pun — mesin ini menghitung tashrif-nya, bukan mencari di database</p>
+</header>
+
+<section id="belajar">
+  <h2><span class="num">1</span>Belajar</h2>
+  <p>Tashrif (konjugasi) fi'il dalam bahasa Arab bersifat <strong>mekanis dan berpola</strong>: setiap wazan (pola) punya "kerangka" huruf tambahan dan harakat yang tetap, sementara tiga huruf akar (فاء، عين، لام الفعل) tinggal disisipkan ke posisinya. Inilah yang membuat sharf bisa "digenerate" secara algoritmik, bukan sekadar dihafalkan kata per kata.</p>
+  <p>Satu wawasan yang sering luput: <strong>kaidah harakat awal fi'il mudhari' punya aturan tunggal yang elegan</strong> — "setiap mudhari' berharakat fathah di awalnya, KECUALI mudhari' dari fi'il yang madhinya terdiri dari empat huruf" (wazan II فعّل، III فاعل، IV أفعل — ketiganya punya 4 huruf dalam bentuk madhi, baik lewat tasydid, alif, atau hamzah tambahan). Tiga wazan itulah satu-satunya yang berharakat dhammah di awal mudhari'-nya (يُفَعِّلُ، يُفَاعِلُ، يُفْعِلُ); selebihnya (I, V-X) tetap fathah.</p>
+  <p>Wawasan kedua: <strong>mashdar fi'il tsulatsi mujarrad (wazan I) tidak punya pola tetap</strong> — puluhan wazan mashdar bersaing (نَصْر، ضَرْب، فَهْم، عِلْم، جُلُوس، dst) dan hanya bisa dipastikan lewat sima' (rujukan kamus), bukan qiyas murni. Sebaliknya, <strong>mashdar fi'il mazid (II-X) justru presisi dan bisa diqiyaskan penuh</strong> — setiap wazan mazid punya SATU pola mashdar tetap. Ini kontras yang jarang ditekankan: semakin "kompleks" wazan-nya, justru semakin predictable mashdar-nya.</p>
+</section>
+
+<section id="pertanyaan">
+  <h2><span class="num">2</span>Pertanyaan Ilmiah</h2>
+  <ul>
+    <li>Bagian mana dari sebuah kata kerja yang benar-benar "akar" dan bagian mana yang "pola tambahan"?</li>
+    <li>Apakah aturan person-marking (ta', tum, na, dst) berubah tergantung wazan-nya, atau selalu sama?</li>
+    <li>Kenapa hanya 3 dari 10 wazan yang mudhari'-nya berharakat dhammah di awal?</li>
+  </ul>
+</section>
+
+<section id="input">
+  <h2><span class="num">3</span>Masukkan Akar &amp; Pilih Wazan</h2>
+  <div class="row">
+    <label>Akar (3 huruf, mis. كتب / نصر / علم)</label>
+    <input type="text" id="akar" value="كتب" maxlength="4">
+  </div>
+  <div class="row">
+    <label style="width:100%;">Wazan (pola)</label>
+    <select id="wazan">
+      <optgroup label="I — الثلاثي المجرد">
+        <option value="bab1">بَاب 1: فَعَلَ يَفْعُلُ (ضم)</option>
+        <option value="bab2" selected>بَاب 2: فَعَلَ يَفْعِلُ (كسر)</option>
+        <option value="bab3">بَاب 3: فَعَلَ يَفْعَلُ (فتح)</option>
+        <option value="bab4">بَاب 4: فَعِلَ يَفْعَلُ</option>
+        <option value="bab5">بَاب 5: فَعُلَ يَفْعُلُ</option>
+        <option value="bab6">بَاب 6: فَعِلَ يَفْعِلُ</option>
+      </optgroup>
+      <optgroup label="المزيد فيه">
+        <option value="II">II — فَعَّلَ يُفَعِّلُ (تفعيل)</option>
+        <option value="III">III — فَاعَلَ يُفَاعِلُ (مفاعلة)</option>
+        <option value="IV">IV — أَفْعَلَ يُفْعِلُ (إفعال)</option>
+        <option value="V">V — تَفَعَّلَ يَتَفَعَّلُ</option>
+        <option value="VI">VI — تَفَاعَلَ يَتَفَاعَلُ</option>
+        <option value="VII">VII — اِنْفَعَلَ يَنْفَعِلُ</option>
+        <option value="VIII">VIII — اِفْتَعَلَ يَفْتَعِلُ</option>
+        <option value="X">X — اِسْتَفْعَلَ يَسْتَفْعِلُ</option>
+      </optgroup>
+    </select>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--r1);"></i>Huruf 1 (ف)</span>
+    <span><i style="background:var(--r2);"></i>Huruf 2 (ع)</span>
+    <span><i style="background:var(--r3);"></i>Huruf 3 (ل)</span>
+  </div>
+  <button class="primary" id="btnGenerate">Generate Tashrif</button>
+  <div id="flags"></div>
+</section>
+
+<section id="hasil" style="display:none;">
+  <h2><span class="num">4</span>Hasil</h2>
+
+  <div class="grid2">
+    <div class="card"><div class="lbl">اسم الفاعل</div><div class="arword" id="out_ismfail">—</div></div>
+    <div class="card"><div class="lbl">اسم المفعول</div><div class="arword" id="out_ismmaful">—</div></div>
+    <div class="card"><div class="lbl">مصدر</div><div class="arword" id="out_masdar">—</div></div>
+    <div class="card"><div class="lbl">فعل أمر (أنتَ)</div><div class="arword" id="out_amr">—</div></div>
+  </div>
+
+  <h3>الماضي (Madhi)</h3>
+  <table class="tashrif" id="tabelMadhi"></table>
+
+  <h3>المضارع (Mudhari' — Marfu')</h3>
+  <table class="tashrif" id="tabelMudhari"></table>
+
+  <h3>الأمر (Amr — Perintah)</h3>
+  <table class="tashrif" id="tabelAmr"></table>
+</section>
+
+<section id="metode">
+  <h2><span class="num">5</span>Metode</h2>
+  <p>Konjugasi person (14 bentuk untuk madhi/mudhari') memakai aturan sufiks/prefiks UNIVERSAL yang berlaku sama di semua wazan — yang berbeda antar-wazan hanyalah "kerangka" wazan itu sendiri (harakat inti + huruf tambahan). Mesin ini memisahkan dua lapisan itu: <em>lapisan wazan</em> (khusus tiap pola) dan <em>lapisan person-marking</em> (universal), lalu menggabungkannya.</p>
+  <div class="formula">Contoh lapisan person-marking madhi (universal untuk semua wazan):<br>
+  هو: +فتحة | هما: +فتحة+ا | هم: +ضمة+وا | هي: +فتحة+تْ | ... | أنا: +سكون+تُ | نحن: +سكون+نَا</div>
+  <p>Aturan hamzah washal pada fi'il amr: jika huruf pertama fi'il amr (setelah membuang huruf mudhara'ah) berharakat sukun, ditambahkan hamzah washal — berharakat DHAMMAH jika 'ain fi'il mudhari'-nya dhammah, selain itu berharakat KASRAH.</p>
+</section>
+
+<section id="batasan">
+  <h2><span class="num">6</span>Batasan</h2>
+  <ul>
+    <li><strong>Hanya menangani akar shahih (sehat)</strong> — akar dengan huruf illah (و/ي/ا) di posisi manapun, akar mudha'af (huruf 2 = huruf 3), atau akar mahmuz (mengandung hamzah) TIDAK digenerate otomatis, karena tashrif-nya melibatkan kaidah i'lal/idgham yang mengubah bentuk huruf secara fonologis — bukan sekadar penyisipan pola. Sistem akan memberi peringatan, bukan hasil yang mungkin salah.</li>
+    <li>Mashdar untuk wazan I (mujarrad) tidak bisa dipastikan lewat qiyas — sistem menampilkan catatan bahwa perlu rujukan kamus/sima', bukan satu jawaban pasti.</li>
+    <li>Wazan IX (افعلّ، khusus warna/cacat fisik) tidak disertakan karena konjugasinya melibatkan fakkul-idgham yang kompleks dan di luar cakupan mesin ini.</li>
+    <li>Mudhari' hanya ditampilkan dalam bentuk marfu' (rafa') — bentuk manshub dan majzum tidak digenerate otomatis (aturannya bergantung huruf nashab/jazm yang mendahului, di luar cakupan alat berbasis-wazan seperti ini).</li>
+  </ul>
+</section>
+
+<section id="referensi">
+  <h2><span class="num">7</span>Referensi</h2>
+  <ul class="refs">
+    <li>Kaidah tashrif klasik — rujukan umum kitab-kitab sharf (mis. Matn Bina' wal Asas, Al-Amtsilah Al-Tashrifiyyah) yang diajarkan luas di pesantren.</li>
+    <li>Aturan harakat awal mudhari' (dhammah hanya pada wazan berhuruf-empat) dan hamzah washal pada amr — kaidah standar nahwu-sharf.</li>
+  </ul>
+</section>
+
+<footer>Bagian dari Laboratorium Bahasa — Bank Ide Qiladat/JAZMI.</footer>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const F='\u064E', D='\u064F', K='\u0650', S='\u0652', SH='\u0651';
+  const HAMZA_QAT = '\u0623'; // أ
+
+  const PERSONS = ['هو','هما (m)','هم','هي','هما (f)','هن','أنتَ','أنتما','أنتم','أنتِ','أنتما ','أنتن','أنا','نحن'];
+
+  function span(cls, ch){ return '<span class="'+cls+'">'+ch+'</span>; '; }
+  function raw(ch){ return ch; }
+
+  function wrapRoot(R1,R2,R3){
+    return {
+      r1: '<span class="r1">'+R1+'</span>',
+      r2: '<span class="r2">'+R2+'</span>',
+      r3: '<span class="r3">'+R3+'</span>'
+    };
+  }
+
+  function conjugateMadhi(baseHTML){
+    // baseHTML = R1+vowel+R2+vowel+...+R3 (tanpa harakat akhir)
+    return [
+      baseHTML+F,
+      baseHTML+F+'ا',
+      baseHTML+D+'وا',
+      baseHTML+F+'تْ',
+      baseHTML+F+'تَا',
+      baseHTML+S+'نَ',
+      baseHTML+S+'تَ',
+      baseHTML+S+'تُمَا',
+      baseHTML+S+'تُمْ',
+      baseHTML+S+'تِ',
+      baseHTML+S+'تُمَا',
+      baseHTML+S+'تُنَّ',
+      baseHTML+S+'تُ',
+      baseHTML+S+'نَا'
+    ];
+  }
+
+  function conjugateMudhari(prefixVowel, coreHTML){
+    // coreHTML = stem setelah huruf mudhara'ah, sebelum harakat akhir (huruf terakhir tanpa harakat)
+    const yaP = 'ي'+prefixVowel, taP='ت'+prefixVowel;
+    return [
+      yaP+coreHTML+D,
+      yaP+coreHTML+F+'انِ',
+      yaP+coreHTML+D+'ونَ',
+      taP+coreHTML+D,
+      taP+coreHTML+F+'انِ',
+      yaP+coreHTML+S+'نَ',
+      taP+coreHTML+D,
+      taP+coreHTML+F+'انِ',
+      taP+coreHTML+D+'ونَ',
+      taP+coreHTML+K+'ينَ',
+      taP+coreHTML+F+'انِ',
+      taP+coreHTML+S+'نَ',
+      HAMZA_QAT+prefixVowel+coreHTML+D,
+      'ن'+prefixVowel+coreHTML+D
+    ];
+  }
+
+  function conjugateAmr(prefixVowel, coreHTML, ainVowel){
+    // coreHTML sama seperti mudhari core (dimulai setelah prefiks)
+    const needsWasl = coreHTML.startsWith('<span class="r1">') && ainVowel!==null; // heuristik: form I & VII/VIII/X butuh wasl
+    const hamzaVowel = ainVowel===D ? D : K;
+    const waslPrefix = needsWasl ? ('ا'+hamzaVowel) : '';
+    return {
+      anta: waslPrefix+coreHTML+S,
+      antuma: waslPrefix+coreHTML+F+'ا',
+      antum: waslPrefix+coreHTML+D+'وا',
+      anti: waslPrefix+coreHTML+K+'ي',
+      antunna: waslPrefix+coreHTML+S+'نَ'
+    };
+  }
+
+  function detectIrregular(chars){
+    const weak = ['ا','و','ي','أ','إ','ء','ؤ','ئ'];
+    const flags = [];
+    if (chars.length!==3){ flags.push('Akar harus tepat 3 huruf untuk wazan tsulatsi.'); return flags; }
+    const [a,b,c] = chars;
+    if (weak.includes(a)||weak.includes(b)||weak.includes(c)){
+      const jenis = (a==='ء'||a==='أ'||a==='إ'||b==='ء'||c==='ء'||c==='أ') ? 'mahmuz (mengandung hamzah)' : 'mu\'tal (mengandung huruf illah و/ي/ا)';
+      flags.push('PERLU KAIDAH I\'LAL: akar ini terindikasi '+jenis+'. Tashrifnya melibatkan perubahan fonologis yang tidak ditangani mesin generate-mekanis ini — silakan rujuk kaidah i\'lal/ibdal di kitab sharf.');
+    }
+    if (b===c){
+      flags.push('PERLU KAIDAH IDGHAM: huruf ke-2 dan ke-3 akar sama (mudha\'af) — tashrifnya melibatkan idgham (penggabungan huruf kembar) yang tidak ditangani mesin ini.');
+    }
+    return flags;
+  }
+
+  const WAZAN_DEF = {
+    bab1: {label:'فَعَلَ يَفْعُلُ', madhiR2:F, mudhPrefix:F, mudhR2:D, hasWasl:true},
+    bab2: {label:'فَعَلَ يَفْعِلُ', madhiR2:F, mudhPrefix:F, mudhR2:K, hasWasl:true},
+    bab3: {label:'فَعَلَ يَفْعَلُ', madhiR2:F, mudhPrefix:F, mudhR2:F, hasWasl:true},
+    bab4: {label:'فَعِلَ يَفْعَلُ', madhiR2:K, mudhPrefix:F, mudhR2:F, hasWasl:true},
+    bab5: {label:'فَعُلَ يَفْعُلُ', madhiR2:D, mudhPrefix:F, mudhR2:D, hasWasl:true},
+    bab6: {label:'فَعِلَ يَفْعِلُ', madhiR2:K, mudhPrefix:F, mudhR2:K, hasWasl:true}
+  };
+
+  function buildForm1(R,bab){
+    const w = WAZAN_DEF[bab];
+    const madhiBase = R.r1+F+R.r2+w.madhiR2+R.r3;
+    const mudhCore = R.r1+S+R.r2+w.mudhR2+R.r3;
+    const madhi = conjugateMadhi(madhiBase);
+    const mudhari = conjugateMudhari(w.mudhPrefix, mudhCore);
+    const amr = conjugateAmr(w.mudhPrefix, mudhCore, w.mudhR2);
+    return {
+      madhi, mudhari, amr,
+      ismFail: R.r1+F+'ا'+R.r2+K+R.r3,
+      ismMaful: 'م'+F+R.r1+S+R.r2+D+R.r3,
+      masdar: '<span class="dim" style="font-size:0.8rem;">(tidak ada pola tetap — rujuk kamus, mis. bisa berpola '+R.r1+F+R.r2+S+R.r3+' / '+R.r1+K+R.r2+F+'ا'+R.r3+' / lainnya)</span>'
+    };
+  }
+
+  function buildMazid(R, form){
+    let madhiBase, mudhCore, mudhPrefix, ismFail, ismMaful, masdar, ainVowelForAmr=null, needsWasl=false;
+    switch(form){
+      case 'II':
+        madhiBase = R.r1+F+R.r2+SH+F+R.r3;
+        mudhCore = R.r1+F+R.r2+SH+K+R.r3;
+        mudhPrefix = D;
+        ismFail = 'م'+D+R.r1+F+R.r2+SH+K+R.r3;
+        ismMaful = 'م'+D+R.r1+F+R.r2+SH+F+R.r3;
+        masdar = 'ت'+F+R.r1+D+R.r2+K+R.r3;
+        break;
+      case 'III':
+        madhiBase = R.r1+F+'ا'+R.r2+F+R.r3;
+        mudhCore = R.r1+F+'ا'+R.r2+K+R.r3;
+        mudhPrefix = D;
+        ismFail = 'م'+D+R.r1+F+'ا'+R.r2+K+R.r3;
+        ismMaful = 'م'+D+R.r1+F+'ا'+R.r2+F+R.r3;
+        masdar = 'م'+D+R.r1+F+R.r2+F+'ا'+R.r3+'ة';
+        break;
+      case 'IV':
+        madhiBase = HAMZA_QAT+F+R.r1+S+R.r2+F+R.r3;
+        mudhCore = R.r1+S+R.r2+K+R.r3;
+        mudhPrefix = D;
+        ismFail = 'م'+D+R.r1+S+R.r2+K+R.r3;
+        ismMaful = 'م'+D+R.r1+S+R.r2+F+R.r3;
+        masdar = HAMZA_QAT+K+R.r1+S+R.r2+F+'ا'+R.r3;
+        break;
+      case 'V':
+        madhiBase = 'ت'+F+R.r1+F+R.r2+SH+F+R.r3;
+        mudhCore = 'ت'+F+R.r1+F+R.r2+SH+F+R.r3;
+        mudhPrefix = F;
+        ismFail = 'م'+D+'ت'+F+R.r1+F+R.r2+SH+K+R.r3;
+        ismMaful = 'م'+D+'ت'+F+R.r1+F+R.r2+SH+F+R.r3;
+        masdar = 'ت'+F+R.r1+F+R.r2+SH+D+R.r3;
+        break;
+      case 'VI':
+        madhiBase = 'ت'+F+R.r1+F+'ا'+R.r2+F+R.r3;
+        mudhCore = 'ت'+F+R.r1+F+'ا'+R.r2+F+R.r3;
+        mudhPrefix = F;
+        ismFail = 'م'+D+'ت'+F+R.r1+F+'ا'+R.r2+K+R.r3;
+        ismMaful = 'م'+D+'ت'+F+R.r1+F+'ا'+R.r2+F+R.r3;
+        masdar = 'ت'+F+R.r1+F+'ا'+R.r2+D+R.r3;
+        break;
+      case 'VII':
+        madhiBase = 'ا'+K+'ن'+S+R.r1+F+R.r2+F+R.r3;
+        mudhCore = 'ن'+S+R.r1+F+R.r2+K+R.r3;
+        mudhPrefix = F;
+        ismFail = 'م'+D+'ن'+S+R.r1+F+R.r2+K+R.r3;
+        ismMaful = 'م'+D+'ن'+S+R.r1+F+R.r2+F+R.r3;
+        masdar = 'ا'+K+'ن'+S+R.r1+F+R.r2+F+'ا'+R.r3;
+        ainVowelForAmr = K; needsWasl=true;
+        break;
+      case 'VIII':
+        madhiBase = 'ا'+K+R.r1+S+'ت'+F+R.r2+F+R.r3;
+        mudhCore = R.r1+S+'ت'+F+R.r2+K+R.r3;
+        mudhPrefix = F;
+        ismFail = 'م'+D+R.r1+S+'ت'+F+R.r2+K+R.r3;
+        ismMaful = 'م'+D+R.r1+S+'ت'+F+R.r2+F+R.r3;
+        masdar = 'ا'+K+R.r1+S+'ت'+F+R.r2+F+'ا'+R.r3;
+        ainVowelForAmr = K; needsWasl=true;
+        break;
+      case 'X':
+        madhiBase = 'ا'+K+'س'+S+'ت'+F+R.r1+S+R.r2+F+R.r3;
+        mudhCore = 'س'+S+'ت'+F+R.r1+S+R.r2+K+R.r3;
+        mudhPrefix = F;
+        ismFail = 'م'+D+'س'+S+'ت'+F+R.r1+S+R.r2+K+R.r3;
+        ismMaful = 'م'+D+'س'+S+'ت'+F+R.r1+S+R.r2+F+R.r3;
+        masdar = 'ا'+K+'س'+S+'ت'+F+R.r1+S+R.r2+F+'ا'+R.r3;
+        ainVowelForAmr = K; needsWasl=true;
+        break;
+    }
+    const madhi = conjugateMadhi(madhiBase);
+    const mudhari = conjugateMudhari(mudhPrefix, mudhCore);
+    let amr;
+    if (needsWasl){
+      const hv = ainVowelForAmr;
+      amr = {
+        anta: 'ا'+hv+mudhCore+S,
+        antuma: 'ا'+hv+mudhCore+F+'ا',
+        antum: 'ا'+hv+mudhCore+D+'وا',
+        anti: 'ا'+hv+mudhCore+K+'ي',
+        antunna: 'ا'+hv+mudhCore+S+'نَ'
+      };
+    } else {
+      amr = {
+        anta: mudhCore+S,
+        antuma: mudhCore+F+'ا',
+        antum: mudhCore+D+'وا',
+        anti: mudhCore+K+'ي',
+        antunna: mudhCore+S+'نَ'
+      };
+    }
+    return {madhi, mudhari, amr, ismFail, ismMaful, masdar};
+  }
+
+  $('btnGenerate').addEventListener('click', ()=>{
+    const akarRaw = $('akar').value.trim();
+    const chars = Array.from(akarRaw).filter(c=>c!==' ');
+    const flagsDiv = $('flags');
+    const irregular = detectIrregular(chars);
+    if (irregular.length>0){
+      flagsDiv.innerHTML = irregular.map(f=>'<div class="flag">'+f+'</div>').join('');
+      $('hasil').style.display='none';
+      return;
+    }
+    flagsDiv.innerHTML = '';
+    const [c1,c2,c3] = chars;
+    const R = wrapRoot(c1,c2,c3);
+    const wazanVal = $('wazan').value;
+
+    let result;
+    if (wazanVal.startsWith('bab')) result = buildForm1(R, wazanVal);
+    else result = buildMazid(R, wazanVal);
+
+    $('out_ismfail').innerHTML = result.ismFail;
+    $('out_ismmaful').innerHTML = result.ismMaful;
+    $('out_masdar').innerHTML = result.masdar;
+    $('out_amr').innerHTML = result.amr.anta;
+
+    let hMadhi = '<tr><th>Dhamir</th><th>Bentuk</th></tr>';
+    PERSONS.forEach((p,i)=>{ hMadhi += `<tr><td class="person">${p}</td><td class="arword">${result.madhi[i]}</td></tr>`; });
+    $('tabelMadhi').innerHTML = hMadhi;
+
+    let hMudh = '<tr><th>Dhamir</th><th>Bentuk</th></tr>';
+    PERSONS.forEach((p,i)=>{ hMudh += `<tr><td class="person">${p}</td><td class="arword">${result.mudhari[i]}</td></tr>`; });
+    $('tabelMudhari').innerHTML = hMudh;
+
+    const amrLabels = ['أنتَ','أنتما','أنتم','أنتِ','أنتن'];
+    const amrKeys = ['anta','antuma','antum','anti','antunna'];
+    let hAmr = '<tr><th>Dhamir</th><th>Bentuk</th></tr>';
+    amrKeys.forEach((k,i)=>{ hAmr += `<tr><td class="person">${amrLabels[i]}</td><td class="arword">${result.amr[k]}</td></tr>`; });
+    $('tabelAmr').innerHTML = hAmr;
+
+    $('hasil').style.display='block';
+    $('hasil').scrollIntoView({behavior:'smooth'});
+  });
+
+  // Generate default on load
+  $('btnGenerate').click();
+})();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

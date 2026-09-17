@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratorium Model Belajar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #10141A;
+    --panel: #171D25;
+    --panel-2: #1D2530;
+    --border: rgba(232,236,244,0.09);
+    --border-strong: rgba(232,236,244,0.16);
+    --text: #ECEFF3;
+    --muted: #8C97A6;
+    --gold: #E0A94D;
+    --blue: #6FA3D9;
+    --teal: #4FB8A3;
+    --violet: #9C82E0;
+    --amber: #E0954D;
+    --rose: #DB6B7E;
+    --radius: 4px;
+  }
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior: smooth; }
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Karla', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,h2,h3{ font-family:'Fraunces', serif; font-weight:500; letter-spacing:-0.01em; margin:0; }
+  .wrap{ max-width: 980px; margin:0 auto; padding: 0 22px 80px; }
+  .rule{ height:1px; background:var(--border); margin: 48px 0; }
+
+  /* ---- header ---- */
+  header.top{ padding: 56px 0 8px; }
+  header.top .kicker{ font-size:13px; color:var(--muted); margin:0 0 14px; }
+  header.top h1{ font-size: clamp(30px,5vw,42px); margin-bottom:10px; }
+  header.top p.lede{ color:var(--muted); max-width:60ch; font-size:16px; margin:0 0 22px; }
+  .reset-row{ display:flex; justify-content:flex-end; margin-top:-8px; }
+
+  button{
+    font-family:'Karla',sans-serif;
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--text);
+    background:transparent;
+    border:1px solid var(--border-strong);
+    border-radius:3px;
+    padding:8px 14px;
+    cursor:pointer;
+    transition: border-color .15s ease, background .15s ease, color .15s ease;
+  }
+  button:hover{ border-color: var(--gold); }
+  button:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+
+  /* ---- summary ---- */
+  .summary{
+    display:grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 26px;
+    align-items: stretch;
+  }
+  @media (max-width:760px){ .summary{ grid-template-columns:1fr; } }
+
+  .card{
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 26px;
+  }
+
+  .score-block{ display:flex; align-items:flex-end; gap:22px; flex-wrap:wrap; margin-bottom:22px; }
+  .score-num{ font-family:'Fraunces',serif; font-size: 52px; line-height:1; color:var(--gold); }
+  .score-num small{ font-size:20px; color:var(--muted); font-family:'Karla',sans-serif; }
+  .score-label{ font-size:14px; color:var(--muted); margin-bottom:4px; }
+  .indeks-badge{
+    display:inline-block;
+    font-size:14px;
+    font-weight:600;
+    padding:6px 14px;
+    border-radius:100px;
+    border:1px solid var(--border-strong);
+    color:var(--text);
+  }
+
+  .flow{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap: 6px;
+    margin: 4px 0 22px;
+  }
+  .flow .step{
+    font-size:13px;
+    font-weight:600;
+    padding:7px 12px;
+    background: var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:3px;
+    color: var(--text);
+  }
+  .flow .arrow{ color:var(--muted); font-size:14px; }
+
+  .hasil-text{ font-size:15.5px; color:var(--text); margin:0; }
+  .hasil-label{ font-size:13px; color:var(--muted); margin:0 0 8px; }
+
+  .perandaian{
+    margin-top:20px;
+    padding: 16px 18px;
+    background: var(--panel-2);
+    border-left: 2px solid var(--gold);
+    border-radius: 2px;
+    font-size: 14.5px;
+    color: var(--text);
+  }
+  .perandaian b{ color: var(--gold); }
+
+  /* ---- struktur belajar ---- */
+  .struktur-grid{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-top: 18px;
+  }
+  @media (max-width:760px){ .struktur-grid{ grid-template-columns: repeat(2,1fr); } }
+  @media (max-width:460px){ .struktur-grid{ grid-template-columns: 1fr; } }
+
+  .struk-card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding: 18px 18px 20px;
+  }
+  .struk-card .head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+  .struk-card h3{ font-size:16px; }
+  .struk-card .pct{ font-family:'Fraunces',serif; font-size:20px; font-variant-numeric:tabular-nums; }
+  .bar{
+    height:5px;
+    border-radius:3px;
+    background: var(--border-strong);
+    overflow:hidden;
+    margin: 4px 0 10px;
+  }
+  .bar-fill{ height:100%; border-radius:3px; transition: width .25s ease; }
+  .struk-card p{ font-size:13.5px; color:var(--muted); margin:0; }
+
+  /* ---- variabel sliders ---- */
+  .var-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px 30px;
+    margin-top: 20px;
+  }
+  @media (max-width:680px){ .var-grid{ grid-template-columns:1fr; } }
+
+  .var-item label{
+    display:flex; justify-content:space-between;
+    font-size:14.5px; margin-bottom:6px;
+  }
+  .var-item label .val{ font-variant-numeric:tabular-nums; color:var(--gold); font-weight:600; }
+  input[type=range]{
+    -webkit-appearance:none;
+    width:100%; height:3px; border-radius:2px;
+    background: var(--border-strong);
+    outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:15px; height:15px; border-radius:50%;
+    background: var(--gold);
+    cursor:pointer;
+    border:2px solid var(--bg);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:13px; height:13px; border-radius:50%;
+    background: var(--gold);
+    cursor:pointer;
+    border:2px solid var(--bg);
+  }
+  input[type=range]:focus-visible{ outline:2px solid var(--gold); outline-offset:4px; }
+  .var-item .hint{ font-size:12.5px; color:var(--muted); margin-top:5px; max-width:52ch; }
+
+  /* ---- skenario ---- */
+  .scenario-grid{
+    display:grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-top: 20px;
+  }
+  @media (max-width:680px){ .scenario-grid{ grid-template-columns: 1fr; } }
+  .scenario-btn{
+    text-align:left;
+    padding: 14px 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor:pointer;
+    transition: border-color .15s ease;
+  }
+  .scenario-btn:hover{ border-color: var(--gold); }
+  .scenario-btn.active{ border-color: var(--gold); background: var(--panel-2); }
+  .scenario-btn .s-title{ font-family:'Fraunces',serif; font-size:15.5px; color:var(--text); display:block; margin-bottom:4px; }
+  .scenario-btn .s-desc{ font-size:13px; color:var(--muted); display:block; }
+
+  footer{ padding-top: 50px; font-size:13px; color:var(--muted); max-width:66ch; }
+  footer p{ margin: 0 0 10px; }
+
+  section .section-head{ display:flex; justify-content:space-between; align-items:baseline; gap:16px; flex-wrap:wrap; margin-bottom:4px; }
+  section h2{ font-size: clamp(22px,3.4vw,28px); }
+  section > p.desc{ color:var(--muted); max-width:66ch; margin: 6px 0 4px; font-size:15px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <p class="kicker">Laboratorium Qiladat / JAZMI — Model Sistem Belajar</p>
+    <h1>Laboratorium Model Belajar</h1>
+    <p class="lede">Ini bukan biodata cara belajar seseorang, dan bukan pengukur "kepintaran". Ini model dari sebuah <b style="color:var(--text)">sistem belajar</b> — ubah variabelnya, lalu lihat bagian mana yang runtuh lebih dulu ketika salah satu unsurnya ditekan ke titik ekstrem.</p>
+  </header>
+
+  <!-- ============ RINGKASAN ============ -->
+  <section id="ringkasan">
+    <div class="reset-row"><button id="btnReset">Atur ulang ke kondisi awal</button></div>
+    <div class="summary">
+      <div class="card">
+        <div class="score-block">
+          <div>
+            <p class="score-label">Model inti</p>
+            <div class="score-num"><span id="scoreOverall">66</span><small>/100</small></div>
+          </div>
+          <div>
+            <p class="score-label">Indeks pembelajaran</p>
+            <span class="indeks-badge" id="indeksBadge">Berkembang</span>
+          </div>
+        </div>
+        <p class="score-label" style="margin-bottom:8px;">Alur model</p>
+        <div class="flow">
+          <span class="step">Pertanyaan</span><span class="arrow">→</span>
+          <span class="step">Konsep</span><span class="arrow">→</span>
+          <span class="step">Model</span><span class="arrow">→</span>
+          <span class="step">Uji</span><span class="arrow">→</span>
+          <span class="step">Tool</span><span class="arrow">→</span>
+          <span class="step">Refleksi</span>
+        </div>
+        <p class="hasil-label">Hasil model</p>
+        <p class="hasil-text" id="hasilText">Model cukup baik, tetapi masih ada bagian yang dapat menjadi titik lemah ketika kompleksitas meningkat.</p>
+      </div>
+
+      <div class="card">
+        <p class="hasil-label">Perandaian — konsekuensi jika satu variabel ditekan</p>
+        <div class="perandaian" id="perandaianText">
+          Menghitung…
+        </div>
+        <p class="hasil-label" style="margin-top:20px;">Cara membaca alat ini</p>
+        <p style="font-size:14px; color:var(--muted); margin:0;">Delapan variabel di bawah adalah <i>parameter yang bisa diuji</i>, bukan skor kepribadian. Empat kartu "struktur belajar" adalah hasil turunan darinya — masing-masing dihitung dari kombinasi variabel yang secara nyata membentuknya, bukan rata-rata rata dari semuanya.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ STRUKTUR BELAJAR ============ -->
+  <section id="struktur">
+    <div class="section-head"><h2>Struktur belajar</h2></div>
+    <p class="desc">Model menganggap belajar bukan satu aktivitas, tetapi rangkaian transformasi — dan setiap tahap transformasi bisa diuji terpisah.</p>
+    <div class="struktur-grid">
+      <div class="struk-card">
+        <div class="head"><h3>Pemahaman</h3><span class="pct" id="pctPemahaman" style="color:var(--blue)">63%</span></div>
+        <div class="bar"><div class="bar-fill" id="barPemahaman" style="background:var(--blue); width:63%;"></div></div>
+        <p>Memahami struktur dan alasan di balik sesuatu, bukan sekadar hasil akhirnya.</p>
+      </div>
+      <div class="struk-card">
+        <div class="head"><h3>Transfer</h3><span class="pct" id="pctTransfer" style="color:var(--teal)">68%</span></div>
+        <div class="bar"><div class="bar-fill" id="barTransfer" style="background:var(--teal); width:68%;"></div></div>
+        <p>Membawa konsep yang sama ke persoalan baru yang belum pernah dihadapi.</p>
+      </div>
+      <div class="struk-card">
+        <div class="head"><h3>Ketahanan</h3><span class="pct" id="pctKetahanan" style="color:var(--violet)">63%</span></div>
+        <div class="bar"><div class="bar-fill" id="barKetahanan" style="background:var(--violet); width:63%;"></div></div>
+        <p>Seberapa mungkin pemahaman bertahan melalui penggunaan berulang dan iterasi.</p>
+      </div>
+      <div class="struk-card">
+        <div class="head"><h3>Validitas</h3><span class="pct" id="pctValiditas" style="color:var(--amber)">70%</span></div>
+        <div class="bar"><div class="bar-fill" id="barValiditas" style="background:var(--amber); width:70%;"></div></div>
+        <p>Kemampuan membedakan model yang sekadar masuk akal dari model yang benar-benar teruji.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ VARIABEL SISTEM ============ -->
+  <section id="variabel">
+    <div class="section-head"><h2>Variabel sistem</h2></div>
+    <p class="desc">Bukan ukuran "kepintaran". Ini parameter model yang dapat diuji satu per satu — geser salah satu, dan lihat efeknya menjalar ke struktur belajar di atas.</p>
+    <div class="var-grid" id="varGrid">
+      <!-- diisi lewat JS -->
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ SKENARIO ANDAIKATA ============ -->
+  <section id="skenario">
+    <div class="section-head"><h2>Skenario "andaikata"</h2></div>
+    <p class="desc">Tujuh kondisi belajar yang berbeda — masing-masing menekan kombinasi variabel yang berbeda untuk menunjukkan di titik mana sistem mulai runtuh, dan mengapa.</p>
+    <div class="scenario-grid" id="scenarioGrid">
+      <!-- diisi lewat JS -->
+    </div>
+  </section>
+
+  <footer>
+    <p>Model ini adalah kerangka analitis dengan bobot yang dipilih secara eksplisit — bukan skor objektif tentang cara belajar siapa pun. Bobot dan formula yang dipakai ditampilkan apa adanya di bagian "cara membaca alat ini" agar bisa diperdebatkan, bukan disembunyikan sebagai kotak hitam.</p>
+    <p>Ditujukan sebagai langkah awal menuju simulator perjalanan belajar: memilih satu jalur non-linear — Belajar → Membuat → Menemukan masalah → Kembali belajar → Memperbaiki model → Membuat lagi — dan melihat di titik mana jalur itu paling rapuh.</p>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var VARS = [
+    {key:'kd', label:'Kedalaman konseptual', desc:'Seberapa jauh konsep ditelusuri sampai definisi, hubungan, asumsi, dan batasannya.', consequence:'fondasi pemahaman'},
+    {key:'ab', label:'Aktivitas berpikir', desc:'Seberapa sering prosesnya berupa bertanya, membandingkan, menjelaskan ulang, dan memecahkan masalah.', consequence:'proses berpikir aktif — belajar berisiko berubah jadi menghafal pasif'},
+    {key:'lp', label:'Latihan & penerapan', desc:'Seberapa sering pengetahuan dipakai pada kasus baru, bukan hanya diingat.', consequence:'kemampuan memindahkan konsep ke kasus nyata'},
+    {key:'vf', label:'Verifikasi', desc:'Seberapa kuat hasil diperiksa dengan contoh, sumber, perhitungan, atau pembuktian.', consequence:'kemampuan membedakan pemahaman yang benar dari yang hanya terasa masuk akal'},
+    {key:'kh', label:'Keterhubungan', desc:'Seberapa baik konsep baru dihubungkan dengan bidang dan konsep sebelumnya.', consequence:'kemampuan menghubungkan satu bidang dengan bidang lain — ilmu berisiko terisolasi'},
+    {key:'it', label:'Iterasi', desc:'Seberapa sering kesalahan digunakan untuk memperbaiki model dan pemahaman.', consequence:'kemampuan sistem memperbaiki dirinya sendiri dari kesalahan'},
+    {key:'fp', label:'Fokus proyek', desc:'Seberapa jelas satu proyek/pertanyaan menjadi pusat eksplorasi pada satu periode.', consequence:'kedalaman eksplorasi — energi berisiko tersebar ke banyak arah sekaligus'},
+    {key:'pn', label:'Produksi nyata', desc:'Seberapa sering pemahaman diwujudkan menjadi catatan, model, simulasi, atau tool.', consequence:'bukti bahwa pemahaman benar-benar terwujud, bukan hanya tersimpan di kepala'}
+  ];
+
+  var DEFAULT = {kd:40, ab:75, lp:65, vf:80, kh:72, it:68, fp:70, pn:62};
+
+  var SCENARIOS = [
+    {
+      id:'default', title:'Kondisi awal', active:false,
+      desc:'Titik berangkat netral — sebagian variabel kuat, sebagian sedang.',
+      values: DEFAULT
+    },
+    {
+      id:'luas-dangkal', title:'Luas tapi dangkal',
+      desc:'Belajar sangat luas, tetapi kedalaman rendah.',
+      values:{kd:15, ab:60, lp:45, vf:45, kh:85, it:40, fp:25, pn:35}
+    },
+    {
+      id:'baca-tanpa-verifikasi', title:'Membaca banyak, verifikasi rendah',
+      desc:'Banyak membaca, tapi jarang diperiksa ulang kebenarannya.',
+      values:{kd:55, ab:80, lp:50, vf:10, kh:60, it:35, fp:50, pn:30}
+    },
+    {
+      id:'paham-tanpa-pakai', title:'Paham tapi tak pernah dipakai',
+      desc:'Pemahaman tinggi, tetapi penerapan hampir nol.',
+      values:{kd:85, ab:80, lp:5, vf:60, kh:70, it:20, fp:40, pn:15}
+    },
+    {
+      id:'fokus-terisolasi', title:'Fokus tinggi, terisolasi',
+      desc:'Fokus proyek sangat tinggi, tetapi keterhubungan antarilmu rendah.',
+      values:{kd:70, ab:65, lp:70, vf:65, kh:10, it:55, fp:95, pn:60}
+    },
+    {
+      id:'tool-duluan', title:'Tool duluan, ilmu belakangan',
+      desc:'Langsung membuat tool tanpa memahami modelnya lebih dulu.',
+      values:{kd:10, ab:30, lp:60, vf:20, kh:25, it:30, fp:60, pn:85}
+    },
+    {
+      id:'teori-abadi', title:'Teori abadi, tak pernah jadi',
+      desc:'Selalu belajar teori, tetapi tidak pernah menghasilkan apa pun.',
+      values:{kd:90, ab:85, lp:40, vf:70, kh:75, it:45, fp:30, pn:5}
+    },
+    {
+      id:'proyek-memicu', title:'Proyek nyata memicu belajar',
+      desc:'Proyek nyata memunculkan kebutuhan belajar teori — putaran nonlinear yang sehat.',
+      values:{kd:75, ab:80, lp:80, vf:75, kh:80, it:85, fp:80, pn:80}
+    }
+  ];
+
+  var state = Object.assign({}, DEFAULT);
+  var activeScenario = 'default';
+
+  // ---------- render variabel sliders ----------
+  var varGrid = document.getElementById('varGrid');
+  VARS.forEach(function(v){
+    var item = document.createElement('div');
+    item.className = 'var-item';
+    item.innerHTML =
+      '<label>' + v.label + ' <span class="val" id="val-'+v.key+'">'+state[v.key]+'%</span></label>' +
+      '<input type="range" min="0" max="100" step="1" value="'+state[v.key]+'" id="slider-'+v.key+'">' +
+      '<div class="hint">' + v.desc + '</div>';
+    varGrid.appendChild(item);
+  });
+
+  VARS.forEach(function(v){
+    document.getElementById('slider-'+v.key).addEventListener('input', function(e){
+      state[v.key] = parseInt(e.target.value, 10);
+      document.getElementById('val-'+v.key).textContent = state[v.key] + '%';
+      activeScenario = null;
+      clearActiveScenarioButtons();
+      render();
+    });
+  });
+
+  // ---------- render skenario buttons ----------
+  var scenarioGrid = document.getElementById('scenarioGrid');
+  SCENARIOS.forEach(function(sc){
+    var btn = document.createElement('button');
+    btn.className = 'scenario-btn' + (sc.id==='default' ? ' active' : '');
+    btn.id = 'scenario-' + sc.id;
+    btn.innerHTML = '<span class="s-title">'+sc.title+'</span><span class="s-desc">'+sc.desc+'</span>';
+    btn.addEventListener('click', function(){
+      state = Object.assign({}, sc.values);
+      activeScenario = sc.id;
+      VARS.forEach(function(v){
+        document.getElementById('slider-'+v.key).value = state[v.key];
+        document.getElementById('val-'+v.key).textContent = state[v.key] + '%';
+      });
+      clearActiveScenarioButtons();
+      btn.classList.add('active');
+      render();
+    });
+    scenarioGrid.appendChild(btn);
+  });
+
+  function clearActiveScenarioButtons(){
+    document.querySelectorAll('.scenario-btn').forEach(function(b){ b.classList.remove('active'); });
+  }
+
+  document.getElementById('btnReset').addEventListener('click', function(){
+    state = Object.assign({}, DEFAULT);
+    activeScenario = 'default';
+    VARS.forEach(function(v){
+      document.getElementById('slider-'+v.key).value = state[v.key];
+      document.getElementById('val-'+v.key).textContent = state[v.key] + '%';
+    });
+    clearActiveScenarioButtons();
+    document.getElementById('scenario-default').classList.add('active');
+    render();
+  });
+
+  // ---------- perhitungan ----------
+  function computeScores(s){
+    var pemahaman = 0.5*s.kd + 0.3*s.ab + 0.2*s.kh;
+    var transfer  = 0.5*s.lp + 0.3*s.kh + 0.2*s.fp;
+    var ketahanan = 0.4*s.it + 0.3*s.lp + 0.3*s.pn;
+    var validitas = 0.5*s.vf + 0.3*s.it + 0.2*s.kh;
+    var overall = (pemahaman + transfer + ketahanan + validitas) / 4;
+    return {
+      pemahaman: Math.round(pemahaman),
+      transfer: Math.round(transfer),
+      ketahanan: Math.round(ketahanan),
+      validitas: Math.round(validitas),
+      overall: Math.round(overall)
+    };
+  }
+
+  function indeksBand(overall){
+    if(overall < 35) return {label:'Rapuh', base:'Sistem belajar ini masih sangat rapuh: sebagian besar strukturnya belum cukup kuat untuk menahan kompleksitas yang meningkat.'};
+    if(overall < 55) return {label:'Rentan', base:'Sistem belajar ini berkembang, tetapi rentan — ada bagian yang bisa runtuh lebih dulu begitu bebannya bertambah.'};
+    if(overall < 75) return {label:'Berkembang', base:'Model cukup baik, tetapi masih ada bagian yang dapat menjadi titik lemah ketika kompleksitas meningkat.'};
+    if(overall < 90) return {label:'Kokoh', base:'Sistem belajar ini cukup kokoh — sebagian besar strukturnya saling menopang dengan baik.'};
+    return {label:'Matang', base:'Sistem belajar ini matang: keempat struktur saling menopang secara seimbang, dengan sedikit titik lemah yang tersisa.'};
+  }
+
+  var STRUK_LABELS = {
+    pemahaman: {name:'pemahaman', clause:'titik lemah utama ada pada pemahaman — konsep mungkin dipakai tanpa benar-benar dimengerti alasannya.'},
+    transfer: {name:'transfer', clause:'titik lemah utama ada pada transfer — pengetahuan cenderung berhenti di satu konteks dan sulit dipindahkan ke persoalan baru.'},
+    ketahanan: {name:'ketahanan', clause:'titik lemah utama ada pada ketahanan — pemahaman berisiko luntur begitu tidak terus-menerus dipakai dan diuji.'},
+    validitas: {name:'validitas', clause:'titik lemah utama ada pada validitas — sulit membedakan mana pemahaman yang benar-benar teruji dan mana yang hanya terasa masuk akal.'}
+  };
+
+  function narrativeHasil(scores){
+    var band = indeksBand(scores.overall);
+    var keys = ['pemahaman','transfer','ketahanan','validitas'];
+    var minKey = keys[0];
+    keys.forEach(function(k){ if(scores[k] < scores[minKey]) minKey = k; });
+    return band.base + ' Saat ini ' + STRUK_LABELS[minKey].clause;
+  }
+
+  function narrativePerandaian(s){
+    var minKey = VARS[0].key, maxKey = VARS[0].key;
+    VARS.forEach(function(v){
+      if(s[v.key] < s[minKey]) minKey = v.key;
+      if(s[v.key] > s[maxKey]) maxKey = v.key;
+    });
+    var minVar = VARS.filter(function(v){return v.key===minKey;})[0];
+    var maxVar = VARS.filter(function(v){return v.key===maxKey;})[0];
+    return 'Jika <b>'+minVar.label.toLowerCase()+'</b> (saat ini '+s[minKey]+'%) turun mendekati nol, sistem paling mungkin kehilangan '+minVar.consequence+'. Saat ini kekuatan terbesar berada pada <b>'+maxVar.label.toLowerCase()+'</b> ('+s[maxKey]+'%).';
+  }
+
+  function render(){
+    var scores = computeScores(state);
+    document.getElementById('scoreOverall').textContent = scores.overall;
+    var band = indeksBand(scores.overall);
+    document.getElementById('indeksBadge').textContent = band.label;
+
+    document.getElementById('pctPemahaman').textContent = scores.pemahaman + '%';
+    document.getElementById('barPemahaman').style.width = scores.pemahaman + '%';
+    document.getElementById('pctTransfer').textContent = scores.transfer + '%';
+    document.getElementById('barTransfer').style.width = scores.transfer + '%';
+    document.getElementById('pctKetahanan').textContent = scores.ketahanan + '%';
+    document.getElementById('barKetahanan').style.width = scores.ketahanan + '%';
+    document.getElementById('pctValiditas').textContent = scores.validitas + '%';
+    document.getElementById('barValiditas').style.width = scores.validitas + '%';
+
+    document.getElementById('hasilText').textContent = narrativeHasil(scores);
+    document.getElementById('perandaianText').innerHTML = narrativePerandaian(state);
+  }
+
+  render();
+})();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

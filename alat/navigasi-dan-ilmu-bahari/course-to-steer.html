@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Segitiga Haluan–Kecepatan–Arus (Course to Steer)</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0B0F1E;--panel:#141A30;--panel2:#1B2340;--ink:#E8E6F5;--soft:#9C9DC4;--electron:#4FD8E0;--plasma:#B26BFF;--line:#2A3158;--good:#3FA66B;--warn:#D9A441;--bad:#D9564A;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.65;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:940px;margin:0 auto;padding:0 24px 96px;}
+  header.hero{background:radial-gradient(ellipse at top,#1B2360 0%,#0B0F1E 65%);padding:56px 24px 40px;border-bottom:1px solid var(--line);}
+  header.hero .wrap{padding-bottom:0;}
+  .eyebrow{color:var(--plasma);font-size:0.9rem;margin:0 0 6px;font-weight:600;}
+  h1{font-size:clamp(1.4rem,4vw,2.1rem);margin:0 0 14px;font-weight:700;background:linear-gradient(90deg,var(--electron),var(--plasma));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .lede{max-width:660px;color:#C3C4E0;font-size:1.02rem;margin:0;}
+  section{padding:36px 0;border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  h2{font-size:1.3rem;font-weight:700;margin:0 0 8px;color:var(--plasma);}
+  .sub{color:var(--soft);font-size:0.9rem;margin:0 0 16px;}
+  p{margin:0 0 14px;}
+  .fam-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0;}
+  .fam-card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;font-size:0.85rem;}
+  .fam-card b{color:var(--electron);}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px;margin-top:16px;}
+  .field{margin:14px 0;}
+  .field label{display:flex;justify-content:space-between;font-size:0.82rem;color:var(--soft);margin-bottom:6px;}
+  .value{font-family:'JetBrains Mono',monospace;color:var(--electron);font-weight:600;}
+  input[type=range]{width:100%;accent-color:var(--electron);}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media (max-width:680px){.grid2{grid-template-columns:1fr;}}
+  .canvas-box{background:#10152A;border:1px solid var(--line);border-radius:6px;overflow:hidden;text-align:center;}
+  .canvas-box canvas{display:block;width:100%;height:auto;}
+  .legend-row{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:8px;font-size:0.75rem;color:var(--soft);}
+  .legend-row span{display:inline-flex;align-items:center;gap:5px;}
+  .sw{width:16px;height:2.5px;display:inline-block;}
+  .status-line{font-size:0.82rem;margin-top:10px;text-align:center;padding:8px;border-radius:6px;}
+  .status-ok{color:var(--soft);}
+  .status-bad{color:var(--bad);background:#2A1414;border:1px solid #5A2A2A;}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px;}
+  .stat-card{background:#10152A;border:1px solid var(--line);border-radius:6px;padding:10px 12px;text-align:center;}
+  .stat-card .n{font-family:'JetBrains Mono',monospace;font-size:1.15rem;font-weight:700;color:var(--electron);}
+  .stat-card .l{font-size:0.68rem;color:var(--soft);margin-top:3px;}
+
+  .formula{background:#080B16;color:#C3C4E0;padding:12px 16px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:0.85rem;display:inline-block;margin:6px 0;}
+  .limits{background:#241B0F;border:1px solid #5A4A1E;border-radius:8px;padding:20px;}
+  .limits h3{margin-top:0;font-size:1rem;color:var(--warn);}
+  footer{padding:28px 24px;text-align:center;color:var(--soft);font-size:0.82rem;border-top:1px solid var(--line);}
+  a{color:var(--electron);}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">JAZMI — Modul Sains · Navigasi Bahari</p>
+    <h1>Segitiga Haluan–Kecepatan–Arus</h1>
+    <p class="lede">Kapal ingin menempuh satu arah lintasan (track), tapi arus menghanyutkannya ke arah lain. Haluan yang harus dikemudikan nakhoda hampir tidak pernah sama dengan arah tujuan itu sendiri. Ini alat untuk menghitung — dan melihat langsung — koreksi haluan itu.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <h2>Belajar</h2>
+    <p>Bayangkan berenang menyeberangi sungai berarus deras: kalau berenang lurus ke seberang, arus akan menghanyutkan tubuh ke hilir — titik pendaratan bergeser jauh dari target. Untuk mendarat tepat di seberang, harus berenang agak melawan arus. Prinsip yang sama persis berlaku untuk kapal, hanya dalam skala dan presisi yang jauh lebih menuntut.</p>
+    <div class="fam-grid">
+      <div class="fam-card"><b>Track</b> — arah lintasan yang <em>ingin</em> ditempuh kapal di atas permukaan bumi (garis yang digambar di peta dari titik asal ke tujuan).</div>
+      <div class="fam-card"><b>Set &amp; Drift</b> — arah <em>tujuan</em> aliran arus (set, bukan arah asalnya) dan kecepatan arus tersebut (drift).</div>
+      <div class="fam-card"><b>Haluan (course to steer)</b> — arah kompas yang harus dikemudikan nakhoda agar gabungan gerak kapal + hanyutan arus tetap jatuh di garis track.</div>
+      <div class="fam-card"><b>SOG (speed over ground)</b> — kecepatan aktual kapal di atas dasar/permukaan bumi, hasil gabungan kecepatan kapal terhadap air dan arus — bisa lebih cepat atau lebih lambat dari kecepatan mesin kapal itu sendiri.</div>
+    </div>
+    <p>Ini kebalikan logis dari modul <a href="baringan-berjalan.html">Baringan Berjalan</a>: di sana arus dianggap sumber galat yang tidak diketahui dan harus diestimasi dari hasil pengamatan. Di sini arus <strong>sudah diketahui</strong> (dari perkiraan pasang-surut atau pengukuran), dan justru sengaja dikompensasi di muka sebelum kapal berangkat.</p>
+  </section>
+
+  <section id="eksplorasi">
+    <h2>Eksplorasi — Geser Variabelnya</h2>
+    <p class="sub">Atur arah track yang diinginkan, arah &amp; kecepatan arus, serta kecepatan kapal terhadap air. Diagram vektor dan haluan yang harus dikemudikan akan diperbarui otomatis.</p>
+    <div class="panel">
+      <div class="grid2">
+        <div>
+          <div class="field"><label>Arah Track (T) <span class="value" id="v-track">090°</span></label><input type="range" id="s-track" min="0" max="359" value="90"></div>
+          <div class="field"><label>Arah Set — arus menuju (S) <span class="value" id="v-set">000°</span></label><input type="range" id="s-set" min="0" max="359" value="0"></div>
+        </div>
+        <div>
+          <div class="field"><label>Drift — kecepatan arus <span class="value" id="v-drift">3.0 kn</span></label><input type="range" id="s-drift" min="0" max="10" step="0.1" value="3"></div>
+          <div class="field"><label>Kecepatan kapal thd air (V) <span class="value" id="v-speed">10.0 kn</span></label><input type="range" id="s-speed" min="1" max="20" step="0.1" value="10"></div>
+        </div>
+      </div>
+
+      <div class="canvas-box">
+        <canvas id="tri-canvas" width="700" height="440"></canvas>
+      </div>
+      <div class="legend-row">
+        <span><span class="sw" style="background:#B26BFF;border-top:2px dashed #B26BFF;height:0"></span> Garis track</span>
+        <span><span class="sw" style="background:#D9A441"></span> Vektor arus (Set/Drift)</span>
+        <span><span class="sw" style="background:#4FD8E0"></span> Haluan kapal (thd air)</span>
+        <span><span class="sw" style="background:#3FA66B"></span> Lintasan atas dasar (SOG)</span>
+      </div>
+      <div class="status-line status-ok" id="status-line"></div>
+      <div class="stat-grid" id="stat-grid"></div>
+    </div>
+  </section>
+
+  <section id="perhitungan">
+    <h2>Perhitungan</h2>
+    <p>Hukum dasarnya adalah penjumlahan vektor: gerak kapal di atas dasar bumi adalah gabungan dari gerak kapal terhadap air dan gerak air itu sendiri (arus).</p>
+    <div class="formula">V_darat = V_air&nbsp;(haluan) + V_arus&nbsp;(set, drift)</div>
+    <p>Diuraikan ke komponen Utara–Timur lalu diselesaikan sebagai persamaan kuadrat pada SOG (kecepatan atas dasar) — pendekatan ini dipakai di tool ini karena otomatis mendeteksi kapan koreksi mustahil dilakukan, tanpa perlu menghafal banyak kasus segitiga terpisah seperti aturan sinus klasik:</p>
+    <div class="formula">k = komponen arus searah track<br>SOG = k + √(k² − drift² + V²)<br>V_kapal = SOG·t̂ − V_arus &nbsp;→&nbsp; haluan = atan2(komponen Timur, komponen Utara)</div>
+    <p>Bila nilai di dalam akar negatif, artinya arus menyamping terlalu kuat dibanding kecepatan kapal — tidak ada haluan berapa pun yang membuat kapal tetap di garis track tersebut.</p>
+  </section>
+
+  <section id="batasan">
+    <div class="limits">
+      <h3>Batasan</h3>
+      <p>Model ini mengasumsikan set &amp; drift arus <strong>konstan</strong> selama pelayaran berlangsung — pada kenyataannya arus pasang-surut berubah arah dan kekuatan sepanjang waktu, sehingga haluan perlu dihitung ulang secara berkala untuk pelayaran yang panjang. Model juga mengabaikan <em>leeway</em> (hanyutan akibat angin pada lambung kapal) — bila angin kencang dari samping turut berpengaruh, koreksi tambahan di luar tool ini diperlukan. Geometri dihitung pada bidang datar (planar), cukup akurat untuk jarak pelayaran pendek–menengah; untuk lintasan sangat panjang, kelengkungan bumi mulai berpengaruh dan perlu didekati dengan navigasi great circle/rhumb line (lihat <a href="navigasi-rhumb-greatcircle.html">Rhumb Line vs Great Circle</a>).</p>
+    </div>
+  </section>
+
+  <footer>JAZMI — Modul Sains · Pelengkap <a href="navigasi-rhumb-greatcircle.html">Rhumb Line vs Great Circle</a> &amp; <a href="baringan-berjalan.html">Baringan Berjalan</a></footer>
+</div>
+
+<script>
+(function(){
+  const DEG = Math.PI/180;
+  const canvas = document.getElementById('tri-canvas');
+  const ctx = canvas.getContext('2d');
+  const statusLine = document.getElementById('status-line');
+  const statGrid = document.getElementById('stat-grid');
+
+  const sTrack = document.getElementById('s-track');
+  const sSet = document.getElementById('s-set');
+  const sDrift = document.getElementById('s-drift');
+  const sSpeed = document.getElementById('s-speed');
+  const vTrack = document.getElementById('v-track');
+  const vSet = document.getElementById('v-set');
+  const vDrift = document.getElementById('v-drift');
+  const vSpeed = document.getElementById('v-speed');
+
+  function norm360(a){ return ((a%360)+360)%360; }
+
+  function solve(T,S,drift,V){
+    const tE = Math.sin(T*DEG), tN = Math.cos(T*DEG);
+    const cE = drift*Math.sin(S*DEG), cN = drift*Math.cos(S*DEG);
+    const k = tE*cE + tN*cN;
+    const disc = k*k - (cE*cE+cN*cN) + V*V;
+    if(disc < 0) return {ok:false};
+    const SOG = k + Math.sqrt(disc);
+    if(SOG <= 0) return {ok:false};
+    const wE = SOG*tE - cE, wN = SOG*tN - cN;
+    const heading = norm360(Math.atan2(wE,wN)/DEG);
+    return {ok:true, SOG, heading, cE, cN, tE, tN, wE, wN};
+  }
+
+  function drawArrow(ctx,x1,y1,x2,y2,color,width){
+    ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=width||2;
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    const ang=Math.atan2(y2-y1,x2-x1), hl=9;
+    ctx.beginPath();
+    ctx.moveTo(x2,y2);
+    ctx.lineTo(x2-hl*Math.cos(ang-0.4), y2-hl*Math.sin(ang-0.4));
+    ctx.lineTo(x2-hl*Math.cos(ang+0.4), y2-hl*Math.sin(ang+0.4));
+    ctx.closePath(); ctx.fill();
+  }
+
+  function render(){
+    const T = parseFloat(sTrack.value), S = parseFloat(sSet.value);
+    const drift = parseFloat(sDrift.value), V = parseFloat(sSpeed.value);
+    vTrack.textContent = T.toFixed(0)+'°';
+    vSet.textContent = S.toFixed(0)+'°';
+    vDrift.textContent = drift.toFixed(1)+' kn';
+    vSpeed.textContent = V.toFixed(1)+' kn';
+
+    const W=canvas.width,H=canvas.height;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#10152A'; ctx.fillRect(0,0,W,H);
+
+    const ox=W*0.42, oy=H*0.58;
+    const maxMag = Math.max(drift, V, 1);
+    const scale = (Math.min(W,H)*0.36)/maxMag;
+
+    const r = solve(T,S,drift,V);
+
+    // track line (dashed), through O, both directions
+    const tE = Math.sin(T*DEG), tN=Math.cos(T*DEG);
+    const trackLen = Math.max(W,H);
+    ctx.setLineDash([6,6]);
+    ctx.strokeStyle='#B26BFF'; ctx.lineWidth=1.3;
+    ctx.beginPath();
+    ctx.moveTo(ox - tE*trackLen, oy + tN*trackLen);
+    ctx.lineTo(ox + tE*trackLen, oy - tN*trackLen);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // current vector O -> C
+    const cE = drift*Math.sin(S*DEG), cN = drift*Math.cos(S*DEG);
+    const cx = ox + cE*scale, cy = oy - cN*scale;
+    drawArrow(ctx, ox,oy, cx,cy, '#D9A441', 2.4);
+
+    // STW circle around C (dashed light)
+    ctx.setLineDash([3,4]);
+    ctx.strokeStyle='#3A4270'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.arc(cx,cy, V*scale, 0, Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]);
+
+    if(r.ok){
+      const gx = ox + r.SOG*r.tE*scale, gy = oy - r.SOG*r.tN*scale;
+      drawArrow(ctx, ox,oy, gx,gy, '#3FA66B', 2.4);
+      drawArrow(ctx, cx,cy, gx,gy, '#4FD8E0', 2.6);
+
+      statusLine.className='status-line status-ok';
+      statusLine.textContent = `Track ${T.toFixed(0)}° · Set ${S.toFixed(0)}°/${drift.toFixed(1)}kn · V=${V.toFixed(1)}kn → kemudikan haluan ${r.heading.toFixed(1)}°`;
+      const corr = (()=>{ let d=r.heading-T; while(d>180)d-=360; while(d<-180)d+=360; return d; })();
+      statGrid.innerHTML = `
+        <div class="stat-card"><div class="n">${r.heading.toFixed(1)}°</div><div class="l">HALUAN DIKEMUDIKAN</div></div>
+        <div class="stat-card"><div class="n">${r.SOG.toFixed(2)} kn</div><div class="l">SOG (KEC. ATAS DASAR)</div></div>
+        <div class="stat-card"><div class="n">${corr>=0?'+':''}${corr.toFixed(1)}°</div><div class="l">KOREKSI DARI TRACK</div></div>`;
+    } else {
+      statusLine.className='status-line status-bad';
+      statusLine.textContent = 'Tidak ada solusi — arus menyamping lebih kuat daripada kecepatan kapal terhadap air. Kapal ini tidak bisa mempertahankan track tersebut.';
+      statGrid.innerHTML = `<div class="stat-card"><div class="n">—</div><div class="l">HALUAN DIKEMUDIKAN</div></div><div class="stat-card"><div class="n">—</div><div class="l">SOG</div></div>`;
+    }
+
+    // labels
+    ctx.fillStyle='#E8E6F5'; ctx.font='11px JetBrains Mono';
+    ctx.fillText('O', ox+6, oy+14);
+    ctx.fillText('C', cx+6, cy-6);
+  }
+
+  [sTrack,sSet,sDrift,sSpeed].forEach(el=>el.addEventListener('input', render));
+  render();
+})();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

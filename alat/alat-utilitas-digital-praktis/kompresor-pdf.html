@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kompresor PDF (Client-Side) | Tools Qiladat JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#10151A;
+  --panel:#161D24;
+  --panel-2:#1C242C;
+  --line:rgba(220,232,238,0.12);
+  --line-strong:rgba(220,232,238,0.26);
+  --text:#DCE8EE;
+  --muted:#84A0AC;
+  --signal:#3FB897;
+  --signal-dim:rgba(63,184,151,0.16);
+  --amber:#D6A93B;
+  --amber-dim:rgba(214,169,59,0.16);
+  --danger:#C1554A;
+  --danger-dim:rgba(193,85,74,0.16);
+  --radius:2px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:var(--ink);color:var(--text);font-family:'Karla',sans-serif;font-size:16px;line-height:1.55;}
+@media (prefers-reduced-motion: reduce){*{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;}}
+.wrap{max-width:880px;margin:0 auto;padding:0 18px 80px;}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-0.01em;margin:0 0 6px;}
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--signal);display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.eyebrow::before{content:"";width:18px;height:1px;background:var(--signal);display:inline-block;}
+
+.hero{background:linear-gradient(160deg,#182028 0%, #141A20 60%, #10151A 100%);margin:0 -18px 22px;padding:34px 18px 26px;border-bottom:1px solid var(--line-strong);}
+.hero-inner{max-width:880px;margin:0 auto;}
+.hero h1{font-size:clamp(24px,5vw,34px);line-height:1.1;}
+.hero p.sub{color:var(--muted);font-size:15px;max-width:60ch;margin:10px 0 0;}
+
+.sheet{position:relative;background:var(--panel);border:1px solid var(--line-strong);border-radius:var(--radius);padding:20px;margin-bottom:18px;}
+.sheet::before,.sheet::after{content:"";position:absolute;width:9px;height:9px;top:-1px;left:-1px;border-top:1.5px solid var(--signal);border-left:1.5px solid var(--signal);}
+.sheet::after{top:auto;left:auto;bottom:-1px;right:-1px;border-top:none;border-left:none;border-bottom:1.5px solid var(--signal);border-right:1.5px solid var(--signal);}
+.sheet h2{font-size:19px;}
+.tag{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;display:block;}
+
+.warn{background:var(--amber-dim);border:1px solid rgba(214,169,59,0.5);border-left:4px solid var(--amber);padding:14px 16px;border-radius:var(--radius);margin-bottom:20px;}
+.warn .tag{color:#EBCB7C;}
+.warn p{margin:6px 0 0;font-size:14.5px;}
+.warn p strong{color:#fff;}
+.warn ul{margin:8px 0 0;padding-left:18px;font-size:14px;}
+.warn ul li{margin-bottom:4px;}
+
+.dropzone{border:2px dashed var(--line-strong);border-radius:var(--radius);padding:34px 18px;text-align:center;cursor:pointer;transition:border-color 0.2s ease, background 0.2s ease;}
+.dropzone:hover, .dropzone.drag{border-color:var(--signal);background:var(--signal-dim);}
+.dropzone p{margin:6px 0 0;color:var(--muted);font-size:13.5px;}
+.dropzone .dzicon{font-size:34px;}
+#fileInput{display:none;}
+
+.fileinfo{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;margin-top:14px;font-size:13.5px;}
+.fileinfo .name{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--text);word-break:break-all;}
+.fileinfo .size{color:var(--muted);font-size:12px;white-space:nowrap;}
+button.small-x{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;}
+button.small-x:hover{color:var(--danger);}
+
+.grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px;}
+@media(min-width:640px){.grid.cols-2{grid-template-columns:1fr 1fr;}}
+label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px;font-family:'JetBrains Mono',monospace;letter-spacing:0.02em;}
+select{width:100%;background:var(--ink);border:1px solid var(--line-strong);color:var(--text);padding:9px 10px;border-radius:var(--radius);font-family:'JetBrains Mono',monospace;font-size:14.5px;}
+select:focus{outline:2px solid var(--signal);outline-offset:1px;border-color:var(--signal);}
+.field-note{font-size:12px;color:var(--muted);margin-top:4px;}
+
+.mode-toggle{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+.mode-btn{font-family:'Karla',sans-serif;font-weight:700;font-size:13px;background:var(--panel-2);color:var(--text);border:1px solid var(--line-strong);padding:9px 14px;border-radius:20px;cursor:pointer;text-align:left;}
+.mode-btn.active{background:var(--signal);color:#0c1f18;border-color:var(--signal);}
+.mode-desc{font-size:12.5px;color:var(--muted);margin-top:8px;}
+
+button.primary{font-family:'Karla',sans-serif;font-weight:700;font-size:14.5px;background:var(--signal);color:#0c1f18;border:1px solid var(--signal);padding:11px 20px;border-radius:var(--radius);cursor:pointer;width:100%;margin-top:16px;}
+button.primary:hover{opacity:0.9;}
+button.primary:disabled{opacity:0.4;cursor:not-allowed;}
+
+.progress-outer{background:var(--ink);border:1px solid var(--line-strong);border-radius:20px;height:10px;overflow:hidden;margin-top:14px;display:none;}
+.progress-outer.show{display:block;}
+.progress-inner{height:100%;background:var(--signal);width:0%;transition:width 0.2s ease;}
+.status-text{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--muted);margin-top:8px;min-height:16px;}
+
+.result{display:none;margin-top:18px;}
+.result.show{display:block;}
+.stat-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px;}
+.stat{background:var(--ink);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;}
+.stat .label{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);}
+.stat .value{font-family:'Fraunces',serif;font-size:19px;font-weight:600;color:var(--signal);margin-top:2px;}
+a.download-btn{display:block;text-align:center;font-family:'Karla',sans-serif;font-weight:700;text-decoration:none;background:var(--signal);color:#0c1f18;padding:11px 20px;border-radius:var(--radius);margin-top:14px;}
+a.download-btn:hover{opacity:0.9;}
+
+.badge{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:11.5px;padding:3px 9px;border-radius:20px;border:1px solid var(--line-strong);}
+.badge.safe{border-color:rgba(63,184,151,0.5);color:var(--signal);background:var(--signal-dim);}
+.badge.warnb{border-color:rgba(193,85,74,0.5);color:#E0A79A;background:var(--danger-dim);}
+
+.refs{font-size:13px;color:var(--muted);}
+.refs li{margin-bottom:6px;}
+.consult{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;background:linear-gradient(135deg,var(--panel-2),var(--panel));border:1px solid var(--signal);border-radius:var(--radius);padding:16px 18px;}
+.consult p{margin:0;font-size:14px;max-width:52ch;}
+.consult a.wa{font-family:'Karla',sans-serif;font-weight:700;text-decoration:none;background:var(--signal);color:#0c1f18;padding:10px 18px;border-radius:var(--radius);white-space:nowrap;font-size:14px;}
+.consult a.wa:hover{opacity:0.9;}
+footer.foot{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;text-align:center;}
+.small{font-size:12px;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Tools Qiladat · JAZMI · Utilitas Dokumen</div>
+    <h1>Kompresor PDF</h1>
+    <p class="sub">Perkecil ukuran file PDF langsung di browser Anda — tidak ada file yang diunggah ke server mana pun. Cocok terutama untuk PDF hasil scan/foto.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="warn">
+    <span class="tag">⚠ Baca dulu sebelum memakai</span>
+    <p><strong>Alat ini butuh koneksi internet</strong> — berbeda dari kalkulator JAZMI lainnya, alat ini memuat dua library (pdf.js &amp; pdf-lib) dari CDN saat halaman dibuka. File PDF Anda sendiri tetap 100% diproses lokal di perangkat Anda, tidak pernah terkirim ke server mana pun.</p>
+    <ul>
+      <li><strong>Mode Gambar mengubah setiap halaman jadi gambar terkompresi.</strong> Ukuran berkurang drastis untuk PDF hasil scan, tapi teksnya jadi tidak bisa lagi di-<em>select</em>/dicari/disalin. Jangan pakai mode ini untuk dokumen yang teksnya masih Anda perlukan.</li>
+      <li>PDF yang formatnya rumit (form isian, tanda tangan digital, lapisan keamanan) mungkin tidak diproses sempurna.</li>
+      <li>File besar / halaman banyak bisa memakan waktu — proses berjalan di perangkat Anda sendiri, jadi kecepatan tergantung spesifikasi HP/laptop Anda.</li>
+    </ul>
+  </div>
+
+  <section class="sheet">
+    <span class="tag">1 — Unggah File</span>
+    <h2>Pilih PDF</h2>
+    <div class="dropzone" id="dropzone">
+      <div class="dzicon">📄</div>
+      <p><strong>Ketuk untuk pilih file</strong>, atau seret PDF ke sini</p>
+      <p class="small">Hanya file .pdf</p>
+    </div>
+    <input type="file" id="fileInput" accept="application/pdf">
+    <div class="fileinfo" id="fileInfo" style="display:none;">
+      <div>
+        <div class="name" id="fileName"></div>
+        <div class="size" id="fileSize"></div>
+      </div>
+      <button class="small-x" id="clearFile">✕</button>
+    </div>
+  </section>
+
+  <section class="sheet">
+    <span class="tag">2 — Mode &amp; Tingkat Kompresi</span>
+    <h2>Pengaturan</h2>
+    <div class="mode-toggle" id="modeToggle"></div>
+    <p class="mode-desc" id="modeDesc"></p>
+
+    <div class="grid cols-2" id="presetWrap">
+      <div>
+        <label for="preset">Preset kompresi</label>
+        <select id="preset">
+          <option value="max">Maksimal — ukuran terkecil, kualitas gambar turun jelas</option>
+          <option value="balanced" selected>Seimbang — kompromi ukuran &amp; kualitas</option>
+          <option value="high">Kualitas Tinggi — ukuran berkurang lebih sedikit</option>
+        </select>
+        <p class="field-note">Resolusi render &amp; kualitas JPEG per halaman mengikuti preset ini.</p>
+      </div>
+    </div>
+
+    <button class="primary" id="processBtn" disabled>Kompres PDF</button>
+    <div class="progress-outer" id="progressOuter"><div class="progress-inner" id="progressInner"></div></div>
+    <div class="status-text" id="statusText"></div>
+
+    <div class="result" id="result">
+      <div class="stat-row">
+        <div class="stat"><div class="label">Ukuran asli</div><div class="value" id="sizeBefore" style="font-size:16px;">–</div></div>
+        <div class="stat"><div class="label">Ukuran hasil</div><div class="value" id="sizeAfter" style="font-size:16px;">–</div></div>
+        <div class="stat"><div class="label">Pengurangan</div><div class="value" id="sizeDelta" style="font-size:16px;">–</div></div>
+      </div>
+      <a class="download-btn" id="downloadLink" download>Unduh PDF Hasil Kompresi</a>
+    </div>
+  </section>
+
+  <section class="sheet">
+    <span class="tag">Cara Kerja</span>
+    <h2>Apa yang Sebenarnya Terjadi</h2>
+    <p style="font-size:14.5px;"><strong>Mode Gambar</strong> (default): tiap halaman PDF dirender ulang jadi gambar (lewat pdf.js), lalu gambar itu dikompres sebagai JPEG pada kualitas &amp; resolusi sesuai preset, lalu disusun jadi PDF baru berisi gambar-gambar tersebut (lewat pdf-lib). Ini teknik "rasterize &amp; rekompresi" yang sama dipakai banyak alat kompresi PDF berbasis scan.</p>
+    <p style="font-size:14.5px;"><strong>Mode Ringan</strong>: PDF dibuka lalu ditulis ulang strukturnya (object stream dioptimalkan, metadata dirapikan) tanpa mengubah kontennya sama sekali — teks &amp; gambar asli tetap vektor/utuh. Pengurangan ukurannya biasanya jauh lebih kecil daripada Mode Gambar, tapi teks tetap bisa disalin/dicari.</p>
+  </section>
+
+  <section class="sheet">
+    <span class="tag">Batasan</span>
+    <h2>Kapan Alat Ini Tidak Cocok</h2>
+    <ul style="font-size:14px;padding-left:20px;">
+      <li><strong>Mode Gambar menghilangkan teks yang bisa diseleksi.</strong> Jika PDF Anda adalah dokumen teks (bukan scan) dan Anda butuh teksnya tetap bisa dicari/disalin, pakai Mode Ringan — atau terima bahwa Mode Gambar bukan pilihan tepat untuk kasus itu.</li>
+      <li><strong>Mode Ringan seringkali hanya mengurangi ukuran sedikit</strong> (kadang nyaris tidak berubah) untuk PDF yang sudah dioptimalkan sebelumnya — ini realitas format PDF, bukan bug alat.</li>
+      <li>PDF dengan proteksi kata sandi, tanda tangan digital, atau form interaktif kompleks berisiko rusak/berubah setelah diproses — cadangkan file asli Anda sebelum mengganti.</li>
+      <li>Karena semua proses berjalan di perangkat Anda (bukan server), file besar (puluhan-ratusan MB) atau puluhan halaman bisa terasa berat/lambat, tergantung spesifikasi perangkat.</li>
+      <li>Butuh koneksi internet saat pertama membuka halaman ini (memuat pdf.js &amp; pdf-lib) — setelah termuat, pemrosesan filenya sendiri tidak butuh internet lagi.</li>
+    </ul>
+  </section>
+
+  <section class="sheet">
+    <span class="tag">Referensi</span>
+    <ul class="refs">
+      <li>pdf.js — proyek Mozilla untuk membaca &amp; merender PDF di browser (lisensi Apache).</li>
+      <li>pdf-lib — pustaka untuk membuat &amp; memodifikasi PDF di JavaScript (lisensi MIT).</li>
+      <li>Prinsip downsampling &amp; rekompresi JPEG sebagai teknik kompresi gambar dalam dokumen — praktik umum di banyak alat kompresi PDF berbasis scan.</li>
+    </ul>
+  </section>
+
+  <div class="consult">
+    <p><strong>Untuk dokumen penting/sensitif, selalu simpan salinan asli.</strong> Ada pertanyaan atau file yang gagal diproses? Hubungi kami.</p>
+    <a class="wa" href="https://wa.me/6281356572588?text=Halo%2C%20saya%20ingin%20konsultasi%20soal%20Kompresor%20PDF%20JAZMI." target="_blank" rel="noopener">Konsultasi via WhatsApp →</a>
+  </div>
+
+  <footer class="foot">Tools Qiladat / JAZMI — laboratorium alat &amp; keilmuan. Dibangun mengikuti metode Belajar → Model → Uji → Tool.</footer>
+</div>
+
+<!-- pdf.js (dipin ke versi UMD/global yang stabil) -->
+<script src="https://unpkg.com/pdfjs-dist@2.16.105/build/pdf.min.js"></script>
+<!-- pdf-lib (UMD, global PDFLib) -->
+<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+
+<script>
+let libsReady = false;
+try{
+  if(window.pdfjsLib){
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@2.16.105/build/pdf.worker.min.js';
+    libsReady = !!window.PDFLib;
+  }
+}catch(e){ console.error(e); }
+
+/* ===================== STATE ===================== */
+let selectedFile = null;
+let mode = 'image'; // 'image' | 'light'
+const MODES = [
+  {id:'image', label:'Mode Gambar', desc:'Ukuran berkurang drastis, tapi teks jadi gambar (tidak bisa di-select/cari). Cocok untuk PDF hasil scan.'},
+  {id:'light', label:'Mode Ringan', desc:'Teks & gambar asli tetap utuh, pengurangan ukuran biasanya kecil. Cocok untuk dokumen teks yang teksnya masih dibutuhkan.'}
+];
+const PRESETS = {
+  max:{scale:1.0, quality:0.4, label:'Maksimal'},
+  balanced:{scale:1.3, quality:0.6, label:'Seimbang'},
+  high:{scale:1.8, quality:0.8, label:'Kualitas Tinggi'}
+};
+
+/* ===================== UI HELPERS ===================== */
+function bytesToSize(bytes){
+  if(bytes===0) return '0 B';
+  const units=['B','KB','MB','GB'];
+  const i = Math.floor(Math.log(bytes)/Math.log(1024));
+  return (bytes/Math.pow(1024,i)).toFixed(i===0?0:2)+' '+units[i];
+}
+function setStatus(msg){ document.getElementById('statusText').textContent = msg; }
+function setProgress(pct){
+  const outer = document.getElementById('progressOuter');
+  outer.classList.add('show');
+  document.getElementById('progressInner').style.width = pct+'%';
+}
+
+function renderModeToggle(){
+  const el = document.getElementById('modeToggle');
+  el.innerHTML = MODES.map(m=>`<button class="mode-btn ${m.id===mode?'active':''}" data-id="${m.id}">${m.label}</button>`).join('');
+  el.querySelectorAll('.mode-btn').forEach(b=>b.addEventListener('click', ()=>{
+    mode = b.dataset.id;
+    renderModeToggle();
+    document.getElementById('presetWrap').style.display = mode==='image' ? '' : 'none';
+  }));
+  document.getElementById('modeDesc').textContent = MODES.find(m=>m.id===mode).desc;
+  document.getElementById('presetWrap').style.display = mode==='image' ? '' : 'none';
+}
+
+/* ===================== FILE SELECTION ===================== */
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+dropzone.addEventListener('click', ()=>fileInput.click());
+dropzone.addEventListener('dragover', e=>{ e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', ()=>dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', e=>{
+  e.preventDefault(); dropzone.classList.remove('drag');
+  if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e=>{
+  if(e.target.files.length) handleFile(e.target.files[0]);
+});
+document.getElementById('clearFile').addEventListener('click', ()=>{
+  selectedFile = null;
+  document.getElementById('fileInfo').style.display='none';
+  document.getElementById('dropzone').style.display='';
+  document.getElementById('processBtn').disabled = true;
+  document.getElementById('result').classList.remove('show');
+  fileInput.value='';
+});
+
+function handleFile(file){
+  if(file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')){
+    alert('Mohon pilih file PDF.');
+    return;
+  }
+  selectedFile = file;
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('fileSize').textContent = bytesToSize(file.size);
+  document.getElementById('fileInfo').style.display='flex';
+  document.getElementById('dropzone').style.display='none';
+  document.getElementById('processBtn').disabled = !libsReady;
+  document.getElementById('result').classList.remove('show');
+  if(!libsReady) setStatus('⚠ Library pdf.js/pdf-lib belum termuat — periksa koneksi internet Anda lalu muat ulang halaman.');
+  else setStatus('');
+}
+
+/* ===================== CORE: compress ===================== */
+function dataURLToBytes(dataURL){
+  const base64 = dataURL.split(',')[1];
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+  return bytes;
+}
+
+async function compressImageMode(arrayBuffer, presetKey){
+  const preset = PRESETS[presetKey];
+  const loadingTask = pdfjsLib.getDocument({data: arrayBuffer});
+  const pdf = await loadingTask.promise;
+  const numPages = pdf.numPages;
+
+  const { PDFDocument } = PDFLib;
+  const outPdf = await PDFDocument.create();
+
+  for(let i=1;i<=numPages;i++){
+    setStatus(`Memproses halaman ${i} dari ${numPages}...`);
+    setProgress(Math.round((i-1)/numPages*100));
+
+    const page = await pdf.getPage(i);
+    const nativeViewport = page.getViewport({scale:1});
+    const renderViewport = page.getViewport({scale: preset.scale});
+
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(renderViewport.width);
+    canvas.height = Math.round(renderViewport.height);
+    const ctx = canvas.getContext('2d');
+    await page.render({canvasContext: ctx, viewport: renderViewport}).promise;
+
+    const dataUrl = canvas.toDataURL('image/jpeg', preset.quality);
+    const jpgBytes = dataURLToBytes(dataUrl);
+    const jpgImage = await outPdf.embedJpg(jpgBytes);
+
+    const newPage = outPdf.addPage([nativeViewport.width, nativeViewport.height]);
+    newPage.drawImage(jpgImage, {
+      x:0, y:0, width: nativeViewport.width, height: nativeViewport.height
+    });
+
+    canvas.width = 0; canvas.height = 0; // bantu pembersihan memori
+  }
+
+  setStatus('Menyusun PDF akhir...');
+  setProgress(100);
+  const pdfBytes = await outPdf.save();
+  return pdfBytes;
+}
+
+async function compressLightMode(arrayBuffer){
+  setStatus('Membuka & menulis ulang struktur PDF...');
+  setProgress(30);
+  const { PDFDocument } = PDFLib;
+  const pdfDoc = await PDFDocument.load(arrayBuffer, {updateMetadata:false});
+  pdfDoc.setProducer('');
+  pdfDoc.setCreator('');
+  setProgress(70);
+  const pdfBytes = await pdfDoc.save({useObjectStreams:true});
+  setProgress(100);
+  return pdfBytes;
+}
+
+document.getElementById('preset').addEventListener('change', ()=>{});
+
+document.getElementById('processBtn').addEventListener('click', async ()=>{
+  if(!selectedFile) return;
+  const btn = document.getElementById('processBtn');
+  btn.disabled = true;
+  document.getElementById('result').classList.remove('show');
+  setProgress(0);
+  setStatus('Membaca file...');
+
+  try{
+    const arrayBuffer = await selectedFile.arrayBuffer();
+    let outBytes;
+    if(mode==='image'){
+      const presetKey = document.getElementById('preset').value;
+      outBytes = await compressImageMode(arrayBuffer, presetKey);
+    } else {
+      outBytes = await compressLightMode(arrayBuffer);
+    }
+
+    const blob = new Blob([outBytes], {type:'application/pdf'});
+    const url = URL.createObjectURL(blob);
+    const dl = document.getElementById('downloadLink');
+    dl.href = url;
+    dl.download = selectedFile.name.replace(/\.pdf$/i,'') + '-kompres.pdf';
+
+    const before = selectedFile.size, after = blob.size;
+    document.getElementById('sizeBefore').textContent = bytesToSize(before);
+    document.getElementById('sizeAfter').textContent = bytesToSize(after);
+    const deltaPct = before>0 ? ((1-after/before)*100) : 0;
+    const deltaEl = document.getElementById('sizeDelta');
+    if(after < before){
+      deltaEl.innerHTML = `<span class="badge safe">−${deltaPct.toFixed(0)}%</span>`;
+    } else {
+      deltaEl.innerHTML = `<span class="badge warnb">Tidak mengecil</span>`;
+    }
+    document.getElementById('result').classList.add('show');
+    setStatus('Selesai.');
+  }catch(err){
+    console.error(err);
+    setStatus('⚠ Gagal memproses file: '+ (err && err.message ? err.message : 'kesalahan tidak diketahui') + '. Pastikan file adalah PDF yang valid dan koneksi internet aktif.');
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+/* ===================== INIT ===================== */
+renderModeToggle();
+if(!libsReady){
+  setStatus('⚠ Gagal memuat pdf.js/pdf-lib dari CDN — periksa koneksi internet Anda lalu muat ulang halaman.');
+}
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

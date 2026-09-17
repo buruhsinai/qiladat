@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gelas Isi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fdf6e8; --card:#ffffff; --line:#f0e2c4;
+    --ink:#3a3226; --dim:#8a7c62;
+    --accent:#2f8fbf; --accent-soft:#e5f3fa;
+    --display:'Fredoka',sans-serif; --sans:'Quicksand',sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;overscroll-behavior:none;}
+  .wrap{max-width:460px;margin:0 auto;padding:0 18px 60px;}
+
+  .hero{padding:36px 10px 18px;text-align:center;}
+  .hero h1{font-family:var(--display);font-weight:700;font-size:clamp(24px,7vw,32px);margin:0 0 8px;color:#215e80;}
+  .hero p{color:var(--dim);font-size:14px;margin:0;}
+
+  .preset-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
+  .preset-btn{font-family:var(--display);font-weight:600;font-size:11.5px;background:var(--card);border:2px solid var(--line);
+    color:var(--dim);padding:10px 4px;border-radius:12px;cursor:pointer;text-align:center;line-height:1.3;}
+  .preset-btn .cap{display:block;font-family:var(--mono);font-size:9.5px;font-weight:400;color:#b9ad94;margin-top:2px;}
+  .preset-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .preset-btn.active .cap{color:rgba(255,255,255,.85);}
+
+  .stage-card{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px 16px;margin-bottom:16px;text-align:center;}
+  #stageSvg{width:220px;height:260px;}
+
+  .pour-btn{width:100%;font-family:var(--display);font-weight:700;font-size:16px;padding:16px;border-radius:16px;border:none;
+    cursor:pointer;background:var(--accent);color:#fff;box-shadow:0 6px 0 rgba(0,0,0,0.08);transition:transform .1s;
+    touch-action:none;user-select:none;margin-top:10px;}
+  .pour-btn:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,0.08);}
+  .pour-btn.penuh{background:#e6ddc6;color:#b9ad94;}
+
+  .readout-card{background:var(--accent-soft);border-radius:16px;padding:16px 18px;text-align:center;margin-bottom:16px;}
+  .readout-num{font-family:var(--display);font-weight:700;font-size:26px;color:#215e80;}
+  .readout-sub{font-size:13px;color:var(--dim);margin-top:2px;}
+  .readout-status{font-family:var(--display);font-size:14.5px;color:#215e80;margin-top:8px;}
+
+  .btn-row{display:flex;gap:10px;margin-bottom:16px;}
+  .btn-secondary{flex:1;font-family:var(--display);font-weight:600;font-size:13.5px;padding:11px;border-radius:12px;
+    border:2px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer;}
+
+  .compare-card{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:16px;}
+  .compare-title{font-family:var(--mono);font-size:11px;color:var(--dim);text-transform:uppercase;margin-bottom:10px;}
+  .compare-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--line);font-size:13.5px;}
+  .compare-row:last-child{border-bottom:none;}
+  .compare-row b{color:#215e80;}
+
+  .note-card{background:var(--accent-soft);border-radius:14px;padding:16px 18px;font-size:13.5px;color:#215e80;}
+  .note-card strong{color:#173f57;}
+
+  footer{text-align:center;padding-top:26px;color:#b9ad94;font-size:11.5px;font-family:var(--mono);}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>🫗 Gelas Isi</h1>
+    <p>Tahan tombolnya untuk menuang — lihat sendiri airnya naik pelan-pelan.</p>
+  </div>
+
+  <div class="preset-row" id="presetRow"></div>
+
+  <div class="stage-card">
+    <svg id="stageSvg" viewBox="0 0 220 260" xmlns="http://www.w3.org/2000/svg"></svg>
+    <button class="pour-btn" id="pourBtn">💧 Tahan untuk Menuang</button>
+  </div>
+
+  <div class="readout-card">
+    <div class="readout-num" id="readoutNum">0 ml</div>
+    <div class="readout-sub" id="readoutSub">= 0 liter</div>
+    <div class="readout-status" id="readoutStatus"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-secondary" onclick="kosongkan()">🔁 Kosongkan</button>
+  </div>
+
+  <div class="compare-card">
+    <div class="compare-title">Kalau wadah ini penuh...</div>
+    <div id="compareList"></div>
+  </div>
+
+  <div class="note-card">
+    <strong>Kenapa harus ditahan lama?</strong> Wadah yang lebih besar butuh air lebih banyak untuk penuh — jadi butuh waktu menuang lebih lama juga. Isi (volume) itu sebenarnya bisa dirasakan dari dua hal sekaligus: seberapa tinggi air naik, dan seberapa lama kita menuang untuk membuatnya penuh.
+  </div>
+
+  <footer>Laboratorium Pendidikan Anak — Bank Alat JAZMI/Qiladat</footer>
+</div>
+
+<script>
+  const WADAH = [
+    { nama:'Gelas Kecil', kap:250, tick:50 },
+    { nama:'Gelas Besar', kap:350, tick:50 },
+    { nama:'Botol Minum', kap:600, tick:100 },
+    { nama:'Ember', kap:5000, tick:1000 }
+  ];
+
+  let wadahAktif = WADAH[0];
+  let volume = 0;
+  let pouring = false;
+  let rafId = null;
+  let lastTs = 0;
+  let waveTime = 0;
+  let droplets = [];
+  const RATE_ML_PER_SEC = 45;
+
+  function buatPreset(){
+    const row = document.getElementById('presetRow');
+    row.innerHTML = '';
+    WADAH.forEach((w, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'preset-btn' + (i===0 ? ' active' : '');
+      btn.innerHTML = `${w.nama}<span class="cap">${w.kap >= 1000 ? (w.kap/1000)+' L' : w.kap+' ml'}</span>`;
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        wadahAktif = w;
+        volume = 0;
+        renderAll();
+      });
+      row.appendChild(btn);
+    });
+  }
+
+  function kosongkan(){
+    volume = 0;
+    renderAll();
+  }
+
+  // ---- interaksi tuang (tahan untuk menuang) ----
+  const pourBtn = document.getElementById('pourBtn');
+  function startPour(e){
+    if(volume >= wadahAktif.kap) return;
+    pouring = true;
+    lastTs = performance.now();
+    loop();
+    e.preventDefault();
+  }
+  function stopPour(){
+    pouring = false;
+    cancelAnimationFrame(rafId);
+  }
+  pourBtn.addEventListener('mousedown', startPour);
+  pourBtn.addEventListener('mouseup', stopPour);
+  pourBtn.addEventListener('mouseleave', stopPour);
+  pourBtn.addEventListener('touchstart', startPour, {passive:false});
+  pourBtn.addEventListener('touchend', stopPour);
+  pourBtn.addEventListener('touchcancel', stopPour);
+
+  function loop(ts){
+    if(!ts) ts = performance.now();
+    const dt = (ts - lastTs)/1000;
+    lastTs = ts;
+
+    if(pouring && volume < wadahAktif.kap){
+      volume = Math.min(wadahAktif.kap, volume + RATE_ML_PER_SEC * dt);
+      if(Math.random() < 0.5) droplets.push({y: 40, vy: 3+Math.random()*1.5, x: 110+(Math.random()*8-4)});
+    }
+    droplets.forEach(d => d.y += d.vy);
+    const waterY = waterSurfaceY();
+    droplets = droplets.filter(d => d.y < waterY + 5);
+
+    waveTime += dt;
+    renderStage();
+    renderReadout();
+
+    if(volume >= wadahAktif.kap){
+      pouring = false;
+      cancelAnimationFrame(rafId);
+      return;
+    }
+    if(pouring) rafId = requestAnimationFrame(loop);
+  }
+
+  // ---- geometri wadah ----
+  const CUP_TOP_Y = 40, CUP_BOTTOM_Y = 240, CUP_LEFT = 55, CUP_RIGHT = 165, CUP_H = CUP_BOTTOM_Y - CUP_TOP_Y;
+
+  function waterSurfaceY(){
+    const frac = wadahAktif.kap > 0 ? volume / wadahAktif.kap : 0;
+    return CUP_BOTTOM_Y - CUP_H * frac;
+  }
+
+  function renderStage(){
+    const svg = document.getElementById('stageSvg');
+    const frac = wadahAktif.kap > 0 ? volume / wadahAktif.kap : 0;
+    const surfaceY = waterSurfaceY();
+
+    // garis takar
+    let ticks = '';
+    const jumlahTick = Math.round(wadahAktif.kap / wadahAktif.tick);
+    for(let i=1;i<jumlahTick;i++){
+      const val = i * wadahAktif.tick;
+      const y = CUP_BOTTOM_Y - (val/wadahAktif.kap)*CUP_H;
+      ticks += `<line x1="${CUP_LEFT-4}" y1="${y}" x2="${CUP_LEFT+4}" y2="${y}" stroke="#8a7c62" stroke-width="1.5"/>`;
+    }
+
+    // gelombang air
+    const amp = pouring ? 3 : 1.2;
+    let wavePath = `M ${CUP_LEFT} ${surfaceY}`;
+    for(let x=CUP_LEFT; x<=CUP_RIGHT; x+=8){
+      const y = surfaceY + Math.sin((x*0.15) + waveTime*4) * amp;
+      wavePath += ` L ${x} ${y}`;
+    }
+    wavePath += ` L ${CUP_RIGHT} ${CUP_BOTTOM_Y} L ${CUP_LEFT} ${CUP_BOTTOM_Y} Z`;
+
+    let dropletsHtml = '';
+    droplets.forEach(d => {
+      dropletsHtml += `<ellipse cx="${d.x.toFixed(1)}" cy="${d.y.toFixed(1)}" rx="2.5" ry="4" fill="#5fb3e0"/>`;
+    });
+
+    const streamHtml = pouring ? `<rect x="106" y="18" width="8" height="24" fill="#5fb3e0" opacity="0.8"/>` : '';
+    const jugHtml = `
+      <g transform="translate(110,10)">
+        <path d="M -14 0 L 14 0 L 10 20 L -10 20 Z" fill="#c9b48a" stroke="#8a7c62" stroke-width="1.5"/>
+        <rect x="-4" y="-6" width="8" height="8" fill="#c9b48a" stroke="#8a7c62" stroke-width="1.5"/>
+      </g>`;
+
+    svg.innerHTML = `
+      <clipPath id="cupClip"><rect x="${CUP_LEFT}" y="${CUP_TOP_Y}" width="${CUP_RIGHT-CUP_LEFT}" height="${CUP_H}"/></clipPath>
+      ${jugHtml}
+      ${streamHtml}
+      ${dropletsHtml}
+      <g clip-path="url(#cupClip)">
+        <path d="${wavePath}" fill="url(#waterGrad)"/>
+      </g>
+      <defs>
+        <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#6fc3ea"/>
+          <stop offset="100%" stop-color="#2f8fbf"/>
+        </linearGradient>
+      </defs>
+      <path d="M ${CUP_LEFT} ${CUP_TOP_Y} L ${CUP_LEFT} ${CUP_BOTTOM_Y} L ${CUP_RIGHT} ${CUP_BOTTOM_Y} L ${CUP_RIGHT} ${CUP_TOP_Y}"
+        fill="none" stroke="#8a7c62" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      ${ticks}
+    `;
+  }
+
+  function formatMl(ml){
+    if(ml >= 1000) return (ml/1000).toFixed(2).replace(/\.00$/,'') + ' L';
+    return Math.round(ml) + ' ml';
+  }
+
+  function renderReadout(){
+    document.getElementById('readoutNum').textContent = formatMl(volume);
+    document.getElementById('readoutSub').textContent = `= ${(volume/1000).toFixed(3)} liter`;
+    const persen = wadahAktif.kap > 0 ? Math.round((volume/wadahAktif.kap)*100) : 0;
+    const statusEl = document.getElementById('readoutStatus');
+    if(volume >= wadahAktif.kap){
+      statusEl.textContent = `🎉 ${wadahAktif.nama} sudah PENUH!`;
+      pourBtn.classList.add('penuh');
+      pourBtn.textContent = '✅ Sudah Penuh';
+    } else {
+      statusEl.textContent = `Terisi ${persen}% dari ${wadahAktif.nama}`;
+      pourBtn.classList.remove('penuh');
+      pourBtn.textContent = '💧 Tahan untuk Menuang';
+    }
+  }
+
+  function renderCompare(){
+    const list = document.getElementById('compareList');
+    list.innerHTML = '';
+    WADAH.forEach(w => {
+      if(w === wadahAktif) return;
+      const rasio = wadahAktif.kap / w.kap;
+      const row = document.createElement('div');
+      row.className = 'compare-row';
+      row.innerHTML = `<span>${wadahAktif.nama} = </span><b>${rasio >= 1 ? rasio.toFixed(1) : rasio.toFixed(2)}× ${w.nama}</b>`;
+      list.appendChild(row);
+    });
+  }
+
+  function renderAll(){
+    renderStage();
+    renderReadout();
+    renderCompare();
+  }
+
+  // idle wave animation walau tidak menuang
+  function idleLoop(ts){
+    if(!pouring){
+      waveTime += 0.016;
+      renderStage();
+    }
+    requestAnimationFrame(idleLoop);
+  }
+
+  buatPreset();
+  renderAll();
+  requestAnimationFrame(idleLoop);
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

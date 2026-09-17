@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerhana ala Aryabhata — Laboratorium JAZMI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&display=swap');
+
+:root{
+  --bg-top:#161a33; --bg-bot:#0c0e1f;
+  --saffron:#D4820A; --saffron-light:#EAB05C; --vermillion:#B33A2E;
+  --cream:#F0E4C8; --indigo-line:#2c3363;
+  --ink:#F0E4C8; --ink-soft:#a9a0c0;
+  --panel:#1c2140; --panel-border:#333a66;
+  --line:rgba(240,228,200,.14); --line-strong:rgba(240,228,200,.28);
+}
+*{box-sizing:border-box;} html,body{margin:0;padding:0;}
+body{ background:linear-gradient(180deg,var(--bg-top),var(--bg-bot)); color:var(--ink); font-family:'Karla',sans-serif; min-height:100vh; }
+.wrap{max-width:1000px; margin:0 auto; padding:20px 14px 44px;}
+.eyebrow{font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--saffron-light); margin:0 0 4px;}
+h1{font-family:'Fraunces',serif; font-weight:700; font-size:clamp(24px,5.5vw,34px); margin:0 0 6px;}
+.sub{font-size:13.5px; color:var(--ink-soft); max-width:70ch; line-height:1.55;}
+
+.intro{ background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:16px 18px; margin-top:16px; }
+.intro h2{ font-family:'Fraunces',serif; font-size:17px; margin:0 0 8px; color:var(--saffron-light); }
+.intro p{ font-size:13px; line-height:1.65; margin:0 0 10px; }
+.timeline{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+.tlitem{ background:var(--bg-bot); border:1px solid var(--panel-border); border-radius:5px; padding:8px 10px; font-size:11.5px; flex:1; min-width:130px; }
+.tlitem b{ color:var(--saffron-light); display:block; font-family:'Fraunces',serif; font-size:13px; margin-bottom:2px; }
+
+.controls{ background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:16px; margin-top:16px; }
+.mode-toggle{ display:flex; gap:8px; margin-bottom:12px; }
+.mode-toggle button{ flex:1; }
+.row{ display:flex; flex-wrap:wrap; gap:16px; margin-bottom:6px; }
+.field{ display:flex; flex-direction:column; gap:4px; flex:1; min-width:220px; }
+.field label{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); display:flex; justify-content:space-between; }
+.field label .val{ color:var(--saffron-light); font-weight:700; text-transform:none; letter-spacing:0; }
+input[type=range]{ width:100%; accent-color:var(--saffron); }
+button{
+  font-family:'Karla',sans-serif; font-weight:700; font-size:12px;
+  background:var(--saffron); color:#241505; border:none; border-radius:999px; padding:9px 14px; cursor:pointer;
+}
+button.ghost{ background:transparent; color:var(--ink); border:1px solid var(--line-strong); font-weight:500; }
+button.active{ background:var(--vermillion); color:var(--cream); }
+button:hover{ filter:brightness(1.1); }
+.presets{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+
+.stage{ display:grid; grid-template-columns:1fr; gap:16px; margin-top:16px; }
+@media(min-width:760px){ .stage{ grid-template-columns:1.3fr 1fr; } }
+.diagram-box{ background:radial-gradient(circle at 50% 40%, #10142c 0%, #05060f 80%); border:1px solid var(--panel-border); border-radius:6px; padding:10px; }
+svg.dia{ width:100%; height:auto; display:block; }
+
+.readout{ background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:16px; display:flex; flex-direction:column; gap:9px; }
+.rline{ display:flex; justify-content:space-between; font-size:12.5px; border-bottom:1px solid var(--line); padding-bottom:6px; }
+.rline b{ color:var(--saffron-light); }
+.verdict{ margin-top:4px; padding:12px; border-radius:6px; text-align:center; font-family:'Fraunces',serif; font-size:17px; font-weight:700; background:rgba(212,130,10,.14); color:var(--saffron-light); }
+.verdict.none{ background:rgba(255,255,255,.05); color:var(--ink-soft); }
+.mag-bar{ height:8px; border-radius:4px; background:rgba(255,255,255,.08); overflow:hidden; }
+.mag-fill{ height:100%; background:linear-gradient(90deg,var(--vermillion),var(--saffron)); }
+
+.method{ margin-top:16px; background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:16px 18px; }
+.method h2{ font-family:'Fraunces',serif; font-size:16px; margin:0 0 8px; color:var(--saffron-light); }
+.method p{ font-size:13px; line-height:1.6; color:var(--ink-soft); }
+
+footer{margin-top:26px; padding-top:14px; border-top:1px solid var(--line); font-size:11.5px; color:var(--ink-soft); line-height:1.6;}
+footer b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">JAZMI · Laboratorium Arkeoastronomi · Level 4</p>
+  <h1>Gerhana ala Aryabhata</h1>
+  <p class="sub">Simulasi geometri bayangan yang menentukan bukan cuma <i>kapan</i> gerhana terjadi,
+  tapi <i>jenis</i> apa — total, cincin (annular), sebagian, atau penumbra saja. Ini justru lompatan
+  yang dibuat Aryabhata: menghitung ukuran & jangkauan bayangan, bukan sekadar jadwalnya.</p>
+
+  <div class="intro">
+    <h2>Belajar dulu: siapa Aryabhata, dan siapa saja sebelumnya</h2>
+    <p>Aryabhata (476–550 M) menulis <i>Aryabhatiya</i> tahun 499 M di usia 23 tahun, kemungkinan di
+    Kusumapura dekat Pataliputra (kini Patna, India). Kontribusi paling berani secara intelektual:
+    ia menyatakan tegas bahwa gerhana disebabkan <b>bayangan</b> — Bumi menutupi Bulan, Bulan menutupi
+    Matahari — bukan raksasa Rahu yang menelan keduanya seperti mitos populer pada masanya. Dari situ
+    ia menghitung ukuran & durasi bayangan, bukan cuma tanggalnya. Ia juga menghitung keliling Bumi
+    (~24.835 mil, sangat dekat angka modern ~24.901 mil) dan mengemukakan gagasan Bumi berotasi.</p>
+    <div class="timeline">
+      <div class="tlitem"><b>~700 SM, Babilonia</b>Siklus Saros — prediksi kapan lewat pola berulang, bukan model geometris.</div>
+      <div class="tlitem"><b>~150 SM, Hipparchus</b>Yunani — mulai memakai geometri untuk menaksir jarak Bumi-Bulan dari data gerhana.</div>
+      <div class="tlitem"><b>~150 M, Ptolemy</b>Almagest — model epicycle yang memperhitungkan variasi jarak (dekat konsep apogee/perigee).</div>
+      <div class="tlitem"><b>499 M, Aryabhata</b>India — tradisi geometris-bayangan independen + penolakan eksplisit mitos Rahu.</div>
+      <div class="tlitem"><b>628 M, Brahmagupta</b>Melanjutkan & menajamkan perhitungan Aryabhata di <i>Brahmasphutasiddhanta</i>.</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="mode-toggle">
+      <button id="modeSolar" class="active">☀ Gerhana Matahari</button>
+      <button id="modeLunar" class="ghost">🌑 Gerhana Bulan</button>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Posisi Bulan di orbit elipsnya (anomali sejati) <span class="val" id="moonAnomVal">0°</span></label>
+        <input type="range" id="moonAnom" min="0" max="360" value="0" step="1">
+        <div style="font-size:10.5px; color:var(--ink-soft);">0° = Perigee (terdekat) · 180° = Apogee (terjauh)</div>
+      </div>
+      <div class="field">
+        <label>Hari dalam setahun (jarak Bumi-Matahari) <span class="val" id="dayVal">3</span></label>
+        <input type="range" id="dayOfYear" min="1" max="365" value="3" step="1">
+        <div style="font-size:10.5px; color:var(--ink-soft);">~3 Jan = Perihelion (terdekat) · ~4 Jul = Aphelion (terjauh)</div>
+      </div>
+    </div>
+    <div class="row" id="offsetRowSolar">
+      <div class="field" style="min-width:100%;">
+        <label>Jarak pusat Bulan dari pusat piringan Matahari <span class="val" id="offSolarVal">0,0 arcmin</span></label>
+        <input type="range" id="offSolar" min="0" max="70" value="0" step="0.5">
+      </div>
+    </div>
+    <div class="row" id="offsetRowLunar" style="display:none;">
+      <div class="field" style="min-width:100%;">
+        <label>Jarak lintasan Bulan dari sumbu pusat bayangan Bumi <span class="val" id="offLunarVal">0 km</span></label>
+        <input type="range" id="offLunar" min="0" max="9000" value="0" step="50">
+      </div>
+    </div>
+    <div class="presets">
+      <button class="ghost" id="presetTotal">Perigee + sejajar → Total</button>
+      <button class="ghost" id="presetAnnular">Apogee + sejajar → Cincin</button>
+      <button class="ghost" id="presetPartial">Offset besar → Sebagian</button>
+      <button class="ghost" id="presetNone">Offset ekstrem → Tanpa gerhana</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="diagram-box">
+      <svg class="dia" id="diaSvg" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div class="readout">
+      <div class="rline"><span>Jarak Bumi-Bulan</span><b id="out-dmoon">–</b></div>
+      <div class="rline"><span>Diameter sudut Bulan</span><b id="out-moonang">–</b></div>
+      <div class="rline"><span>Jarak Bumi-Matahari</span><b id="out-dsun">–</b></div>
+      <div class="rline"><span>Diameter sudut Matahari</span><b id="out-sunang">–</b></div>
+      <div id="extraReadout"></div>
+      <div>
+        <div style="font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); margin-bottom:4px;">Magnitudo gerhana</div>
+        <div class="mag-bar"><div class="mag-fill" id="magFill" style="width:0%"></div></div>
+      </div>
+      <div class="verdict none" id="verdict">Belum dihitung</div>
+    </div>
+  </div>
+
+  <div class="method">
+    <h2>Prinsip yang sama dipakai Aryabhata (dengan satuan modern)</h2>
+    <p>Aryabhata menyatakan ukuran bayangan dalam satuan yojana lewat tabel trigonometri (jya/sinus)
+    yang ia rintis sendiri. Prinsip intinya identik dengan yang disimulasikan di atas: bandingkan
+    ukuran piringan/bayangan yang bersaing (Bulan vs Matahari untuk gerhana Matahari; Bulan vs kerucut
+    bayangan Bumi untuk gerhana Bulan), lalu ukur seberapa jauh pusatnya bergeser dari sejajar sempurna
+    untuk menentukan <i>jenis</i> dan <i>magnitudo</i> gerhananya — bukan cuma memprediksi tanggalnya
+    seperti tradisi Babilonia.</p>
+  </div>
+
+  <footer>
+    <b>Batasan:</b> Jarak Bulan &amp; Matahari dihitung dari model elips dua-benda sederhana (eksentrisitas
+    rata-rata Bulan e=0,0549, Matahari e=0,0167) — mengabaikan gangguan gravitasi pihak ketiga, jadi
+    rentang perigee-apogee yang dihasilkan (~363.300–405.500 km) sedikit lebih sempit dari rekor
+    ekstrem sesungguhnya (~356.500–406.700 km, yang melibatkan efek "perigee-syzygy"/supermoon).
+    Kerucut umbra/penumbra dihitung dari geometri kerucut sederhana (segitiga sebangun), mengabaikan
+    pembiasan atmosfer Bumi yang sedikit memperbesar bayangan nyata. Slider "jarak dari sumbu/pusat"
+    adalah parameter bebas yang mewakili lintang ekliptika Bulan saat konjungsi/oposisi — disederhanakan
+    jadi kontrol langsung, bukan diturunkan dari posisi node orbit sungguhan pada tanggal tertentu.
+  </footer>
+</div>
+
+<script>
+const R_EARTH=6371, R_MOON=1737.4, R_SUN=696000;
+const A_MOON=384400, E_MOON=0.0549;
+const A_SUN=149600000, E_SUN=0.0167;
+
+function trueAnomToDist(a,e,nuDeg){
+  const nu=nuDeg*Math.PI/180;
+  return a*(1-e*e)/(1+e*Math.cos(nu));
+}
+function dayOfYearToNu(day){
+  // perihelion ~ day 3, mean anomaly from there
+  const M = (day-3)*360/365.25 * Math.PI/180;
+  const e=E_SUN;
+  const nu = M + 2*e*Math.sin(M) + 1.25*e*e*Math.sin(2*M);
+  return nu*180/Math.PI;
+}
+function angDiamArcmin(radiusKm, distKm){
+  return 2*Math.atan(radiusKm/distKm)*(180/Math.PI)*60;
+}
+
+let mode='solar';
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs){const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); return e;}
+
+function render(){
+  const moonNu = parseFloat(document.getElementById('moonAnom').value);
+  const day = parseInt(document.getElementById('dayOfYear').value);
+  document.getElementById('moonAnomVal').textContent = moonNu+'°';
+  document.getElementById('dayVal').textContent = day;
+
+  const dMoon = trueAnomToDist(A_MOON, E_MOON, moonNu);
+  const sunNu = dayOfYearToNu(day);
+  const dSun = trueAnomToDist(A_SUN, E_SUN, sunNu);
+
+  const moonAng = angDiamArcmin(R_MOON, dMoon);
+  const sunAng = angDiamArcmin(R_SUN, dSun);
+
+  document.getElementById('out-dmoon').textContent = Math.round(dMoon).toLocaleString('id-ID')+' km';
+  document.getElementById('out-moonang').textContent = moonAng.toFixed(2)+"'";
+  document.getElementById('out-dsun').textContent = Math.round(dSun).toLocaleString('id-ID')+' km';
+  document.getElementById('out-sunang').textContent = sunAng.toFixed(2)+"'";
+
+  if(mode==='solar') renderSolar(dMoon, dSun, moonAng, sunAng);
+  else renderLunar(dMoon, dSun, moonAng, sunAng);
+}
+
+function setVerdict(text, cls){
+  const v=document.getElementById('verdict');
+  v.textContent=text; v.className='verdict'+(cls?(' '+cls):'');
+}
+function setMag(frac){
+  document.getElementById('magFill').style.width = Math.max(0,Math.min(100,frac*100)).toFixed(0)+'%';
+}
+
+function renderSolar(dMoon,dSun,moonAng,sunAng){
+  document.getElementById('offsetRowSolar').style.display='';
+  document.getElementById('offsetRowLunar').style.display='none';
+  document.getElementById('extraReadout').innerHTML = `<div class="rline"><span>Selisih diameter sudut</span><b>${(moonAng-sunAng).toFixed(2)}'</b></div>`;
+
+  const off = parseFloat(document.getElementById('offSolar').value);
+  document.getElementById('offSolarVal').textContent = off.toFixed(1)+' arcmin';
+
+  const rMoon=moonAng/2, rSun=sunAng/2;
+  const sumR=rMoon+rSun, diffR=Math.abs(rMoon-rSun);
+
+  let verdict, mag, cls='';
+  if(off >= sumR){
+    verdict='Tidak terjadi gerhana — piringan tak bersentuhan'; mag=0; cls='none';
+  } else if(off <= diffR){
+    if(rMoon>rSun){
+      verdict='🌑 Gerhana Matahari TOTAL'; mag=1;
+      if(Math.abs(rMoon-rSun)<0.3) verdict+=' (berpotensi HIBRIDA — perbedaan ukuran sangat tipis)';
+    } else {
+      verdict='🌕 Gerhana Matahari CINCIN (Annular)'; mag=1-((rSun-rMoon)/rSun)*0.15;
+      if(Math.abs(rMoon-rSun)<0.3) verdict+=' (berpotensi HIBRIDA — perbedaan ukuran sangat tipis)';
+    }
+  } else {
+    verdict='🌗 Gerhana Matahari SEBAGIAN';
+    mag = (sumR-off)/(2*Math.min(rMoon,rSun));
+  }
+  setVerdict(verdict, cls);
+  setMag(mag);
+
+  const svg=document.getElementById('diaSvg'); svg.innerHTML='';
+  const cx=300,cy=200, scale=5.2;
+  svg.appendChild(el('circle',{cx:cx,cy:cy,r:rSun*scale,fill:'#E8A23C',opacity:.9}));
+  svg.appendChild(el('circle',{cx:cx+off*scale,cy:cy,r:rMoon*scale,fill:'#12141f',stroke:'#444a70','stroke-width':1}));
+  const cap=el('text',{x:cx,y:370,fill:'#a9a0c0','font-size':11,'text-anchor':'middle'}); cap.textContent='Piringan Matahari (oranye) & Bulan (gelap) — sesuai proporsi ukuran sudut & jarak yang dihitung'; svg.appendChild(cap);
+}
+
+function renderLunar(dMoon,dSun,moonAng,sunAng){
+  document.getElementById('offsetRowSolar').style.display='none';
+  document.getElementById('offsetRowLunar').style.display='';
+
+  const f1 = Math.atan((R_SUN-R_EARTH)/dSun);
+  const f2 = Math.atan((R_SUN+R_EARTH)/dSun);
+  const rUmbra = R_EARTH - dMoon*Math.tan(f1);
+  const rPenumbra = R_EARTH + dMoon*Math.tan(f2);
+
+  document.getElementById('extraReadout').innerHTML = `
+    <div class="rline"><span>Radius umbra di jarak Bulan</span><b>${Math.round(rUmbra).toLocaleString('id-ID')} km</b></div>
+    <div class="rline"><span>Radius penumbra di jarak Bulan</span><b>${Math.round(rPenumbra).toLocaleString('id-ID')} km</b></div>`;
+
+  const off = parseFloat(document.getElementById('offLunar').value);
+  document.getElementById('offLunarVal').textContent = Math.round(off).toLocaleString('id-ID')+' km';
+
+  let verdict, mag, cls='';
+  if(off + R_MOON <= rUmbra){
+    verdict='🔴 Gerhana Bulan TOTAL'; mag=1;
+  } else if(off - R_MOON < rUmbra){
+    verdict='🌘 Gerhana Bulan SEBAGIAN';
+    mag = (rUmbra - (off-R_MOON)) / (2*R_MOON);
+  } else if(off - R_MOON < rPenumbra){
+    verdict='🌗 Gerhana Bulan PENUMBRA saja';
+    mag = (rPenumbra - (off-R_MOON)) / (2*R_MOON) * 0.3;
+  } else {
+    verdict='Tidak terjadi gerhana — Bulan di luar penumbra'; mag=0; cls='none';
+  }
+  setVerdict(verdict, cls);
+  setMag(Math.max(0,mag));
+
+  const svg=document.getElementById('diaSvg'); svg.innerHTML='';
+  const cx0=60, cy=200, scale=0.28;
+  // umbra cone
+  svg.appendChild(el('polygon',{points:`${cx0},${cy-R_EARTH*scale} ${cx0+380},${cy-rUmbra*scale} ${cx0+380},${cy+rUmbra*scale} ${cx0},${cy+R_EARTH*scale}`, fill:'#1a1020', opacity:.85}));
+  svg.appendChild(el('polygon',{points:`${cx0},${cy-R_EARTH*scale} ${cx0+380},${cy-rPenumbra*scale} ${cx0+380},${cy+rPenumbra*scale} ${cx0},${cy+R_EARTH*scale}`, fill:'#3a2f4a', opacity:.35}));
+  svg.appendChild(el('circle',{cx:cx0,cy:cy,r:R_EARTH*scale,fill:'#2c5f8a'}));
+  const moonX=cx0+340;
+  svg.appendChild(el('circle',{cx:moonX,cy:cy+off*scale,r:R_MOON*scale*2.2,fill:'#c9bfae',stroke:'#6b6250','stroke-width':1}));
+  const cap=el('text',{x:300,y:380,fill:'#a9a0c0','font-size':11,'text-anchor':'middle'}); cap.textContent='Kerucut umbra (gelap) & penumbra (ungu pudar) dari Bumi, dengan lintasan Bulan (bulat krem) — bukan skala jarak nyata'; svg.appendChild(cap);
+}
+
+document.getElementById('modeSolar').addEventListener('click', ()=>{
+  mode='solar';
+  document.getElementById('modeSolar').classList.add('active'); document.getElementById('modeSolar').classList.remove('ghost');
+  document.getElementById('modeLunar').classList.remove('active'); document.getElementById('modeLunar').classList.add('ghost');
+  render();
+});
+document.getElementById('modeLunar').addEventListener('click', ()=>{
+  mode='lunar';
+  document.getElementById('modeLunar').classList.add('active'); document.getElementById('modeLunar').classList.remove('ghost');
+  document.getElementById('modeSolar').classList.remove('active'); document.getElementById('modeSolar').classList.add('ghost');
+  render();
+});
+
+['moonAnom','dayOfYear','offSolar','offLunar'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', render);
+});
+
+document.getElementById('presetTotal').addEventListener('click', ()=>{
+  document.getElementById('moonAnom').value=0; document.getElementById('dayOfYear').value=3;
+  if(mode==='solar') document.getElementById('offSolar').value=0; else document.getElementById('offLunar').value=0;
+  render();
+});
+document.getElementById('presetAnnular').addEventListener('click', ()=>{
+  document.getElementById('moonAnom').value=180; document.getElementById('dayOfYear').value=3;
+  if(mode==='solar') document.getElementById('offSolar').value=0; else document.getElementById('offLunar').value=0;
+  render();
+});
+document.getElementById('presetPartial').addEventListener('click', ()=>{
+  if(mode==='solar') document.getElementById('offSolar').value=25; else document.getElementById('offLunar').value=4200;
+  render();
+});
+document.getElementById('presetNone').addEventListener('click', ()=>{
+  if(mode==='solar') document.getElementById('offSolar').value=65; else document.getElementById('offLunar').value=8500;
+  render();
+});
+
+render();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

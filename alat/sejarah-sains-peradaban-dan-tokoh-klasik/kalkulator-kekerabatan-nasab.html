@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator Derajat Kekerabatan Nasab</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&display=swap');
+:root{
+  --bg:#12141c; --bg-panel:#1b1f2b; --bg-panel-2:#20263a;
+  --line:#333a4f; --text:#eee7d6; --text-dim:#a9a6ac;
+  --gold:#c9a15a; --gold-soft:#8a713c; --teal:#5a9c92; --radius:10px;
+}
+*{box-sizing:border-box;}
+body{ margin:0; background:var(--bg); color:var(--text); font-family:'Karla',sans-serif; line-height:1.6; }
+h1,h2,h3{ font-family:'Fraunces',serif; font-weight:600; margin:0 0 0.5em; }
+.wrap{ max-width:820px; margin:0 auto; padding:0 20px; }
+.hero{ padding:48px 0 30px; border-bottom:1px solid var(--line); text-align:center; }
+.hero .eyebrow{ text-transform:uppercase; font-size:0.7rem; letter-spacing:2.5px; color:var(--gold); margin-bottom:12px; }
+.hero h1{ font-size:clamp(1.5rem,4.6vw,2.2rem); color:#fff; }
+.hero p.tag{ color:var(--text-dim); max-width:580px; margin:10px auto 0; font-size:0.94rem; }
+section{ padding:36px 0; border-bottom:1px solid var(--line); }
+section:last-of-type{ border-bottom:none; }
+.kicker{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+.kicker .num{ font-family:'Fraunces',serif; color:var(--gold); font-size:0.85rem; border:1px solid var(--gold-soft); border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.kicker h2{ font-size:1.2rem; margin:0; color:#fff; }
+p{ color:var(--text); } p.dim{ color:var(--text-dim); font-size:0.9rem; }
+.panel{ background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-top:16px; }
+
+label{ display:block; font-size:0.82rem; color:var(--text-dim); margin:14px 0 6px; }
+label:first-of-type{ margin-top:0; }
+input[type=text]{
+  width:100%; background:#0e1017; border:1px solid var(--line); color:var(--text);
+  padding:11px; border-radius:8px; font-family:'Karla',sans-serif; font-size:0.95rem;
+}
+input:focus{ outline:none; border-color:var(--gold); }
+.btn{ margin-top:16px; width:100%; background:var(--gold); color:#12141c; border:none; padding:12px; border-radius:8px; font-weight:700; font-size:0.92rem; cursor:pointer; }
+.error{ color:#d97f6f; font-size:0.85rem; margin-top:8px; display:none; }
+.error.show{ display:block; }
+
+.result{ margin-top:20px; display:none; }
+.result.show{ display:block; }
+.result-headline{ text-align:center; padding:20px; background:var(--bg-panel-2); border:1px solid var(--gold-soft); border-radius:var(--radius); }
+.result-headline .desc{ font-family:'Fraunces',serif; font-size:1.3rem; color:var(--gold); margin-bottom:6px; }
+.result-headline .lca{ font-size:0.88rem; color:var(--text-dim); }
+
+.jalur-grid{ display:flex; flex-wrap:wrap; gap:16px; margin-top:18px; }
+.jalur-col{ flex:1; min-width:220px; }
+.jalur-col h4{ font-size:0.85rem; color:#fff; margin-bottom:10px; }
+.jalur-chain{ border-left:2px dashed var(--line); padding-left:14px; }
+.jalur-item{ position:relative; padding:8px 0; font-size:0.88rem; }
+.jalur-item::before{ content:''; position:absolute; left:-19px; top:14px; width:8px; height:8px; border-radius:50%; background:var(--teal); }
+.jalur-item.puncak::before{ background:var(--gold); }
+.jalur-item.puncak{ font-weight:700; color:var(--gold); }
+
+.formula{ font-family:'Fraunces',serif; font-style:italic; background:var(--bg-panel-2); border-radius:8px; padding:14px 18px; margin:14px 0; overflow-x:auto; color:#f4eede; }
+ul{ padding-left:20px; } ul.batas li{ margin-bottom:10px; }
+.refs li{ margin-bottom:10px; font-size:0.9rem; color:var(--text-dim); }
+.consult{ background:linear-gradient(135deg,var(--bg-panel-2),var(--bg-panel)); border:1px solid var(--gold-soft); border-radius:var(--radius); padding:22px; text-align:center; }
+.consult a.wa{ display:inline-block; margin-top:14px; background:var(--teal); color:#0e1017; text-decoration:none; font-weight:700; padding:12px 26px; border-radius:30px; }
+footer{ text-align:center; padding:26px 0; color:var(--text-dim); font-size:0.8rem; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Pasangan Alat · Pohon Nasab Interaktif</div>
+    <h1>Kalkulator Derajat Kekerabatan Nasab</h1>
+    <p class="tag">Bukan sekadar melihat pohon nasabnya — masukkan dua nama, sistem hitung sendiri di titik mana nasab keduanya bertemu, dan berapa generasi jaraknya.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <div class="kicker"><div class="num">1</div><h2>Belajar</h2></div>
+    <p>Menampilkan pohon nasab adalah menyajikan data. Alat ini melangkah satu tahap lebih jauh: <strong>menghitung</strong>. Dari 143 tokoh yang sudah terhubung di Pohon Nasab Interaktif, alat ini menelusuri jalur leluhur dua orang sekaligus ke atas — sampai bertemu di satu titik yang sama (disebut <em>leluhur bersama terdekat</em>) — lalu menghitung berapa generasi jarak masing-masing dari titik pertemuan itu.</p>
+    <p class="dim">Inilah yang sebenarnya terjadi di kepala ulama nasab klasik saat mereka berkata "fulan itu sepupu fulan" — hanya saja di sini dihitung otomatis, dan Anda bisa mencobanya untuk pasangan tokoh mana pun.</p>
+  </section>
+
+  <section id="alat">
+    <div class="kicker"><div class="num">2</div><h2>Alat</h2></div>
+    <div class="panel">
+      <label>Tokoh pertama</label>
+      <input type="text" id="input-a" list="daftar-nama" placeholder="Ketik nama, mis. Abu Bakr" value="Abu Bakr">
+      <label>Tokoh kedua</label>
+      <input type="text" id="input-b" list="daftar-nama" placeholder="Ketik nama, mis. 'Umar" value="'Umar bin Al-Khaththab">
+      <datalist id="daftar-nama"></datalist>
+
+      <button class="btn" onclick="hitungKekerabatan()">Hitung Kekerabatan</button>
+      <div class="error" id="error-msg"></div>
+
+      <div class="result" id="hasil-area">
+        <div class="result-headline">
+          <div class="desc" id="hasil-desc">—</div>
+          <div class="lca" id="hasil-lca">—</div>
+        </div>
+        <div class="jalur-grid">
+          <div class="jalur-col">
+            <h4 id="judul-jalur-a">Jalur Tokoh 1</h4>
+            <div class="jalur-chain" id="jalur-a"></div>
+          </div>
+          <div class="jalur-col">
+            <h4 id="judul-jalur-b">Jalur Tokoh 2</h4>
+            <div class="jalur-chain" id="jalur-b"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="metode">
+    <div class="kicker"><div class="num">3</div><h2>Metode</h2></div>
+    <p>Algoritma yang dipakai adalah pencarian <strong>leluhur bersama terdekat</strong> (lowest common ancestor) — sama seperti dipakai ilmu komputer untuk struktur pohon: telusuri jalur kedua tokoh ke atas satu per satu, ancestor pertama yang sama-sama muncul di kedua jalur itulah titik temunya.</p>
+    <div class="formula">tingkat sepupu = min(jarakA, jarakB) − 1 &nbsp;•&nbsp; pergeseran = |jarakA − jarakB|</div>
+    <p class="dim">Contoh yang sudah diuji: 'Ali bin Abi Thalib dan Nabi ﷺ sama-sama berjarak 2 generasi dari 'Abdul Muththalib — cocok dengan fakta masyhur bahwa ayah keduanya (Abu Thalib dan 'Abdullah) bersaudara kandung, sehingga 'Ali adalah sepupu pertama Nabi ﷺ.</p>
+  </section>
+
+  <section id="batasan">
+    <div class="kicker"><div class="num">4</div><h2>Batasan</h2></div>
+    <ul class="batas">
+      <li>Hanya mencakup 143 tokoh yang sudah dipetakan di Pohon Nasab Interaktif — di luar itu, alat ini tidak bisa menghitung.</li>
+      <li>Istri-istri Nabi ﷺ belum punya rantai leluhur yang dipetakan (baru disebut dalam teks biografi), sehingga belum bisa dihitung kekerabatannya lewat alat ini — ini bagian yang masih perlu riset lanjutan.</li>
+      <li>Jalur mengikuti nasab dari garis ayah (patrilineal), sesuai konvensi yang sama dipakai di seluruh Pohon Nasab Interaktif.</li>
+      <li>Istilah "sepupu tingkat ke-N" dan "bergeser M generasi" memakai konvensi silsilah umum — bukan istilah baku tunggal, karena penamaan derajat kekerabatan jauh memang bervariasi antar budaya.</li>
+    </ul>
+  </section>
+
+  <section id="konsultasi">
+    <div class="consult">
+      <h3 style="color:#fff;">Ingin tokoh lain ditambahkan?</h3>
+      <p class="dim">Alat ini masih pengembangan versi awal, mengikuti data yang sama dengan Pohon Nasab Interaktif. Silakan hubungi kami untuk usulan atau koreksi data.</p>
+      <a class="wa" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20bertanya%20seputar%20Kalkulator%20Kekerabatan%20Nasab." target="_blank">Hubungi via WhatsApp</a>
+    </div>
+  </section>
+
+</div>
+<footer>Pasangan alat dari Pohon Nasab Interaktif · Prototipe, belum masuk struktur menu utama.</footer>
+
+<script>
+const NAMA = {"nabi":"Muhammad ﷺ","abdullah":"'Abdullah bin Abdul Muththalib","abdulmuttalib":"'Abdul Muththalib (Syaibah bin Hasyim)","hashim":"Hasyim bin 'Abdu Manaf","abdumanaf":"'Abdu Manaf bin Qushay","qushay":"Qushay bin Kilab","kilab":"Kilab bin Murrah","murrah":"Murrah bin Ka'b","kab":"Ka'b bin Lu'ay","luay":"Lu'ay bin Ghalib","ghalib":"Ghalib bin Fihr","fihr":"Fihr bin Malik","malik":"Malik bin An-Nadhr","annadhr":"An-Nadhr bin Kinanah","kinanah":"Kinanah bin Khuzaimah","khuzaimah":"Khuzaimah bin Mudrikah","mudrikah":"Mudrikah bin Ilyas","ilyas":"Ilyas bin Mudhar","mudhar":"Mudhar bin Nizar","nizar":"Nizar bin Ma'ad","maad":"Ma'ad bin 'Adnan","adnan":"'Adnan","udad":"Udad","muqawwim":"Muqawwim bin Udad","nahur2":"Nahur bin Muqawwim","tairah":"Tairah bin Nahur","yarib":"Ya'rib bin Tairah","yasyjub":"Yasyjub bin Ya'rib","nabit":"Nabit bin Yasyjub","ismail":"Isma'il 'alaihissalam","ibrahim":"Ibrahim 'alaihissalam","tarih":"Tarih (Azar)","nahur":"Nahur bin Saruj","saruj":"Saruj bin Ra'u","rau":"Ra'u bin Falagh","falagh":"Falagh bin 'Abir","abir":"'Abir bin Syalih","syalih":"Syalih bin Arfakhsyad","arfakhsyad":"Arfakhsyad bin Sam","sam":"Sam bin Nuh","nuh":"Nuh 'alaihissalam","lamak":"Lamak bin Mutawasyilakh","mutawasyilakh":"Mutawasyilakh bin Akhnukh","akhnukh":"Akhnukh (Nabi Idris 'alaihissalam)","yarid":"Yarid bin Mahalail","mahalail":"Mahalail bin Qainan","qainan":"Qainan bin Anusy","anusy":"Anusy bin Syits","syits":"Syits 'alaihissalam","adam":"Adam 'alaihissalam","khadijah":"Khadijah binti Khuwailid","saudah":"Saudah binti Zam'ah","aisyah":"'Aisyah binti Abu Bakr","hafshah":"Hafshah binti 'Umar","zainabkhuzaimah":"Zainab binti Khuzaimah","ummusalamah":"Ummu Salamah (Hindun)","zainabjahsy":"Zainab binti Jahsy","juwairiyah":"Juwairiyah binti Al-Harits","ummuhabibah":"Ummu Habibah (Ramlah)","shafiyyah":"Shafiyyah binti Huyay","maimunah":"Maimunah binti Al-Harits","mariyah":"Mariyah Al-Qibthiyyah","qasim":"Al-Qasim","zainabnabi":"Zainab binti Nabi ﷺ","ruqayyah":"Ruqayyah","ummukultsum":"Ummu Kultsum","abdullahnabi":"'Abdullah (At-Thayyib/At-Thahir)","ibrahimnabi":"Ibrahim bin Nabi ﷺ","fatimah":"Fatimah Az-Zahra","abbas":"Al-'Abbas bin 'Abdul Muththalib","hamzah":"Hamzah bin 'Abdul Muththalib","abuthalib":"Abu Thalib ('Abdu Manaf bin 'Abdul Muththalib)","ali":"'Ali bin Abi Thalib","abulahab":"Abu Lahab ('Abdul 'Uzza bin 'Abdul Muththalib)","zubairpaman":"Az-Zubair bin 'Abdul Muththalib","safiyyahpaman":"Shafiyyah binti 'Abdul Muththalib","ummuhakim":"Ummu Hakim (Al-Baidha')","adiy":"'Adiy bin Ka'b","razah":"Razah bin 'Adiy","qurth":"Qurth bin Razah","abdullahbinqurth":"'Abdullah bin Qurth","riyah":"Riyah bin 'Abdullah","abduluzza2":"'Abdul 'Uzza bin Riyah","nufail":"Nufail bin 'Abdul 'Uzza","khattab":"Al-Khaththab bin Nufail","umar":"'Umar bin Al-Khaththab","amrbinnufail":"'Amr bin Nufail","zaidbinamr":"Zaid bin 'Amr bin Nufail","saidbinzaid":"Sa'id bin Zaid","taim":"Taim bin Murrah","saadtaim":"Sa'd bin Taim","kabtaim":"Ka'b bin Sa'd","amrtaim":"'Amr bin Ka'b (Taim)","amirtaim":"'Amir bin 'Amr","abuquhafah":"'Utsman bin 'Amir (Abu Quhafah)","abubakr":"Abu Bakr Ash-Shiddiq ('Abdullah)","utsmantaim2":"'Utsman bin 'Amr (Taim)","ubaidillah":"'Ubaidillah bin 'Utsman","thalhah":"Thalhah bin 'Ubaidillah","abdusyams":"'Abdu Syams bin 'Abdu Manaf","umayyah":"Umayyah bin 'Abdu Syams","abulash":"Abul 'Ash bin Umayyah","affan":"'Affan bin Abul 'Ash","utsman":"'Utsman bin 'Affan","harbbinumayyah":"Harb bin Umayyah","abusufyan":"Abu Sufyan bin Harb","almuththalib":"Al-Muththalib bin 'Abdu Manaf","hasyimmuthalib":"Hasyim bin Al-Muththalib","abduyazid":"'Abdu Yazid bin Hasyim (Al-Muththalib)","ubaidsyafii":"'Ubaid bin 'Abdu Yazid","assaib":"As-Sa'ib bin 'Ubaid","syafii_kakek":"Syafi' bin As-Sa'ib","utsmansyafii":"'Utsman bin Syafi'","abbassyafii":"Al-'Abbas bin 'Utsman","idrissyafii":"Idris bin Al-'Abbas","syafii":"Muhammad bin Idris Asy-Syafi'i","zuhrah":"Zuhrah bin Kilab","abdumanafzuhrah":"'Abdu Manaf bin Zuhrah","wuhaib":"Wuhaib bin 'Abdu Manaf (Zuhrah)","malikwuhaib":"Malik bin Wuhaib","saadbinabiwaqqash":"Sa'd bin Abi Waqqash (Malik)","harits_zuhrah":"Al-Harits bin Zuhrah","abd_zuhrah":"'Abd bin Al-Harits (Zuhrah)","abduauf":"'Abdu 'Auf bin 'Abd","abdurrahmanbinauf":"'Abdurrahman bin 'Auf","harits_fihr":"Al-Harits bin Fihr","dhabbah":"Dhabbah bin Al-Harits (Fihr)","uhaib":"Uhaib bin Dhabbah","hilal":"Hilal bin Uhaib","jarrah":"Al-Jarrah bin Hilal","abdullahbinjarrah":"'Abdullah bin Al-Jarrah","abuubaidah":"Abu 'Ubaidah bin Al-Jarrah ('Amir)","asad":"Asad bin 'Abdul 'Uzza","khuwailid":"Khuwailid bin Asad","awwam":"Al-'Awwam bin Khuwailid","zubairsahabat":"Az-Zubair bin Al-'Awwam","hasan":"Al-Hasan bin 'Ali","husain":"Al-Husain bin 'Ali","idris1":"Idris bin 'Abdullah","ahmadmuhajir":"Ahmad Al-Muhajir ilallah","abdullahbinabbas":"'Abdullah bin 'Abbas","muhammadalibbn":"Muhammad bin 'Ali bin 'Abdullah bin 'Abbas","assaffah":"Abul 'Abbas As-Saffah"};
+
+const PARENT = {"maad":"adnan","nizar":"maad","mudhar":"nizar","ilyas":"mudhar","mudrikah":"ilyas","khuzaimah":"mudrikah","kinanah":"khuzaimah","annadhr":"kinanah","malik":"annadhr","fihr":"malik","ghalib":"fihr","luay":"ghalib","kab":"luay","murrah":"kab","kilab":"murrah","qushay":"kilab","abdumanaf":"qushay","hashim":"abdumanaf","abdulmuttalib":"hashim","abdullah":"abdulmuttalib","nabi":"abdullah","ismail":"ibrahim","nabit":"ismail","yasyjub":"nabit","yarib":"yasyjub","tairah":"yarib","nahur2":"tairah","muqawwim":"nahur2","udad":"muqawwim","adnan":"udad","syits":"adam","anusy":"syits","qainan":"anusy","mahalail":"qainan","yarid":"mahalail","akhnukh":"yarid","mutawasyilakh":"akhnukh","lamak":"mutawasyilakh","nuh":"lamak","sam":"nuh","arfakhsyad":"sam","syalih":"arfakhsyad","abir":"syalih","falagh":"abir","rau":"falagh","saruj":"rau","nahur":"saruj","tarih":"nahur","ibrahim":"tarih","adiy":"kab","razah":"adiy","qurth":"razah","abdullahbinqurth":"qurth","riyah":"abdullahbinqurth","abduluzza2":"riyah","nufail":"abduluzza2","khattab":"nufail","umar":"khattab","amrbinnufail":"nufail","zaidbinamr":"amrbinnufail","saidbinzaid":"zaidbinamr","taim":"murrah","saadtaim":"taim","kabtaim":"saadtaim","amrtaim":"kabtaim","amirtaim":"amrtaim","abuquhafah":"amirtaim","abubakr":"abuquhafah","utsmantaim2":"amrtaim","ubaidillah":"utsmantaim2","thalhah":"ubaidillah","zuhrah":"kilab","abdumanafzuhrah":"zuhrah","wuhaib":"abdumanafzuhrah","malikwuhaib":"wuhaib","saadbinabiwaqqash":"malikwuhaib","harits_zuhrah":"zuhrah","abd_zuhrah":"harits_zuhrah","abduauf":"abd_zuhrah","abdurrahmanbinauf":"abduauf","harits_fihr":"fihr","dhabbah":"harits_fihr","uhaib":"dhabbah","hilal":"uhaib","jarrah":"hilal","abdullahbinjarrah":"jarrah","abuubaidah":"abdullahbinjarrah","asad":"qushay","khuwailid":"asad","awwam":"khuwailid","zubairsahabat":"awwam","abdusyams":"abdumanaf","umayyah":"abdusyams","abulash":"umayyah","affan":"abulash","utsman":"affan","harbbinumayyah":"umayyah","abusufyan":"harbbinumayyah","almuththalib":"abdumanaf","hasyimmuthalib":"almuththalib","abduyazid":"hasyimmuthalib","ubaidsyafii":"abduyazid","assaib":"ubaidsyafii","syafii_kakek":"assaib","utsmansyafii":"syafii_kakek","abbassyafii":"utsmansyafii","idrissyafii":"abbassyafii","syafii":"idrissyafii","idris1":"hasan","ahmadmuhajir":"husain","abdullahbinabbas":"abbas","muhammadalibbn":"abdullahbinabbas","assaffah":"muhammadalibbn","ali":"abuthalib","qasim":"nabi","zainabnabi":"nabi","ruqayyah":"nabi","ummukultsum":"nabi","abdullahnabi":"nabi","ibrahimnabi":"nabi","fatimah":"nabi","abbas":"abdulmuttalib","hamzah":"abdulmuttalib","abuthalib":"abdulmuttalib","abulahab":"abdulmuttalib","zubairpaman":"abdulmuttalib","safiyyahpaman":"abdulmuttalib","ummuhakim":"abdulmuttalib","hasan":"ali","husain":"ali"};
+
+function isiDatalist(){
+  const dl = document.getElementById('daftar-nama');
+  dl.innerHTML = Object.values(NAMA).map(n=>`<option value="${n.replace(/"/g,'&quot;')}">`).join('');
+}
+
+function cariId(namaInput){
+  const target = namaInput.trim().toLowerCase();
+  if(!target) return null;
+  // cocok persis dulu
+  for(const id in NAMA){ if(NAMA[id].toLowerCase()===target) return id; }
+  // cocok sebagian (mengandung)
+  const kandidat = Object.keys(NAMA).filter(id=> NAMA[id].toLowerCase().includes(target));
+  return kandidat.length===1 ? kandidat[0] : (kandidat.length>1 ? {ambigu:kandidat} : null);
+}
+
+function jalurKeAkar(id){
+  const jalur=[id]; let cur=id;
+  while(PARENT[cur]){ cur=PARENT[cur]; jalur.push(cur); }
+  return jalur;
+}
+
+function cariLCA(idA, idB){
+  const jalurA = jalurKeAkar(idA);
+  const jalurB = jalurKeAkar(idB);
+  const posB = new Map(jalurB.map((id,i)=>[id,i]));
+  for(let i=0;i<jalurA.length;i++){
+    if(posB.has(jalurA[i])) return {lca:jalurA[i], jarakA:i, jarakB:posB.get(jalurA[i]), jalurA:jalurA.slice(0,i+1), jalurB:jalurB.slice(0,posB.get(jalurA[i])+1)};
+  }
+  return null;
+}
+
+function deskripsiHubungan(jarakA, jarakB){
+  if(jarakA===0 && jarakB===0) return 'Orang yang sama';
+  if(jarakA===0) return `Leluhur langsung (${jarakB} generasi di atas Tokoh 2)`;
+  if(jarakB===0) return `Leluhur langsung (${jarakA} generasi di atas Tokoh 1)`;
+  const tingkat = Math.min(jarakA,jarakB)-1;
+  const pergeseran = Math.abs(jarakA-jarakB);
+  if(tingkat===0) return pergeseran===0 ? 'Saudara (leluhur langsung sama)' : `Saudara berjarak ${pergeseran} generasi`;
+  let ket = `Sepupu tingkat ke-${tingkat}`;
+  if(pergeseran>0) ket += ` (bergeser ${pergeseran} generasi)`;
+  return ket;
+}
+
+function tampilkanJalur(elId, jalur){
+  document.getElementById(elId).innerHTML = jalur.map((id,i)=>{
+    const puncak = i===jalur.length-1;
+    return `<div class="jalur-item ${puncak?'puncak':''}">${NAMA[id]||id}</div>`;
+  }).join('');
+}
+
+function hitungKekerabatan(){
+  const err = document.getElementById('error-msg');
+  const hasil = document.getElementById('hasil-area');
+  err.classList.remove('show'); hasil.classList.remove('show');
+
+  const rawA = document.getElementById('input-a').value;
+  const rawB = document.getElementById('input-b').value;
+  const idA = cariId(rawA);
+  const idB = cariId(rawB);
+
+  if(!idA || (idA && idA.ambigu)){
+    err.textContent = idA && idA.ambigu ? 'Nama Tokoh 1 cocok dengan beberapa tokoh, tuliskan lebih spesifik: ' + idA.ambigu.map(i=>NAMA[i]).join(', ') : 'Tokoh 1 tidak ditemukan dalam data (143 tokoh Pohon Nasab Interaktif).';
+    err.classList.add('show'); return;
+  }
+  if(!idB || (idB && idB.ambigu)){
+    err.textContent = idB && idB.ambigu ? 'Nama Tokoh 2 cocok dengan beberapa tokoh, tuliskan lebih spesifik: ' + idB.ambigu.map(i=>NAMA[i]).join(', ') : 'Tokoh 2 tidak ditemukan dalam data (143 tokoh Pohon Nasab Interaktif).';
+    err.classList.add('show'); return;
+  }
+
+  if(idA===idB){
+    err.textContent = 'Kedua nama merujuk pada tokoh yang sama.';
+    err.classList.add('show'); return;
+  }
+
+  const r = cariLCA(idA, idB);
+  if(!r){
+    err.textContent = 'Belum ditemukan leluhur bersama dalam data yang tersedia (kemungkinan salah satu tokoh belum punya rantai leluhur terpetakan, mis. istri-istri Nabi ﷺ).';
+    err.classList.add('show'); return;
+  }
+
+  document.getElementById('hasil-desc').textContent = deskripsiHubungan(r.jarakA, r.jarakB);
+  document.getElementById('hasil-lca').textContent = 'Bertemu di: ' + NAMA[r.lca] + ' (Tokoh 1: ' + r.jarakA + ' generasi, Tokoh 2: ' + r.jarakB + ' generasi)';
+  document.getElementById('judul-jalur-a').textContent = 'Jalur ' + NAMA[idA];
+  document.getElementById('judul-jalur-b').textContent = 'Jalur ' + NAMA[idB];
+  tampilkanJalur('jalur-a', r.jalurA);
+  tampilkanJalur('jalur-b', r.jalurB);
+  hasil.classList.add('show');
+}
+
+isiDatalist();
+hitungKekerabatan();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

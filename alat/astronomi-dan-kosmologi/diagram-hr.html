@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagram Hertzsprung-Russell — JAZMI</title>
+<style>
+  :root{
+    --bg:#0a0b12;
+    --panel:#12131e;
+    --panel2:#1a1c2b;
+    --gold:#d9b25a;
+    --gold-light:#eecc80;
+    --text:#e6e6f0;
+    --text-soft:#8f8fa8;
+    --line:#262838;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;line-height:1.65;}
+  .wrap{max-width:940px;margin:0 auto;padding:36px 20px 70px;}
+  .eyebrow{color:var(--gold-light);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}
+  h1{font-family:Georgia,"Iowan Old Style",serif;font-weight:normal;font-size:clamp(23px,4.3vw,33px);margin:0 0 10px;}
+  h2{font-family:Georgia,"Iowan Old Style",serif;font-weight:normal;font-size:20px;color:var(--gold-light);margin:42px 0 12px;border-bottom:1px solid var(--line);padding-bottom:8px;}
+  p{color:var(--text-soft);font-size:15px;}
+  .lede{color:var(--text);font-size:15.5px;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:22px 24px;}
+  .field{margin:16px 0;}
+  .field label{display:block;font-size:13px;color:var(--text-soft);margin-bottom:8px;}
+  input[type=range]{width:100%;accent-color:var(--gold);}
+  svg{display:block;width:100%;height:auto;}
+  .btnrow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+  .btnrow button{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:7px 14px;border-radius:16px;font-size:12.5px;cursor:pointer;}
+  .btnrow button:hover{border-color:var(--gold);}
+  .readout{background:#1a140c88;border:1px solid var(--gold);border-radius:8px;padding:16px 20px;margin-top:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;}
+  .readout .item .label{font-size:11px;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.5px;}
+  .readout .item .value{font-size:18px;color:var(--gold-light);font-weight:600;}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px;}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);color:var(--text-soft);}
+  th{color:var(--text);}
+  ul{color:var(--text-soft);font-size:14.5px;padding-left:20px;}
+  li{margin-bottom:6px;}
+  .refs li{font-size:13px;}
+  footer{margin-top:44px;font-size:12px;color:var(--text-soft);border-top:1px solid var(--line);padding-top:16px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Laboratorium alat · JAZMI · Tier 3 No. 15</p>
+    <h1>Diagram Hertzsprung–Russell</h1>
+    <p class="lede">Grafik paling penting dalam astrofisika bintang — memetakan suhu permukaan (sumbu-x, terbalik: panas di kiri) terhadap luminositas (sumbu-y, skala logaritmik). Disusun terpisah oleh Ejnar Hertzsprung (1911) dan Henry Norris Russell (1913), tanpa saling tahu satu sama lain, dan ternyata pola yang mereka temukan sama persis.</p>
+  </header>
+
+  <h2>Belajar</h2>
+  <div class="panel">
+    <p>Kalau bintang tersebar acak di diagram ini, tidak akan ada pola apa pun. Tapi ternyata sebagian besar bintang (≈90%) jatuh di satu pita diagonal — <strong>deret utama</strong> (main sequence) — dari kiri-atas (panas, sangat terang, masif) ke kanan-bawah (dingin, redup, ringan). Ini bukan kebetulan: selama fase paling panjang hidupnya, bintang membakar hidrogen di intinya dengan laju yang ditentukan hampir sepenuhnya oleh satu variabel — massanya. Semakin masif, semakin panas dan terang.</p>
+    <p>Di luar deret utama ada dua wilayah penting lain: <strong>raksasa dan maharaksasa</strong> (giants/supergiants) di kanan-atas — bintang yang sudah menghabiskan hidrogen inti, membengkak jadi sangat besar tapi permukaannya justru mendingin; dan <strong>katai putih</strong> (white dwarfs) di kiri-bawah — sisa inti bintang yang sudah mati, sangat panas tapi sangat kecil sehingga total cahayanya redup.</p>
+    <p>Klasifikasi spektral OBAFGKM (dari panas ke dingin) adalah sumbu-x diagram ini dalam bentuk kategori, bukan angka — mnemonicnya yang terkenal: "Oh Be A Fine Girl/Guy, Kiss Me".</p>
+  </div>
+
+  <h2>Eksplorasi</h2>
+  <div class="panel">
+    <svg id="hrSvg" viewBox="0 0 760 560" role="img" aria-label="Diagram Hertzsprung-Russell interaktif"></svg>
+
+    <div class="field">
+      <label>Massa bintang deret-utama hipotetis (kali massa Matahari) — <span id="massLabel"></span></label>
+      <input type="range" id="massSlider" min="-0.7" max="1.8" value="0" step="0.02">
+    </div>
+    <p style="font-size:12px;color:var(--text-soft);">(Slider dalam skala logaritmik — 0 = 1 massa matahari, geser ke kanan untuk bintang lebih masif, ke kiri untuk lebih ringan)</p>
+
+    <div class="readout">
+      <div class="item"><div class="label">Massa</div><div class="value" id="massOut"></div></div>
+      <div class="item"><div class="label">Suhu permukaan</div><div class="value" id="tempOut"></div></div>
+      <div class="item"><div class="label">Luminositas</div><div class="value" id="lumOut"></div></div>
+      <div class="item"><div class="label">Kelas spektral perkiraan</div><div class="value" id="classOut"></div></div>
+    </div>
+
+    <div class="btnrow" id="starButtons"></div>
+    <div class="readout" id="starInfoBox" style="display:none;">
+      <div class="item"><div class="label">Bintang</div><div class="value" id="starNameOut"></div></div>
+      <div class="item"><div class="label">Suhu</div><div class="value" id="starTempOut"></div></div>
+      <div class="item"><div class="label">Luminositas</div><div class="value" id="starLumOut"></div></div>
+      <div class="item"><div class="label">Jenis</div><div class="value" id="starNoteOut"></div></div>
+    </div>
+  </div>
+
+  <h2>Metode</h2>
+  <div class="panel">
+    <p>Posisi bintang deret-utama hipotetis dihitung lewat interpolasi log-log dari tabel jangkar data astronomi standar (bukan rumus tunggal, karena hubungan massa-luminositas-suhu deret utama memang tidak benar-benar satu pangkat sederhana di seluruh rentang massa):</p>
+    <table>
+      <tr><th>Kelas</th><th>Massa (M☉)</th><th>Suhu (K)</th><th>Luminositas (L☉)</th></tr>
+      <tr><td>O5</td><td class="val">60</td><td>40.000</td><td>800.000</td></tr>
+      <tr><td>B0</td><td>18</td><td>30.000</td><td>20.000</td></tr>
+      <tr><td>A0</td><td>2,9</td><td>9.700</td><td>40</td></tr>
+      <tr><td>F0</td><td>1,6</td><td>7.200</td><td>6,5</td></tr>
+      <tr><td>G0</td><td>1,05</td><td>6.000</td><td>1,5</td></tr>
+      <tr><td>G2 (Matahari)</td><td>1,0</td><td>5.778</td><td>1,0</td></tr>
+      <tr><td>K0</td><td>0,79</td><td>5.300</td><td>0,4</td></tr>
+      <tr><td>M0</td><td>0,51</td><td>3.800</td><td>0,08</td></tr>
+      <tr><td>M5</td><td>0,21</td><td>3.200</td><td>0,008</td></tr>
+    </table>
+    <p style="margin-top:10px;">Bintang-bintang acuan nyata (Sirius, Betelgeuse, dll.) diplot dari data katalog suhu efektif dan luminositas yang dipublikasikan — bukan dihitung dari rumus deret utama, karena banyak di antaranya justru bukan bintang deret utama (raksasa, maharaksasa, katai putih) sehingga hubungan massa-luminositas deret utama tidak berlaku untuk mereka.</p>
+  </div>
+
+  <h2>Batasan</h2>
+  <div class="panel">
+    <ul>
+      <li>Interpolasi log-log antar titik jangkar adalah pendekatan — hubungan massa-luminositas sesungguhnya berubah kemiringan di beberapa rentang massa (kira-kira L∝M² untuk bintang sangat ringan, L∝M³·⁵ untuk bintang menengah, L∝M untuk bintang sangat masif) — kalkulator ini tidak memodelkan patahan-patahan itu secara eksplisit, hanya mengikuti tabel jangkar yang sudah mencerminkan pola itu secara kasar.</li>
+      <li>Luminositas bintang maharaksasa seperti Betelgeuse sangat bervariasi dari waktu ke waktu (bintang variabel) — angka yang ditampilkan adalah nilai representatif dari literatur, bukan pengukuran waktu-nyata.</li>
+      <li>Diagram ini menampilkan bintang pada satu momen dalam hidupnya — tidak menggambarkan jalur evolusi (bagaimana satu bintang berpindah posisi seiring waktu saat bahan bakarnya berubah), yang sebenarnya jauh lebih kaya dari sekadar posisi statis di deret utama.</li>
+      <li>Rentang massa slider dibatasi sekitar 0,2–60 kali massa Matahari, sesuai rentang tabel jangkar — di luar rentang itu ekstrapolasi jadi tidak dapat diandalkan.</li>
+    </ul>
+  </div>
+
+  <h2>Referensi</h2>
+  <div class="panel refs">
+    <ul>
+      <li>Tabel kelas spektral deret utama — parameter standar astronomi (massa, suhu efektif, luminositas per kelas).</li>
+      <li>Hertzsprung, E. (1911); Russell, H.N. (1913) — publikasi asli diagram.</li>
+      <li>Data bintang acuan (Sirius A/B, Betelgeuse, Rigel, Proxima Centauri, Vega, Aldebaran, Pollux, Arcturus) — katalog parameter bintang standar.</li>
+    </ul>
+  </div>
+
+  <footer>
+    Prototipe berdiri sendiri untuk proyek JAZMI, mengikuti metode Belajar → Model → Uji → Tool. Tabel jangkar deret utama diverifikasi monoton (massa naik → suhu naik → luminositas naik) sebelum dipakai untuk interpolasi.
+  </footer>
+</div>
+
+<script>
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); return e; }
+
+// Tabel jangkar deret utama, diurutkan dari massa terbesar ke terkecil
+const ANCHORS = [
+  {mass:60, temp:40000, lum:800000, cls:'O5'},
+  {mass:18, temp:30000, lum:20000, cls:'B0'},
+  {mass:2.9, temp:9700, lum:40, cls:'A0'},
+  {mass:1.6, temp:7200, lum:6.5, cls:'F0'},
+  {mass:1.05, temp:6000, lum:1.5, cls:'G0'},
+  {mass:1.0, temp:5778, lum:1.0, cls:'G2'},
+  {mass:0.79, temp:5300, lum:0.4, cls:'K0'},
+  {mass:0.51, temp:3800, lum:0.08, cls:'M0'},
+  {mass:0.21, temp:3200, lum:0.008, cls:'M5'}
+];
+
+function interpMS(massSolar){
+  const logM = Math.log10(massSolar);
+  // cari dua jangkar yang mengapit logM
+  let lo=null, hi=null;
+  for(let i=0;i<ANCHORS.length-1;i++){
+    const a=ANCHORS[i], b=ANCHORS[i+1];
+    if(logM <= Math.log10(a.mass) && logM >= Math.log10(b.mass)){ hi=a; lo=b; break; }
+  }
+  if(!lo && !hi){
+    if(massSolar > ANCHORS[0].mass){ hi=ANCHORS[0]; lo=ANCHORS[1]; }
+    else { hi=ANCHORS[ANCHORS.length-2]; lo=ANCHORS[ANCHORS.length-1]; }
+  }
+  const logMlo=Math.log10(lo.mass), logMhi=Math.log10(hi.mass);
+  const f = (logM-logMlo)/(logMhi-logMlo);
+  const logT = Math.log10(lo.temp) + f*(Math.log10(hi.temp)-Math.log10(lo.temp));
+  const logL = Math.log10(lo.lum) + f*(Math.log10(hi.lum)-Math.log10(lo.lum));
+  return {temp:Math.pow(10,logT), lum:Math.pow(10,logL)};
+}
+
+function spectralClassFromTemp(t){
+  if(t>=30000) return 'O';
+  if(t>=10000) return 'B';
+  if(t>=7500) return 'A';
+  if(t>=6000) return 'F';
+  if(t>=5200) return 'G';
+  if(t>=3700) return 'K';
+  return 'M';
+}
+
+// Bintang acuan nyata (bukan dihitung dari tabel deret utama)
+const REAL_STARS = [
+  {name:'Matahari', temp:5778, lum:1, note:'G2V, deret utama'},
+  {name:'Sirius A', temp:9940, lum:25.4, note:'A1V, deret utama'},
+  {name:'Sirius B', temp:25000, lum:0.03, note:'DA2, katai putih'},
+  {name:'Betelgeuse', temp:3600, lum:126000, note:'M2Iab, maharaksasa merah'},
+  {name:'Rigel', temp:12100, lum:120000, note:'B8Ia, maharaksasa biru'},
+  {name:'Proxima Centauri', temp:3042, lum:0.0017, note:'M5.5V, katai merah'},
+  {name:'Vega', temp:9600, lum:40, note:'A0V, deret utama'},
+  {name:'Aldebaran', temp:3900, lum:400, note:'K5III, raksasa merah'},
+  {name:'Pollux', temp:4666, lum:43, note:'K0III, raksasa oranye'},
+  {name:'Arcturus', temp:4286, lum:170, note:'K1.5III, raksasa merah'}
+];
+
+const svg = document.getElementById('hrSvg');
+const W=760,H=560, padL=70,padR=30,padT=30,padB=50;
+const TMIN=3000, TMAX=45000, LMIN=1e-4, LMAX=1e6;
+
+function xScale(t){
+  // sumbu suhu terbalik, skala log
+  const logT = Math.log10(t), logTmin=Math.log10(TMIN), logTmax=Math.log10(TMAX);
+  return padL + (1-(logT-logTmin)/(logTmax-logTmin))*(W-padL-padR);
+}
+function yScale(l){
+  const logL=Math.log10(l), logLmin=Math.log10(LMIN), logLmax=Math.log10(LMAX);
+  return H-padB - (logL-logLmin)/(logLmax-logLmin)*(H-padT-padB);
+}
+function starColor(t){
+  if(t>=25000) return '#9bb0ff';
+  if(t>=10000) return '#aabfff';
+  if(t>=7500) return '#cad7ff';
+  if(t>=6000) return '#f8f7ff';
+  if(t>=5200) return '#fff4ea';
+  if(t>=3700) return '#ffd2a1';
+  return '#ffb56c';
+}
+
+function buildBase(){
+  svg.innerHTML='';
+  svg.appendChild(el('rect',{x:0,y:0,width:W,height:H,fill:'#0a0b12'}));
+  // grid suhu
+  [40000,30000,20000,10000,7500,6000,5200,3700,3000].forEach(t=>{
+    const x=xScale(t);
+    svg.appendChild(el('line',{x1:x,y1:padT,x2:x,y2:H-padB,stroke:'#1a1c2b','stroke-width':1}));
+    const lbl=el('text',{x:x,y:H-padB+18,'text-anchor':'middle','font-size':10,fill:'#8f8fa8'});
+    lbl.textContent = t+'K';
+    svg.appendChild(lbl);
+  });
+  [1e-4,1e-2,1,1e2,1e4,1e6].forEach(l=>{
+    const y=yScale(l);
+    svg.appendChild(el('line',{x1:padL,y1:y,x2:W-padR,y2:y,stroke:'#1a1c2b','stroke-width':1}));
+    const lbl=el('text',{x:padL-10,y:y+4,'text-anchor':'end','font-size':10,fill:'#8f8fa8'});
+    lbl.textContent = l>=1?l.toExponential(0).replace('+',''):l.toExponential(0);
+    svg.appendChild(lbl);
+  });
+  const xlbl=el('text',{x:W/2,y:H-10,'text-anchor':'middle','font-size':12,fill:'#e6e6f0'});
+  xlbl.textContent = 'Suhu permukaan (K) — panas di kiri';
+  svg.appendChild(xlbl);
+  const ylbl=el('text',{x:16,y:H/2,'text-anchor':'middle','font-size':12,fill:'#e6e6f0',transform:'rotate(-90 16 '+(H/2)+')'});
+  ylbl.textContent = 'Luminositas (L☉, skala log)';
+  svg.appendChild(ylbl);
+
+  // pita deret utama
+  let msPath='';
+  for(let logM=-0.9; logM<=1.85; logM+=0.05){
+    const m=Math.pow(10,logM);
+    const r=interpMS(m);
+    const x=xScale(r.temp), y=yScale(r.lum);
+    msPath += (logM===-0.9?'M ':' L ')+x+' '+y;
+  }
+  svg.appendChild(el('path',{d:msPath,fill:'none',stroke:'#d9b25a55','stroke-width':10,'stroke-linecap':'round'}));
+
+  // bintang acuan nyata
+  REAL_STARS.forEach(s=>{
+    const x=xScale(s.temp), y=yScale(s.lum);
+    svg.appendChild(el('circle',{cx:x,cy:y,r:6,fill:starColor(s.temp),stroke:'#0a0b12','stroke-width':1}));
+    const lbl=el('text',{x:x+9,y:y+3,'font-size':9,fill:'#8f8fa8'});
+    lbl.textContent = s.name;
+    svg.appendChild(lbl);
+  });
+
+  svg.appendChild(el('g',{id:'dynamicStar'}));
+}
+buildBase();
+
+function update(){
+  const logM = parseFloat(document.getElementById('massSlider').value);
+  const mass = Math.pow(10,logM);
+  const r = interpMS(mass);
+  const cls = spectralClassFromTemp(r.temp);
+
+  document.getElementById('massLabel').textContent = mass.toFixed(2)+' M☉';
+  document.getElementById('massOut').textContent = mass.toFixed(2)+' M☉';
+  document.getElementById('tempOut').textContent = Math.round(r.temp).toLocaleString('id-ID')+' K';
+  document.getElementById('lumOut').textContent = r.lum>=1 ? r.lum.toFixed(1)+' L☉' : r.lum.toExponential(2)+' L☉';
+  document.getElementById('classOut').textContent = 'Kelas '+cls;
+
+  const dyn = document.getElementById('dynamicStar');
+  dyn.innerHTML='';
+  const x=xScale(r.temp), y=yScale(r.lum);
+  dyn.appendChild(el('circle',{cx:x,cy:y,r:10,fill:starColor(r.temp),stroke:'#eecc80','stroke-width':2}));
+}
+document.getElementById('massSlider').addEventListener('input', update);
+
+const starButtons = document.getElementById('starButtons');
+REAL_STARS.forEach(s=>{
+  const b = document.createElement('button');
+  b.textContent = s.name;
+  b.addEventListener('click', ()=>{
+    document.getElementById('starInfoBox').style.display='grid';
+    document.getElementById('starNameOut').textContent = s.name;
+    document.getElementById('starTempOut').textContent = s.temp.toLocaleString('id-ID')+' K';
+    document.getElementById('starLumOut').textContent = (s.lum>=1? s.lum.toLocaleString('id-ID',{maximumFractionDigits:1}) : s.lum.toExponential(2))+' L☉';
+    document.getElementById('starNoteOut').textContent = s.note;
+  });
+  starButtons.appendChild(b);
+});
+
+update();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Code Quishing Checker</title>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0F1115;--panel:#161A21;--panel2:#1D222B;--ink:#E7E9EE;--dim:#98A0AE;--dimmer:#5E6673;
+--line:rgba(231,233,238,.1);--red:#E5534B;--amber:#E0A730;--green:#3FB37F;--blue:#5B9BD5;
+--rsoft:rgba(229,83,75,.14);--asoft:rgba(224,167,48,.14);--gsoft:rgba(63,179,127,.14);--bsoft:rgba(91,155,213,.14);}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Karla',sans-serif;line-height:1.6}
+.mono{font-family:'JetBrains Mono',monospace}
+h1,h2{font-family:'Fraunces',serif;font-weight:600;margin:0}
+.wrap{max-width:720px;margin:0 auto;padding:32px 18px 70px}
+.kicker{font-size:.82rem;color:var(--blue);font-weight:700;margin-bottom:10px;letter-spacing:.02em}
+h1{font-size:1.5rem;margin-bottom:10px}
+header p{color:var(--dim);font-size:.92rem}
+.privacy{display:inline-block;margin-top:10px;background:var(--gsoft);border:1px solid rgba(63,179,127,.35);color:var(--green);font-size:.78rem;padding:6px 12px;border-radius:20px;}
+section{padding:28px 0;border-top:1px solid var(--line)}
+section:first-of-type{border-top:none}
+h2{font-size:1.1rem;margin-bottom:12px}
+p{margin:0 0 12px;color:var(--dim);font-size:.9rem}
+.lab{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:20px}
+.mode-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.mode-btn{flex:1;min-width:140px;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--dim);cursor:pointer;font-size:.85rem;font-weight:600;text-align:center}
+.mode-btn.active{background:var(--bsoft);border-color:var(--blue);color:var(--blue)}
+.drop-zone{border:2px dashed var(--line);border-radius:12px;padding:34px 20px;text-align:center;cursor:pointer;color:var(--dimmer);font-size:.88rem}
+.drop-zone:hover{border-color:var(--blue);color:var(--blue)}
+#fileInput{display:none}
+#previewWrap{display:none;margin-top:14px;text-align:center}
+#previewImg{max-width:100%;max-height:260px;border-radius:10px;border:1px solid var(--line)}
+#cameraWrap{display:none;margin-top:14px}
+video{width:100%;border-radius:10px;border:1px solid var(--line);background:#000}
+.cam-status{font-size:.82rem;color:var(--dimmer);margin-top:8px;text-align:center}
+.btn{padding:9px 16px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);cursor:pointer;font-size:.85rem;font-weight:600}
+.btn.primary{background:var(--bsoft);border-color:var(--blue);color:var(--blue)}
+
+.decoded-box{margin-top:16px;padding:12px 14px;border-radius:8px;background:rgba(0,0,0,.25);border:1px solid var(--line);font-family:'JetBrains Mono',monospace;font-size:.85rem;word-break:break-all;display:none}
+.decoded-box.show{display:block}
+
+.gauge-wrap{margin-top:18px;display:none}
+.gauge-wrap.show{display:block}
+.gauge-track{height:14px;border-radius:8px;background:rgba(0,0,0,.3);overflow:hidden;border:1px solid var(--line)}
+.gauge-fill{height:100%;border-radius:8px;transition:width .25s ease, background .25s ease;width:0%}
+.gauge-label{display:flex;justify-content:space-between;margin-top:8px;font-size:.85rem}
+.gauge-cat{font-family:'Fraunces',serif;font-weight:600;font-size:1.05rem}
+.signal-list{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+.signal{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.16);font-size:.85rem}
+.signal .dot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex-shrink:0}
+.signal .w{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--dimmer);white-space:nowrap}
+.empty-note{color:var(--dimmer);font-size:.85rem;font-style:italic}
+
+.non-url-note{margin-top:14px;padding:12px 14px;border-radius:8px;background:var(--asoft);border:1px solid rgba(224,167,48,.4);color:var(--amber);font-size:.85rem;display:none}
+.non-url-note.show{display:block}
+footer{margin-top:24px;font-size:.78rem;color:var(--dimmer)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <p class="kicker">Laboratorium JAZMI — Modul Keamanan Siber</p>
+  <h1>QR Code Quishing Checker</h1>
+  <p>"Quishing" (QR + phishing) memanfaatkan fakta bahwa mata manusia tidak bisa membaca QR code — kita harus percaya begitu saja ke mana ia mengarah. Modus nyatanya: stiker QR palsu ditempel di atas QR resmi (mesin parkir, meja restoran, poster pembayaran), atau QR disisipkan di email/pesan karena pemindai email sering tidak menganalisis gambar. Tool ini membaca QR di browser Anda, lalu melempar hasilnya ke mesin analisis URL yang sama seperti pada Simulator Phishing.</p>
+  <span class="privacy">🔒 Gambar/kamera diproses sepenuhnya di browser Anda — tidak diunggah ke server manapun</span>
+</header>
+
+<section id="scan">
+  <h2>Pindai QR Code</h2>
+  <div class="lab">
+    <div class="mode-row">
+      <button class="mode-btn active" id="modeUpload">📁 Unggah Gambar</button>
+      <button class="mode-btn" id="modeCamera">📷 Pindai dengan Kamera</button>
+    </div>
+
+    <div id="uploadPane">
+      <div class="drop-zone" id="dropZone">Klik atau seret gambar QR code ke sini (PNG/JPG)</div>
+      <input type="file" id="fileInput" accept="image/*">
+      <div id="previewWrap"><img id="previewImg"></div>
+    </div>
+
+    <div id="cameraPane" style="display:none;">
+      <div id="cameraWrap">
+        <video id="video" autoplay playsinline muted></video>
+      </div>
+      <div class="mode-row" style="margin-top:10px;">
+        <button class="btn primary" id="btnStartCam">Aktifkan Kamera</button>
+        <button class="btn" id="btnStopCam" style="display:none;">Matikan Kamera</button>
+      </div>
+      <div class="cam-status" id="camStatus"></div>
+    </div>
+
+    <canvas id="hiddenCanvas" style="display:none;"></canvas>
+
+    <div class="decoded-box" id="decodedBox"></div>
+    <div class="non-url-note" id="nonUrlNote"></div>
+
+    <div class="gauge-wrap" id="gaugeWrap">
+      <div class="gauge-track"><div class="gauge-fill" id="urlGaugeFill"></div></div>
+      <div class="gauge-label"><span class="gauge-cat" id="urlGaugeCat">–</span><span class="mono" id="urlGaugeScore">0/100</span></div>
+      <div class="signal-list" id="urlSignals"></div>
+    </div>
+  </div>
+</section>
+
+<footer>Bagian dari Laboratorium JAZMI — dibangun mengikuti metode "Belajar → Memodelkan → Menguji → Membuat Tool". Skor bersifat heuristik untuk edukasi — bukan verdict pasti.</footer>
+</div>
+
+<script>
+/* ================= URL ANALYSIS ENGINE (sama seperti Simulator Phishing) ================= */
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({length:m+1}, ()=>new Array(n+1).fill(0));
+  for(let i=0;i<=m;i++) dp[i][0]=i;
+  for(let j=0;j<=n;j++) dp[0][j]=j;
+  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++)
+    dp[i][j] = a[i-1]===b[j-1] ? dp[i-1][j-1] : 1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
+  return dp[m][n];
+}
+const BRANDS = ['google','facebook','instagram','whatsapp','paypal','apple','microsoft','amazon','netflix',
+  'gojek','grab','shopee','tokopedia','telkomsel','twitter','linkedin','ebay','spotify','steam','yahoo','outlook','bankbca'];
+const SHORTENERS = ['bit.ly','tinyurl.com','t.co','goo.gl','is.gd','ow.ly','cutt.ly','shorte.st','adf.ly','buff.ly'];
+const SUS_TLD = ['tk','ml','ga','cf','gq','xyz','top','work','click','link','country','kim','party','review','zip','mov','icu','cam'];
+
+function normalizeLeet(s){
+  return s.replace(/0/g,'o').replace(/1/g,'l').replace(/3/g,'e').replace(/5/g,'s').replace(/4/g,'a').replace(/7/g,'t').replace(/rn/g,'m');
+}
+function getRootDomain(hostname){
+  const parts = hostname.split('.');
+  return parts.length<=2 ? hostname : parts.slice(-2).join('.');
+}
+function analyzeUrl(raw){
+  if(!raw || !raw.trim()) return {valid:false, empty:true};
+  let input = raw.trim();
+  if(!/^[a-zA-Z]+:\/\//.test(input)) input = 'https://'+input;
+  let url;
+  try { url = new URL(input); } catch(e){
+    return {valid:false, signals:[{label:'URL tidak valid atau tidak lengkap', weight:0}]};
+  }
+  const host = url.hostname.toLowerCase();
+  const root = getRootDomain(host);
+  const sld = root.split('.')[0];
+  const tldPart = root.split('.').slice(1).join('.').split('.').pop();
+  const signals = [];
+
+  if(/^\d{1,3}(\.\d{1,3}){3}$/.test(host))
+    signals.push({label:'Menggunakan alamat IP langsung sebagai host, bukan nama domain', weight:25});
+  if(raw.includes('@'))
+    signals.push({label:'Mengandung karakter "@" — bagian sebelum "@" bisa mengelabui; browser tetap membuka host yang ada SETELAH "@"', weight:30});
+  if(SUS_TLD.includes(tldPart))
+    signals.push({label:`Domain tingkat atas ".${tldPart}" tergolong murah/gratis didaftarkan dan sering disalahgunakan`, weight:15});
+  if(SHORTENERS.includes(root))
+    signals.push({label:'Menggunakan layanan pemendek URL — tujuan asli disembunyikan dari pandangan (pola sangat umum di QR phishing!)', weight:15});
+
+  let typoBrand = null;
+  if(sld.length>=4){
+    for(const b of BRANDS){
+      if(b.length<4) continue;
+      const d = levenshtein(sld, b);
+      if(d>0 && d<=2 && Math.abs(sld.length-b.length)<=2){
+        signals.push({label:`Nama domain "${sld}" mirip sekali dengan brand "${b}" (beda ${d} karakter) — indikasi typosquatting`, weight:35});
+        typoBrand = b;
+        break;
+      }
+    }
+  }
+  const normHost = normalizeLeet(host);
+  for(const b of BRANDS){
+    if(b === typoBrand) continue;
+    if(normHost.includes(b) && sld !== b){
+      const viaLeet = !host.includes(b) && normHost.includes(b);
+      signals.push({label: viaLeet
+        ? `Domain mengandung ejaan mirip "${b}" dengan huruf diganti angka (mis. 0 ganti o) — trik penyamaran umum`
+        : `Nama brand "${b}" muncul di alamat, tapi domain utamanya bukan "${b}.com" — kemungkinan ditempel sebagai kata kunci pengelabu`,
+        weight: viaLeet ? 30 : 25});
+      break;
+    }
+  }
+  const hyphenCount = (host.match(/-/g)||[]).length;
+  if(hyphenCount>=3 && !host.includes('xn--'))
+    signals.push({label:`Domain mengandung ${hyphenCount} tanda hubung — pola umum domain yang digenerate massal`, weight:10});
+  if(url.protocol !== 'https:')
+    signals.push({label:'Tidak menggunakan HTTPS — koneksi tidak terenkripsi', weight:10});
+  if(host.includes('xn--'))
+    signals.push({label:'Mengandung kode punycode (xn--) — indikasi karakter unicode yang menyamar mirip huruf latin (homograph attack)', weight:30});
+  if(host.length>30)
+    signals.push({label:`Nama domain sangat panjang (${host.length} karakter)`, weight:8});
+  if(host.split('.').length-1>=4)
+    signals.push({label:'Subdomain bertingkat sangat banyak — pola umum untuk menyembunyikan domain asli', weight:12});
+
+  const score = Math.min(100, signals.reduce((s,x)=>s+x.weight,0));
+  return {valid:true, host, root, score, signals};
+}
+function scoreCategory(score){
+  if(score===0) return {label:'Tidak ada tanda mencurigakan', color:'var(--green)'};
+  if(score<=20) return {label:'Kemungkinan aman', color:'var(--green)'};
+  if(score<=45) return {label:'Perlu waspada', color:'var(--amber)'};
+  if(score<=70) return {label:'Mencurigakan', color:'var(--red)'};
+  return {label:'Sangat berisiko — kemungkinan phishing', color:'var(--red)'};
+}
+function severityDot(weight){
+  if(weight>=25) return 'var(--red)';
+  if(weight>=12) return 'var(--amber)';
+  return 'var(--dimmer)';
+}
+function renderUrlAnalysis(text){
+  const decodedBox = document.getElementById('decodedBox');
+  decodedBox.textContent = text;
+  decodedBox.classList.add('show');
+
+  const looksLikeUrl = /^(https?:\/\/|www\.)/i.test(text.trim()) || /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/.test(text.trim());
+  const nonUrlNote = document.getElementById('nonUrlNote');
+  const gaugeWrap = document.getElementById('gaugeWrap');
+
+  if(!looksLikeUrl){
+    nonUrlNote.textContent = 'Isi QR code ini bukan URL (mungkin teks biasa, konfigurasi WiFi, atau kontak vCard) — mesin analisis URL tidak berlaku, tapi tetap waspada kalau isinya meminta Anda memasukkan info sensitif.';
+    nonUrlNote.classList.add('show');
+    gaugeWrap.classList.remove('show');
+    return;
+  }
+  nonUrlNote.classList.remove('show');
+  gaugeWrap.classList.add('show');
+
+  const r = analyzeUrl(text);
+  const score = r.valid ? r.score : 0;
+  const cat = scoreCategory(score);
+  document.getElementById('urlGaugeFill').style.width = score+'%';
+  document.getElementById('urlGaugeFill').style.background = cat.color;
+  document.getElementById('urlGaugeCat').textContent = cat.label;
+  document.getElementById('urlGaugeCat').style.color = cat.color;
+  document.getElementById('urlGaugeScore').textContent = score+'/100';
+
+  const el = document.getElementById('urlSignals');
+  const signals = r.valid ? r.signals : [];
+  el.innerHTML = signals.length ? signals.map(s=>`
+    <div class="signal">
+      <span class="dot" style="background:${severityDot(s.weight)}"></span>
+      <span style="flex:1;">${s.label}</span>
+      <span class="w">+${s.weight}</span>
+    </div>`).join('') : '<div class="empty-note">Tidak ada tanda mencurigakan terdeteksi dari URL hasil pindai ini.</div>';
+}
+
+/* ================= MODE SWITCH ================= */
+const modeUpload = document.getElementById('modeUpload');
+const modeCamera = document.getElementById('modeCamera');
+const uploadPane = document.getElementById('uploadPane');
+const cameraPane = document.getElementById('cameraPane');
+modeUpload.addEventListener('click', ()=>{
+  modeUpload.classList.add('active'); modeCamera.classList.remove('active');
+  uploadPane.style.display='block'; cameraPane.style.display='none';
+  stopCamera();
+});
+modeCamera.addEventListener('click', ()=>{
+  modeCamera.classList.add('active'); modeUpload.classList.remove('active');
+  uploadPane.style.display='none'; cameraPane.style.display='block';
+  document.getElementById('cameraWrap').style.display='block';
+});
+
+/* ================= UPLOAD & DECODE IMAGE ================= */
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const hiddenCanvas = document.getElementById('hiddenCanvas');
+const hctx = hiddenCanvas.getContext('2d');
+
+dropZone.addEventListener('click', ()=>fileInput.click());
+dropZone.addEventListener('dragover', e=>{ e.preventDefault(); dropZone.style.borderColor='var(--blue)'; });
+dropZone.addEventListener('dragleave', ()=>{ dropZone.style.borderColor=''; });
+dropZone.addEventListener('drop', e=>{
+  e.preventDefault(); dropZone.style.borderColor='';
+  if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e=>{
+  if(e.target.files.length) handleFile(e.target.files[0]);
+});
+
+function handleFile(file){
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      document.getElementById('previewImg').src = ev.target.result;
+      document.getElementById('previewWrap').style.display='block';
+      hiddenCanvas.width = img.width;
+      hiddenCanvas.height = img.height;
+      hctx.drawImage(img,0,0);
+      const imageData = hctx.getImageData(0,0,img.width,img.height);
+      const code = jsQR(imageData.data, imageData.width, imageData.height);
+      if(code){
+        renderUrlAnalysis(code.data);
+      } else {
+        document.getElementById('decodedBox').textContent = 'Tidak ada QR code yang terdeteksi pada gambar ini.';
+        document.getElementById('decodedBox').classList.add('show');
+        document.getElementById('nonUrlNote').classList.remove('show');
+        document.getElementById('gaugeWrap').classList.remove('show');
+      }
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ================= CAMERA SCAN ================= */
+let camStream = null, camLoop = null;
+const video = document.getElementById('video');
+document.getElementById('btnStartCam').addEventListener('click', async ()=>{
+  try{
+    camStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    video.srcObject = camStream;
+    document.getElementById('btnStartCam').style.display='none';
+    document.getElementById('btnStopCam').style.display='inline-block';
+    document.getElementById('camStatus').textContent = 'Mengarahkan kamera... arahkan ke QR code.';
+    scanLoop();
+  }catch(err){
+    document.getElementById('camStatus').textContent = 'Tidak bisa mengakses kamera: '+err.message;
+  }
+});
+document.getElementById('btnStopCam').addEventListener('click', stopCamera);
+function stopCamera(){
+  if(camLoop) cancelAnimationFrame(camLoop);
+  if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
+  document.getElementById('btnStartCam').style.display='inline-block';
+  document.getElementById('btnStopCam').style.display='none';
+  document.getElementById('camStatus').textContent='';
+}
+function scanLoop(){
+  if(video.readyState === video.HAVE_ENOUGH_DATA){
+    hiddenCanvas.width = video.videoWidth;
+    hiddenCanvas.height = video.videoHeight;
+    hctx.drawImage(video,0,0,hiddenCanvas.width,hiddenCanvas.height);
+    const imageData = hctx.getImageData(0,0,hiddenCanvas.width,hiddenCanvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height);
+    if(code){
+      document.getElementById('camStatus').textContent = 'QR code ditemukan!';
+      renderUrlAnalysis(code.data);
+      stopCamera();
+      return;
+    }
+  }
+  camLoop = requestAnimationFrame(scanLoop);
+}
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

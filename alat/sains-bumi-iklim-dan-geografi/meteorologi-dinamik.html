@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meteorologi Dinamik — Keseimbangan Angin Geostropik</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#10141A; --panel:#171D25; --panel-2:#1D2530;
+    --border:rgba(232,236,244,0.09); --border-strong:rgba(232,236,244,0.17);
+    --text:#ECEFF3; --muted:#8C97A6;
+    --gold:#E0A94D; --gold-dim:224,169,77;
+    --cyan:#4FC7D9; --cyan-dim:79,199,217;
+    --true:#4FBF8A; --true-dim:79,191,138;
+    --warn:#D9677A; --warn-dim:217,103,122;
+    --radius:4px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(79,199,217,0.06), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 0%, rgba(224,169,77,0.05), transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:'Karla',sans-serif;font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:'Fraunces',serif;font-weight:500;letter-spacing:-0.01em;margin:0;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 26px 80px;}
+  .rule{height:1px;background:var(--border);margin:44px 0;}
+  .eyebrow-num{font-family:'Fraunces',serif;font-style:italic;color:var(--cyan);font-size:15px;margin:0 0 10px;}
+  section h2{font-size:clamp(22px,3.4vw,28px);margin-bottom:10px;}
+  section > p.desc{color:var(--muted);max-width:66ch;margin:0 0 20px;font-size:15px;}
+
+  header.top{padding:44px 0 6px;}
+  header.top .kicker{font-size:13px;color:var(--muted);margin:0 0 14px;}
+  header.top h1{font-size:clamp(28px,5vw,40px);margin-bottom:12px;max-width:22ch;}
+  header.top p.lede{color:var(--muted);max-width:64ch;font-size:16px;margin:0;}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
+  .badge{font-size:12px;padding:4px 11px;border-radius:100px;border:1px solid var(--border-strong);color:var(--muted);}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  @media (max-width:720px){.grid-2{grid-template-columns:1fr;}}
+
+  .slider-row{ margin:14px 0; }
+  .slider-row label{ display:flex; justify-content:space-between; font-size:13.5px; font-weight:600; color:var(--text); margin-bottom:7px; }
+  .slider-row label span.val{ font-family:'JetBrains Mono',monospace; color:var(--gold); }
+  input[type=range]{ width:100%; accent-color:var(--gold); }
+  .toggle-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .toggle-chip{padding:7px 14px;border-radius:100px;border:1px solid var(--border-strong);background:var(--panel-2);color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer;}
+  .toggle-chip.active{border-color:var(--gold);color:var(--gold);}
+  .preset-row{ display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 4px; }
+  .preset-chip{ padding:7px 13px; border-radius:100px; border:1px solid var(--border-strong); background:var(--panel-2); color:var(--muted); font-size:12.5px; font-weight:600; cursor:pointer; }
+  .preset-chip:hover{border-color:var(--cyan);color:var(--cyan);}
+
+  .result-box{ margin-top:16px; background:var(--panel-2); border:1px solid var(--border); border-radius:3px; padding:16px 18px; display:flex; flex-wrap:wrap; gap:22px; }
+  .result-item .lbl{ font-size:12px; color:var(--muted); margin-bottom:3px; }
+  .result-item .num{ font-family:'JetBrains Mono',monospace; font-size:20px; color:var(--gold); }
+  .result-item .num.big{ font-size:26px; }
+  .result-item .num.warn{ color:var(--warn); }
+  .formula-note{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted); margin-top:12px; line-height:1.7; }
+
+  .chart-svg-wrap{background:var(--panel-2);border:1px solid var(--border);border-radius:3px;padding:12px 14px;margin-top:14px;}
+  .chart-svg-wrap svg{width:100%;height:auto;display:block;}
+  .chart-caption{font-size:11.5px;color:var(--muted);margin-top:6px;}
+
+  .callout{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--cyan);border-radius:3px;padding:15px 18px;font-size:14px;color:var(--muted);margin-top:12px;}
+  .callout.warn-border{border-left-color:var(--warn);}
+  .callout p{margin:0 0 8px;} .callout p:last-child{margin-bottom:0;}
+  .callout b{color:var(--text);}
+
+  .ref-list{list-style:none;padding:0;margin:16px 0;}
+  .ref-list li{padding:12px 0;border-top:1px solid var(--border);font-size:14px;color:var(--muted);}
+  .ref-list li:last-child{border-bottom:1px solid var(--border);}
+  .ref-list .who{color:var(--text);}
+  .related-links{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted);margin-top:10px;}
+
+  footer{padding-top:40px;font-size:13px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <p class="kicker">Laboratorium Qiladat / JAZMI — Meteorologi Dinamik</p>
+    <h1>Kenapa Angin Tak Mengalir Lurus ke Tekanan Rendah</h1>
+    <p class="lede">Cabang meteorologi yang menjelaskan gerak atmosfer lewat hukum fisika murni — bukan membaca pola, tapi menghitungnya. Konsep paling mendasar &amp; paling mengejutkan di cabang ini: angin skala besar hampir tak pernah bergerak menuju tekanan rendah. Ia bergerak <em>menyamping</em> darinya.</p>
+    <div class="badge-row">
+      <span class="badge">Meteorologi Dinamik</span>
+      <span class="badge">Gaya Coriolis</span>
+      <span class="badge">Angin Geostropik</span>
+      <span class="badge">Simulator Interaktif</span>
+    </div>
+  </header>
+
+  <div class="rule"></div>
+
+  <!-- 1 -->
+  <section id="konsep">
+    <p class="eyebrow-num">1 — Konsep</p>
+    <h2>Dua Gaya yang Saling Membatalkan</h2>
+    <p class="desc">Gaya gradien tekanan (Pressure Gradient Force) selalu mendorong udara dari tekanan tinggi ke tekanan rendah — persis seperti intuisi Anda. Tapi begitu udara mulai bergerak, rotasi Bumi membelokkannya lewat gaya semu Coriolis, tegak lurus terhadap arah geraknya. Di skala besar (ratusan kilometer, tanpa gesekan permukaan), kedua gaya ini akhirnya saling menyeimbangkan persis — dan hasilnya, angin berhenti menuju tekanan rendah, lalu mengalir <b style="color:var(--text)">sejajar dengan garis isobar</b>. Inilah yang disebut <b style="color:var(--text)">angin geostropik</b> (geostrophic wind) — model paling mendasar dalam meteorologi dinamik, dan hampir semua angin skala sinoptik (siklon, front, jet stream) mendekati kondisi ini.</p>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 2 -->
+  <section id="kalkulator">
+    <p class="eyebrow-num">2 — Kalkulator Interaktif</p>
+    <h2>Simulator Keseimbangan Angin Geostropik</h2>
+    <p class="desc">Geser lintang &amp; kekuatan gradien tekanan — lihat langsung diagram tiga gaya (gradien tekanan, Coriolis, angin resultan) dan berapa kecepatan anginnya.</p>
+    <div class="card">
+      <div class="grid-2">
+        <div>
+          <div class="toggle-row">
+            <span class="toggle-chip active" data-hemi="N">Belahan Bumi Utara</span>
+            <span class="toggle-chip" data-hemi="S">Belahan Bumi Selatan</span>
+          </div>
+          <div class="slider-row">
+            <label>Lintang |φ| <span class="val" id="v-lat">45°</span></label>
+            <input type="range" id="in-lat" min="3" max="85" step="1" value="45">
+          </div>
+          <div class="slider-row">
+            <label>Gradien tekanan <span class="val" id="v-grad">2.0 hPa/100km</span></label>
+            <input type="range" id="in-grad" min="0.2" max="8" step="0.1" value="2.0">
+          </div>
+          <div class="result-box">
+            <div class="result-item"><div class="lbl">Kecepatan angin geostropik</div><div class="num big" id="out-vg">—</div></div>
+            <div class="result-item"><div class="lbl">Parameter Coriolis (f)</div><div class="num" id="out-f">—</div></div>
+          </div>
+          <p class="formula-note">Vg = (1/ρf) · (ΔP/Δn) &nbsp;→&nbsp; makin dekat ekuator (f→0), angin yang dibutuhkan untuk gradien yang sama jadi jauh lebih kencang &amp; tak realistis — persis kenapa model geostropik gagal di sana (lihat Batasan).</p>
+        </div>
+        <div class="chart-svg-wrap">
+          <svg id="svg-force" viewBox="0 0 320 320"></svg>
+          <div class="chart-caption">
+            <span style="color:var(--warn)">■</span> Gaya gradien tekanan (H→L) &nbsp;
+            <span style="color:var(--cyan)">■</span> Gaya Coriolis &nbsp;
+            <span style="color:var(--gold)">■</span> Angin resultan (sejajar isobar)
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 3 -->
+  <section id="kasus">
+    <p class="eyebrow-num">3 — Kasus-Kasus</p>
+    <h2>Dari Kutub sampai Nyaris Ekuator</h2>
+    <p class="desc">Klik untuk memuat tiap kasus ke simulator di atas.</p>
+    <div class="preset-row" id="presetRow">
+      <span class="preset-chip" data-lat="80" data-grad="2">Dekat kutub (80°, gradien sedang)</span>
+      <span class="preset-chip" data-lat="45" data-grad="1">Lintang tengah khas (45°, gradien lemah)</span>
+      <span class="preset-chip" data-lat="45" data-grad="5">Siklon ekstratropis kuat (45°, gradien tajam)</span>
+      <span class="preset-chip" data-lat="10" data-grad="2">Nyaris tropis (10°, mulai tak wajar)</span>
+      <span class="preset-chip" data-lat="3" data-grad="2">Nyaris ekuator (3°, model runtuh)</span>
+    </div>
+    <div class="callout" id="kasusNote"></div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 4 -->
+  <section id="metode">
+    <p class="eyebrow-num">4 — Metode &amp; Rumus</p>
+    <div class="callout">
+      <p><strong>Parameter Coriolis:</strong> f = 2Ω sin(φ), dengan Ω = 7,292×10⁻⁵ rad/s (kecepatan rotasi Bumi) dan φ = lintang. f bernilai nol tepat di ekuator dan maksimum di kutub — inilah kenapa arah rotasi siklon berbeda antar belahan bumi, dan kenapa model geostropik ini butuh f yang tidak nol untuk bisa dipakai sama sekali.</p>
+      <p><strong>Angin geostropik:</strong> Vg = (1/ρf) · (ΔP/Δn), dengan ρ ≈ 1,225 kg/m³ (kerapatan udara permukaan standar) dan ΔP/Δn = gradien tekanan tegak lurus isobar. Arah angin dihitung dengan memutar vektor gaya gradien tekanan 90° — searah jarum jam di Belahan Utara, berlawanan jarum jam di Belahan Selatan — persis Hukum Buys Ballot: di Belahan Utara, membelakangi angin, tekanan rendah selalu ada di sisi kiri Anda.</p>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 5 -->
+  <section id="batasan">
+    <p class="eyebrow-num">5 — Batasan</p>
+    <div class="callout warn-border">
+      <p>Angin geostropik adalah <b style="color:var(--text)">idealisasi</b>: mengasumsikan isobar lurus (tanpa lengkungan), tanpa gesekan permukaan, dan sudah mencapai keseimbangan penuh (steady-state). Di dunia nyata, angin permukaan diperlambat &amp; dibelokkan gesekan (menyimpang dari sejajar isobar, sedikit menuju tekanan rendah — inilah kenapa siklon permukaan tetap punya aliran masuk / konvergensi), dan di sekitar sistem melengkung (siklon rapat) diperlukan koreksi tambahan yang disebut <b style="color:var(--text)">angin gradien</b> (gradient wind), yang memperhitungkan gaya sentrifugal.</p>
+      <p><b style="color:var(--text)">Model ini juga runtuh total mendekati ekuator</b> (|φ| di bawah ~10-15°) karena f→0 membuat Vg meledak ke nilai yang tidak realistis untuk gradien tekanan yang sama — inilah sebabnya siklon tropis tidak bisa dijelaskan lewat keseimbangan geostropik, dan butuh kerangka fisika yang sama sekali berbeda (keseimbangan siklostropik, di mana gaya sentrifugal yang berperan, bukan Coriolis).</p>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 6 -->
+  <section id="referensi">
+    <p class="eyebrow-num">6 — Referensi &amp; Terkait</p>
+    <h2>Sumber</h2>
+    <ul class="ref-list">
+      <li><span class="who">Holton, J. R. &amp; Hakim, G. J.</span> <i>An Introduction to Dynamic Meteorology.</i> — rujukan standar keseimbangan geostropik, gradien, dan siklostropik.</li>
+      <li><span class="who">Bjerknes, V. (1904).</span> "Das Problem der Wettervorhersage..." — perumusan awal cuaca sebagai persoalan fisika, fondasi cabang meteorologi dinamik.</li>
+      <li><span class="who">Buys Ballot, C. H. D. (1857).</span> Hukum empiris arah angin relatif terhadap tekanan — dasar aturan "tekanan rendah di kiri" yang dipakai kalkulator arah di atas.</li>
+    </ul>
+    <div class="related-links">
+      <span>→ Dari Klimatologi ke Meteorologi — Titik Balik Kecepatan Informasi (sejarah &amp; cabang-cabang meteorologi, termasuk asal-usul cabang ini)</span>
+    </div>
+  </section>
+
+  <footer>Disusun sebagai bagian dari laboratorium Qiladat/JAZMI — kalkulator interaktif untuk konsep inti Meteorologi Dinamik: keseimbangan angin geostropik.</footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var OMEGA = 7.2921159e-5; // rad/s
+  var RHO = 1.225; // kg/m^3, kerapatan udara permukaan standar
+  var hemi = 'N';
+
+  function svgEl(tag, attrs){
+    var e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for(var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function fmt(n,d){ if(d===undefined) d=1; return (Math.round(n*Math.pow(10,d))/Math.pow(10,d)).toLocaleString('id-ID'); }
+
+  var inLat = document.getElementById('in-lat');
+  var inGrad = document.getElementById('in-grad');
+  var vLat = document.getElementById('v-lat');
+  var vGrad = document.getElementById('v-grad');
+  var outVg = document.getElementById('out-vg');
+  var outF = document.getElementById('out-f');
+
+  function update(){
+    var lat = parseFloat(inLat.value);
+    var grad = parseFloat(inGrad.value);
+    vLat.textContent = lat + '°';
+    vGrad.textContent = fmt(grad,1) + ' hPa/100km';
+
+    var f = 2*OMEGA*Math.sin(lat*Math.PI/180);
+    var dPdn = grad * 0.001; // Pa/m
+    var vg = (1/(RHO*f)) * dPdn;
+
+    outF.textContent = fmt(f*1e4,2) + ' ×10⁻⁴ s⁻¹';
+
+    var unreal = vg > 100;
+    outVg.textContent = fmt(vg,1) + ' m/s (' + fmt(vg*3.6,0) + ' km/j)';
+    outVg.className = 'num big' + (unreal ? ' warn' : '');
+
+    drawForceDiagram(vg, unreal);
+  }
+
+  function drawForceDiagram(vg, unreal){
+    var svg = document.getElementById('svg-force');
+    svg.innerHTML = '';
+    var W=320,H=320,cx=160,cy=180;
+
+    // isobars: parallel horizontal lines, high pressure top, low pressure bottom
+    for(var i=0;i<5;i++){
+      var y = 40 + i*45;
+      svg.appendChild(svgEl('line',{x1:20,y1:y,x2:300,y2:y,stroke:'rgba(232,236,244,0.14)','stroke-width':1}));
+    }
+    var ht = svgEl('text',{x:20,y:28,'font-size':11,fill:'#D9677A','font-weight':'700'}); ht.textContent='TEKANAN TINGGI (H)'; svg.appendChild(ht);
+    var lt = svgEl('text',{x:20,y:308,'font-size':11,fill:'#4FC7D9','font-weight':'700'}); lt.textContent='TEKANAN RENDAH (L)'; svg.appendChild(lt);
+
+    // PGF vector: points from high(top) to low(bottom) => (0,1) direction (down)
+    var pgf = {x:0, y:1};
+    // rotate for wind direction: NH = rotate +90 ccw (x,y)->(-y,x); SH = rotate -90 cw (x,y)->(y,-x)
+    var wind = hemi==='N' ? {x:-pgf.y, y:pgf.x} : {x:pgf.y, y:-pgf.x};
+    // coriolis balances PGF: opposite direction of PGF
+    var cor = {x:-pgf.x, y:-pgf.y};
+
+    var scale = 70;
+    function arrow(dx,dy,color,label,len){
+      len = len || scale;
+      var x2 = cx+dx*len, y2 = cy+dy*len;
+      svg.appendChild(svgEl('line',{x1:cx,y1:cy,x2:x2,y2:y2,stroke:color,'stroke-width':2.6}));
+      var ang = Math.atan2(y2-cy,x2-cx);
+      var a1x = x2-10*Math.cos(ang-0.4), a1y = y2-10*Math.sin(ang-0.4);
+      var a2x = x2-10*Math.cos(ang+0.4), a2y = y2-10*Math.sin(ang+0.4);
+      svg.appendChild(svgEl('polygon',{points:x2+','+y2+' '+a1x+','+a1y+' '+a2x+','+a2y, fill:color}));
+      var lx = cx+dx*(len+22), ly = cy+dy*(len+22);
+      var t = svgEl('text',{x:lx,y:ly,'text-anchor':'middle','font-size':10.5,fill:color,'font-weight':'700'});
+      t.textContent = label; svg.appendChild(t);
+    }
+    arrow(pgf.x,pgf.y,'#D9677A','PGF');
+    arrow(cor.x,cor.y,'#4FC7D9','Coriolis');
+    arrow(wind.x,wind.y,'#E0A94D', unreal ? 'Angin (!)' : 'Angin', scale*1.15);
+
+    svg.appendChild(svgEl('circle',{cx:cx,cy:cy,r:4,fill:'#ECEFF3'}));
+  }
+
+  inLat.addEventListener('input', update);
+  inGrad.addEventListener('input', update);
+  document.querySelectorAll('.toggle-chip[data-hemi]').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      document.querySelectorAll('.toggle-chip[data-hemi]').forEach(function(c){c.classList.remove('active');});
+      chip.classList.add('active');
+      hemi = chip.getAttribute('data-hemi');
+      update();
+    });
+  });
+
+  var kasusNotes = {
+    '80-2': 'Di lintang tinggi, f besar — angin cukup moderat meski gradien lumayan. Ini tipikal pola angin di sekitar kutub, jarang jadi badai ekstrem.',
+    '45-1': 'Ini contoh klasik buku teks: gradien tekanan lemah 1 hPa/100km di lintang tengah menghasilkan angin geostropik sekitar 7-8 m/s — angin sedang, khas cuaca cerah bertekanan landai.',
+    '45-5': 'Gradien setajam ini di lintang tengah tipikal siklon ekstratropis kuat (badai musim dingin Atlantik/Pasifik Utara) — angin geostropik sudah mendekati kekuatan angin badai.',
+    '10-2': 'Mendekati tropis, f mulai sangat kecil — angin geostropik untuk gradien yang sama jadi jauh lebih kencang dari kelihatannya wajar. Sinyal awal bahwa model ini mulai kehilangan validitas.',
+    '3-2': 'Nyaris di ekuator: f mendekati nol, dan rumus geostropik meledak jadi angka yang tidak masuk akal secara fisis (lihat peringatan merah). Inilah kenapa siklon tropis butuh kerangka fisika berbeda — keseimbangan siklostropik, bukan geostropik.'
+  };
+  document.querySelectorAll('#presetRow .preset-chip').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      var lat = chip.getAttribute('data-lat');
+      var grad = chip.getAttribute('data-grad');
+      inLat.value = lat;
+      inGrad.value = grad;
+      update();
+      document.getElementById('kasusNote').textContent = kasusNotes[lat+'-'+grad] || '';
+    });
+  });
+
+  update();
+})();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

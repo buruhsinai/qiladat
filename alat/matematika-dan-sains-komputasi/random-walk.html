@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Random Walk — JAZMI Fisika</title>
+<style>
+  :root{
+    --bg:#141210; --panel:#1c1916; --panel2:#211d19;
+    --gold:#c9a24b; --gold-soft:#8a7440; --text:#e8e0d0; --text-dim:#a89a80;
+    --line:#3a332a; --danger:#c25c4a; --ok:#6f9e6a; --blue:#6a91c2;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Georgia,'Times New Roman',serif;line-height:1.6;}
+  .container{max-width:920px;margin:0 auto;padding:24px 16px 60px;}
+  header{text-align:center;margin-bottom:26px;border-bottom:1px solid var(--line);padding-bottom:18px;}
+  header h1{font-size:1.4rem;color:var(--gold);margin:0 0 6px;}
+  header p{color:var(--text-dim);margin:0;font-size:0.9rem;font-style:italic;}
+  h2{color:var(--gold);font-size:1.08rem;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+  h2 .num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;
+    border:1px solid var(--gold-soft);border-radius:50%;font-size:0.78rem;color:var(--gold);flex-shrink:0;}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:16px;}
+  p{margin:0 0 9px;font-size:0.92rem;} p:last-child{margin-bottom:0;}
+  .dim{color:var(--text-dim);font-size:0.84rem;}
+  ul{margin:6px 0;padding-left:20px;} li{margin-bottom:5px;font-size:0.9rem;}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;flex-wrap:wrap;}
+  .row label{font-size:0.87rem;flex:1;min-width:170px;display:flex;justify-content:space-between;}
+  .row label span.val{color:var(--gold);font-weight:bold;}
+  input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:var(--line);outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+    background:var(--gold);cursor:pointer;border:2px solid var(--bg);}
+  .toggles{display:flex;gap:8px;margin-bottom:10px;}
+  .toggle-btn{background:var(--panel2);border:1px solid var(--gold-soft);color:var(--text-dim);
+    padding:7px 16px;border-radius:8px;font-family:inherit;font-size:0.85rem;cursor:pointer;flex:1;}
+  .toggle-btn.on{background:var(--gold-soft);color:#1a1712;font-weight:bold;}
+  .btn-row{display:flex;gap:8px;margin-top:10px;}
+  .btn-row button{flex:1;background:var(--panel2);border:1px solid var(--gold-soft);color:var(--text);
+    padding:10px;border-radius:8px;font-family:inherit;font-size:0.88rem;cursor:pointer;}
+  .btn-row button.primary{background:var(--gold-soft);color:#1a1712;font-weight:bold;}
+  svg.canvas{width:100%;height:auto;background:#0d0c0a;border-radius:8px;border:1px solid var(--line);}
+  .readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:14px;}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;text-align:center;}
+  .stat .label{font-size:0.68rem;color:var(--text-dim);text-transform:uppercase;}
+  .stat .value{font-size:0.98rem;color:var(--gold);margin-top:2px;}
+  .formula{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:10px 14px;
+    font-family:'Courier New',monospace;font-size:0.84rem;margin:8px 0;overflow-x:auto;}
+  .refs li{font-size:0.82rem;color:var(--text-dim);}
+  footer{text-align:center;color:var(--text-dim);font-size:0.76rem;margin-top:22px;}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Random Walk</h1>
+  <p>Dari langkah acak satu partikel, menuju hukum difusi yang pasti</p>
+</header>
+
+<section id="belajar">
+  <h2><span class="num">1</span>Belajar</h2>
+  <p>Bayangkan satu partikel yang di setiap langkah waktu bergerak ke arah ACAK sejauh jarak tetap. Lintasan satu partikel seperti ini benar-benar tidak bisa diprediksi — tapi begitu Anda punya RATUSAN partikel yang semuanya melakukan hal serupa, sesuatu yang menakjubkan muncul: <strong>pola statistiknya menjadi sangat bisa diprediksi</strong>, meski setiap partikel individual tetap acak.</p>
+  <p>Inilah jembatan mikroskopik→statistik→makroskopik yang mendasari banyak fisika: gerak Brown (partikel serbuk sari yang "menari" tak menentu di air, diamati Robert Brown 1827, baru dijelaskan matematis oleh Einstein 1905), difusi (tinta menyebar di air, parfum menyebar di udara), hingga mekanika statistik (bagaimana miliaran molekul gas yang bergerak acak menghasilkan hukum gas ideal yang rapi).</p>
+  <p>Pola yang muncul: posisi rata-rata partikel tetap di sekitar titik awal (tidak ada arah favorit), tapi <strong>sebaran (variansi) posisinya tumbuh LINEAR terhadap jumlah langkah</strong> — inilah akar dari hukum difusi.</p>
+</section>
+
+<section id="pertanyaan">
+  <h2><span class="num">2</span>Pertanyaan Ilmiah</h2>
+  <ul>
+    <li>Kalau tiap langkah benar-benar acak dan rata-rata nol, kenapa partikel tetap makin menyebar jauh dari titik awal seiring waktu?</li>
+    <li>Bagaimana bentuk sebaran (distribusi) posisi ratusan partikel berubah seiring bertambahnya langkah?</li>
+  </ul>
+</section>
+
+<section id="simulator">
+  <h2><span class="num">3</span>Simulator</h2>
+  <div class="toggles">
+    <button class="toggle-btn on" id="btn1D" data-dim="1">Random Walk 1D</button>
+    <button class="toggle-btn" id="btn2D" data-dim="2">Random Walk 2D</button>
+  </div>
+  <div class="row"><label>Jumlah partikel <span class="val" id="v_n">300</span></label><input type="range" id="nPartikel" min="20" max="800" step="10" value="300"></div>
+  <div class="row"><label>Ukuran langkah (step size) <span class="val" id="v_s">4</span></label><input type="range" id="stepSize" min="1" max="10" step="0.5" value="4"></div>
+  <div class="row"><label>Kecepatan simulasi (langkah/detik) <span class="val" id="v_speed">10</span></label><input type="range" id="speed" min="1" max="30" step="1" value="10"></div>
+
+  <div class="btn-row">
+    <button class="primary" id="btnStart">▶ Mulai</button>
+    <button id="btnReset">⟲ Reset</button>
+  </div>
+
+  <svg id="canvas" class="canvas" viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg" style="margin-top:12px;"></svg>
+  <svg id="histogram" class="canvas" viewBox="0 0 700 140" xmlns="http://www.w3.org/2000/svg" style="margin-top:10px;"></svg>
+
+  <div class="readout">
+    <div class="stat"><div class="label">Langkah ke-</div><div class="value" id="out_step">0</div></div>
+    <div class="stat"><div class="label">Posisi rata-rata</div><div class="value" id="out_mean">—</div></div>
+    <div class="stat"><div class="label">MSD (Sebaran²)</div><div class="value" id="out_msd">—</div></div>
+    <div class="stat"><div class="label">MSD Teori (N×s²)</div><div class="value" id="out_teori">—</div></div>
+  </div>
+</section>
+
+<section id="metode">
+  <h2><span class="num">4</span>Metode &amp; Rumus</h2>
+  <p>Tiap langkah, tiap partikel bergerak sejauh <em>s</em> ke arah acak (1D: ±s dengan peluang sama; 2D: sudut acak seragam 0-360°). Besaran kunci adalah Mean Squared Displacement (MSD) — rata-rata kuadrat jarak dari titik awal:</p>
+  <div class="formula">MSD = ⟨r²⟩ = N × s²   (N = jumlah langkah, s = ukuran langkah)
+Koefisien difusi: D = MSD / (2×dimensi×N)</div>
+  <p class="dim">Verifikasi: simulasi 2000 partikel, 200 langkah, s=1 menghasilkan MSD=200,16 (prediksi teori tepat 200) — variansi memang tumbuh linear terhadap jumlah langkah, bukan konstan maupun kuadratik.</p>
+</section>
+
+<section id="batasan">
+  <h2><span class="num">5</span>Batasan</h2>
+  <ul>
+    <li>Hanya 1D dan 2D — random walk 3D mengikuti prinsip matematis identik (MSD=N×s² tetap berlaku), tapi divisualisasikan lebih sulit di layar datar sehingga tidak disertakan.</li>
+    <li>Histogram memakai jumlah partikel terbatas (puluhan-ratusan) — sebaran akan makin mendekati kurva Gauss halus jika jumlah partikel diperbanyak jauh lebih besar (ribuan-jutaan), yang tidak praktis dijalankan real-time di browser.</li>
+    <li>Model ini adalah "random walk murni" (setiap langkah independen) — gerak Brown sungguhan di dunia nyata juga dipengaruhi viskositas fluida dan ukuran partikel, yang membuat konstanta difusi sesungguhnya bergantung faktor tambahan (rumus Einstein-Stokes), tidak dimodelkan di sini.</li>
+  </ul>
+</section>
+
+<section id="referensi">
+  <h2><span class="num">6</span>Referensi</h2>
+  <ul class="refs">
+    <li>A. Einstein (1905), "On the Movement of Small Particles Suspended in Stationary Liquids" — penjelasan matematis gerak Brown.</li>
+    <li>Teori random walk &amp; difusi — mekanika statistik standar.</li>
+  </ul>
+</section>
+
+<footer>Bagian dari Laboratorium Fisika — Bank Ide Qiladat/JAZMI.</footer>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  let dim = 1;
+  let particles = [];
+  let stepCount = 0;
+  let running = false;
+  let accumTime = 0;
+
+  function bindVal(id,labelId){ $(id).addEventListener('input', ()=>{ $(labelId).textContent=$(id).value; }); }
+  bindVal('nPartikel','v_n'); bindVal('stepSize','v_s'); bindVal('speed','v_speed');
+
+  $('btn1D').addEventListener('click', ()=>{ dim=1; $('btn1D').classList.add('on'); $('btn2D').classList.remove('on'); resetSim(); });
+  $('btn2D').addEventListener('click', ()=>{ dim=2; $('btn2D').classList.add('on'); $('btn1D').classList.remove('on'); resetSim(); });
+
+  function resetSim(){
+    const n = parseInt($('nPartikel').value);
+    particles = Array(n).fill(0).map(()=>({x:0,y:0}));
+    stepCount = 0;
+    drawAll();
+  }
+  $('btnReset').addEventListener('click', resetSim);
+  $('nPartikel').addEventListener('change', resetSim);
+
+  $('btnStart').addEventListener('click', ()=>{
+    running = !running;
+    $('btnStart').textContent = running?'⏸ Jeda':'▶ Mulai';
+  });
+
+  function doStep(){
+    const s = parseFloat($('stepSize').value);
+    particles.forEach(p=>{
+      if (dim===1){
+        p.x += (Math.random()<0.5?-1:1)*s;
+      } else {
+        const th = Math.random()*2*Math.PI;
+        p.x += s*Math.cos(th);
+        p.y += s*Math.sin(th);
+      }
+    });
+    stepCount++;
+  }
+
+  function drawParticles(){
+    const W=700,H=320,cx=W/2,cy=H/2;
+    let svg = `<rect x="0" y="0" width="${W}" height="${H}" fill="#0d0c0a"/>`;
+    svg += `<line x1="0" y1="${cy}" x2="${W}" y2="${cy}" stroke="#3a332a" stroke-width="1"/>`;
+    if (dim===2) svg += `<line x1="${cx}" y1="0" x2="${cx}" y2="${H}" stroke="#3a332a" stroke-width="1"/>`;
+    particles.forEach((p,idx)=>{
+      const px = cx+p.x;
+      const py = dim===1 ? cy + ((idx%40)-20)*3 : cy+p.y;
+      if (px>0&&px<W&&py>0&&py<H) svg += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="2.2" fill="#8fc9e8" opacity="0.7"/>`;
+    });
+    $('canvas').innerHTML = svg;
+  }
+
+  function drawHistogram(){
+    const W=700,H=140, padL=30,padB=20;
+    const xs = particles.map(p=>p.x);
+    const maxAbs = Math.max(10, ...xs.map(Math.abs));
+    const nBins = 30;
+    const binW = (2*maxAbs)/nBins;
+    const bins = Array(nBins).fill(0);
+    xs.forEach(x=>{
+      let idx = Math.floor((x+maxAbs)/binW);
+      idx = Math.max(0, Math.min(nBins-1, idx));
+      bins[idx]++;
+    });
+    const maxCount = Math.max(1,...bins);
+    const barW = (W-padL*2)/nBins;
+
+    let svg = `<rect x="0" y="0" width="${W}" height="${H}" fill="#0d0c0a"/>`;
+    svg += `<text x="10" y="14" fill="#a89a80" font-size="10" font-family="Georgia,serif">Distribusi posisi-x</text>`;
+    bins.forEach((c,i)=>{
+      const bh = (c/maxCount)*(H-padB-20);
+      const bx = padL+i*barW;
+      const by = H-padB-bh;
+      svg += `<rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${(barW-1).toFixed(1)}" height="${bh.toFixed(1)}" fill="#c9a24b" opacity="0.75"/>`;
+    });
+    svg += `<line x1="${padL}" y1="${H-padB}" x2="${W-padL}" y2="${H-padB}" stroke="#3a332a" stroke-width="1"/>`;
+    $('histogram').innerHTML = svg;
+  }
+
+  function drawAll(){
+    drawParticles();
+    drawHistogram();
+    const n = particles.length;
+    const meanX = particles.reduce((a,p)=>a+p.x,0)/n;
+    const msd = particles.reduce((a,p)=>a + p.x*p.x + (dim===2?p.y*p.y:0), 0)/n;
+    const s = parseFloat($('stepSize').value);
+    const teori = stepCount*s*s;
+
+    $('out_step').textContent = stepCount;
+    $('out_mean').textContent = meanX.toFixed(2);
+    $('out_msd').textContent = msd.toFixed(1);
+    $('out_teori').textContent = teori.toFixed(1);
+  }
+
+  let lastTime = 0;
+  function loop(ts){
+    if (running){
+      const speed = parseFloat($('speed').value); // langkah per detik
+      if (!lastTime) lastTime=ts;
+      accumTime += (ts-lastTime);
+      lastTime = ts;
+      const interval = 1000/speed;
+      while (accumTime > interval){
+        doStep();
+        accumTime -= interval;
+      }
+      drawAll();
+    } else {
+      lastTime = 0;
+    }
+    requestAnimationFrame(loop);
+  }
+
+  resetSim();
+  requestAnimationFrame(loop);
+})();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

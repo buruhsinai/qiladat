@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detektif Cilik!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fdf6e8; --card:#ffffff; --line:#f0e2c4;
+    --ink:#3a3226; --dim:#8a7c62;
+    --accent:#c9784f; --accent-soft:#f7e9df;
+    --good:#5a8a5a; --good-soft:#dff2df; --good-line:#8fc98f;
+    --bad:#b04a4a; --bad-soft:#fbdede; --bad-line:#dd9a9a;
+    --display:'Fredoka',sans-serif; --sans:'Quicksand',sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;}
+  .wrap{max-width:520px;margin:0 auto;padding:0 18px 70px;}
+
+  .hero{padding:36px 10px 18px;text-align:center;}
+  .hero h1{font-family:var(--display);font-weight:700;font-size:clamp(24px,6.5vw,32px);margin:0 0 8px;color:#8a4a2a;}
+  .hero p{color:var(--dim);font-size:14px;max-width:440px;margin:0 auto;}
+
+  .tab-nav{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:18px;}
+  .tab-btn{font-family:var(--display);font-weight:600;font-size:12px;background:#fff;border:2px solid var(--line);
+    color:var(--dim);padding:11px 3px;border-radius:12px;cursor:pointer;text-align:center;line-height:1.3;}
+  .tab-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  .card{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px 18px;margin-bottom:16px;}
+  .card p.desc{font-size:13.5px;color:var(--dim);margin:0 0 16px;}
+
+  .result-panel{background:var(--accent-soft);border-radius:14px;padding:14px;text-align:center;margin-bottom:16px;}
+  .compare-row{display:flex;justify-content:space-around;}
+  .compare-box .n{font-family:var(--display);font-weight:700;font-size:20px;color:#8a4a2a;}
+  .compare-box .l{font-size:10px;color:var(--dim);font-family:var(--mono);}
+
+  .situasi-box{background:var(--accent-soft);border-left:5px solid var(--accent);border-radius:10px;padding:14px 16px;
+    font-size:14px;color:var(--ink);margin-bottom:12px;white-space:pre-line;}
+  .pertanyaan-txt{font-family:var(--display);font-weight:600;font-size:15px;color:var(--ink);margin-bottom:14px;}
+
+  .jawaban-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+  .jawaban-grid.satu-kolom{grid-template-columns:1fr;}
+  .jawaban-grid.dua-kolom{grid-template-columns:repeat(2,1fr);}
+  .jawaban-btn{background:#fff;border:2px solid var(--line);border-radius:12px;padding:13px 6px;text-align:center;
+    font-family:var(--display);font-weight:600;font-size:12.5px;color:var(--ink);cursor:pointer;
+    transition:transform .1s, background .2s, border-color .2s, color .2s;}
+  .jawaban-btn.pilihan-panjang{font-family:var(--sans);font-weight:600;font-size:13px;text-align:left;padding:13px 14px;}
+  .jawaban-btn:active{transform:scale(0.97);}
+  .jawaban-btn.correct{background:var(--good-soft);border-color:var(--good-line);color:var(--good);}
+  .jawaban-btn.wrong{background:var(--bad-soft);border-color:var(--bad-line);color:var(--bad);}
+  .jawaban-btn.disabled{pointer-events:none;opacity:0.55;}
+
+  .penjelasan-box{background:var(--accent-soft);border-radius:12px;padding:14px 16px;font-size:13px;color:#6b4a30;
+    margin-bottom:12px;display:none;}
+  .penjelasan-box.show{display:block;}
+  .penjelasan-box strong{color:#4a2e18;}
+
+  .lanjut-btn{width:100%;font-family:var(--display);font-weight:700;font-size:14.5px;padding:13px;border-radius:14px;
+    border:none;cursor:pointer;background:var(--accent);color:#fff;display:none;}
+  .lanjut-btn.show{display:block;}
+
+  .note-card{background:var(--accent-soft);border-radius:14px;padding:14px 16px;font-size:12.5px;color:#6b4a30;margin-top:14px;}
+  .note-card strong{color:#4a2e18;}
+
+  footer{text-align:center;padding-top:26px;color:#b9ad94;font-size:11.5px;font-family:var(--mono);}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>🔎 Detektif Cilik!</h1>
+    <p>Detektif hebat tidak pernah menebak sembarangan — mereka membaca petunjuk baik-baik, mencoret yang tidak mungkin, dan baru menyimpulkan kalau buktinya sudah cukup kuat. Yuk berlatih jadi detektif!</p>
+  </div>
+
+  <div class="tab-nav">
+    <button class="tab-btn active" data-tab="baca">📖 Baca & Simpulkan</button>
+    <button class="tab-btn" data-tab="deduksi">🧩 Siapa & Apa</button>
+    <button class="tab-btn" data-tab="beda">🗂️ Cari yang Beda</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-baca">
+    <div class="card">
+      <p class="desc">Baca cerita pendeknya, lalu tentukan: pernyataan berikut ini <strong>Benar</strong>, <strong>Salah</strong>, atau <strong>Belum Bisa Dipastikan</strong> dari cerita itu?</p>
+      <div class="result-panel">
+        <div class="compare-row">
+          <div class="compare-box"><div class="n" id="bacaSkorN">0</div><div class="l">⭐ SKOR</div></div>
+          <div class="compare-box"><div class="n" id="bacaBeruntunN">0</div><div class="l">🔥 BERUNTUN</div></div>
+          <div class="compare-box"><div class="n" id="bacaTotalN">0</div><div class="l">📝 DIJAWAB</div></div>
+        </div>
+      </div>
+      <div class="situasi-box" id="bacaSituasi"></div>
+      <div class="pertanyaan-txt" id="bacaPertanyaan"></div>
+      <div class="jawaban-grid" id="bacaJawaban"></div>
+      <div class="penjelasan-box" id="bacaPenjelasan"></div>
+      <button class="lanjut-btn" id="bacaLanjutBtn" onclick="soalBerikutnya('baca')">Lanjut ke Soal Berikutnya →</button>
+    </div>
+    <div class="note-card"><strong>Tips detektif:</strong> Jangan menambah-nambah cerita di kepalamu sendiri. Kalau ceritanya tidak menyebutkan sesuatu, jawabannya adalah "Belum Bisa Dipastikan" — bukan menebak-nebak.</div>
+  </div>
+
+  <div class="tab-panel" id="tab-deduksi">
+    <div class="card">
+      <p class="desc">Baca semua petunjuknya, coret kemungkinan yang tidak cocok satu per satu, baru simpulkan jawabannya.</p>
+      <div class="result-panel">
+        <div class="compare-row">
+          <div class="compare-box"><div class="n" id="deduksiSkorN">0</div><div class="l">⭐ SKOR</div></div>
+          <div class="compare-box"><div class="n" id="deduksiBeruntunN">0</div><div class="l">🔥 BERUNTUN</div></div>
+          <div class="compare-box"><div class="n" id="deduksiTotalN">0</div><div class="l">📝 DIJAWAB</div></div>
+        </div>
+      </div>
+      <div class="situasi-box" id="deduksiSituasi"></div>
+      <div class="pertanyaan-txt" id="deduksiPertanyaan"></div>
+      <div class="jawaban-grid satu-kolom" id="deduksiJawaban"></div>
+      <div class="penjelasan-box" id="deduksiPenjelasan"></div>
+      <button class="lanjut-btn" id="deduksiLanjutBtn" onclick="soalBerikutnya('deduksi')">Lanjut ke Soal Berikutnya →</button>
+    </div>
+    <div class="note-card"><strong>Cara mengerjakan:</strong> Baca satu petunjuk, coret kemungkinan yang sudah pasti salah. Ulangi untuk petunjuk berikutnya sampai cuma tersisa satu jawaban yang mungkin.</div>
+  </div>
+
+  <div class="tab-panel" id="tab-beda">
+    <div class="card">
+      <p class="desc">Empat kata di bawah ini — tiga di antaranya satu kelompok, satu lagi tidak termasuk. Temukan yang berbeda!</p>
+      <div class="result-panel">
+        <div class="compare-row">
+          <div class="compare-box"><div class="n" id="bedaSkorN">0</div><div class="l">⭐ SKOR</div></div>
+          <div class="compare-box"><div class="n" id="bedaBeruntunN">0</div><div class="l">🔥 BERUNTUN</div></div>
+          <div class="compare-box"><div class="n" id="bedaTotalN">0</div><div class="l">📝 DIJAWAB</div></div>
+        </div>
+      </div>
+      <div class="pertanyaan-txt" id="bedaPertanyaan">Mana yang tidak termasuk kelompoknya?</div>
+      <div class="jawaban-grid dua-kolom" id="bedaJawaban"></div>
+      <div class="penjelasan-box" id="bedaPenjelasan"></div>
+      <button class="lanjut-btn" id="bedaLanjutBtn" onclick="soalBerikutnya('beda')">Lanjut ke Soal Berikutnya →</button>
+    </div>
+    <div class="note-card"><strong>Tips:</strong> Tanyakan pada dirimu, "Tiga kata mana yang punya kesamaan?" — begitu ketemu kesamaannya, kata yang tersisa itulah jawabannya.</div>
+  </div>
+
+  <footer>Laboratorium Dengar & Baca Anak — Bank Alat JAZMI/Qiladat</footer>
+</div>
+
+<script>
+  /* ============ TAB SWITCHING ============ */
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+
+  /* ============ DATA TAB 1: BACA & SIMPULKAN (Benar/Salah/Belum Tahu) ============ */
+  const SOAL_BACA = [
+    { situasi:"Doni pulang sekolah jam 2 siang. Sesampainya di rumah, ia melihat piring kotor bekas makan siang sudah ada di wastafel.", pertanyaan:"Seseorang sudah makan siang sebelum Doni pulang.", jawaban:"benar", penjelasan:"Piring kotor bekas makan siang sudah ada di wastafel, artinya memang sudah ada yang makan siang sebelum Doni pulang." },
+    { situasi:"Doni pulang sekolah jam 2 siang. Sesampainya di rumah, ia melihat piring kotor bekas makan siang sudah ada di wastafel.", pertanyaan:"Doni sendiri yang mengotori piring itu.", jawaban:"belumtahu", penjelasan:"Bisa jadi anggota keluarga lain yang makan siang duluan — ceritanya tidak menyebutkan siapa yang makan." },
+    { situasi:"Setiap pagi Bu Rina selalu menyiram semua tanaman di halaman sebelum berangkat kerja, tidak pernah terlewat satu hari pun.", pertanyaan:"Pagi ini Bu Rina sudah menyiram tanaman.", jawaban:"benar", penjelasan:"Karena disebutkan 'tidak pernah terlewat satu hari pun', itu berarti berlaku juga untuk hari ini." },
+    { situasi:"Setiap pagi Bu Rina selalu menyiram semua tanaman di halaman sebelum berangkat kerja, tidak pernah terlewat satu hari pun.", pertanyaan:"Bu Rina menyiram tanaman menggunakan selang air.", jawaban:"belumtahu", penjelasan:"Alat yang digunakan untuk menyiram tidak disebutkan — bisa selang, bisa juga gembor atau ember." },
+    { situasi:"Kevin memelihara dua ekor ikan di akuarium kecil di kamarnya. Kemarin salah satu ikannya sakit dan tidak mau makan.", pertanyaan:"Kevin punya lebih dari satu ikan.", jawaban:"benar", penjelasan:"Sudah jelas disebutkan Kevin memelihara 'dua ekor ikan'." },
+    { situasi:"Kevin memelihara dua ekor ikan di akuarium kecil di kamarnya. Kemarin salah satu ikannya sakit dan tidak mau makan.", pertanyaan:"Ikan yang sakit itu akhirnya sembuh.", jawaban:"belumtahu", penjelasan:"Ceritanya berhenti di 'kemarin ikan sakit' — tidak diceritakan kelanjutannya." },
+    { situasi:"Toko buku itu tutup setiap hari Minggu. Hari ini adalah hari Minggu, dan Sari ingin membeli buku baru.", pertanyaan:"Sari bisa langsung membeli buku di toko itu hari ini.", jawaban:"salah", penjelasan:"Toko itu tutup setiap hari Minggu, dan hari ini Minggu — jadi Sari tidak bisa membeli buku di sana hari ini." },
+    { situasi:"Adit menabung setiap bulan di celengannya. Bulan ini ia menabung Rp20.000, sama seperti bulan-bulan sebelumnya.", pertanyaan:"Uang di celengan Adit sekarang pasti sudah lebih dari Rp100.000.", jawaban:"belumtahu", penjelasan:"Kita tidak tahu sudah berapa bulan Adit menabung, jadi totalnya belum bisa dipastikan." },
+    { situasi:"Semua peserta lomba lari wajib memakai nomor punggung. Budi ikut lomba lari itu.", pertanyaan:"Budi memakai nomor punggung.", jawaban:"benar", penjelasan:"Aturan itu wajib untuk semua peserta, dan Budi adalah salah satu peserta lomba." },
+    { situasi:"Hari ini langit sangat mendung dan gelap sejak pagi.", pertanyaan:"Hari ini pasti akan turun hujan.", jawaban:"belumtahu", penjelasan:"Mendung memang sering jadi tanda akan hujan, tapi bukan jaminan pasti — kadang mendung saja tanpa hujan." },
+    { situasi:"Perpustakaan sekolah buka dari jam 7 pagi sampai jam 3 sore setiap hari kerja. Sekarang jam menunjukkan pukul 4 sore pada hari Selasa.", pertanyaan:"Perpustakaan sekolah sedang tutup sekarang.", jawaban:"benar", penjelasan:"Sekarang sudah lewat jam 3 sore dan hari Selasa adalah hari kerja, jadi perpustakaan sudah tutup." },
+    { situasi:"Nina memiliki tiga boneka: satu boneka beruang, satu boneka kelinci, dan satu boneka lagi yang warnanya belum disebutkan.", pertanyaan:"Boneka ketiga Nina berwarna merah.", jawaban:"belumtahu", penjelasan:"Warna boneka ketiga memang belum disebutkan dalam cerita." },
+    { situasi:"Semua siswa di kelas itu harus mengumpulkan tugas sebelum pukul 12 siang. Sudah pukul 1 siang dan Rio belum mengumpulkan tugasnya.", pertanyaan:"Rio terlambat mengumpulkan tugas.", jawaban:"benar", penjelasan:"Batas waktunya pukul 12 siang, dan sekarang sudah pukul 1 siang tanpa Rio mengumpulkan — jadi Rio terlambat." },
+    { situasi:"Warung makan itu hanya menjual makanan pedas. Made memesan satu porsi makanan di warung itu.", pertanyaan:"Makanan yang dipesan Made pasti pedas.", jawaban:"benar", penjelasan:"Karena warung itu HANYA menjual makanan pedas, apa pun yang dipesan Made pasti pedas." },
+    { situasi:"Kelas 5A punya 20 murid. Semua murid kelas 5A hari ini memakai baju olahraga karena ada pelajaran olahraga pagi ini. Tono adalah murid kelas 5A.", pertanyaan:"Tono hari ini tidak memakai baju olahraga.", jawaban:"salah", penjelasan:"Semua murid kelas 5A memakai baju olahraga hari ini, dan Tono termasuk murid kelas 5A — jadi pasti Tono memakainya." },
+    { situasi:"Toko itu hanya tutup pada tanggal merah, dan selalu buka setiap hari lainnya tanpa kecuali. Hari ini bukan tanggal merah.", pertanyaan:"Toko itu tutup hari ini.", jawaban:"salah", penjelasan:"Karena hari ini bukan tanggal merah, dan toko itu hanya tutup pada tanggal merah, berarti toko itu buka hari ini." }
+  ];
+
+  /* ============ DATA TAB 2: SIAPA & APA (Deduksi/Eliminasi) ============ */
+  const SOAL_DEDUKSI = [
+    { situasi:"Ada tiga anak: Rian, Dewi, dan Fajar. Mereka masing-masing punya satu buah kesukaan berbeda: apel, pisang, dan jeruk.\nPetunjuk:\n• Rian tidak suka pisang.\n• Dewi tidak suka apel maupun jeruk.\n• Fajar suka jeruk.", pertanyaan:"Buah kesukaan Rian?", pilihan:[{text:"Apel",benar:true},{text:"Pisang",benar:false},{text:"Jeruk",benar:false}], penjelasan:"Dewi tidak suka apel maupun jeruk, jadi Dewi suka pisang. Fajar sudah pasti suka jeruk. Jadi sisa apel untuk Rian." },
+    { situasi:"Ada tiga anak: Lisa, Bima, dan Citra. Mereka memakai baju warna berbeda untuk acara sekolah: merah, biru, dan hijau.\nPetunjuk:\n• Lisa tidak memakai warna biru.\n• Bima memakai warna hijau.\n• Citra tidak memakai warna merah.", pertanyaan:"Warna baju Citra?", pilihan:[{text:"Merah",benar:false},{text:"Biru",benar:true},{text:"Hijau",benar:false}], penjelasan:"Bima sudah pasti hijau. Lisa tidak biru, jadi Lisa merah (karena hijau sudah dipakai Bima). Sisa biru untuk Citra." },
+    { situasi:"Ada tiga anak piket kelas: Eko, Wati, dan Joko, masing-masing kebagian satu hari berbeda: Senin, Selasa, dan Rabu.\nPetunjuk:\n• Eko piket bukan hari Senin.\n• Wati piket hari Rabu.\n• Joko piket bukan hari Rabu maupun Selasa.", pertanyaan:"Hari piket Eko?", pilihan:[{text:"Senin",benar:false},{text:"Selasa",benar:true},{text:"Rabu",benar:false}], penjelasan:"Wati sudah pasti Rabu. Joko bukan Rabu dan bukan Selasa, jadi Joko Senin. Sisa Selasa untuk Eko." },
+    { situasi:"Ada tiga anak: Dina, Faisal, dan Putri. Mereka punya mainan kesukaan berbeda: mobil-mobilan, boneka, dan puzzle.\nPetunjuk:\n• Faisal tidak suka boneka maupun puzzle.\n• Putri suka puzzle.", pertanyaan:"Mainan kesukaan Dina?", pilihan:[{text:"Mobil-mobilan",benar:false},{text:"Boneka",benar:true},{text:"Puzzle",benar:false}], penjelasan:"Faisal tidak suka boneka maupun puzzle, jadi Faisal suka mobil-mobilan. Putri sudah pasti puzzle. Sisa boneka untuk Dina." },
+    { situasi:"Ada tiga anak: Gita, Handi, dan Ira. Mereka punya minuman kesukaan berbeda: teh, susu, dan jus jeruk.\nPetunjuk:\n• Gita tidak suka teh.\n• Handi suka susu.\n• Ira tidak suka jus jeruk.", pertanyaan:"Minuman kesukaan Ira?", pilihan:[{text:"Teh",benar:true},{text:"Susu",benar:false},{text:"Jus Jeruk",benar:false}], penjelasan:"Handi sudah pasti susu. Gita tidak teh, jadi Gita jus jeruk (karena susu sudah dipakai Handi). Sisa teh untuk Ira." },
+    { situasi:"Ada tiga anak: Joni, Kiki, dan Lala. Mereka punya pelajaran favorit berbeda: matematika, seni, dan olahraga.\nPetunjuk:\n• Joni suka matematika.\n• Kiki tidak suka olahraga.", pertanyaan:"Pelajaran favorit Lala?", pilihan:[{text:"Matematika",benar:false},{text:"Seni",benar:false},{text:"Olahraga",benar:true}], penjelasan:"Joni sudah pasti matematika. Kiki tidak olahraga, jadi Kiki seni (karena matematika sudah dipakai Joni). Sisa olahraga untuk Lala." },
+    { situasi:"Ada tiga anak: Made, Nita, dan Oscar. Mereka masing-masing memainkan satu alat musik berbeda: gitar, drum, dan piano.\nPetunjuk:\n• Made tidak main drum maupun piano.\n• Nita main piano.", pertanyaan:"Alat musik yang dimainkan Oscar?", pilihan:[{text:"Gitar",benar:false},{text:"Drum",benar:true},{text:"Piano",benar:false}], penjelasan:"Made tidak main drum maupun piano, jadi Made main gitar. Nita sudah pasti piano. Sisa drum untuk Oscar." },
+    { situasi:"Ada tiga anak: Panji, Qori, dan Rara. Mereka punya waktu favorit untuk bermain: pagi, siang, dan sore.\nPetunjuk:\n• Panji main sore.\n• Qori tidak main pagi.", pertanyaan:"Rara suka main jam berapa?", pilihan:[{text:"Pagi",benar:true},{text:"Siang",benar:false},{text:"Sore",benar:false}], penjelasan:"Panji sudah pasti sore. Qori tidak pagi, jadi Qori siang (karena sore sudah dipakai Panji). Sisa pagi untuk Rara." },
+    { situasi:"Ada tiga anak: Sinta, Tomi, dan Umar. Mereka punya buku favorit berbeda: dongeng, komik, dan ensiklopedia.\nPetunjuk:\n• Sinta tidak suka komik.\n• Tomi suka ensiklopedia.", pertanyaan:"Buku favorit Umar?", pilihan:[{text:"Dongeng",benar:false},{text:"Komik",benar:true},{text:"Ensiklopedia",benar:false}], penjelasan:"Tomi sudah pasti ensiklopedia. Sinta tidak komik, jadi Sinta dongeng (karena ensiklopedia sudah dipakai Tomi). Sisa komik untuk Umar." },
+    { situasi:"Ada tiga anak: Vino, Wulan, dan Xena. Mereka punya olahraga favorit berbeda: renang, basket, dan bulutangkis.\nPetunjuk:\n• Vino tidak suka basket maupun bulutangkis.\n• Wulan suka bulutangkis.", pertanyaan:"Olahraga favorit Xena?", pilihan:[{text:"Renang",benar:false},{text:"Basket",benar:true},{text:"Bulutangkis",benar:false}], penjelasan:"Vino tidak suka basket maupun bulutangkis, jadi Vino suka renang. Wulan sudah pasti bulutangkis. Sisa basket untuk Xena." }
+  ];
+
+  /* ============ DATA TAB 3: CARI YANG BEDA (Kategorisasi) ============ */
+  const SOAL_BEDA = [
+    { pilihan:[{text:"Apel",benar:false},{text:"Pisang",benar:false},{text:"Wortel",benar:true},{text:"Anggur",benar:false}], penjelasan:"Apel, Pisang, dan Anggur adalah buah — sedangkan Wortel adalah sayur." },
+    { pilihan:[{text:"Mobil",benar:false},{text:"Motor",benar:false},{text:"Sepeda",benar:false},{text:"Kucing",benar:true}], penjelasan:"Mobil, Motor, dan Sepeda adalah kendaraan — sedangkan Kucing adalah makhluk hidup, bukan kendaraan." },
+    { pilihan:[{text:"Merah",benar:false},{text:"Biru",benar:false},{text:"Besar",benar:true},{text:"Hijau",benar:false}], penjelasan:"Merah, Biru, dan Hijau adalah warna — sedangkan Besar adalah ukuran, bukan warna." },
+    { pilihan:[{text:"Senin",benar:false},{text:"Selasa",benar:false},{text:"Januari",benar:true},{text:"Rabu",benar:false}], penjelasan:"Senin, Selasa, dan Rabu adalah nama hari — sedangkan Januari adalah nama bulan." },
+    { pilihan:[{text:"Gitar",benar:false},{text:"Drum",benar:false},{text:"Piano",benar:false},{text:"Bola",benar:true}], penjelasan:"Gitar, Drum, dan Piano adalah alat musik — sedangkan Bola bukan alat musik." },
+    { pilihan:[{text:"Segitiga",benar:false},{text:"Lingkaran",benar:false},{text:"Kotak Pensil",benar:true},{text:"Persegi",benar:false}], penjelasan:"Segitiga, Lingkaran, dan Persegi adalah bentuk geometri — sedangkan Kotak Pensil adalah benda, bukan bentuk." },
+    { pilihan:[{text:"Ikan",benar:false},{text:"Katak",benar:false},{text:"Kadal",benar:false},{text:"Kursi",benar:true}], penjelasan:"Ikan, Katak, dan Kadal adalah makhluk hidup — sedangkan Kursi adalah benda mati." },
+    { pilihan:[{text:"Satu",benar:false},{text:"Dua",benar:false},{text:"Merah",benar:true},{text:"Tiga",benar:false}], penjelasan:"Satu, Dua, dan Tiga adalah bilangan — sedangkan Merah adalah warna." },
+    { pilihan:[{text:"Dokter",benar:false},{text:"Guru",benar:false},{text:"Polisi",benar:false},{text:"Meja",benar:true}], penjelasan:"Dokter, Guru, dan Polisi adalah pekerjaan orang — sedangkan Meja adalah benda." },
+    { pilihan:[{text:"Es Krim",benar:false},{text:"Air Mendidih",benar:true},{text:"Salju",benar:false},{text:"Es Batu",benar:false}], penjelasan:"Es Krim, Salju, dan Es Batu bersifat dingin/beku — sedangkan Air Mendidih bersifat panas." },
+    { pilihan:[{text:"Payung",benar:false},{text:"Jaket Hujan",benar:false},{text:"Sepatu Bot",benar:false},{text:"Kacamata Hitam",benar:true}], penjelasan:"Payung, Jaket Hujan, dan Sepatu Bot dipakai untuk melindungi dari hujan — sedangkan Kacamata Hitam dipakai saat cuaca cerah/terik." },
+    { pilihan:[{text:"Piring",benar:false},{text:"Gelas",benar:false},{text:"Sendok",benar:false},{text:"Buku",benar:true}], penjelasan:"Piring, Gelas, dan Sendok adalah peralatan makan — sedangkan Buku bukan peralatan makan." },
+    { pilihan:[{text:"Jakarta",benar:false},{text:"Surabaya",benar:false},{text:"Bandung",benar:false},{text:"Indonesia",benar:true}], penjelasan:"Jakarta, Surabaya, dan Bandung adalah nama kota — sedangkan Indonesia adalah nama negara." },
+    { pilihan:[{text:"Kompor",benar:false},{text:"Kulkas",benar:false},{text:"Setrika",benar:false},{text:"Bantal",benar:true}], penjelasan:"Kompor, Kulkas, dan Setrika adalah alat elektronik rumah tangga — sedangkan Bantal bukan alat elektronik." },
+    { pilihan:[{text:"Hijau",benar:false},{text:"Kuning",benar:false},{text:"Bulat",benar:true},{text:"Merah",benar:false}], penjelasan:"Hijau, Kuning, dan Merah adalah warna — sedangkan Bulat adalah bentuk, bukan warna." },
+    { pilihan:[{text:"Pensil",benar:false},{text:"Pulpen",benar:false},{text:"Krayon",benar:false},{text:"Gunting",benar:true}], penjelasan:"Pensil, Pulpen, dan Krayon adalah alat untuk menulis/mewarnai — sedangkan Gunting adalah alat untuk memotong." }
+  ];
+
+  /* ============ ENGINE PERMAINAN (dipakai bersama 3 tab) ============ */
+  const GAMES = {
+    baca:    { pool: SOAL_BACA,    bag: [], current: null, score: 0, streak: 0, total: 0, answered: false, tipe: 'tigapilihan' },
+    deduksi: { pool: SOAL_DEDUKSI, bag: [], current: null, score: 0, streak: 0, total: 0, answered: false, tipe: 'multipilihan' },
+    beda:    { pool: SOAL_BEDA,    bag: [], current: null, score: 0, streak: 0, total: 0, answered: false, tipe: 'odditem' }
+  };
+
+  function ambilDariKantong(game){
+    const g = GAMES[game];
+    if(g.bag.length === 0){
+      g.bag = shuffle(g.pool.map((_, i) => i));
+    }
+    return g.bag.pop();
+  }
+
+  function soalBerikutnya(game){
+    const g = GAMES[game];
+    const idx = ambilDariKantong(game);
+    g.current = g.pool[idx];
+    g.answered = false;
+
+    const situasiEl = document.getElementById(game+'Situasi');
+    if(situasiEl) situasiEl.textContent = g.current.situasi || '';
+
+    if(g.tipe !== 'odditem'){
+      document.getElementById(game+'Pertanyaan').textContent = g.current.pertanyaan;
+    }
+
+    document.getElementById(game+'Penjelasan').classList.remove('show');
+    document.getElementById(game+'Penjelasan').textContent = '';
+    document.getElementById(game+'LanjutBtn').classList.remove('show');
+
+    const jawabanDiv = document.getElementById(game+'Jawaban');
+    jawabanDiv.innerHTML = '';
+
+    if(g.tipe === 'tigapilihan'){
+      const opsi = [
+        { value:'benar', label:'✅ Benar' },
+        { value:'salah', label:'❌ Salah' },
+        { value:'belumtahu', label:'🤔 Belum Bisa Dipastikan' }
+      ];
+      opsi.forEach(o => {
+        const btn = document.createElement('div');
+        btn.className = 'jawaban-btn';
+        btn.textContent = o.label;
+        btn.dataset.value = o.value;
+        btn.addEventListener('click', () => jawabTigaPilihan(game, o.value, btn));
+        jawabanDiv.appendChild(btn);
+      });
+    } else {
+      const pilihanTeracak = shuffle(g.current.pilihan);
+      pilihanTeracak.forEach(p => {
+        const btn = document.createElement('div');
+        btn.className = g.tipe === 'odditem' ? 'jawaban-btn' : 'jawaban-btn pilihan-panjang';
+        btn.textContent = p.text;
+        btn.dataset.benar = p.benar ? '1' : '0';
+        btn.addEventListener('click', () => jawabMultiPilihan(game, p.benar, btn));
+        jawabanDiv.appendChild(btn);
+      });
+    }
+  }
+
+  function kuncSemuaJawaban(game){
+    document.querySelectorAll('#'+game+'Jawaban .jawaban-btn').forEach(b => b.classList.add('disabled'));
+  }
+
+  function tampilkanPenjelasan(game){
+    const g = GAMES[game];
+    const box = document.getElementById(game+'Penjelasan');
+    box.innerHTML = '<strong>Kenapa?</strong> ' + g.current.penjelasan;
+    box.classList.add('show');
+    document.getElementById(game+'LanjutBtn').classList.add('show');
+  }
+
+  function updateSkor(game){
+    const g = GAMES[game];
+    document.getElementById(game+'SkorN').textContent = g.score;
+    document.getElementById(game+'BeruntunN').textContent = g.streak;
+    document.getElementById(game+'TotalN').textContent = g.total;
+  }
+
+  function jawabTigaPilihan(game, value, btnEl){
+    const g = GAMES[game];
+    if(g.answered) return;
+    g.answered = true;
+    g.total++;
+    const benar = (value === g.current.jawaban);
+    if(benar){
+      g.score++; g.streak++;
+      btnEl.classList.add('correct');
+    } else {
+      g.streak = 0;
+      btnEl.classList.add('wrong');
+      document.querySelectorAll('#'+game+'Jawaban .jawaban-btn').forEach(b => {
+        if(b.dataset.value === g.current.jawaban) b.classList.add('correct');
+      });
+    }
+    kuncSemuaJawaban(game);
+    updateSkor(game);
+    tampilkanPenjelasan(game);
+  }
+
+  function jawabMultiPilihan(game, benar, btnEl){
+    const g = GAMES[game];
+    if(g.answered) return;
+    g.answered = true;
+    g.total++;
+    if(benar){
+      g.score++; g.streak++;
+      btnEl.classList.add('correct');
+    } else {
+      g.streak = 0;
+      btnEl.classList.add('wrong');
+      document.querySelectorAll('#'+game+'Jawaban .jawaban-btn').forEach(b => {
+        if(b.dataset.benar === '1') b.classList.add('correct');
+      });
+    }
+    kuncSemuaJawaban(game);
+    updateSkor(game);
+    tampilkanPenjelasan(game);
+  }
+
+  /* ============ INIT ============ */
+  Object.keys(GAMES).forEach(game => {
+    updateSkor(game);
+    soalBerikutnya(game);
+  });
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

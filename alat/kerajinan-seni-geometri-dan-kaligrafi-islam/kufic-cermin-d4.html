@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kufic Cermin — Medalion Simetri D4 | Tools Qiladat JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#13152A;
+  --panel:#191C33;
+  --panel-2:#1F2340;
+  --line:rgba(230,225,210,0.12);
+  --line-strong:rgba(230,225,210,0.26);
+  --text:#E8E4D8;
+  --muted:#8A8AA8;
+  --gold:#D4AF62;
+  --gold-dim:rgba(212,175,98,0.16);
+  --teal:#4FA8A0;
+  --teal-dim:rgba(79,168,160,0.16);
+  --danger:#C1554A;
+  --danger-dim:rgba(193,85,74,0.16);
+  --radius:2px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:var(--ink);color:var(--text);font-family:'Karla',sans-serif;font-size:16px;line-height:1.55;}
+@media (prefers-reduced-motion: reduce){*{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;}}
+.wrap{max-width:920px;margin:0 auto;padding:0 18px 80px;}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-0.01em;margin:0 0 6px;}
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.eyebrow::before{content:"";width:18px;height:1px;background:var(--gold);display:inline-block;}
+
+.hero{background:radial-gradient(ellipse at 30% 0%, #232752 0%, #191C33 55%, #13152A 100%);margin:0 -18px 22px;padding:34px 18px 26px;border-bottom:1px solid var(--line-strong);}
+.hero-inner{max-width:920px;margin:0 auto;}
+.hero h1{font-size:clamp(24px,5vw,34px);line-height:1.1;}
+.hero p.sub{color:var(--muted);font-size:15px;max-width:62ch;margin:10px 0 0;}
+
+.mode-toggle{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
+.mode-btn{font-family:'Karla',sans-serif;font-weight:700;font-size:13.5px;background:rgba(25,28,51,0.7);color:var(--text);border:1px solid var(--line-strong);padding:9px 16px;border-radius:20px;cursor:pointer;}
+.mode-btn.active{background:var(--gold);color:#241a08;border-color:var(--gold);}
+
+.sheet{position:relative;background:var(--panel);border:1px solid var(--line-strong);border-radius:var(--radius);padding:20px;margin-bottom:18px;}
+.sheet::before,.sheet::after{content:"";position:absolute;width:9px;height:9px;top:-1px;left:-1px;border-top:1.5px solid var(--gold);border-left:1.5px solid var(--gold);}
+.sheet::after{top:auto;left:auto;bottom:-1px;right:-1px;border-top:none;border-left:none;border-bottom:1.5px solid var(--gold);border-right:1.5px solid var(--gold);}
+.sheet h2{font-size:19px;}
+.tag{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;display:block;}
+
+.warn{background:var(--teal-dim);border:1px solid rgba(79,168,160,0.5);border-left:4px solid var(--teal);padding:14px 16px;border-radius:var(--radius);margin-bottom:20px;}
+.warn .tag{color:#8FCFC8;}
+.warn p{margin:6px 0 0;font-size:14.5px;}
+.warn p strong{color:#fff;}
+.warn ul{margin:8px 0 0;padding-left:18px;font-size:14px;}
+.warn ul li{margin-bottom:4px;}
+
+input[type=text]{width:100%;background:var(--ink);border:1px solid var(--line-strong);color:var(--text);padding:12px 14px;border-radius:var(--radius);font-family:'Amiri', serif;font-size:22px;direction:rtl;}
+input[type=text]:focus{outline:2px solid var(--gold);outline-offset:1px;border-color:var(--gold);}
+label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-family:'JetBrains Mono',monospace;letter-spacing:0.02em;}
+.field-note{font-size:12px;color:var(--muted);margin-top:6px;}
+
+.samples{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.sample-btn{font-family:'Amiri',serif;font-size:15px;background:var(--panel-2);color:var(--text);border:1px solid var(--line-strong);padding:6px 14px;border-radius:20px;cursor:pointer;}
+.sample-btn:hover{border-color:var(--gold);color:var(--gold);}
+
+.theme-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+.theme-btn{font-family:'Karla',sans-serif;font-weight:700;font-size:12.5px;background:var(--panel-2);color:var(--text);border:1px solid var(--line-strong);padding:7px 12px;border-radius:20px;cursor:pointer;display:flex;align-items:center;gap:6px;}
+.theme-btn.active{border-color:var(--gold);}
+.theme-swatch{width:12px;height:12px;border-radius:2px;display:inline-block;}
+
+.canvas-box{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:16px;overflow-x:auto;display:flex;justify-content:center;}
+.canvas-box svg{max-width:100%;height:auto;}
+
+.grid-controls{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px;}
+.grid-controls input[type=range]{width:100%;accent-color:var(--gold);}
+.grid-controls .val{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold);}
+
+button.primary{font-family:'Karla',sans-serif;font-weight:700;font-size:14px;background:var(--gold);color:#241a08;border:1px solid var(--gold);padding:9px 18px;border-radius:var(--radius);cursor:pointer;}
+button.primary:hover{opacity:0.9;}
+
+.badge{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:11.5px;padding:3px 9px;border-radius:20px;border:1px solid var(--line-strong);}
+.badge.warnb{border-color:rgba(193,85,74,0.5);color:#E0A79A;background:var(--danger-dim);}
+
+.panel8-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;}
+@media(min-width:640px){.panel8-grid{grid-template-columns:1fr 1fr 1fr 1fr;}}
+.panel8{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);padding:10px;text-align:center;}
+.panel8 svg{width:100%;height:auto;max-height:90px;}
+.panel8 .p8label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gold);margin-top:6px;}
+.panel8 .p8desc{font-size:10.5px;color:var(--muted);margin-top:2px;}
+.panel8.native{border-color:rgba(79,168,160,0.5);}
+.panel8.native .p8label{color:var(--teal);}
+
+.refs{font-size:13px;color:var(--muted);}
+.refs li{margin-bottom:6px;}
+.consult{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;background:linear-gradient(135deg,var(--panel-2),var(--panel));border:1px solid var(--gold);border-radius:var(--radius);padding:16px 18px;}
+.consult p{margin:0;font-size:14px;max-width:52ch;}
+.consult a.wa{font-family:'Karla',sans-serif;font-weight:700;text-decoration:none;background:var(--gold);color:#241a08;padding:10px 18px;border-radius:var(--radius);white-space:nowrap;font-size:14px;}
+.consult a.wa:hover{opacity:0.9;}
+footer.foot{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;text-align:center;}
+.small{font-size:12px;color:var(--muted);}
+hr.rule{border:none;border-top:1px dashed var(--line-strong);margin:18px 0;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Tools Qiladat · JAZMI · Laboratorium Geometri Huruf</div>
+    <h1>Kufic Cermin — Medalion Simetri D4</h1>
+    <p class="sub">Kelanjutan dari Generator Kufic Persegi. Satu kata dijadikan medalion 4-arah lewat cermin &amp; rotasi — penerapan nyata grup simetri dihedral D4 pada bentuk huruf, bukan sekadar ditempel ke bingkai simetris.</p>
+    <div class="mode-toggle" id="modeToggle"></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="warn">
+    <span class="tag">⚠ Baca dulu — kejujuran soal D4</span>
+    <p><strong>Grup D4 (simetri persegi) punya 8 elemen: 4 rotasi (0°,90°,180°,270°) + 4 cermin.</strong> Tapi teks yang diputar 90° jadi menyamping/tidak terbaca — itu sebabnya medalion Kufic asli yang ada di dinding masjid/ubin hampir selalu memakai <strong>subgrup V4</strong> (identitas + cermin horizontal + cermin vertikal + rotasi 180°, 4 dari 8 elemen) — bukan D4 penuh.</p>
+    <ul>
+      <li><strong>Mode "Medalion 4 Arah"</strong> memakai subgrup V4 ini — hasilnya medalion utuh &amp; menyambung mulus, sudah saya verifikasi matematis (simetri cermin di sambungan tengah teruji tepat).</li>
+      <li><strong>Mode "Peta 8 Transformasi"</strong> menampilkan seluruh 8 elemen D4 secara terpisah (termasuk rotasi 90°/270° yang bikin teks menyamping) — ini murni untuk melihat isi grupnya secara lengkap, bukan medalion siap pakai, karena panel-panel itu sengaja tidak disambung jadi satu (menyambungnya perlu memotong kata jadi irisan 45°, yang belum bisa saya pastikan hasilnya baik tanpa uji visual nyata).</li>
+    </ul>
+  </div>
+
+  <section class="sheet">
+    <span class="tag">Belajar — Pertanyaan Ilmiah</span>
+    <h2>V4 sebagai Subgrup dari D4</h2>
+    <p style="font-size:14.5px;">D4 = {e, r90, r180, r270, cermin-H, cermin-V, cermin-diagonal-1, cermin-diagonal-2}. Empat dari delapan elemen itu — {e, r180, cermin-H, cermin-V} — punya sifat istimewa: <strong>tidak satu pun melibatkan rotasi 90°/270°</strong>, sehingga tetap mempertahankan orientasi tegak teks. Himpunan ini tertutup terhadap operasi komposisi (menggabungkan dua elemen manapun dari situ selalu menghasilkan elemen lain dari situ juga) — itulah definisi <strong>subgrup</strong>, dan dalam notasi grup ia dikenal sebagai grup Klein V4.</p>
+    <p style="font-size:14.5px;">Menariknya, batasan "teks tidak boleh menyamping" yang murni soal keterbacaan justru berhimpitan pas dengan struktur matematis: subgrup yang memenuhi syarat itu ternyata juga subgrup normal terkecil non-trivial dari D4. Kendala estetik dan kendala matematis bertemu di titik yang sama.</p>
+  </section>
+
+  <section class="sheet">
+    <span class="tag">Kata Dasar</span>
+    <h2>Ketik Nama atau Kalimat Pendek</h2>
+    <label for="textInput">Teks (huruf Arab)</label>
+    <input type="text" id="textInput" value="الله" placeholder="mis. محمد">
+    <div class="samples" id="samples"></div>
+    <p class="field-note" id="warnUnknown"></p>
+  </section>
+
+  <!-- ============ MODE A: MEDALION 4 ARAH ============ -->
+  <section class="sheet" id="medalionSection">
+    <span class="tag">Medalion 4 Arah — Subgrup V4</span>
+    <h2>Hasil Medalion</h2>
+    <div class="theme-row" id="themeRow"></div>
+    <div class="canvas-box"><svg id="medalionSvg" xmlns="http://www.w3.org/2000/svg"></svg></div>
+    <div class="grid-controls">
+      <div>
+        <label for="unitSize">Ukuran sel grid <span class="val" id="unitVal">18px</span></label>
+        <input type="range" id="unitSize" min="10" max="28" value="18">
+      </div>
+    </div>
+    <button class="primary" id="downloadSvg" style="margin-top:14px;">Unduh Medalion sebagai SVG</button>
+  </section>
+
+  <!-- ============ MODE B: PETA 8 TRANSFORMASI ============ -->
+  <section class="sheet" id="mapSection" style="display:none;">
+    <span class="tag">Peta 8 Transformasi — D4 Penuh</span>
+    <h2>Semua Elemen Grup, Satu per Satu</h2>
+    <p class="small">Panel bertepi teal = anggota subgrup V4 (dipakai di mode Medalion). Panel lain memperlihatkan rotasi 90°/270° &amp; cermin diagonal — bagian D4 yang tidak dipakai untuk medalion karena membuat teks menyamping.</p>
+    <div class="panel8-grid" id="panel8Grid"></div>
+  </section>
+
+  <section class="sheet">
+    <span class="tag">Batasan</span>
+    <h2>Yang Perlu Anda Tahu</h2>
+    <ul style="font-size:14px;padding-left:20px;">
+      <li>Bentuk huruf dasarnya mewarisi seluruh batasan Generator Kufic Persegi — konstruksi berbasis prinsip, bukan jiplakan manuskrip/font tertentu (lihat Batasan di alat itu).</li>
+      <li><strong>Rotasi 90°/270° pada Mode Peta 8 Transformasi membuat teks terbaring menyamping</strong> — ini benar secara matematis (itu memang salah satu dari 8 elemen D4), tapi tidak dimaksudkan untuk dibaca sebagai teks, murni untuk melihat struktur grupnya.</li>
+      <li>Cermin diagonal (sd1/sd2) di Mode Peta menghasilkan panel dengan lebar &amp; tinggi tertukar — ukurannya sengaja berbeda dari panel lain, bukan bug.</li>
+      <li>Medalion 4 arah akan terlihat rapi untuk kata pendek-sedang; kata sangat panjang menghasilkan medalion yang sangat lebar (memanjang horizontal), karena tile dasarnya memang tidak dipaksa persegi.</li>
+    </ul>
+  </section>
+
+  <section class="sheet">
+    <span class="tag">Referensi</span>
+    <ul class="refs">
+      <li>Grup dihedral D4 &amp; subgrup Klein V4 — teori grup dasar, aljabar abstrak.</li>
+      <li>Medalion Kufic cermin pada arsitektur Islam (mis. ubin &amp; ukiran masjid Asia Tengah/Persia) — praktik umum menyusun kata dalam simetri cermin 2/4-arah.</li>
+      <li>Lihat juga: Generator Kufic Persegi (Tools Qiladat JAZMI) — fondasi bentuk huruf yang dipakai alat ini.</li>
+    </ul>
+  </section>
+
+  <div class="consult">
+    <p><strong>Untuk karya kaligrafi resmi, verifikasi dengan ahli/rujukan bersanad.</strong> Ada masukan? Hubungi kami.</p>
+    <a class="wa" href="https://wa.me/6281356572588?text=Halo%2C%20saya%20ingin%20memberi%20masukan%20soal%20Kufic%20Cermin%20JAZMI." target="_blank" rel="noopener">Konsultasi via WhatsApp →</a>
+  </div>
+
+  <footer class="foot">Tools Qiladat / JAZMI — laboratorium alat &amp; keilmuan. Dibangun mengikuti metode Belajar → Model → Uji → Tool.</footer>
+</div>
+
+<script>
+/* ===================== LETTER DATA (identik dengan Generator Kufic Persegi) ===================== */
+const LETTER_DATA = {
+  '\u0627': {name:'alif', width:1, connects:false, body:["1","1","1","1"]},
+  '\u0628': {name:'ba', width:3, connects:true, body:["000","000","000","111"], dotsBelow:[1]},
+  '\u062A': {name:'ta', width:3, connects:true, body:["000","000","000","111"], dotsAbove:[0,2]},
+  '\u062B': {name:'tsa', width:3, connects:true, body:["000","000","000","111"], dotsAbove:[0,1,2]},
+  '\u062C': {name:'jim', width:3, connects:true, body:["000","001","001","111"], dotsBelow:[1]},
+  '\u062D': {name:'ha\'', width:3, connects:true, body:["000","001","001","111"]},
+  '\u062E': {name:'kha', width:3, connects:true, body:["000","001","001","111"], dotsAbove:[1]},
+  '\u062F': {name:'dal', width:2, connects:false, body:["00","00","01","11"]},
+  '\u0630': {name:'dzal', width:2, connects:false, body:["00","00","01","11"], dotsAbove:[0]},
+  '\u0631': {name:'ra', width:2, connects:false, body:["00","00","00","10"], descender:[1]},
+  '\u0632': {name:'zay', width:2, connects:false, body:["00","00","00","10"], descender:[1], dotsAbove:[0]},
+  '\u0633': {name:'sin', width:5, connects:true, body:["00000","00000","10101","11111"]},
+  '\u0634': {name:'syin', width:5, connects:true, body:["00000","00000","10101","11111"], dotsAbove:[0,2,4]},
+  '\u0635': {name:'shad', width:3, connects:true, body:["000","100","100","111"]},
+  '\u0636': {name:'dhad', width:3, connects:true, body:["000","100","100","111"], dotsAbove:[1]},
+  '\u0637': {name:'tha\'', width:3, connects:true, body:["010","010","010","111"]},
+  '\u0638': {name:'zha\'', width:3, connects:true, body:["010","010","010","111"], dotsAbove:[1]},
+  '\u0639': {name:'ain', width:3, connects:true, body:["000","100","100","111"]},
+  '\u063A': {name:'ghain', width:3, connects:true, body:["000","100","100","111"], dotsAbove:[1]},
+  '\u0641': {name:'fa', width:3, connects:true, body:["000","000","010","111"], dotsAbove:[1]},
+  '\u0642': {name:'qaf', width:3, connects:true, body:["000","000","010","111"], dotsAbove:[0,2], descender:[1]},
+  '\u0643': {name:'kaf', width:3, connects:true, body:["100","110","100","111"]},
+  '\u0644': {name:'lam', width:2, connects:true, body:["10","10","10","11"]},
+  '\u0645': {name:'mim', width:2, connects:true, body:["00","00","11","11"]},
+  '\u0646': {name:'nun', width:3, connects:true, body:["000","000","000","111"], dotsAbove:[1]},
+  '\u0647': {name:'ha', width:2, connects:true, body:["00","11","00","11"]},
+  '\u0648': {name:'wau', width:2, connects:false, body:["00","00","11","11"], descender:[1]},
+  '\u064A': {name:'ya', width:3, connects:true, body:["000","000","000","111"], dotsBelow:[0,2]},
+  '\u0621': {name:'hamzah', width:1, connects:false, body:["0","1","1","0"]},
+  '\u0629': {name:'ta marbuthah', width:2, connects:false, body:["00","11","00","11"], dotsAbove:[0,1]},
+};
+
+function normalizeArabic(text){
+  return text
+    .replace(/[\u064B-\u0652\u0670\u0640]/g, '')
+    .replace(/[\u0623\u0625\u0622\u0671]/g, '\u0627');
+}
+
+const NONJOIN_GAP = 0.4, WORD_GAP = 1.5;
+function layoutText(text){
+  const clean = normalizeArabic(text);
+  const chars = Array.from(clean);
+  let xCursor = 0;
+  const placed = [];
+  const unknown = [];
+  for(const ch of chars){
+    if(ch === ' '){ xCursor += WORD_GAP; continue; }
+    const letter = LETTER_DATA[ch];
+    if(!letter){ if(!unknown.includes(ch)) unknown.push(ch); xCursor += 1; continue; }
+    placed.push({letter, x: xCursor});
+    xCursor += letter.width;
+    if(!letter.connects) xCursor += NONJOIN_GAP;
+  }
+  const totalWidth = Math.max(xCursor,1);
+  const mirrored = placed.map(p => ({ letter: p.letter, x: totalWidth - p.x - p.letter.width }));
+  return {placed: mirrored, totalWidth, unknown};
+}
+
+/* ===================== TILE CELLS (gx,gy kontinu, size=1 stroke / 0.4 titik) ===================== */
+function getTileCells(text){
+  const {placed, totalWidth, unknown} = layoutText(text);
+  const W = totalWidth, H = 6;
+  const cells = [];
+  placed.forEach(({letter, x})=>{
+    letter.body.forEach((rowStr, ri)=>{
+      for(let ci=0; ci<rowStr.length; ci++){
+        if(rowStr[ci]==='1') cells.push({gx:x+ci, gy:1+ri, size:1});
+      }
+    });
+    (letter.dotsAbove||[]).forEach(ci=>cells.push({gx:x+ci, gy:0, size:0.4}));
+    (letter.dotsBelow||[]).forEach(ci=>cells.push({gx:x+ci, gy:5, size:0.4}));
+    (letter.descender||[]).forEach(ci=>cells.push({gx:x+ci, gy:5, size:1}));
+  });
+  return {cells, W, H, unknown};
+}
+
+/* ===================== 8 TRANSFORMASI D4 ===================== */
+/* Setiap transform: (gx,gy,W,H) -> [nx,ny], plus dimensi keluaran (outW,outH) relatif thd (W,H) */
+const D4 = {
+  e:    {fn:(x,y,W,H)=>[x,y],               dims:(W,H)=>[W,H], label:'Identitas (e)', desc:'tanpa perubahan', v4:true},
+  r90:  {fn:(x,y,W,H)=>[H-y-1,x],           dims:(W,H)=>[H,W], label:'Rotasi 90°', desc:'teks menyamping', v4:false},
+  r180: {fn:(x,y,W,H)=>[W-x-1,H-y-1],       dims:(W,H)=>[W,H], label:'Rotasi 180°', desc:'terbalik penuh', v4:true},
+  r270: {fn:(x,y,W,H)=>[y,W-x-1],           dims:(W,H)=>[H,W], label:'Rotasi 270°', desc:'teks menyamping', v4:false},
+  sh:   {fn:(x,y,W,H)=>[W-x-1,y],           dims:(W,H)=>[W,H], label:'Cermin Horizontal', desc:'balik kiri-kanan', v4:true},
+  sv:   {fn:(x,y,W,H)=>[x,H-y-1],           dims:(W,H)=>[W,H], label:'Cermin Vertikal', desc:'balik atas-bawah', v4:true},
+  sd1:  {fn:(x,y,W,H)=>[y,x],               dims:(W,H)=>[H,W], label:'Cermin Diagonal ↘', desc:'lebar↔tinggi tertukar', v4:false},
+  sd2:  {fn:(x,y,W,H)=>[H-y-1,W-x-1],       dims:(W,H)=>[H,W], label:'Cermin Diagonal ↗', desc:'lebar↔tinggi tertukar', v4:false},
+};
+
+/* ===================== THEMES ===================== */
+const THEMES = [
+  {id:'gold-night', label:'Emas di Malam', stroke:'#D4AF62', bg:'#13152A'},
+  {id:'black-cream', label:'Hitam di Krem', stroke:'#241C10', bg:'#EFE6CE'},
+  {id:'white-teal', label:'Putih di Teal', stroke:'#F4F0E4', bg:'#1E4A47'},
+];
+let activeTheme = 'gold-night';
+function renderThemeRow(){
+  const el = document.getElementById('themeRow');
+  el.innerHTML = THEMES.map(t=>`
+    <button class="theme-btn ${t.id===activeTheme?'active':''}" data-id="${t.id}">
+      <span class="theme-swatch" style="background:${t.bg};box-shadow:inset 0 0 0 2px ${t.stroke};"></span>${t.label}
+    </button>
+  `).join('');
+  el.querySelectorAll('.theme-btn').forEach(b=>b.addEventListener('click', ()=>{
+    activeTheme = b.dataset.id;
+    renderThemeRow();
+    renderAll();
+  }));
+}
+
+/* ===================== RENDER: MEDALION 4 ARAH (subgrup V4) ===================== */
+function renderMedalion(){
+  const text = document.getElementById('textInput').value;
+  const unit = parseInt(document.getElementById('unitSize').value);
+  const theme = THEMES.find(t=>t.id===activeTheme);
+  const {cells, W, H, unknown} = getTileCells(text);
+
+  document.getElementById('warnUnknown').innerHTML = unknown.length
+    ? `<span class="badge warnb">Karakter tidak dikenali, dilewati: ${unknown.join(' ')}</span>`
+    : '';
+
+  const canvasW = 2*W, canvasH = 2*H;
+  const svgW = canvasW*unit, svgH = canvasH*unit;
+  const svg = document.getElementById('medalionSvg');
+  svg.setAttribute('viewBox', `0 0 ${svgW} ${svgH}`);
+  svg.setAttribute('width', svgW);
+  svg.setAttribute('height', svgH);
+
+  const cellRect = (gx,gy,size)=>{
+    const s = (size||1)*unit*0.92;
+    const off = (unit-s)/2;
+    return `<rect x="${(gx*unit+off).toFixed(1)}" y="${(gy*unit+off).toFixed(1)}" width="${s.toFixed(1)}" height="${s.toFixed(1)}" fill="${theme.stroke}"/>`;
+  };
+
+  let out = `<rect x="0" y="0" width="${svgW}" height="${svgH}" fill="${theme.bg}"/>`;
+  // garis sumbu simetri tipis sebagai penanda (opsional, tipis)
+  out += `<line x1="${W*unit}" y1="0" x2="${W*unit}" y2="${svgH}" stroke="${theme.stroke}" stroke-width="0.5" opacity="0.15"/>`;
+  out += `<line x1="0" y1="${H*unit}" x2="${svgW}" y2="${H*unit}" stroke="${theme.stroke}" stroke-width="0.5" opacity="0.15"/>`;
+
+  const quadrants = [
+    {tf:D4.e,    offX:0, offY:0},
+    {tf:D4.sh,   offX:W, offY:0},
+    {tf:D4.sv,   offX:0, offY:H},
+    {tf:D4.r180, offX:W, offY:H},
+  ];
+  quadrants.forEach(({tf,offX,offY})=>{
+    cells.forEach(c=>{
+      const [nx,ny] = tf.fn(c.gx, c.gy, W, H);
+      out += cellRect(nx+offX, ny+offY, c.size);
+    });
+  });
+
+  svg.innerHTML = out;
+}
+
+/* ===================== RENDER: PETA 8 TRANSFORMASI ===================== */
+function renderPanel8(){
+  const text = document.getElementById('textInput').value;
+  const theme = THEMES.find(t=>t.id===activeTheme);
+  const {cells, W, H} = getTileCells(text);
+  const grid = document.getElementById('panel8Grid');
+  const unit = 12;
+
+  grid.innerHTML = Object.entries(D4).map(([key, tf])=>{
+    const [outW, outH] = tf.dims(W,H);
+    const svgW = outW*unit, svgH = outH*unit;
+    let rects = `<rect x="0" y="0" width="${svgW}" height="${svgH}" fill="${theme.bg}"/>`;
+    cells.forEach(c=>{
+      const [nx,ny] = tf.fn(c.gx, c.gy, W, H);
+      const s = (c.size||1)*unit*0.9;
+      const off = (unit-s)/2;
+      rects += `<rect x="${(nx*unit+off).toFixed(1)}" y="${(ny*unit+off).toFixed(1)}" width="${s.toFixed(1)}" height="${s.toFixed(1)}" fill="${theme.stroke}"/>`;
+    });
+    return `
+      <div class="panel8 ${tf.v4?'native':''}">
+        <svg viewBox="0 0 ${svgW} ${svgH}">${rects}</svg>
+        <div class="p8label">${tf.label}</div>
+        <div class="p8desc">${tf.desc}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderAll(){
+  if(currentMode==='medalion') renderMedalion();
+  else renderPanel8();
+}
+
+/* ===================== MODE TOGGLE ===================== */
+let currentMode = 'medalion';
+function renderModeToggle(){
+  const el = document.getElementById('modeToggle');
+  el.innerHTML = `
+    <button class="mode-btn ${currentMode==='medalion'?'active':''}" data-m="medalion">Medalion 4 Arah</button>
+    <button class="mode-btn ${currentMode==='map'?'active':''}" data-m="map">Peta 8 Transformasi</button>
+  `;
+  el.querySelectorAll('.mode-btn').forEach(b=>b.addEventListener('click', ()=>{
+    currentMode = b.dataset.m;
+    renderModeToggle();
+    document.getElementById('medalionSection').style.display = currentMode==='medalion'?'':'none';
+    document.getElementById('mapSection').style.display = currentMode==='map'?'':'none';
+    renderAll();
+  }));
+}
+
+/* ===================== SAMPLES ===================== */
+const SAMPLES = ['\u0627\u0644\u0644\u0647','\u0645\u062D\u0645\u062F','\u0642\u0644\u0627\u062F\u0629','\u0646\u0648\u0631'];
+function renderSamples(){
+  const el = document.getElementById('samples');
+  el.innerHTML = SAMPLES.map(s=>`<button class="sample-btn" data-t="${s}">${s}</button>`).join('');
+  el.querySelectorAll('.sample-btn').forEach(b=>b.addEventListener('click', ()=>{
+    document.getElementById('textInput').value = b.dataset.t;
+    renderAll();
+  }));
+}
+
+/* ===================== WIRING ===================== */
+document.getElementById('textInput').addEventListener('input', renderAll);
+document.getElementById('unitSize').addEventListener('input', e=>{
+  document.getElementById('unitVal').textContent = e.target.value+'px';
+  renderMedalion();
+});
+document.getElementById('downloadSvg').addEventListener('click', ()=>{
+  const svg = document.getElementById('medalionSvg');
+  const serializer = new XMLSerializer();
+  const source = '<?xml version="1.0" standalone="no"?>\r\n' + serializer.serializeToString(svg);
+  const blob = new Blob([source], {type:'image/svg+xml;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'kufic-medalion.svg';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+/* ===================== INIT ===================== */
+renderThemeRow();
+renderSamples();
+renderModeToggle();
+renderAll();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

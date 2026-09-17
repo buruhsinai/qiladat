@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistem Terjadwal Al-Jazari — Alat JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12151a; --bg-panel:#1a1e25; --bg-panel-2:#20242c; --line:#2c313b;
+    --text:#e9e6df; --text-dim:#9aa1ad;
+    --gold:#c9a24b; --gold-soft:#e3c988;
+    --ok:#4f9c94; --warn:#e3766a; --blue:#5b8fc9;
+    --font-display:"Fraunces",serif; --font-body:"Karla",sans-serif; --font-mono:"JetBrains Mono",monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px 80px;}
+  header.hero{padding:56px 20px 40px;text-align:center;border-bottom:1px solid var(--line);
+    background:radial-gradient(ellipse at 50% 0%, rgba(201,162,75,0.10), transparent 60%);}
+  .eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;}
+  h1{font-family:var(--font-display);font-weight:600;font-size:clamp(26px,5vw,40px);margin:0 0 12px;}
+  .subtitle{color:var(--text-dim);font-size:15px;max-width:660px;margin:0 auto;}
+  .arabic{font-family:"Amiri",serif;font-size:15px;color:var(--gold-soft);margin-top:8px;}
+  section{padding:40px 0;border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  h2{font-family:var(--font-display);font-weight:600;font-size:22px;color:var(--gold-soft);margin:0 0 6px;display:flex;align-items:baseline;gap:10px;}
+  h2 .num{font-family:var(--font-mono);font-size:13px;color:var(--text-dim);font-weight:400;}
+  p{font-size:15.5px;} p.dim{color:var(--text-dim);font-size:14px;}
+  ul{padding-left:20px;} li{margin-bottom:8px;font-size:15px;}
+
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;}
+  .tab-btn{background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text-dim);
+    padding:12px 16px;border-radius:8px;font-size:13.5px;font-weight:700;cursor:pointer;transition:all .15s;}
+  .tab-btn.active{border-color:var(--gold);color:var(--gold-soft);background:rgba(201,162,75,0.08);}
+  .tab-btn:hover{border-color:var(--gold);}
+  .panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:24px;}
+
+  .controls-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:18px;}
+  .field label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--text-dim);margin-bottom:6px;font-family:var(--font-mono);text-transform:uppercase;}
+  .field label .val{color:var(--gold-soft);}
+  .field input[type=range]{width:100%;accent-color:var(--gold);}
+  .field input,.field select{width:100%;background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:6px;}
+
+  svg.diagram{width:100%;height:auto;display:block;background:#0d0f13;border-radius:8px;border:1px solid var(--line);margin-top:16px;}
+
+  .results{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px;}
+  .result-card{background:var(--bg-panel-2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;}
+  .result-card .l{font-family:var(--font-mono);font-size:10.5px;color:var(--text-dim);text-transform:uppercase;}
+  .result-card .v{font-family:var(--font-display);font-size:19px;color:var(--gold-soft);}
+
+  .lock-row{display:flex;gap:14px;justify-content:center;margin:20px 0;flex-wrap:wrap;}
+  .dial{background:var(--bg-panel-2);border:2px solid var(--line);border-radius:10px;width:74px;padding:10px 0;text-align:center;cursor:pointer;user-select:none;transition:border-color .15s;}
+  .dial:hover{border-color:var(--gold);}
+  .dial .sym{font-family:var(--font-display);font-size:28px;color:var(--gold-soft);}
+  .dial .hint{font-family:var(--font-mono);font-size:9px;color:var(--text-dim);margin-top:4px;}
+  .lock-status{text-align:center;font-family:var(--font-mono);font-size:15px;padding:14px;border-radius:8px;margin-top:10px;font-weight:700;}
+  .status-locked{background:rgba(227,118,106,0.1);color:var(--warn);}
+  .status-open{background:rgba(79,156,148,0.1);color:var(--ok);}
+
+  .note-box{margin-top:14px;background:var(--bg-panel-2);border:1px dashed var(--gold);border-radius:8px;padding:12px 16px;font-size:13.5px;color:var(--text-dim);}
+  .benefit-list{display:grid;gap:10px;}
+  .benefit-item{background:var(--bg-panel);border:1px solid var(--line);border-radius:8px;padding:14px 18px;}
+  .benefit-item .btitle{font-weight:700;color:var(--gold-soft);font-size:15px;margin-bottom:4px;}
+  .limit-item{background:var(--bg-panel);border:1px solid var(--line);border-left:3px solid var(--warn);
+    padding:12px 16px;border-radius:6px;margin-bottom:8px;font-size:14.5px;color:var(--text-dim);}
+  table.refs{width:100%;border-collapse:collapse;font-size:14px;}
+  table.refs td{padding:8px 4px;border-bottom:1px solid var(--line);color:var(--text-dim);vertical-align:top;}
+  table.refs td:first-child{color:var(--text);width:32%;font-weight:600;}
+  footer{text-align:center;padding:36px 20px 10px;color:var(--text-dim);font-size:12.5px;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="eyebrow">JAZMI · Alat · Sejarah Teknologi Islam</div>
+  <h1>Sistem Otomatis Terjadwal Al-Jazari</h1>
+  <p class="subtitle">Arsitektur, Enkripsi, dan Timer — tiga sistem otomatis dari Kitab al-Jāmiʿ Bayn al-ʿIlm wa-al-ʿAmal al-Nāfiʿ fī Ṣināʿat al-Ḥiyal (1206 M), disimulasikan langsung, bukan sekadar dibaca.</p>
+  <p class="arabic">الجامع بين العلم والعمل النافع في صناعة الحيل</p>
+</header>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <h2><span class="num">01</span> Belajar</h2>
+    <p>Badīʿ al-Zaman Abū al-ʿIzz Ismāʿīl al-Jazarī (1136–1206 M), insinyur istana di Diyarbakir, menulis risalah paling lengkap tentang mesin otomatis (al-ḥiyal) pada masanya. Tiga hal dalam karyanya bisa dibaca sebagai cikal-bakal "rumah pintar":</p>
+    <ul>
+      <li><strong>Arsitektur</strong> — jam istana (Castle Clock) yang menyatu dengan fasad bangunan: pintu-pintu otomatis terbuka, patung elang menjatuhkan bola, musik dibunyikan — semua terjadwal tanpa campur tangan manusia langsung.</li>
+      <li><strong>Enkripsi</strong> — mekanisme kunci kombinasi 4 cakram huruf, salah satu kunci kombinasi tertulis paling awal dalam sejarah teknik — baru terbuka jika seluruh cakram diputar ke posisi rahasia yang benar.</li>
+      <li><strong>Timer</strong> — jam air yang harus dikalibrasi ulang mengikuti musim, karena sistem waktu yang dipakai adalah "jam tak sama" (panjang siang dibagi 12, bukan 60 menit tetap) — jam istana Al-Jazari termasuk perangkat mekanis paling awal yang bisa "diprogram ulang" mengikuti perubahan ini.</li>
+    </ul>
+  </section>
+
+  <section id="eksplorasi">
+    <h2><span class="num">02</span> Simulasi</h2>
+    <div class="tabs" id="tabSelect">
+      <button class="tab-btn active" data-tab="arsitektur">🏛️ Arsitektur — Jam Istana</button>
+      <button class="tab-btn" data-tab="enkripsi">🔐 Enkripsi — Kunci Kombinasi</button>
+      <button class="tab-btn" data-tab="timer">⏱️ Timer — Kalibrasi Musiman</button>
+    </div>
+    <div class="panel" id="tabContent"></div>
+  </section>
+
+  <section id="manfaat">
+    <h2><span class="num">03</span> Manfaat &amp; Kegunaan</h2>
+    <div class="benefit-list">
+      <div class="benefit-item"><div class="btitle">Menunjukkan otomasi bukan penemuan abad ke-20</div>Peristiwa terjadwal otomatis, kunci berlapis, dan kalibrasi waktu adaptif — tiga pilar sistem otomatis rumah tangga masa kini — sudah ada wujud mekanisnya 800 tahun lalu.</div>
+      <div class="benefit-item"><div class="btitle">Menghubungkan konsep klasik &amp; modern</div>Ruang kombinasi kunci Al-Jazari adalah nenek moyang konseptual "keyspace" dalam kriptografi modern; kalibrasi jam air musiman adalah nenek moyang konsep "jam tak sama" yang sama dipakai di Simulator Astrolab &amp; Rubu' Mujayyab kita.</div>
+      <div class="benefit-item"><div class="btitle">Media belajar sejarah teknik Islam yang aktif</div>Bukan sekadar membaca "Al-Jazari menciptakan X" — pengguna benar-benar menjalankan mekanismenya sendiri.</div>
+    </div>
+  </section>
+
+  <section id="batasan">
+    <h2><span class="num">04</span> Batasan</h2>
+    <div class="limit-item">Simulasi ini adalah rekonstruksi konseptual berdasarkan deskripsi umum yang banyak dikutip tentang karya Al-Jazari — bukan replika presisi mekanisme asli dari manuskrip primer, yang detail teknisnya jauh lebih rumit &amp; sebagian masih diperdebatkan sejarawan teknik.</div>
+    <div class="limit-item">"Enkripsi" di sini dipakai secara longgar/anakronistik — istilah kriptografi modern belum ada di masa Al-Jazari; yang sebenarnya ada adalah mekanisme kunci kombinasi mekanis, dipetakan ke konsep keyspace modern untuk tujuan edukasi.</div>
+    <div class="limit-item">Simulasi kalibrasi Timer memakai rumus astronomi standar modern (bukan metode perhitungan Al-Jazari sendiri, yang tidak sepenuhnya terdokumentasi) — hasil akhirnya (kebutuhan kalibrasi musiman) tetap representasi historis yang sahih, meski jalur hitungnya berbeda.</div>
+  </section>
+
+  <section id="referensi">
+    <h2><span class="num">05</span> Referensi</h2>
+    <table class="refs">
+      <tr><td>Al-Jazari (1206 M)</td><td>Kitab al-Jāmiʿ Bayn al-ʿIlm wa-al-ʿAmal al-Nāfiʿ fī Ṣināʿat al-Ḥiyal</td></tr>
+      <tr><td>Donald R. Hill</td><td>The Book of Knowledge of Ingenious Mechanical Devices — terjemahan &amp; anotasi akademik standar</td></tr>
+      <tr><td>Konsep Jam Tak Sama</td><td>Sama dengan yang dipakai di Simulator Astrolab &amp; Rubu' Mujayyab JAZMI</td></tr>
+    </table>
+  </section>
+
+</div>
+
+<footer>Bagian dari Bank Alat JAZMI — Laboratorium Sejarah Teknologi Islam.</footer>
+
+<script>
+(function(){
+  const el = id => document.getElementById(id);
+  let activeTab = 'arsitektur';
+  let arsitekturTimer = null;
+
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(arsitekturTimer){ clearInterval(arsitekturTimer); arsitekturTimer=null; }
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      activeTab = btn.dataset.tab;
+      renderTab();
+    });
+  });
+
+  /* ================= TAB 1: ARSITEKTUR — JAM ISTANA ================= */
+  function renderArsitektur(){
+    const c = el('tabContent');
+    c.innerHTML = `
+      <p class="dim">Jam istana menandai tiap 1/12 siang dengan peristiwa otomatis — pintu terbuka, elang menjatuhkan bola, musik berbunyi. Geser waktu untuk melihat air berkurang &amp; peristiwa terpicu satu per satu.</p>
+      <div class="controls-row">
+        <div class="field"><label>Waktu Simulasi (jam ke-) <span class="val" id="vJam">0.0</span></label><input type="range" id="inJam" min="0" max="12" step="0.1" value="0"></div>
+        <div class="field"><label>Kecepatan Air Mengalir <span class="val" id="vSpeed">Normal</span></label><input type="range" id="inSpeed" min="1" max="3" step="1" value="2"></div>
+      </div>
+      <svg class="diagram" id="svgIstana" viewBox="0 0 700 260"></svg>
+      <div class="results">
+        <div class="result-card"><div class="l">Ketinggian Air Tersisa</div><div class="v" id="resAir">100%</div></div>
+        <div class="result-card"><div class="l">Peristiwa Terpicu</div><div class="v" id="resEvent">0 / 12</div></div>
+      </div>
+    `;
+    function upd(){
+      const t = parseFloat(el('inJam').value);
+      el('vJam').textContent = t.toFixed(1);
+      const speedLabel = {1:'Lambat',2:'Normal',3:'Cepat'};
+      el('vSpeed').textContent = speedLabel[el('inSpeed').value];
+      const airPct = Math.max(0, 100 - (t/12)*100);
+      el('resAir').textContent = airPct.toFixed(0)+'%';
+      const eventsTriggered = Math.floor(t);
+      el('resEvent').textContent = eventsTriggered + ' / 12';
+      drawIstana(t, airPct);
+    }
+    function drawIstana(t, airPct){
+      const W=700,H=260;
+      let s = '';
+      // fasad bangunan
+      s += `<rect x="150" y="20" width="400" height="220" fill="#1a1e25" stroke="#c9a24b" stroke-width="2"/>`;
+      s += `<polygon points="150,20 350,-10 550,20" fill="none" stroke="#c9a24b" stroke-width="2" transform="translate(0,10)"/>`;
+      // tangki air (reservoir) di dalam
+      const tankX=180, tankY=40, tankW=60, tankH=180;
+      s += `<rect x="${tankX}" y="${tankY}" width="${tankW}" height="${tankH}" fill="none" stroke="#5b8fc9" stroke-width="1.5"/>`;
+      const waterH = tankH*(airPct/100);
+      s += `<rect x="${tankX}" y="${tankY+tankH-waterH}" width="${tankW}" height="${waterH}" fill="#5b8fc9" opacity="0.6"/>`;
+      s += `<text x="${tankX+tankW/2}" y="${tankY-6}" fill="#9aa1ad" font-size="10" text-anchor="middle" font-family="JetBrains Mono, monospace">Tangki Air</text>`;
+      // 12 pintu/peristiwa
+      const doorsPerRow=6;
+      for(let i=0;i<12;i++){
+        const row = Math.floor(i/doorsPerRow), colI = i%doorsPerRow;
+        const dx = 300 + colI*38, dy = 50 + row*90;
+        const triggered = t >= i;
+        const color = triggered ? '#c9a24b' : '#3a4150';
+        s += `<rect x="${dx}" y="${dy}" width="28" height="60" fill="${triggered?'rgba(201,162,75,0.15)':'#12151a'}" stroke="${color}" stroke-width="1.5"/>`;
+        if(triggered){
+          s += `<circle cx="${dx+14}" cy="${dy+20}" r="5" fill="#e3c988"/>`; // elang/figure muncul
+        }
+        s += `<text x="${dx+14}" y="${dy+72}" fill="${triggered?'#e3c988':'#6a7180'}" font-size="9" text-anchor="middle" font-family="JetBrains Mono, monospace">${i+1}</text>`;
+      }
+      s += `<text x="350" y="252" fill="#9aa1ad" font-size="10" text-anchor="middle" font-family="JetBrains Mono, monospace">12 pintu jam — emas = sudah terpicu (patung/bola/bunyi keluar)</text>`;
+      el('svgIstana').innerHTML = s;
+    }
+    let playing=false;
+    el('inJam').addEventListener('input', upd);
+    el('inSpeed').addEventListener('input', upd);
+    upd();
+    // auto-play berdasarkan kecepatan
+    function tick(){
+      if(!el('inJam')){ clearInterval(arsitekturTimer); arsitekturTimer=null; return; }
+      const speed = parseFloat(el('inSpeed').value);
+      let t = parseFloat(el('inJam').value);
+      t += 0.02*speed;
+      if(t>12) t=0;
+      el('inJam').value = t;
+      upd();
+    }
+    if(arsitekturTimer){ clearInterval(arsitekturTimer); }
+    arsitekturTimer = setInterval(tick, 100);
+  }
+
+  /* ================= TAB 2: ENKRIPSI — KUNCI KOMBINASI ================= */
+  const SYMBOLS_FULL = ['ا','ب','ج','د','ه','و','ز','ح','ط','ي','ك','ل','م','ن','س','ع'];
+  let secretCode = [0,0,0,0];
+  let dialState = [0,0,0,0];
+
+  function renderEnkripsi(){
+    const c = el('tabContent');
+    c.innerHTML = `
+      <p class="dim">Empat cakram harus diputar ke posisi rahasia yang benar secara bersamaan agar palang kunci terlepas. Klik tiap cakram untuk memutar simbolnya.</p>
+      <div class="controls-row">
+        <div class="field"><label>Jumlah Simbol per Cakram (ruang kunci) <span class="val" id="vAlpha">6</span></label><input type="range" id="inAlpha" min="2" max="16" step="1" value="6"></div>
+      </div>
+      <div class="lock-row" id="lockDials"></div>
+      <div class="lock-status status-locked" id="lockStatus">🔒 TERKUNCI — putar cakram untuk mencoba</div>
+      <div class="results">
+        <div class="result-card"><div class="l">Total Kemungkinan Kombinasi</div><div class="v" id="resKeyspace">–</div></div>
+        <div class="result-card"><div class="l">Estimasi Waktu Coba Semua (1 percobaan/detik)</div><div class="v" id="resBrute">–</div></div>
+      </div>
+      <div class="note-box" id="hintBox"></div>
+    `;
+    function setupSecret(){
+      const n = parseInt(el('inAlpha').value);
+      secretCode = [
+        Math.floor(Math.random()*n), Math.floor(Math.random()*n),
+        Math.floor(Math.random()*n), Math.floor(Math.random()*n)
+      ];
+      dialState = [0,0,0,0];
+    }
+    function renderDials(){
+      const n = parseInt(el('inAlpha').value);
+      el('vAlpha').textContent = n;
+      el('lockDials').innerHTML = dialState.map((v,i)=>`
+        <div class="dial" data-idx="${i}">
+          <div class="sym">${SYMBOLS_FULL[v % SYMBOLS_FULL.length]}</div>
+          <div class="hint">cakram ${i+1}</div>
+        </div>
+      `).join('');
+      document.querySelectorAll('.dial').forEach(d=>{
+        d.addEventListener('click', ()=>{
+          const i = parseInt(d.dataset.idx);
+          dialState[i] = (dialState[i]+1) % n;
+          renderDials();
+          checkLock();
+        });
+      });
+    }
+    function checkLock(){
+      const n = parseInt(el('inAlpha').value);
+      const match = dialState.every((v,i)=> v===secretCode[i]);
+      const status = el('lockStatus');
+      if(match){
+        status.className = 'lock-status status-open';
+        status.innerHTML = '🔓 TERBUKA! Kombinasi rahasia ditemukan.';
+      } else {
+        status.className = 'lock-status status-locked';
+        status.innerHTML = '🔒 TERKUNCI — putar cakram untuk mencoba';
+      }
+      const keyspace = Math.pow(n,4);
+      el('resKeyspace').textContent = keyspace.toLocaleString('id-ID');
+      const seconds = keyspace;
+      let human;
+      if(seconds<60) human = seconds.toFixed(0)+' detik';
+      else if(seconds<3600) human = (seconds/60).toFixed(1)+' menit';
+      else if(seconds<86400) human = (seconds/3600).toFixed(1)+' jam';
+      else human = (seconds/86400).toFixed(1)+' hari';
+      el('resBrute').textContent = human;
+      el('hintBox').innerHTML = `Menaikkan jumlah simbol per cakram dari ${n-1} ke ${n} melipatgandakan ruang kunci dari ${Math.pow(n-1,4).toLocaleString('id-ID')} menjadi ${keyspace.toLocaleString('id-ID')} kemungkinan — inilah prinsip dasar yang sama dipakai memperkuat kata sandi digital modern: setiap simbol tambahan melipatgandakan usaha yang dibutuhkan penyerang brute-force.`;
+    }
+    el('inAlpha').addEventListener('input', ()=>{ setupSecret(); renderDials(); checkLock(); });
+    setupSecret(); renderDials(); checkLock();
+  }
+
+  /* ================= TAB 3: TIMER — KALIBRASI MUSIMAN ================= */
+  function solarLambda(date){
+    const j2000 = new Date(Date.UTC(2000,0,1,12,0,0));
+    const n = (date - j2000)/86400000;
+    const L = (280.460 + 0.9856474*n) % 360;
+    const g = (357.528 + 0.9856003*n) % 360 * Math.PI/180;
+    let lam = L + 1.915*Math.sin(g) + 0.020*Math.sin(2*g);
+    return ((lam%360)+360)%360;
+  }
+  function decFromLam(lamDeg){
+    const eps=23.4366; const toRad=d=>d*Math.PI/180, toDeg=r=>r*180/Math.PI;
+    return toDeg(Math.asin(Math.sin(toRad(eps))*Math.sin(toRad(lamDeg))));
+  }
+  function dayLengthHours(dec,lat){
+    const toRad=d=>d*Math.PI/180, toDeg=r=>r*180/Math.PI;
+    let cosH0 = -Math.tan(toRad(lat))*Math.tan(toRad(dec));
+    cosH0 = Math.max(-1,Math.min(1,cosH0));
+    return 2*toDeg(Math.acos(cosH0))/15;
+  }
+
+  function renderTimer(){
+    const c = el('tabContent');
+    c.innerHTML = `
+      <p class="dim">Sistem waktu yang dipakai jam istana Al-Jazari membagi siang jadi 12 "jam tak sama" — panjangnya berubah tiap musim. Geser tanggal &amp; lintang untuk melihat berapa jam istana perlu dikalibrasi ulang.</p>
+      <div class="controls-row">
+        <div class="field"><label>Tanggal</label><input type="date" id="inDate"></div>
+        <div class="field"><label>Lintang Lokasi (° — Diyarbakir≈37,9)</label><input type="number" id="inLat" step="0.1" value="37.9"></div>
+      </div>
+      <svg class="diagram" id="svgTimer" viewBox="0 0 700 140"></svg>
+      <div class="results">
+        <div class="result-card"><div class="l">Panjang Siang Hari Ini</div><div class="v" id="resSiang">–</div></div>
+        <div class="result-card"><div class="l">1 Jam Istana (Tak Sama) Setara</div><div class="v" id="resJamTakSama">–</div></div>
+        <div class="result-card"><div class="l">Selisih dari Ekuinoks (1 jam sama)</div><div class="v" id="resSelisih">–</div></div>
+      </div>
+      <div class="note-box">Inilah sebabnya jam istana Al-Jazari perlu penyetelan ulang berkala mengikuti musim — konsep identik dengan tab "Jam Tak Sama → Jam Sama" di Simulator Astrolab JAZMI.</div>
+    `;
+    el('inDate').value = new Date().toISOString().slice(0,10);
+    function upd(){
+      const d = new Date(el('inDate').value+'T12:00:00Z');
+      const lat = parseFloat(el('inLat').value);
+      const dec = decFromLam(solarLambda(d));
+      const siang = dayLengthHours(dec, lat);
+      const jamTakSama = siang/12;
+      el('resSiang').textContent = siang.toFixed(2)+' jam';
+      el('resJamTakSama').textContent = jamTakSama.toFixed(3)+' jam sama';
+      const selisihPersen = ((jamTakSama-1)*100);
+      el('resSelisih').textContent = (selisihPersen>=0?'+':'')+selisihPersen.toFixed(1)+'%';
+      drawTimerBar(siang);
+    }
+    function drawTimerBar(siang){
+      const W=700,H=140;
+      const maxH=16;
+      const wRatio = siang/maxH;
+      let s = `<rect x="40" y="50" width="620" height="30" fill="#20242c" stroke="#3a4150"/>`;
+      s += `<rect x="40" y="50" width="${(620*wRatio).toFixed(1)}" height="30" fill="#c9a24b" opacity="0.7"/>`;
+      for(let h=0;h<=12;h++){
+        const x = 40 + (620*wRatio)*(h/12);
+        s += `<line x1="${x.toFixed(1)}" y1="45" x2="${x.toFixed(1)}" y2="85" stroke="#e3c988" stroke-width="1"/>`;
+      }
+      s += `<text x="350" y="30" fill="#9aa1ad" font-size="11" text-anchor="middle" font-family="JetBrains Mono, monospace">Siang dibagi 12 jam istana (garis emas = batas tiap jam)</text>`;
+      s += `<text x="350" y="105" fill="#9aa1ad" font-size="10" text-anchor="middle" font-family="JetBrains Mono, monospace">${siang.toFixed(2)} jam siang total</text>`;
+      el('svgTimer').innerHTML = s;
+    }
+    el('inDate').addEventListener('input', upd);
+    el('inLat').addEventListener('input', upd);
+    upd();
+  }
+
+  function renderTab(){
+    if(activeTab==='arsitektur') renderArsitektur();
+    else if(activeTab==='enkripsi') renderEnkripsi();
+    else renderTimer();
+  }
+
+  renderTab();
+})();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

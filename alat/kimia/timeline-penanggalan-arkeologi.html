@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timeline Teknik Penanggalan Arkeologi</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --bg:#12141c; --bg-panel:#1b1f2b; --bg-panel-2:#20263a;
+  --line:#333a4f; --text:#eee7d6; --text-dim:#a9a6ac;
+  --gold:#c9a15a; --gold-soft:#8a713c; --teal:#5a9c92; --red:#c07a6e; --blue:#6f9bd1; --radius:10px;
+}
+*{box-sizing:border-box;}
+body{ margin:0; background:var(--bg); color:var(--text); font-family:'Karla',sans-serif; line-height:1.6; }
+h1,h2,h3{ font-family:'Fraunces',serif; font-weight:600; margin:0 0 0.5em; }
+.mono{ font-family:'JetBrains Mono', monospace; }
+.wrap{ max-width:880px; margin:0 auto; padding:0 20px; }
+.hero{ padding:48px 0 30px; border-bottom:1px solid var(--line); text-align:center; }
+.hero .eyebrow{ text-transform:uppercase; font-size:0.7rem; letter-spacing:2.5px; color:var(--gold); margin-bottom:12px; }
+.hero h1{ font-size:clamp(1.4rem,4.4vw,2.1rem); color:#fff; }
+.hero p.tag{ color:var(--text-dim); max-width:600px; margin:10px auto 0; font-size:0.94rem; }
+section{ padding:36px 0; border-bottom:1px solid var(--line); }
+section:last-of-type{ border-bottom:none; }
+.kicker{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+.kicker .num{ font-family:'Fraunces',serif; color:var(--gold); font-size:0.85rem; border:1px solid var(--gold-soft); border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.kicker h2{ font-size:1.2rem; margin:0; color:#fff; }
+p{ color:var(--text); } p.dim{ color:var(--text-dim); font-size:0.9rem; }
+.panel{ background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-top:16px; }
+blockquote{ border-left:3px solid var(--gold); margin:16px 0; padding:4px 0 4px 16px; color:var(--text-dim); font-style:italic; }
+
+/* TIMELINE */
+.tl-item{ border:1px solid var(--line); border-radius:8px; margin-bottom:8px; overflow:hidden; }
+.tl-head{ display:flex; align-items:center; gap:12px; padding:12px 14px; cursor:pointer; background:var(--bg-panel-2); }
+.tl-head:hover{ background:#252c40; }
+.tl-year{ font-family:'JetBrains Mono',monospace; color:var(--gold); font-size:0.85rem; min-width:64px; }
+.tl-nama{ font-weight:700; font-size:0.92rem; flex:1; }
+.tl-badge{ font-size:0.66rem; padding:2px 8px; border-radius:10px; background:rgba(111,155,209,0.2); color:var(--blue); white-space:nowrap; }
+.tl-body{ display:none; padding:14px 16px; font-size:0.88rem; }
+.tl-body.show{ display:block; }
+.tl-body h5{ font-size:0.78rem; color:var(--gold); text-transform:uppercase; letter-spacing:1px; margin:12px 0 6px; }
+.tl-body h5:first-child{ margin-top:0; }
+.tl-body ul{ margin:0; padding-left:18px; }
+.tl-body li{ margin-bottom:5px; color:var(--text-dim); }
+
+label{ display:block; font-size:0.82rem; color:var(--text-dim); margin:14px 0 6px; }
+label:first-of-type{ margin-top:0; }
+input[type=range]{ width:100%; accent-color:var(--gold); }
+input[type=number]{ width:100%; background:#0e1017; border:1px solid var(--line); color:var(--text); padding:10px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:0.95rem; }
+.slider-row{ display:flex; justify-content:space-between; font-size:0.74rem; color:var(--text-dim); margin-top:4px; }
+
+.hasil-grid{ display:grid; grid-template-columns:1fr; gap:8px; margin-top:14px; }
+.hasil-card{ background:var(--bg-panel-2); border:1px solid var(--line); border-radius:8px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.hasil-card .lbl{ font-size:0.82rem; color:var(--text-dim); }
+.hasil-card .val{ font-family:'JetBrains Mono',monospace; font-size:1rem; color:var(--gold); text-align:right; }
+.hasil-card.warn .val{ color:var(--red); }
+
+.formula{ font-family:'Fraunces',serif; font-style:italic; background:var(--bg-panel-2); border-radius:8px; padding:14px 18px; margin:14px 0; overflow-x:auto; color:#f4eede; }
+ul.batas li{ margin-bottom:10px; }
+.refs li{ margin-bottom:10px; font-size:0.9rem; color:var(--text-dim); }
+.consult{ background:linear-gradient(135deg,var(--bg-panel-2),var(--bg-panel)); border:1px solid var(--gold-soft); border-radius:var(--radius); padding:22px; text-align:center; }
+.consult a.wa{ display:inline-block; margin-top:14px; background:var(--teal); color:#12141c; text-decoration:none; font-weight:700; padding:12px 26px; border-radius:30px; }
+footer{ text-align:center; padding:26px 0; color:var(--text-dim); font-size:0.8rem; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Sains Arkeologi</div>
+    <h1>Timeline Teknik Penanggalan Arkeologi</h1>
+    <p class="tag">Dari mengamati permukaan batu yang tak berubah selama berabad-abad, sampai menghitung atom di dalam gua — 16 titik dalam sejarah bagaimana manusia belajar membaca umur benda mati.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <div class="kicker"><div class="num">1</div><h2>Belajar: Intuisi Anda, Diperiksa</h2></div>
+    <p>Intuisi yang Anda gambarkan — mengamati tempat yang sudah lama tidak berubah, mencatat kondisinya sebagai "potret umur 2000 tahun", lalu membandingkan tempat lain yang belum diketahui umurnya dengan potret itu — <strong>ternyata persis menggambarkan teknik nyata bernama likenometri</strong>, ditemukan ahli lumut kerak (lichen) Austria, Roland Beschel, tahun 1950.</p>
+    <p>Bedanya dengan bayangan Anda cuma satu hal penting: pertumbuhannya <strong>tidak berjalan lurus (linear)</strong>. Lumut kerak tumbuh cepat di awal ("periode besar"), lalu melambat drastis seiring waktu — sehingga anggapan "dua kali lebih besar = dua kali lebih tua" justru keliru. Inilah salah satu celah paling terkenal dari teknik ini, dan Anda bisa mencobanya sendiri di Simulator B di bawah.</p>
+    <p class="dim">Prinsip umum di balik intuisi Anda — "kalibrasi terhadap permukaan yang umurnya sudah pasti diketahui" — juga dipakai teknik lain: hidrasi obsidian, dan dulu "penanggalan kimia/fluorin" yang bahkan pernah dipakai membongkar salah satu penipuan sains paling terkenal, kasus manusia Piltdown.</p>
+  </section>
+  <section id="timeline">
+    <div class="kicker"><div class="num">2</div><h2>Timeline 16 Teknik</h2></div>
+    <p class="dim">Sentuh tiap kartu untuk membaca cara kerja &amp; titik kekeliruannya. Kartu bertanda "revisit" berarti keluarga teknik yang sama muncul lagi di titik waktu lain karena ada modifikasi berarti — bukan pengulangan sia-sia.</p>
+    <div id="timeline-area"></div>
+  </section>
+
+  <section id="sim-a">
+    <div class="kicker"><div class="num">3</div><h2>Simulator A: Radiokarbon</h2></div>
+    <p class="dim">Geser umur sebenarnya dan dua sumber kekeliruan paling terkenal — lihat seberapa jauh umur yang "terbaca" melenceng.</p>
+    <div class="panel">
+      <label>Umur sebenarnya sampel (tahun)</label>
+      <input type="range" id="rc-umur" min="100" max="48000" step="100" value="2000">
+      <div class="slider-row"><span id="rc-umur-label">2000 tahun</span><span></span></div>
+
+      <label>Efek reservoir / "kayu tua" (tahun — karbon sudah tua saat masuk sampel)</label>
+      <input type="range" id="rc-reservoir" min="0" max="1000" step="10" value="0">
+      <div class="slider-row"><span id="rc-reservoir-label">0 tahun</span><span></span></div>
+
+      <label>Kontaminasi karbon modern (%, mis. akar tanaman masa kini ikut terukur)</label>
+      <input type="range" id="rc-kontaminasi" min="0" max="10" step="0.1" value="0">
+      <div class="slider-row"><span id="rc-kontaminasi-label">0%</span><span></span></div>
+
+      <div class="hasil-grid">
+        <div class="hasil-card"><span class="lbl">Umur sebenarnya</span><span class="val" id="rc-out-benar">—</span></div>
+        <div class="hasil-card warn"><span class="lbl">Umur yang "terbaca" alat</span><span class="val" id="rc-out-tampak">—</span></div>
+        <div class="hasil-card warn"><span class="lbl">Selisih kekeliruan</span><span class="val" id="rc-out-selisih">—</span></div>
+      </div>
+      <p class="dim" style="margin-top:10px;" id="rc-catatan"></p>
+    </div>
+  </section>
+
+  <section id="sim-b">
+    <div class="kicker"><div class="num">4</div><h2>Simulator B: Likenometri (Menguji Intuisi Anda)</h2></div>
+    <p class="dim">Kurva pertumbuhan lumut kerak sesungguhnya melambat seiring waktu (garis emas). Bandingkan dengan anggapan naif bahwa pertumbuhannya lurus (garis merah putus-putus) — keduanya dikalibrasi dari titik acuan yang sama.</p>
+    <div class="panel">
+      <label>Diameter maksimum lumut kerak di wilayah ini (mm)</label>
+      <input type="range" id="lm-dmax" min="20" max="100" step="1" value="50">
+      <div class="slider-row"><span id="lm-dmax-label">50 mm</span><span></span></div>
+
+      <label>Laju pertumbuhan (tetapan waktu τ — makin besar, makin lambat melandai)</label>
+      <input type="range" id="lm-tau" min="50" max="500" step="10" value="200">
+      <div class="slider-row"><span id="lm-tau-label">τ = 200 tahun</span><span></span></div>
+
+      <label>Titik acuan: umur permukaan yang sudah diketahui pasti (mis. nisan bertahun)</label>
+      <input type="range" id="lm-tref" min="20" max="300" step="5" value="100">
+      <div class="slider-row"><span id="lm-tref-label">100 tahun</span><span></span></div>
+
+      <label>Diameter terukur di permukaan yang BELUM diketahui umurnya (mm)</label>
+      <input type="range" id="lm-dukur" min="1" max="99" step="1" value="35">
+      <div class="slider-row"><span id="lm-dukur-label">35 mm</span><span></span></div>
+
+      <svg id="lm-svg" viewBox="0 0 380 200" style="width:100%; margin-top:16px; background:var(--bg-panel-2); border-radius:8px;"></svg>
+
+      <div class="hasil-grid">
+        <div class="hasil-card"><span class="lbl">Umur via kurva sebenarnya (tidak linear)</span><span class="val" id="lm-out-benar">—</span></div>
+        <div class="hasil-card warn"><span class="lbl">Umur via asumsi linear (naif, seperti intuisi awal)</span><span class="val" id="lm-out-naif">—</span></div>
+        <div class="hasil-card warn"><span class="lbl">Selisih kekeliruan</span><span class="val" id="lm-out-selisih">—</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="metode">
+    <div class="kicker"><div class="num">5</div><h2>Metode</h2></div>
+    <p><strong>Radiokarbon:</strong> peluruhan eksponensial dengan waktu paruh 5.730 tahun. Efek reservoir menggeser "jam" karbon sebelum mulai meluruh; kontaminasi modern mencampur sebagian karbon berumur nol ke dalam sampel.</p>
+    <div class="formula">fraksi_sisa = 0,5^((umur+reservoir)/5730) × (1−kontaminasi) + 1×kontaminasi<br>umur_tampak = 5730 × log₂(1/fraksi_sisa)</div>
+    <p><strong>Likenometri:</strong> kurva pertumbuhan jenuh (saturasi), bukan garis lurus:</p>
+    <div class="formula">diameter(t) = D_maks × (1 − e^(−t/τ))</div>
+    <p class="dim">Model naif hanya menarik garis lurus dari titik nol ke satu titik acuan yang diketahui — akurat di dekat titik acuan itu saja, makin meleset jauh dari titik itu, terutama untuk permukaan yang jauh lebih tua.</p>
+  </section>
+
+  <section id="batasan">
+    <div class="kicker"><div class="num">6</div><h2>Batasan</h2></div>
+    <ul class="batas">
+      <li>Kedua simulator adalah <strong>model matematis sederhana</strong> untuk keperluan belajar — bukan software laboratorium sungguhan. Sumber kekeliruan dunia nyata jauh lebih banyak dan saling berinteraksi.</li>
+      <li>Angka waktu paruh radiokarbon yang dipakai (5.730 tahun) adalah nilai fisis terkini — banyak laboratorium tetap melaporkan "umur radiokarbon konvensional" memakai konstanta lama Libby (5.568 tahun) sebagai konvensi historis, sehingga dua laporan bisa terlihat sedikit berbeda meski sama-sama "benar" menurut konvensinya masing-masing.</li>
+      <li>Reliabilitas likenometri sendiri masih diperdebatkan sebagian ilmuwan geomorfologi — ada studi yang secara eksplisit mempertanyakan apakah metode ini cukup andal untuk penanggalan numerik presisi, bukan cuma penanggalan relatif kasar.</li>
+      <li>16 teknik di timeline adalah kurasi yang mewakili titik balik penting — bukan katalog lengkap seluruh metode penanggalan arkeologi yang pernah ada.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <div class="kicker"><div class="num">7</div><h2>Referensi</h2></div>
+    <ul class="refs">
+      <li>Beschel, R.E. (1950, 1961) — publikasi asli prinsip likenometri.</li>
+      <li>Pearson, C.L. dkk., <em>"Dendrochronology and Radiocarbon Dating"</em>, Radiocarbon (2021) — sejarah keterkaitan Douglass &amp; Libby, "Curve of Knowns".</li>
+      <li>Friedman, I. &amp; Smith, R. (1960) — publikasi awal hidrasi obsidian, US Geological Survey.</li>
+      <li>Oakley, K. (1949) — penanggalan fluorin dan pembongkaran kasus Piltdown Man.</li>
+      <li>Various, <em>"Lichenometric dating: Science or pseudo-science?"</em>, ScienceDirect — perdebatan reliabilitas likenometri.</li>
+      <li>Encyclopedia.com, <em>"Dating Techniques"</em>; Vaia, <em>"Historical Dating: Methods &amp; Techniques"</em> — ringkasan umum ragam teknik.</li>
+    </ul>
+  </section>
+
+  <section id="konsultasi">
+    <div class="consult">
+      <h3 style="color:#fff;">Ingin teknik lain ditambahkan ke timeline?</h3>
+      <p class="dim">Alat ini masih pengembangan versi awal. Silakan hubungi kami untuk usulan (mis. dating amino acid racemization, atau arkeomagnetik).</p>
+      <a class="wa" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20bertanya%20seputar%20Timeline%20Penanggalan%20Arkeologi." target="_blank">Hubungi via WhatsApp</a>
+    </div>
+  </section>
+
+<script>
+const TEKNIK = [
+{tahun:'1669/1800-an', nama:'Stratigrafi (Prinsip Superposisi)', revisit:false,
+ cara:'Nicolas Steno merumuskan prinsip geologis: lapisan di bawah lebih tua dari lapisan di atasnya. Diadopsi arkeologi abad ke-19 (Pitt Rivers, dkk.) untuk membaca urutan relatif lapisan galian.',
+ celah:['Konteks yang terganggu (lubang galian, hewan penggali, erosi) bisa membalik urutan seharusnya.','Hanya memberi urutan relatif — tidak memberi tahun kalender.','Butuh pencatatan sangat hati-hati saat penggalian; kesalahan tak bisa diulang setelah lapisan dibongkar.']},
+
+{tahun:'1899', nama:'Seriasi / Sequence Dating', revisit:false,
+ cara:'Flinders Petrie mengurutkan tembikar Mesir berdasarkan perubahan gaya bertahap, menciptakan urutan relatif tanpa perlu tahu tahun pastinya.',
+ celah:['Mengasumsikan perubahan gaya berjalan bertahap &amp; searah — perdagangan/migrasi bisa mencampur gaya dari periode berbeda di lokasi sama.','Tidak memberi tahun kalender absolut dengan sendirinya, perlu dijangkarkan ke titik lain yang sudah diketahui.']},
+
+{tahun:'1878–1910-an', nama:'Kronologi Varve', revisit:false,
+ cara:'Gerard De Geer menghitung lapisan sedimen tahunan danau glasial Swedia — mirip cincin pohon, tapi di dasar danau.',
+ celah:['Mengasumsikan tepat satu lapisan terbentuk per tahun — banjir/longsor bisa menghasilkan lapisan ganda atau lapisan hilang.','Sulit menyambungkan urutan varve dari danau yang berjauhan secara meyakinkan.']},
+
+{tahun:'1929', nama:'Dendrokronologi', revisit:false,
+ cara:'A.E. Douglass merumuskan metode "crossdating" — mencocokkan pola lebar cincin pohon antar sampel untuk membangun kronologi tahunan yang sambung-menyambung, bukan sekadar menghitung cincin satu pohon.',
+ celah:['Perlu spesies pohon berumur panjang dengan cincin musiman jelas — sulit diterapkan di daerah tropis/iklim seragam.','Kronologi bersifat regional — pola di satu wilayah belum tentu cocok wilayah lain.','"Masalah kayu tua": tahun tebang pohon belum tentu sama dengan tahun benda itu dipakai/dikubur.']},
+
+{tahun:'1949', nama:'Radiokarbon (Konvensional)', revisit:false,
+ cara:'Willard Libby menemukan peluruhan karbon-14 bisa dipakai menghitung umur bahan organik hingga ~50.000 tahun. Douglass bahkan meminjamkan sampel kayu bertahun pasti dari dendrokronologinya untuk menguji metode Libby ("Curve of Knowns").',
+ celah:['Awalnya mengasumsikan kadar karbon-14 atmosfer konstan sepanjang sejarah — belakangan terbukti keliru (lihat kalibrasi, revisit berikutnya).','Rentan kontaminasi karbon modern maupun karbon "mati" (reservoir), lihat Simulator A.','Hanya berlaku untuk bahan organik, dan mentok di sekitar 50.000 tahun.']},
+
+{tahun:'1949', nama:'Penanggalan Fluorin/Kimia (Relatif)', revisit:false,
+ cara:'Tulang menyerap fluorin dari tanah secara perlahan — dua tulang dari lokasi &amp; lapisan tanah sama bisa dibandingkan usia relatifnya lewat kadar fluorinnya. Kenneth Oakley memakainya membongkar hoax "Manusia Piltdown" tahun 1949.',
+ celah:['Murni relatif — hanya sah membandingkan benda dari kondisi tanah yang sama persis.','Tidak bisa dipakai lintas lokasi berbeda kimia tanahnya.','Tidak memberi angka tahun kalender sama sekali.']},
+
+{tahun:'1950', nama:'Likenometri', revisit:false,
+ cara:'Roland Beschel mengukur diameter lumut kerak di permukaan batu yang umurnya sudah pasti (nisan bertahun, morena glasial terdata), membangun kurva pertumbuhan, lalu menerapkannya ke permukaan yang belum diketahui umurnya. Inilah yang paling dekat dengan intuisi awal Anda.',
+ celah:['Laju pertumbuhan TIDAK linear — cepat di awal, melandai seiring waktu (lihat Simulator B).','Sangat bergantung mikroiklim lokal — kurva dari satu wilayah tak bisa dipakai wilayah lain.','Sebagian ilmuwan mempertanyakan keandalannya untuk angka tahun presisi, bukan cuma perkiraan kasar.']},
+
+{tahun:'1950-an', nama:'Kalium-Argon (K-Ar)', revisit:false,
+ cara:'Mengukur peluruhan kalium-40 jadi argon-40 pada batuan vulkanik yang mengapit temuan fosil (mis. situs Olduvai Gorge) — menjangkau rentang jutaan tahun, jauh melampaui radiokarbon.',
+ celah:['Menanggali batuan vulkanik di sekitarnya, bukan fosil/artefaknya secara langsung.','Argon bisa "bocor" keluar/masuk batuan, mendistorsi hasil.','Kurang presisi untuk sampel muda (< 100.000 tahun).']},
+
+{tahun:'1960-an', nama:'Termoluminesensi (TL)', revisit:false,
+ cara:'Bahan yang pernah dipanaskan (tembikar, batu api terbakar) menyimpan energi radiasi yang terlepas sebagai cahaya saat dipanaskan ulang di laboratorium — jumlah cahaya sebanding lama waktu sejak pemanasan terakhir.',
+ celah:['Butuh rekonstruksi akurat laju radiasi lingkungan tempat penguburan — sulit dipastikan.','Hanya berlaku untuk bahan yang pernah mengalami "pemanasan pengenolan".','Sensitif terhadap kelembapan &amp; komposisi tanah sekitar.']},
+
+{tahun:'1960', nama:'Hidrasi Obsidian', revisit:false,
+ cara:'Irving Friedman &amp; Robert Smith menemukan permukaan obsidian (kaca vulkanik) yang baru dipotong menyerap air membentuk "lapisan hidrasi" yang menebal seiring waktu, terukur di bawah mikroskop.',
+ celah:['Laju hidrasi sangat bergantung suhu &amp; kelembapan — perlu kalibrasi lokal yang tepat.','Tidak benar-benar linear dalam rentang waktu sangat panjang.','Pemanasan ulang/pengerjaan ulang artefak bisa mengacaukan lapisan yang sudah terbentuk.']},
+
+{tahun:'1960-an', nama:'Radiokarbon Terkalibrasi (revisit)', revisit:true,
+ cara:'Setelah disadari kadar karbon-14 atmosfer TIDAK konstan sepanjang sejarah, kurva kalibrasi (memakai cincin pohon &amp; arsip lain yang tahunnya pasti) dibangun untuk mengoreksi "umur radiokarbon mentah" menjadi tahun kalender sesungguhnya.',
+ celah:['Akurasi hanya sebaik cakupan &amp; kerapatan data kurva kalibrasi di rentang waktu tersebut.','Ada "dataran" (plateau) di kurva kalibrasi — periode tertentu menghasilkan rentang tahun yang sangat lebar &amp; tidak presisi.']},
+
+{tahun:'akhir 1970-an', nama:'AMS Radiokarbon (revisit)', revisit:true,
+ cara:'Accelerator Mass Spectrometry menghitung atom karbon-14 secara langsung (bukan menunggu peluruhannya terdeteksi) — sampel yang dibutuhkan jauh lebih kecil (miligram, bukan gram) dan presisi meningkat.',
+ celah:['Tetap rentan kontaminasi &amp; efek reservoir yang sama seperti radiokarbon konvensional.','Sampel yang jauh lebih kecil justru membuat proporsi kontaminasi kecil pun berdampak lebih besar secara relatif.']},
+
+{tahun:'1980–1990-an', nama:'Luminesensi Terstimulasi Optik / OSL (revisit)', revisit:true,
+ cara:'Pengembangan dari termoluminesensi — kali ini mengukur kapan butiran sedimen (pasir, lanau) terakhir kali "direset" oleh paparan sinar matahari sebelum terkubur, bukan oleh pemanasan.',
+ celah:['Butuh "pemutihan" (bleaching) sempurna oleh sinar matahari sebelum terkubur — sedimen yang terkubur cepat/keruh airnya sering tak sempat "direset" penuh, membuat umur tampak lebih tua dari sebenarnya.','Tantangan rekonstruksi laju radiasi lingkungan yang sama seperti TL.']},
+
+{tahun:'1980-an', nama:'Deret Uranium (U-Th)', revisit:false,
+ cara:'Mengukur peluruhan uranium menjadi thorium pada formasi gua (stalagmit/stalaktit) dan terumbu karang — menjangkau rentang ratusan ribu tahun.',
+ celah:['Mengasumsikan "sistem tertutup" — tidak ada uranium/thorium yang bocor keluar-masuk setelah terbentuk, sering dilanggar pada material berpori.','Perlu koreksi rumit jika ada kontaminasi thorium dari sedimen sekitar.']},
+
+{tahun:'1980–1990-an', nama:'Penanggalan Eksposur Permukaan (Nuklida Kosmogenik)', revisit:false,
+ cara:'Sinar kosmik menghasilkan isotop langka (mis. Berilium-10) yang terakumulasi di permukaan batuan yang terekspos udara terbuka — jumlahnya menunjukkan berapa lama permukaan itu terpapar.',
+ celah:['Butuh asumsi permukaan tidak pernah terkikis/tertimbun sejak awal terekspos.','Laju produksi isotop berubah menurut lintang &amp; ketinggian, perlu kalibrasi rumit.','"Warisan" paparan dari siklus eksposur sebelumnya bisa membuat umur tampak lebih tua.']},
+
+{tahun:'1990–2000-an', nama:'Pemodelan Kronologi Bayesian (mis. OxCal) (revisit statistik)', revisit:true,
+ cara:'Bukan teknik fisik baru — melainkan cara menggabungkan banyak tanggal radiokarbon/stratigrafi sekaligus lewat statistika Bayesian, memakai urutan lapisan sebagai batasan, menghasilkan rentang tahun gabungan yang jauh lebih presisi.',
+ celah:['Hasil hanya sebaik asumsi urutan stratigrafi yang dimasukkan — urutan yang salah menghasilkan kepercayaan-diri statistik yang salah arah juga.','Mesin statistiknya bisa membuat hasil terlihat presisi meyakinkan padahal fondasi datanya lemah — risiko "terlihat pasti padahal tidak".']},
+];
+
+function renderTimeline(){
+  const area = document.getElementById('timeline-area');
+  area.innerHTML = TEKNIK.map((t,i)=>{
+    const badge = t.revisit ? '<span class="tl-badge">↺ revisit keluarga teknik sebelumnya</span>' : '';
+    return `<div class="tl-item">
+      <div class="tl-head" onclick="toggleTl(${i})">
+        <div class="tl-year">${t.tahun}</div>
+        <div class="tl-nama">${t.nama}</div>
+        ${badge}
+      </div>
+      <div class="tl-body" id="tl-body-${i}">
+        <h5>Cara kerja</h5><p style="margin:0;">${t.cara}</p>
+        <h5>Titik kekeliruan</h5><ul>${t.celah.map(c=>'<li>'+c+'</li>').join('')}</ul>
+      </div>
+    </div>`;
+  }).join('');
+}
+function toggleTl(i){ document.getElementById('tl-body-'+i).classList.toggle('show'); }
+
+/* ===== SIMULATOR A: RADIOKARBON ===== */
+const HALFLIFE = 5730;
+function hitungFraksi(umur){ return Math.pow(0.5, umur/HALFLIFE); }
+function hitungUmurDariFraksi(fraksi){ return HALFLIFE * Math.log2(1/fraksi); }
+function fmtTahun(n){ return Math.round(n).toLocaleString('id-ID') + ' tahun'; }
+
+function updateRC(){
+  const umur = parseFloat(document.getElementById('rc-umur').value);
+  const reservoir = parseFloat(document.getElementById('rc-reservoir').value);
+  const kontam = parseFloat(document.getElementById('rc-kontaminasi').value);
+
+  document.getElementById('rc-umur-label').textContent = fmtTahun(umur);
+  document.getElementById('rc-reservoir-label').textContent = fmtTahun(reservoir);
+  document.getElementById('rc-kontaminasi-label').textContent = kontam + '%';
+
+  const umurEfektif = umur + reservoir;
+  const fraksiReservoir = hitungFraksi(umurEfektif);
+  const fMod = kontam/100;
+  const fraksiAkhir = fraksiReservoir*(1-fMod) + 1*fMod;
+  const umurTampak = hitungUmurDariFraksi(fraksiAkhir);
+  const selisih = umurTampak - umur;
+
+  document.getElementById('rc-out-benar').textContent = fmtTahun(umur);
+  document.getElementById('rc-out-tampak').textContent = fmtTahun(umurTampak);
+  document.getElementById('rc-out-selisih').textContent = (selisih>=0?'+':'') + Math.round(selisih).toLocaleString('id-ID') + ' tahun';
+
+  let catatan = '';
+  if(umur>30000 && kontam>0.5) catatan = '⚠️ Sampel setua ini sangat rentan: kontaminasi modern sedikit saja membuat umur tampak jauh lebih muda dari sebenarnya — pola yang benar-benar terjadi pada sampel-sampel purba di dunia nyata.';
+  else if(Math.abs(selisih) < 5) catatan = 'Kondisi hampir bersih — umur tampak mendekati umur sebenarnya.';
+  document.getElementById('rc-catatan').textContent = catatan;
+}
+['rc-umur','rc-reservoir','rc-kontaminasi'].forEach(id=> document.getElementById(id).addEventListener('input', updateRC));
+
+/* ===== SIMULATOR B: LIKENOMETRI ===== */
+function diameterKurva(t, Dmax, tau){ return Dmax*(1-Math.exp(-t/tau)); }
+function umurDariKurva(d, Dmax, tau){ if(d>=Dmax) return Infinity; return -tau*Math.log(1-d/Dmax); }
+function umurDariLinear(d, tRef, Dmax, tau){
+  const dRef = diameterKurva(tRef, Dmax, tau);
+  const laju = dRef/tRef;
+  return d/laju;
+}
+
+function updateLM(){
+  const Dmax = parseFloat(document.getElementById('lm-dmax').value);
+  const tau = parseFloat(document.getElementById('lm-tau').value);
+  const tRef = parseFloat(document.getElementById('lm-tref').value);
+  const dUkur = parseFloat(document.getElementById('lm-dukur').value);
+
+  document.getElementById('lm-dmax-label').textContent = Dmax + ' mm';
+  document.getElementById('lm-tau-label').textContent = 'τ = ' + tau + ' tahun';
+  document.getElementById('lm-tref-label').textContent = tRef + ' tahun';
+  document.getElementById('lm-dukur-label').textContent = dUkur + ' mm';
+
+  const umurBenar = umurDariKurva(dUkur, Dmax, tau);
+  const umurNaif = umurDariLinear(dUkur, tRef, Dmax, tau);
+  const selisih = umurNaif - umurBenar;
+
+  document.getElementById('lm-out-benar').textContent = isFinite(umurBenar) ? fmtTahun(umurBenar) : '(≥ diameter maksimum)';
+  document.getElementById('lm-out-naif').textContent = fmtTahun(umurNaif);
+  document.getElementById('lm-out-selisih').textContent = (selisih>=0?'+':'') + Math.round(selisih).toLocaleString('id-ID') + ' tahun';
+
+  gambarLM(Dmax, tau, tRef, dUkur, umurBenar);
+}
+
+function gambarLM(Dmax, tau, tRef, dUkur, umurBenar){
+  const svg = document.getElementById('lm-svg');
+  const W=380,H=200,padL=34,padR=10,padT=14,padB=24;
+  const tMax = Math.max(tau*3, umurBenar*1.3, tRef*1.5, 100);
+  const xOf = t => padL + (t/tMax)*(W-padL-padR);
+  const yOf = d => padT + (1-d/Dmax)*(H-padT-padB);
+
+  let kurvaBenar = '';
+  for(let t=0;t<=tMax;t+=tMax/60){ kurvaBenar += (xOf(t)).toFixed(1)+','+(yOf(diameterKurva(t,Dmax,tau))).toFixed(1)+' '; }
+
+  const dRef = diameterKurva(tRef, Dmax, tau);
+  const laju = dRef/tRef;
+  const dAkhirLinear = Math.min(Dmax, laju*tMax);
+  const tAkhirLinear = dAkhirLinear/laju;
+
+  let svgStr = `
+    <line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#453a42"/>
+    <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-padB}" stroke="#453a42"/>
+    <polyline points="${kurvaBenar}" fill="none" stroke="var(--gold)" stroke-width="2.3"/>
+    <line x1="${xOf(0)}" y1="${yOf(0)}" x2="${xOf(tAkhirLinear)}" y2="${yOf(dAkhirLinear)}" stroke="var(--red)" stroke-width="1.8" stroke-dasharray="4,3"/>
+    <circle cx="${xOf(tRef)}" cy="${yOf(dRef)}" r="4" fill="var(--teal)"/>
+    <text x="${xOf(tRef)+6}" y="${yOf(dRef)-6}" font-size="8" fill="var(--teal)">titik acuan</text>
+    <line x1="${padL}" y1="${yOf(dUkur)}" x2="${W-padR}" y2="${yOf(dUkur)}" stroke="var(--blue)" stroke-width="1" stroke-dasharray="2,2"/>
+    <text x="${W-padR}" y="${yOf(dUkur)-4}" font-size="8" fill="var(--blue)" text-anchor="end">diameter terukur</text>
+    <text x="${padL}" y="${H-6}" font-size="8" fill="#a9a6ac">0</text>
+    <text x="${W-padR}" y="${H-6}" font-size="8" fill="#a9a6ac" text-anchor="end">${Math.round(tMax)} th</text>
+  `;
+  svg.innerHTML = svgStr;
+}
+
+['lm-dmax','lm-tau','lm-tref','lm-dukur'].forEach(id=> document.getElementById(id).addEventListener('input', updateLM));
+
+renderTimeline();
+updateRC();
+updateLM();
+</script>
+
+</div>
+<footer>Prototipe alat sains arkeologi · belum masuk struktur menu utama.</footer>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

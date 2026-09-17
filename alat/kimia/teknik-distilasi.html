@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teknik-Teknik Distilasi</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#14161D;--panel:#1A1D27;--panel2:#22252D;--ink:#E9E7DE;--dim:#A6AAB2;--dimmer:#6D717A;
+--line:rgba(233,231,222,.1);--blue:#5B9BD5;--amber:#CBA134;--green:#3FAE7A;--red:#C4634F;
+--bsoft:rgba(91,155,213,.14);--gsoft:rgba(63,174,122,.14);--rsoft:rgba(196,99,79,.14);}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Karla',sans-serif;line-height:1.65}
+.mono{font-family:'JetBrains Mono',monospace}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:500;margin:0}
+.wrap{max-width:720px;margin:0 auto;padding:30px 18px 70px}
+.kicker{font-size:.85rem;color:var(--blue);font-weight:600;margin-bottom:14px}
+h1{font-size:1.5rem;line-height:1.3;margin-bottom:12px}
+header p{color:var(--dim);font-size:.95rem}
+section{padding:36px 0;border-top:1px solid var(--line)}
+section:first-of-type{border-top:none}
+h2{font-size:1.2rem;margin-bottom:12px}
+p{margin:0 0 14px;color:var(--dim)}
+.lab{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:18px;padding:22px 20px;margin:16px 0}
+.slider-row label{display:flex;justify-content:space-between;font-size:.84rem;color:var(--dimmer);margin-bottom:8px}
+input[type=range]{width:100%;-webkit-appearance:none;height:4px;border-radius:4px;background:var(--line)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--blue);border:3px solid var(--bg);cursor:pointer}
+.tek-card{margin-top:16px;padding:20px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.16)}
+.tek-title{font-family:'Fraunces',serif;font-size:1.15rem;color:var(--blue);margin-bottom:6px}
+.tek-when{font-size:.78rem;color:var(--amber);margin-bottom:12px}
+.tek-desc{font-size:.92rem;color:var(--dim)}
+.result-box{padding:16px 18px;border-radius:12px;margin-top:12px;border:1px solid}
+.rb-ok{background:var(--gsoft);border-color:rgba(63,174,122,.4)}
+.rb-warn{background:var(--rsoft);border-color:rgba(196,99,79,.4)}
+.result-box .k{font-size:.76rem;color:var(--dimmer);margin-bottom:6px}
+.result-box .v{font-family:'Fraunces',serif;font-size:1.1rem}
+.chip-nav{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.chip{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;background:var(--panel2);border:1px solid var(--line);color:var(--dimmer);cursor:pointer}
+.chip.active{background:var(--bsoft);border-color:var(--blue);color:var(--blue)}
+canvas#diagram{width:100%;max-width:360px;display:block;margin:0 auto 14px;background:rgba(0,0,0,.22);border-radius:14px;border:1px solid var(--line)}
+footer{margin-top:30px;font-size:.8rem;color:var(--dimmer)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <p class="kicker">Laboratorium JAZMI — Rekayasa Klasik</p>
+  <h1>Lima Teknik Distilasi: Kapan Masing-Masing Dipakai</h1>
+  <p>Distilasi bukan satu teknik tunggal — pilihan metodenya berubah tergantung sifat zat yang dipisahkan: seberapa dekat titik didihnya, seberapa tahan panas, dan seberapa mudah rusak.</p>
+</header>
+
+<section id="teknik">
+  <h2>1. Jelajahi lima tekniknya</h2>
+  <div class="lab">
+    <div class="slider-row">
+      <label>Pilih teknik <span id="tekPos"></span></label>
+      <input type="range" id="tekSlider" min="0" max="4" step="1" value="0">
+    </div>
+    <div class="tek-card" id="tekCard"></div>
+    <canvas id="diagram" width="320" height="220"></canvas>
+    <div class="chip-nav" id="chips"></div>
+  </div>
+</section>
+
+<section id="kalkulator">
+  <h2>2. Kalkulator: cukup sederhana, atau perlu bertingkat?</h2>
+  <p>Aturan praktis klasik: kalau selisih titik didih dua zat kurang dari ~25°C, distilasi sederhana akan menghasilkan pemisahan yang buruk — uap yang naik akan bercampur, bukan murni salah satu zat.</p>
+  <div class="lab">
+    <div class="slider-row">
+      <label>Titik didih Zat A (°C) <span id="bpAPos"></span></label>
+      <input type="range" id="bpASlider" min="30" max="200" step="1" value="78">
+    </div>
+    <div class="slider-row">
+      <label>Titik didih Zat B (°C) <span id="bpBPos"></span></label>
+      <input type="range" id="bpBSlider" min="30" max="200" step="1" value="100">
+    </div>
+    <div id="calcResult"></div>
+  </div>
+</section>
+
+<section id="vakum">
+  <h2>3. Simulasi nyata: tekanan menurunkan titik didih</h2>
+  <p>Ini prinsip di balik distilasi vakum — dihitung memakai persamaan Antoine sungguhan untuk air, bukan sekadar ilustrasi.</p>
+  <div class="lab">
+    <div class="slider-row">
+      <label>Tekanan (mmHg) — 760 = tekanan udara normal <span id="pPos"></span></label>
+      <input type="range" id="pSlider" min="10" max="760" step="5" value="760">
+    </div>
+    <div id="vacResult"></div>
+  </div>
+</section>
+
+<footer>Bagian dari Laboratorium JAZMI — dibangun mengikuti metode "Belajar → Memodelkan → Menguji → Membuat Tool".</footer>
+</div>
+
+<script>
+const TEKNIK = [
+  {nama:'Distilasi Sederhana', kapan:'Dipakai ketika: selisih titik didih dua zat besar (>25°C), atau memisahkan cairan dari zat padat terlarut.',
+   desc:'Cairan dipanaskan hingga menguap, uap dialirkan lewat pipa pendingin lalu mengembun kembali jadi cairan murni. Teknik paling dasar — inilah yang dipakai alkimiawan klasik seperti dalam risalah Maryanus-Khalid.'},
+  {nama:'Distilasi Bertingkat (Fraksionasi)', kapan:'Dipakai ketika: titik didih dua zat berdekatan (<25°C), butuh pemisahan berulang dalam satu alat.',
+   desc:'Uap melewati kolom berisi banyak "pelat" bertingkat. Setiap pelat adalah satu siklus mini menguap-mengembun — makin banyak pelat, makin murni hasilnya. Inilah cara memisahkan komponen minyak bumi atau memurnikan etanol.'},
+  {nama:'Distilasi Uap', kapan:'Dipakai ketika: zat target punya titik didih sangat tinggi atau rusak kalau dipanaskan langsung sampai titik didih aslinya (mis. minyak atsiri dari bunga/daun).',
+   desc:'Uap air dialirkan lewat bahan; uap air "menyeret" senyawa target ikut menguap pada suhu jauh di bawah titik didih aslinya, karena keduanya menguap bersama begitu total tekanan uap gabungan mencapai tekanan atmosfer.'},
+  {nama:'Distilasi Vakum', kapan:'Dipakai ketika: zat akan terurai/rusak kalau dipanaskan sampai titik didih normalnya pada tekanan atmosfer.',
+   desc:'Tekanan diturunkan (disedot dengan pompa vakum), sehingga zat mendidih pada suhu jauh lebih rendah dari biasanya. Dipakai untuk memurnikan senyawa organik sensitif-panas dan dalam penyulingan minyak bumi bertitik-didih sangat tinggi.'},
+  {nama:'Distilasi Kering (Destruktif)', kapan:'Dipakai ketika: tujuannya bukan memurnikan cairan, tapi menguraikan zat padat lewat pemanasan tanpa udara.',
+   desc:'Bahan padat (kayu, batu bara) dipanaskan kuat tanpa oksigen sehingga terurai jadi gas, cairan (tar), dan residu padat (arang/kokas) — bukan penyulingan cairan yang sudah ada, melainkan penciptaan zat baru lewat penguraian panas.'},
+];
+
+const tekSlider = document.getElementById('tekSlider');
+const tekPos = document.getElementById('tekPos');
+const tekCard = document.getElementById('tekCard');
+
+/* ---------- Diagram animasi ---------- */
+const VISUAL = [
+  {color:'#5B9BD5', spawnMs:650, plates:0, steamSource:false, vacuumPump:false, destructive:false},
+  {color:'#5B9BD5', spawnMs:500, plates:3, steamSource:false, vacuumPump:false, destructive:false},
+  {color:'#7FD1B0', spawnMs:550, plates:0, steamSource:true,  vacuumPump:false, destructive:false},
+  {color:'#8FC7EA', spawnMs:280, plates:0, steamSource:false, vacuumPump:true,  destructive:false},
+  {color:'#9A9A9A', spawnMs:420, plates:0, steamSource:false, vacuumPump:false, destructive:true},
+];
+const dcanvas = document.getElementById('diagram');
+const dctx = dcanvas.getContext('2d');
+let particles = [];
+let receiverLevel = 0.15;
+let residueLevel = 0.1;
+let lastSpawn = 0;
+let curVis = VISUAL[0];
+
+function pathPoint(t, plates){
+  // t: 0..1 along neck+column+condenser+drip
+  const flaskTop = {x:70, y:112}, condStart = {x:80, y:96};
+  if(t < 0.35){
+    // rising through neck / plate column
+    const seg = t/0.35;
+    const wig = plates>0 ? Math.sin(seg*plates*Math.PI*2)*6 : 0;
+    return {x:70+wig, y:150-seg*54};
+  } else if(t < 0.8){
+    const seg = (t-0.35)/0.45;
+    // diagonal condenser tube
+    return {x:80+seg*130, y:96-seg*36};
+  } else {
+    const seg = (t-0.8)/0.2;
+    return {x:210+seg*45, y:60+seg*70};
+  }
+}
+
+function drawFlame(x,y,big){
+  const flick = 3+Math.sin(Date.now()/90)*2;
+  dctx.fillStyle = big ? '#C4634F' : '#CBA134';
+  dctx.beginPath();
+  dctx.moveTo(x-10,y);
+  dctx.quadraticCurveTo(x, y-14-flick, x+10, y);
+  dctx.quadraticCurveTo(x, y-6, x-10, y);
+  dctx.fill();
+}
+
+function drawApparatus(vis){
+  const W = dcanvas.width, H = dcanvas.height;
+  dctx.clearRect(0,0,W,H);
+  dctx.strokeStyle = 'rgba(233,231,222,.4)';
+  dctx.lineWidth = 1.6;
+  dctx.fillStyle = 'rgba(233,231,222,.04)';
+
+  if(vis.destructive){
+    // sealed retort, no liquid — smoke to a side collector, residue at bottom
+    dctx.beginPath(); dctx.arc(70,140,26,0,7); dctx.rect(58,96,24,44); dctx.fill(); dctx.stroke();
+    // residue solid growing at bottom
+    dctx.fillStyle = '#2A2A2A';
+    const rH = residueLevel*22;
+    dctx.beginPath(); dctx.arc(70,140+ (22-rH),20,0,Math.PI); dctx.fill();
+    drawFlame(70,168,true);
+    // pipe to collector
+    dctx.strokeStyle = 'rgba(233,231,222,.4)';
+    dctx.beginPath(); dctx.moveTo(80,100); dctx.lineTo(180,70); dctx.lineTo(250,70); dctx.stroke();
+    dctx.beginPath(); dctx.rect(245,60,30,26); dctx.stroke();
+    dctx.fillStyle = 'rgba(154,154,154,.25)';
+    dctx.fillRect(247,74,26,10);
+  } else {
+    // main flask + liquid
+    dctx.beginPath(); dctx.arc(70,140,26,0,7); dctx.rect(58,96,24,44); dctx.fill(); dctx.stroke();
+    dctx.fillStyle = 'rgba(91,155,213,.28)';
+    dctx.beginPath(); dctx.arc(70,146,20,0,Math.PI,false); dctx.fill();
+    drawFlame(70,168,false);
+
+    if(vis.plates>0){
+      dctx.strokeStyle = 'rgba(203,161,52,.5)';
+      for(let i=1;i<=vis.plates;i++){
+        const y = 148 - i*54/(vis.plates+1);
+        dctx.beginPath(); dctx.moveTo(58,y); dctx.lineTo(82,y); dctx.stroke();
+      }
+    }
+    if(vis.steamSource){
+      dctx.strokeStyle = 'rgba(233,231,222,.4)';
+      dctx.beginPath(); dctx.arc(28,160,14,0,7); dctx.stroke();
+      drawFlame(28,176,false);
+      dctx.beginPath(); dctx.moveTo(40,158); dctx.lineTo(52,150); dctx.stroke();
+    }
+    // condenser tube with hatch (cooling jacket)
+    dctx.strokeStyle = 'rgba(233,231,222,.4)';
+    dctx.beginPath(); dctx.moveTo(80,96); dctx.lineTo(210,60); dctx.stroke();
+    for(let i=0;i<8;i++){
+      const p1 = {x:80+i*16, y:96-i*4.5};
+      dctx.beginPath(); dctx.moveTo(p1.x-4,p1.y-6); dctx.lineTo(p1.x+4,p1.y+6); dctx.stroke();
+    }
+    // receiver flask
+    dctx.beginPath(); dctx.arc(255,150,22,0,7); dctx.stroke();
+    dctx.fillStyle = curVis.color+'55';
+    dctx.beginPath(); dctx.arc(255,150+22*(1-receiverLevel),22*receiverLevel,0,Math.PI,false); dctx.fill();
+
+    if(vis.vacuumPump){
+      dctx.strokeStyle = 'rgba(233,231,222,.4)';
+      dctx.setLineDash([3,3]);
+      dctx.beginPath(); dctx.moveTo(255,128); dctx.lineTo(255,100); dctx.lineTo(290,100); dctx.lineTo(290,180); dctx.stroke();
+      dctx.setLineDash([]);
+      dctx.beginPath(); dctx.rect(278,168,24,24); dctx.stroke();
+      dctx.fillStyle='rgba(143,199,234,.25)'; dctx.fillRect(280,170,20,20);
+      dctx.fillStyle = '#8FC7EA'; dctx.font='9px sans-serif'; dctx.fillText('vac', 282,183);
+    }
+  }
+}
+
+function animateDiagram(ts){
+  if(!curVis.destructive){
+    if(ts - lastSpawn > curVis.spawnMs){
+      particles.push({t:0});
+      lastSpawn = ts;
+    }
+  } else {
+    if(ts - lastSpawn > curVis.spawnMs){
+      particles.push({t:0, smoke:true});
+      lastSpawn = ts;
+      residueLevel = Math.min(1, residueLevel+0.03);
+      if(residueLevel>=1) residueLevel = 0.1;
+    }
+  }
+  drawApparatus(curVis);
+
+  particles.forEach(p=> p.t += 0.012);
+  particles = particles.filter(p=>{
+    if(p.t >= 1){
+      if(!p.smoke){ receiverLevel = Math.min(0.85, receiverLevel+0.03); if(receiverLevel>=0.85) receiverLevel=0.15; }
+      return false;
+    }
+    return true;
+  });
+
+  particles.forEach(p=>{
+    if(curVis.destructive){
+      const x = 90+p.t*160, y = 96-p.t*30 - Math.sin(p.t*3)*4;
+      dctx.fillStyle = curVis.color+'AA';
+      dctx.beginPath(); dctx.arc(x,y,3+p.t*2,0,7); dctx.fill();
+    } else {
+      const pt = pathPoint(p.t, curVis.plates);
+      dctx.fillStyle = curVis.color;
+      dctx.beginPath(); dctx.arc(pt.x,pt.y,3,0,7); dctx.fill();
+    }
+  });
+
+  requestAnimationFrame(animateDiagram);
+}
+requestAnimationFrame(animateDiagram);
+
+function renderTeknik(i){
+  const t = TEKNIK[i];
+  curVis = VISUAL[i];
+  particles = [];
+  tekPos.textContent = `(${i+1} dari ${TEKNIK.length})`;
+  tekCard.innerHTML = `<div class="tek-title">${t.nama}</div><div class="tek-when">${t.kapan}</div><div class="tek-desc">${t.desc}</div>`;
+  document.querySelectorAll('.chip').forEach((c,idx)=>c.classList.toggle('active', idx===i));
+}
+document.getElementById('chips').innerHTML = TEKNIK.map((_,i)=>`<div class="chip" data-i="${i}">${i+1}</div>`).join('');
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{ tekSlider.value=c.dataset.i; renderTeknik(+c.dataset.i); }));
+tekSlider.addEventListener('input', e=>renderTeknik(+e.target.value));
+renderTeknik(0);
+
+/* ---------- Kalkulator sederhana vs bertingkat ---------- */
+const bpASlider = document.getElementById('bpASlider');
+const bpBSlider = document.getElementById('bpBSlider');
+const bpAPos = document.getElementById('bpAPos');
+const bpBPos = document.getElementById('bpBPos');
+const calcResult = document.getElementById('calcResult');
+function renderCalc(){
+  const a = +bpASlider.value, b = +bpBSlider.value;
+  bpAPos.textContent = a+'°C'; bpBPos.textContent = b+'°C';
+  const diff = Math.abs(a-b);
+  const ok = diff >= 25;
+  calcResult.innerHTML = `<div class="result-box ${ok?'rb-ok':'rb-warn'}">
+    <div class="k">Selisih titik didih: ${diff}°C</div>
+    <div class="v">${ok ? '✓ Distilasi sederhana cukup' : '⚠ Perlu distilasi bertingkat'}</div>
+  </div>`;
+}
+bpASlider.addEventListener('input', renderCalc);
+bpBSlider.addEventListener('input', renderCalc);
+renderCalc();
+
+/* ---------- Simulasi tekanan vs titik didih (persamaan Antoine, air) ---------- */
+const pSlider = document.getElementById('pSlider');
+const pPos = document.getElementById('pPos');
+const vacResult = document.getElementById('vacResult');
+function boilingPointWater(pMmHg){
+  const A=8.07131, B=1730.63, C=233.426;
+  return B/(A - Math.log10(pMmHg)) - C;
+}
+function renderVac(){
+  const p = +pSlider.value;
+  pPos.textContent = p + ' mmHg';
+  const temp = boilingPointWater(p);
+  const isVacuum = p < 700;
+  vacResult.innerHTML = `<div class="result-box ${isVacuum?'rb-ok':'rb-warn'}">
+    <div class="k">Titik didih air pada tekanan ini</div>
+    <div class="v">${temp.toFixed(1)}°C</div>
+    <div class="k" style="margin-top:8px">${isVacuum ? 'Di bawah 100°C — inilah kenapa distilasi vakum bisa "memasak" zat sensitif tanpa merusaknya.' : 'Tekanan normal — titik didih air kembali ke 100°C seperti biasa.'}</div>
+  </div>`;
+}
+pSlider.addEventListener('input', renderVac);
+renderVac();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

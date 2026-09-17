@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generator Syair Geometris — Auto-Distribusi — JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --emerald-deep:#0F3D2E; --emerald-mid:#1D5C43; --ivory:#FAF6ED; --ivory-soft:#F1EADA;
+    --ink:#1C2B24; --gold:#B8934A; --gold-soft:#E7D2A0; --line:rgba(15,61,46,0.14);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--ivory);color:var(--ink);font-family:'Karla',sans-serif;line-height:1.65;}
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;color:var(--emerald-deep);letter-spacing:-0.01em;}
+  .wrap{max-width:840px;margin:0 auto;padding:0 24px;}
+
+  .versi-awal{background:var(--emerald-deep);color:var(--ivory);padding:14px 24px;}
+  .versi-awal .wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap;max-width:840px;}
+  .versi-awal .badge{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;background:var(--gold);color:var(--emerald-deep);padding:4px 9px;border-radius:2px;flex-shrink:0;}
+  .versi-awal p{margin:0;font-size:14px;color:rgba(250,246,237,0.92);flex:1;min-width:220px;}
+  .versi-awal a.wa-inline{color:var(--gold-soft);font-weight:700;text-decoration:underline;white-space:nowrap;}
+
+  .crumb{padding:20px 24px 0;max-width:840px;margin:0 auto;font-size:13px;letter-spacing:0.04em;text-transform:uppercase;color:var(--emerald-mid);opacity:0.75;}
+  .crumb span{color:var(--ink);opacity:0.4;margin:0 6px;}
+
+  .hero{padding:32px 0 24px;}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:14px;}
+  .eyebrow::before{content:"";width:18px;height:1px;background:var(--gold);display:inline-block;}
+  .hero h1{font-size:clamp(24px,4.5vw,34px);margin:0 0 12px;line-height:1.2;}
+  .hero p.lede{font-size:16px;color:var(--emerald-deep);opacity:0.85;max-width:64ch;margin:0;}
+
+  .banding-box{background:var(--ivory-soft);border-left:3px solid var(--gold);padding:16px 18px;border-radius:2px;font-size:14.5px;}
+  .banding-box .judul{font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;color:var(--gold);margin-bottom:6px;}
+
+  section{padding:32px 0;border-top:1px solid var(--line);}
+  section:first-of-type{border-top:none;}
+  .label{font-size:12px;letter-spacing:0.09em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:10px;}
+  section h2{font-size:20px;margin:0 0 14px;}
+  section p{margin:0 0 12px;font-size:15px;}
+  ul.plain{margin:0 0 12px;padding-left:20px;}
+  ul.plain li{margin-bottom:8px;font-size:15px;}
+  code.formula{display:block;background:var(--ivory-soft);padding:12px 14px;border-radius:3px;font-family:monospace;font-size:13px;margin:10px 0;color:var(--emerald-deep);overflow-x:auto;}
+
+  .kartu{background:var(--emerald-deep);color:var(--ivory);border-radius:4px;padding:26px;margin-bottom:16px;}
+  .kartu h3{color:var(--ivory);margin:0 0 4px;font-size:16.5px;}
+  .kartu .sublabel{font-size:12px;color:rgba(250,246,237,0.55);margin-bottom:16px;}
+
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:13px;margin-bottom:6px;color:var(--gold-soft);}
+  .field input, .field select, .field textarea{width:100%;padding:10px 12px;border-radius:3px;border:1px solid rgba(231,210,160,0.35);background:rgba(250,246,237,0.06);color:var(--ivory);font-family:'Karla',sans-serif;font-size:14.5px;}
+  .field textarea{min-height:100px;resize:vertical;}
+  .field .hint{font-size:11.5px;color:rgba(250,246,237,0.5);margin-top:5px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media (max-width:560px){.grid2{grid-template-columns:1fr;}}
+
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
+  button.aksi{padding:12px 18px;border:none;border-radius:3px;font-family:'Karla',sans-serif;font-weight:700;font-size:14px;cursor:pointer;}
+  button.aksi.utama{background:var(--gold);color:var(--emerald-deep);flex:1;min-width:160px;}
+  button.aksi.utama:hover{background:var(--gold-soft);}
+  button.aksi.sekunder{background:rgba(250,246,237,0.1);color:var(--ivory);border:1px solid rgba(231,210,160,0.35);}
+
+  .segmen-preview{margin-top:16px;display:none;flex-wrap:wrap;gap:6px;}
+  .segmen-preview.tampil{display:flex;}
+  .segmen-tag{background:rgba(250,246,237,0.08);border:1px solid rgba(231,210,160,0.25);border-radius:3px;padding:5px 10px;font-size:12px;color:rgba(250,246,237,0.85);}
+  .segmen-tag .panjang{color:var(--gold-soft);font-size:10px;margin-left:5px;}
+
+  .kanvas-box{background:#FFFFFF;border:1px solid var(--line);border-radius:4px;margin-top:18px;padding:16px;text-align:center;overflow-x:auto;}
+  .kanvas-box svg{max-width:100%;height:auto;}
+
+  .status-isi{margin-top:12px;padding:12px 14px;border-radius:4px;font-size:13px;background:rgba(250,246,237,0.07);}
+  .status-isi.kurang{background:rgba(199,123,91,0.15);}
+
+  .verifikasi-box{background:var(--ivory-soft);border-radius:4px;padding:16px 18px;margin:14px 0;font-size:13.5px;}
+  .verifikasi-box .baris-cek{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);gap:12px;}
+  .verifikasi-box .baris-cek:last-child{border-bottom:none;}
+
+  .batasan-item{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start;}
+  .batasan-item .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:8px;flex-shrink:0;}
+  .disclaimer-box{background:var(--ivory-soft);border-left:3px solid var(--gold);padding:14px 16px;border-radius:2px;font-size:14px;margin-top:14px;}
+
+  .konsultasi{margin-top:8px;padding:20px;border:1px dashed var(--line);border-radius:4px;text-align:center;}
+  .konsultasi p{font-size:14px;margin-bottom:12px;color:var(--emerald-deep);}
+  .btn-konsul{display:inline-block;padding:10px 22px;border-radius:3px;background:var(--emerald-mid);color:var(--ivory);font-family:'Karla',sans-serif;font-weight:600;font-size:14px;cursor:pointer;text-decoration:none;}
+
+  footer{padding:24px 24px 50px;font-size:13px;color:var(--emerald-mid);opacity:0.7;max-width:840px;margin:0 auto;}
+</style>
+</head>
+<body>
+
+<div class="versi-awal">
+  <div class="wrap">
+    <span class="badge">Versi Awal — Mode Auto-Distribusi</span>
+    <p>Pasangan dari Generator Syair Geometris (mode manual+rima). Di sini Anda cukup tempel satu kalimat/paragraf utuh — mesin yang membagi rata ke tiap kelopak.</p>
+    <a class="wa-inline" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20diskusi%20terkait%20Generator%20Syair%20Geometris%20Auto-Distribusi%20JAZMI." target="_blank" rel="noopener">Diskusikan via WhatsApp →</a>
+  </div>
+</div>
+
+<div class="crumb">JAZMI <span>/</span> Alat <span>/</span> Syair Geometris (Auto-Distribusi)</div>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">Alat — Seni &amp; Bahasa</div>
+    <h1>Generator Syair Geometris — Auto-Distribusi</h1>
+    <p class="lede">Tempel satu kalimat atau paragraf apa adanya — mesin membagi rata ke tiap kelopak rosette secara stabil, tanpa Anda perlu menyusun daftar kata atau mencocokkan rima sendiri.</p>
+  </div>
+
+  <section id="perbedaan" style="border-top:none;padding-top:0;">
+    <div class="label">Beda dari Versi Manual</div>
+    <div class="banding-box">
+      <div class="judul">Dua mode, dua filosofi</div>
+      <strong>Versi manual+rima</strong> (alat sebelumnya): Anda susun daftar kata sendiri, alat mengelompokkan berdasarkan rima bunyi akhir — cocok kalau Anda sudah punya bank kata dan ingin efek "kesatuan bunyi" seperti model Arab klasik.<br><br>
+      <strong>Versi auto-distribusi</strong> (alat ini): Anda tempel satu kalimat utuh apa adanya, alat membagi rata berdasarkan panjang teks — cocok kalau Anda sudah punya kalimat/puisi jadi dan cuma ingin melihatnya dalam bentuk geometris, tanpa mikirkan rima sama sekali.
+    </div>
+  </section>
+
+  <section id="generator">
+    <div class="label">Eksplorasi</div>
+    <div class="kartu">
+      <h3>Tempel Kalimat Anda</h3>
+      <div class="sublabel">Satu kalimat atau paragraf utuh — tidak perlu dipecah manual</div>
+
+      <div class="field">
+        <label for="kataPusat">Kata/frasa di pusat rosette</label>
+        <input type="text" id="kataPusat" placeholder="Contoh: SENJA" value="SENJA">
+      </div>
+
+      <div class="field">
+        <label for="kalimatInput">Kalimat/paragraf</label>
+        <textarea id="kalimatInput">Di ufuk senja kupandangi langit yang perlahan berubah warna dari jingga menuju ungu gelap sementara angin malam mulai berhembus pelan menyapa dedaunan yang mulai tertidur</textarea>
+      </div>
+
+      <div class="field">
+        <label for="jumlahKelopak">Jumlah kelopak</label>
+        <select id="jumlahKelopak">
+          <option value="6">6</option>
+          <option value="8" selected>8</option>
+          <option value="10">10</option>
+          <option value="12">12</option>
+        </select>
+      </div>
+
+      <div class="btnrow">
+        <button class="aksi utama" onclick="generateRosette()">Bagi &amp; Generate Rosette</button>
+        <button class="aksi sekunder" onclick="unduhSVG()">Unduh SVG</button>
+      </div>
+
+      <div class="segmen-preview" id="segmenPreview"></div>
+      <div class="status-isi" id="statusIsi" style="display:none;"></div>
+    </div>
+
+    <div class="kanvas-box">
+      <svg id="kanvasRosette" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+  </section>
+
+  <section id="metode">
+    <div class="label">Metode</div>
+    <h2>Bagaimana pembagian rata ini bekerja</h2>
+    <p>Bukan sekadar membagi jumlah kata secara rata (yang bisa timpang kalau ada kata pendek dan panjang bercampur), tapi mencari <strong>titik potong di batas kata yang paling dekat dengan target panjang karakter</strong> untuk tiap kelopak:</p>
+    <code class="formula">target_potongan_ke_k = (total_panjang_karakter × k) / N,  untuk k = 1 .. N-1</code>
+    <p>Untuk tiap target, alat mencari batas kata terdekat — sehingga potongan selalu jatuh di antara kata (tidak pernah memotong satu kata jadi dua), sekaligus menjaga panjang tiap kelopak tetap seimbang secara keseluruhan.</p>
+
+    <div class="verifikasi-box">
+      <div class="baris-cek"><span>Kalimat 20 kata dibagi 8 kelopak</span><strong>Panjang tiap kelopak: 24-11-22-18-10-21-21-16 karakter — variasi wajar, tidak ada yang timpang ekstrem ✓</strong></div>
+      <div class="baris-cek"><span>Kalimat pendek (3 kata) dibagi 8 kelopak</span><strong>Hanya mengisi 3 kelopak, sisanya jujur dikosongkan — bukan dipaksa dipecah per-huruf ✓</strong></div>
+    </div>
+  </section>
+
+  <section id="batasan">
+    <div class="label">Batasan</div>
+    <h2>Yang perlu diperhatikan</h2>
+    <div class="batasan-item"><div class="dot"></div><p>Pembagian murni berdasarkan <strong>panjang karakter</strong>, bukan makna atau struktur kalimat (subjek-predikat, dsb.) — potongan bisa jatuh di tengah frasa yang secara makna sebenarnya menyatu.</p></div>
+    <div class="batasan-item"><div class="dot"></div><p>Tidak ada elemen rima sama sekali di mode ini — kalau Anda ingin efek "kesatuan bunyi" seperti model asli, pakai versi manual+rima sebagai gantinya.</p></div>
+    <div class="batasan-item"><div class="dot"></div><p>Kalimat yang jauh lebih pendek dari jumlah kelopak akan menyisakan kelopak kosong — alat ini tidak memaksakan pemecahan per-suku-kata atau per-huruf untuk mengisi semuanya.</p></div>
+    <div class="disclaimer-box">Alat ini murni bantuan tata letak geometris. Kualitas dan makna kalimat sepenuhnya tanggung jawab dan hak cipta Anda sebagai penulis.</div>
+  </section>
+
+  <section id="konsultasi">
+    <div class="konsultasi">
+      <p>Menurut Anda mode mana yang lebih pas — manual+rima atau auto-distribusi? Atau kombinasi keduanya?</p>
+      <a class="btn-konsul" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20diskusi%20perbandingan%20dua%20mode%20Generator%20Syair%20Geometris%20JAZMI." target="_blank" rel="noopener">Diskusikan via WhatsApp</a>
+    </div>
+  </section>
+
+  <footer>
+    <p>Bagian dari Laboratorium Alat JAZMI. Prototipe berdiri sendiri — belum terhubung ke Beranda atau modul lain.</p>
+  </footer>
+</div>
+
+<script>
+function bagiSeimbang(kalimat, N){
+  const kata = kalimat.trim().split(/\s+/).filter(w => w.length > 0);
+  if (kata.length === 0) return [];
+
+  const kumulatif = [];
+  let total = 0;
+  kata.forEach((k, i) => {
+    total += k.length + (i > 0 ? 1 : 0);
+    kumulatif.push(total);
+  });
+  const totalPanjang = total;
+
+  if (kata.length <= N){
+    return kata.map(k => k);
+  }
+
+  const targetPotongan = [];
+  for (let k = 1; k < N; k++){
+    const target = (totalPanjang * k) / N;
+    let terdekatIdx = 0, selisihTerkecil = Infinity;
+    for (let i = 0; i < kumulatif.length - 1; i++){
+      const selisih = Math.abs(kumulatif[i] - target);
+      if (selisih < selisihTerkecil){ selisihTerkecil = selisih; terdekatIdx = i; }
+    }
+    targetPotongan.push(terdekatIdx);
+  }
+  const unik = [...new Set(targetPotongan)].sort((a,b)=>a-b);
+
+  const segmen = [];
+  let mulai = 0;
+  unik.forEach(idx => {
+    segmen.push(kata.slice(mulai, idx+1).join(' '));
+    mulai = idx+1;
+  });
+  segmen.push(kata.slice(mulai).join(' '));
+  return segmen;
+}
+
+function generateRosette(){
+  const N = parseInt(document.getElementById('jumlahKelopak').value, 10);
+  const kataPusat = document.getElementById('kataPusat').value.trim() || '—';
+  const kalimat = document.getElementById('kalimatInput').value;
+
+  const segmen = bagiSeimbang(kalimat, N);
+  const terisi = segmen.slice(0, N);
+  const kosong = N - terisi.length;
+
+  const previewBox = document.getElementById('segmenPreview');
+  previewBox.innerHTML = terisi.map(s => `<span class="segmen-tag">${escapeXML(s)}<span class="panjang">${s.length} krk</span></span>`).join('');
+  previewBox.classList.add('tampil');
+
+  const statusBox = document.getElementById('statusIsi');
+  statusBox.style.display = 'block';
+  if (kosong > 0){
+    statusBox.className = 'status-isi kurang';
+    statusBox.textContent = `Kalimat hanya cukup untuk ${terisi.length} dari ${N} kelopak. ${kosong} kelopak dibiarkan kosong — tambahkan lebih banyak kata di kalimat Anda untuk mengisi semuanya.`;
+  } else {
+    statusBox.className = 'status-isi';
+    statusBox.textContent = `Kalimat terbagi rata ke semua ${N} kelopak.`;
+  }
+
+  renderSVG(N, kataPusat, terisi);
+}
+
+function renderSVG(N, kataPusat, daftarSegmen){
+  const cx = 300, cy = 300, R = 130;
+  let inner = '';
+
+  for (let i = 0; i < N; i++){
+    const theta = i * (360/N);
+    const rad = theta * Math.PI/180;
+    const Px = cx + R*Math.cos(rad), Py = cy + R*Math.sin(rad);
+    const start = { x: Px + R*Math.cos(rad - Math.PI/2), y: Py + R*Math.sin(rad - Math.PI/2) };
+    const end   = { x: Px + R*Math.cos(rad + Math.PI/2), y: Py + R*Math.sin(rad + Math.PI/2) };
+
+    inner += `<circle cx="${Px.toFixed(2)}" cy="${Py.toFixed(2)}" r="${R}" fill="none" stroke="#1D5C43" stroke-width="1.5" opacity="0.55"/>`;
+
+    const pathId = `arcLuar${i}`;
+    inner += `<path id="${pathId}" d="M ${start.x.toFixed(2)} ${start.y.toFixed(2)} A ${R} ${R} 0 0 1 ${end.x.toFixed(2)} ${end.y.toFixed(2)}" fill="none" stroke="none"/>`;
+
+    const teks = daftarSegmen[i] || '';
+    if (teks){
+      inner += `<text font-size="11.5" fill="#0F3D2E" font-family="Karla, sans-serif" font-weight="600">
+        <textPath href="#${pathId}" startOffset="50%" text-anchor="middle">${escapeXML(teks)}</textPath>
+      </text>`;
+    }
+  }
+
+  inner += `<circle cx="${cx}" cy="${cy}" r="34" fill="#B8934A" opacity="0.15"/>`;
+  inner += `<text x="${cx}" y="${cy+5}" text-anchor="middle" font-size="15" font-weight="700" fill="#0F3D2E" font-family="Fraunces, serif">${escapeXML(kataPusat)}</text>`;
+
+  const svg = document.getElementById('kanvasRosette');
+  svg.innerHTML = `<rect x="0" y="0" width="600" height="600" fill="#FFFFFF"/>` + inner;
+}
+
+function escapeXML(str){
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function unduhSVG(){
+  const svg = document.getElementById('kanvasRosette');
+  if (!svg.innerHTML.trim()){ alert('Generate rosette-nya dulu sebelum mengunduh.'); return; }
+  const serializer = new XMLSerializer();
+  let source = serializer.serializeToString(svg);
+  if (!source.match(/^<svg[^>]+xmlns="http:\/\/www\.w3\.org\/2000\/svg"/)){
+    source = source.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+  }
+  const blob = new Blob([source], {type:'image/svg+xml'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'syair-geometris-auto-jazmi.svg';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+generateRosette();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

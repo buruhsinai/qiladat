@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coriolis & Siklogenesis — JAZMI</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#14171c; --panel2:#1b1f26; --line:#2a2f38;
+    --text:#e8e6df; --muted:#9aa1ab; --accent:#c9a24d; --accent2:#6fae8c;
+    --warn:#d98c5f; --danger:#c1595a; --blue:#7f9fe8; --font-d:'Georgia',serif; --font-b:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-b);margin:0;padding:0;line-height:1.6}
+  .wrap{max-width:840px;margin:0 auto;padding:28px 18px 80px}
+  header{border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:28px}
+  h1{font-family:var(--font-d);font-size:1.55rem;margin:0 0 8px;color:var(--accent)}
+  .tagline{color:var(--muted);font-size:.95rem}
+  h2{font-family:var(--font-d);font-size:1.2rem;color:var(--accent2);border-left:3px solid var(--accent2);padding-left:10px;margin-top:40px}
+  h3{color:var(--text);font-size:1rem;margin-top:0}
+  section{margin-bottom:10px}
+  p{color:#d7d5cd}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;margin:14px 0}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px}
+  @media(min-width:640px){.grid-2{grid-template-columns:1fr 1fr}}
+  @media(min-width:640px){.grid-3{grid-template-columns:1fr 1fr 1fr}}
+  .slider-field label{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);margin-bottom:6px}
+  .slider-field label b{color:var(--accent);font-weight:600}
+  .slider-field input[type=range]{width:100%;accent-color:var(--accent2)}
+  .slider-hint{font-size:.78rem;color:#767c85;margin-top:3px}
+  .result{background:var(--panel2);border:1px solid var(--accent);border-radius:8px;padding:14px;margin-top:14px;font-size:1.02rem}
+  .result b{color:var(--accent)}
+  .verdict{border-radius:8px;padding:14px;margin-top:10px;font-size:.95rem}
+  .v-ok{background:#152a1f;border:1px solid var(--accent2);color:#bfe6cf}
+  .v-warn{background:#2a2416;border:1px solid var(--warn);color:#f0dcc4}
+  .v-bad{background:#2a1616;border:1px solid var(--danger);color:#f0c4c4}
+  .note{font-size:.82rem;color:var(--muted);margin-top:6px}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:.86rem}
+  th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left}
+  th{color:var(--accent2)}
+  .wa{display:inline-block;margin-top:14px;background:#25D366;color:#04250f;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:600}
+  .limitbox{background:#241a14;border:1px solid var(--warn);border-radius:8px;padding:14px;color:#e8d3c1}
+  .histbox{background:#161a20;border:1px dashed var(--line);border-radius:8px;padding:14px;color:#c7c4bb;font-size:.92rem}
+  ul{color:#d7d5cd}
+  svg{width:100%;height:auto;background:var(--panel2);border-radius:8px;border:1px solid var(--line)}
+  .chartbox{margin-top:10px}
+  .criteria{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .crit-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:6px;font-size:.9rem}
+  .crit-pass{background:#152a1f;border:1px solid var(--accent2)}
+  .crit-fail{background:#2a1616;border:1px solid var(--danger)}
+  footer{margin-top:50px;border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:.8rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Coriolis & Siklogenesis</h1>
+  <div class="tagline">Lautan Indonesia cukup hangat untuk siklon tropis — tapi ada satu syarat lain yang hampir selalu gagal dipenuhi karena posisi geografis semata.</div>
+</header>
+
+<section>
+  <h2>1. Belajar — Kenapa Rotasi Butuh Lintang, Bukan Cuma Suhu</h2>
+  <p>Siklon tropis adalah pusaran udara besar yang berputar terorganisir mengelilingi pusat tekanan rendah. Untuk berputar terorganisir (bukan sekadar badai lokal biasa), sistem ini butuh <b>gaya Coriolis</b> — efek semu akibat rotasi Bumi yang membelokkan arah gerak udara, sebanding dengan sinus garis lintang: <b>f = 2Ω sin(φ)</b>, dengan Ω = kecepatan sudut rotasi Bumi.</p>
+  <div class="card">
+    <p>Persamaan ini punya konsekuensi tegas: tepat di garis khatulistiwa (φ=0°), sin(0°)=0, sehingga <b>gaya Coriolis nyaris nol</b>. Tanpa gaya ini, udara yang bergerak menuju pusat tekanan rendah cenderung masuk lurus ke tengah dan mengisi kekosongan tanpa membelok cukup untuk memutar — pusaran gagal terbentuk, meski airnya cukup hangat untuk memasok energi.</p>
+    <p style="margin-bottom:0">Riset klasik William Gray (1968) merangkum beberapa syarat yang harus terpenuhi <i>bersamaan</i> untuk siklogenesis tropis: suhu permukaan laut ≥26,5°C (hingga kedalaman cukup), geseran angin vertikal rendah, kelembapan troposfer menengah cukup, ada gangguan awal (bibit vorteks), dan <b>jarak minimum dari khatulistiwa sekitar 5°</b> agar Coriolis cukup kuat mengorganisir rotasi dalam waktu hidup gangguan cuaca (biasanya cuma beberapa hari).</p>
+  </div>
+  <div class="histbox">
+    <p style="margin:0"><b>Kasus langka yang membuktikan aturan:</b> Topan Vamei (Desember 2001) terbentuk di sekitar 1,5°N dekat Kalimantan/Laut China Selatan — siklon tropis paling dekat khatulistiwa yang pernah tercatat. Kejadiannya begitu jarang sehingga jadi bahan kajian ilmiah tersendiri, justru karena melanggar "aturan 5°" yang biasanya berlaku ketat.</p>
+  </div>
+  <p>Sebagian besar wilayah Indonesia berada dalam rentang lintang sekitar 6°LU–11°LS — sebagian besar daratan dan lautnya justru berada <i>di dalam</i> zona 5° dari khatulistiwa tempat Coriolis terlalu lemah. Hanya wilayah paling selatan (dekat Laut Arafura/Timor, berbatasan Australia utara) dan paling utara (Aceh, kadang terpengaruh sisa badai dari Teluk Benggala) yang sesekali merasakan dampak tidak langsung siklon yang terbentuk di luar wilayah inti Indonesia.</p>
+</section>
+
+<section>
+  <h2>2. Eksplorasi A — Kalkulator Periode Inersia</h2>
+  <p>Geser garis lintang dan lihat berapa lama waktu yang dibutuhkan gaya Coriolis untuk menyelesaikan satu putaran penuh osilasi inersia — indikator seberapa "kuat" efek pemutar ini bekerja di lintang tersebut.</p>
+  <div class="card">
+    <div class="slider-field">
+      <label>Garis lintang <b id="valLintang">2.0</b>° <span id="arahLintang">LU</span></label>
+      <input type="range" id="lintang" min="-25" max="25" step="0.1" value="2">
+    </div>
+    <div class="chartbox">
+      <svg id="chart" viewBox="0 0 600 240"></svg>
+    </div>
+    <div class="result" id="hasilCoriolis"></div>
+    <div class="verdict" id="verdictCoriolis"></div>
+  </div>
+</section>
+
+<section>
+  <h2>3. Eksplorasi B — Simulator Syarat Siklogenesis</h2>
+  <p>Siklon butuh semua syarat terpenuhi bersamaan, bukan salah satu saja. Coba geser ketiganya dan lihat kapan status berubah dari "tidak mendukung" jadi "mendukung".</p>
+  <div class="card">
+    <div class="grid grid-3">
+      <div class="slider-field">
+        <label>Lintang lokasi <b id="valLintang2">2.0</b>°</label>
+        <input type="range" id="lintang2" min="0" max="25" step="0.5" value="2">
+      </div>
+      <div class="slider-field">
+        <label>Suhu permukaan laut <b id="valSST">29.0</b> °C</label>
+        <input type="range" id="sst" min="24" max="32" step="0.1" value="29">
+      </div>
+      <div class="slider-field">
+        <label>Geseran angin vertikal <b id="valShear">8</b> m/s</label>
+        <input type="range" id="shear" min="0" max="30" step="1" value="8">
+      </div>
+    </div>
+    <div class="criteria" id="hasilKriteria"></div>
+    <div class="verdict" id="verdictKriteria"></div>
+  </div>
+</section>
+
+<section>
+  <h2>4. Metode / Rumus</h2>
+  <div class="card">
+    <p><b>Parameter Coriolis:</b> f = 2Ω sin(φ), Ω = 7,2921×10⁻⁵ rad/s (kecepatan sudut rotasi Bumi)</p>
+    <p><b>Periode inersia:</b> T = 2π/f — waktu satu osilasi rotasi alami akibat Coriolis saja</p>
+    <p><b>Kriteria siklogenesis (disederhanakan dari Gray, 1968):</b> lintang ≥5° dari khatulistiwa, SST ≥26,5°C, geseran angin vertikal ≤12 m/s</p>
+  </div>
+</section>
+
+<section>
+  <h2>5. Batasan</h2>
+  <div class="limitbox">
+    <ul>
+      <li><b>Ambang "5° dari khatulistiwa" dan "geseran ≤12 m/s" adalah nilai umum yang sering dikutip literatur, bukan hukum fisika mutlak</b> — kasus seperti Topan Vamei menunjukkan pengecualian tetap mungkin terjadi dalam kondisi sangat spesifik.</li>
+      <li>Simulator ini menilai <b>potensi</b> berdasarkan tiga faktor utama — siklogenesis nyata juga bergantung kelembapan troposfer menengah dan keberadaan bibit gangguan cuaca yang tidak dimodelkan di sini.</li>
+      <li>Periode inersia mengukur kecenderungan rotasi murni dari Coriolis — bukan prediksi langsung apakah siklon akan terbentuk, hanya indikator seberapa "siap" lintang tersebut secara dinamis.</li>
+      <li>Ini alat edukasi konsep meteorologi, bukan sistem peringatan dini siklon — untuk info siklon aktual, rujuk BMKG atau JTWC.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>6. Referensi</h2>
+  <ul>
+    <li>Gray, W.M. (1968) — "Global View of the Origin of Tropical Disturbances and Storms", <i>Monthly Weather Review</i></li>
+    <li>Palmén, E. (1948) — kriteria lintang minimum siklogenesis tropis</li>
+    <li>Chang, C.P. et al. (2003) — kajian ilmiah Topan Vamei (2001), siklon tropis terdekat khatulistiwa yang tercatat</li>
+  </ul>
+</section>
+
+<div class="card" style="text-align:center">
+  <p style="margin:0 0 8px">Ingin diskusi lebih lanjut soal topik ini?</p>
+  <a class="wa" id="waLink" href="#" target="_blank">Konsultasi via WhatsApp</a>
+</div>
+
+<footer>
+  Bagian dari Bank Alat JAZMI — Level 1–5 (Belajar → Eksplorasi → Metode → Batasan → Referensi).<br>
+  Alat ini edukasi konsep dinamika atmosfer, bukan sistem peringatan dini siklon.
+</footer>
+</div>
+
+<script>
+function fmt(x, d=2){
+  if(!isFinite(x)) return "-";
+  if(Math.abs(x) >= 1e6 || (Math.abs(x)<1e-6 && x!==0)) return x.toExponential(3);
+  return parseFloat(x.toFixed(d)).toString();
+}
+
+const OMEGA = 7.2921e-5;
+
+// ===== Panel A =====
+const lintangEl = document.getElementById('lintang');
+
+function hitungCoriolis(){
+  const phi = parseFloat(lintangEl.value);
+  document.getElementById('valLintang').textContent = fmt(Math.abs(phi),1);
+  document.getElementById('arahLintang').textContent = phi>=0 ? 'LU' : 'LS';
+
+  const phiRad = phi*Math.PI/180;
+  const f = 2*OMEGA*Math.sin(phiRad);
+  const absF = Math.abs(f);
+  let out;
+  if(absF < 1e-9){
+    out = 'Periode inersia: tak terhingga (Coriolis nol persis)';
+  } else {
+    const T_sec = 2*Math.PI/absF;
+    const T_jam = T_sec/3600;
+    const T_hari = T_jam/24;
+    out = T_hari > 2
+      ? `Periode inersia: <b>${fmt(T_hari,1)} hari</b> (${fmt(T_jam,0)} jam)`
+      : `Periode inersia: <b>${fmt(T_jam,1)} jam</b>`;
+  }
+
+  document.getElementById('hasilCoriolis').innerHTML = `
+    Parameter Coriolis (f): <b>${fmt(f,7)} s⁻¹</b><br>${out}
+  `;
+
+  const verdict = document.getElementById('verdictCoriolis');
+  if(Math.abs(phi) < 3){
+    verdict.className='verdict v-bad';
+    verdict.innerHTML = `Pada lintang ini, periode inersia sangat panjang — gangguan cuaca biasa (umumnya hanya bertahan beberapa hari) akan bubar atau bergerak lebih dulu sebelum sempat berputar terorganisir jadi siklon.`;
+  } else if(Math.abs(phi) < 5){
+    verdict.className='verdict v-warn';
+    
+    verdict.innerHTML = `Mendekati ambang 5° — secara historis sangat jarang terjadi siklogenesis di sini, tapi bukan mustahil dalam kondisi luar biasa (seperti Topan Vamei).`;
+  } else {
+    verdict.className='verdict v-ok';
+    verdict.innerHTML = `Periode inersia cukup pendek dibanding umur khas gangguan cuaca tropis — secara dinamis, lintang ini cukup untuk mendukung organisasi rotasi siklon (dengan syarat lain seperti SST dan geseran angin juga terpenuhi).`;
+  }
+
+  gambarChart(phi);
+}
+
+function periodeInersiaJam(phiDeg){
+  const phiRad = phiDeg*Math.PI/180;
+  const f = 2*OMEGA*Math.sin(phiRad);
+  if(Math.abs(f) < 1e-9) return 99999;
+  return (2*Math.PI/Math.abs(f))/3600;
+}
+
+function gambarChart(phiNow){
+  const svg = document.getElementById('chart');
+  const W=600,H=240,padL=52,padR=14,padT=16,padB=32;
+  const maxJam = 300; // cap tampilan
+  function px(phi){ return padL + ((phi+25)/50)*(W-padL-padR); }
+  function py(jam){ 
+    const clamped = Math.min(jam, maxJam);
+    return (H-padB) - (clamped/maxJam)*(H-padT-padB);
+  }
+
+  let path = "";
+  for(let phi=-25; phi<=25; phi+=0.25){
+    if(Math.abs(phi) < 0.15) continue; // skip singularitas persis di 0
+    const jam = periodeInersiaJam(phi);
+    const x = px(phi), y = py(jam);
+    path += (path===""?'M':'L')+x.toFixed(1)+','+y.toFixed(1);
+  }
+
+  // zona Indonesia -11 s.d 6
+  const xInd1 = px(-11), xInd2 = px(6);
+  const xNow = px(phiNow), yNow = py(periodeInersiaJam(phiNow===0?0.15:phiNow));
+
+  let ticks = '';
+  [-20,-10,0,10,20].forEach(t=>{
+    const x = px(t);
+    ticks += `<text x="${x}" y="${H-padB+18}" fill="#9aa1ab" font-size="10" text-anchor="middle">${t}°</text>`;
+  });
+
+  svg.innerHTML = `
+    <rect x="${xInd1}" y="${padT}" width="${xInd2-xInd1}" height="${H-padB-padT}" fill="#c9a24d" opacity="0.12"/>
+    <text x="${(xInd1+xInd2)/2}" y="${padT+14}" fill="#c9a24d" font-size="10" text-anchor="middle">rentang lintang Indonesia</text>
+    <line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#2a2f38"/>
+    <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-padB}" stroke="#2a2f38"/>
+    ${ticks}
+    <path d="${path}" fill="none" stroke="#7f9fe8" stroke-width="2.5"/>
+    <circle cx="${xNow}" cy="${yNow}" r="5" fill="#c9a24d"/>
+    <text x="${W/2}" y="${H-4}" fill="#9aa1ab" font-size="11" text-anchor="middle">garis lintang</text>
+    <text x="${padL-8}" y="${padT+10}" fill="#9aa1ab" font-size="9" text-anchor="end">panjang (hari+)</text>
+    <text x="${padL-8}" y="${H-padB}" fill="#9aa1ab" font-size="9" text-anchor="end">pendek</text>
+  `;
+}
+
+lintangEl.addEventListener('input', hitungCoriolis);
+
+// ===== Panel B =====
+const lintang2El = document.getElementById('lintang2');
+const sstEl = document.getElementById('sst');
+const shearEl = document.getElementById('shear');
+
+function hitungKriteria(){
+  const lin = parseFloat(lintang2El.value);
+  const sst = parseFloat(sstEl.value);
+  const shear = parseFloat(shearEl.value);
+  document.getElementById('valLintang2').textContent = fmt(lin,1);
+  document.getElementById('valSST').textContent = fmt(sst,1);
+  document.getElementById('valShear').textContent = shear;
+
+  const passLintang = lin >= 5;
+  const passSST = sst >= 26.5;
+  const passShear = shear <= 12;
+
+  function baris(label, pass, ket){
+    return `<div class="crit-row ${pass?'crit-pass':'crit-fail'}"><span>${label}</span><span>${pass?'✓ Terpenuhi':'✗ Belum'} — ${ket}</span></div>`;
+  }
+
+  document.getElementById('hasilKriteria').innerHTML =
+    baris('Lintang ≥5° dari khatulistiwa', passLintang, `${fmt(lin,1)}°`) +
+    baris('Suhu laut ≥26,5°C', passSST, `${fmt(sst,1)}°C`) +
+    baris('Geseran angin ≤12 m/s', passShear, `${shear} m/s`);
+
+  const verdict = document.getElementById('verdictKriteria');
+  const jumlahPass = [passLintang,passSST,passShear].filter(Boolean).length;
+  if(jumlahPass===3){
+    verdict.className='verdict v-ok';
+    verdict.innerHTML = 'Ketiga syarat utama terpenuhi bersamaan — kondisi ini secara prinsip mendukung siklogenesis tropis (dengan catatan syarat kelembapan &amp; bibit gangguan di luar model ini juga harus terpenuhi).';
+  } else if(!passLintang && passSST && passShear){
+    verdict.className='verdict v-bad';
+    
+    verdict.innerHTML = 'Persis pola Indonesia: suhu laut dan geseran angin sudah mendukung, tapi lintang terlalu dekat khatulistiwa — inilah faktor tunggal yang paling sering menjadi penghalang siklogenesis di perairan Indonesia.';
+  } else {
+    verdict.className='verdict v-warn';
+    
+    verdict.innerHTML = `Belum semua syarat terpenuhi (${jumlahPass}/3) — siklogenesis tropis butuh kombinasi lengkap, bukan satu faktor saja.`;
+  }
+}
+[lintang2El,sstEl,shearEl].forEach(el=>el.addEventListener('input', hitungKriteria));
+
+const waMsg = encodeURIComponent("Assalamu'alaikum, saya ingin diskusi terkait Coriolis & Siklogenesis JAZMI.");
+document.getElementById('waLink').href = `https://wa.me/6281356572588?text=${waMsg}`;
+
+hitungCoriolis();
+hitungKriteria();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

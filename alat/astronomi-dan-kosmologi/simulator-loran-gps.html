@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulator LORAN vs GPS — Triangulasi Posisi</title>
+<style>
+:root{
+  --bg:#0C1220;--panel:#121C2E;--panel2:#0F1826;
+  --border:#1E2E48;--border2:#253550;
+  --putih:#E4EAF4;--abu:#5A6A82;--abu2:#3A4A62;
+  --loran:#F5A623;--loran2:#C47A10;--loran-bg:rgba(245,166,35,.08);
+  --gps:#00D4AA;--gps2:#009977;--gps-bg:rgba(0,212,170,.08);
+  --merah:#FF5555;--hijau:#44CC88;--ungu:#AA88FF;
+  --reseptor:#FF8844;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--putih);font-family:system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;font-size:13px}
+
+/* HEADER */
+header{padding:.9rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+.logo{font-family:'Courier New',monospace;font-size:.78rem;color:var(--loran);letter-spacing:.06em}
+.logo span{color:var(--gps)}
+.sub-header{font-size:.68rem;color:var(--abu)}
+
+/* TAB */
+.tab-bar{display:flex;border-bottom:1px solid var(--border);background:var(--panel2)}
+.tab{padding:.7rem 1.25rem;font-size:.75rem;color:var(--abu);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;user-select:none}
+.tab:hover{color:var(--putih)}
+.tab.ak.loran{color:var(--loran);border-color:var(--loran)}
+.tab.ak.gps{color:var(--gps);border-color:var(--gps)}
+.tab.ak.kompar{color:var(--ungu);border-color:var(--ungu)}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:250px 1fr;flex:1;min-height:0}
+.sidebar{padding:1rem;border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;gap:.9rem;background:var(--panel2)}
+.sg{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:7px;padding:.85rem}
+.st{font-size:.62rem;letter-spacing:.08em;margin-bottom:.7rem;font-weight:700}
+.st.loran{color:var(--loran)}.st.gps{color:var(--gps)}.st.netral{color:var(--abu)}
+.sf{margin-bottom:.75rem}.sf:last-child{margin-bottom:0}
+.sl{font-size:.67rem;color:var(--abu);margin-bottom:.28rem;display:flex;justify-content:space-between}
+.sv{font-weight:700;font-family:'Courier New',monospace}
+.sv.loran{color:var(--loran)}.sv.gps{color:var(--gps)}
+input[type=range]{width:100%;-webkit-appearance:none;height:3px;border-radius:2px;outline:none;background:var(--border2);display:block;margin-top:.1rem}
+input[type=range].loran::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--loran);cursor:pointer;box-shadow:0 0 6px rgba(245,166,35,.5)}
+input[type=range].gps::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--gps);cursor:pointer;box-shadow:0 0 6px rgba(0,212,170,.5)}
+input[type=range].netral::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--putih);cursor:pointer}
+
+.toggle-row{display:flex;flex-direction:column;gap:.35rem}
+.tog{display:flex;align-items:center;gap:.45rem;font-size:.7rem;color:var(--abu);cursor:pointer;user-select:none;padding:.25rem 0}
+.tog input{display:none}
+.togbox{width:12px;height:12px;border:1.5px solid var(--border2);border-radius:2px;flex-shrink:0;position:relative;transition:all .15s}
+.tog input:checked+.togbox{border-color:currentColor}
+.tog input:checked+.togbox::after{content:'';position:absolute;left:2px;top:-1px;width:4px;height:7px;border:2px solid currentColor;border-left:none;border-top:none;transform:rotate(45deg)}
+.tog.loran{color:var(--loran)}.tog.gps{color:var(--gps)}.tog.netral{color:var(--putih)}
+
+/* KANVAS */
+.canvas-area{position:relative;overflow:hidden;background:var(--bg);display:flex;align-items:center;justify-content:center}
+canvas{display:block;cursor:crosshair}
+.cv-overlay{position:absolute;top:.7rem;left:.8rem;pointer-events:none}
+.cv-tag{font-size:.63rem;color:rgba(255,255,255,.45);font-family:'Courier New',monospace;line-height:1.8}
+
+/* READOUT BAR */
+.readout{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--border)}
+.ri{padding:.75rem 1rem;border-right:1px solid var(--border)}
+.ri:last-child{border-right:none}
+.rl{font-size:.6rem;color:var(--abu);margin-bottom:.25rem}
+.rv{font-size:1rem;font-weight:700;font-family:'Courier New',monospace;line-height:1.2}
+.rsub{font-size:.62rem;color:var(--abu);margin-top:.15rem}
+
+/* PANEL PENJELASAN */
+.pen-bar{padding:.75rem 1.25rem;border-top:1px solid var(--border);font-size:.72rem;color:var(--abu);line-height:1.7;background:rgba(0,0,0,.15)}
+.pen-bar strong{color:var(--putih)}
+
+/* PANEL KOMPARASI */
+.kompar-panel{padding:1.5rem;overflow-y:auto;display:none}
+.kompar-panel.ak{display:block}
+.kp-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.5rem}
+.kp-kartu{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:1.1rem}
+.kp-judul{font-size:.9rem;font-weight:700;margin-bottom:.25rem}
+.kp-sub{font-size:.72rem;color:var(--abu);margin-bottom:1rem;line-height:1.55}
+.kp-row{display:flex;justify-content:space-between;align-items:baseline;padding:.35rem 0;border-bottom:1px solid var(--border)}
+.kp-row:last-child{border:none}
+.kp-label{font-size:.68rem;color:var(--abu)}
+.kp-val{font-size:.8rem;font-weight:600;font-family:'Courier New',monospace}
+.bar-wrap{margin:.5rem 0}
+.bar-lbl{font-size:.62rem;color:var(--abu);margin-bottom:.25rem;display:flex;justify-content:space-between}
+.bar-bg{height:5px;background:var(--border2);border-radius:3px;overflow:hidden}
+.bar-isi{height:100%;border-radius:3px;transition:width .5s ease}
+.timeline{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:1.1rem;margin-bottom:1.25rem}
+.tl-ttl{font-size:.75rem;color:var(--abu);margin-bottom:.85rem}
+.tl-item{display:flex;gap:.85rem;align-items:flex-start;margin-bottom:.75rem;padding-bottom:.75rem;border-bottom:1px solid var(--border)}
+.tl-item:last-child{border:none;margin:0;padding:0}
+.tl-tahun{font-size:.68rem;font-family:'Courier New',monospace;color:var(--ungu);width:50px;flex-shrink:0;padding-top:.1rem}
+.tl-isi{font-size:.72rem;line-height:1.6;color:var(--abu)}
+.tl-isi strong{color:var(--putih)}
+.catatan-jujur{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:7px;padding:1rem 1.1rem;font-size:.72rem;color:var(--abu);line-height:1.75}
+.catatan-jujur strong{color:var(--putih)}
+
+@media(max-width:680px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{border-right:none;border-bottom:1px solid var(--border);max-height:240px;overflow-y:auto}
+  .readout{grid-template-columns:repeat(2,1fr)}
+  .ri:nth-child(2){border-right:none}
+  .ri:nth-child(3){border-top:1px solid var(--border)}
+  .kp-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">LORAN <span>vs GPS</span> — Simulator Triangulasi</div>
+  <div class="sub-header">Murni geometri dan fisika gelombang · Klik peta untuk pindahkan penerima</div>
+</header>
+
+<div class="tab-bar">
+  <div class="tab ak loran" data-tab="loran">LORAN (Darat)</div>
+  <div class="tab gps" data-tab="gps">GPS (Orbit)</div>
+  <div class="tab kompar" data-tab="kompar">Perbandingan</div>
+</div>
+
+<div class="layout" id="mainLayout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+
+    <!-- LORAN CONTROLS -->
+    <div id="loranControls">
+      <div class="sg">
+        <div class="st loran">Stasiun LORAN</div>
+        <div class="sf">
+          <div class="sl">Jumlah stasiun <span class="sv loran" id="vNSt">3</span></div>
+          <input type="range" class="loran" id="sNSt" min="2" max="6" value="3" step="1">
+        </div>
+        <div class="sf">
+          <div class="sl">Jarak antar stasiun <span class="sv loran" id="vDSt">800</span> km</div>
+          <input type="range" class="loran" id="sDSt" min="200" max="2000" value="800" step="50">
+        </div>
+        <div class="sf">
+          <div class="sl">Kebisingan sinyal <span class="sv loran" id="vNoise">15</span> µs</div>
+          <input type="range" class="loran" id="sNoise" min="1" max="100" value="15" step="1">
+        </div>
+        <div class="sf">
+          <div class="sl">Frekuensi <span class="sv loran" id="vFreq">100</span> kHz</div>
+          <input type="range" class="loran" id="sFreq" min="10" max="300" value="100" step="10">
+        </div>
+      </div>
+      <div class="sg">
+        <div class="st netral">Tampilan</div>
+        <div class="toggle-row">
+          <label class="tog loran"><input type="checkbox" id="tHiperbola" checked><span class="togbox"></span>Garis hiperbolik TDOA</label>
+          <label class="tog loran"><input type="checkbox" id="tLingkaran" checked><span class="togbox"></span>Lingkaran jangkauan</label>
+          <label class="tog netral"><input type="checkbox" id="tDop" checked><span class="togbox"></span>Zona ketidakpastian</label>
+          <label class="tog netral"><input type="checkbox" id="tGrid"><span class="togbox"></span>Grid referensi</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- GPS CONTROLS -->
+    <div id="gpsControls" style="display:none">
+      <div class="sg">
+        <div class="st gps">Konstelasi GPS</div>
+        <div class="sf">
+          <div class="sl">Satelit terlihat <span class="sv gps" id="vNSat">8</span></div>
+          <input type="range" class="gps" id="sNSat" min="3" max="12" value="8" step="1">
+        </div>
+        <div class="sf">
+          <div class="sl">Ketinggian orbit <span class="sv gps" id="vOrbH">20200</span> km</div>
+          <input type="range" class="gps" id="sOrbH" min="550" max="36000" value="20200" step="100">
+        </div>
+        <div class="sf">
+          <div class="sl">Error jam penerima <span class="sv gps" id="vClk">10</span> ns</div>
+          <input type="range" class="gps" id="sClk" min="1" max="100" value="10" step="1">
+        </div>
+        <div class="sf">
+          <div class="sl">Error ionosfer <span class="sv gps" id="vIon">5</span> m</div>
+          <input type="range" class="gps" id="sIon" min="0" max="30" value="5" step="1">
+        </div>
+      </div>
+      <div class="sg">
+        <div class="st netral">Tampilan</div>
+        <div class="toggle-row">
+          <label class="tog gps"><input type="checkbox" id="tSatOrbit" checked><span class="togbox"></span>Orbit satelit</label>
+          <label class="tog gps"><input type="checkbox" id="tGpsCircle" checked><span class="togbox"></span>Lingkaran pseudorange</label>
+          <label class="tog netral"><input type="checkbox" id="tDopGps" checked><span class="togbox"></span>Zona ketidakpastian</label>
+          <label class="tog netral"><input type="checkbox" id="tDopBand"><span class="togbox"></span>GDOP visual</label>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- CANVAS -->
+  <div class="canvas-area" id="canvasArea">
+    <canvas id="cv"></canvas>
+    <div class="cv-overlay">
+      <div class="cv-tag" id="cvTag"></div>
+    </div>
+  </div>
+</div>
+
+<!-- READOUT -->
+<div class="readout" id="readoutBar">
+  <div class="ri">
+    <div class="rl" id="r1l">Akurasi LORAN</div>
+    <div class="rv" id="r1v" style="color:var(--loran)">—</div>
+    <div class="rsub" id="r1s">—</div>
+  </div>
+  <div class="ri">
+    <div class="rl" id="r2l">Faktor Geometri (GDOP)</div>
+    <div class="rv" id="r2v">—</div>
+    <div class="rsub" id="r2s">—</div>
+  </div>
+  <div class="ri">
+    <div class="rl" id="r3l">Jangkauan efektif</div>
+    <div class="rv" id="r3v">—</div>
+    <div class="rsub" id="r3s">—</div>
+  </div>
+  <div class="ri">
+    <div class="rl" id="r4l">Teknologi dasar</div>
+    <div class="rv" id="r4v">—</div>
+    <div class="rsub" id="r4s">—</div>
+  </div>
+</div>
+
+<div class="pen-bar" id="penBar"></div>
+
+<!-- KOMPARASI PANEL (full-width) -->
+<div class="kompar-panel" id="komparPanel">
+  <div class="kp-grid">
+    <div class="kp-kartu" style="border-top:3px solid var(--loran)">
+      <div class="kp-judul" style="color:var(--loran)">LORAN-C / eLORAN</div>
+      <div class="kp-sub">Long Range Navigation — sistem navigasi radio darat berbasis pengukuran selisih waktu kedatangan sinyal (TDOA) dari stasiun pemancar berfrekuensi rendah.</div>
+      <div class="kp-row"><div class="kp-label">Akurasi standar</div><div class="kp-val" style="color:var(--loran)">185–400 m</div></div>
+      <div class="kp-row"><div class="kp-label">eLORAN (modern)</div><div class="kp-val" style="color:var(--loran)">8–20 m</div></div>
+      <div class="kp-row"><div class="kp-label">Frekuensi</div><div class="kp-val">90–110 kHz</div></div>
+      <div class="kp-row"><div class="kp-label">Jangkauan</div><div class="kp-val">1.500–2.300 km</div></div>
+      <div class="kp-row"><div class="kp-label">Dikembangkan</div><div class="kp-val">1940-an (WW2)</div></div>
+      <div class="kp-row"><div class="kp-label">Ketergantungan orbit</div><div class="kp-val" style="color:var(--hijau)">Nol</div></div>
+      <div class="kp-row"><div class="kp-label">Penetrasi bangunan</div><div class="kp-val" style="color:var(--hijau)">Lebih baik</div></div>
+      <div class="kp-row"><div class="kp-label">Tahan jamming</div><div class="kp-val" style="color:var(--hijau)">Lebih tahan</div></div>
+      <div class="kp-row"><div class="kp-label">Status</div><div class="kp-val" style="color:var(--merah)">Banyak dimatikan</div></div>
+    </div>
+    <div class="kp-kartu" style="border-top:3px solid var(--gps)">
+      <div class="kp-judul" style="color:var(--gps)">GPS (GNSS)</div>
+      <div class="kp-sub">Global Positioning System — navigasi berbasis pengukuran waktu tempuh sinyal dari konstelasi satelit di orbit menengah (MEO ~20.200 km).</div>
+      <div class="kp-row"><div class="kp-label">Akurasi standar sipil</div><div class="kp-val" style="color:var(--gps)">3–5 m</div></div>
+      <div class="kp-row"><div class="kp-label">GPS + WAAS/SBAS</div><div class="kp-val" style="color:var(--gps)">0.5–1 m</div></div>
+      <div class="kp-row"><div class="kp-label">Frekuensi</div><div class="kp-val">1.227–1.575 GHz</div></div>
+      <div class="kp-row"><div class="kp-label">Jangkauan</div><div class="kp-val">Global (di langit terbuka)</div></div>
+      <div class="kp-row"><div class="kp-label">Dikembangkan</div><div class="kp-val">1970-an, aktif 1995</div></div>
+      <div class="kp-row"><div class="kp-label">Ketergantungan orbit</div><div class="kp-val" style="color:var(--merah)">Total</div></div>
+      <div class="kp-row"><div class="kp-label">Penetrasi bangunan</div><div class="kp-val" style="color:var(--merah)">Buruk</div></div>
+      <div class="kp-row"><div class="kp-label">Tahan jamming</div><div class="kp-val" style="color:var(--merah)">Rentan</div></div>
+      <div class="kp-row"><div class="kp-label">Status</div><div class="kp-val" style="color:var(--hijau)">Operasional global</div></div>
+    </div>
+  </div>
+
+  <div class="kp-grid">
+    <div>
+      <div class="bar-wrap">
+        <div class="bar-lbl"><span style="color:var(--loran)">LORAN-C (185 m)</span><span style="color:var(--gps)">GPS standar (4 m)</span></div>
+        <div style="font-size:.68rem;color:var(--abu);margin-bottom:.4rem">Akurasi relatif (bar lebih panjang = lebih akurat)</div>
+        <div class="bar-bg" style="margin-bottom:.35rem"><div class="bar-isi" style="width:2%;background:var(--loran)"></div></div>
+        <div class="bar-bg"><div class="bar-isi" style="width:95%;background:var(--gps)"></div></div>
+      </div>
+      <div class="bar-wrap" style="margin-top:1rem">
+        <div class="bar-lbl"><span style="color:var(--loran)">LORAN: tahan jamming</span><span style="color:var(--gps)">GPS: rentan jamming</span></div>
+        <div style="font-size:.68rem;color:var(--abu);margin-bottom:.4rem">Ketahanan terhadap gangguan (bar lebih panjang = lebih tahan)</div>
+        <div class="bar-bg" style="margin-bottom:.35rem"><div class="bar-isi" style="width:80%;background:var(--loran)"></div></div>
+        <div class="bar-bg"><div class="bar-isi" style="width:25%;background:var(--gps)"></div></div>
+      </div>
+      <div class="bar-wrap" style="margin-top:1rem">
+        <div class="bar-lbl"><span style="color:var(--loran)">LORAN: infrastruktur</span><span style="color:var(--gps)">GPS: infrastruktur</span></div>
+        <div style="font-size:.68rem;color:var(--abu);margin-bottom:.4rem">Kompleksitas infrastruktur (bar lebih panjang = lebih kompleks)</div>
+        <div class="bar-bg" style="margin-bottom:.35rem"><div class="bar-isi" style="width:40%;background:var(--loran)"></div></div>
+        <div class="bar-bg"><div class="bar-isi" style="width:95%;background:var(--gps)"></div></div>
+      </div>
+    </div>
+    <div>
+      <div class="catatan-jujur">
+        <strong>Mengapa LORAN dimatikan padahal masih berguna?</strong><br><br>
+        Ini pertanyaan yang relevan. Alasan resminya: GPS dianggap sudah cukup dan LORAN dianggap redundan. Tapi ada kritik legitim:<br><br>
+        1. GPS sangat rentan terhadap jamming dan spoofing — ini bukan teori konspirasi, ini fakta yang diakui militer.<br><br>
+        2. eLORAN (versi modern) mencapai akurasi 8–20 meter — mendekati GPS standar sipil — tanpa ketergantungan pada orbit.<br><br>
+        3. Beberapa negara (Korea Selatan, Inggris, Rusia) justru <strong>mengaktifkan kembali</strong> sistem LORAN sebagai backup GPS.<br><br>
+        4. Keputusan mematikan LORAN-C di AS (2010) dikritik oleh komunitas navigasi maritime dan penerbangan sebagai terlalu tergesa.
+      </div>
+    </div>
+  </div>
+
+  <div class="timeline">
+    <div class="tl-ttl">Garis Waktu: dari LORAN ke GPS</div>
+    <div class="tl-item">
+      <div class="tl-tahun">1940</div>
+      <div class="tl-isi"><strong>LORAN-A lahir</strong> — dikembangkan MIT untuk navigasi militer Perang Dunia II. Prinsip dasar: ukur selisih waktu kedatangan dua sinyal radio untuk mendapatkan garis hiperbolik posisi.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-tahun">1957</div>
+      <div class="tl-isi"><strong>Sputnik & ide GPS</strong> — fisikawan Johns Hopkins menyadari frekuensi sinyal Sputnik bergeser (efek Doppler) sehingga posisi bisa dihitung. Konsep terbalik: posisi penerima dari satelit yang diketahui.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-tahun">1974</div>
+      <div class="tl-isi"><strong>LORAN-C</strong> menjadi standar, akurasi 185–400 m menggunakan frekuensi 100 kHz. Jangkauan 1.500 km siang hari, hingga 2.300 km malam (pantulan ionosfer).</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-tahun">1995</div>
+      <div class="tl-isi"><strong>GPS penuh operasional</strong> — 24 satelit, akurasi awal 100 m (sengaja diperburuk untuk sipil). Selective Availability dimatikan tahun 2000, akurasi sipil langsung turun ke 10–20 m.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-tahun">2010</div>
+      <div class="tl-isi"><strong>AS mematikan LORAN-C</strong> — dianggap redundan dengan GPS. Keputusan ini dikritik karena menghilangkan backup sistem navigasi yang tahan gangguan.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-tahun">2020-an</div>
+      <div class="tl-isi"><strong>eLORAN dihidupkan kembali</strong> di beberapa negara. Korea Selatan membangun sistem baru. Inggris mengoperasikan stasiun eLORAN. Akurasi eLORAN modern: 8–20 meter.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const cv=document.getElementById('cv');
+const ctx=cv.getContext('2d');
+const c=299792458; // kecepatan cahaya m/s
+
+let tabAktif='loran';
+let penerima={x:.5,y:.6}; // posisi relatif 0-1
+
+// State LORAN
+let nSt=3,dSt=800,noiseUs=15,freqKHz=100;
+let showHiperbola=true,showLingkaran=true,showDop=true,showGrid=false;
+
+// State GPS
+let nSat=8,orbH=20200,clkNs=10,ionM=5;
+let showSatOrbit=true,showGpsCircle=true,showDopGps=true,showDopBand=false;
+
+function resize(){
+  const area=document.getElementById('canvasArea');
+  cv.width=area.clientWidth;cv.height=area.clientHeight;
+}
+
+// ============ LORAN ENGINE ============
+function loranStasiun(n,d,w,h){
+  // Tempatkan stasiun dalam formasi
+  const cx=w/2,cy=h/2;
+  const r=Math.min(w,h)*0.35*(d/1000);
+  const sts=[];
+  if(n===2){
+    sts.push({x:cx-r,y:cy});sts.push({x:cx+r,y:cy});
+  } else {
+    for(let i=0;i<n;i++){
+      const a=(i/n)*2*Math.PI-Math.PI/2;
+      sts.push({x:cx+r*Math.cos(a),y:cy+r*Math.sin(a)});
+    }
+  }
+  return sts;
+}
+
+function hitungAkurasiLoran(n,noise,freq,posRel,stasiun,w,h){
+  // Akurasi LORAN berdasarkan GDOP geometri dan noise timing
+  // c * noise_us * 1e-6 = error jarak
+  const errJarak=c*noise*1e-6; // meter error per pengukuran
+  // GDOP geometri: lebih banyak stasiun di posisi baik = GDOP lebih kecil
+  const px=posRel.x*w,py=posRel.y*h;
+  let gdop=99;
+  if(n>=2){
+    // Hitung matriks DOP sederhana
+    let sumSin2=0,sumCos2=0,sumSinCos=0;
+    stasiun.forEach(s=>{
+      const dx=px-s.x,dy=py-s.y,r=Math.sqrt(dx*dx+dy*dy);
+      if(r>0){const ux=dx/r,uy=dy/r;sumSin2+=ux*ux;sumCos2+=uy*uy;sumSinCos+=ux*uy;}
+    });
+    const det=sumSin2*sumCos2-sumSinCos*sumSinCos;
+    if(det>0.001)gdop=Math.sqrt((sumSin2+sumCos2)/det)/n;
+    else gdop=20;
+    gdop=Math.max(1,Math.min(gdop,20));
+  }
+  // Akurasi = GDOP * sigma_range
+  const akurasi=gdop*errJarak;
+  // eLORAN correction: frekuensi lebih tinggi → timing lebih presisi
+  const freqFaktor=Math.sqrt(100/freq);
+  return{akurasi:akurasi*freqFaktor,gdop,errJarak};
+}
+
+function drawLoran(){
+  const w=cv.width,h=cv.height;
+  ctx.clearRect(0,0,w,h);
+  // BG
+  ctx.fillStyle='#0C1220';ctx.fillRect(0,0,w,h);
+
+  const sts=loranStasiun(nSt,dSt,w,h);
+  const {akurasi,gdop,errJarak}=hitungAkurasiLoran(nSt,noiseUs,freqKHz,penerima,sts,w,h);
+  const px=penerima.x*w,py=penerima.y*h;
+
+  // Grid
+  if(showGrid){
+    ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=1;
+    for(let x=0;x<w;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+    for(let y=0;y<h;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+  }
+
+  // Skala: estimasi 1 pixel = berapa meter
+  const scaleM=dSt*1000/(Math.min(w,h)*.35);
+
+  // Lingkaran jangkauan
+  if(showLingkaran){
+    const maxR=1500e3/scaleM;
+    sts.forEach(s=>{
+      const g=ctx.createRadialGradient(s.x,s.y,0,s.x,s.y,maxR);
+      g.addColorStop(0,'rgba(245,166,35,.06)');g.addColorStop(1,'transparent');
+      ctx.beginPath();ctx.arc(s.x,s.y,maxR,0,2*Math.PI);ctx.fillStyle=g;ctx.fill();
+      ctx.beginPath();ctx.arc(s.x,s.y,maxR,0,2*Math.PI);
+      ctx.strokeStyle='rgba(245,166,35,.12)';ctx.lineWidth=1;ctx.setLineDash([6,8]);ctx.stroke();ctx.setLineDash([]);
+    });
+  }
+
+  // Garis hiperbolik TDOA
+  if(showHiperbola && nSt>=2){
+    for(let i=0;i<sts.length-1;i++){
+      for(let j=i+1;j<sts.length;j++){
+        const s1=sts[i],s2=sts[j];
+        // Hitung TDOA aktual dari posisi penerima
+        const d1=Math.sqrt((px-s1.x)**2+(py-s1.y)**2)*scaleM;
+        const d2=Math.sqrt((px-s2.x)**2+(py-s2.y)**2)*scaleM;
+        const tdoa=(d1-d2)/c; // detik
+
+        // Gambar garis hiperbolik untuk TDOA ini
+        const pts=[];
+        const step=4;
+        for(let gx=0;gx<w;gx+=step){
+          for(let gy=0;gy<h;gy+=step){
+            const gd1=Math.sqrt((gx-s1.x)**2+(gy-s1.y)**2)*scaleM;
+            const gd2=Math.sqrt((gx-s2.x)**2+(gy-s2.y)**2)*scaleM;
+            const gtdoa=(gd1-gd2)/c;
+            if(Math.abs(gtdoa-tdoa)<noiseUs*1e-6*0.8){pts.push([gx,gy]);}
+          }
+        }
+        const alpha=0.4+0.3*(i+j)/sts.length;
+        ctx.fillStyle=`rgba(245,166,35,${alpha})`;
+        pts.forEach(([gx,gy])=>{ctx.fillRect(gx,gy,step*.8,step*.8);});
+      }
+    }
+  }
+
+  // Zona ketidakpastian
+  if(showDop){
+    const errPx=akurasi/scaleM;
+    const g2=ctx.createRadialGradient(px,py,0,px,py,errPx);
+    g2.addColorStop(0,'rgba(245,166,35,.25)');g2.addColorStop(1,'rgba(245,166,35,0)');
+    ctx.beginPath();ctx.arc(px,py,errPx,0,2*Math.PI);ctx.fillStyle=g2;ctx.fill();
+    ctx.beginPath();ctx.arc(px,py,errPx,0,2*Math.PI);
+    ctx.strokeStyle='rgba(245,166,35,.5)';ctx.lineWidth=1.5;ctx.setLineDash([3,4]);ctx.stroke();ctx.setLineDash([]);
+  }
+
+  // Garis dari stasiun ke penerima
+  sts.forEach((s,i)=>{
+    ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(px,py);
+    ctx.strokeStyle='rgba(245,166,35,.2)';ctx.lineWidth=1;ctx.stroke();
+  });
+
+  // Stasiun LORAN
+  sts.forEach((s,i)=>{
+    ctx.beginPath();ctx.arc(s.x,s.y,10,0,2*Math.PI);
+    ctx.fillStyle='#1A1000';ctx.fill();
+    ctx.strokeStyle='var(--loran)';ctx.lineWidth=2;ctx.stroke();
+    // Icon menara
+    ctx.fillStyle=`rgb(245,166,35)`;ctx.font='bold 10px system-ui';ctx.textAlign='center';
+    ctx.fillText('⬡',s.x,s.y+4);
+    ctx.fillStyle='rgba(245,166,35,.8)';ctx.font='9px system-ui';
+    ctx.fillText(`ST-${i+1}`,s.x,s.y+22);
+    // Halo
+    ctx.beginPath();ctx.arc(s.x,s.y,16,0,2*Math.PI);
+    ctx.strokeStyle='rgba(245,166,35,.15)';ctx.lineWidth=1;ctx.stroke();
+    ctx.textAlign='left';
+  });
+
+  // Penerima
+  const errPx=akurasi/scaleM;
+  ctx.beginPath();ctx.arc(px,py,6,0,2*Math.PI);ctx.fillStyle='#FF8844';ctx.fill();
+  ctx.beginPath();ctx.arc(px,py,9,0,2*Math.PI);ctx.strokeStyle='rgba(255,136,68,.6)';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle='rgba(255,136,68,.9)';ctx.font='bold 9px system-ui';ctx.textAlign='left';
+  ctx.fillText('Penerima',px+12,py-4);
+  ctx.fillStyle='rgba(255,136,68,.5)';ctx.font='8px Courier New';
+  ctx.fillText(`±${akurasi>=1000?(akurasi/1000).toFixed(1)+' km':akurasi.toFixed(0)+' m'}`,px+12,py+8);
+  ctx.textAlign='left';
+
+  // Update overlay
+  document.getElementById('cvTag').textContent=`LORAN-C | ${nSt} stasiun | noise ${noiseUs}µs | ${freqKHz}kHz`;
+
+  // Update readout
+  const akuStr=akurasi>=1000?`${(akurasi/1000).toFixed(1)} km`:`${akurasi.toFixed(0)} m`;
+  document.getElementById('r1l').textContent='Akurasi LORAN';
+  document.getElementById('r1v').textContent=akuStr;document.getElementById('r1v').style.color='var(--loran)';
+  document.getElementById('r1s').textContent=`error timing: ${noiseUs}µs → ${errJarak.toFixed(0)}m/pengukuran`;
+  document.getElementById('r2l').textContent='GDOP Geometri';
+  const gdopKl=gdop<2?'var(--hijau)':gdop<5?'var(--loran)':'var(--merah)';
+  document.getElementById('r2v').innerHTML=`<span style="color:${gdopKl}">${gdop.toFixed(2)}</span>`;
+  document.getElementById('r2s').textContent=gdop<2?'Geometri sangat baik':gdop<5?'Geometri cukup':'Geometri buruk';
+  document.getElementById('r3l').textContent='Jangkauan siang/malam';
+  document.getElementById('r3v').textContent='1500/2300';document.getElementById('r3v').style.color='var(--putih)';
+  document.getElementById('r3s').textContent='km | pantulan ionosfer malam';
+  document.getElementById('r4l').textContent='Prinsip';
+  document.getElementById('r4v').textContent='TDOA';document.getElementById('r4v').style.color='var(--putih)';
+  document.getElementById('r4s').textContent='Time Difference of Arrival — darat';
+
+  // Penjelasan
+  const loranAkuBarik=akurasi.toFixed(0);
+  document.getElementById('penBar').innerHTML=`
+    <strong>Cara kerja:</strong> Setiap pasang stasiun menghasilkan satu <strong>garis hiperbolik</strong> (titik-titik berjarak selisih konstan dari dua stasiun). Irisan ${nSt>=3?'tiga':'dua'} garis hiperbolik memberikan titik posisi. 
+    Error timing <strong>${noiseUs} µs</strong> → error jarak <strong>${errJarak.toFixed(0)} m</strong> per pengukuran → akurasi akhir <strong>${akuStr}</strong> (GDOP ${gdop.toFixed(2)}). 
+    ${nSt<4?'<strong>Tambah stasiun</strong> untuk lihat akurasi meningkat dan GDOP mengecil.':''} 
+    Geser posisi penerima untuk lihat pengaruh geometri terhadap GDOP.`;
+}
+
+// ============ GPS ENGINE ============
+function gpsSatelit(n,orbH,w,h){
+  const cx=w/2,cy=h/2;
+  const r=Math.min(w,h)*0.42;
+  const sats=[];
+  for(let i=0;i<n;i++){
+    const a=(i/n)*2*Math.PI+(Math.PI/6);
+    sats.push({x:cx+r*Math.cos(a),y:cy+r*Math.sin(a),elev:Math.random()*70+10});
+  }
+  return sats;
+}
+
+function hitungAkurasiGps(n,orbH,clkNs,ionM,posRel,sats,w,h){
+  const px=posRel.x*w,py=posRel.y*h,cx=w/2,cy=w/2;
+  // Error komponen
+  const errClk=c*clkNs*1e-9; // error dari jam penerima (meter)
+  const errOrbit=2.5; // m
+  const errEfemeris=0.5;
+  const errTroposfer=0.5;
+  // GDOP dari geometri satelit
+  let sumA=0,sumB=0,sumAB=0;
+  sats.forEach(s=>{
+    const dx=px-s.x,dy=py-s.y,r=Math.sqrt(dx*dx+dy*dy);
+    if(r>0){const ux=dx/r,uy=dy/r;sumA+=ux*ux;sumB+=uy*uy;sumAB+=ux*uy;}
+  });
+  const det=sumA*sumB-sumAB*sumAB;
+  let gdop=det>0.001?Math.sqrt((sumA+sumB)/det)/n:8;
+  gdop=Math.max(1,Math.min(gdop,15));
+  // Total user equivalent range error
+  const uere=Math.sqrt(errClk**2+errOrbit**2+errEfemeris**2+ionM**2+errTroposfer**2);
+  const akurasi=gdop*uere;
+  return{akurasi,gdop,errClk,uere};
+}
+
+function drawGps(){
+  const w=cv.width,h=cv.height;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='#0C1220';ctx.fillRect(0,0,w,h);
+
+  if(showGrid){
+    ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=1;
+    for(let x=0;x<w;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+    for(let y=0;y<h;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+  }
+
+  const sats=gpsSatelit(nSat,orbH,w,h);
+  const {akurasi,gdop,errClk,uere}=hitungAkurasiGps(nSat,orbH,clkNs,ionM,penerima,sats,w,h);
+  const px=penerima.x*w,py=penerima.y*h;
+
+  // Orbit ring
+  if(showSatOrbit){
+    ctx.beginPath();ctx.arc(w/2,h/2,Math.min(w,h)*.42,0,2*Math.PI);
+    ctx.strokeStyle='rgba(0,212,170,.08)';ctx.lineWidth=1;ctx.setLineDash([4,8]);ctx.stroke();ctx.setLineDash([]);
+    // Label orbit
+    ctx.fillStyle='rgba(0,212,170,.3)';ctx.font='8px Courier New';ctx.textAlign='center';
+    ctx.fillText(`Orbit ~${(orbH/1000).toFixed(0)}k km`,w/2,h/2-Math.min(w,h)*.43);ctx.textAlign='left';
+  }
+
+  // Lingkaran pseudorange dari tiap satelit
+  if(showGpsCircle){
+    sats.forEach(s=>{
+      const d=Math.sqrt((px-s.x)**2+(py-s.y)**2);
+      ctx.beginPath();ctx.arc(s.x,s.y,d,0,2*Math.PI);
+      ctx.strokeStyle='rgba(0,212,170,.12)';ctx.lineWidth=1;ctx.setLineDash([3,6]);ctx.stroke();ctx.setLineDash([]);
+    });
+  }
+
+  // Garis dari satelit ke penerima
+  sats.forEach(s=>{
+    ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(px,py);
+    ctx.strokeStyle='rgba(0,212,170,.18)';ctx.lineWidth=1;ctx.stroke();
+  });
+
+  // Zona ketidakpastian
+  if(showDopGps){
+    const errPx=akurasi*2; // GPS jauh lebih akurat, scale berbeda
+    const g=ctx.createRadialGradient(px,py,0,px,py,Math.max(errPx,8));
+    g.addColorStop(0,'rgba(0,212,170,.3)');g.addColorStop(1,'rgba(0,212,170,0)');
+    ctx.beginPath();ctx.arc(px,py,Math.max(errPx,8),0,2*Math.PI);ctx.fillStyle=g;ctx.fill();
+    ctx.beginPath();ctx.arc(px,py,Math.max(errPx,8),0,2*Math.PI);
+    ctx.strokeStyle='rgba(0,212,170,.5)';ctx.lineWidth=1.5;ctx.setLineDash([3,4]);ctx.stroke();ctx.setLineDash([]);
+  }
+
+  // Bumi kecil di tengah
+  ctx.beginPath();ctx.arc(w/2,h/2,18,0,2*Math.PI);
+  const eg=ctx.createRadialGradient(w/2-5,h/2-5,0,w/2,h/2,18);
+  eg.addColorStop(0,'#2A5FAA');eg.addColorStop(1,'#0D2244');
+  ctx.fillStyle=eg;ctx.fill();
+  ctx.strokeStyle='rgba(0,212,170,.3)';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,.5)';ctx.font='8px system-ui';ctx.textAlign='center';ctx.fillText('🌍',w/2,h/2+3);ctx.textAlign='left';
+
+  // Satelit
+  sats.forEach((s,i)=>{
+    ctx.beginPath();ctx.arc(s.x,s.y,7,0,2*Math.PI);ctx.fillStyle='#001A15';ctx.fill();
+    ctx.strokeStyle='#00D4AA';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='rgba(0,212,170,.9)';ctx.font='bold 8px system-ui';ctx.textAlign='center';
+    ctx.fillText('◆',s.x,s.y+3);
+    ctx.fillStyle='rgba(0,212,170,.6)';ctx.font='8px system-ui';ctx.fillText(`G${i+1}`,s.x,s.y+18);
+    ctx.textAlign='left';
+  });
+
+  // Penerima
+  ctx.beginPath();ctx.arc(px,py,6,0,2*Math.PI);ctx.fillStyle='#FF8844';ctx.fill();
+  ctx.beginPath();ctx.arc(px,py,9,0,2*Math.PI);ctx.strokeStyle='rgba(255,136,68,.6)';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle='rgba(255,136,68,.9)';ctx.font='bold 9px system-ui';ctx.textAlign='left';
+  ctx.fillText('Penerima',px+12,py-4);
+  ctx.fillStyle='rgba(255,136,68,.6)';ctx.font='8px Courier New';
+  ctx.fillText(`±${akurasi.toFixed(1)} m`,px+12,py+8);
+
+  document.getElementById('cvTag').textContent=`GPS | ${nSat} satelit | orbit ${orbH} km | GDOP ${gdop.toFixed(2)}`;
+
+  document.getElementById('r1l').textContent='Akurasi GPS';
+  document.getElementById('r1v').textContent=`${akurasi.toFixed(2)} m`;document.getElementById('r1v').style.color='var(--gps)';
+  document.getElementById('r1s').textContent=`UERE ${uere.toFixed(1)}m × GDOP ${gdop.toFixed(2)}`;
+  document.getElementById('r2l').textContent='GDOP Geometri';
+  const gk=gdop<2?'var(--hijau)':gdop<4?'var(--gps)':'var(--merah)';
+  document.getElementById('r2v').innerHTML=`<span style="color:${gk}">${gdop.toFixed(2)}</span>`;
+  document.getElementById('r2s').textContent=gdop<2?'Sangat baik':gdop<4?'Baik':'Bisa diperbaiki';
+  document.getElementById('r3l').textContent='Satelit terlihat / total';
+  document.getElementById('r3v').textContent=`${nSat}/31`;document.getElementById('r3v').style.color='var(--putih)';
+  document.getElementById('r3s').textContent='Minimal 4 untuk 3D fix';
+  document.getElementById('r4l').textContent='Prinsip';
+  document.getElementById('r4v').textContent='TOA';document.getElementById('r4v').style.color='var(--putih)';
+  document.getElementById('r4s').textContent='Time of Arrival — orbit';
+
+  document.getElementById('penBar').innerHTML=`
+    <strong>Cara kerja:</strong> Setiap satelit memancarkan sinyal waktu presisi. Penerima mengukur selisih waktu tempuh sinyal (×c = jarak). Dengan <strong>${nSat} satelit</strong>, irisan lingkaran pseudorange memberikan posisi 3D. 
+    Error jam penerima <strong>${clkNs} ns</strong> → ${(c*clkNs*1e-9).toFixed(2)} m. Error ionosfer: <strong>${ionM} m</strong>. 
+    Total akurasi: <strong>${akurasi.toFixed(2)} m</strong> (GDOP ${gdop.toFixed(2)}). 
+    ${nSat<5?'<strong>Perlu minimal 4 satelit</strong> untuk solusi 3D (3 posisi + 1 waktu).':''}
+    Geser penerima untuk lihat perubahan GDOP berdasarkan geometri.`;
+}
+
+function draw(){if(tabAktif==='loran')drawLoran();else if(tabAktif==='gps')drawGps();}
+
+// Event: klik peta pindahkan penerima
+cv.addEventListener('click',function(e){
+  const r=cv.getBoundingClientRect();
+  penerima.x=(e.clientX-r.left)/cv.width;
+  penerima.y=(e.clientY-r.top)/cv.height;
+  penerima.x=Math.max(.05,Math.min(.95,penerima.x));
+  penerima.y=Math.max(.05,Math.min(.95,penerima.y));
+  draw();
+});
+cv.addEventListener('mousemove',function(e){
+  if(e.buttons===1){
+    const r=cv.getBoundingClientRect();
+    penerima.x=(e.clientX-r.left)/cv.width;
+    penerima.y=(e.clientY-r.top)/cv.height;
+    penerima.x=Math.max(.05,Math.min(.95,penerima.x));
+    penerima.y=Math.max(.05,Math.min(.95,penerima.y));
+    draw();
+  }
+});
+
+// Tabs
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',function(){
+    tabAktif=this.dataset.tab;
+    document.querySelectorAll('.tab').forEach(x=>{x.classList.remove('ak');});
+    this.classList.add('ak');
+    document.getElementById('loranControls').style.display=tabAktif==='loran'?'':'none';
+    document.getElementById('gpsControls').style.display=tabAktif==='gps'?'':'none';
+    document.getElementById('mainLayout').style.display=tabAktif==='kompar'?'none':'grid';
+    document.getElementById('readoutBar').style.display=tabAktif==='kompar'?'none':'grid';
+    document.getElementById('penBar').style.display=tabAktif==='kompar'?'none':'';
+    document.getElementById('komparPanel').classList.toggle('ak',tabAktif==='kompar');
+    if(tabAktif!=='kompar')draw();
+  });
+});
+
+// Slider LORAN
+function bindL(id,setter,elId,fmt){
+  document.getElementById(id).addEventListener('input',function(){
+    setter(parseFloat(this.value));document.getElementById(elId).textContent=fmt(parseFloat(this.value));draw();
+  });
+}
+bindL('sNSt',v=>{nSt=v;},'vNSt',v=>v);
+bindL('sDSt',v=>{dSt=v;},'vDSt',v=>v);
+bindL('sNoise',v=>{noiseUs=v;},'vNoise',v=>v);
+bindL('sFreq',v=>{freqKHz=v;},'vFreq',v=>v);
+
+// Toggle LORAN
+[['tHiperbola',v=>{showHiperbola=v;}],['tLingkaran',v=>{showLingkaran=v;}],
+ ['tDop',v=>{showDop=v;}],['tGrid',v=>{showGrid=v;}]].forEach(([id,fn])=>{
+  document.getElementById(id).addEventListener('change',function(){fn(this.checked);draw();});
+});
+
+// Slider GPS
+bindL('sNSat',v=>{nSat=v;},'vNSat',v=>v);
+bindL('sOrbH',v=>{orbH=v;},'vOrbH',v=>v.toLocaleString('id'));
+bindL('sClk',v=>{clkNs=v;},'vClk',v=>v);
+bindL('sIon',v=>{ionM=v;},'vIon',v=>v);
+
+[['tSatOrbit',v=>{showSatOrbit=v;}],['tGpsCircle',v=>{showGpsCircle=v;}],
+ ['tDopGps',v=>{showDopGps=v;}],['tDopBand',v=>{showDopBand=v;}]].forEach(([id,fn])=>{
+  document.getElementById(id).addEventListener('change',function(){fn(this.checked);draw();});
+});
+
+window.addEventListener('resize',()=>{resize();if(tabAktif!=='kompar')draw();});
+resize();draw();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

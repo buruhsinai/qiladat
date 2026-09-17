@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Queue Simulator — Belajar Memodelkan Dunia Nyata</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0D1117;--panel:#161B22;--deep:#010409;--text:#C9D1D9;--soft:#8B949E;--blue:#58A6FF;--red:#F85149;--green:#3FB950;--amber:#D29922;--line:#30363D;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.6;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:700px;margin:0 auto;padding:32px 20px 60px;}
+  h1{font-size:1.5rem;margin:0 0 6px;color:#fff;}
+  h2{font-size:1.05rem;margin:0 0 10px;color:#fff;}
+  p{color:var(--soft);font-size:0.9rem;margin:0 0 14px;}
+  .ascii{font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--soft);background:var(--deep);border:1px solid var(--line);border-radius:6px;padding:12px 16px;white-space:pre;overflow-x:auto;margin-bottom:18px;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 18px;margin-bottom:18px;}
+  canvas{display:block;width:100%;background:var(--deep);border:1px solid var(--line);border-radius:6px;}
+  .row{margin-top:12px;}
+  label{display:flex;justify-content:space-between;font-size:0.82rem;color:var(--soft);margin-bottom:6px;}
+  input[type=range]{width:100%;accent-color:var(--blue);}
+  .pill-row{display:flex;flex-wrap:wrap;gap:6px;}
+  .pill{padding:6px 12px;border-radius:6px;border:1px solid var(--line);background:var(--deep);color:var(--text);font-size:0.82rem;cursor:pointer;}
+  .pill.active{background:var(--blue);color:#0D1117;border-color:var(--blue);font-weight:700;}
+  .ctrl-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px;}
+  button{padding:8px 14px;border-radius:6px;border:1px solid var(--line);background:var(--deep);color:var(--text);font-size:0.85rem;cursor:pointer;}
+  button.act{background:var(--blue);color:#0D1117;border-color:var(--blue);font-weight:700;}
+  .legend{display:flex;gap:16px;margin-top:10px;font-size:0.78rem;color:var(--soft);flex-wrap:wrap;}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .sw{width:10px;height:2px;display:inline-block;}
+
+  .compare{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-top:6px;}
+  .compare .hcell{background:var(--deep);color:var(--soft);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.03em;padding:8px 10px;border-bottom:1px solid var(--line);}
+  .compare .lcell{padding:8px 10px;font-size:0.82rem;color:var(--soft);border-bottom:1px solid var(--line);border-right:1px solid var(--line);}
+  .compare .vcell{padding:8px 10px;font-family:'JetBrains Mono',monospace;font-size:0.86rem;border-bottom:1px solid var(--line);border-right:1px solid var(--line);}
+  .compare .vcell:last-child{border-right:none;}
+  .compare .sim{color:var(--blue);font-weight:700;}
+  .compare .theo{color:var(--amber);font-weight:700;}
+
+  .runlist{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+  .runchip{font-family:'JetBrains Mono',monospace;font-size:0.76rem;padding:4px 9px;border-radius:12px;background:var(--deep);border:1px solid var(--line);color:var(--soft);}
+
+  .plain-list{margin:0;padding-left:1.1em;color:var(--soft);font-size:0.86rem;}
+  .plain-list li{margin-bottom:7px;}
+  .qbox{background:var(--deep);border-left:3px solid var(--amber);border-radius:0 6px 6px 0;padding:12px 14px;font-size:0.86rem;color:var(--soft);margin-top:10px;}
+  .qbox b{color:var(--amber);}
+  .warn{color:var(--red);font-weight:700;}
+  .foot{font-size:0.78rem;color:#565D66;margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Queue Simulator</h1>
+  <p>"Belajar memodelkan dunia nyata." Sorting dan chaos tadi masih sistem abstrak — ini antrean sungguhan, seperti kasir di minimarket.</p>
+
+  <div class="ascii">          ┌── Kasir 1
+P1 ───────┤
+P2 ───────┤
+P3 ───────┤
+P4 ───────┤
+P5 ───────┤
+          └── Kasir 2</div>
+
+  <div class="panel">
+    <h2>Parameter</h2>
+    <p style="margin-bottom:10px;">Ubah salah satu — sistem dijalankan ulang sebagai simulasi peristiwa diskrit (bukan cuma rumus), lalu dibandingkan dengan prediksi teori antrean.</p>
+
+    <div class="row">
+      <label>Laju kedatangan (λ) <span id="lambdaVal" class="mono">3.0 / menit</span></label>
+      <input type="range" id="lambdaRange" min="0.5" max="15" step="0.5" value="3">
+    </div>
+    <div class="row">
+      <label>Rata-rata waktu layanan <span id="stVal" class="mono">1.0 menit</span></label>
+      <input type="range" id="stRange" min="0.2" max="5" step="0.1" value="1">
+    </div>
+    <div class="row">
+      <label style="margin-bottom:8px;">Jumlah kasir (server, c)</label>
+      <div class="pill-row" id="cPills"></div>
+    </div>
+    <div class="row">
+      <label>Kapasitas antrean total (K, termasuk yang sedang dilayani) <span id="kVal" class="mono">15</span></label>
+      <input type="range" id="kRange" min="1" max="40" step="1" value="15">
+    </div>
+    <div class="row">
+      <label>Jumlah pelanggan disimulasikan (N) <span id="nVal" class="mono">500</span></label>
+      <input type="range" id="nRange" min="50" max="3000" step="50" value="500">
+    </div>
+
+    <div class="ctrl-row">
+      <button class="act" id="runBtn">▶ Jalankan simulasi</button>
+      <button id="reseedBtn">🎲 Jalankan ulang (acak baru, parameter sama)</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Jumlah pelanggan dalam sistem — sepanjang simulasi</h2>
+    <canvas id="chart" width="900" height="320"></canvas>
+    <div class="legend">
+      <span><span class="sw" style="background:#58A6FF;"></span>jumlah dalam sistem (simulasi)</span>
+      <span><span class="sw" style="background:#D29922;border-top:2px dashed #D29922;height:0;"></span>rata-rata menurut teori (L)</span>
+    </div>
+    <p class="foot" id="runFoot">–</p>
+  </div>
+
+  <div class="panel">
+    <h2>Simulasi vs Teori</h2>
+    <p style="margin-bottom:6px;">Teori memakai rumus antrean M/M/c/K (Erlang, dengan kapasitas terbatas). Simulasi memakai kejadian acak sungguhan — karena itu angkanya bisa sedikit meleset dari teori, apalagi kalau N kecil.</p>
+    <div class="compare" id="compareTable"></div>
+    <div class="runlist" id="runHistory"></div>
+    <p class="foot">Kotak di atas: hasil Wq (waktu tunggu) dari beberapa kali "jalankan ulang" terakhir dengan parameter yang sama persis — perhatikan angkanya tidak pernah identik.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Pendekatan ilmiah untuk tool ini</h2>
+    <p><b style="color:#fff;">Apa yang dimodelkan:</b></p>
+    <ul class="plain-list">
+      <li>Kedatangan mengikuti proses Poisson (selang waktu antar-kedatangan acak eksponensial dengan rata-rata 1/λ).</li>
+      <li>Waktu layanan tiap pelanggan acak eksponensial dengan rata-rata sesuai slider.</li>
+      <li>Disiplin antrean FIFO (siapa datang duluan, dilayani duluan), c kasir identik, kapasitas total K.</li>
+    </ul>
+    <p><b style="color:#fff;">Apa yang TIDAK dimodelkan:</b></p>
+    <ul class="plain-list">
+      <li>Pelanggan yang menyerah menunggu lalu pergi (reneging), atau yang mengurungkan niat begitu lihat antrean panjang (balking) — di sini semua yang belum penuh pasti masuk dan menunggu sampai selesai.</li>
+      <li>Prioritas berbeda antar pelanggan, kasir yang istirahat/lambat di jam tertentu, atau kedatangan berkelompok (mis. satu keluarga datang bersamaan).</li>
+      <li>Waktu layanan yang sebenarnya jarang benar-benar eksponensial (distribusi nyata sering punya batas bawah — tidak ada transaksi 0 detik).</li>
+    </ul>
+    <div class="qbox">
+      <b>Pertanyaan reflektif:</b> apakah grafik yang bergerak halus di atas membuatnya <i>terasa</i> seperti kepastian? Padahal setiap kali tombol "jalankan ulang" ditekan dengan parameter identik, hasilnya tetap berbeda — itulah <b>ilusi simulasi</b>: animasi yang meyakinkan bukan jaminan bahwa satu hasil mewakili kenyataan. Baris "Simulasi vs Teori" di atas ada justru untuk membiasakan bertanya: <i>apakah angka yang saya lihat ini satu sampel acak, atau benar-benar pola yang stabil?</i>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ================= STATE ================= */
+let lambda = 3, serviceTime = 1, c = 3, K = 15, N = 500;
+let waitHistory = [];
+
+function renderCPills(){
+  const el = document.getElementById('cPills');
+  el.innerHTML = [1,2,3,4,5,6].map(v=>`<button class="pill ${v===c?'active':''}" data-v="${v}">${v}</button>`).join('');
+  el.querySelectorAll('.pill').forEach(b=>b.addEventListener('click',()=>{
+    c = +b.dataset.v;
+    renderCPills();
+    const kr = document.getElementById('kRange');
+    if(+kr.value < c){ kr.value = c; K = c; document.getElementById('kVal').textContent = K; }
+    runSimulation(true);
+  }));
+}
+
+/* ================= THEORY: M/M/c/K ================= */
+function fact(n){ let r=1; for(let i=2;i<=n;i++) r*=i; return r; }
+function theoryMMcK(lam, mu, c, K){
+  const a = lam/mu;
+  const rho = a/c;
+  const p = new Array(K+1).fill(0);
+  for(let nn=0; nn<=Math.min(c-1,K); nn++) p[nn] = Math.pow(a,nn)/fact(nn);
+  const pcFactor = Math.pow(a,c)/fact(c);
+  for(let nn=c; nn<=K; nn++) p[nn] = pcFactor*Math.pow(rho, nn-c);
+  const sum = p.reduce((s,x)=>s+x,0);
+  const pn = p.map(x=>x/sum);
+  const Pblock = pn[K];
+  const lambdaEff = lam*(1-Pblock);
+  let Lq=0;
+  for(let nn=c+1;nn<=K;nn++) Lq += (nn-c)*pn[nn];
+  const avgBusyServers = lambdaEff/mu;
+  const L = Lq + avgBusyServers;
+  const Wq = lambdaEff>0 ? Lq/lambdaEff : 0;
+  const W = Wq + 1/mu;
+  const util = avgBusyServers/c;
+  return {Pblock, lambdaEff, Lq, L, Wq, W, util, rho};
+}
+
+/* ================= SIMULATION: discrete-event ================= */
+function simulate(lam, mu, c, K, numArrivals){
+  const serviceMean = 1/mu;
+  const arrivals = [];
+  let t = 0;
+  for(let i=0;i<numArrivals;i++){ t += -Math.log(Math.random())/lam; arrivals.push(t); }
+
+  const busyUntil = new Array(c).fill(-1);
+  const waitingQueue = [];
+  let blocked = 0, served = 0, waitSum = 0;
+  const log = [{t:0, n:0}];
+  let ai = 0;
+
+  function inSystem(){ return busyUntil.filter(b=>b>=0).length + waitingQueue.length; }
+
+  while(ai < arrivals.length || busyUntil.some(b=>b>=0)){
+    let depTime = Infinity, depServer = -1;
+    for(let s=0;s<c;s++){ if(busyUntil[s]>=0 && busyUntil[s]<depTime){ depTime=busyUntil[s]; depServer=s; } }
+    const arrTime = ai<arrivals.length ? arrivals[ai] : Infinity;
+
+    if(arrTime <= depTime){
+      const t0 = arrTime;
+      if(inSystem() >= K){
+        blocked++;
+      } else {
+        let freeServer = -1;
+        for(let s=0;s<c;s++){ if(busyUntil[s]<0){ freeServer=s; break; } }
+        if(freeServer>=0){
+          busyUntil[freeServer] = t0 + (-Math.log(Math.random())*serviceMean);
+          served++;
+        } else {
+          waitingQueue.push(t0);
+        }
+      }
+      ai++;
+      log.push({t:t0, n:inSystem()});
+    } else {
+      const t0 = depTime;
+      busyUntil[depServer] = -1;
+      if(waitingQueue.length>0){
+        const arrT = waitingQueue.shift();
+        waitSum += (t0-arrT);
+        served++;
+        busyUntil[depServer] = t0 + (-Math.log(Math.random())*serviceMean);
+      }
+      log.push({t:t0, n:inSystem()});
+    }
+  }
+
+  const totalTime = log[log.length-1].t || 1;
+  let areaN=0;
+  for(let i=1;i<log.length;i++) areaN += log[i-1].n*(log[i].t-log[i-1].t);
+  const Lsim = areaN/totalTime;
+  const Wq_sim = served>0 ? waitSum/served : 0;
+  const throughput = served/totalTime;
+  const util_sim = (throughput*serviceMean)/c;
+  const Pblock_sim = blocked/numArrivals;
+
+  return {log, totalTime, Lsim, Wq_sim, throughput, util_sim, Pblock_sim, served, blocked};
+}
+
+/* ================= CHART ================= */
+const canvas = document.getElementById('chart');
+const ctx = canvas.getContext('2d');
+function drawChart(result, theory){
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const pad = 40;
+  const maxT = result.totalTime;
+  const maxN = Math.max(...result.log.map(p=>p.n), theory.L)*1.2 || 1;
+  const sx = (W-2*pad)/maxT, sy = (H-2*pad)/maxN;
+  const ox = pad, oy = H-pad;
+
+  ctx.strokeStyle = '#30363D'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(ox,oy); ctx.lineTo(W-15,oy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ox,oy); ctx.lineTo(ox,15); ctx.stroke();
+  ctx.fillStyle = '#8B949E'; ctx.font='11px Inter, sans-serif';
+  ctx.fillText('0', ox-4, oy+16);
+  ctx.fillText(maxT.toFixed(0)+' menit', W-90, oy+16);
+  ctx.fillText(Math.round(maxN/1.2), ox-24, 22);
+
+  // theory L dashed line
+  ctx.strokeStyle = '#D29922'; ctx.lineWidth = 1.5; ctx.setLineDash([5,4]);
+  const yL = oy - theory.L*sy;
+  ctx.beginPath(); ctx.moveTo(ox,yL); ctx.lineTo(W-15,yL); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // step chart of simulation
+  ctx.strokeStyle = '#58A6FF'; ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  let prevX = ox, prevY = oy;
+  result.log.forEach((p,i)=>{
+    const px = ox+p.t*sx, py = oy-p.n*sy;
+    if(i===0){ ctx.moveTo(px,py); }
+    else { ctx.lineTo(px,prevY); ctx.lineTo(px,py); }
+    prevX=px; prevY=py;
+  });
+  ctx.stroke();
+}
+
+/* ================= RUN ================= */
+let lastTheory = null;
+
+function updateCompareTable(sim, theo){
+  const el = document.getElementById('compareTable');
+  const rows = [
+    ['Waktu tunggu rata-rata (Wq)', sim.Wq_sim.toFixed(2)+' menit', theo.Wq.toFixed(2)+' menit'],
+    ['Panjang antrean/sistem rata-rata (L)', sim.Lsim.toFixed(2), theo.L.toFixed(2)],
+    ['Throughput (dilayani/menit)', sim.throughput.toFixed(2), theo.lambdaEff.toFixed(2)],
+    ['Utilisasi kasir', (sim.util_sim*100).toFixed(1)+' %', (theo.util*100).toFixed(1)+' %'],
+    ['Probabilitas ditolak (penuh)', (sim.Pblock_sim*100).toFixed(1)+' %', (theo.Pblock*100).toFixed(1)+' %'],
+  ];
+  let html = `<div class="hcell">Ukuran</div><div class="hcell">Simulasi</div><div class="hcell">Teori (M/M/c/K)</div>`;
+  rows.forEach(r=>{
+    html += `<div class="lcell">${r[0]}</div><div class="vcell sim">${r[1]}</div><div class="vcell theo">${r[2]}</div>`;
+  });
+  el.innerHTML = html;
+}
+
+function runSimulation(resetHistory){
+  lambda = parseFloat(document.getElementById('lambdaRange').value);
+  serviceTime = parseFloat(document.getElementById('stRange').value);
+  K = Math.max(c, parseInt(document.getElementById('kRange').value));
+  N = parseInt(document.getElementById('nRange').value);
+  const mu = 1/serviceTime;
+
+  const theo = theoryMMcK(lambda, mu, c, K);
+  lastTheory = theo;
+  const sim = simulate(lambda, mu, c, K, N);
+
+  drawChart(sim, theo);
+  updateCompareTable(sim, theo);
+
+  const rhoWarn = theo.rho>=1 ? ` <span class="warn">— beban ≥ kapasitas layanan (ρ=${theo.rho.toFixed(2)}), sistem jenuh</span>` : '';
+  document.getElementById('runFoot').innerHTML = `Simulasi berjalan ${sim.totalTime.toFixed(1)} menit, ${sim.served} pelanggan dilayani, ${sim.blocked} ditolak karena antrean penuh.${rhoWarn}`;
+
+  if(resetHistory) waitHistory = [];
+  waitHistory.push(sim.Wq_sim);
+  if(waitHistory.length>8) waitHistory.shift();
+  document.getElementById('runHistory').innerHTML = waitHistory.map((w,i)=>
+    `<span class="runchip">run ${i+1}: Wq=${w.toFixed(2)}m</span>`).join('');
+}
+
+/* ================= WIRING ================= */
+document.getElementById('lambdaRange').addEventListener('input', e=>{
+  document.getElementById('lambdaVal').textContent = parseFloat(e.target.value).toFixed(1)+' / menit';
+  runSimulation(true);
+});
+document.getElementById('stRange').addEventListener('input', e=>{
+  document.getElementById('stVal').textContent = parseFloat(e.target.value).toFixed(1)+' menit';
+  runSimulation(true);
+});
+document.getElementById('kRange').addEventListener('input', e=>{
+  const v = Math.max(c, parseInt(e.target.value));
+  document.getElementById('kVal').textContent = v;
+  runSimulation(true);
+});
+document.getElementById('nRange').addEventListener('input', e=>{
+  document.getElementById('nVal').textContent = e.target.value;
+  runSimulation(true);
+});
+document.getElementById('runBtn').addEventListener('click', ()=>runSimulation(true));
+document.getElementById('reseedBtn').addEventListener('click', ()=>runSimulation(false));
+
+renderCPills();
+runSimulation(true);
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

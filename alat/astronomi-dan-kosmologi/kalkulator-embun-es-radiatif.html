@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kenapa Kaca Mobil Berembun Es Saat Langit Cerah</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600&family=IBM+Plex+Sans&family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0C0A10;--surface:#17131D;--line:#332C40;--ink:#F1EDF5;--muted:#9C93AC;--blue:#5B9BD9;--amber:#E8A34A;--red:#E1614E;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;padding:30px 20px 60px;}
+  .wrap{max-width:560px;margin:0 auto;}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:22px;line-height:1.3;margin:0 0 8px;}
+  p{color:var(--muted);font-size:14px;line-height:1.6;}
+  .tag{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--blue);margin-bottom:10px;}
+  .panel{background:var(--surface);border:1px solid var(--line);padding:22px;margin-top:20px;}
+  .field{margin-bottom:20px;}
+  label{font-size:13px; color:var(--muted); display:block; margin-bottom:6px;}
+  input[type=range]{width:100%;accent-color:var(--blue);}
+  .val{font-family:'IBM Plex Mono',monospace;color:var(--blue);font-size:15px;font-weight:600;}
+  .kpis{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); border:1px solid var(--line); margin-top:16px;}
+  .kpi{background:var(--surface); padding:12px;}
+  .kpi .v{font-family:'IBM Plex Mono',monospace; font-size:16px;}
+  .kpi .l{font-size:10.5px; color:var(--muted);}
+  .verdict{margin-top:16px; padding:14px 16px; font-size:13.5px; border-left:3px solid var(--blue); background:#201A29;}
+  .verdict.risiko{border-left-color:var(--red);}
+  footer{margin-top:24px;font-size:11px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="tag">TERKAIT NO. 18 — VERSI SEHARI-HARI (3)</div>
+  <h1>Kenapa kaca mobil bisa berembun es di pagi hari padahal suhu udara di atas 0°C</h1>
+  <p>Kaca mobil tidak cuma bertukar panas dengan udara di sekitarnya — ia juga terus memancarkan radiasi inframerah ke langit (persis benda hitam di kalkulator sebelumnya). Kalau langit cerah, ia "melihat" ruang yang jauh lebih dingin dari udara sekitarnya, dan bisa mendingin lebih cepat daripada udara itu sendiri. Awan menghalangi ini seperti selimut.</p>
+
+  <div class="panel">
+    <div class="field">
+      <label>Suhu udara: <span class="val" id="vSuhu"></span></label>
+      <input type="range" id="suhu" min="-5" max="25" step="1" value="8">
+    </div>
+    <div class="field">
+      <label>Tutupan awan: <span class="val" id="vAwan"></span></label>
+      <input type="range" id="awan" min="0" max="100" step="5" value="10">
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="v" id="tSky"></div><div class="l">suhu efektif "yang dilihat" kaca di langit</div></div>
+      <div class="kpi"><div class="v" id="pNet"></div><div class="l">daya pendinginan bersih (W/m²)</div></div>
+    </div>
+
+    <div class="verdict" id="verdict"></div>
+  </div>
+
+  <footer>Model ilustratif (defisit suhu langit cerah ≈22°C di bawah suhu udara, konstanta Stefan-Boltzmann σ=5,67×10⁻⁸ W/m²K⁴) — bukan prakiraan cuaca. Efek nyata juga dipengaruhi kelembapan dan angin.</footer>
+</div>
+
+<script>
+const sigma=5.670e-8;
+function hitung(){
+  const suhu = parseFloat(document.getElementById('suhu').value);
+  const awan = parseFloat(document.getElementById('awan').value);
+  document.getElementById('vSuhu').textContent = suhu+'°C';
+  document.getElementById('vAwan').textContent = awan+'%';
+
+  const defisitMaks = 22; // °C, pendekatan langit cerah
+  const tSkyC = suhu - defisitMaks*(1-awan/100);
+  const tSurfaceK = suhu+273.15;
+  const tSkyK = tSkyC+273.15;
+  const pNet = sigma*(Math.pow(tSurfaceK,4)-Math.pow(tSkyK,4));
+
+  document.getElementById('tSky').textContent = tSkyC.toFixed(1)+'°C';
+  document.getElementById('pNet').textContent = pNet.toFixed(0);
+
+  const verdict = document.getElementById('verdict');
+  const berisiko = suhu < 6 && awan < 40;
+  if(berisiko){
+    verdict.className='verdict risiko';
+    verdict.innerHTML = `<strong>Berisiko berembun es.</strong> Suhu udara ${suhu}°C mungkin masih di atas titik beku, tapi permukaan kaca bisa mendingin lebih jauh lewat radiasi ke langit yang "terlihat" sedingin ${tSkyC.toFixed(1)}°C — cukup untuk turun di bawah 0°C dan membekukan embun.`;
+  } else if(awan>=40){
+    verdict.className='verdict';
+    verdict.innerHTML = `<strong>Relatif aman.</strong> Awan memantulkan/memancarkan ulang radiasi inframerah kembali ke bawah, menahan suhu langit efektif tetap dekat suhu udara (${tSkyC.toFixed(1)}°C) — pendinginan tambahan lewat radiasi jadi kecil.`;
+  } else {
+    verdict.className='verdict';
+    verdict.innerHTML = `<strong>Kemungkinan embun cair, bukan es.</strong> Suhu udara cukup hangat sehingga meski permukaan mendingin lewat radiasi, kemungkinan besar belum sampai membeku.`;
+  }
+}
+document.getElementById('suhu').addEventListener('input', hitung);
+document.getElementById('awan').addEventListener('input', hitung);
+hitung();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

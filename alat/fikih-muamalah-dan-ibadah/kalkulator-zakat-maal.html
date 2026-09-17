@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator Zakat Maal — JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Karla:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --emerald-deep:#0F3D2E;
+    --emerald-mid:#1D5C43;
+    --ivory:#FAF6ED;
+    --ivory-soft:#F1EADA;
+    --ink:#1C2B24;
+    --gold:#B8934A;
+    --gold-soft:#E7D2A0;
+    --line:rgba(15,61,46,0.14);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--ivory);
+    color:var(--ink);
+    font-family:'Karla',sans-serif;
+    line-height:1.65;
+  }
+  ::selection{background:var(--gold-soft);}
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;color:var(--emerald-deep);letter-spacing:-0.01em;}
+  .amiri{font-family:'Amiri',serif;}
+  a{color:var(--emerald-mid);}
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px;}
+
+  /* Breadcrumb */
+  .crumb{
+    padding:20px 24px 0;
+    max-width:760px;margin:0 auto;
+    font-size:13px;letter-spacing:0.04em;text-transform:uppercase;
+    color:var(--emerald-mid);opacity:0.75;
+  }
+  .crumb span{color:var(--ink);opacity:0.4;margin:0 6px;}
+
+  /* Hero */
+  .hero{padding:36px 0 40px;}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:13px;letter-spacing:0.08em;text-transform:uppercase;
+    color:var(--gold);font-weight:700;margin-bottom:14px;
+  }
+  .eyebrow::before{content:"";width:18px;height:1px;background:var(--gold);display:inline-block;}
+  .hero h1{font-size:clamp(30px,5vw,42px);margin:0 0 14px;line-height:1.15;}
+  .hero p.lede{font-size:17px;color:var(--emerald-deep);opacity:0.85;max-width:56ch;margin:0;}
+
+  /* Scale divider — signature element */
+  .scale-divider{
+    display:flex;align-items:center;gap:14px;
+    margin:38px 0;color:var(--emerald-mid);
+  }
+  .scale-divider svg{flex-shrink:0;}
+  .scale-divider .dash{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);}
+  .scale-divider .dash.rev{background:linear-gradient(270deg,var(--line),transparent);}
+
+  section{padding:38px 0;border-top:1px solid var(--line);}
+  section:first-of-type{border-top:none;}
+  .label{
+    font-size:12px;letter-spacing:0.09em;text-transform:uppercase;
+    color:var(--gold);font-weight:700;margin-bottom:10px;
+  }
+  section h2{font-size:23px;margin:0 0 16px;}
+  section p{margin:0 0 14px;font-size:15.5px;}
+  ul.plain{margin:0 0 14px;padding-left:20px;}
+  ul.plain li{margin-bottom:8px;font-size:15.5px;}
+
+  /* Kalkulator card */
+  .kartu{
+    background:var(--emerald-deep);
+    color:var(--ivory);
+    border-radius:4px;
+    padding:32px;
+    position:relative;
+    overflow:hidden;
+  }
+  .kartu::before{
+    content:"";position:absolute;top:-40px;right:-40px;width:180px;height:180px;
+    border:1px solid rgba(231,210,160,0.18);border-radius:50%;
+  }
+  .kartu::after{
+    content:"";position:absolute;top:-10px;right:-10px;width:100px;height:100px;
+    border:1px solid rgba(231,210,160,0.14);border-radius:50%;
+  }
+  .kartu h2{color:var(--ivory);}
+  .kartu .label{color:var(--gold-soft);}
+  .field{margin-bottom:18px;position:relative;z-index:1;}
+  .field label{display:block;font-size:13.5px;margin-bottom:6px;color:var(--gold-soft);}
+  .field .hint{font-size:12.5px;color:rgba(250,246,237,0.55);margin-top:5px;}
+  .field input, .field select{
+    width:100%;padding:11px 13px;border-radius:3px;border:1px solid rgba(231,210,160,0.35);
+    background:rgba(250,246,237,0.06);color:var(--ivory);font-family:'Karla',sans-serif;font-size:15px;
+  }
+  .field input::placeholder{color:rgba(250,246,237,0.4);}
+  .field input:focus, .field select:focus{
+    outline:none;border-color:var(--gold);background:rgba(250,246,237,0.1);
+  }
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:560px){.grid2{grid-template-columns:1fr;}}
+  button.hitung{
+    width:100%;padding:14px;border:none;border-radius:3px;
+    background:var(--gold);color:var(--emerald-deep);
+    font-family:'Karla',sans-serif;font-weight:700;font-size:15px;
+    cursor:pointer;position:relative;z-index:1;margin-top:6px;
+  }
+  button.hitung:hover{background:var(--gold-soft);}
+  button.hitung:focus-visible{outline:2px solid var(--ivory);outline-offset:2px;}
+
+  .hasil{
+    margin-top:24px;padding-top:22px;border-top:1px solid rgba(231,210,160,0.22);
+    position:relative;z-index:1;display:none;
+  }
+  .hasil.tampil{display:block;}
+  .hasil .baris{display:flex;justify-content:space-between;font-size:14.5px;padding:6px 0;color:rgba(250,246,237,0.85);}
+  .hasil .baris strong{color:var(--ivory);font-weight:600;}
+  .hasil .status{
+    margin-top:14px;padding:14px 16px;border-radius:3px;font-size:15px;
+  }
+  .status.wajib{background:rgba(184,147,74,0.18);border:1px solid var(--gold);}
+  .status.belum{background:rgba(250,246,237,0.05);border:1px solid rgba(250,246,237,0.2);}
+  .status .angka{font-family:'Fraunces',serif;font-size:26px;display:block;margin-top:4px;}
+
+  /* Metode steps */
+  .langkah{border-left:2px solid var(--gold-soft);padding-left:18px;margin-bottom:16px;}
+  .langkah .no{font-family:'Fraunces',serif;color:var(--gold);font-size:13px;margin-bottom:3px;}
+  code.formula{
+    display:block;background:var(--ivory-soft);padding:12px 14px;border-radius:3px;
+    font-family:monospace;font-size:14px;margin:10px 0;color:var(--emerald-deep);
+    overflow-x:auto;
+  }
+
+  .batasan-item{display:flex;gap:12px;margin-bottom:14px;align-items:flex-start;}
+  .batasan-item .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:8px;flex-shrink:0;}
+
+  .konsultasi{
+    margin-top:12px;padding:20px;border:1px dashed var(--line);border-radius:4px;
+    text-align:center;
+  }
+  .konsultasi p{font-size:14px;margin-bottom:12px;color:var(--emerald-deep);}
+  .konsultasi .btn-konsul{
+    display:inline-block;padding:10px 22px;border-radius:3px;
+    background:transparent;border:1px solid var(--emerald-mid);color:var(--emerald-mid);
+    font-family:'Karla',sans-serif;font-weight:600;font-size:14px;cursor:pointer;
+  }
+
+  footer{padding:30px 0 50px;font-size:13px;color:var(--emerald-mid);opacity:0.7;}
+  .disclaimer-box{
+    background:var(--ivory-soft);border-left:3px solid var(--gold);
+    padding:14px 16px;border-radius:2px;font-size:14px;margin-top:16px;
+  }
+
+  /* Banner versi awal */
+  .versi-awal{
+    background:var(--emerald-deep);color:var(--ivory);
+    padding:14px 24px;
+  }
+  .versi-awal .wrap{
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  }
+  .versi-awal .badge{
+    font-size:11px;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;
+    background:var(--gold);color:var(--emerald-deep);padding:4px 9px;border-radius:2px;flex-shrink:0;
+  }
+  .versi-awal p{margin:0;font-size:14px;color:rgba(250,246,237,0.92);flex:1;min-width:220px;}
+  .versi-awal a.wa-inline{
+    color:var(--gold-soft);font-weight:700;text-decoration:underline;white-space:nowrap;
+  }
+
+  /* Status harga otomatis */
+  .harga-status{
+    grid-column:1/-1;
+    font-size:12.5px;color:rgba(250,246,237,0.65);
+    display:flex;align-items:center;gap:7px;margin-top:-8px;margin-bottom:6px;
+  }
+  .harga-status .dotstat{width:6px;height:6px;border-radius:50%;background:#7BAE8F;flex-shrink:0;}
+  .harga-status.gagal .dotstat{background:#C77B5B;}
+  .harga-status button.refresh{
+    background:none;border:none;color:var(--gold-soft);text-decoration:underline;
+    font-family:'Karla',sans-serif;font-size:12.5px;cursor:pointer;padding:0;margin-left:auto;
+  }
+
+  .btn-konsul{text-decoration:none;}
+  .konsultasi .btn-konsul.wa{
+    background:var(--emerald-mid);border-color:var(--emerald-mid);color:var(--ivory);
+  }
+</style>
+</head>
+<body>
+
+<div class="versi-awal">
+  <div class="wrap">
+    <span class="badge">Versi Awal</span>
+    <p>Alat ini masih dalam tahap pengembangan awal. Perhitungan sudah mengikuti kaidah fikih zakat yang umum, namun kami tetap menganjurkan setiap hasil divalidasi langsung sebelum ditunaikan.</p>
+    <a class="wa-inline" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20validasi%20hasil%20Kalkulator%20Zakat%20Maal%20JAZMI." target="_blank" rel="noopener">Validasi via WhatsApp →</a>
+  </div>
+</div>
+
+<div class="crumb">JAZMI <span>/</span> Alat <span>/</span> Zakat Maal</div>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">Alat — Sains Fikih</div>
+    <h1>Kalkulator Zakat Maal</h1>
+    <p class="lede">Menghitung kewajiban zakat harta (maal) dari uang, tabungan, emas, perak, dan aset niaga — berdasarkan nisab dan haul, bukan tebakan.</p>
+  </div>
+
+  <div class="scale-divider">
+    <svg width="28" height="20" viewBox="0 0 28 20" fill="none">
+      <path d="M14 1V19M6 5H22M6 5L3 12M6 5L9 12M22 5L19 12M22 5L25 12M2 19H12M16 19H26" stroke="#1D5C43" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div class="dash rev"></div>
+  </div>
+
+  <section id="belajar">
+    <div class="label">01 — Belajar</div>
+    <h2>Apa yang sebenarnya diukur?</h2>
+    <p>Zakat maal bukan pajak atas seluruh kekayaan, melainkan kewajiban atas harta yang memenuhi dua syarat: mencapai <strong>nisab</strong> (batas minimum) dan telah dimiliki selama <strong>haul</strong> (satu tahun penuh menurut kalender Hijriah).</p>
+    <ul class="plain">
+      <li><strong>Nisab</strong> — ambang nilai harta. Untuk uang/tabungan, nisab disetarakan dengan nilai 85 gram emas murni (atau 595 gram perak, menurut sebagian ulama).</li>
+      <li><strong>Haul</strong> — harta harus mengendap (tidak habis dipakai) selama satu tahun Hijriah sebelum wajib dizakati.</li>
+      <li><strong>Kadar</strong> — jika kedua syarat terpenuhi, kadar zakat maal adalah 2,5% dari total harta.</li>
+    </ul>
+    <p>Karena nisab bergantung pada <em>harga emas/perak saat ini</em> — angka yang terus berubah — alat ini sengaja tidak menyimpan harga tetap. Anda memasukkan harga terkini sendiri, supaya hasilnya selalu mengikuti kondisi pasar hari ini, bukan angka basi.</p>
+  </section>
+
+  <section id="kalkulator">
+    <div class="label">02 — Eksplorasi &amp; Perhitungan</div>
+    <div class="kartu">
+      <h2>Hitung zakat Anda</h2>
+
+      <div class="field">
+        <label for="harta">Total harta yang sudah mengendap 1 haul (Rp)</label>
+        <input type="number" id="harta" placeholder="Contoh: 60000000" min="0">
+        <div class="hint">Jumlahkan uang tunai, tabungan, emas/perak simpanan, dan aset niaga yang sudah lewat masa haul.</div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="standar">Standar nisab</label>
+          <select id="standar" onchange="onStandarBerubah()">
+            <option value="emas">Emas — 85 gram</option>
+            <option value="perak">Perak — 595 gram</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="harga">Harga per gram hari ini (Rp)</label>
+          <input type="number" id="harga" placeholder="Cek harga terkini" min="0">
+          <div class="hint" id="hargaHint">Bisa diisi otomatis untuk emas, atau diubah manual kapan saja.</div>
+        </div>
+        <div class="harga-status" id="hargaStatus">
+          <span class="dotstat"></span>
+          <span id="hargaStatusText">Mengambil harga emas otomatis…</span>
+          <button class="refresh" onclick="ambilHargaOtomatis()">Perbarui</button>
+        </div>
+      </div>
+
+      <button class="hitung" onclick="hitungZakat()">Hitung Zakat</button>
+
+      <div class="hasil" id="hasilBox">
+        <div class="baris"><span>Nisab (harga × berat standar)</span><strong id="outNisab">—</strong></div>
+        <div class="baris"><span>Total harta yang dimasukkan</span><strong id="outHarta">—</strong></div>
+        <div class="status" id="outStatus">
+          <span id="statusText">—</span>
+          <span class="angka" id="outZakat">—</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="metode">
+    <div class="label">03 — Metode</div>
+    <h2>Bagaimana alat ini menghitung</h2>
+    <div class="langkah">
+      <div class="no">Langkah 1</div>
+      <p>Nisab dihitung dari harga logam per gram dikali berat standar.</p>
+      <code class="formula">nisab = harga_per_gram × (85 jika emas, 595 jika perak)</code>
+    </div>
+    <div class="langkah">
+      <div class="no">Langkah 2</div>
+      <p>Total harta dibandingkan dengan nisab. Jika kurang dari nisab, tidak ada kewajiban zakat.</p>
+      <code class="formula">wajib_zakat = (total_harta ≥ nisab)</code>
+    </div>
+    <div class="langkah">
+      <div class="no">Langkah 3</div>
+      <p>Jika wajib, kadar zakat adalah 2,5% dari total harta — bukan hanya dari kelebihan di atas nisab.</p>
+      <code class="formula">zakat = total_harta × 0.025</code>
+    </div>
+  </section>
+
+  <section id="batasan">
+    <div class="label">04 — Batasan</div>
+    <h2>Kapan hasil ini tidak boleh langsung dipercaya</h2>
+    <div class="batasan-item"><div class="dot"></div><p>Alat ini <strong>mengasumsikan haul sudah terpenuhi</strong>. Ia tidak melacak tanggal kepemilikan harta Anda dari waktu ke waktu.</p></div>
+    <div class="batasan-item"><div class="dot"></div><p>Standar nisab emas (85g) vs perak (595g) adalah dua pendapat yang berbeda di kalangan ulama — hasil akan berbeda cukup jauh tergantung pilihan Anda.</p></div>
+    <div class="batasan-item"><div class="dot"></div><p>Aset niaga (barang dagangan) dan piutang punya aturan penilaian tersendiri yang lebih rumit daripada sekadar dijumlah — alat ini menyederhanakannya menjadi satu angka input.</p></div>
+    <div class="batasan-item"><div class="dot"></div><p>Harga emas/perak yang Anda masukkan menentukan seluruh hasil — pastikan menggunakan harga yang sahih dan terkini.</p></div>
+    <div class="batasan-item"><div class="dot"></div><p>Harga emas otomatis diambil dari satu sumber publik (harga jual Antam) sebagai perkiraan — bisa berbeda dari harga toko emas/bank tempat Anda bertransaksi. Harga perak masih harus diisi manual karena belum ada sumber otomatis yang stabil untuk itu.</p></div>
+    <div class="disclaimer-box">
+      Alat ini membantu perhitungan berdasarkan metode fikih zakat yang umum digunakan. Hasilnya bersifat bantu-hitung, bukan fatwa atau keputusan hukum final. Untuk harta bercampur, aset niaga, atau kasus khusus, konsultasikan dengan pihak yang berkompeten.
+    </div>
+  </section>
+
+  <section id="konsultasi">
+    <div class="konsultasi">
+      <p>Hasil di atas untuk kasus umum. Ada harta campuran, piutang, atau aset niaga yang ingin didiskusikan?</p>
+      <a class="btn-konsul wa" id="btnKonsul" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20konsultasi%20terkait%20perhitungan%20zakat%20maal%20saya." target="_blank" rel="noopener">Konsultasikan via WhatsApp</a>
+    </div>
+  </section>
+
+  <footer>
+    <p>Bagian dari Laboratorium Alat JAZMI. Prototipe berdiri sendiri — belum terhubung ke Beranda atau modul lain.</p>
+  </footer>
+</div>
+
+<script>
+function formatRupiah(angka){
+  return 'Rp ' + Math.round(angka).toLocaleString('id-ID');
+}
+
+// Sumber harga emas otomatis: logam-mulia-api (open-source, scraping harga jual Antam)
+const SUMBER_HARGA_EMAS = [
+  { nama: 'Aneka Logam (Antam)', url: 'https://logam-mulia-api.iamutaki.workers.dev/api/prices/anekalogam' },
+  { nama: 'HargaEmas.org', url: 'https://logam-mulia-api.iamutaki.workers.dev/api/prices/hargaemas-org' }
+];
+
+function setHargaStatus(teks, gagal){
+  const box = document.getElementById('hargaStatus');
+  const txt = document.getElementById('hargaStatusText');
+  txt.textContent = teks;
+  box.className = 'harga-status' + (gagal ? ' gagal' : '');
+}
+
+async function ambilHargaOtomatis(){
+  const standar = document.getElementById('standar').value;
+  if (standar !== 'emas') {
+    setHargaStatus('Untuk perak, masukkan harga per gram secara manual.', true);
+    return;
+  }
+  setHargaStatus('Mengambil harga emas otomatis…', false);
+
+  for (const sumber of SUMBER_HARGA_EMAS) {
+    try {
+      const res = await fetch(sumber.url);
+      if (!res.ok) continue;
+      const json = await res.json();
+      if (!json.success || !Array.isArray(json.data) || json.data.length === 0) continue;
+
+      const gr1 = json.data.find(d => d.weight === 1) || json.data[0];
+      const hargaPerGram = gr1.sellPrice || gr1.price;
+      if (!hargaPerGram) continue;
+
+      document.getElementById('harga').value = hargaPerGram;
+      const waktu = gr1.recordedDate ? ` (${gr1.recordedDate})` : '';
+      setHargaStatus(`Harga otomatis dari ${sumber.nama}${waktu} — bisa diubah manual di atas.`, false);
+      return;
+    } catch (e) {
+      continue; // coba sumber berikutnya
+    }
+  }
+  setHargaStatus('Gagal mengambil harga otomatis — mohon isi manual.', true);
+}
+
+function onStandarBerubah(){
+  const standar = document.getElementById('standar').value;
+  if (standar === 'emas') {
+    ambilHargaOtomatis();
+  } else {
+    document.getElementById('harga').value = '';
+    setHargaStatus('Standar perak: masukkan harga per gram secara manual.', true);
+  }
+}
+
+function updatePesanKonsultasi(harta, standar, nisab, wajib, zakat){
+  let pesan = `Assalamu'alaikum, saya ingin konsultasi hasil Kalkulator Zakat Maal JAZMI.\n\nTotal harta: ${formatRupiah(harta)}\nStandar nisab: ${standar === 'emas' ? 'Emas 85g' : 'Perak 595g'}\nNisab: ${formatRupiah(nisab)}\nStatus: ${wajib ? 'Wajib zakat, sebesar ' + formatRupiah(zakat) : 'Belum mencapai nisab'}`;
+  document.getElementById('btnKonsul').href = 'https://wa.me/6281356572588?text=' + encodeURIComponent(pesan);
+}
+
+function hitungZakat(){
+  const harta = parseFloat(document.getElementById('harta').value);
+  const harga = parseFloat(document.getElementById('harga').value);
+  const standar = document.getElementById('standar').value;
+
+  if (isNaN(harta) || isNaN(harga) || harta < 0 || harga < 0) {
+    alert('Mohon isi total harta dan harga per gram dengan angka yang valid.');
+    return;
+  }
+
+  const berat = standar === 'emas' ? 85 : 595;
+  const nisab = harga * berat;
+  const wajib = harta >= nisab;
+  const zakat = wajib ? harta * 0.025 : 0;
+
+  document.getElementById('outNisab').textContent = formatRupiah(nisab);
+  document.getElementById('outHarta').textContent = formatRupiah(harta);
+
+  const statusBox = document.getElementById('outStatus');
+  const statusText = document.getElementById('statusText');
+  const outZakat = document.getElementById('outZakat');
+
+  if (wajib) {
+    statusBox.className = 'status wajib';
+    statusText.textContent = 'Harta mencapai nisab — zakat wajib ditunaikan:';
+    outZakat.textContent = formatRupiah(zakat);
+  } else {
+    statusBox.className = 'status belum';
+    statusText.textContent = 'Harta belum mencapai nisab — belum ada kewajiban zakat maal.';
+    outZakat.textContent = '—';
+  }
+
+  document.getElementById('hasilBox').classList.add('tampil');
+  updatePesanKonsultasi(harta, standar, nisab, wajib, zakat);
+}
+
+// Coba ambil harga emas otomatis saat halaman dimuat
+window.addEventListener('DOMContentLoaded', ambilHargaOtomatis);
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

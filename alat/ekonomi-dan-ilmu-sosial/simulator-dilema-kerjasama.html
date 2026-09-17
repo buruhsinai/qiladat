@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulator Dilema Kerjasama Ekonomi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12151a; --bg-panel:#1a1e25; --bg-panel-2:#20242c; --line:#2c313b;
+    --text:#e9e6df; --text-dim:#9aa1ad;
+    --gold:#c9a24b; --gold-soft:#e3c988; --ok:#4f9c94; --warn:#e3766a; --purple:#9b7fc9;
+    --font-display:"Fraunces",serif; --font-body:"Karla",sans-serif; --font-mono:"JetBrains Mono",monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;}
+  .wrap{max-width:760px;margin:0 auto;padding:44px 20px 60px;}
+  .eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--purple);margin-bottom:10px;}
+  h1{font-family:var(--font-display);font-weight:700;font-size:clamp(24px,4.5vw,34px);margin:0 0 10px;}
+  p.sub{color:var(--text-dim);font-size:15px;max-width:600px;margin:0 0 28px;}
+  .panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:22px;}
+  .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px;}
+  .field label{display:flex;justify-content:space-between;font-size:12px;color:var(--text-dim);margin-bottom:5px;font-family:var(--font-mono);text-transform:uppercase;}
+  .field label .val{color:var(--gold-soft);}
+  .field input{width:100%;accent-color:var(--purple);}
+
+  table.matrix{width:100%;border-collapse:collapse;text-align:center;margin-bottom:14px;font-size:14px;}
+  table.matrix th{color:var(--text-dim);font-weight:600;font-size:12px;padding:8px;font-family:var(--font-mono);text-transform:uppercase;}
+  table.matrix td{border:1px solid var(--line);padding:16px 10px;background:var(--bg-panel-2);border-radius:4px;}
+  table.matrix td.ne{outline:2px solid var(--gold);outline-offset:-2px;background:rgba(201,162,75,0.08);}
+  .payoff{font-family:var(--font-display);font-size:18px;color:var(--gold-soft);}
+
+  .result-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  .badge{background:var(--bg-panel-2);border:1px solid var(--line);border-radius:20px;padding:6px 14px;font-size:12.5px;font-family:var(--font-mono);}
+  .badge.eq{border-color:var(--gold);color:var(--gold-soft);}
+
+  .insight-box{background:var(--bg-panel-2);border:1px dashed var(--gold);border-radius:8px;padding:14px 18px;font-size:14px;}
+  .insight-box b{color:var(--gold-soft);}
+  .note{font-size:13px;color:var(--text-dim);margin-top:16px;}
+  .note b{color:var(--text);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Game Theory · Ekonomi Mikro</div>
+  <h1>Simulator Dilema Kerjasama Ekonomi</h1>
+  <p class="sub">Kenapa dua pihak yang sama-sama rasional bisa berakhir saling merugikan, padahal kerja sama sebenarnya lebih menguntungkan keduanya? Ini pola klasik <em>Prisoner's Dilemma</em> — muncul di persaingan harga antar-perusahaan, perlombaan senjata, sampai perjanjian iklim antarnegara. Geser nilai imbalan di bawah, lihat siapa yang "menang" secara rasional.</p>
+
+  <div class="panel">
+    <div class="controls">
+      <div class="field"><label>Untung Kerja Sama Bersama (R) <span class="val" id="vR">3</span></label><input type="range" id="inR" min="0" max="10" step="1" value="3"></div>
+      <div class="field"><label>Untung Curang Sendirian (T) <span class="val" id="vT">5</span></label><input type="range" id="inT" min="0" max="10" step="1" value="5"></div>
+      <div class="field"><label>Rugi Dicurangi (S) <span class="val" id="vS">0</span></label><input type="range" id="inS" min="0" max="10" step="1" value="0"></div>
+      <div class="field"><label>Rugi Curang Bersama (P) <span class="val" id="vP">1</span></label><input type="range" id="inP" min="0" max="10" step="1" value="1"></div>
+    </div>
+
+    <table class="matrix">
+      <tr><th></th><th>Pihak B: Kerja Sama</th><th>Pihak B: Curang</th></tr>
+      <tr><th>Pihak A: Kerja Sama</th><td id="cellCC"></td><td id="cellCD"></td></tr>
+      <tr><th>Pihak A: Curang</th><td id="cellDC"></td><td id="cellDD"></td></tr>
+    </table>
+
+    <div class="result-row" id="badges"></div>
+    <div class="insight-box" id="insight"></div>
+    <p class="note">Format sel: (bayaran Pihak A, bayaran Pihak B). Kotak bergaris emas = <b>titik keseimbangan (Nash Equilibrium)</b> — pilihan yang rasional dipertahankan kedua pihak meski hasilnya belum tentu terbaik bagi keduanya.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  const el=id=>document.getElementById(id);
+  const inR=el('inR'), inT=el('inT'), inS=el('inS'), inP=el('inP');
+  [inR,inT,inS,inP].forEach(i=>i.addEventListener('input', recompute));
+
+  function recompute(){
+    const R=+inR.value, T=+inT.value, S=+inS.value, P=+inP.value;
+    el('vR').textContent=R; el('vT').textContent=T; el('vS').textContent=S; el('vP').textContent=P;
+
+    el('cellCC').innerHTML = `<span class="payoff">${R}, ${R}</span>`;
+    el('cellCD').innerHTML = `<span class="payoff">${S}, ${T}</span>`;
+    el('cellDC').innerHTML = `<span class="payoff">${T}, ${S}</span>`;
+    el('cellDD').innerHTML = `<span class="payoff">${P}, ${P}</span>`;
+    document.querySelectorAll('#cellCC,#cellCD,#cellDC,#cellDD').forEach(c=>c.classList.remove('ne'));
+
+    // Dominant strategy check (payoffs symmetric for both players)
+    const defectDominates = (T > R) && (P > S);
+    const cooperateDominates = (R > T) && (S > P);
+
+    let eqCell, eqLabel, badges=[];
+    if(defectDominates){
+      eqCell='cellDD'; eqLabel='(Curang, Curang)';
+      badges.push('<span class="badge eq">Nash Equilibrium: Curang–Curang</span>');
+    } else if(cooperateDominates){
+      eqCell='cellCC'; eqLabel='(Kerja Sama, Kerja Sama)';
+      badges.push('<span class="badge eq">Nash Equilibrium: Kerja Sama–Kerja Sama</span>');
+    } else {
+      eqCell=null; eqLabel='tidak ada strategi dominan tunggal';
+      badges.push('<span class="badge">Tidak ada strategi dominan — hasil tergantung ekspektasi terhadap lawan</span>');
+    }
+    if(eqCell) el(eqCell).classList.add('ne');
+
+    const isDilemma = T>R && R>P && P>S;
+    badges.push(`<span class="badge">${isDilemma ? 'Dilema Sejati (T>R>P>S)' : 'Bukan Dilema Klasik'}</span>`);
+    el('badges').innerHTML = badges.join('');
+
+    let insight;
+    if(defectDominates){
+      const lossVsCoop = R - P;
+      insight = `Curang adalah pilihan rasional bagi MASING-MASING pihak secara individu (T=${T} > R=${R}, dan P=${P} > S=${S}) — apa pun pilihan lawan, curang selalu lebih menguntungkan. Tapi lihat hasilnya: kedua pihak berakhir di (${P}, ${P}), padahal jika keduanya mau kerja sama, keduanya bisa dapat (${R}, ${R}) — <b>lebih baik ${lossVsCoop} poin untuk masing-masing</b>. Inilah dilemanya: rasionalitas individu menghasilkan kerugian bersama.`;
+    } else if(cooperateDominates){
+      insight = `Dalam pengaturan nilai ini, kerja sama justru jadi strategi dominan bagi kedua pihak — tidak ada insentif untuk curang. Coba naikkan "Untung Curang Sendirian (T)" melebihi "Untung Kerja Sama (R)" untuk melihat dilema klasiknya muncul.`;
+    } else {
+      insight = `Tidak ada strategi yang secara mutlak lebih baik terlepas dari pilihan lawan — hasil optimal di sini bergantung pada ekspektasi/kepercayaan terhadap apa yang akan dipilih pihak lain, bukan murni perhitungan dominan.`;
+    }
+    el('insight').innerHTML = insight;
+  }
+  recompute();
+})();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kenapa Greenland Terlihat Sebesar Afrika?</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0B0F1E;--panel:#141A30;--ink:#E8E6F5;--soft:#9C9DC4;--electron:#4FD8E0;--plasma:#B26BFF;--line:#2A3158;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.6;padding:0 20px 50px;}
+  .wrap{max-width:600px;margin:0 auto;}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:1.4rem;margin:32px 0 8px;background:linear-gradient(90deg,var(--electron),var(--plasma));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  p.lede{color:var(--soft);margin:0 0 20px;font-size:0.92rem;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px;}
+  label{display:block;font-size:0.85rem;color:var(--soft);margin-bottom:8px;}
+  .value{font-family:'JetBrains Mono',monospace;color:var(--electron);font-weight:600;}
+  input[type=range]{width:100%;accent-color:var(--electron);}
+  .compare{display:flex;gap:20px;justify-content:center;align-items:flex-end;margin-top:20px;height:180px;}
+  .col{text-align:center;}
+  .shape{background:var(--electron);border-radius:50%;margin:0 auto;}
+  .lbl{font-size:0.78rem;color:var(--soft);margin-top:8px;}
+  .result{text-align:center;background:#1B2340;border-radius:8px;padding:14px;margin-top:16px;}
+  .result .n{font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:700;color:var(--electron);}
+  .result .l{font-size:0.7rem;color:var(--soft);margin-top:4px;}
+  a{color:var(--electron);}
+  footer{color:var(--soft);font-size:0.78rem;text-align:center;margin-top:20px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Kenapa Greenland Terlihat Sebesar Afrika?</h1>
+  <p class="lede">Di peta Mercator, Greenland tampak hampir sebesar Afrika — padahal luas aslinya cuma 1/14-nya. Ini bukan kesalahan cetak, tapi konsekuensi matematis dari proyeksi konformal. Geser lintang untuk melihat sendiri faktor pembesarannya.</p>
+
+  <div class="panel">
+    <label>Lintang lokasi — <span class="value" id="lat-val">0</span>°</label>
+    <input type="range" id="lat-slider" min="0" max="85" step="1" value="0">
+
+    <div class="compare">
+      <div class="col">
+        <div class="shape" id="shape-true" style="width:60px;height:60px;"></div>
+        <div class="lbl">Luas asli (tetap)</div>
+      </div>
+      <div class="col">
+        <div class="shape" id="shape-merc" style="width:60px;height:60px;background:var(--plasma);"></div>
+        <div class="lbl">Tampak di peta Mercator</div>
+      </div>
+    </div>
+
+    <div class="result">
+      <div class="n" id="factor-result">1,00×</div>
+      <div class="l">FAKTOR PEMBESARAN LUAS = 1/cos²(LINTANG)</div>
+    </div>
+  </div>
+
+  <p style="font-size:0.85rem;color:var(--soft);margin-top:16px;">Mercator menjaga bentuk lokal tetap benar (konformal) — sudut kompas akurat di mana pun, sebabnya dipakai navigasi laut sejak abad ke-16. Harganya: luas melebar secara eksponensial mendekati kutub. Lihat juga <a href="proyeksi-peta.html">Proyeksi Peta</a> untuk mencoba proyeksi equal-area yang tidak punya masalah ini.</p>
+
+  <footer>JAZMI — Modul Sains · Pelengkap Proyeksi Peta</footer>
+</div>
+
+<script>
+(function(){
+  const slider=document.getElementById('lat-slider');
+  const latVal=document.getElementById('lat-val');
+  const shapeMerc=document.getElementById('shape-merc');
+  const factorResult=document.getElementById('factor-result');
+  function render(){
+    const lat=parseFloat(slider.value);
+    latVal.textContent=lat;
+    const cosLat=Math.cos(lat*Math.PI/180);
+    const factor=1/(cosLat*cosLat);
+    const cappedSize=Math.min(220, 60*Math.sqrt(factor));
+    shapeMerc.style.width=cappedSize+'px';
+    shapeMerc.style.height=cappedSize+'px';
+    factorResult.textContent=factor.toFixed(2)+'×'+(cappedSize>=220?' (dipotong agar muat layar)':'');
+  }
+  slider.addEventListener('input', render);
+  render();
+})();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

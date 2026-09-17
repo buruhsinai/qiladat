@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suhu Warna Cahaya — JAZMI</title>
+<style>
+  body{margin:0;background:#0f1115;color:#e6e6f0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;line-height:1.6;}
+  .wrap{max-width:640px;margin:0 auto;padding:32px 20px 60px;}
+  h1{font-family:Georgia,serif;font-weight:normal;font-size:26px;margin:0 0 8px;}
+  p{color:#9494ac;font-size:14.5px;}
+  .swatch{width:100%;height:140px;border-radius:10px;margin:16px 0;transition:background 0.15s;border:1px solid #262838;}
+  input[type=range]{width:100%;accent-color:#d9b25a;}
+  .val{font-size:22px;color:#eecc80;font-weight:600;margin:10px 0;}
+  .btnrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+  .btnrow button{background:#1a1c2b;border:1px solid #262838;color:#e6e6f0;padding:6px 12px;border-radius:14px;font-size:12px;cursor:pointer;}
+  .btnrow button:hover{border-color:#d9b25a;}
+  .note{font-size:12.5px;color:#8f8fa8;margin-top:18px;border-top:1px solid #262838;padding-top:14px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p style="color:#eecc80;font-size:11px;letter-spacing:1px;text-transform:uppercase;">JAZMI · terhubung dengan Diagram HR (Tier 3 No.15)</p>
+    <h1>Suhu warna cahaya</h1>
+    <p>Fisikanya sama persis dengan pewarnaan bintang di Diagram Hertzsprung-Russell (radiasi benda-hitam) — cuma di sini rentangnya jauh lebih rendah dan yang kita lihat tiap hari: lampu, layar, langit.</p>
+  </header>
+
+  <div class="swatch" id="swatch"></div>
+  <p class="val" id="kelvinOut"></p>
+  <input type="range" id="kSlider" min="1000" max="15000" value="6500" step="50">
+  <div class="btnrow" id="quickBtns"></div>
+
+  <p class="note">Algoritma Kelvin→RGB memakai pendekatan standar Tanner Helland (dipakai luas di software fotografi/desain) — akurat untuk kebutuhan visual, bukan spektrofotometri presisi. Bintang bersuhu sama akan tampak warna serupa dengan lampu di sini — itulah kenapa bintang panas tampak biru-putih dan bintang dingin tampak jingga-merah di Diagram HR.</p>
+</div>
+
+<script>
+function kelvinToRGB(kelvin){
+  const temp = kelvin/100;
+  let r,g,b;
+  if(temp<=66){
+    r=255;
+    g=99.47*Math.log(temp)-161.12;
+  } else {
+    r=329.7*Math.pow(temp-60,-0.133);
+    g=288.12*Math.pow(temp-60,-0.0755);
+  }
+  if(temp>=66) b=255;
+  else if(temp<=19) b=0;
+  else b=138.52*Math.log(temp-10)-305.04;
+  const clamp=(v)=>Math.max(0,Math.min(255,Math.round(v)));
+  return [clamp(r),clamp(g),clamp(b)];
+}
+const sources = [
+  {name:'Lilin',k:1900},{name:'Bohlam pijar',k:2700},{name:'Halogen',k:3000},
+  {name:'Siang hari',k:5500},{name:'Mendung',k:7000},{name:'Langit biru cerah',k:12000}
+];
+const slider=document.getElementById('kSlider');
+const swatch=document.getElementById('swatch');
+const kOut=document.getElementById('kelvinOut');
+function update(){
+  const k=parseInt(slider.value);
+  const [r,g,b]=kelvinToRGB(k);
+  swatch.style.background=`rgb(${r},${g},${b})`;
+  kOut.textContent=k.toLocaleString('id-ID')+' K';
+}
+slider.addEventListener('input',update);
+const btnRow=document.getElementById('quickBtns');
+sources.forEach(s=>{
+  const btn=document.createElement('button');
+  btn.textContent=s.name+' ('+s.k+'K)';
+  btn.addEventListener('click',()=>{slider.value=s.k;update();});
+  btnRow.appendChild(btn);
+});
+update();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pusat Massa — Laboratorium JAZMI</title>
+<style>
+:root{--bg:#0a0e1a;--panel:#11162a;--cyan:#5fd3d8;--text:#e4e8f2;--dim:#8b93ac;--line:#232a45;--gold:#e0c26a;}
+*{box-sizing:border-box;} body{margin:0;background:var(--bg);color:var(--text);font-family:Georgia,serif;line-height:1.6;}
+.wrap{max-width:720px;margin:0 auto;padding:22px 16px 44px;}
+h1{font-size:1.3rem;margin:0 0 4px;} .tag{color:var(--cyan);font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;}
+p.sub{color:var(--dim);font-size:0.88rem;margin:4px 0 18px;}
+section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:14px;}
+h2{color:var(--cyan);font-size:1rem;margin:0 0 8px;}
+p{font-size:0.9rem;margin:0 0 8px;} .dim{color:var(--dim);font-size:0.84rem;}
+.row{display:flex;justify-content:space-between;gap:10px;padding:6px 0;flex-wrap:wrap;}
+.row label{font-size:0.85rem;flex:1;min-width:160px;display:flex;justify-content:space-between;color:var(--dim);}
+.row label span{color:var(--cyan);font-weight:bold;}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:var(--line);}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--cyan);cursor:pointer;border:2px solid var(--bg);}
+svg{width:100%;height:auto;background:#050810;border-radius:8px;border:1px solid var(--line);}
+button{font-family:Georgia,serif;font-weight:bold;font-size:0.82rem;background:var(--cyan);color:#0a1520;border:none;border-radius:999px;padding:7px 14px;cursor:pointer;margin-right:6px;}
+.formula{background:#161c35;border:1px solid var(--line);border-radius:6px;padding:9px 12px;font-family:'Courier New',monospace;font-size:0.82rem;margin:8px 0;}
+footer{text-align:center;color:var(--dim);font-size:0.74rem;margin-top:18px;}
+</style></head><body><div class="wrap">
+<p class="tag">JAZMI · Modul Sains · Selingan singkat, terkait #14</p>
+<h1>Pusat Massa: Kenapa Jungkat-Jungkit Bisa Seimbang</h1>
+<p class="sub">Dua benda yang "saling mengorbit" (termasuk dalam simulasi N-body sebelumnya) sebenarnya
+sama-sama mengelilingi satu titik bersama — pusat massa. Prinsip yang sama membuat jungkat-jungkit seimbang.</p>
+
+<section>
+<h2>Jungkat-Jungkit</h2>
+<p class="dim">Geser massa & posisi tiap sisi. Titik pusat massa (kuning) menentukan ke mana papan condong.</p>
+<svg id="seesaw" viewBox="0 0 500 220"></svg>
+<div class="row"><label>Massa kiri (kg) <span id="v_m1">30</span></label><input type="range" id="m1" min="5" max="80" value="30"></div>
+<div class="row"><label>Jarak kiri dari pivot (m) <span id="v_d1">2.0</span></label><input type="range" id="d1" min="0.2" max="4" step="0.1" value="2.0"></div>
+<div class="row"><label>Massa kanan (kg) <span id="v_m2">30</span></label><input type="range" id="m2" min="5" max="80" value="30"></div>
+<div class="row"><label>Jarak kanan dari pivot (m) <span id="v_d2">2.0</span></label><input type="range" id="d2" min="0.2" max="4" step="0.1" value="2.0"></div>
+<div class="formula" id="formulaOut"></div>
+</section>
+
+<section>
+<h2>Analogi: Orbit Biner (seperti #14, tapi tanpa integrasi numerik)</h2>
+<p class="dim">Dua benda ini "duduk" di jungkat-jungkit yang sama, hanya diputar mengelilingi pusat massanya
+dengan kecepatan sudut sama — persis begini juga dua bintang kembar saling mengorbit.</p>
+<svg id="orbit" viewBox="0 0 500 260"></svg>
+<button id="playBtn">▶ Putar</button>
+</section>
+
+<footer>Bagian dari Laboratorium Sains JAZMI — pelengkap ringan Tier 3 #14</footer>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+function computeCM(){
+  const m1=+$('m1').value, d1=+$('d1').value, m2=+$('m2').value, d2=+$('d2').value;
+  $('v_m1').textContent=m1; $('v_d1').textContent=d1.toFixed(1);
+  $('v_m2').textContent=m2; $('v_d2').textContent=d2.toFixed(1);
+  const torqueDiff = m1*d1 - m2*d2; // positive = left heavier torque
+  const cmFrac = (m2*d2 - m1*d1)/((m1+m2)*Math.max(d1,d2)); // rough visual offset
+  return {m1,d1,m2,d2,torqueDiff,cmFrac};
+}
+function drawSeesaw(){
+  const {m1,d1,m2,d2,torqueDiff}=computeCM();
+  const cx=250, py=150, scale=45;
+  const angle = Math.max(-18,Math.min(18, torqueDiff*1.2)); // degrees tilt
+  const rad=angle*Math.PI/180;
+  const x1=cx-d1*scale*Math.cos(rad), y1=py+d1*scale*Math.sin(rad);
+  const x2=cx+d2*scale*Math.cos(rad), y2=py-d2*scale*Math.sin(rad);
+  const balanced=Math.abs(torqueDiff)<1;
+  let s=`<line x1="${cx-4}" y1="${py+40}" x2="${cx+4}" y2="${py+40}" stroke="#232a45" stroke-width="0"/>`;
+  s+=`<polygon points="${cx-16},${py+40} ${cx+16},${py+40} ${cx},${py+10}" fill="#232a45"/>`;
+  s+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#5fd3d8" stroke-width="6" stroke-linecap="round"/>`;
+  s+=`<circle cx="${x1}" cy="${y1}" r="${8+Math.cbrt(m1)*2}" fill="#e0716a"/>`;
+  s+=`<circle cx="${x2}" cy="${y2}" r="${8+Math.cbrt(m2)*2}" fill="#e0c26a"/>`;
+  s+=`<circle cx="${cx}" cy="${py}" r="4" fill="${balanced?'#6fd68a':'#e0c26a'}"/>`;
+  s+=`<text x="${cx}" y="${py-20}" fill="#8b93ac" font-size="12" text-anchor="middle" font-family="Georgia">${balanced?'SEIMBANG':'condong'}</text>`;
+  $('seesaw').innerHTML=s;
+  $('formulaOut').textContent = `Torsi kiri (m1×d1) = ${(m1*d1).toFixed(1)}   |   Torsi kanan (m2×d2) = ${(m2*d2).toFixed(1)}   →   ${balanced?'sama besar, seimbang!':'tidak sama, papan condong ke sisi torsi lebih besar'}`;
+}
+['m1','d1','m2','d2'].forEach(id=>$(id).addEventListener('input',drawSeesaw));
+drawSeesaw();
+
+// binary orbit (closed-form, no integration)
+let angle=0, running=false;
+function drawOrbit(){
+  const m1=+$('m1').value, m2=+$('m2').value;
+  const totalD = 120; // fixed separation for clarity
+  const r1 = totalD*m2/(m1+m2), r2 = totalD*m1/(m1+m2);
+  const cx=250, cy=140;
+  const x1=cx+r1*Math.cos(angle), y1=cy+r1*Math.sin(angle);
+  const x2=cx-r2*Math.cos(angle), y2=cy-r2*Math.sin(angle);
+  let s=`<circle cx="${cx}" cy="${cy}" r="3" fill="#6fd68a"/>`;
+  s+=`<circle cx="${cx}" cy="${cy}" r="${r1}" fill="none" stroke="#232a45" stroke-width="1" stroke-dasharray="3,3"/>`;
+  s+=`<circle cx="${cx}" cy="${cy}" r="${r2}" fill="none" stroke="#232a45" stroke-width="1" stroke-dasharray="3,3"/>`;
+  s+=`<circle cx="${x1}" cy="${y1}" r="${8+Math.cbrt(m1)*2}" fill="#e0716a"/>`;
+  s+=`<circle cx="${x2}" cy="${y2}" r="${8+Math.cbrt(m2)*2}" fill="#e0c26a"/>`;
+  s+=`<text x="10" y="250" fill="#8b93ac" font-size="11" font-family="Georgia">Benda lebih berat mengorbit lebih dekat ke pusat massa — persis seperti jungkat-jungkit di atas.</text>`;
+  $('orbit').innerHTML=s;
+}
+drawOrbit();
+$('playBtn').addEventListener('click', function(){
+  running=!running; this.textContent=running?'⏸ Jeda':'▶ Putar';
+});
+function loop(){ if(running){ angle+=0.02; drawOrbit(); } requestAnimationFrame(loop); }
+loop();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body></html>

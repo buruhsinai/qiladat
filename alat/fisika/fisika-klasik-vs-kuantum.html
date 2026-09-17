@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fisika Klasik vs Kuantum — Simulator Skala</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#060D1A;
+  --card:rgba(255,255,255,0.04);
+  --border:rgba(255,255,255,0.08);
+  --cl:#F0923A;
+  --cl-dim:rgba(240,146,58,0.12);
+  --cl-b:rgba(240,146,58,0.22);
+  --qt:#3AADF4;
+  --qt-dim:rgba(58,173,244,0.1);
+  --qt-b:rgba(58,173,244,0.2);
+  --pu:#9B72F5;
+  --pu-dim:rgba(155,114,245,0.1);
+  --text:#E2EAF6;
+  --dim:rgba(226,234,246,0.5);
+  --green:#4ADE80;
+  --yellow:#FBBF24;
+  --orange:#F97316;
+  --red:#F87171;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-weight:300;line-height:1.7;min-height:100vh;}
+
+/* Stars */
+.stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+.star{position:absolute;border-radius:50%;background:white;opacity:0;animation:tw linear infinite;}
+@keyframes tw{0%,100%{opacity:0;}50%{opacity:0.28;}}
+main{position:relative;z-index:1;}
+
+/* Hero */
+.hero{text-align:center;padding:3.8rem 2rem 2rem;position:relative;}
+.hero::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:600px;height:300px;background:radial-gradient(ellipse,rgba(155,114,245,0.07) 0%,transparent 70%);pointer-events:none;}
+.hero-title{font-size:clamp(1.4rem,4vw,2.1rem);font-weight:600;letter-spacing:-0.02em;margin-bottom:0.5rem;}
+.cl{color:var(--cl);}
+.vs{color:var(--dim);font-weight:300;margin:0 0.4em;}
+.qt{color:var(--qt);}
+.hero-sub{font-size:0.88rem;color:var(--dim);max-width:500px;margin:0 auto;}
+
+/* Container */
+.container{max-width:860px;margin:0 auto;padding:0 1.5rem 4rem;}
+.section{margin-bottom:2.5rem;}
+.section-label{font-size:0.67rem;letter-spacing:0.13em;color:var(--dim);text-transform:uppercase;margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border);}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.8rem;}
+
+/* Scale strip */
+.scale-strip{display:flex;align-items:center;gap:1.2rem;padding:1rem 1.3rem;background:rgba(0,0,0,0.22);border-radius:10px;margin-bottom:1.3rem;}
+.scale-emoji{font-size:1.8rem;flex-shrink:0;}
+.scale-label{font-family:'Space Mono',monospace;font-size:1.25rem;}
+.scale-obj{font-size:0.76rem;color:var(--dim);margin-top:0.1rem;}
+
+/* Main canvas */
+.canvas-wrap{width:100%;height:265px;background:rgba(0,0,0,0.28);border-radius:10px;overflow:hidden;margin-bottom:1.3rem;position:relative;}
+#main-canvas{display:block;width:100%;height:100%;}
+.clabel{position:absolute;top:13px;font-size:0.68rem;font-family:'Space Mono',monospace;letter-spacing:0.06em;}
+.clabel.l{left:14px;color:rgba(240,146,58,0.6);}
+.clabel.r{right:14px;color:rgba(58,173,244,0.6);}
+
+/* Slider */
+.slider-ends{display:flex;justify-content:space-between;margin-bottom:0.55rem;}
+.slider-ends span{font-size:0.73rem;color:var(--dim);}
+input[type=range]{width:100%;height:4px;-webkit-appearance:none;border-radius:2px;outline:none;cursor:pointer;background:linear-gradient(to right,var(--cl),var(--pu),var(--qt));}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;cursor:pointer;box-shadow:0 0 10px rgba(155,114,245,0.5);transition:transform .1s;}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2);}
+
+/* Stats row */
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin:1.3rem 0;}
+@media(max-width:500px){.stats{grid-template-columns:1fr 1fr;}}
+.stat{background:rgba(0,0,0,0.2);border-radius:8px;padding:1rem;text-align:center;}
+.stat-label{font-size:0.67rem;color:var(--dim);margin-bottom:0.25rem;letter-spacing:0.03em;}
+.stat-val{font-family:'Space Mono',monospace;font-size:1.05rem;}
+.qt-c{color:var(--qt);}
+.hi{color:var(--green);}
+.me{color:var(--yellow);}
+.lo{color:var(--orange);}
+.fa{color:var(--red);}
+
+/* Phenomenon */
+.phenom{background:var(--pu-dim);border:1px solid rgba(155,114,245,0.18);border-radius:10px;padding:1.1rem 1.3rem;}
+.phenom-title{font-size:0.83rem;font-weight:500;color:var(--pu);margin-bottom:0.3rem;}
+.phenom-desc{font-size:0.78rem;line-height:1.75;color:var(--dim);}
+
+/* Mini grid */
+.mini-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.1rem;}
+@media(max-width:640px){.mini-grid{grid-template-columns:1fr;}}
+.mini-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.2rem;}
+.mini-title{font-size:0.74rem;font-weight:500;margin-bottom:0.6rem;}
+.mini-wrap{width:100%;height:90px;background:rgba(0,0,0,0.22);border-radius:7px;overflow:hidden;margin-bottom:0.65rem;}
+canvas.mini{display:block;width:100%;height:100%;}
+.mini-desc{font-size:0.71rem;color:var(--dim);line-height:1.65;}
+
+/* Philosophy */
+.phil{background:rgba(0,0,0,0.22);border:1px solid var(--border);border-radius:14px;padding:2rem;position:relative;overflow:hidden;}
+.phil::before{content:'';position:absolute;top:0;right:0;width:220px;height:220px;background:radial-gradient(circle,rgba(58,173,244,0.05),transparent 70%);}
+.phil-quote{font-size:clamp(0.9rem,2vw,1.1rem);font-style:italic;line-height:1.9;margin-bottom:1.4rem;max-width:580px;color:var(--text);}
+.phil-quote em{font-style:normal;color:var(--qt);font-weight:500;}
+.phil-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+@media(max-width:500px){.phil-grid{grid-template-columns:1fr;}}
+.pbox{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:1rem;}
+.pbox-label{font-size:0.66rem;letter-spacing:0.09em;color:var(--dim);text-transform:uppercase;margin-bottom:0.35rem;}
+.pbox-text{font-size:0.78rem;line-height:1.7;color:var(--text);}
+.pbox-text em{font-style:normal;color:var(--qt);}
+
+footer{text-align:center;padding:2rem;font-size:0.7rem;color:rgba(226,234,246,0.18);border-top:1px solid var(--border);margin-top:1rem;}
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<main>
+<div class="hero">
+  <h1 class="hero-title">
+    <span class="cl">Fisika Klasik</span>
+    <span class="vs">vs</span>
+    <span class="qt">Fisika Kuantum</span>
+  </h1>
+  <p class="hero-sub">Geser dari dunia bola dan mobil menuju dunia atom dan elektron — dan saksikan kapan "hukum alam" mulai runtuh.</p>
+</div>
+
+<div class="container">
+
+  <div class="section">
+    <div class="section-label">Simulator Skala Interaktif</div>
+    <div class="card">
+
+      <div class="scale-strip">
+        <div class="scale-emoji" id="s-emoji">⚽</div>
+        <div>
+          <div class="scale-label" id="s-label">1,00 m</div>
+          <div class="scale-obj" id="s-obj">Bola sepak, manusia</div>
+        </div>
+      </div>
+
+      <div class="canvas-wrap">
+        <canvas id="main-canvas"></canvas>
+        <div class="clabel l">▸ PREDIKSI KLASIK</div>
+        <div class="clabel r">REALITAS KUANTUM ◂</div>
+      </div>
+
+      <div class="slider-ends">
+        <span>◀ Makro (1 m)</span>
+        <span>Kuantum (0,01 nm) ▶</span>
+      </div>
+      <input type="range" id="slider" min="0" max="100" value="0">
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">Skala</div>
+          <div class="stat-val qt-c" id="st-scale">1,00 m</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Akurasi Fisika Klasik</div>
+          <div class="stat-val hi" id="st-acc">99,99%</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Ketidakpastian Posisi</div>
+          <div class="stat-val qt-c" id="st-unc">≈ 0</div>
+        </div>
+      </div>
+
+      <div class="phenom">
+        <div class="phenom-title" id="ph-title">Fisika Klasik: Akurat Sempurna</div>
+        <div class="phenom-desc" id="ph-desc">Persamaan Newton berlaku dengan akurasi hampir sempurna. Posisi dan momentum dapat diketahui bersamaan dengan presisi tak terbatas. Dunia sepenuhnya deterministik.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Tiga Fenomena Kuantum</div>
+    <div class="mini-grid">
+      <div class="mini-card">
+        <div class="mini-title">⚖ Prinsip Ketidakpastian Heisenberg</div>
+        <div class="mini-wrap"><canvas class="mini" id="m-unc"></canvas></div>
+        <div class="mini-desc">Semakin pasti posisi → semakin tak pasti momentum. Bukan karena alat ukur buruk, melainkan sifat hakiki alam.</div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-title">🌊 Eksperimen Celah Ganda</div>
+        <div class="mini-wrap"><canvas class="mini" id="m-slit"></canvas></div>
+        <div class="mini-desc">Partikel yang melewati dua celah membentuk pola interferensi — seperti gelombang, bukan peluru klasik.</div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-title">⚡ Diskretisasi Tingkat Energi</div>
+        <div class="mini-wrap"><canvas class="mini" id="m-energy"></canvas></div>
+        <div class="mini-desc">Elektron dalam atom hanya boleh memiliki energi tertentu — bukan sembarang nilai kontinu seperti dalam fisika klasik.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Ketidakdetailan sebagai Kesalahan Hakiki</div>
+    <div class="phil">
+      <p class="phil-quote">
+        Fisika klasik bukan sekadar <em>"belum lengkap"</em> — ia <em>keliru secara hakiki</em> di level subatomik.
+        Gambaran partikel sebagai bola kecil di posisi pasti ternyata salah secara ontologis.
+        Kita hanya menyadarinya <em>setelah sains berikutnya datang</em> dan menggantikannya — bukan menambalnya.
+      </p>
+      <div class="phil-grid">
+        <div class="pbox">
+          <div class="pbox-label">Narasi Umum</div>
+          <div class="pbox-text">"Sains berkembang akumulatif — selalu menuju lebih benar, tidak pernah benar-benar salah."</div>
+        </div>
+        <div class="pbox">
+          <div class="pbox-label">Yang Sebenarnya Terjadi</div>
+          <div class="pbox-text">Fisika klasik tidak sekedar "kurang detail" — model partikelnya <em>salah struktural</em> di level mikro. Kuantum bukan tambalan; ia pengganti.</div>
+        </div>
+        <div class="pbox">
+          <div class="pbox-label">Implikasi Epistemologis</div>
+          <div class="pbox-text">Sains hari ini pun berpotensi keliru secara hakiki di level yang belum kita capai. Kesadaran ini bukan anti-sains — ia lahir <em>dari dalam sains itu sendiri</em>.</div>
+        </div>
+        <div class="pbox">
+          <div class="pbox-label">Relevansi Metodologis</div>
+          <div class="pbox-text">Mengikat interpretasi teks klasik pada model sains kontemporer berisiko: model itu bisa <em>digantikan total</em>, bukan sekedar diperhalus — membawa interpretasi itu ikut runtuh.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+
+<footer>
+  Visualisasi edukatif — bukan simulasi fisika presisi. Kurva "akurasi" bersifat ilustratif untuk menggambarkan transisi dari validitas fisika klasik menuju dominasi efek kuantum.
+</footer>
+
+<script>
+// ── State ─────────────────────────────────────────────────
+let T = 0;
+let mW = 0, mH = 0, mCtx = null;
+
+// ── Scale data ────────────────────────────────────────────
+const SCALES = [
+  {t:0,    e:'⚽', l:'1,00 m',   o:'Bola sepak, manusia'},
+  {t:0.18, e:'🪙', l:'1,00 cm',  o:'Koin, butir beras'},
+  {t:0.27, e:'🏖', l:'1,00 mm',  o:'Butir pasir'},
+  {t:0.36, e:'💈', l:'100 µm',   o:'Ketebalan rambut manusia'},
+  {t:0.45, e:'🩸', l:'10 µm',    o:'Sel darah merah'},
+  {t:0.55, e:'🦠', l:'1 µm',     o:'Bakteri E. coli'},
+  {t:0.64, e:'🧫', l:'100 nm',   o:'Virus, partikel COVID-19'},
+  {t:0.73, e:'🧬', l:'10 nm',    o:'Lebar untai DNA'},
+  {t:0.82, e:'⚗', l:'1 nm',     o:'Molekul protein kecil'},
+  {t:0.91, e:'⚛', l:'0,1 nm',   o:'Diameter atom hidrogen'},
+  {t:1.0,  e:'🔵', l:'0,01 nm',  o:'Proton / Elektron'},
+];
+
+const PHENOM = [
+  {r:[0,0.44],    ti:'Fisika Klasik: Akurat Sempurna',    de:'Persamaan Newton dan Maxwell berlaku dengan akurasi hampir sempurna. Posisi dan momentum dapat diketahui bersamaan secara presisi. Dunia sepenuhnya deterministik dan dapat diprediksi.'},
+  {r:[0.44,0.60], ti:'Fluktuasi Termal & Gerak Brown',    de:'Mulai muncul getaran acak dari tumbukan molekul. Fisika statistik klasik masih cukup — tapi "keteraturan sempurna" mulai retak di tepinya.'},
+  {r:[0.60,0.73], ti:'Efek Terowongan Kuantum',           de:'Partikel dapat "menembus" penghalang yang secara klasik tak mungkin dilalui. Prinsip ini bekerja di dalam setiap transistor, STM, dan perangkat nanoelektronik modern.'},
+  {r:[0.73,0.88], ti:'Dualitas Gelombang–Partikel',       de:'Partikel menunjukkan sifat gelombang yang kuat: interferensi dan difraksi menjadi nyata. Konsep "bola kecil di posisi tertentu" tidak lagi valid secara fisika.'},
+  {r:[0.88,1.01], ti:'Prinsip Ketidakpastian Heisenberg', de:'Tidak ada posisi yang "pasti". Mengukur posisi dengan presisi tinggi secara fundamental merusak kepastian momentum — bukan karena alat ukur buruk, tapi karena demikianlah alam bekerja.'},
+];
+
+function getScale(t) {
+  let s = SCALES[0];
+  for (const d of SCALES) { if (t >= d.t) s = d; }
+  return s;
+}
+
+function getAcc(t) {
+  return Math.min(99.99, Math.max(0.01, Math.pow(Math.max(0, 1 - t * 1.08), 3) * 99.98 + 0.01));
+}
+
+function getUnc(t) {
+  if (t < 0.28) return '≈ 0';
+  const v = Math.pow(10, -15 + t * 15);
+  if (v < 1e-12) return `~${(v*1e15).toFixed(1)} fm`;
+  if (v < 1e-9)  return `~${(v*1e12).toFixed(1)} pm`;
+  if (v < 1e-6)  return `~${(v*1e9).toFixed(2)} nm`;
+  if (v < 1e-3)  return `~${(v*1e6).toFixed(1)} µm`;
+  return `~${v.toFixed(3)} m`;
+}
+
+function getPhenom(t) {
+  for (const p of PHENOM) { if (t >= p.r[0] && t < p.r[1]) return p; }
+  return PHENOM[PHENOM.length-1];
+}
+
+// ── Main canvas ───────────────────────────────────────────
+function initMain() {
+  const c = document.getElementById('main-canvas');
+  const dpr = window.devicePixelRatio || 1;
+  mW = c.parentElement.clientWidth;
+  mH = c.parentElement.clientHeight;
+  c.width = mW * dpr;
+  c.height = mH * dpr;
+  c.style.width = mW + 'px';
+  c.style.height = mH + 'px';
+  mCtx = c.getContext('2d');
+  mCtx.scale(dpr, dpr);
+}
+
+function drawMain(t) {
+  const ctx = mCtx, W = mW, H = mH;
+  ctx.clearRect(0, 0, W, H);
+  const cx = W/2, cy = H * 0.44;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.025)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 32) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 32) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+  const sigma = 6 + t * t * W * 0.3;
+
+  // ── Quantum cloud ──
+  if (t > 0.02) {
+    const qa = Math.min(1, t * 1.3);
+    for (let i = 10; i >= 1; i--) {
+      const r = sigma * (i/10) * 2.6;
+      const gv = Math.exp(-0.5 * Math.pow(r/(sigma*1.6), 2));
+      const a  = gv * qa * 0.35;
+      const g  = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      g.addColorStop(0, `rgba(58,173,244,${Math.min(0.85, a*2.5)})`);
+      g.addColorStop(0.5,`rgba(58,173,244,${a * 0.6})`);
+      g.addColorStop(1, 'rgba(58,173,244,0)');
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2);
+      ctx.fillStyle = g; ctx.fill();
+    }
+  }
+
+  // ── Classical particle ──
+  const ca = Math.max(0, 1 - t * 1.35);
+  if (ca > 0.01) {
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 22);
+    g.addColorStop(0, `rgba(255,225,170,${ca})`);
+    g.addColorStop(0.4, `rgba(240,146,58,${ca})`);
+    g.addColorStop(1, 'rgba(240,146,58,0)');
+    ctx.beginPath(); ctx.arc(cx, cy, 22, 0, Math.PI*2);
+    ctx.fillStyle = g; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(255,240,210,${ca})`; ctx.fill();
+  }
+
+  // ── Ghost classical (dashed) ──
+  if (t > 0.48) {
+    const ga = Math.min(0.5, (t-0.48) * 1.5);
+    ctx.beginPath(); ctx.arc(cx, cy, 9, 0, Math.PI*2);
+    ctx.strokeStyle = `rgba(240,146,58,${ga})`;
+    ctx.setLineDash([3,4]); ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // ── Uncertainty ring ──
+  if (t > 0.35) {
+    const ra = Math.min(0.5, (t-0.35)*1.8);
+    const ur = sigma * 1.2;
+    ctx.beginPath(); ctx.arc(cx, cy, ur, 0, Math.PI*2);
+    ctx.strokeStyle = `rgba(58,173,244,${ra})`;
+    ctx.setLineDash([2,5]); ctx.lineWidth = 1; ctx.stroke();
+    ctx.setLineDash([]);
+    if (t > 0.52 && ur < W*0.44) {
+      const la = Math.min(0.65, (t-0.52)*2.5);
+      ctx.fillStyle = `rgba(58,173,244,${la})`;
+      ctx.font = '10px Space Mono,monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText('Δx', cx+ur+7, cy+4);
+    }
+  }
+
+  // ── Classical trajectory (parabola hint) ──
+  if (t < 0.55) {
+    const ta2 = Math.max(0, (0.55-t) / 0.55) * 0.18;
+    ctx.strokeStyle = `rgba(240,146,58,${ta2})`;
+    ctx.setLineDash([3,5]); ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    for (let x = -W*0.45; x < W*0.45; x+=2) {
+      const y = cy - 35 + (x*x)/(W*2.2);
+      if (x === -W*0.45) ctx.moveTo(cx+x, y); else ctx.lineTo(cx+x, y);
+    }
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  // ── Wave function ──
+  if (t > 0.52) {
+    const wa = Math.min(0.65, (t-0.52)*2);
+    const wl = Math.max(14, (1-t*0.65)*55);
+    const amp = Math.min(30, t*36);
+    const wy = cy + Math.min(sigma*1.35, H*0.34);
+    if (wy < H-18) {
+      ctx.beginPath();
+      ctx.strokeStyle = `rgba(155,114,245,${wa*0.75})`;
+      ctx.lineWidth = 1.5;
+      for (let x=0; x<=W; x++) {
+        const env = Math.exp(-0.5*Math.pow((x-cx)/(W*0.21),2));
+        const y = wy + Math.sin((x-cx)*(2*Math.PI/wl))*amp*env;
+        if (x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+      ctx.fillStyle = `rgba(155,114,245,${wa*0.55})`;
+      ctx.font = '10px Space Mono,monospace'; ctx.textAlign = 'center';
+      ctx.fillText('ψ(x)', cx, wy+amp+15);
+    }
+  }
+
+  // ── Bottom labels ──
+  ctx.font = '10px Inter,sans-serif';
+  if (t < 0.55) {
+    const la = Math.max(0, 1 - t*1.7);
+    ctx.fillStyle = `rgba(240,146,58,${la*0.75})`; ctx.textAlign = 'left';
+    ctx.fillText('x pasti, Δx → 0', 14, H-16);
+  }
+  if (t > 0.38) {
+    const la = Math.min(0.75, (t-0.38)*2.2);
+    ctx.fillStyle = `rgba(58,173,244,${la})`; ctx.textAlign = 'right';
+    ctx.fillText('Δx · Δp ≥ ℏ/2', W-14, H-16);
+  }
+
+  // ── "Klasik SALAH" label ──
+  if (t > 0.7) {
+    const la = Math.min(0.7, (t-0.7)*3);
+    ctx.fillStyle = `rgba(248,113,113,${la})`;
+    ctx.font = '10px Space Mono,monospace'; ctx.textAlign = 'center';
+    ctx.fillText('prediksi klasik: TIDAK BERLAKU', cx, cy-32);
+  }
+}
+
+// ── Mini: Uncertainty ────────────────────────────────────
+function drawUnc(t) {
+  const c = document.getElementById('m-unc');
+  const W = c.width, H = c.height;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+  const hw = W/2 - 3;
+
+  // Left: Classical sharp
+  ctx.fillStyle='rgba(240,146,58,0.08)'; ctx.fillRect(2,2,hw,H-4);
+  const lcx=hw/2+2, lcy=H/2;
+  ctx.beginPath(); ctx.arc(lcx,lcy,5,0,Math.PI*2);
+  ctx.fillStyle='#F0923A'; ctx.fill();
+  ctx.strokeStyle='rgba(240,146,58,0.35)'; ctx.lineWidth=0.7;
+  ctx.beginPath(); ctx.moveTo(lcx-14,lcy); ctx.lineTo(lcx+14,lcy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(lcx,lcy-14); ctx.lineTo(lcx,lcy+14); ctx.stroke();
+  ctx.fillStyle='rgba(240,146,58,0.55)';
+  ctx.font='7px Space Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText('KLASIK', lcx, H-4);
+
+  // Right: Quantum cloud
+  ctx.fillStyle='rgba(58,173,244,0.06)'; ctx.fillRect(hw+4,2,hw,H-4);
+  const rcx=hw+4+hw/2, rcy=H/2;
+  const sq = 6+t*22;
+  for (let i=7;i>=1;i--) {
+    const r=sq*i/3.5;
+    const av=Math.exp(-0.5*(r/sq)**2)*0.42;
+    const g=ctx.createRadialGradient(rcx,rcy,0,rcx,rcy,r);
+    g.addColorStop(0,`rgba(58,173,244,${av*2.2})`);
+    g.addColorStop(1,'rgba(58,173,244,0)');
+    ctx.beginPath(); ctx.arc(rcx,rcy,r,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
+  }
+  ctx.fillStyle='rgba(58,173,244,0.55)';
+  ctx.font='7px Space Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText('KUANTUM', rcx, H-4);
+}
+
+// ── Mini: Double Slit ────────────────────────────────────
+function drawSlit(t) {
+  const c = document.getElementById('m-slit');
+  const W = c.width, H = c.height;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+  const hw = W/2 - 3;
+
+  // Left: Classical two bands
+  ctx.fillStyle='rgba(240,146,58,0.06)'; ctx.fillRect(2,2,hw,H-4);
+  for (let py=4; py<H-8; py++) {
+    const y=(py-H/2)/H*2.2;
+    const I=Math.exp(-0.5*((y-0.4)/0.18)**2)+Math.exp(-0.5*((y+0.4)/0.18)**2);
+    ctx.fillStyle=`rgba(240,146,58,${Math.min(0.85,I*0.75)})`;
+    ctx.fillRect(7,py,hw-9,1);
+  }
+  ctx.fillStyle='rgba(240,146,58,0.5)'; ctx.font='7px Space Mono,monospace';
+  ctx.textAlign='center'; ctx.fillText('KLASIK',hw/2+2,H-4);
+
+  // Right: Quantum interference
+  ctx.fillStyle='rgba(58,173,244,0.06)'; ctx.fillRect(hw+4,2,hw,H-4);
+  const rx=hw+4;
+  for (let py=4; py<H-8; py++) {
+    const y=(py-H/2)/H*3.2;
+    const phi=Math.PI*4.5*y, psi=Math.PI*0.85*y;
+    const sinc=Math.abs(psi)<0.001?1:Math.sin(psi)/psi;
+    const Iq=Math.cos(phi)**2*sinc**2;
+    const Ic=Math.exp(-0.5*((y-0.5)/0.22)**2)+Math.exp(-0.5*((y+0.5)/0.22)**2);
+    const I=(1-t)*Ic*0.5+t*Iq;
+    ctx.fillStyle=`rgba(58,173,244,${Math.min(0.9,I)})`;
+    ctx.fillRect(rx+5,py,hw-9,1);
+  }
+  ctx.fillStyle='rgba(58,173,244,0.5)'; ctx.font='7px Space Mono,monospace';
+  ctx.textAlign='center'; ctx.fillText('KUANTUM',rx+hw/2,H-4);
+}
+
+// ── Mini: Energy levels ──────────────────────────────────
+function drawEnergy(t) {
+  const c = document.getElementById('m-energy');
+  const W = c.width, H = c.height;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+  const hw = W/2 - 3;
+
+  // Left: Classical continuous
+  ctx.fillStyle='rgba(240,146,58,0.06)'; ctx.fillRect(2,2,hw,H-4);
+  const g=ctx.createLinearGradient(0,H-10,0,10);
+  g.addColorStop(0,'rgba(240,146,58,0.08)'); g.addColorStop(1,'rgba(240,146,58,0.75)');
+  ctx.fillStyle=g; ctx.fillRect(8,8,hw-10,H-18);
+  ctx.fillStyle='rgba(240,146,58,0.5)'; ctx.font='7px Space Mono,monospace';
+  ctx.textAlign='center'; ctx.fillText('KLASIK',hw/2+2,H-4);
+
+  // Right: Quantum discrete
+  ctx.fillStyle='rgba(58,173,244,0.06)'; ctx.fillRect(hw+4,2,hw,H-4);
+  const rx=hw+4;
+  const lv=[0.86,0.70,0.52,0.33,0.16];
+  lv.forEach((f,i)=>{
+    const ly=f*(H-18)+8;
+    const br=0.3+(1-f)*0.72;
+    ctx.strokeStyle=`rgba(58,173,244,${br*0.9})`; ctx.lineWidth=1.8;
+    ctx.beginPath(); ctx.moveTo(rx+8,ly); ctx.lineTo(rx+hw-6,ly); ctx.stroke();
+    ctx.fillStyle=`rgba(58,173,244,${br*0.6})`;
+    ctx.font='7px Space Mono,monospace'; ctx.textAlign='right';
+    ctx.fillText(`n=${i+1}`,rx+hw-4,ly-2);
+  });
+  ctx.fillStyle='rgba(58,173,244,0.5)'; ctx.font='7px Space Mono,monospace';
+  ctx.textAlign='center'; ctx.fillText('KUANTUM',rx+hw/2,H-4);
+}
+
+// ── UI Update ─────────────────────────────────────────────
+function update(t) {
+  const sd=getScale(t);
+  document.getElementById('s-emoji').textContent=sd.e;
+  document.getElementById('s-label').textContent=sd.l;
+  document.getElementById('s-obj').textContent=sd.o;
+  document.getElementById('st-scale').textContent=sd.l;
+
+  const acc=getAcc(t);
+  const ae=document.getElementById('st-acc');
+  ae.textContent=acc.toFixed(2)+'%';
+  ae.className='stat-val '+(acc>90?'hi':acc>50?'me':acc>10?'lo':'fa');
+
+  document.getElementById('st-unc').textContent=getUnc(t);
+
+  const ph=getPhenom(t);
+  document.getElementById('ph-title').textContent=ph.ti;
+  document.getElementById('ph-desc').textContent=ph.de;
+
+  drawMain(t);
+  drawUnc(t);
+  drawSlit(t);
+  drawEnergy(t);
+}
+
+// ── Init ─────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  initMain();
+
+  // Init mini canvases with explicit sizes
+  ['m-unc','m-slit','m-energy'].forEach(id=>{
+    const c=document.getElementById(id);
+    c.width=c.parentElement.clientWidth||180;
+    c.height=c.parentElement.clientHeight||90;
+  });
+
+  document.getElementById('slider').addEventListener('input', function() {
+    T = this.value/100;
+    update(T);
+  });
+
+  window.addEventListener('resize',()=>{
+    initMain();
+    ['m-unc','m-slit','m-energy'].forEach(id=>{
+      const c=document.getElementById(id);
+      c.width=c.parentElement.clientWidth||180;
+      c.height=c.parentElement.clientHeight||90;
+    });
+    update(T);
+  });
+
+  // Stars
+  const se=document.getElementById('stars');
+  for(let i=0;i<55;i++){
+    const s=document.createElement('div'); s.className='star';
+    const sz=Math.random()*1.7+0.4;
+    s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${Math.random()*6}s;animation-duration:${2.5+Math.random()*4}s;`;
+    se.appendChild(s);
+  }
+
+  update(0);
+});
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

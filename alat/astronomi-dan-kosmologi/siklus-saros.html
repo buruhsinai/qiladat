@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Siklus Saros — Laboratorium JAZMI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&display=swap');
+:root{
+  --bg:#101826; --panel:#182234; --panel-border:#2b3a52;
+  --ink:#E7EEF5; --ink-soft:#93a3b8; --accent:#4FA3D1; --gold:#E0A83E; --red:#C0523B;
+  --line:rgba(231,238,245,.13); --line-strong:rgba(231,238,245,.26);
+}
+*{box-sizing:border-box;} html,body{margin:0;padding:0;}
+body{ background:linear-gradient(180deg,#0c1220,var(--bg)); color:var(--ink); font-family:'Karla',sans-serif; }
+.wrap{max-width:800px; margin:0 auto; padding:20px 14px 40px;}
+.eyebrow{font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); margin:0 0 4px;}
+h1{font-family:'Fraunces',serif; font-weight:700; font-size:clamp(22px,5vw,30px); margin:0 0 6px;}
+.sub{font-size:13.5px; color:var(--ink-soft); max-width:66ch; line-height:1.55;}
+
+.intro{ background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:14px 16px; margin-top:14px; font-size:13px; line-height:1.6; }
+.intro b{ color:var(--gold); }
+
+.controls{ background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:14px 16px; margin-top:14px; }
+.row{ display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end; margin-bottom:8px; }
+.field{ display:flex; flex-direction:column; gap:4px; flex:1; min-width:180px; }
+.field label{ font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); display:flex; justify-content:space-between; }
+.field label .val{ color:var(--gold); font-weight:700; text-transform:none; letter-spacing:0; }
+.field input[type=date], .field input[type=number]{
+  background:#0e1524; border:1px solid var(--line-strong); color:var(--ink); border-radius:4px; padding:6px 8px; font-family:'Karla',sans-serif; font-size:13px;
+}
+input[type=range]{ width:100%; accent-color:var(--gold); }
+
+.strip{ background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:14px; margin-top:14px; }
+svg.strip-svg{ width:100%; height:auto; display:block; }
+.seg{ cursor:pointer; }
+
+.detail{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-top:14px; }
+.dcard{ background:var(--panel); border:1px solid var(--panel-border); border-radius:6px; padding:10px 12px; }
+.dcard .l{ font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); }
+.dcard .v{ font-family:'Fraunces',serif; font-size:16px; font-weight:700; margin-top:2px; }
+
+.legend{ display:flex; gap:14px; flex-wrap:wrap; font-size:11.5px; color:var(--ink-soft); margin-top:8px; }
+.legend span{ display:inline-flex; align-items:center; gap:5px; }
+.legend i{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+
+footer{margin-top:22px; padding-top:12px; border-top:1px solid var(--line); font-size:11.5px; color:var(--ink-soft); line-height:1.6;}
+footer b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">JAZMI · Laboratorium Astronomi · Level 4 (ringan)</p>
+  <h1>Siklus Saros</h1>
+  <p class="sub">Kenapa gerhana "berkeluarga" — satu seri Saros bisa berisi 70–85 gerhana yang
+  tersebar lebih dari 1.200 tahun, lahir sebagai gerhana sebagian tipis, dewasa jadi total/cincin,
+  lalu menua kembali jadi sebagian sebelum akhirnya "pensiun".</p>
+
+  <div class="intro">
+    223 bulan sinodik (<b>6.585,3211 hari</b>, ≈18 tahun 11 hari 8 jam) ternyata <i>juga</i> hampir
+    persis sama dengan 242 bulan draconic (waktu Bulan kembali ke node/simpul orbit yang sama). Karena
+    dua siklus berbeda ini nyaris berhimpit, geometri gerhana berulang dengan pola yang sangat mirip
+    setiap 6.585 hari — itulah satu "seri Saros". Tapi "nyaris" bukan "persis": ada pergeseran kecil
+    tiap siklus, itu yang perlahan mengubah jenis gerhananya dari generasi ke generasi dalam satu seri.
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <div class="field">
+        <label>Tanggal gerhana pertama dalam seri</label>
+        <input type="date" id="startDate" value="2026-01-01">
+      </div>
+      <div class="field">
+        <label>Jarak awal dari simpul (arcmin) <span class="val" id="latVal">-30,0'</span></label>
+        <input type="range" id="latStart" min="-32" max="-20" value="-30" step="0.5">
+      </div>
+      <div class="field">
+        <label>Laju pergeseran / siklus <span class="val" id="driftVal">0,5'</span></label>
+        <input type="range" id="drift" min="0.2" max="1.0" value="0.5" step="0.1">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Jumlah gerhana ditampilkan <span class="val" id="nVal">40</span></label>
+        <input type="range" id="nCount" min="10" max="80" value="40" step="1">
+      </div>
+    </div>
+  </div>
+
+  <div class="strip">
+    <svg class="strip-svg" id="stripSvg" viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="legend">
+      <span><i style="background:#4FA3D1"></i>Tidak ada gerhana (di luar seri)</span>
+      <span><i style="background:#E0A83E"></i>Sebagian</span>
+      <span><i style="background:#C0523B"></i>Total / Cincin (sentral)</span>
+    </div>
+    <div style="font-size:11.5px; color:var(--ink-soft); margin-top:8px;">Geser slider di atas atau klik langsung salah satu titik pada garis untuk melihat detailnya.</div>
+    <input type="range" id="pickN" min="1" max="40" value="1" style="margin-top:6px;">
+  </div>
+
+  <div class="detail" id="detail"></div>
+
+  <div class="strip" style="margin-top:10px;">
+    <div style="font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin-bottom:6px;">Pergeseran bujur (relatif terhadap gerhana pertama)</div>
+    <svg class="strip-svg" id="lonSvg" viewBox="0 0 760 60" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div style="font-size:11.5px; color:var(--ink-soft); margin-top:6px;">Karena tiap siklus bergeser ~120°, anggota seri Saros jatuh bergiliran ke 3 pita bujur berbeda
+    — baru kembali ke pita yang nyaris sama setiap 3 siklus (54 tahun, disebut Exeligmos).</div>
+  </div>
+
+  <footer>
+    <b>Batasan:</b> Model pergeseran lintang di sini memakai laju konstan yang bisa Anda atur sendiri
+    (bukan dihitung dari efemeris Bulan sungguhan) — cukup untuk memperagakan <i>prinsip</i> evolusi
+    seri Saros (kenapa jenis gerhana berubah pelan-pelan dari generasi ke generasi), bukan jadwal
+    gerhana presisi tinggi untuk seri tertentu di dunia nyata. Pergeseran bujur ~120° per siklus
+    (kenapa gerhana satu seri terlihat dari benua berbeda-beda) memakai angka bulat umum dikutip,
+    dan strip "Pita 1/2/3" menunjukkan pergeseran RELATIF terhadap gerhana pertama dalam seri —
+    bukan bujur geografis sungguhan (yang butuh tanggal & jam gerhana pertama yang presisi untuk
+    dihitung). Ambang sentral/sebagian memakai radius sudut Matahari & Bulan rata-rata tetap (16,0'
+    dan 15,5'), tidak memperhitungkan variasi jarak perigee-apogee (topik itu sudah dibahas di alat
+    "Gerhana ala Aryabhata").
+  </footer>
+</div>
+
+<script>
+const SAROS_DAYS=6585.3211;
+const R_SUN=16.0, R_MOON=15.5; // arcmin, fixed representative
+const diffR=Math.abs(R_MOON-R_SUN), sumR=R_MOON+R_SUN;
+
+function dateAdd(dateStr, days){
+  const d=new Date(dateStr+'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate()+Math.round(days));
+  return d;
+}
+function fmtDate(d){
+  return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
+}
+
+function typeOf(lat){
+  const a=Math.abs(lat);
+  if(a>sumR) return {label:'Tidak ada gerhana', color:'#4FA3D1', key:'none'};
+  if(a>diffR) return {label:'Sebagian', color:'#E0A83E', key:'partial'};
+  return {label:'Total / Cincin (sentral)', color:'#C0523B', key:'central'};
+}
+
+function seriesData(){
+  const start=document.getElementById('startDate').value;
+  const latStart=parseFloat(document.getElementById('latStart').value);
+  const drift=parseFloat(document.getElementById('drift').value);
+  const n=parseInt(document.getElementById('nCount').value);
+  const arr=[];
+  for(let i=0;i<n;i++){
+    const lat = latStart + i*drift;
+    const date = dateAdd(start, i*SAROS_DAYS);
+    const lonShift = (i*120)%360;
+    arr.push({i:i+1, lat, date, lonShift, type:typeOf(lat)});
+  }
+  return arr;
+}
+
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs){const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); return e;}
+
+function render(){
+  document.getElementById('latVal').textContent=parseFloat(document.getElementById('latStart').value).toFixed(1)+"'";
+  document.getElementById('driftVal').textContent=parseFloat(document.getElementById('drift').value).toFixed(1)+"'";
+  document.getElementById('nVal').textContent=document.getElementById('nCount').value;
+
+  const data=seriesData();
+  const pickSlider=document.getElementById('pickN');
+  pickSlider.max=data.length;
+  if(parseInt(pickSlider.value)>data.length) pickSlider.value=data.length;
+
+  const svg=document.getElementById('stripSvg'); svg.innerHTML='';
+  const X0=20,X1=740,Y=40,W=(X1-X0)/data.length;
+  svg.appendChild(el('line',{x1:X0,y1:Y,x2:X1,y2:Y,stroke:'#2b3a52','stroke-width':10,'stroke-linecap':'round'}));
+  data.forEach((d,idx)=>{
+    const cx=X0+W*(idx+0.5);
+    const c=el('circle',{cx,cy:Y,r:idx===parseInt(pickSlider.value)-1?7:4.5, fill:d.type.color, class:'seg', 'data-i':idx+1});
+    svg.appendChild(c);
+  });
+  svg.addEventListener('click',(e)=>{
+    if(e.target.tagName==='circle' || e.target.dataset.i){
+      pickSlider.value=e.target.dataset.i;
+      showDetail();
+    }
+  });
+
+  showDetail();
+  function showDetail(){
+    const idx=parseInt(pickSlider.value)-1;
+    const d=data[idx];
+    if(!d) return;
+    document.getElementById('detail').innerHTML=`
+      <div class="dcard"><div class="l">Gerhana ke-</div><div class="v">${d.i} dari ${data.length}</div></div>
+      <div class="dcard"><div class="l">Tanggal perkiraan</div><div class="v">${fmtDate(d.date)}</div></div>
+      <div class="dcard"><div class="l">Jarak dari simpul</div><div class="v">${d.lat.toFixed(1)}'</div></div>
+      <div class="dcard"><div class="l">Pergeseran bujur kumulatif</div><div class="v">${d.lonShift}°</div></div>
+      <div class="dcard" style="grid-column:1/-1;"><div class="l">Jenis</div><div class="v" style="color:${d.type.color}">${d.type.label}</div></div>
+    `;
+    [...svg.querySelectorAll('circle')].forEach((c,i)=> c.setAttribute('r', i===idx?7:4.5));
+    drawLonStrip(d.lonShift);
+  }
+  pickSlider.oninput = showDetail;
+
+  function drawLonStrip(lonShift){
+    const lsvg=document.getElementById('lonSvg'); lsvg.innerHTML='';
+    const X0=10, X1=750, W=X1-X0;
+    const bandColors=['#22304a','#2a2038','#302818'];
+    for(let b=0;b<3;b++){
+      lsvg.appendChild(el('rect',{x:X0+b*W/3, y:15, width:W/3, height:20, fill:bandColors[b]}));
+      const lbl=el('text',{x:X0+b*W/3+W/6, y:29, fill:'#8493a6','font-size':10,'text-anchor':'middle'}); lbl.textContent='Pita '+(b+1); lsvg.appendChild(lbl);
+    }
+    const mx=X0+(lonShift/360)*W;
+    lsvg.appendChild(el('line',{x1:mx,y1:8,x2:mx,y2:42,stroke:'#E0A83E','stroke-width':2.5}));
+    lsvg.appendChild(el('circle',{cx:mx,cy:8,r:4,fill:'#E0A83E'}));
+    const t=el('text',{x:mx,y:52,fill:'#E0A83E','font-size':10,'text-anchor':'middle'}); t.textContent=lonShift+'°'; lsvg.appendChild(t);
+  }
+}
+
+['startDate','latStart','drift','nCount'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', render);
+});
+render();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

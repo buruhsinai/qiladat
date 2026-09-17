@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulasi Pulau: Menguji Waktu Adaptasi — JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-900:#0e1512; --ink-800:#141d19; --ink-700:#1b2621; --ink-600:#28362f;
+    --jade-500:#4a9b7a; --jade-300:#84c7a8;
+    --brass-500:#c39a54; --brass-300:#d9bc85;
+    --coral-500:#c1683f; --coral-300:#d89a78;
+    --rust-500:#b1543a;
+    --text-hi:#eef3ef; --text-mid:#a9b8b0; --text-dim:#74827b;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--ink-900);color:var(--text-hi);font-family:'Karla',sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;}
+  ::selection{background:var(--jade-500);color:#fff;}
+  a{color:var(--brass-300);}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+
+  .hero{position:relative;padding:56px 0 40px;overflow:hidden;border-bottom:1px solid var(--ink-600);
+    background:radial-gradient(ellipse at 75% -10%, rgba(74,155,122,0.15), transparent 55%), var(--ink-900);}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--jade-300);margin:0 0 14px;}
+  h1{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(24px,4.6vw,38px);line-height:1.16;margin:0 0 16px;color:var(--text-hi);}
+  .hero p.lede{font-size:17px;color:var(--text-mid);max-width:66ch;margin:0 0 6px;}
+  .hero-lineage{margin-top:22px;display:flex;gap:10px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-dim);}
+  .hero-lineage span{border:1px solid var(--ink-600);padding:4px 10px;border-radius:999px;}
+  .hero-lineage span b{color:var(--jade-300);font-weight:600;}
+
+  section{padding:44px 0;border-bottom:1px solid var(--ink-700);}
+  section:last-of-type{border-bottom:none;}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin:0 0 18px;}
+  .sec-num{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--jade-300);border:1px solid var(--ink-600);border-radius:4px;padding:2px 7px;}
+  h2{font-family:'Fraunces',serif;font-weight:600;font-size:22px;margin:0;color:var(--text-hi);}
+  h3{font-family:'Fraunces',serif;font-weight:600;font-size:16px;margin:0 0 8px;color:var(--text-hi);}
+  p{color:var(--text-mid);margin:0 0 12px;}
+  ul{color:var(--text-mid);padding-left:20px;margin:0 0 12px;}
+  li{margin-bottom:6px;}
+  code,.mono{font-family:'IBM Plex Mono',monospace;}
+  code{background:var(--ink-700);color:var(--brass-300);padding:1px 6px;border-radius:4px;font-size:.92em;}
+
+  .mech-grid{display:grid;grid-template-columns:1fr;gap:14px;margin:18px 0;}
+  @media(min-width:680px){.mech-grid{grid-template-columns:1fr 1fr 1fr;}}
+  .mech-card{background:var(--ink-800);border:1px solid var(--ink-600);border-radius:8px;padding:14px 16px;}
+  .mech-card h3{font-size:14px;color:var(--jade-300);}
+  .mech-card p{font-size:13px;margin:0;}
+
+  .case-box{background:var(--ink-800);border:1px solid var(--ink-600);border-radius:10px;padding:18px 20px;margin:18px 0;}
+  .case-box .tag{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--coral-300);text-transform:uppercase;letter-spacing:.04em;}
+
+  .panel{background:var(--ink-800);border:1px solid var(--ink-600);border-radius:10px;padding:22px;margin-bottom:22px;}
+  .panel h3{color:var(--jade-300);}
+
+  select{
+    font-family:'Karla',sans-serif;font-weight:700;font-size:13px;color:var(--text-hi);
+    background:var(--ink-700);border:1px solid var(--ink-600);border-radius:6px;padding:8px 10px;margin-bottom:14px;
+  }
+  .slider-row label{display:flex;justify-content:space-between;font-size:13px;color:var(--text-mid);margin-bottom:6px;}
+  .slider-row label b{color:var(--text-hi);font-family:'IBM Plex Mono',monospace;}
+  input[type="range"]{width:100%;accent-color:var(--jade-500);}
+  .slider-row{margin-bottom:16px;}
+
+  .toggle-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;font-size:13px;color:var(--text-mid);}
+  .toggle-row input{accent-color:var(--jade-500);width:18px;height:18px;}
+
+  .result-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:6px;}
+  .result-card{background:var(--ink-700);border:1px solid var(--ink-600);border-radius:8px;padding:12px;}
+  .result-card .label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;}
+  .result-card .value{font-family:'IBM Plex Mono',monospace;font-size:16px;color:var(--text-hi);margin-top:4px;}
+
+  .verdict{margin-top:14px;padding:14px 16px;border-radius:8px;font-size:13.5px;border:1px solid var(--ink-600);
+    background:rgba(74,155,122,0.1);border-color:rgba(74,155,122,0.4);color:var(--text-hi);}
+
+  table.ttable{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:12.5px;margin-top:6px;}
+  table.ttable td,table.ttable th{border:1px solid var(--ink-600);padding:6px 8px;text-align:left;color:var(--text-mid);}
+  table.ttable th{color:var(--jade-300);background:var(--ink-700);}
+
+  .whatsapp-box{display:flex;gap:14px;align-items:center;background:var(--ink-700);border:1px solid var(--ink-600);border-radius:10px;padding:16px 18px;margin-top:8px;}
+  .whatsapp-box a{font-family:'Karla',sans-serif;font-weight:700;font-size:13px;color:var(--ink-900);background:var(--brass-500);padding:9px 16px;border-radius:6px;text-decoration:none;white-space:nowrap;}
+  .whatsapp-box a:hover{background:var(--brass-300);}
+
+  footer{padding:30px 0 60px;color:var(--text-dim);font-size:12px;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <p class="eyebrow">JAZMI · Laboratorium Evolusi &amp; Adaptasi — Pulau</p>
+    <h1>Simulasi Pulau: Menguji Waktu Adaptasi</h1>
+    <p class="lede">Bagaimana bagian tubuh yang vital bisa berubah, padahal perubahan itu perlu waktu lama sementara fungsinya tidak boleh berhenti? Kita hanya melihat tulang dan bekas — bukan prosesnya. Alat ini tidak berpura-pura menjawab semuanya, tapi mengambil kasus-kasus nyata yang benar-benar terukur untuk membuat rentang waktu evolusi bisa dicerna, bukan sekadar dibayangkan.</p>
+    <div class="hero-lineage">
+      <span><b>Bukan anti-sains</b> · menguji, bukan menolak</span>
+      <span><b>Bukan romantisasi</b> · angka dulu, kesimpulan belakangan</span>
+      <span><b>Kasus nyata terukur</b> · bukan hipotetis</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- BELAJAR -->
+  <section id="belajar">
+    <div class="sec-head"><span class="sec-num">01</span><h2>Belajar</h2></div>
+    <p>Pertanyaannya sah dan penting: bagaimana bagian tubuh yang <b>vital</b> — sistem pencernaan, misalnya — bisa berubah bentuk untuk menyesuaikan makanan baru, padahal perubahan butuh waktu sementara organisme itu harus tetap makan &amp; bertahan hidup setiap hari selama proses berlangsung? Ini bukan pertanyaan naif — ini persis pertanyaan yang dijawab tiga mekanisme berikut dalam biologi evolusi modern:</p>
+    <div class="mech-grid">
+      <div class="mech-card">
+        <h3>1. Variasi yang sudah ada</h3>
+        <p>Populasi biasanya sudah punya rentang variasi sebelum tekanan seleksi datang — bukan semua individu identik. Seleksi tidak perlu "menciptakan" bentuk baru dari nol; ia cukup mengubah <i>frekuensi</i> variasi yang sudah tersedia. Beberapa individu sudah sedikit lebih cocok dari lahir.</p>
+      </div>
+      <div class="mech-card">
+        <h3>2. Plastisitas &amp; asimilasi genetik</h3>
+        <p>Tubuh sering bisa merespons lingkungan secara fleksibel dulu (tanpa perubahan genetik) — respons ini langsung berfungsi, tidak ada jeda "tidak berfungsi". Jika respons itu menguntungkan, seleksi lama-lama membuatnya lebih otomatis/terwariskan secara genetik. Dikenal sebagai efek Baldwin.</p>
+      </div>
+      <div class="mech-card">
+        <h3>3. Redundansi &amp; eksaptasi</h3>
+        <p>Fungsi vital sering dijaga oleh salinan gen ganda — satu salinan tetap menjalankan fungsi lama, salinan lain bebas berubah. Struktur baru juga sering "meminjam" bagian yang tadinya berfungsi untuk hal lain (eksaptasi) — bukan muncul mendadak dari ketiadaan.</p>
+      </div>
+    </div>
+
+    <div class="case-box">
+      <div class="tag">Kasus nyata — mekanisme 1 &amp; 2 sekaligus</div>
+      <h3 style="margin-top:8px;">Kadal Pod Mrčaru (Italia/Kroasia)</h3>
+      <p>Tahun 1971, 10 ekor kadal tembok Italia (<i>Podarcis sicula</i>) dipindahkan ke pulau kecil Pod Mrčaru yang minim serangga tapi kaya tumbuhan. Ditemukan kembali 36 tahun (~30 generasi) kemudian, populasi ini sudah punya kepala lebih besar, gigitan lebih kuat, DAN struktur usus baru — <b>katup sekum</b> — yang tak pernah tercatat pada spesies ini sebelumnya, berfungsi memperlambat pencernaan agar mikroba usus sempat memfermentasi serat tumbuhan.</p>
+      <p style="margin-bottom:0;"><b>Catatan jujur yang justru memperkuat kasus ini:</b> penelitian lanjutan menemukan sebagian perubahan pencernaan itu bersifat <i>plastis</i> — ketika kadal Pod Mrčaru diberi pakan serangga eksklusif selama 15 minggu, katup sekumnya mengecil/menghilang. Ini bukan kelemahan datanya, justru ilustrasi hidup mekanisme #2 di atas: sistem pencernaan sudah punya kapasitas merespons diet secara fleksibel SEBELUM ia menjadi sifat yang lebih tetap secara genetik.</p>
+    </div>
+  </section>
+
+  <!-- EKSPLORASI -->
+  <section id="eksplorasi">
+    <div class="sec-head"><span class="sec-num">02</span><h2>Eksplorasi</h2></div>
+    <p>Kalkulator di bawah memakai <b>persamaan pemulia (breeder's equation)</b> — rumus baku genetika kuantitatif untuk memprediksi seberapa cepat sifat terukur (ukuran organ, kekuatan gigitan, dst.) bergeser di bawah tekanan seleksi terus-menerus.</p>
+
+    <div class="panel">
+      <h3>Kalkulator: Berapa Lama Perubahan Adaptif Terjadi?</h3>
+      <div class="slider-row">
+        <label for="targetRange">Besar perubahan yang ingin dicapai <b id="targetVal">— σ (simpangan baku sifat)</b></label>
+        <input type="range" id="targetRange" min="0.5" max="10" step="0.5" value="2">
+      </div>
+      <div class="slider-row">
+        <label for="h2Range">Heritabilitas sifat (h²) <b id="h2Val">—</b></label>
+        <input type="range" id="h2Range" min="0.1" max="0.9" step="0.05" value="0.5">
+      </div>
+      <div class="slider-row">
+        <label for="sRange">Intensitas seleksi per generasi <b id="sVal">— σ/generasi</b></label>
+        <input type="range" id="sRange" min="0.05" max="1" step="0.05" value="0.3">
+      </div>
+      <div class="toggle-row">
+        <input type="checkbox" id="hybridToggle">
+        <label for="hybridToggle">Variasi genetik berdiri diperbesar (mis. lewat percampuran/hibridisasi populasi) — melipatgandakan laju respons</label>
+      </div>
+      <div class="slider-row">
+        <label for="orgSelectSim">Organisme (menentukan waktu generasi)</label>
+        <select id="orgSelectSim"></select>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-card"><div class="label">Jumlah generasi dibutuhkan</div><div class="value" id="outGenSim">—</div></div>
+        <div class="result-card"><div class="label">Perkiraan waktu nyata</div><div class="value" id="outYearsSim">—</div></div>
+      </div>
+      <div class="verdict" id="simVerdict"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Pembanding: Radiasi Adaptif (Pembentukan Banyak Spesies)</h3>
+      <p style="font-size:13px;">Kalkulator di atas memodelkan pergeseran SATU sifat terukur, bukan pembentukan spesies baru (yang juga butuh isolasi reproduktif — proses berbeda, tidak disimulasikan kuantitatif di sini). Sebagai pembanding jujur, ini rentang waktu radiasi adaptif yang benar-benar terukur:</p>
+      <table class="ttable">
+        <tr><th>Kasus</th><th>Jumlah spesies</th><th>Waktu</th><th>Faktor pendorong diketahui</th></tr>
+        <tr><td>Cichlid Danau Victoria</td><td>~500</td><td>15.000–16.000 tahun</td><td>Hibridisasi leluhur — variasi genetik melimpah sejak awal, radiasi vertebrata tercepat yang diketahui</td></tr>
+        <tr><td>Cichlid Danau Malawi</td><td>~500</td><td>&lt;800.000 tahun</td><td>Hibridisasi leluhur serupa</td></tr>
+        <tr><td>Cichlid Danau Tanganyika</td><td>~250</td><td>10–12 juta tahun</td><td>Tanpa dorongan hibridisasi sebesar dua danau di atas — jauh lebih lambat</td></tr>
+        <tr><td>Finch Galápagos, Anolis Karibia, honeycreeper Hawaii</td><td>belasan–puluhan</td><td>jutaan tahun</td><td>Radiasi bertahap tanpa ledakan variasi awal sebesar cichlid</td></tr>
+      </table>
+      <p style="font-size:13px;margin-top:10px;">Pola yang konsisten: <b>ketersediaan variasi genetik di awal</b> — bukan cuma waktu yang tersedia — sangat menentukan kecepatan radiasi. Dua danau dengan hibridisasi leluhur menghasilkan radiasi 100–1000× lebih cepat dari danau tanpa faktor itu.</p>
+    </div>
+  </section>
+
+  <!-- METODE -->
+  <section id="metode">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Metode</h2></div>
+    <p>Persamaan pemulia: <code>R = h² × S</code>, dengan <code>R</code> = respons seleksi (pergeseran rata-rata sifat per generasi, dalam satuan simpangan baku σ), <code>h²</code> = heritabilitas (proporsi variasi sifat yang diwariskan), dan <code>S</code> = diferensial seleksi (seberapa jauh individu yang lolos seleksi berbeda dari rata-rata populasi).</p>
+    <p>Kalkulator mengasumsikan <code>R</code> konstan tiap generasi (penyederhanaan — lihat Batasan) sehingga jumlah generasi untuk mencapai target perubahan total <code>T</code> (dalam σ) adalah <code>generasi = T / (h² × S)</code>. Opsi "variasi genetik berdiri diperbesar" melipatgandakan <code>h²×S</code> efektif sebesar 2× — mewakili efek nyata yang diamati pada radiasi cichlid: hibridisasi menyuntikkan variasi baru yang langsung bisa diseleksi, bukan menunggu mutasi baru muncul satu per satu.</p>
+  </section>
+
+  <!-- BATASAN -->
+  <section id="batasan">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Batasan</h2></div>
+    <ul>
+      <li><b>Ini simulator pergeseran sifat, bukan simulator asal-usul struktur baru.</b> Persamaan pemulia memodelkan seberapa cepat rata-rata sifat BERGESER dalam populasi yang sudah punya variasi — bukan bagaimana sebuah struktur benar-benar baru (seperti katup sekum) pertama kali muncul. Untuk itu, penjelasan yang relevan adalah mekanisme #2 dan #3 di bagian Belajar (plastisitas &amp; eksaptasi), bukan rumus di kalkulator ini.</li>
+      <li><b><code>R</code> konstan adalah penyederhanaan.</b> Pada populasi nyata, variasi genetik bisa habis terpakai (respons melambat) atau justru bertambah lewat mutasi &amp; rekombinasi baru — kalkulator ini tidak memodelkan dinamika itu, hanya laju rata-rata sederhana.</li>
+      <li><b>Pembentukan spesies baru (spesiasi) memerlukan isolasi reproduktif</b> — bukan cuma pergeseran sifat fisik sejauh apa pun. Dua populasi bisa sangat berbeda secara fisik tapi masih satu spesies (bisa kawin silang), atau nyaris identik secara fisik tapi sudah terisolasi secara reproduktif. Tabel radiasi adaptif di atas bersifat deskriptif-komparatif, bukan hasil kalkulator ini.</li>
+      <li><b>Kejujuran soal fosil:</b> untuk peristiwa evolusi purba, yang benar-benar kita miliki hanyalah bekas &amp; struktur akhir (fosil, anatomi banding, DNA masa kini) — bukan rekaman proses langsung. Kasus-kasus modern seperti kadal Pod Mrčaru dan cichlid Danau Victoria berharga justru karena keduanya BENAR-BENAR teramati dari awal sampai akhir, memberi kalibrasi nyata untuk apa yang secara prinsip mungkin dicapai dalam rentang waktu tertentu — bukan bukti bahwa setiap peristiwa purba pasti berjalan lewat jalur identik.</li>
+      <li>Nilai <code>h²</code> dan <code>S</code> di kalkulator adalah <b>parameter yang bisa diatur pengguna</b>, bukan angka pasti untuk kasus tertentu — gunakan sebagai alat berpikir "bagaimana jika", bukan prediksi presisi untuk spesies nyata mana pun.</li>
+    </ul>
+  </section>
+
+  <!-- REFERENSI -->
+  <section id="referensi">
+    <div class="sec-head"><span class="sec-num">05</span><h2>Referensi</h2></div>
+    <ul>
+      <li>A. Herrel dkk., "Rapid Large-Scale Evolutionary Divergence in Morphology and Performance Associated with Exploitation of a Different Dietary Resource", <i>PNAS</i> 105(12), 2008 — kadal Pod Mrčaru.</li>
+      <li>M. J. Genner, "New Structure Evolved in Just 36 Years" &amp; sumber terkait — catatan plastisitas katup sekum pada diet eksperimen.</li>
+      <li>O. M. Selz &amp; O. Seehausen dkk., "Cycles of Fusion and Fission Enabled Rapid Parallel Adaptive Radiations in African Cichlids", <i>Science</i>, 2023; serta studi genomik terkait di <i>Nature</i> 2014 — radiasi cichlid Danau Victoria &amp; Malawi.</li>
+      <li>C. H. Waddington, konsep asimilasi genetik/efek Baldwin — genetika evolusioner standar.</li>
+      <li>Persamaan pemulia (breeder's equation) — materi standar genetika kuantitatif populasi.</li>
+    </ul>
+
+    <div class="whatsapp-box">
+      <p style="margin:0;color:var(--text-mid);font-size:13.5px;">Alat ini bagian dari pengembangan tahap awal JAZMI. Ada koreksi data, usul kasus lain, atau mau diskusi lebih lanjut?</p>
+      <a id="waLink" href="#" target="_blank" rel="noopener">WhatsApp</a>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">Simulasi Pulau: Menguji Waktu Adaptasi — bagian dari Laboratorium Evolusi &amp; Adaptasi, JAZMI (Jalinan Zamrud Islamiah). Versi awal, dibangun mengikuti metode Belajar → Model → Uji → Tool.</div>
+</footer>
+
+<script>
+(function(){
+  const ORGS = {
+    serangga: { name:"Serangga (generasi ~2 bulan)", genYears: 2/12 },
+    kadal:    { name:"Kadal kecil (generasi ~1,2 tahun — dikalibrasi dari kasus Pod Mrčaru)", genYears: 1.2 },
+    ikan:     { name:"Ikan kecil / cichlid (generasi ~1 tahun)", genYears: 1 },
+    burung:   { name:"Burung kecil (generasi ~2 tahun)", genYears: 2 },
+    mamalia:  { name:"Mamalia besar (generasi ~8 tahun)", genYears: 8 }
+  };
+
+  const els = {
+    targetRange: document.getElementById('targetRange'), targetVal: document.getElementById('targetVal'),
+    h2Range: document.getElementById('h2Range'), h2Val: document.getElementById('h2Val'),
+    sRange: document.getElementById('sRange'), sVal: document.getElementById('sVal'),
+    hybridToggle: document.getElementById('hybridToggle'),
+    orgSelectSim: document.getElementById('orgSelectSim'),
+    outGenSim: document.getElementById('outGenSim'), outYearsSim: document.getElementById('outYearsSim'),
+    verdict: document.getElementById('simVerdict'),
+    waLink: document.getElementById('waLink')
+  };
+
+  function buildOrgSelect(){
+    els.orgSelectSim.innerHTML = '';
+    Object.keys(ORGS).forEach(key=>{
+      const opt = document.createElement('option');
+      opt.value = key; opt.textContent = ORGS[key].name;
+      els.orgSelectSim.appendChild(opt);
+    });
+    els.orgSelectSim.value = 'kadal';
+  }
+
+  function render(){
+    const target = parseFloat(els.targetRange.value);
+    const h2 = parseFloat(els.h2Range.value);
+    const S = parseFloat(els.sRange.value);
+    const hybrid = els.hybridToggle.checked;
+    const org = ORGS[els.orgSelectSim.value];
+
+    els.targetVal.textContent = target + ' σ';
+    els.h2Val.textContent = h2.toFixed(2);
+    els.sVal.textContent = S.toFixed(2) + ' σ/generasi';
+
+    const multiplier = hybrid ? 2 : 1;
+    const RperGen = h2*S*multiplier;
+    const generations = target/RperGen;
+    const years = generations*org.genYears;
+
+    els.outGenSim.textContent = generations.toFixed(1) + ' generasi';
+    els.outYearsSim.textContent = years < 1 ? (years*12).toFixed(1)+' bulan' : years.toFixed(1) + ' tahun';
+
+    let msg = 'Dengan parameter ini, dibutuhkan sekitar <b>'+generations.toFixed(1)+' generasi</b> (~'+ (years<1? (years*12).toFixed(1)+' bulan': years.toFixed(1)+' tahun') +') untuk mencapai pergeseran '+target+'σ. ';
+    msg += 'Sebagai pembanding: kadal Pod Mrčaru mencapai ~2σ pergeseran struktur kepala &amp; usus dalam 30 generasi (36 tahun) di lapangan sungguhan' + (hybrid ? ' — tanpa dorongan tambahan variasi genetik seperti opsi hibridisasi yang Anda aktifkan sekarang.' : '.');
+
+    els.verdict.innerHTML = msg;
+
+    const waMsg = encodeURIComponent(
+      'Halo, saya baru mencoba Simulasi Pulau: Menguji Waktu Adaptasi (JAZMI). Ingin diskusi/validasi lebih lanjut.'
+    );
+    els.waLink.href = 'https://wa.me/6281356572588?text=' + waMsg;
+  }
+
+  [els.targetRange, els.h2Range, els.sRange, els.hybridToggle, els.orgSelectSim].forEach(el=>el.addEventListener('input', render));
+
+  buildOrgSelect();
+  render();
+})();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

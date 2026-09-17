@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hukum Malus — JAZMI Fisika</title>
+<style>
+  :root{--bg:#141210;--panel:#1c1916;--panel2:#211d19;--gold:#c9a24b;--gold-soft:#8a7440;--text:#e8e0d0;--text-dim:#a89a80;--line:#3a332a;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Georgia,'Times New Roman',serif;line-height:1.6;}
+  .container{max-width:700px;margin:0 auto;padding:24px 16px 60px;}
+  header{text-align:center;margin-bottom:22px;border-bottom:1px solid var(--line);padding-bottom:16px;}
+  header h1{font-size:1.3rem;color:var(--gold);margin:0 0 6px;}
+  header p{color:var(--text-dim);margin:0;font-size:0.88rem;font-style:italic;}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:14px;}
+  p{margin:0 0 8px;font-size:0.9rem;} p:last-child{margin-bottom:0;}
+  .dim{color:var(--text-dim);font-size:0.82rem;}
+  h2{color:var(--gold);font-size:1rem;margin:0 0 10px;}
+  input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:var(--line);outline:none;margin-top:8px;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--gold);cursor:pointer;border:2px solid var(--bg);}
+  .stage{display:flex;align-items:center;justify-content:center;gap:20px;margin:16px 0;}
+  .lamp{width:60px;height:60px;border-radius:50%;background:#fff8e0;box-shadow:0 0 30px 10px #fff8e0;}
+  .filter{width:50px;height:110px;border:3px solid var(--gold-soft);border-radius:8px;position:relative;background:rgba(201,162,75,0.08);}
+  .filter .line{position:absolute;top:50%;left:50%;width:2px;height:90px;background:var(--gold);transform-origin:center;}
+  .result{width:60px;height:60px;border-radius:50%;transition:opacity 0.15s, box-shadow 0.15s;}
+  .formula{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:10px 14px;font-family:'Courier New',monospace;font-size:0.86rem;margin:8px 0;text-align:center;}
+  .readout{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:12px;}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;flex:1;text-align:center;}
+  .stat .l{font-size:0.68rem;color:var(--text-dim);text-transform:uppercase;}
+  .stat .v{font-size:1rem;color:var(--gold);}
+  ul{margin:6px 0;padding-left:20px;font-size:0.88rem;}
+  footer{text-align:center;color:var(--text-dim);font-size:0.74rem;margin-top:18px;}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>Hukum Malus</h1>
+  <p>Kenapa memutar kacamata polarisasi/filter kamera bisa menggelapkan pemandangan?</p>
+</header>
+
+<section>
+  <p>Cahaya biasa bergetar ke segala arah. Filter polarisasi (seperti pada kacamata anti-silau atau filter CPL kamera) hanya meloloskan getaran pada SATU arah saja. Kalau cahaya yang sudah terpolarisasi itu ditembakkan ke filter KEDUA yang diputar-putar, jumlah cahaya yang lolos berubah mengikuti hukum sederhana:</p>
+  <div class="formula">I = I₀ × cos²(θ)</div>
+  <p class="dim">θ = sudut antara arah polarisasi filter pertama dan kedua. Saat sejajar (θ=0°) hampir semua cahaya lolos; saat tegak lurus (θ=90°) cahaya nyaris hilang total — inilah yang membuat dua lensa polarisasi yang disilangkan tegak lurus terlihat gelap total.</p>
+</section>
+
+<section>
+  <h2>Coba Sendiri</h2>
+  <div class="stage">
+    <div class="lamp"></div>
+    <div class="filter"><div class="line" id="filterLine"></div></div>
+    <div class="result" id="hasil"></div>
+  </div>
+  <input type="range" id="theta" min="0" max="90" step="1" value="30">
+  <div class="readout">
+    <div class="stat"><div class="l">Sudut (θ)</div><div class="v" id="out_theta">30°</div></div>
+    <div class="stat"><div class="l">Cahaya Lolos</div><div class="v" id="out_I">—</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Kaitan Sehari-hari</h2>
+  <ul>
+    <li>Kacamata polarisasi mengurangi silau pantulan air/aspal karena cahaya pantul cenderung terpolarisasi horizontal — lensa kacamata sengaja dipasang meloloskan arah vertikal saja.</li>
+    <li>Filter CPL kamera dipakai memutar-mutar sampai langit terlihat lebih biru pekat atau pantulan kaca hilang — persis menerapkan hukum ini secara langsung.</li>
+    <li>Layar LCD memancarkan cahaya terpolarisasi — coba miringkan kepala saat memakai kacamata polarisasi di depan layar HP, kecerahannya berubah!</li>
+  </ul>
+</section>
+
+<footer>Bagian dari Laboratorium Fisika — Bank Ide Qiladat/JAZMI. Pelengkap ringan No. 13.</footer>
+</div>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  function update(){
+    const theta = parseFloat($('theta').value);
+    const rad = theta*Math.PI/180;
+    const I = Math.pow(Math.cos(rad),2);
+    $('out_theta').textContent = theta+'°';
+    $('out_I').textContent = (I*100).toFixed(1)+'%';
+    $('filterLine').style.transform = `translate(-50%,-50%) rotate(${theta}deg)`;
+    $('hasil').style.background = '#fff8e0';
+    $('hasil').style.opacity = Math.max(0.04, I);
+    $('hasil').style.boxShadow = I>0.05 ? `0 0 ${30*I}px ${10*I}px #fff8e0` : 'none';
+  }
+  $('theta').addEventListener('input', update);
+  update();
+})();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

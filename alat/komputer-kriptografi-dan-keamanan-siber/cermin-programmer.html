@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cermin Programmer — JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --emerald-deep:#0F3D2E; --emerald-mid:#1D5C43; --ivory:#FAF6ED; --ivory-soft:#F1EADA;
+    --ink:#1C2B24; --gold:#B8934A; --gold-soft:#E7D2A0; --line:rgba(15,61,46,0.14);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--ivory);color:var(--ink);font-family:'Karla',sans-serif;line-height:1.65;}
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;color:var(--emerald-deep);letter-spacing:-0.01em;}
+  .wrap{max-width:840px;margin:0 auto;padding:0 24px;}
+
+  .versi-awal{background:var(--emerald-deep);color:var(--ivory);padding:14px 24px;}
+  .versi-awal .wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap;max-width:840px;}
+  .versi-awal .badge{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;background:var(--gold);color:var(--emerald-deep);padding:4px 9px;border-radius:2px;flex-shrink:0;}
+  .versi-awal p{margin:0;font-size:14px;color:rgba(250,246,237,0.92);flex:1;min-width:220px;}
+
+  .crumb{padding:20px 24px 0;max-width:840px;margin:0 auto;font-size:13px;letter-spacing:0.04em;text-transform:uppercase;color:var(--emerald-mid);opacity:0.75;}
+  .crumb span{color:var(--ink);opacity:0.4;margin:0 6px;}
+
+  .hero{padding:32px 0 24px;}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:14px;}
+  .eyebrow::before{content:"";width:18px;height:1px;background:var(--gold);display:inline-block;}
+  .hero h1{font-size:clamp(24px,4.5vw,34px);margin:0 0 12px;line-height:1.2;}
+  .hero p.lede{font-size:16px;color:var(--emerald-deep);opacity:0.85;max-width:64ch;margin:0;}
+
+  section{padding:32px 0;border-top:1px solid var(--line);}
+  section:first-of-type{border-top:none;}
+  .label{font-size:12px;letter-spacing:0.09em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:10px;}
+  section h2{font-size:20px;margin:0 0 14px;}
+  section p{margin:0 0 12px;font-size:15px;}
+  ul.plain{margin:0 0 12px;padding-left:20px;}
+  ul.plain li{margin-bottom:8px;font-size:15px;}
+  code.formula{display:block;background:var(--ivory-soft);padding:12px 14px;border-radius:3px;font-family:monospace;font-size:13px;margin:10px 0;color:var(--emerald-deep);overflow-x:auto;}
+
+  .renungan-box{background:var(--ivory-soft);border-left:3px solid var(--gold);padding:16px 18px;border-radius:2px;font-size:15px;font-style:italic;color:var(--emerald-deep);margin:16px 0;}
+
+  .kartu{background:var(--emerald-deep);color:var(--ivory);border-radius:4px;padding:26px;margin-bottom:16px;}
+  .kartu h3{color:var(--ivory);margin:0 0 4px;font-size:16.5px;}
+  .kartu .sublabel{font-size:12px;color:rgba(250,246,237,0.55);margin-bottom:18px;}
+
+  /* Tumpukan abstraksi */
+  .lapisan-list{margin-bottom:18px;}
+  .lapisan-item{
+    display:flex;align-items:center;gap:12px;padding:11px 14px;margin-bottom:6px;border-radius:3px;
+    background:rgba(250,246,237,0.06);border-left:3px solid rgba(231,210,160,0.25);cursor:pointer;transition:all 0.15s;
+  }
+  .lapisan-item:hover{background:rgba(250,246,237,0.1);}
+  .lapisan-item .nomor{font-family:'Fraunces',serif;color:var(--gold-soft);font-size:13px;min-width:20px;}
+  .lapisan-item .nama-lapisan{flex:1;font-size:13.5px;}
+  .lapisan-item .status-paham{font-size:11px;padding:3px 9px;border-radius:10px;font-weight:700;}
+  .status-paham.paham{background:rgba(123,174,143,0.25);color:#9BC9AC;}
+  .status-paham.sedikit{background:rgba(184,147,74,0.25);color:var(--gold-soft);}
+  .status-paham.tidak{background:rgba(199,123,91,0.25);color:#E8A088;}
+
+  .ringkasan-jarak{background:rgba(250,246,237,0.07);border-radius:4px;padding:18px 20px;text-align:center;margin-top:14px;}
+  .ringkasan-jarak .angka-besar{font-family:'Fraunces',serif;font-size:32px;color:var(--gold-soft);}
+  .ringkasan-jarak .ket{font-size:12.5px;color:rgba(250,246,237,0.65);margin-top:4px;}
+
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:13px;margin-bottom:6px;color:var(--gold-soft);}
+  .field input, .field select{width:100%;padding:10px 12px;border-radius:3px;border:1px solid rgba(231,210,160,0.35);background:rgba(250,246,237,0.06);color:var(--ivory);font-family:'Karla',sans-serif;font-size:14.5px;}
+  .field .hint{font-size:11.5px;color:rgba(250,246,237,0.5);margin-top:5px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media (max-width:560px){.grid2{grid-template-columns:1fr;}}
+
+  button.aksi{padding:12px 18px;border:none;border-radius:3px;font-family:'Karla',sans-serif;font-weight:700;font-size:14px;cursor:pointer;}
+  button.aksi.utama{background:var(--gold);color:var(--emerald-deep);width:100%;margin-top:6px;}
+  button.aksi.utama:hover{background:var(--gold-soft);}
+
+  /* Ekonomi perhatian */
+  .chart-box{background:#FFFFFF;border:1px solid var(--line);border-radius:4px;margin-top:18px;padding:16px;text-align:center;}
+  .chart-box svg{max-width:100%;height:auto;}
+
+  .statistik-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;}
+  @media (max-width:560px){.statistik-grid{grid-template-columns:1fr;}}
+  .stat-box{background:rgba(250,246,237,0.07);border-radius:4px;padding:14px;text-align:center;}
+  .stat-box .angka{font-family:'Fraunces',serif;font-size:24px;color:var(--gold-soft);}
+  .stat-box .label-stat{font-size:11px;text-transform:uppercase;letter-spacing:0.04em;color:rgba(250,246,237,0.6);margin-top:3px;}
+
+  .pertanyaan-box{
+    background:rgba(184,147,74,0.12);border:1px solid rgba(184,147,74,0.35);border-radius:4px;
+    padding:18px 20px;margin-top:16px;font-size:14.5px;font-style:italic;color:var(--emerald-deep);
+  }
+
+  .verifikasi-box{background:var(--ivory-soft);border-radius:4px;padding:16px 18px;margin:14px 0;font-size:13.5px;}
+  .verifikasi-box .baris-cek{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);gap:12px;}
+  .verifikasi-box .baris-cek:last-child{border-bottom:none;}
+
+  .batasan-item{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start;}
+  .batasan-item .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:8px;flex-shrink:0;}
+  .disclaimer-box{background:var(--ivory-soft);border-left:3px solid var(--gold);padding:14px 16px;border-radius:2px;font-size:14px;margin-top:14px;}
+
+  .konsultasi{margin-top:8px;padding:20px;border:1px dashed var(--line);border-radius:4px;text-align:center;}
+  .konsultasi p{font-size:14px;margin-bottom:12px;color:var(--emerald-deep);}
+  .btn-konsul{display:inline-block;padding:10px 22px;border-radius:3px;background:var(--emerald-mid);color:var(--ivory);font-family:'Karla',sans-serif;font-weight:600;font-size:14px;cursor:pointer;text-decoration:none;}
+
+  footer{padding:24px 24px 50px;font-size:13px;color:var(--emerald-mid);opacity:0.7;max-width:840px;margin:0 auto;}
+</style>
+</head>
+<body>
+
+<div class="versi-awal">
+  <div class="wrap">
+    <span class="badge">Versi Awal — Bukan Penilaian, Cermin</span>
+    <p>Alat ini tidak menilai siapa "programmer sungguhan" dan siapa bukan. Ia cuma menawarkan dua cermin matematis untuk direnungkan sendiri.</p>
+  </div>
+</div>
+
+<div class="crumb">JAZMI <span>/</span> Alat <span>/</span> Cermin Programmer</div>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">Alat — Refleksi &amp; Sains Komputer</div>
+    <h1>Cermin Programmer</h1>
+    <p class="lede">Untuk ruang-ruang tempat identitas "programmer" sering dirayakan — Terminal, GitHub, dan semacamnya. Dua cermin matematis, bukan penghakiman: seberapa jauh kode Anda dari mesin sungguhan, dan kenapa "perhatian" (bintang, follower) hampir tidak pernah terbagi rata.</p>
+  </div>
+
+  <section id="belajar" style="border-top:none;padding-top:0;">
+    <div class="label">01 — Belajar</div>
+    <h2>Dua fakta yang jarang dibahas</h2>
+    <p>Ruang seperti terminal Linux dan GitHub sering jadi tempat orang membangun identitas "aku programmer" — tapi identitas itu bisa terbentuk tanpa benar-benar menyentuh apa yang membuat sesuatu itu <em>bekerja</em>. Dua hal berikut ini murni matematis, bukan opini:</p>
+    <div class="renungan-box">
+      "Menguasai bahasa mesin" itu sendiri adalah frasa yang jarang ditanyakan maknanya — bahasa mesin yang mana? Berapa lapis di bawah baris kode yang biasa Anda tulis?
+    </div>
+  </section>
+
+  <section id="jarak-mesin">
+    <div class="label">02 — Cermin 1: Jarak ke Mesin</div>
+    <div class="kartu">
+      <h3>Tumpukan Abstraksi</h3>
+      <div class="sublabel">Klik tiap lapisan, tandai jujur seberapa Anda memahaminya — bukan seberapa sering Anda memakainya</div>
+
+      <div class="lapisan-list" id="lapisanList"></div>
+
+      <div class="ringkasan-jarak" id="ringkasanJarak"></div>
+    </div>
+  </section>
+
+  <section id="ekonomi-perhatian">
+    <div class="label">03 — Cermin 2: Ekonomi Perhatian</div>
+    <h2>Kenapa bintang GitHub hampir tidak pernah terbagi rata</h2>
+    <p>Distribusi "perhatian" (bintang, follower, unduhan) pada hampir semua platform berbasis jaringan mengikuti pola matematis yang disebut <strong>hukum Zipf/pangkat</strong> — bukan karena algoritma platform "curang", tapi karena visibilitas menciptakan visibilitas lebih lanjut (efek jaringan). Semakin timpang (s makin tinggi), makin sedikit proyek yang menyerap hampir semua perhatian.</p>
+    <div class="kartu">
+      <h3>Simulasikan Ekosistem</h3>
+      <div class="grid2">
+        <div class="field">
+          <label for="jumlahProyek">Jumlah total proyek di ekosistem (N)</label>
+          <select id="jumlahProyek">
+            <option value="1000">1.000</option>
+            <option value="10000">10.000</option>
+            <option value="100000">100.000</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="skewParam">Tingkat ketimpangan (s)</label>
+          <select id="skewParam">
+            <option value="0.8">0,8 — relatif merata</option>
+            <option value="1.0" selected>1,0 — khas dunia nyata</option>
+            <option value="1.5">1,5 — sangat timpang</option>
+            <option value="2.0">2,0 — ekstrem</option>
+          </select>
+        </div>
+      </div>
+      <button class="aksi utama" onclick="hitungZipf()">Hitung Distribusi</button>
+
+      <div class="chart-box">
+        <svg id="zipfSvg" viewBox="0 0 600 260" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+
+      <div class="statistik-grid" id="statistikZipf"></div>
+
+      <div class="pertanyaan-box" id="pertanyaanZipf"></div>
+    </div>
+  </section>
+
+  <section id="metode">
+    <div class="label">04 — Metode</div>
+    <h2>Bagaimana angka ini dihitung</h2>
+    <code class="formula">frekuensi(peringkat r) = C / r^s
+pangsa_top_k = (Σ 1/r^s untuk r=1..k) / (Σ 1/r^s untuk r=1..N)</code>
+    <p>Ini pola matematis nyata dan mapan — dipakai untuk menjelaskan frekuensi kata dalam bahasa, populasi kota, hingga popularitas konten daring. Bukan statistik yang dikarang untuk proyek ini.</p>
+    <div class="verifikasi-box">
+      <div class="baris-cek"><span>N=1.000, s=1,0</span><strong>Top 1% (10 proyek) menyerap 39,1% perhatian; top 10% menyerap 69,3%</strong></div>
+      <div class="baris-cek"><span>N=1.000, s=1,5</span><strong>Top 1% menyerap 78,3%; top 10% menyerap 94,7%</strong></div>
+      <div class="baris-cek"><span>N=10.000, s=1,0</span><strong>Top 1% (100 proyek) menyerap 53,0%; top 10% menyerap 76,5%</strong></div>
+    </div>
+  </section>
+
+  <section id="batasan">
+    <div class="label">05 — Batasan</div>
+    <h2>Yang perlu diperhatikan</h2>
+    <div class="batasan-item"><div class="dot"></div><p>Ketimpangan perhatian (Cermin 2) <strong>tidak membuktikan</strong> proyek populer buruk atau proyek sepi bagus — hukum Zipf ini muncul di hampir semua sistem berjaringan, terlepas dari kualitas. Ini fakta struktural, bukan penilaian moral.</p></div>
+    <div class="batasan-item"><div class="dot"></div><p>Tumpukan abstraksi (Cermin 1) adalah penyederhanaan — arsitektur komputer sungguhan (mis. compiler modern, out-of-order execution) jauh lebih rumit dari 6-7 lapisan yang ditampilkan.</p></div>
+    <div class="batasan-item"><div class="dot"></div><p>Tidak memahami lapisan bawah bukan berarti seseorang "bukan programmer sungguhan" — spesialisasi itu wajar dan perlu. Alat ini untuk kesadaran, bukan standar kelulusan.</p></div>
+    <div class="disclaimer-box">Alat ini murni cermin reflektif berbasis matematika yang mapan. Tidak dimaksudkan menghakimi siapa pun — termasuk pembuatnya sendiri.</div>
+  </section>
+
+  <section id="konsultasi">
+    <div class="konsultasi">
+      <p>Ada sudut pandang lain yang ingin ditambahkan ke cermin ini?</p>
+      <a class="btn-konsul" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20diskusi%20terkait%20Cermin%20Programmer%20JAZMI." target="_blank" rel="noopener">Diskusikan via WhatsApp</a>
+    </div>
+  </section>
+
+  <footer>
+    <p>Bagian dari Laboratorium Alat JAZMI. Prototipe berdiri sendiri — belum terhubung ke Beranda atau modul lain.</p>
+  </footer>
+</div>
+
+<script>
+const LAPISAN = [
+  { nama: 'Kode yang Anda tulis (JS/Python/dll.)' },
+  { nama: 'Bytecode / hasil compiler (mis. .pyc, bundel JS)' },
+  { nama: 'Assembly (instruksi prosesor dalam bentuk terbaca manusia)' },
+  { nama: 'Machine code (biner murni, 0 dan 1)' },
+  { nama: 'Mikroarsitektur CPU (pipeline, register, gerbang logika)' },
+  { nama: 'Transistor (jutaan/miliaran saklar elektronik)' },
+  { nama: 'Fisika semikonduktor (elektron, silikon, medan listrik)' },
+];
+
+let statusLapisan = LAPISAN.map(() => 'sedikit'); // default: sedikit paham
+
+function renderLapisan(){
+  const box = document.getElementById('lapisanList');
+  box.innerHTML = LAPISAN.map((l, i) => {
+    const status = statusLapisan[i];
+    const labelStatus = { paham:'Paham', sedikit:'Sedikit', tidak:'Tidak Paham' }[status];
+    return `
+      <div class="lapisan-item" onclick="siklusStatus(${i})">
+        <span class="nomor">${i+1}</span>
+        <span class="nama-lapisan">${l.nama}</span>
+        <span class="status-paham ${status}">${labelStatus}</span>
+      </div>
+    `;
+  }).join('');
+  renderRingkasanJarak();
+}
+
+function siklusStatus(i){
+  const urutan = ['paham','sedikit','tidak'];
+  const idx = urutan.indexOf(statusLapisan[i]);
+  statusLapisan[i] = urutan[(idx+1)%3];
+  renderLapisan();
+}
+
+function renderRingkasanJarak(){
+  let lapisanTerakhirPaham = -1;
+  for (let i=0; i<statusLapisan.length; i++){
+    if (statusLapisan[i] === 'paham') lapisanTerakhirPaham = i;
+    else if (statusLapisan[i] !== 'paham' && lapisanTerakhirPaham === i-1){
+      // lanjut cek, tidak break -- kita cari titik pertama TIDAK/SEDIKIT setelah rangkaian PAHAM dari atas
+    }
+  }
+  // Cari lapisan pertama (dari atas) yang bukan "paham" -- itu jadi "batas pemahaman"
+  let batas = LAPISAN.length;
+  for (let i=0; i<statusLapisan.length; i++){
+    if (statusLapisan[i] !== 'paham'){ batas = i; break; }
+  }
+
+  const box = document.getElementById('ringkasanJarak');
+  if (batas === LAPISAN.length){
+    box.innerHTML = `<div class="angka-besar">Lengkap</div><div class="ket">Anda menandai paham di semua lapisan sampai ke fisika semikonduktor.</div>`;
+  } else if (batas === 0){
+    box.innerHTML = `<div class="angka-besar">${LAPISAN.length} lapisan</div><div class="ket">Jarak dari kode yang Anda tulis sampai lapisan pertama yang belum Anda kuasai penuh.</div>`;
+  } else {
+    box.innerHTML = `<div class="angka-besar">${LAPISAN.length - batas} lapisan</div><div class="ket">Pemahaman penuh Anda berhenti di sekitar "${LAPISAN[batas-1] ? LAPISAN[batas-1].nama : 'kode'}" — ${LAPISAN.length-batas} lapisan di bawahnya belum sepenuhnya dikuasai.</div>`;
+  }
+}
+
+renderLapisan();
+
+/* ---------- Ekonomi Perhatian (Zipf) ---------- */
+function generalizedHarmonic(N, s){
+  let sum = 0;
+  for (let r=1; r<=N; r++) sum += 1/Math.pow(r,s);
+  return sum;
+}
+function topKShare(N, s, k){
+  const H = generalizedHarmonic(N,s);
+  let top = 0;
+  for (let r=1; r<=k; r++) top += 1/Math.pow(r,s);
+  return top/H;
+}
+
+function hitungZipf(){
+  const N = parseInt(document.getElementById('jumlahProyek').value, 10);
+  const s = parseFloat(document.getElementById('skewParam').value);
+
+  const top1pct = Math.max(1, Math.round(N*0.01));
+  const top10pct = Math.max(1, Math.round(N*0.10));
+  const share1 = topKShare(N,s,top1pct);
+  const share10 = topKShare(N,s,top10pct);
+
+  document.getElementById('statistikZipf').innerHTML = `
+    <div class="stat-box"><div class="angka">${(share1*100).toFixed(1)}%</div><div class="label-stat">Diserap top 1% proyek (${top1pct.toLocaleString('id-ID')} dari ${N.toLocaleString('id-ID')})</div></div>
+    <div class="stat-box"><div class="angka">${(share10*100).toFixed(1)}%</div><div class="label-stat">Diserap top 10% proyek (${top10pct.toLocaleString('id-ID')} dari ${N.toLocaleString('id-ID')})</div></div>
+  `;
+
+  // Chart: kurva frekuensi(r) = 1/r^s dinormalisasi, skala log pada sumbu-x untuk 100 peringkat pertama
+  const H = generalizedHarmonic(N, s);
+  const jumlahTitik = 100;
+  let pts = [];
+  for (let r=1; r<=jumlahTitik; r++){
+    const frek = (1/Math.pow(r,s))/H;
+    pts.push(frek);
+  }
+  const maxFrek = pts[0];
+  const W=600,H_svg=260,marginL=40,marginB=30,marginT=15;
+  const plotW=W-marginL-20, plotH=H_svg-marginT-marginB;
+  const xOf = i => marginL + (Math.log(i+1)/Math.log(jumlahTitik+1))*plotW;
+  const yOf = v => marginT + plotH - (v/maxFrek)*plotH;
+
+  let path = `M ${xOf(0)} ${yOf(pts[0])}`;
+  pts.forEach((v,i) => { path += ` L ${xOf(i).toFixed(1)} ${yOf(v).toFixed(1)}`; });
+
+  let svgInner = `<rect x="0" y="0" width="${W}" height="${H_svg}" fill="#FFFFFF"/>`;
+  svgInner += `<line x1="${marginL}" y1="${marginT}" x2="${marginL}" y2="${marginT+plotH}" stroke="#ccc"/>`;
+  svgInner += `<line x1="${marginL}" y1="${marginT+plotH}" x2="${marginL+plotW}" y2="${marginT+plotH}" stroke="#ccc"/>`;
+  svgInner += `<path d="${path}" fill="none" stroke="#B8934A" stroke-width="2.5"/>`;
+  svgInner += `<text x="${marginL}" y="${marginT+plotH+20}" font-size="11" fill="#1D5C43">Peringkat #1</text>`;
+  svgInner += `<text x="${marginL+plotW}" y="${marginT+plotH+20}" font-size="11" fill="#1D5C43" text-anchor="end">Peringkat #100</text>`;
+  svgInner += `<text x="${marginL}" y="${marginT-3}" font-size="11" fill="#1D5C43">Pangsa perhatian relatif (skala log peringkat)</text>`;
+
+  document.getElementById('zipfSvg').innerHTML = svgInner;
+
+  const pertanyaan = [
+    'Kalau proyek Anda punya sedikit bintang, apakah itu benar-benar ukuran kualitasnya — atau sekadar posisi Anda dalam kurva ini?',
+    'Berapa banyak proyek luar biasa yang mungkin Anda lewatkan hanya karena mereka ada di ekor kurva ini, bukan puncaknya?',
+    'Kalau Anda mengejar bintang GitHub sebagai bukti kemampuan, seberapa besar itu benar-benar soal kemampuan, dan seberapa besar soal siapa yang lebih dulu terlihat?'
+  ];
+  document.getElementById('pertanyaanZipf').textContent = pertanyaan[Math.floor(Math.random()*pertanyaan.length)];
+}
+
+hitungZipf();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

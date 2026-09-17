@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visualisasi Jabat Tangan TLS/HTTPS</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0F1115;--panel:#161A21;--panel2:#1D222B;--ink:#E7E9EE;--dim:#98A0AE;--dimmer:#5E6673;
+--line:rgba(231,233,238,.1);--red:#E5534B;--amber:#E0A730;--green:#3FB37F;--blue:#5B9BD5;
+--rsoft:rgba(229,83,75,.14);--asoft:rgba(224,167,48,.14);--gsoft:rgba(63,179,127,.14);}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Karla',sans-serif;line-height:1.6}
+.mono{font-family:'JetBrains Mono',monospace}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0}
+.wrap{max-width:720px;margin:0 auto;padding:32px 18px 70px}
+.kicker{font-size:.82rem;color:var(--blue);font-weight:700;margin-bottom:10px;letter-spacing:.02em}
+h1{font-size:1.5rem;margin-bottom:10px}
+header p{color:var(--dim);font-size:.92rem}
+
+.lab{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:20px}
+
+.toggle-row{display:flex;gap:7px;margin-bottom:18px;flex-wrap:wrap}
+.mpill{padding:8px 13px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--dim);cursor:pointer;font-size:.82rem;font-weight:600}
+.mpill.active{background:rgba(91,155,213,.15);border-color:var(--blue);color:var(--blue)}
+
+.stepper{display:flex;justify-content:space-between;margin-bottom:22px;position:relative}
+.stepper::before{content:'';position:absolute;top:14px;left:20px;right:20px;height:2px;background:var(--line);z-index:0}
+.step-dot{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;flex:1}
+.step-dot .circle{width:28px;height:28px;border-radius:50%;background:var(--panel2);border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--dimmer);font-weight:700}
+.step-dot.active .circle{background:var(--blue);border-color:var(--blue);color:#fff}
+.step-dot.done .circle{background:var(--gsoft);border-color:var(--green);color:var(--green)}
+.step-dot .lbl{font-size:.65rem;color:var(--dimmer);text-align:center;max-width:70px}
+.step-dot.active .lbl{color:var(--blue);font-weight:700}
+
+.stage{background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:12px;padding:20px 14px;margin-bottom:16px}
+.parties{display:flex;justify-content:space-between;align-items:flex-start}
+.party{width:110px;text-align:center;font-size:.8rem;color:var(--dim);font-weight:700}
+.party .emoji{font-size:1.8rem;display:block;margin-bottom:4px}
+.arrow-zone{flex:1;position:relative;height:70px;display:flex;align-items:center;justify-content:center}
+.arrow-zone svg{width:100%;height:60px;overflow:visible}
+.msg-label{position:absolute;top:-2px;left:0;right:0;text-align:center;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--amber);font-weight:700}
+
+.step-detail{background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.step-detail h3{font-size:1.05rem;margin-bottom:8px;color:var(--blue)}
+.step-detail p{color:var(--dim);font-size:.88rem;margin:0}
+.step-detail .note{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);font-size:.82rem;color:var(--amber)}
+
+.btn-row{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.btn{padding:9px 16px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);cursor:pointer;font-size:.85rem;font-weight:600}
+.btn.primary{background:rgba(91,155,213,.18);border-color:var(--blue);color:var(--blue)}
+
+.compare{margin-top:20px;display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:520px){.compare{grid-template-columns:1fr 1fr}}
+.cbox{border-radius:12px;padding:14px 16px;font-size:.85rem}
+.cbox.bad{background:var(--rsoft);border:1px solid rgba(229,83,75,.35);color:#f2b3af}
+.cbox.good{background:var(--gsoft);border:1px solid rgba(63,179,127,.35);color:#a9e6c6}
+.cbox h3{font-size:.92rem;margin-bottom:6px}
+
+.info{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:18px;font-size:.85rem;color:var(--dim)}
+.info h3{font-size:.95rem;color:var(--ink);margin-bottom:8px}
+.info ul{margin:6px 0;padding-left:18px}
+.info li{margin-bottom:6px}
+footer{margin-top:24px;font-size:.78rem;color:var(--dimmer)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <p class="kicker">Laboratorium JAZMI — Modul Keamanan Siber</p>
+  <h1>Visualisasi Jabat Tangan TLS/HTTPS</h1>
+  <p>Setiap kali gembok kecil muncul di address bar, lima tahap ini terjadi dalam hitungan milidetik. Klik tiap tahap untuk melihat apa yang sebenarnya dikirim — dan coba ganti metode pertukaran kunci untuk lihat kenapa itu penting.</p>
+</header>
+
+<div class="lab">
+  <div class="toggle-row" id="kexToggle"></div>
+
+  <div class="stepper" id="stepper"></div>
+
+  <div class="stage">
+    <div class="parties">
+      <div class="party"><span class="emoji">🖥️</span>Klien (Browser)</div>
+      <div class="arrow-zone"><span class="msg-label" id="msgLabel"></span><svg id="arrowSvg" viewBox="0 0 300 60"></svg></div>
+      <div class="party"><span class="emoji">🌐</span>Server (Situs)</div>
+    </div>
+  </div>
+
+  <div class="step-detail">
+    <h3 id="stepTitle"></h3>
+    <p id="stepDesc"></p>
+    <div class="note" id="stepNote" style="display:none;"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn" id="prevBtn">← Sebelumnya</button>
+    <button class="btn primary" id="playBtn">▶ Putar Otomatis</button>
+    <button class="btn" id="nextBtn">Berikutnya →</button>
+  </div>
+</div>
+
+<div class="compare">
+  <div class="cbox bad"><h3>🔓 Tanpa HTTPS (HTTP biasa)</h3>Semua data — termasuk password yang Anda ketik — mengalir sebagai teks polos. Siapa pun yang berbagi jaringan yang sama (WiFi kafe, ISP, router yang disusupi) bisa membacanya langsung.</div>
+  <div class="cbox good"><h3>🔒 Dengan HTTPS</h3>Setelah lima tahap di atas selesai, seluruh data dienkripsi dengan kunci sesi yang cuma diketahui klien &amp; server itu — penyadap di jaringan yang sama cuma melihat data acak yang tidak bisa dibaca.</div>
+</div>
+
+<div class="info">
+  <h3>Batasan model ini</h3>
+  <ul>
+    <li>Ini versi yang disederhanakan untuk membangun intuisi. TLS 1.3 sungguhan menggabungkan beberapa pesan ini jadi satu putaran (round-trip) untuk mempercepat koneksi, dan ada banyak detail teknis lain (cipher suite negotiation, session resumption, dsb.) yang tidak digambarkan di sini.</li>
+    <li>Sertifikat digital hanya membuktikan bahwa server memegang kunci privat yang cocok dengan domain yang tertulis di sertifikat — itu <b>tidak</b> membuktikan situsnya jujur atau aman dari penipuan, cuma membuktikan Anda sungguh terhubung ke domain yang Anda tuju.</li>
+  </ul>
+</div>
+
+<footer>Bagian dari Laboratorium JAZMI</footer>
+</div>
+
+<script>
+const STEPS = [
+  {code:'CH', label:'ClientHello', dir:'right', msg:'ClientHello',
+    title:'1 · ClientHello', desc:'Klien memulai percakapan: mengirim versi TLS yang didukung, daftar cipher suite (kombinasi algoritma enkripsi) yang bisa dipakai, dan sebuah angka acak (client random) yang nantinya ikut dipakai membentuk kunci sesi.'},
+  {code:'SH', label:'ServerHello', dir:'left', msg:'ServerHello',
+    title:'2 · ServerHello', desc:'Server memilih satu versi TLS dan satu cipher suite dari daftar yang ditawarkan klien, lalu mengirim balik angka acaknya sendiri (server random).'},
+  {code:'CT', label:'Sertifikat', dir:'left', msg:'Sertifikat Digital',
+    title:'3 · Sertifikat Digital', desc:'Server mengirim sertifikat digitalnya — berisi kunci publik server, ditandatangani oleh Certificate Authority (CA) tepercaya. Browser memverifikasi tanda tangan ini untuk memastikan sertifikat memang untuk domain yang sedang diakses, bukan sertifikat palsu.'},
+  {code:'KEX', label:'Kunci Sesi', dir:'both', msg:'',
+    title:'4 · Pembuatan Kunci Sesi', desc:'',},
+  {code:'FIN', label:'Selesai', dir:'both', msg:'Finished (terenkripsi)',
+    title:'5 · Finished — Beralih ke Enkripsi Simetris', desc:'Kedua pihak saling mengonfirmasi bahwa mereka sudah memiliki kunci sesi yang identik. Mulai titik ini, seluruh komunikasi dienkripsi memakai algoritma simetris (jauh lebih cepat dari asimetris) memakai kunci sesi tadi — inilah yang direpresentasikan gembok kecil di address bar.'},
+];
+
+let kex = 'ecdhe'; // 'ecdhe' | 'rsa'
+let current = 0;
+let playing = false, playTimer = null;
+
+function kexDesc(){
+  if(kex==='ecdhe'){
+    return {
+      desc:'Klien dan server sama-sama menghasilkan kunci sesi rahasia yang identik lewat pertukaran Diffie-Hellman berbasis kurva eliptik (ECDHE) — kuncinya sendiri <b>tidak pernah</b> dikirim lewat jaringan, cuma bahan hitungannya. Setiap sesi memakai kunci sementara (ephemeral) yang berbeda.',
+      note:'✅ Forward secrecy: karena kuncinya sementara dan unik tiap sesi, bahkan jika kunci privat server bocor bertahun-tahun kemudian, rekaman lalu lintas lama tetap tidak bisa dibuka.'
+    };
+  }
+  return {
+    desc:'Klien membuat kunci sesi sendiri, lalu mengenkripsinya memakai kunci publik server (dari sertifikat) dan mengirimkannya. Server membuka kunci sesi itu memakai kunci privatnya.',
+    note:'⚠️ Tanpa forward secrecy: kunci sesi ini dilindungi oleh satu kunci privat server yang sama, dipakai berulang-ulang. Kalau kunci privat itu pernah bocor di masa depan, semua rekaman lalu lintas lama yang pernah disadap bisa dibuka kembali. Inilah sebabnya TLS modern (1.3) mewajibkan ECDHE dan tidak lagi mengizinkan metode RSA murni ini.'
+  };
+}
+
+function renderToggle(){
+  const el = document.getElementById('kexToggle');
+  el.innerHTML = `
+    <button class="mpill ${kex==='ecdhe'?'active':''}" data-k="ecdhe">ECDHE (modern, TLS 1.3)</button>
+    <button class="mpill ${kex==='rsa'?'active':''}" data-k="rsa">RSA klasik (TLS 1.2 lama)</button>`;
+  el.querySelectorAll('.mpill').forEach(b=>b.addEventListener('click', ()=>{
+    kex = b.dataset.k; renderToggle(); render();
+  }));
+}
+
+function renderStepper(){
+  const el = document.getElementById('stepper');
+  el.innerHTML = STEPS.map((s,i)=>`
+    <div class="step-dot ${i===current?'active':i<current?'done':''}" data-i="${i}">
+      <div class="circle">${i+1}</div>
+      <div class="lbl">${s.label}</div>
+    </div>`).join('');
+  el.querySelectorAll('.step-dot').forEach(d=>d.addEventListener('click', ()=>{
+    current = parseInt(d.dataset.i); render();
+  }));
+}
+
+function drawArrow(dir){
+  const svg = document.getElementById('arrowSvg');
+  const y = 30;
+  if(dir==='right'){
+    svg.innerHTML = `<defs><marker id="ar" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#5B9BD5"/></marker></defs>
+      <line x1="10" y1="${y}" x2="280" y2="${y}" stroke="#5B9BD5" stroke-width="2.5" marker-end="url(#ar)"/>`;
+  } else if(dir==='left'){
+    svg.innerHTML = `<defs><marker id="al" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M6,0 L0,3 L6,6 Z" fill="#E0A730"/></marker></defs>
+      <line x1="290" y1="${y}" x2="20" y2="${y}" stroke="#E0A730" stroke-width="2.5" marker-end="url(#al)"/>`;
+  } else {
+    svg.innerHTML = `<defs>
+      <marker id="ar2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#3FB37F"/></marker>
+      <marker id="al2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M6,0 L0,3 L6,6 Z" fill="#3FB37F"/></marker></defs>
+      <line x1="15" y1="20" x2="270" y2="20" stroke="#3FB37F" stroke-width="2.5" marker-end="url(#ar2)"/>
+      <line x1="285" y1="42" x2="30" y2="42" stroke="#3FB37F" stroke-width="2.5" marker-end="url(#al2)"/>`;
+  }
+}
+
+function render(){
+  renderStepper();
+  const s = STEPS[current];
+  drawArrow(s.dir);
+
+  let msg = s.msg, desc = s.desc, note = null;
+  if(s.code==='KEX'){
+    const kd = kexDesc();
+    msg = kex==='ecdhe' ? 'Pertukaran ECDHE' : 'Kunci Sesi Terenkripsi RSA';
+    desc = kd.desc;
+    note = kd.note;
+  }
+  document.getElementById('msgLabel').textContent = msg;
+  document.getElementById('stepTitle').textContent = s.title;
+  document.getElementById('stepDesc').innerHTML = desc;
+  const noteEl = document.getElementById('stepNote');
+  if(note){ noteEl.style.display='block'; noteEl.innerHTML = note; }
+  else { noteEl.style.display='none'; }
+
+  document.getElementById('prevBtn').disabled = current===0;
+  document.getElementById('nextBtn').disabled = current===STEPS.length-1;
+}
+
+document.getElementById('prevBtn').addEventListener('click', ()=>{ if(current>0){ current--; render(); } });
+document.getElementById('nextBtn').addEventListener('click', ()=>{ if(current<STEPS.length-1){ current++; render(); } });
+document.getElementById('playBtn').addEventListener('click', (e)=>{
+  playing = !playing;
+  e.target.textContent = playing ? '⏸ Jeda' : '▶ Putar Otomatis';
+  if(playing){
+    if(current>=STEPS.length-1) current=0;
+    playTimer = setInterval(()=>{
+      current++;
+      if(current>=STEPS.length){ current=STEPS.length-1; playing=false; e.target.textContent='▶ Putar Otomatis'; clearInterval(playTimer); }
+      render();
+    }, 2400);
+  } else {
+    clearInterval(playTimer);
+  }
+});
+
+renderToggle();
+render();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

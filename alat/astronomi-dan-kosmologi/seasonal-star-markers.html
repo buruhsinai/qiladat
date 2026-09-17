@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seasonal Star Markers — Kompas Bintang &amp; Kalender Musim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root{
+    --bg:#F5F1E6; --bg-deep:#EAE2CC;
+    --ink:#20293A; --ink-soft:#5A6270;
+    --dawn:#2E3A59; --amber:#E08E45; --teal:#1D9E75;
+    --line:#d9d0b4;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.6;}
+  h1,h2,h3,.display{font-family:'Crimson Pro',serif;color:var(--ink);margin:0;}
+  .wrap{max-width:1100px;margin:0 auto;padding:40px 22px 90px;}
+
+  header.hero{padding-bottom:24px;border-bottom:1.5px solid var(--line);margin-bottom:30px;}
+  header.hero h1{font-size:2.1rem;font-weight:700;max-width:28ch;}
+  header.hero p{margin:10px 0 0;color:var(--ink-soft);max-width:72ch;font-size:1rem;}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+  .badge{font-size:0.78rem;padding:4px 10px;border-radius:20px;border:1px solid var(--line);color:var(--ink-soft);background:#fff;}
+
+  .toc{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:34px;}
+  .toc a{font-size:0.78rem;padding:5px 11px;border-radius:20px;border:1px solid var(--line);color:var(--ink-soft);text-decoration:none;background:#fff;}
+
+  section{margin-bottom:42px;scroll-margin-top:16px;}
+  section > h2{font-size:1.35rem;font-weight:700;margin-bottom:6px;display:flex;align-items:baseline;gap:10px;}
+  section > h2 .num{color:var(--amber);font-size:1rem;font-family:'Inter',sans-serif;font-weight:700;}
+  section > .lead{color:var(--ink-soft);margin-bottom:16px;max-width:74ch;font-size:0.95rem;}
+
+  .card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:16px 18px;}
+  .card h3{font-size:1.02rem;margin-bottom:6px;}
+  .card p{margin:0;font-size:0.88rem;color:var(--ink-soft);}
+  .card .tag{display:inline-block;font-size:0.7rem;color:var(--dawn);border:1px solid var(--dawn);border-radius:20px;padding:1px 8px;margin-bottom:8px;}
+
+  .panel{background:#fff;border:1px solid var(--line);border-radius:10px;padding:20px 22px;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  @media (max-width:760px){.grid-2{grid-template-columns:1fr;}}
+
+  .field{margin-bottom:15px;}
+  .field label{display:flex;justify-content:space-between;font-size:0.85rem;color:var(--ink-soft);margin-bottom:6px;}
+  .field label .val{font-weight:700;font-variant-numeric:tabular-nums;color:var(--amber);}
+  .field input[type=range]{width:100%;accent-color:var(--dawn);}
+  .field select, .field input[type=number]{
+    width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:4px;
+    background:#fff;font-family:'Inter',sans-serif;font-size:0.92rem;color:var(--ink);
+  }
+
+  .result-box{margin-top:8px;padding:16px 18px;border-radius:8px;color:#fff;background:var(--dawn);}
+  .result-box .big{font-family:'Crimson Pro',serif;font-size:1.4rem;font-weight:700;}
+  .result-box .small{font-size:0.8rem;opacity:0.85;margin-top:2px;}
+
+  .chart-wrap{background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px;}
+  svg.chart{width:100%;height:auto;}
+
+  table.data{width:100%;border-collapse:collapse;font-size:0.86rem;}
+  table.data th,table.data td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);}
+  table.data th{color:var(--ink-soft);font-weight:600;font-size:0.76rem;}
+  table.data td.num{font-variant-numeric:tabular-nums;color:var(--amber);font-weight:600;}
+
+  .month-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:10px;}
+  .month-cell{padding:10px 4px;text-align:center;border-radius:5px;font-size:0.78rem;background:var(--bg-deep);color:var(--ink-soft);border:1px solid var(--line);}
+  .month-cell.visible{background:var(--amber);color:#fff;font-weight:600;border-color:var(--amber);}
+
+  .preset-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;}
+  .preset-card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px 16px;cursor:pointer;text-align:left;font-family:'Inter',sans-serif;}
+  .preset-card:hover{border-color:var(--dawn);}
+  .preset-card h3{font-size:0.98rem;margin-bottom:4px;color:var(--ink);font-family:'Crimson Pro',serif;font-weight:700;}
+  .preset-card p{margin:0;font-size:0.82rem;color:var(--ink-soft);}
+
+  .callout{background:#fff;border:1px solid var(--line);border-left:4px solid var(--ink-soft);border-radius:6px;padding:15px 18px;font-size:0.88rem;color:var(--ink-soft);margin-top:12px;}
+  .callout p{margin:0 0 6px;} .callout p:last-child{margin-bottom:0;}
+  .callout.method{border-left-color:var(--amber);}
+  ol.ref-list{padding-left:20px;font-size:0.86rem;color:var(--ink-soft);}
+  ol.ref-list li{margin-bottom:6px;}
+  .related-links{display:flex;flex-direction:column;gap:6px;font-size:0.9rem;}
+
+  /* --- panel tambahan: model 3D busur diurnal --- */
+  .panel-3d{margin-top:16px;}
+  .panel-3d h3{font-size:1.05rem;margin-bottom:6px;}
+  .panel-3d .lead3d{color:var(--ink-soft);font-size:0.88rem;margin:0 0 14px;max-width:74ch;}
+  #three3d-compass{width:100%;height:320px;border-radius:8px;overflow:hidden;cursor:grab;touch-action:none;background:var(--bg-deep);-webkit-user-select:none;user-select:none;}
+  #three3d-compass.grabbing{cursor:grabbing;}
+  .hint3d{font-size:0.74rem;color:var(--ink-soft);margin-top:6px;}
+  .play-row{display:flex;gap:10px;align-items:center;margin-bottom:16px;}
+  .btn-play{cursor:pointer;padding:9px 18px;border-radius:8px;border:1px solid var(--dawn);background:var(--dawn);color:#fff;font-family:'Inter',sans-serif;font-size:0.88rem;font-weight:600;flex:0 0 auto;}
+  .btn-play:hover{opacity:0.9;}
+  .btn-play.playing{background:var(--amber);border-color:var(--amber);}
+  .legend3d{display:flex;flex-wrap:wrap;gap:10px 16px;font-size:0.76rem;color:var(--ink-soft);margin-top:10px;}
+  .legend3d span{display:inline-flex;align-items:center;gap:5px;}
+  .legend3d i{width:10px;height:10px;border-radius:50%;display:inline-block;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <h1>Seasonal Star Markers — Kompas Bintang &amp; Kalender Musim</h1>
+    <p>Bukan satu titik presisi seperti heliacal rising — melainkan pola bintang yang dipakai sekaligus sebagai kompas arah dan penanda jendela musim, dari kompas bintang Polinesia-Mikronesia hingga bintang penanda tanam Nusantara.</p>
+    <div class="badge-row">
+      <span class="badge">Navigasi Bintang</span>
+      <span class="badge">Kompas 32-Rumah</span>
+      <span class="badge">Kalender Musim</span>
+      <span class="badge">Lintas Budaya</span>
+      <span class="badge">Simulator Interaktif</span>
+    </div>
+  </header>
+
+  <div class="toc">
+    <a href="#s01">01 Belajar</a>
+    <a href="#s02">02 Kompas Bintang</a>
+    <a href="#s03">03 Jalur Bintang</a>
+    <a href="#s04">04 Kalender Musim</a>
+    <a href="#s05">05 Lintas Budaya</a>
+    <a href="#s06">06 Metode</a>
+    <a href="#s07">07 Batasan</a>
+    <a href="#s08">08 Referensi</a>
+  </div>
+
+  <!-- 01 -->
+  <section id="s01">
+    <h2><span class="num">01</span> Belajar: Dua Fungsi Sekaligus</h2>
+    <p class="lead">Titik terbit &amp; terbenam sebuah bintang di ufuk <strong>tidak berubah sepanjang tahun</strong> untuk lintang yang sama — beda dari heliacal rising yang sangat terikat tanggal. Sifat konstan inilah yang membuatnya jadi kompas alami sekaligus, saat dipadukan dengan musim kemunculannya, jadi penanda waktu tanam/panen.</p>
+    <div class="card-grid">
+      <div class="card"><span class="tag">Navigasi</span><h3>Kompas bintang Polinesia-Mikronesia</h3><p>Navigator seperti Mau Piailug menghafal titik terbit/terbenam puluhan bintang, disusun jadi "kompas sideris" dengan 32 titik horizon (setiap titik ~11,25°) — sistem ini kemudian dikembangkan Nainoa Thompson menjadi kompas bintang Hawaii yang dipakai kanoe Hōkūleʻa.</p></div>
+      <div class="card"><span class="tag">Musim</span><h3>Bintang Tujuh / Kartika Nusantara</h3><p>Kemunculan gugus Pleiades di langit fajar/senja jadi penanda awal musim tanam di berbagai tradisi pertanian Nusantara — mirip fungsi Matariki bagi Māori.</p></div>
+      <div class="card"><span class="tag">Musim + Navigasi</span><h3>Scorpius bagi Yolŋu</h3><p>Kemunculan rasi Kalajengking (Scorpius) menandai perkiraan datangnya musim angin yang membawa nelayan Makassar mencari teripang ke pesisir Australia utara.</p></div>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section id="s02">
+    <h2><span class="num">02</span> Kompas Bintang 32-Rumah</h2>
+    <p class="lead">Sama seperti kompas sideris tradisional, horizon dibagi 32 titik (~11,25° tiap titik). Pilih bintang &amp; lintang — titik terbit/terbenamnya akan jatuh di salah satu dari 32 titik ini, konstan sepanjang tahun.</p>
+    <div class="panel">
+      <div class="grid-2">
+        <div>
+          <div class="field">
+            <label>Bintang / asterisma</label>
+            <select id="s-star"></select>
+          </div>
+          <div class="field">
+            <label>Lintang pengamat (°) <span class="val" id="v-slat">-6.2</span></label>
+            <input type="range" id="s-lat" min="-60" max="60" step="0.1" value="-6.2">
+          </div>
+          <div class="result-box">
+            <div class="small">Titik terbit</div>
+            <div class="big" id="s-rise-out">—</div>
+            <div class="small" style="margin-top:8px">Titik terbenam</div>
+            <div class="big" id="s-set-out">—</div>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <svg class="chart" id="svg-compass" viewBox="0 0 280 280"></svg>
+        </div>
+      </div>
+      <div class="callout">
+        <p>Nama titik di atas memakai istilah kompas 32-arah universal (N, NbE, NNE, ...) — bukan istilah asli Hawaii/Mikronesia yang punya nama tersendiri per rumah — tapi strukturnya (32 titik, ~11,25° per titik) persis prinsip yang sama.</p>
+      </div>
+    </div>
+
+    <!-- panel tambahan: model 3D busur diurnal (memakai bintang & lintang yang sama seperti di atas) -->
+    <div class="panel panel-3d">
+      <h3 class="display">Model 3D — Busur Diurnal di Kubah Langit</h3>
+      <p class="lead3d">Kompas 2D di atas hanya menunjukkan titik terbit &amp; terbenam di ufuk. Di kenyataannya bintang bergerak sepanjang <em>lingkaran diurnal</em> yang tetap — sejajar ekuator langit, dimiringkan oleh sumbu putar Bumi sebesar garis lintang Anda — yang memotong bidang ufuk persis di dua titik itu. Putar model untuk melihat kemiringannya, tekan Putar untuk simulasi harian, atau geser bulan evaluasi untuk melihat langsung mengapa bintang tampak/tidak tampak saat senja — menyambungkan panel ini dengan Kalender Musim di bagian 04.</p>
+      <div class="grid-2">
+        <div>
+          <div id="three3d-compass"></div>
+          <div class="hint3d">seret = putar tampilan · scroll/cubit 2 jari = zoom</div>
+          <div class="legend3d">
+            <span><i style="background:#E08E45"></i>Bintang &amp; lintasannya</span>
+            <span><i style="background:#F2C14E"></i>Matahari &amp; lintasannya</span>
+            <span><i style="background:#2E3A59"></i>Sumbu langit (kutub)</span>
+            <span><i style="background:#1D9E75"></i>Titik terbit/terbenam bintang</span>
+          </div>
+        </div>
+        <div>
+          <div class="play-row">
+            <button id="btn-play3d" class="btn-play">▶ Putar</button>
+            <div class="field" style="flex:1;margin:0;">
+              <label>Kecepatan <span class="val" id="v-speed3d">1×</span></label>
+              <input type="range" id="in-speed3d" min="0.25" max="6" step="0.25" value="1">
+            </div>
+          </div>
+          <div class="field">
+            <label>Bulan evaluasi senja <span class="val" id="v-evalmonth">Jan</span> <span style="font-weight:400;color:var(--ink-soft)">(pakai bujur &amp; offset dari bagian 04)</span></label>
+            <input type="range" id="in-evalmonth" min="0" max="11" step="1" value="0">
+          </div>
+          <div class="result-box">
+            <div class="small">Ketinggian (altitude) bintang saat animasi</div>
+            <div class="big" id="out-alt3d">—</div>
+            <div class="small" style="margin-top:8px">Status</div>
+            <div class="big" id="out-status3d" style="font-size:1rem">—</div>
+          </div>
+          <div class="result-box" style="margin-top:10px;background:var(--amber)">
+            <div class="small">Matahari terbenam + offset senja (UT)</div>
+            <div class="big" id="out-sunset3d">—</div>
+            <div class="small" style="margin-top:8px">Bintang pada momen senja itu</div>
+            <div class="big" id="out-starvis3d" style="font-size:1rem">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section id="s03">
+    <h2><span class="num">03</span> Pencari Jalur Bintang (Bintang Kemudi)</h2>
+    <p class="lead">Navigator tradisional tidak memakai satu bintang sepanjang malam — begitu bintang naik terlalu tinggi untuk dijadikan acuan arah, mereka beralih ke bintang lain yang terbit/terbenam di titik horizon yang sama. Coba: pilih arah tujuan, lihat bintang mana saja yang bisa jadi "bintang kemudi" untuk arah itu di lintang Anda.</p>
+    <div class="panel">
+      <div class="field" style="max-width:420px">
+        <label>Arah tujuan (azimut, ° dari Utara) <span class="val" id="v-heading">70</span></label>
+        <input type="range" id="in-heading" min="0" max="359" step="1" value="70">
+      </div>
+      <table class="data">
+        <tr><th>Bintang</th><th>Peristiwa</th><th>Azimut</th><th>Selisih dari arah tujuan</th></tr>
+        <tbody id="steer-out"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section id="s04">
+    <h2><span class="num">04</span> Kalender Tampak Musiman</h2>
+    <p class="lead">Apakah bintang pilihan tampak di langit senja pada tiap bulan, pada jam tertentu setelah Matahari terbenam — inilah dasar penanda musim tanam tradisional.</p>
+    <div class="panel">
+      <div class="grid-2">
+        <div>
+          <div class="field">
+            <label>Bujur pengamat (°, + timur) <span class="val" id="v-slon">106.8</span></label>
+            <input type="range" id="s-lon" min="-180" max="180" step="0.1" value="106.8">
+          </div>
+          <div class="field">
+            <label>Jam setelah Matahari terbenam <span class="val" id="v-soffset">1.5</span></label>
+            <input type="range" id="s-offset" min="0" max="4" step="0.25" value="1.5">
+          </div>
+        </div>
+        <div class="month-grid" id="month-grid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section id="s05">
+    <h2><span class="num">05</span> Galeri Lintas Budaya</h2>
+    <p class="lead">Klik untuk memuat bintang &amp; lintang budaya tersebut ke bagian 02 &amp; 04.</p>
+    <div class="preset-grid" id="preset-grid"></div>
+  </section>
+
+  <!-- 06 -->
+  <section id="s06">
+    <h2><span class="num">06</span> Metode &amp; Rumus</h2>
+    <div class="callout method">
+      <p><strong>Azimut terbit/terbenam:</strong> dihitung dari rumus sudut jam horizon standar — cos(H₀) = -tan(lintang)×tan(deklinasi) memberi sudut jam H₀ saat bintang di ketinggian 0°; azimutnya lalu diturunkan lewat rumus posisi horizontal standar. Nilai ini murni fungsi lintang &amp; deklinasi bintang — tidak bergantung tanggal/waktu sama sekali.</p>
+      <p><strong>Pencari jalur bintang:</strong> menghitung azimut terbit &amp; terbenam untuk seluruh katalog, lalu mengurutkan berdasarkan selisih sudut terkecil (memperhitungkan pembungkusan lingkaran 0°–360°) terhadap arah tujuan yang Anda pilih.</p>
+      <p><strong>Kalender tampak:</strong> untuk tanggal 15 tiap bulan, dihitung jam terbenam Matahari, lalu dievaluasi apakah bintang berada di atas ufuk pada jam terbenam + offset yang Anda atur.</p>
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section id="s07">
+    <h2><span class="num">07</span> Batasan</h2>
+    <div class="callout">
+      <p>Katalog bintang di sini terbatas (~20 bintang terang) — kompas bintang tradisional sesungguhnya memakai lebih dari 100–200 bintang untuk cakupan penuh 32 titik di berbagai lintang. Perhitungan mengabaikan ekstingsi atmosfer &amp; ketinggian ufuk nyata (pegunungan, bangunan). Nama 32 titik yang dipakai adalah istilah kompas universal, bukan istilah budaya asli — penamaan asli tiap tradisi (Hawaii, Mikronesia, dsb.) punya kosakatanya sendiri yang tidak saya reproduksi di sini.</p>
+    </div>
+  </section>
+
+  <!-- 08 -->
+  <section id="s08">
+    <h2><span class="num">08</span> Referensi &amp; Alat Terkait</h2>
+    <ol class="ref-list">
+      <li>Polynesian Voyaging Society / Hōkūleʻa — "Polynesian Wayfinding" (kompas bintang 32-rumah)</li>
+      <li>Nainoa Thompson, PBS Wayfinders — penjelasan kompas bintang sebagai konstruksi mental navigator</li>
+      <li>Stephen D. Thomas, <em>The Last Navigator</em> — kompas sideris Mau Piailug, ~15 bintang/rasi untuk 32 titik</li>
+      <li>The Astronomy of Aboriginal Australia (arXiv 0906.0155) — Scorpius &amp; kedatangan nelayan Makassar bagi Yolŋu</li>
+    </ol>
+    <div class="callout" style="margin-top:14px">
+      <div class="related-links">
+        <span>→ Heliacal Rising — Laboratorium Kemunculan Fajar Bintang (heliacal-rising.html)</span>
+        <span>→ Phenological Calendar &amp; kalender-alam.html (dua jenis lainnya)</span>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const D2R = Math.PI/180, R2D = 180/Math.PI;
+const toRad = d => d*D2R, toDeg = r => r*R2D;
+const norm360 = d => { d = d % 360; return d<0 ? d+360 : d; };
+const clamp = (v,lo,hi) => Math.max(lo, Math.min(hi, v));
+
+const STAR_CATALOG = [
+  {name:"Sirius", ra:101.287, dec:-16.716},
+  {name:"Canopus", ra:95.988, dec:-52.696},
+  {name:"Arcturus", ra:213.915, dec:19.182},
+  {name:"Vega", ra:279.234, dec:38.784},
+  {name:"Capella", ra:79.172, dec:45.998},
+  {name:"Rigel", ra:78.634, dec:-8.202},
+  {name:"Procyon", ra:114.825, dec:5.225},
+  {name:"Betelgeuse", ra:88.793, dec:7.407},
+  {name:"Achernar", ra:24.428, dec:-57.237},
+  {name:"Hadar", ra:210.956, dec:-60.373},
+  {name:"Rigil Kentaurus", ra:219.902, dec:-60.834},
+  {name:"Altair", ra:297.696, dec:8.868},
+  {name:"Aldebaran", ra:68.980, dec:16.509},
+  {name:"Spica", ra:201.298, dec:-11.161},
+  {name:"Antares", ra:247.352, dec:-26.432},
+  {name:"Pollux", ra:116.329, dec:28.026},
+  {name:"Fomalhaut", ra:344.413, dec:-29.622},
+  {name:"Deneb", ra:310.358, dec:45.280},
+  {name:"Crux/Acrux", ra:186.650, dec:-63.099},
+  {name:"Gacrux", ra:187.791, dec:-57.113},
+  {name:"Pleiades (Alcyone)", ra:56.75, dec:24.12},
+  {name:"Polaris", ra:37.955, dec:89.264}
+];
+
+const COMPASS32 = ["U","UbT","UUT","TLbU","TL","TLbT","TTL","TbUt","Tm","TbSl","TTg","TGbT","TG","TGbS","STg","SbT","S","SbB","SBd","BDbS","BD","BDbB","BBD","BbSl","B","BbUt","BBL","BLbB","BL","BLbU","UBL","UbB"];
+// U=Utara, T=Timur, S=Selatan, B=Barat, TL=Timur Laut, TG=Tenggara, BD=Barat Daya, BL=Barat Laut (arah campuran disingkat)
+
+function houseIndex(az){
+  return Math.floor((norm360(az)+5.625)/11.25) % 32;
+}
+function houseLabel(az){
+  return `${COMPASS32[houseIndex(az)]} (${az.toFixed(1)}°)`;
+}
+
+function julianDay(date){
+  const Y = date.getUTCFullYear();
+  let M = date.getUTCMonth()+1;
+  const D = date.getUTCDate() + (date.getUTCHours() + date.getUTCMinutes()/60)/24;
+  let y=Y, m=M;
+  if(m<=2){ y-=1; m+=12; }
+  const A = Math.floor(y/100);
+  const B = 2 - A + Math.floor(A/4);
+  return Math.floor(365.25*(y+4716)) + Math.floor(30.6001*(m+1)) + D + B - 1524.5;
+}
+
+function sunEquatorial(jd){
+  const T = (jd-2451545.0)/36525;
+  const L0 = norm360(280.46646 + 36000.76983*T + 0.0003032*T*T);
+  const M  = norm360(357.52911 + 35999.05029*T - 0.0001537*T*T);
+  const C = (1.914602 - 0.004817*T - 0.000014*T*T)*Math.sin(toRad(M))
+          + (0.019993 - 0.000101*T)*Math.sin(toRad(2*M))
+          + 0.000289*Math.sin(toRad(3*M));
+  const trueLong = L0 + C;
+  const omega = 125.04 - 1934.136*T;
+  const lambda = trueLong - 0.00569 - 0.00478*Math.sin(toRad(omega));
+  const eps0 = 23 + 26/60 + 21.448/3600 - (46.8150*T + 0.00059*T*T - 0.001813*T*T*T)/3600;
+  const eps = eps0 + 0.00256*Math.cos(toRad(omega));
+  const raRad = Math.atan2(Math.cos(toRad(eps))*Math.sin(toRad(lambda)), Math.cos(toRad(lambda)));
+  const dec = toDeg(Math.asin(Math.sin(toRad(eps))*Math.sin(toRad(lambda))));
+  return {ra: norm360(toDeg(raRad)), dec};
+}
+
+function gmstDeg(jd){
+  const T = (jd-2451545.0)/36525;
+  const gmst = 280.46061837 + 360.98564736629*(jd-2451545.0) + 0.000387933*T*T - (T*T*T)/38710000;
+  return norm360(gmst);
+}
+
+function equatorialToHorizontal(raDeg, decDeg, latDeg, lstDeg){
+  const H = (function(d){ d=norm360(d); return d>180?d-360:d; })(lstDeg - raDeg);
+  const Hr = toRad(H), decr = toRad(decDeg), latr = toRad(latDeg);
+  const sinAlt = Math.sin(decr)*Math.sin(latr) + Math.cos(decr)*Math.cos(latr)*Math.cos(Hr);
+  const alt = toDeg(Math.asin(clamp(sinAlt,-1,1)));
+  const y = Math.sin(Hr);
+  const x = Math.cos(Hr)*Math.sin(latr) - Math.tan(decr)*Math.cos(latr);
+  const az = norm360(toDeg(Math.atan2(y,x)) + 180);
+  return {alt, az};
+}
+
+function riseSetAzimuth(dec, lat){
+  const latr = toRad(lat), decr = toRad(dec);
+  const cosH0 = -Math.tan(latr)*Math.tan(decr);
+  if(cosH0 < -1 || cosH0 > 1) return null;
+  const H0 = toDeg(Math.acos(clamp(cosH0,-1,1)));
+  const riseAz = equatorialToHorizontal(0, dec, lat, -H0).az;
+  const setAz = equatorialToHorizontal(0, dec, lat, H0).az;
+  return {riseAz, setAz};
+}
+
+function eventUT(raDeg, decDeg, latDeg, lonDeg, jd0, altTargetDeg, rising){
+  const latr = toRad(latDeg), decr = toRad(decDeg);
+  const cosH0 = (Math.sin(toRad(altTargetDeg)) - Math.sin(latr)*Math.sin(decr)) / (Math.cos(latr)*Math.cos(decr));
+  if(cosH0 < -1 || cosH0 > 1) return null;
+  const H0 = toDeg(Math.acos(clamp(cosH0,-1,1)));
+  const H = rising ? -H0 : H0;
+  const lstTarget = norm360(raDeg + H);
+  const requiredGMST = norm360(lstTarget - lonDeg);
+  const gmst0 = gmstDeg(jd0);
+  const delta = norm360(requiredGMST - gmst0);
+  return delta/360.98564736629*24;
+}
+
+function el(tag,attrs){
+  const e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+/* populate star select */
+const starSel = document.getElementById('s-star');
+STAR_CATALOG.forEach((s,i) => {
+  const o = document.createElement('option'); o.value=i; o.textContent=s.name;
+  starSel.appendChild(o);
+});
+
+/* ============ 02: compass ============ */
+function computeCompass(){
+  const star = STAR_CATALOG[starSel.value];
+  const lat = parseFloat(document.getElementById('s-lat').value);
+  document.getElementById('v-slat').textContent = lat.toFixed(1);
+
+  const svg = document.getElementById('svg-compass');
+  svg.innerHTML='';
+  const cx=140, cy=140, R=105;
+  svg.appendChild(el('circle',{cx,cy,r:R, fill:'#fbf8ee', stroke:'#d9d0b4', 'stroke-width':1.5}));
+  for(let i=0;i<32;i++){
+    const az = i*11.25;
+    const a = toRad(az-90);
+    const r1 = R, r2 = (i%8===0) ? R-12 : R-6;
+    svg.appendChild(el('line',{x1:cx+r2*Math.cos(a),y1:cy+r2*Math.sin(a),x2:cx+r1*Math.cos(a),y2:cy+r1*Math.sin(a),stroke:'#B0A98F','stroke-width':i%8===0?1.3:0.6}));
+  }
+  [['U',0],['T',90],['S',180],['B',270]].forEach(([lab,az])=>{
+    const a = toRad(az-90);
+    const t = el('text',{x:cx+(R+14)*Math.cos(a), y:cy+(R+14)*Math.sin(a),'text-anchor':'middle','dominant-baseline':'middle','font-size':13,fill:'#20293A','font-family':'Crimson Pro, serif','font-weight':700});
+    t.textContent=lab; svg.appendChild(t);
+  });
+
+  const rs = riseSetAzimuth(star.dec, lat);
+  if(!rs){
+    document.getElementById('s-rise-out').textContent = 'Sirkumpolar / tak pernah terbit';
+    document.getElementById('s-set-out').textContent = '—';
+    return;
+  }
+  document.getElementById('s-rise-out').textContent = houseLabel(rs.riseAz);
+  document.getElementById('s-set-out').textContent = houseLabel(rs.setAz);
+
+  [[rs.riseAz,'#E08E45','Terbit'],[rs.setAz,'#2E3A59','Terbenam']].forEach(([az,color,label])=>{
+    const a = toRad(az-90);
+    const x=cx+R*Math.cos(a), y=cy+R*Math.sin(a);
+    svg.appendChild(el('line',{x1:cx,y1:cy,x2:x,y2:y,stroke:color,'stroke-width':1.5,'stroke-dasharray':'3,2'}));
+    svg.appendChild(el('circle',{cx:x,cy:y,r:5,fill:color}));
+  });
+}
+['s-star','s-lat'].forEach(id => document.getElementById(id).addEventListener('input', () => { computeCompass(); computeSteering(); rebuild3D(); }));
+
+/* ============ 03: star path finder ============ */
+function computeSteering(){
+  const lat = parseFloat(document.getElementById('s-lat').value);
+  const heading = parseFloat(document.getElementById('in-heading').value);
+  document.getElementById('v-heading').textContent = heading;
+
+  const rows = [];
+  STAR_CATALOG.forEach(star => {
+    const rs = riseSetAzimuth(star.dec, lat);
+    if(!rs) return;
+    [['Terbit', rs.riseAz],['Terbenam', rs.setAz]].forEach(([ev,az]) => {
+      let diff = Math.abs(norm360(az-heading));
+      if(diff>180) diff = 360-diff;
+      rows.push({name:star.name, ev, az, diff});
+    });
+  });
+  rows.sort((a,b)=>a.diff-b.diff);
+  const tbody = document.getElementById('steer-out');
+  tbody.innerHTML='';
+  rows.slice(0,8).forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.name}</td><td>${r.ev}</td><td class="num">${r.az.toFixed(1)}°</td><td class="num">${r.diff.toFixed(1)}°</td>`;
+    tbody.appendChild(tr);
+  });
+}
+document.getElementById('in-heading').addEventListener('input', computeSteering);
+
+/* ============ 04: month grid ============ */
+function computeMonthGrid(){
+  const star = STAR_CATALOG[starSel.value];
+  const lat = parseFloat(document.getElementById('s-lat').value);
+  const lon = parseFloat(document.getElementById('s-lon').value);
+  const offset = parseFloat(document.getElementById('s-offset').value);
+  document.getElementById('v-slon').textContent = lon.toFixed(1);
+  document.getElementById('v-soffset').textContent = offset.toFixed(2);
+
+  const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const grid = document.getElementById('month-grid');
+  grid.innerHTML='';
+  MONTHS.forEach((m,i) => {
+    const jd0 = julianDay(new Date(Date.UTC(2026, i, 15)));
+    const sun = sunEquatorial(jd0);
+    const sunset = eventUT(sun.ra, sun.dec, lat, lon, jd0, -0.833, false);
+    const cell = document.createElement('div');
+    cell.className = 'month-cell';
+    if(sunset!==null){
+      const evalUT = sunset + offset;
+      const lstDeg = norm360(gmstDeg(jd0) + evalUT*15.04107 + lon);
+      const aa = equatorialToHorizontal(star.ra, star.dec, lat, lstDeg);
+      if(aa.alt > 0) cell.classList.add('visible');
+    }
+    cell.textContent = m;
+    grid.appendChild(cell);
+  });
+}
+['s-lon','s-offset'].forEach(id => document.getElementById(id).addEventListener('input', () => { computeMonthGrid(); rebuild3D(); }));
+starSel.addEventListener('input', () => { computeCompass(); computeSteering(); computeMonthGrid(); rebuild3D(); });
+
+/* ============ 05: presets ============ */
+const PRESETS = [
+  {label:"Pleiades / Bintang Tujuh — Nusantara", star:20, lat:-6.2, lon:106.8, note:"Penanda awal musim tanam di berbagai tradisi pertanian Nusantara."},
+  {label:"Pleiades / Matariki — Māori, Aotearoa", star:20, lat:-36.85, lon:174.76, note:"Tahun Baru Māori, akhir Juni."},
+  {label:"Scorpius (Antares) — Yolŋu, Australia Utara", star:14, lat:-12.5, lon:136.8, note:"Menandai datangnya musim nelayan Makassar."},
+  {label:"Southern Cross — navigasi Pasifik", star:18, lat:-17.5, lon:-149.5, note:"Penanda arah Selatan langit, dipakai luas navigator belahan selatan."},
+  {label:"Sirius — Mesir Kuno", star:0, lat:29.87, lon:31.25, note:"Bintang navigasi &amp; musim paling terkenal sepanjang sejarah."}
+];
+const presetGrid = document.getElementById('preset-grid');
+PRESETS.forEach(p => {
+  const card = document.createElement('div');
+  card.className = 'preset-card';
+  card.innerHTML = `<h3>${p.label}</h3><p>${p.note}</p>`;
+  card.addEventListener('click', () => {
+    starSel.value = p.star;
+    document.getElementById('s-lat').value = p.lat;
+    document.getElementById('s-lon').value = p.lon;
+    computeCompass(); computeSteering(); computeMonthGrid(); rebuild3D();
+    document.getElementById('s02').scrollIntoView({behavior:'smooth'});
+  });
+  presetGrid.appendChild(card);
+});
+
+/* ============ 02b: model 3D — busur diurnal bintang ============ */
+let three3d = null; // {scene, camera, renderer, group, updateCamera}
+let anim3d = { playing:false, H:0, speed:1 };
+
+function dirToVec3(az, alt, r){
+  // az: 0=Utara(-Z), 90=Timur(+X), 180=Selatan(+Z), 270=Barat(-X) — konvensi kompas standar
+  const a = toRad(az), e = toRad(alt);
+  const flat = r*Math.cos(e);
+  return new THREE.Vector3(flat*Math.sin(a), r*Math.sin(e), -flat*Math.cos(a));
+}
+
+function makeLabelSprite(text, color){
+  const cnv = document.createElement('canvas');
+  cnv.width = 128; cnv.height = 64;
+  const ctx = cnv.getContext('2d');
+  ctx.font = "bold 42px 'Crimson Pro', Georgia, serif";
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, 64, 34);
+  const tex = new THREE.CanvasTexture(cnv);
+  const mat = new THREE.SpriteMaterial({map:tex, transparent:true, depthTest:false});
+  const spr = new THREE.Sprite(mat);
+  spr.scale.set(0.7, 0.35, 1);
+  return spr;
+}
+
+function initThree3D(){
+  if(three3d) return;
+  const container = document.getElementById('three3d-compass');
+  const w = container.clientWidth, h = container.clientHeight || 320;
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xEAE2CC);
+
+  const camera = new THREE.PerspectiveCamera(45, w/h, 0.05, 100);
+  const target = new THREE.Vector3(0, 0.2, 0);
+  let radius = 6.2, theta = Math.PI*0.32, phi = 1.05;
+
+  const renderer = new THREE.WebGLRenderer({antialias:true});
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+  const dl = new THREE.DirectionalLight(0xffffff, 0.5);
+  dl.position.set(4, 8, 3);
+  scene.add(dl);
+
+  /* piringan ufuk (transparan, agar lingkaran diurnal & sumbu di bawahnya tetap terlihat samar) */
+  const discMat = new THREE.MeshStandardMaterial({color:0xF5F1E6, side:THREE.DoubleSide, transparent:true, opacity:0.55});
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(3, 64), discMat);
+  disc.rotation.x = -Math.PI/2;
+  scene.add(disc);
+  const ring = new THREE.Mesh(new THREE.RingGeometry(2.96, 3, 64), new THREE.MeshBasicMaterial({color:0x20293A, side:THREE.DoubleSide}));
+  ring.rotation.x = -Math.PI/2;
+  scene.add(ring);
+
+  /* tanda 32-rumah di tepi ufuk */
+  const tickPositions = [];
+  for(let i=0;i<32;i++){
+    const az = i*11.25;
+    const r1 = 3.0, r2 = (i%8===0) ? 2.82 : 2.92;
+    tickPositions.push(dirToVec3(az, 0, r1), dirToVec3(az, 0, r2));
+  }
+  const tickGeo = new THREE.BufferGeometry().setFromPoints(tickPositions);
+  scene.add(new THREE.LineSegments(tickGeo, new THREE.LineBasicMaterial({color:0xB0A98F})));
+
+  /* label arah mata angin */
+  [[0,'U'],[90,'T'],[180,'S'],[270,'B']].forEach(([az,label])=>{
+    const spr = makeLabelSprite(label, '#20293A');
+    spr.position.copy(dirToVec3(az, 0.12, 3.35));
+    scene.add(spr);
+  });
+
+  /* grup dinamis: sumbu langit, lingkaran diurnal, titik terbit/terbenam, penanda bintang — dibangun ulang tiap kali bintang/lintang berubah */
+  const group = new THREE.Group();
+  scene.add(group);
+
+  /* kontrol orbit manual: drag = putar, wheel/pinch = zoom */
+  let dragging = false, lastX=0, lastY=0;
+  function updateCamera(){
+    camera.position.x = target.x + radius*Math.sin(phi)*Math.sin(theta);
+    camera.position.z = target.z + radius*Math.sin(phi)*Math.cos(theta);
+    camera.position.y = target.y + radius*Math.cos(phi);
+    camera.lookAt(target);
+  }
+  updateCamera();
+  renderer.domElement.addEventListener('pointerdown', e=>{ dragging=true; lastX=e.clientX; lastY=e.clientY; container.classList.add('grabbing'); });
+  window.addEventListener('pointerup', ()=>{ dragging=false; container.classList.remove('grabbing'); });
+  window.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    theta -= (e.clientX-lastX)*0.006;
+    phi   -= (e.clientY-lastY)*0.006;
+    phi = Math.max(0.15, Math.min(1.52, phi));
+    lastX=e.clientX; lastY=e.clientY;
+    updateCamera();
+  });
+  renderer.domElement.addEventListener('wheel', e=>{
+    e.preventDefault();
+    radius = Math.max(3, Math.min(14, radius + e.deltaY*0.006));
+    updateCamera();
+  }, {passive:false});
+  let pinchDist = null;
+  const touchDist = (t0,t1) => Math.hypot(t1.clientX-t0.clientX, t1.clientY-t0.clientY);
+  renderer.domElement.addEventListener('touchstart', e=>{
+    if(e.touches.length===2){ pinchDist = touchDist(e.touches[0], e.touches[1]); dragging=false; }
+  }, {passive:true});
+  renderer.domElement.addEventListener('touchmove', e=>{
+    if(e.touches.length===2 && pinchDist!==null){
+      e.preventDefault();
+      const d = touchDist(e.touches[0], e.touches[1]);
+      radius = Math.max(3, Math.min(14, radius - (d-pinchDist)*0.01));
+      pinchDist = d;
+      updateCamera();
+    }
+  }, {passive:false});
+  renderer.domElement.addEventListener('touchend', e=>{ if(e.touches.length<2) pinchDist=null; }, {passive:true});
+
+  function onResize(){
+    const w2 = container.clientWidth, h2 = container.clientHeight || 320;
+    camera.aspect = w2/h2; camera.updateProjectionMatrix();
+    renderer.setSize(w2, h2);
+  }
+  window.addEventListener('resize', onResize);
+
+  function loop(){ requestAnimationFrame(loop); renderer.render(scene, camera); }
+  loop();
+
+  three3d = { scene, camera, renderer, group };
+}
+
+function fmtUT(hours){
+  if(hours===null || isNaN(hours)) return '—';
+  let h = norm360(hours*15)/15; // wrap ke 0..24
+  const hh = Math.floor(h);
+  const mm = Math.round((h-hh)*60);
+  return String(hh).padStart(2,'0') + ':' + String(mm===60?0:mm).padStart(2,'0') + ' UT';
+}
+
+const MONTHS3D = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+
+function rebuild3D(){
+  if(!three3d) return;
+  const star = STAR_CATALOG[starSel.value];
+  const lat = parseFloat(document.getElementById('s-lat').value);
+  const lon = parseFloat(document.getElementById('s-lon').value);
+  const offset = parseFloat(document.getElementById('s-offset').value);
+  const monthIdx = parseInt(document.getElementById('in-evalmonth').value);
+  document.getElementById('v-evalmonth').textContent = MONTHS3D[monthIdx];
+  const group = three3d.group;
+  while(group.children.length) group.remove(group.children[0]);
+
+  /* sumbu langit (arah kutub) — altitude kutub = |lintang|, mengarah ke Utara jika lintang≥0, ke Selatan jika lintang<0 */
+  const poleAz = lat>=0 ? 0 : 180;
+  const poleAlt = Math.abs(lat);
+  const poleVec = dirToVec3(poleAz, poleAlt, 4.2);
+  const axisPts = [poleVec.clone().multiplyScalar(-1), poleVec];
+  const axisLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(axisPts), new THREE.LineDashedMaterial({color:0x2E3A59, dashSize:0.12, gapSize:0.08}));
+  axisLine.computeLineDistances();
+  group.add(axisLine);
+  const poleTip = new THREE.Mesh(new THREE.SphereGeometry(0.045,10,10), new THREE.MeshBasicMaterial({color:0x2E3A59}));
+  poleTip.position.copy(poleVec);
+  group.add(poleTip);
+
+  const RSKY = 3.15;
+
+  /* lingkaran diurnal bintang: sampel H 0..360° */
+  const above = new THREE.Color(0xE08E45), below = new THREE.Color(0x9a9484);
+  const starPts = [], starColors = [];
+  for(let i=0;i<=180;i++){
+    const H = i*2;
+    const aa = equatorialToHorizontal(0, star.dec, lat, H);
+    starPts.push(dirToVec3(aa.az, aa.alt, RSKY));
+    const c = aa.alt>=0 ? above : below;
+    starColors.push(c.r, c.g, c.b);
+  }
+  const starCircGeo = new THREE.BufferGeometry().setFromPoints(starPts);
+  starCircGeo.setAttribute('color', new THREE.Float32BufferAttribute(starColors, 3));
+  group.add(new THREE.LineLoop(starCircGeo, new THREE.LineBasicMaterial({vertexColors:true})));
+
+  /* titik terbit & terbenam bintang, memakai fungsi yang sama dengan panel 2D di atas */
+  const rs = riseSetAzimuth(star.dec, lat);
+  if(rs){
+    [rs.riseAz, rs.setAz].forEach(az=>{
+      const m = new THREE.Mesh(new THREE.SphereGeometry(0.07,12,12), new THREE.MeshBasicMaterial({color:0x1D9E75}));
+      m.position.copy(dirToVec3(az, 0, RSKY));
+      group.add(m);
+    });
+  }
+
+  /* --- Matahari: lintasan diurnal untuk bulan evaluasi (tgl 15), + momen senja+offset dari bagian 04 --- */
+  const jd0 = julianDay(new Date(Date.UTC(2026, monthIdx, 15)));
+  const sun = sunEquatorial(jd0);
+  const sunAbove = new THREE.Color(0xF2C14E), sunBelow = new THREE.Color(0x5A6270);
+  const sunPts = [], sunColors = [];
+  for(let i=0;i<=180;i++){
+    const H = i*2;
+    const aa = equatorialToHorizontal(0, sun.dec, lat, H);
+    sunPts.push(dirToVec3(aa.az, aa.alt, RSKY*0.94));
+    const c = aa.alt>=0 ? sunAbove : sunBelow;
+    sunColors.push(c.r, c.g, c.b);
+  }
+  const sunCircGeo = new THREE.BufferGeometry().setFromPoints(sunPts);
+  sunCircGeo.setAttribute('color', new THREE.Float32BufferAttribute(sunColors, 3));
+  group.add(new THREE.LineLoop(sunCircGeo, new THREE.LineBasicMaterial({vertexColors:true})));
+
+  const sunset = eventUT(sun.ra, sun.dec, lat, lon, jd0, -0.833, false);
+  let sunAtEval=null, starAtEval=null, evalUT=null;
+  if(sunset!==null){
+    evalUT = sunset + offset;
+    const lstDeg = norm360(gmstDeg(jd0) + evalUT*15.04107 + lon);
+    sunAtEval = equatorialToHorizontal(sun.ra, sun.dec, lat, lstDeg);
+    starAtEval = equatorialToHorizontal(star.ra, star.dec, lat, lstDeg);
+
+    const sunDot = new THREE.Mesh(new THREE.SphereGeometry(0.09,14,14), new THREE.MeshBasicMaterial({color:0xF2C14E}));
+    sunDot.position.copy(dirToVec3(sunAtEval.az, sunAtEval.alt, RSKY*0.94));
+    group.add(sunDot);
+
+    const starRing = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.02, 8, 20), new THREE.MeshBasicMaterial({color: starAtEval.alt>=0 ? 0x1D9E75 : 0xB0473F}));
+    starRing.position.copy(dirToVec3(starAtEval.az, starAtEval.alt, RSKY));
+    group.add(starRing);
+
+    document.getElementById('out-sunset3d').textContent = fmtUT(evalUT);
+    document.getElementById('out-starvis3d').textContent = (starAtEval.alt>=0 ? 'Tampak, ' : 'Tak tampak, ') + starAtEval.alt.toFixed(1) + '° dari ufuk';
+  } else {
+    document.getElementById('out-sunset3d').textContent = 'Matahari tak terbenam (siang/malam kutub)';
+    document.getElementById('out-starvis3d').textContent = '—';
+  }
+
+  /* warna langit mengikuti ketinggian Matahari saat momen senja evaluasi */
+  if(three3d.scene){
+    let skyColor = 0xF5F1E6;
+    if(sunAtEval){
+      if(sunAtEval.alt < -18) skyColor = 0x2A3347;
+      else if(sunAtEval.alt < -6) skyColor = 0x596583;
+      else if(sunAtEval.alt < 0) skyColor = 0xD9C79E;
+      else skyColor = 0xF5F1E6;
+    }
+    three3d.scene.background = new THREE.Color(skyColor);
+  }
+
+  /* penanda posisi bintang saat ini (dipakai animasi Putar) */
+  const starDot = new THREE.Mesh(new THREE.SphereGeometry(0.09,14,14), new THREE.MeshStandardMaterial({color:0xffffff, emissive:0xE08E45, emissiveIntensity:0.6}));
+  group.add(starDot);
+  three3d.starDot = starDot;
+  three3d.dec = star.dec;
+  three3d.lat = lat;
+  updateStarMarker3D();
+}
+
+function updateStarMarker3D(){
+  if(!three3d || !three3d.starDot) return;
+  const aa = equatorialToHorizontal(0, three3d.dec, three3d.lat, norm360(anim3d.H));
+  three3d.starDot.position.copy(dirToVec3(aa.az, aa.alt, 3.15));
+  three3d.starDot.material.opacity = aa.alt>=0 ? 1 : 0.35;
+  three3d.starDot.material.transparent = aa.alt<0;
+  document.getElementById('out-alt3d').textContent = aa.alt.toFixed(1) + '°';
+  document.getElementById('out-status3d').textContent = aa.alt>=0 ? 'Di atas ufuk (tampak)' : 'Di bawah ufuk (tak tampak)';
+}
+
+function animLoop3D(ts){
+  if(anim3d.playing){
+    if(anim3d.last===undefined) anim3d.last = ts;
+    const dt = (ts - anim3d.last)/1000;
+    anim3d.last = ts;
+    anim3d.H = norm360(anim3d.H + dt*anim3d.speed*15); // ~15°/detik dasar (1 lingkaran ≈ 24 detik pada 1×)
+    updateStarMarker3D();
+  } else {
+    anim3d.last = undefined;
+  }
+  requestAnimationFrame(animLoop3D);
+}
+requestAnimationFrame(animLoop3D);
+
+document.getElementById('btn-play3d').addEventListener('click', function(){
+  anim3d.playing = !anim3d.playing;
+  this.textContent = anim3d.playing ? '⏸ Jeda' : '▶ Putar';
+  this.classList.toggle('playing', anim3d.playing);
+});
+document.getElementById('in-speed3d').addEventListener('input', function(){
+  anim3d.speed = parseFloat(this.value);
+  document.getElementById('v-speed3d').textContent = anim3d.speed + '×';
+});
+document.getElementById('in-evalmonth').addEventListener('input', rebuild3D);
+
+/* inisialisasi 3D setelah kontrol 2D siap */
+initThree3D();
+rebuild3D();
+
+computeCompass();
+computeSteering();
+computeMonthGrid();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

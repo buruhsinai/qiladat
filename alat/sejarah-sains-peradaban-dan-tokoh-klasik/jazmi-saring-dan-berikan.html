@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saring & Berikan — Kerangka Menyaring Klaim dan Menemukan Masalah yang Layak Diselesaikan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14161D; --panel:#1A1D27; --panel-2:#222633;
+    --ink:#E9E7DE; --ink-dim:#A6AAB8; --ink-dimmer:#6B6F80;
+    --line:rgba(233,231,222,0.10);
+    --teal:#4FA8B8; --teal-soft:rgba(79,168,184,0.14); --teal-line:rgba(79,168,184,0.35);
+    --amber:#D69A4E; --amber-soft:rgba(214,154,78,0.14); --amber-line:rgba(214,154,78,0.35);
+    --gold:#C9A84A; --gold-soft:rgba(201,168,74,0.12); --gold-line:rgba(201,168,74,0.4);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:'Karla',sans-serif; line-height:1.65; -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:500;letter-spacing:-0.01em;color:var(--ink);}
+  .wrap{max-width:700px;margin:0 auto;padding:0 22px;}
+  .wide{max-width:780px;}
+
+  header.hero{padding:64px 0 30px;border-bottom:1px solid var(--line);}
+  .kicker{font-size:0.86rem;color:var(--teal);font-weight:600;margin:0 0 16px;}
+  header.hero h1{font-size:clamp(1.7rem,4.6vw,2.3rem);line-height:1.24;margin:0 0 18px;max-width:20ch;}
+  header.hero p{color:var(--ink-dim);font-size:1.02rem;max-width:56ch;margin:0 0 10px;}
+
+  section{padding:46px 0;}
+  section + section{border-top:1px solid var(--line);}
+  .step-tag{display:inline-flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--ink-dimmer);margin-bottom:14px;}
+  .step-tag .dot{width:7px;height:7px;border-radius:50%;background:var(--teal);display:inline-block;}
+  .step-tag.amber .dot{background:var(--amber);}
+  .step-tag.gold .dot{background:var(--gold);}
+  h2{font-size:1.38rem;margin:0 0 16px;}
+  p{margin:0 0 16px;}
+  .lede{color:var(--ink-dim);}
+
+  .lab{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--line); border-radius:20px; padding:26px 24px 28px; margin:22px 0;
+  }
+  .slider-row{margin:16px 0 6px;}
+  .slider-row label{display:flex;justify-content:space-between;font-size:0.86rem;color:var(--ink-dimmer);margin-bottom:10px;}
+  input[type=range]{
+    -webkit-appearance:none;width:100%;height:4px;border-radius:4px;background:var(--line);outline:none;margin:6px 0 4px;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+    background:var(--teal);border:3px solid var(--bg);cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid var(--bg);cursor:pointer;}
+
+  /* ---------- Grid 2D (Part 1) ---------- */
+  .grid-box{
+    position:relative;
+    margin-top:20px;
+    aspect-ratio:1/1;
+    max-width:320px;
+    border-radius:14px;
+    border:1px solid var(--line);
+    background:
+      linear-gradient(to right, rgba(255,255,255,0.03) 50%, transparent 50%),
+      linear-gradient(to bottom, rgba(255,255,255,0.03) 50%, transparent 50%);
+    overflow:hidden;
+  }
+  .grid-axis-label{
+    position:absolute;
+    font-size:0.68rem;
+    color:var(--ink-dimmer);
+  }
+  .gl-top{top:8px;left:50%;transform:translateX(-50%);}
+  .gl-bottom{bottom:8px;left:50%;transform:translateX(-50%);}
+  .gl-left{left:8px;top:50%;transform:translateY(-50%) rotate(-90deg);transform-origin:left center;}
+  .gl-right{right:8px;top:50%;transform:translateY(-50%) rotate(90deg);transform-origin:right center;}
+  .dot-marker{
+    position:absolute;
+    width:16px;height:16px;border-radius:50%;
+    background:var(--teal);
+    border:3px solid var(--bg);
+    box-shadow:0 0 0 1px var(--teal-line);
+    transform:translate(-50%, 50%);
+    transition:all .15s ease;
+  }
+  .verdict-box{
+    margin-top:20px; padding:18px 18px; border-radius:12px;
+    background:var(--teal-soft); border:1px solid var(--teal-line);
+  }
+  .verdict-label{font-size:0.76rem;color:var(--ink-dimmer);margin-bottom:8px;}
+  .verdict-text{font-size:0.95rem;color:var(--ink);}
+
+  /* ---------- Kompas kontribusi (Part 2) ---------- */
+  .path-diagram{
+    display:flex; gap:14px; margin-top:20px;
+  }
+  .path-col{
+    flex:1; padding:16px; border-radius:12px; border:1px solid var(--line);
+    background:rgba(0,0,0,0.15); font-size:0.88rem; color:var(--ink-dim);
+    transition:all .2s ease;
+  }
+  .path-col.active{border-color:var(--amber-line);background:var(--amber-soft);color:var(--ink);}
+  .path-col .path-title{font-family:'Fraunces',serif;font-size:1.02rem;margin-bottom:8px;color:var(--ink);}
+
+  /* ---------- Diagnosa akar masalah (Part 3) ---------- */
+  .case-card{margin-top:18px;}
+  .case-row{
+    padding:14px 16px; border-radius:10px; margin-bottom:10px;
+    background:rgba(0,0,0,0.16); border:1px solid var(--line);
+  }
+  .case-row .k{font-size:0.74rem;color:var(--ink-dimmer);margin-bottom:4px;}
+  .case-row .v{font-size:0.92rem;color:var(--ink-dim);}
+  .case-row.root{border-color:var(--amber-line);background:var(--amber-soft);}
+  .case-row.root .v{color:var(--ink);}
+
+  /* ---------- Renungan (final) ---------- */
+  .renungan{background:linear-gradient(180deg, #1C1810, #14120B);}
+  .renungan .wrap{max-width:700px;}
+  .hadith-card{
+    margin:20px 0;
+    padding:22px 22px 20px;
+    border-radius:16px;
+    border:1px solid var(--gold-line);
+    background:var(--gold-soft);
+  }
+  .hadith-label{font-size:0.76rem;color:var(--gold);margin-bottom:10px;font-weight:600;}
+  .hadith-text{font-family:'Fraunces',serif;font-size:1.12rem;color:var(--ink);line-height:1.6;margin-bottom:10px;}
+  .hadith-source{font-size:0.8rem;color:var(--ink-dimmer);}
+  .renungan p{color:var(--ink-dim);}
+  .renungan b{color:var(--ink);}
+
+  footer{padding:46px 0 66px;color:var(--ink-dimmer);font-size:0.85rem;}
+  footer .divider{height:1px;background:var(--line);margin-bottom:28px;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="kicker">Laboratorium JAZMI — Kerangka Berpikir</p>
+    <h1>Saring dulu, baru simpulkan — lalu jangan berhenti di cukup</h1>
+    <p>Dua kebiasaan berpikir yang sering dianggap sepele, padahal menentukan arah seseorang berkembang atau berhenti: bagaimana ia menyikapi informasi yang belum pasti, dan apakah ia berhenti begitu kebutuhannya sendiri terpenuhi, atau terus mencari masalah nyata yang bisa ia bantu selesaikan.</p>
+    <p class="lede">Coba dulu tiga bagian di bawah ini. Latar belakang dan rujukannya ada di bagian penutup.</p>
+  </div>
+</header>
+
+<section id="saring">
+  <div class="wrap wide">
+    <div class="step-tag"><span class="dot"></span> Bagian 1</div>
+    <h2>Kalkulator sikap terhadap klaim</h2>
+    <p class="lede">Tidak semua informasi harus ditolak mentah-mentah atau dipercaya penuh. Dua hal yang menentukan sikap yang pas: seberapa kuat bukti di baliknya, dan seberapa besar taruhannya kalau kamu salah percaya.</p>
+
+    <div class="lab">
+      <div class="slider-row">
+        <label>Kekuatan bukti <span id="evPos"></span></label>
+        <input type="range" id="evSlider" min="0" max="10" step="1" value="3">
+      </div>
+      <div class="slider-row">
+        <label>Besar taruhan keputusan <span id="stPos"></span></label>
+        <input type="range" id="stSlider" min="0" max="10" step="1" value="3">
+      </div>
+
+      <div class="grid-box">
+        <span class="grid-axis-label gl-top">bukti kuat</span>
+        <span class="grid-axis-label gl-bottom">bukti lemah</span>
+        <span class="grid-axis-label gl-left">taruhan kecil</span>
+        <span class="grid-axis-label gl-right">taruhan besar</span>
+        <div class="dot-marker" id="dotMarker"></div>
+      </div>
+
+      <div class="verdict-box">
+        <div class="verdict-label">Sikap yang pas</div>
+        <div class="verdict-text" id="verdictText"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="kompas">
+  <div class="wrap wide">
+    <div class="step-tag amber"><span class="dot"></span> Bagian 2</div>
+    <h2>Kompas kontribusi: berhenti di cukup, atau terus memberi?</h2>
+    <p class="lede">Geser seberapa besar rasa "sudah cukup" yang dirasakan seseorang setelah kebutuhannya terpenuhi — dan lihat dua jalan yang mulai terbuka setelah titik itu.</p>
+
+    <div class="lab">
+      <div class="slider-row">
+        <label>Rasa "sudah cukup" <span id="cukupPos"></span></label>
+        <input type="range" id="cukupSlider" min="0" max="100" step="5" value="50">
+      </div>
+
+      <div class="path-diagram">
+        <div class="path-col" id="pathBerhenti">
+          <div class="path-title">Berhenti di titik nyaman</div>
+          <div id="berhentiText"></div>
+        </div>
+        <div class="path-col" id="pathLanjut">
+          <div class="path-title">Terus mencari masalah untuk dibantu selesaikan</div>
+          <div id="lanjutText"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="diagnosa">
+  <div class="wrap wide">
+    <div class="step-tag amber"><span class="dot"></span> Bagian 3</div>
+    <h2>Diagnosa akar masalah</h2>
+    <p class="lede">Niat membantu saja tidak cukup kalau masalah yang disasar ternyata bukan akar persoalannya. Geser untuk melihat beberapa kasus di mana solusi yang kelihatannya masuk akal ternyata meleset dari akar masalahnya.</p>
+
+    <div class="lab">
+      <div class="slider-row">
+        <label>Pilih kasus <span id="casePos"></span></label>
+        <input type="range" id="caseSlider" min="0" max="3" step="1" value="0">
+      </div>
+
+      <div class="case-card">
+        <div class="case-row">
+          <div class="k">Solusi yang diajukan</div>
+          <div class="v" id="caseSolusi"></div>
+        </div>
+        <div class="case-row">
+          <div class="k">Masalah yang disangka</div>
+          <div class="v" id="caseSangka"></div>
+        </div>
+        <div class="case-row root">
+          <div class="k">Masalah yang sebenarnya (akar)</div>
+          <div class="v" id="caseAkar"></div>
+        </div>
+      </div>
+    </div>
+    <p class="lede">Pola yang berulang: solusi yang menarik secara teknis bisa tetap meleset kalau kendala nyata di lapangan (desain, infrastruktur, akses) belum dipahami dulu.</p>
+  </div>
+</section>
+
+<section id="renungan" class="renungan">
+  <div class="wrap">
+    <div class="step-tag gold"><span class="dot"></span> Renungan penutup</div>
+    <h2>Dari mana kerangka ini berangkat</h2>
+    <p>Ketiga bagian di atas dibangun dari dua pelajaran yang diajarkan Nabi Muhammad ﷺ empat belas abad lalu — jauh sebelum istilah seperti "bias konfirmasi" atau "problem-fit" dikenal.</p>
+
+    <div class="hadith-card">
+      <div class="hadith-label">Tentang menyaring klaim</div>
+      <div class="hadith-text">"Ceritakanlah apa yang kalian dengar dari Bani Israil, dan tidak mengapa (untuk sekadar diceritakan)."</div>
+      <div class="hadith-source">Diriwayatkan Al-Bukhari, dari Abdullah bin 'Amr</div>
+    </div>
+    <p>Ulama menjelaskan maksudnya: kisah-kisah itu boleh didengar dan diceritakan sebagai pelajaran, bukan karena isinya pasti benar, dan juga bukan berarti pasti dusta — melainkan berada di wilayah yang belum jelas kepastiannya, sehingga tidak dibenarkan (dijadikan dasar keyakinan atau hukum) dan juga tidak buru-buru didustakan. Prinsip inilah yang mendasari Bagian 1: ada ruang sah untuk menerima informasi sekadar sebagai cerita, tanpa harus menaikkannya jadi dasar keputusan penting.</p>
+
+    <div class="hadith-card">
+      <div class="hadith-label">Tentang memberi manfaat</div>
+      <div class="hadith-text">"Sebaik-baik manusia adalah yang paling bermanfaat bagi manusia lainnya."</div>
+      <div class="hadith-source">Dinilai <i>hasan</i> oleh sebagian ulama hadis (antara lain Al-Albani dalam Shahih Al-Jami'), diriwayatkan antara lain oleh Ath-Thabrani</div>
+    </div>
+    <p>Ukurannya bukan seberapa banyak yang seseorang <b>dapatkan</b>, tapi seberapa banyak yang ia <b>berikan</b>. Ini yang mendasari Bagian 2 dan 3: berhenti begitu kebutuhan sendiri terpenuhi adalah titik yang wajar untuk singgah, tapi bukan titik yang seharusnya jadi tujuan akhir — dan memberi manfaat yang sungguhan menuntut usaha memahami akar masalah orang lain, bukan sekadar menawarkan solusi yang kelihatannya keren.</p>
+
+    <p>Dua prinsip ini, kalau digabung, membentuk satu mentalitas: terbuka menerima informasi tanpa naif, dan terus mencari cara memberi manfaat tanpa berhenti di rasa cukup pribadi. Itulah yang coba dimodelkan tiga alat di atas.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="divider"></div>
+    Bagian dari Laboratorium JAZMI — dibangun mengikuti metode "Belajar → Memodelkan → Menguji → Membuat Tool".
+  </div>
+</footer>
+
+<script>
+  // ---------------- Bagian 1: Kalkulator Sikap ----------------
+  const evSlider = document.getElementById('evSlider');
+  const stSlider = document.getElementById('stSlider');
+  const evPos = document.getElementById('evPos');
+  const stPos = document.getElementById('stPos');
+  const dotMarker = document.getElementById('dotMarker');
+  const verdictText = document.getElementById('verdictText');
+
+  function verdictFor(ev, st){
+    const evLevel = ev < 4 ? 'lemah' : ev < 8 ? 'sedang' : 'kuat';
+    const stLevel = st < 4 ? 'kecil' : st < 8 ? 'sedang' : 'besar';
+    const table = {
+      'lemah-kecil': 'Boleh didengar dan diceritakan ulang sebagai cerita ringan — tidak perlu dibenarkan sebagai fakta, cukup dinikmati sebagai bahan renungan.',
+      'lemah-sedang': 'Menarik untuk disimpan sebagai catatan, tapi belum layak memengaruhi keputusan — cari dulu bukti tambahan sebelum dipakai.',
+      'lemah-besar': 'Jangan dijadikan dasar keputusan penting. Taruhannya terlalu besar untuk bukti setipis ini, betapa pun menariknya ceritanya.',
+      'sedang-kecil': 'Cukup layak dicoba dalam skala kecil — risikonya rendah, jadi wajar untuk sekadar diuji sendiri.',
+      'sedang-sedang': 'Ini titik yang pas untuk dijadikan hipotesis: layak diteliti dan diuji lebih lanjut sebelum diyakini penuh.',
+      'sedang-besar': 'Perlu bukti lebih kuat dulu sebelum dipakai untuk keputusan sebesar ini — jangan tergesa, tapi juga jangan diabaikan.',
+      'kuat-kecil': 'Bisa dipakai dengan percaya diri — meski begitu, karena taruhannya kecil, tidak perlu dijadikan urusan besar.',
+      'kuat-sedang': 'Bukti sudah cukup kuat untuk dijadikan pegangan dalam keputusan ini.',
+      'kuat-besar': 'Inilah yang pantas diprioritaskan dan dikerahkan sumber daya besar — bukti kuat, taruhannya juga besar.',
+    };
+    return table[`${evLevel}-${stLevel}`];
+  }
+
+  function renderSikap(){
+    const ev = +evSlider.value, st = +stSlider.value;
+    evPos.textContent = `(${ev} / 10)`;
+    stPos.textContent = `(${st} / 10)`;
+    dotMarker.style.left = (st / 10 * 100) + '%';
+    dotMarker.style.bottom = (ev / 10 * 100) + '%';
+    verdictText.textContent = verdictFor(ev, st);
+  }
+  evSlider.addEventListener('input', renderSikap);
+  stSlider.addEventListener('input', renderSikap);
+  renderSikap();
+
+  // ---------------- Bagian 2: Kompas Kontribusi ----------------
+  const cukupSlider = document.getElementById('cukupSlider');
+  const cukupPos = document.getElementById('cukupPos');
+  const pathBerhenti = document.getElementById('pathBerhenti');
+  const pathLanjut = document.getElementById('pathLanjut');
+  const berhentiText = document.getElementById('berhentiText');
+  const lanjutText = document.getElementById('lanjutText');
+
+  function renderKompas(){
+    const v = +cukupSlider.value;
+    cukupPos.textContent = `(${v}%)`;
+    if (v < 40){
+      berhentiText.textContent = 'Belum relevan — kebutuhan dasar saja belum sepenuhnya terpenuhi, wajar fokus dulu ke situ.';
+      lanjutText.textContent = 'Ekspansi biasanya belum jadi prioritas utama pada titik ini, dan itu wajar.';
+      pathBerhenti.classList.remove('active'); pathLanjut.classList.remove('active');
+    } else if (v < 75){
+      berhentiText.textContent = 'Mulai muncul godaan untuk berhenti — "sudah cukup, tidak usah dikejar lagi".';
+      lanjutText.textContent = 'Di titik inilah pilihan mulai terasa: lanjut mencari masalah orang lain yang bisa dibantu, atau berhenti di sini.';
+      pathBerhenti.classList.remove('active'); pathLanjut.classList.remove('active');
+    } else {
+      berhentiText.textContent = 'Banyak orang berhenti persis di titik ini — merasa sudah cukup terampil, cukup dapat, cukup nyaman — lalu berhenti berkembang.';
+      lanjutText.textContent = 'Orang yang terus berkembang biasanya justru mulai dari sini: kebutuhan sendiri sudah aman, lalu perhatian bergeser ke masalah yang belum terselesaikan di sekitarnya.';
+      pathBerhenti.classList.add('active'); pathLanjut.classList.add('active');
+    }
+  }
+  cukupSlider.addEventListener('input', renderKompas);
+  renderKompas();
+
+  // ---------------- Bagian 3: Diagnosa Akar Masalah ----------------
+  const cases = [
+    {
+      solusi: 'Kendaraan berbahan bakar berbasis air, dipasarkan sebagai solusi hemat BBM di Indonesia.',
+      sangka: 'Indonesia kekurangan bahan bakar alternatif yang lebih murah.',
+      akar: 'Hampir semua kendaraan yang beredar memang didesain dan disertifikasi hanya untuk bensin/diesel — mengganti bahan bakarnya saja, tanpa mengubah desain mesin dan sistemnya, tidak akan berjalan. Brasil bisa memakai etanol secara luas justru karena kendaraannya memang dirancang flex-fuel sejak awal, bukan sekadar diberi bahan bakar alternatif di kendaraan yang sudah ada.'
+    },
+    {
+      solusi: 'Aplikasi belajar bahasa dengan gamifikasi penuh — lencana, poin, papan peringkat.',
+      sangka: 'Orang berhenti belajar bahasa karena prosesnya membosankan.',
+      akar: 'Kebanyakan orang berhenti bukan karena bosan di aplikasinya, tapi karena tidak pernah punya kesempatan memakai bahasa itu dalam percakapan nyata — motivasinya hilang begitu keluar dari aplikasi.'
+    },
+    {
+      solusi: 'Marketplace daring untuk menjual hasil panen petani langsung ke pembeli kota.',
+      sangka: 'Petani kesulitan menjual karena tidak ada platform digital.',
+      akar: 'Hambatan utama sering ada di rantai logistik dan penyimpanan dingin — hasil panen rusak sebelum sempat sampai ke pembeli, betapa pun bagusnya platform digitalnya.'
+    },
+    {
+      solusi: 'Kursus daring gratis untuk melatih keterampilan digital di daerah tertinggal.',
+      sangka: 'Warga daerah tertinggal tidak punya akses pelatihan keterampilan.',
+      akar: 'Banyak wilayah itu justru kekurangan akses internet stabil atau perangkat memadai — kursusnya sudah tersedia, tapi tidak bisa benar-benar diakses.'
+    }
+  ];
+
+  const caseSlider = document.getElementById('caseSlider');
+  const casePos = document.getElementById('casePos');
+  const caseSolusi = document.getElementById('caseSolusi');
+  const caseSangka = document.getElementById('caseSangka');
+  const caseAkar = document.getElementById('caseAkar');
+
+  function renderCase(){
+    const c = cases[+caseSlider.value];
+    casePos.textContent = `(${+caseSlider.value + 1} dari ${cases.length})`;
+    caseSolusi.textContent = c.solusi;
+    caseSangka.textContent = c.sangka;
+    caseAkar.textContent = c.akar;
+  }
+  caseSlider.addEventListener('input', renderCase);
+  renderCase();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

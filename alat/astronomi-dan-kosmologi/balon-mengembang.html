@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Balon yang Mengembang</title>
+<style>
+  :root{--bg:#0b0d10;--panel:#14171c;--panel2:#1b1f26;--line:#2a2f38;--text:#e8e6df;--muted:#9aa1ab;--accent:#c9a24d;--accent2:#6fae8c;--font-d:'Georgia',serif;--font-b:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-b);margin:0;padding:0;line-height:1.6}
+  .wrap{max-width:760px;margin:0 auto;padding:26px 18px 60px}
+  h1{font-family:var(--font-d);font-size:1.4rem;color:var(--accent);margin:0 0 6px}
+  .tagline{color:var(--muted);font-size:.92rem;margin-bottom:24px}
+  h2{font-family:var(--font-d);font-size:1.1rem;color:var(--accent2);border-left:3px solid var(--accent2);padding-left:10px;margin-top:30px}
+  p{color:#d7d5cd}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;margin:12px 0}
+  .slider-field label{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);margin-bottom:6px}
+  .slider-field label b{color:var(--accent)}
+  input[type=range]{width:100%;accent-color:var(--accent2)}
+  svg{width:100%;max-width:320px;display:block;margin:12px auto;height:auto;background:var(--panel2);border-radius:8px;border:1px solid var(--line)}
+  .result{background:var(--panel2);border:1px solid var(--accent);border-radius:8px;padding:12px;margin-top:12px;font-size:.92rem}
+  .result b{color:var(--accent)}
+  table{width:100%;border-collapse:collapse;margin-top:8px;font-size:.85rem}
+  th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:left}
+  th{color:var(--accent2)}
+  .note{font-size:.8rem;color:var(--muted);margin-top:8px}
+  .limitbox{background:#241a14;border:1px solid #d98c5f;border-radius:8px;padding:12px;color:#e8d3c1;font-size:.88rem}
+  ul{color:#d7d5cd;margin:6px 0;padding-left:20px}
+  .wa{display:inline-block;margin-top:10px;background:#25D366;color:#04250f;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:600;font-size:.9rem}
+  footer{margin-top:36px;border-top:1px solid var(--line);padding-top:14px;color:var(--muted);font-size:.76rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Balon yang Mengembang</h1>
+<div class="tagline">Analogi paling terkenal soal ekspansi alam semesta — dan yang membuktikan satu hal penting: tidak ada titik pusatnya.</div>
+
+<h2>Belajar</h2>
+<p>Tempelkan beberapa titik di permukaan balon kempis, lalu tiup. Semua titik saling menjauh satu sama lain — tapi coba tanya titik mana pun "siapa pusat pengembangan ini?", jawabannya sama: <b>dari sudut pandang titik manapun, semua titik lain terlihat menjauh darinya</b>. Tidak ada satu titik yang diam sementara yang lain menjauh. Inilah kenapa pertanyaan "di mana pusat Big Bang?" sebenarnya keliru diajukan — pengembangan terjadi di mana-mana sekaligus, persis seperti permukaan balon ini.</p>
+
+<h2>Eksplorasi — Tiup Balonnya</h2>
+<div class="card">
+  <div class="slider-field">
+    <label>Radius balon <b id="valR">50</b></label>
+    <input type="range" id="r" min="30" max="100" step="1" value="50">
+  </div>
+  <svg id="balon" viewBox="0 0 300 300"></svg>
+  <div class="result">
+    <table>
+      <tr><th>Pasangan titik</th><th>Jarak busur</th></tr>
+      <tr><td>A ↔ B (berdekatan)</td><td id="jarakAB">-</td></tr>
+      <tr><td>A ↔ C (berjauhan)</td><td id="jarakAC">-</td></tr>
+    </table>
+  </div>
+  <p class="note">Perhatikan: saat balon membesar, jarak A↔C bertambah <b>lebih banyak</b> daripada A↔B — persis pola Hukum Hubble (v=H₀d): titik yang lebih jauh, menjauh lebih cepat, meski keduanya sama-sama cuma "ikut" mengembang bersama balon.</p>
+</div>
+
+<h2>Batasan</h2>
+<div class="limitbox">
+  <ul>
+    <li>Balon nyata mengembang dalam ruang 3D yang kita bisa lihat dari luar — alam semesta tidak (setidaknya sejauh yang kita amati) mengembang "ke dalam" sesuatu yang lebih besar. Analogi ini hanya menangkap sifat "tidak ada pusat" dan "makin jauh makin cepat menjauh", bukan geometri sesungguhnya.</li>
+    <li>Permukaan balon melengkung (2D pada permukaan bola) — ruang alam semesta yang diamati sejauh ini tampak mendekati datar, bukan melengkung seperti balon.</li>
+  </ul>
+</div>
+
+<div class="card" style="text-align:center">
+  <a class="wa" id="waLink" href="#" target="_blank">Konsultasi via WhatsApp</a>
+</div>
+
+<footer>Bagian dari Bank Alat JAZMI — pendamping ringan "Hukum Hubble & Ekspansi Alam Semesta".</footer>
+</div>
+
+<script>
+const rEl = document.getElementById('r');
+const angA=0, angB=25, angC=140; // derajat, A-B dekat, A-C jauh
+
+function hitung(){
+  const r = parseFloat(rEl.value);
+  document.getElementById('valR').textContent = r;
+
+  const arcAB = r*(angB-angA)*Math.PI/180;
+  const arcAC = r*(angC-angA)*Math.PI/180;
+  document.getElementById('jarakAB').textContent = arcAB.toFixed(1);
+  document.getElementById('jarakAC').textContent = arcAC.toFixed(1);
+
+  gambar(r);
+}
+
+function gambar(r){
+  const svg = document.getElementById('balon');
+  const cx=150, cy=150;
+  function pt(angDeg){
+    const rad = (angDeg-90)*Math.PI/180;
+    return [cx+r*Math.cos(rad), cy+r*Math.sin(rad)];
+  }
+  const [ax,ay]=pt(angA), [bx,by]=pt(angB), [cxp,cyp]=pt(angC);
+
+  svg.innerHTML = `
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="#1b3550" stroke="#7f9fe8" stroke-width="2" opacity="0.5"/>
+    <circle cx="${ax}" cy="${ay}" r="6" fill="#c9a24d"/><text x="${ax}" y="${ay-10}" fill="#c9a24d" font-size="13" text-anchor="middle">A</text>
+    <circle cx="${bx}" cy="${by}" r="6" fill="#6fae8c"/><text x="${bx}" y="${by-10}" fill="#6fae8c" font-size="13" text-anchor="middle">B</text>
+    <circle cx="${cxp}" cy="${cyp}" r="6" fill="#d98c5f"/><text x="${cxp}" y="${cyp-10}" fill="#d98c5f" font-size="13" text-anchor="middle">C</text>
+  `;
+}
+
+rEl.addEventListener('input', hitung);
+document.getElementById('waLink').href = `https://wa.me/6281356572588?text=${encodeURIComponent("Assalamu'alaikum, saya ingin diskusi terkait Balon yang Mengembang JAZMI.")}`;
+hitung();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>String Laboratory — Laboratorium JAZMI</title>
+<style>
+  :root{
+    --bg:#0a1512; --bg2:#0f1e19; --card:#122420; --card2:#16302a; --line:#1f3d34;
+    --emerald:#22c98a; --emerald-dim:#0e6b4f; --gold:#e0b354; --text:#e9f3ee;
+    --muted:#8fada0; --danger:#e07a5f; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:'Georgia',serif; line-height:1.65;}
+  .sans{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;}
+  header{padding:32px 20px 22px; text-align:center; background:radial-gradient(ellipse at top, #113b2e 0%, var(--bg) 70%); border-bottom:1px solid var(--line);}
+  header .kicker{font-family:-apple-system,sans-serif; letter-spacing:.14em; text-transform:uppercase; font-size:12px; color:var(--gold); margin-bottom:10px;}
+  header h1{font-size:1.4rem; margin:0 0 10px; font-weight:600; line-height:1.35;}
+  header p{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px; max-width:640px; margin:0 auto;}
+  nav.tabs{position:sticky; top:0; z-index:10; display:flex; overflow-x:auto; gap:6px; padding:10px 14px; background:rgba(10,21,18,.96); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); font-family:-apple-system,sans-serif; -webkit-overflow-scrolling:touch;}
+  nav.tabs a{flex:0 0 auto; padding:7px 13px; border-radius:999px; font-size:12.5px; color:var(--muted); text-decoration:none; border:1px solid var(--line); white-space:nowrap;}
+  main{max-width:800px; margin:0 auto; padding:8px 18px 60px;}
+  section{padding:30px 0; border-bottom:1px solid var(--line);}
+  section:last-child{border-bottom:none;}
+  h2{font-size:1.1rem; color:var(--emerald); margin:0 0 6px; display:flex; align-items:center; gap:8px;}
+  h2 .num{font-family:-apple-system,sans-serif; font-size:11px; background:var(--emerald-dim); color:#dff7ec; padding:2px 8px; border-radius:6px;}
+  h3{color:var(--gold); font-size:1rem; margin:20px 0 8px;}
+  p{margin:0 0 14px; font-size:15.5px;}
+  .lead{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px;}
+  .qbox{background:var(--card2); border-left:3px solid var(--gold); border-radius:8px; padding:14px 16px; margin:16px 0; font-style:italic; color:#f0e6cc; font-size:14.5px;}
+  ul{padding-left:20px; margin:10px 0;} li{margin-bottom:7px; font-size:15px;}
+  .sourceline{font-family:-apple-system,sans-serif; font-size:11.5px; color:var(--muted); margin-top:6px; padding-top:6px; border-top:1px dashed var(--line);}
+  .warn{background:#241407; border:1px solid #5c3a12; border-radius:10px; padding:14px 16px; margin:14px 0; font-family:-apple-system,sans-serif; font-size:13.5px; color:#f0d3a8;}
+  .insight{background:#0e2a20; border-left:3px solid var(--emerald); border-radius:8px; padding:14px 16px; margin:14px 0; font-family:-apple-system,sans-serif; font-size:14px; color:#dff7ec;}
+  .insight .lbl{color:var(--emerald); font-size:11px; text-transform:uppercase; letter-spacing:.08em; display:block; margin-bottom:6px; font-weight:700;}
+  .eq{font-family:Georgia,serif; text-align:center; font-size:1.2rem; background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:16px; margin:14px 0; color:var(--emerald);}
+  .eq small{display:block; font-family:-apple-system,sans-serif; font-size:11px; color:var(--muted); margin-top:8px;}
+
+  .sim-card{font-family:-apple-system,sans-serif; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin:14px 0;}
+  .sim-card label{font-size:13px; color:var(--muted); display:block; margin-bottom:6px;}
+  .sim-card input[type=range]{width:100%; accent-color:var(--emerald); margin-bottom:14px;}
+  .val{color:var(--gold); font-weight:700;}
+  .vresult{font-family:-apple-system,sans-serif; text-align:center; padding:10px; background:var(--bg2); border-radius:8px; margin-bottom:14px; font-size:13.5px;}
+
+  .harmonic-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;}
+  .harmonic-cell{font-family:-apple-system,sans-serif; background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:8px; text-align:center;}
+  .harmonic-cell svg{width:100%; height:auto;}
+  .harmonic-cell .hlabel{font-size:11.5px; color:var(--gold); font-weight:700; margin-top:4px;}
+  .harmonic-cell .hfreq{font-size:12.5px; color:var(--emerald); font-weight:700;}
+  .harmonic-cell .hnote{font-size:10.5px; color:var(--muted);}
+
+  table.compare{width:100%; border-collapse:collapse; font-family:-apple-system,sans-serif; font-size:12.5px; margin:14px 0;}
+  table.compare th, table.compare td{padding:8px 9px; border-bottom:1px solid var(--line); text-align:left;}
+  table.compare th{color:var(--gold); font-size:11px;}
+
+  .refs{font-family:-apple-system,sans-serif; font-size:12.5px; color:var(--muted);} .refs li{margin-bottom:8px;}
+  footer{text-align:center; padding:28px 20px; color:var(--muted); font-family:-apple-system,sans-serif; font-size:12px;}
+  @media(max-width:480px){ .harmonic-grid{grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kicker">Laboratorium JAZMI · Resonansi &amp; Harmonik · Proyek Tersendiri</div>
+  <h1>String Laboratory: Tiga Angka yang Menentukan Setiap Nada Alat Musik Berdawai</h1>
+  <p>Level 1–5. Panjang, tegangan, dan massa jenis linear — tiga variabel yang sama persis dipakai penyetem gitar, biola, piano, dan kecapi tanpa mereka sadari sedang memakai fisika gelombang.</p>
+</header>
+
+<nav class="tabs">
+  <a href="#belajar">Belajar</a>
+  <a href="#pertanyaan">Pertanyaan Ilmiah</a>
+  <a href="#rumus">Rumus &amp; Sejarah</a>
+  <a href="#simulator">String Laboratory</a>
+  <a href="#verifikasi">Verifikasi: Hukum Mersenne</a>
+  <a href="#batasan">Batasan</a>
+  <a href="#referensi">Referensi</a>
+</nav>
+
+<main>
+
+  <section id="belajar">
+    <h2><span class="num">01</span>Belajar</h2>
+    <p>Kenapa senar gitar yang tebal berbunyi rendah, sementara senar tipis di sebelahnya berbunyi tinggi — padahal panjangnya sama persis? Kenapa memutar pasak (menambah tegangan) menaikkan nada? Jawabannya ada di satu rumus yang menghubungkan tiga sifat fisik senar dengan kecepatan rambat gelombang di dalamnya, dan dari situ, seluruh deret nada yang bisa dihasilkan senar itu.</p>
+    <div class="qbox">"Setiap alat musik berdawai, dari kecapi tradisional sampai piano konser, sebenarnya cuma permainan tiga angka ini — panjang, tegangan, massa jenis linear — diatur sedemikian rupa sampai menghasilkan nada yang diinginkan."</div>
+  </section>
+
+  <section id="pertanyaan">
+    <h2><span class="num">02</span>Pertanyaan Ilmiah</h2>
+    <ul>
+      <li>Bagaimana panjang, tegangan, dan massa jenis linear senar bersama-sama menentukan kecepatan rambat gelombang di dalamnya?</li>
+      <li>Kenapa dari satu senar yang sama bisa muncul banyak nada sekaligus (harmonik) ketika dipetik, bukan cuma satu nada murni?</li>
+      <li>Kalau salah satu dari tiga variabel itu diubah sendiri-sendiri, bagaimana pola perubahan frekuensinya — linear, berbanding terbalik, atau akar kuadrat?</li>
+    </ul>
+  </section>
+
+  <section id="rumus">
+    <h2><span class="num">03</span>Rumus &amp; Sejarah</h2>
+    <p>Kecepatan gelombang transversal di sepanjang senar ditentukan oleh seberapa kencang senar ditarik (tegangan T) dibagi seberapa "berat" senar per satuan panjangnya (massa jenis linear μ):</p>
+    <div class="eq">
+      v = √(T/μ) &nbsp;&nbsp;→&nbsp;&nbsp; fₙ = n·v / (2L) = (n/2L)·√(T/μ)
+      <small>T = tegangan (Newton) · μ = massa per satuan panjang (kg/m) · L = panjang senar · n = 1,2,3,...</small>
+    </div>
+    <p class="lead">Hubungan ini pertama kali dirumuskan sistematis oleh biarawan-matematikawan Prancis <strong>Marin Mersenne</strong> tahun 1636 — jauh sebelum konsep gelombang dipahami penuh secara matematis — lewat tiga hukum eksperimental yang kini dikenal sebagai <em>Hukum Mersenne untuk Senar</em>.</p>
+  </section>
+
+  <section id="simulator">
+    <h2><span class="num">04</span>String Laboratory</h2>
+    <p class="lead">Geser ketiga variabel — lihat kecepatan rambat, frekuensi fundamental, dan seluruh deret harmoniknya berubah bersamaan.</p>
+    <div class="sim-card">
+      <label>Panjang senar (L): <span class="val" id="lVal">0.65 m</span></label>
+      <input type="range" id="lRange" min="0.2" max="1.5" step="0.01" value="0.65">
+
+      <label>Tegangan (T): <span class="val" id="tVal">70 N</span></label>
+      <input type="range" id="tRange" min="10" max="300" step="1" value="70">
+
+      <label>Massa jenis linear (μ): <span class="val" id="muVal">3.0 g/m</span></label>
+      <input type="range" id="muRange" min="0.5" max="20" step="0.1" value="3.0">
+
+      <div class="vresult" id="vResult"></div>
+
+      <div class="harmonic-grid" id="harmonicGrid"></div>
+    </div>
+  </section>
+
+  <section id="verifikasi">
+    <h2><span class="num">05</span>Verifikasi: Hukum Mersenne</h2>
+    <table class="compare">
+      <tr><th>Hukum</th><th>Bunyi</th><th>Cek di Simulator</th></tr>
+      <tr><td>Hukum 1</td><td>Frekuensi berbanding terbalik dengan panjang senar</td><td>Dobelkan L → f₁ turun tepat setengah</td></tr>
+      <tr><td>Hukum 2</td><td>Frekuensi berbanding lurus dengan akar kuadrat tegangan</td><td>4×kan T → f₁ naik tepat 2×</td></tr>
+      <tr><td>Hukum 3</td><td>Frekuensi berbanding terbalik dengan akar kuadrat massa jenis linear</td><td>4×kan μ → f₁ turun tepat setengah</td></tr>
+    </table>
+    <div class="insight">
+      <span class="lbl">Kenapa senar bass gitar lebih tebal, bukan lebih panjang</span>
+      Membuat senar bernada rendah dengan memperpanjangnya akan membuat gitar jadi sangat besar secara fisik — jauh lebih praktis menaikkan massa jenis linear (senar lebih tebal/dililit kawat) untuk turunkan frekuensi tanpa mengubah panjang instrumen sama sekali. Coba sendiri di simulator: naikkan μ tanpa mengubah L, lihat semua harmonik turun bersamaan.
+    </div>
+  </section>
+
+  <section id="batasan">
+    <h2><span class="num">06</span>Batasan</h2>
+    <ul>
+      <li>Model mengasumsikan senar ideal (lentur sempurna, tanpa kekakuan/stiffness) — senar sungguhan sedikit lebih kaku, membuat harmonik tinggi sesungguhnya sedikit lebih tinggi dari kelipatan bulat murni (disebut inharmonicity, tidak dimodelkan di sini).</li>
+      <li>Redaman (senar berhenti bergetar seiring waktu) dan resonansi badan instrumen (yang membentuk warna suara/timbre sesungguhnya) tidak dimodelkan — ini murni frekuensi getaran senar itu sendiri.</li>
+      <li>Pemetaan frekuensi ke nama nada memakai skala equal temperament (A4=440Hz) sebagai perkiraan, bukan tuning presisi alat musik tertentu.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <h2><span class="num">07</span>Referensi</h2>
+    <ul class="refs">
+      <li>Marin Mersenne (1636) — Harmonie universelle, rumusan awal hukum senar bergetar.</li>
+      <li>HyperPhysics — "Vibrating String".</li>
+      <li>Fletcher, N.H. &amp; Rossing, T.D. — "The Physics of Musical Instruments" (inharmonicity senar nyata).</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  Laboratorium JAZMI — Jalinan Zamrud Islamiah · Belajar → Model → Uji → Tool<br>
+  Proyek tersendiri dari serial Resonansi &amp; Harmonik — pintu menuju musik, gelombang, dan instrumen.
+</footer>
+
+<script>
+const lRange=document.getElementById('lRange'), tRange=document.getElementById('tRange'), muRange=document.getElementById('muRange');
+const NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+function freqToNote(f){
+  if(f<=0) return '–';
+  const n = Math.round(12*Math.log2(f/440)) + 57;
+  const octave = Math.floor(n/12);
+  const name = NOTES[((n%12)+12)%12];
+  return name+octave;
+}
+function drawMode(n){
+  const W=140,H=70,padL=10,padR=10,midY=35,plotW=W-padL-padR;
+  let path='';
+  const steps=60;
+  for(let i=0;i<=steps;i++){
+    const xf=i/steps;
+    const x=padL+xf*plotW;
+    const y=midY - Math.sin(n*Math.PI*xf)*26;
+    path+=(i===0?'M':'L')+x.toFixed(1)+','+y.toFixed(1)+' ';
+  }
+  let html=`<line x1="${padL}" y1="${midY}" x2="${padL+plotW}" y2="${midY}" stroke="#1f3d34" stroke-width="1"/>`;
+  html+=`<circle cx="${padL}" cy="${midY}" r="4" fill="#7a5a3a"/><circle cx="${padL+plotW}" cy="${midY}" r="4" fill="#7a5a3a"/>`;
+  html+=`<path d="${path}" stroke="#e0b354" stroke-width="2" fill="none"/>`;
+  return `<svg viewBox="0 0 ${W} ${H}">${html}</svg>`;
+}
+
+function update(){
+  const L=parseFloat(lRange.value);
+  const T=parseFloat(tRange.value);
+  const mu=parseFloat(muRange.value)/1000; // g/m -> kg/m
+
+  document.getElementById('lVal').textContent=L.toFixed(2)+' m';
+  document.getElementById('tVal').textContent=T.toFixed(0)+' N';
+  document.getElementById('muVal').textContent=(mu*1000).toFixed(1)+' g/m';
+
+  const v=Math.sqrt(T/mu);
+  document.getElementById('vResult').innerHTML=`Kecepatan rambat gelombang: <b style="color:var(--gold)">${v.toFixed(1)} m/s</b>`;
+
+  const grid=document.getElementById('harmonicGrid');
+  let html='';
+  for(let n=1;n<=6;n++){
+    const f=n*v/(2*L);
+    html+=`<div class="harmonic-cell">
+      ${drawMode(n)}
+      <div class="hlabel">Harmonik ${n}${n===1?' (Fundamental)':''}</div>
+      <div class="hfreq">${f.toFixed(1)} Hz</div>
+      <div class="hnote">≈ ${freqToNote(f)}</div>
+    </div>`;
+  }
+  grid.innerHTML=html;
+}
+[lRange,tRange,muRange].forEach(el=>el.addEventListener('input',update));
+update();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

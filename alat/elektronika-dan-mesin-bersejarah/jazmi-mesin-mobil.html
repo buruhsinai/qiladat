@@ -1,0 +1,2308 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JAZMI — Anatomi &amp; Simulasi Mesin Mobil</title>
+<style>
+  :root{
+    --bg:#12151a; --bg-panel:#1a1e25; --bg-panel-2:#20242c; --line:#2c313b;
+    --text:#e9e6df; --text-dim:#9aa1ad;
+    --gold:#c9a24b; --gold-soft:#e3c988;
+    --ok:#4f9c94; --warn:#e3766a; --electric:#5b8fc9; --charge:#7ec98f;
+    --fuel:#e3a23a; --spark:#ffd166; --metal:#8a93a3; --coolant:#5bb8c9;
+    --font-mono:"JetBrains Mono",monospace;
+  }
+  *{box-sizing:border-box;}
+  body{background:var(--bg);margin:0;padding:18px;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  .wrap{max-width:1180px;margin:0 auto;}
+  header{margin-bottom:16px;}
+  .kicker{color:var(--gold);font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;}
+  h1{margin:4px 0 6px;font-size:22px;font-weight:700;}
+  .sub{color:var(--text-dim);font-size:13.5px;line-height:1.5;max-width:680px;}
+
+  .bar{display:flex;align-items:center;gap:10px;background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:8px 14px;flex-wrap:wrap;}
+  .bar .lbl{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);letter-spacing:.05em;}
+  .controlbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:16px 0;}
+
+  .ignition button{background:var(--gold);color:#1a1508;border:none;font-weight:700;font-size:13px;padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit;}
+  .ignition button.off{background:var(--bg-panel-2);color:var(--text-dim);border:1px solid var(--line);}
+  .lamp{width:10px;height:10px;border-radius:50%;background:#333;transition:.2s;}
+  .lamp.on{background:var(--charge);box-shadow:0 0 8px var(--charge);}
+
+  .seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .seg button{background:var(--bg-panel-2);color:var(--text-dim);border:none;font-size:12.5px;padding:7px 12px;cursor:pointer;font-family:inherit;border-right:1px solid var(--line);}
+  .seg button:last-child{border-right:none;}
+  .seg button.active{background:var(--gold);color:#1a1508;font-weight:700;}
+  .seg button:disabled{opacity:.4;cursor:not-allowed;}
+
+  .bodynote{color:var(--text-dim);font-size:12.5px;margin:-6px 0 14px;line-height:1.5;}
+  .bodynote b{color:var(--gold-soft);}
+
+  .gauges{display:flex;gap:18px;margin-top:10px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-dim);flex-wrap:wrap;}
+  .gauge{display:flex;align-items:center;gap:8px;}
+  .gauge b{color:var(--text);font-size:13px;}
+  .gauge .track{width:80px;height:6px;border-radius:4px;background:var(--bg-panel-2);border:1px solid var(--line);overflow:hidden;}
+  .gauge .fill{height:100%;border-radius:4px;transition:width .25s linear;}
+  .gauge.rpmg .fill{background:var(--electric);}
+  .gauge.tempg .fill{background:var(--warn);}
+
+  .chips-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0;}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:#2a1a17;border:1px solid #4a2c28;color:#f2b3a8;border-radius:20px;padding:5px 8px 5px 12px;font-size:12px;}
+  .chip .chip-sev{font-size:10px;font-weight:700;opacity:.85;padding:1px 5px;border-radius:8px;background:rgba(255,255,255,.08);margin:0 4px;}
+  .chip button{background:none;border:none;color:#f2b3a8;cursor:pointer;font-size:14px;line-height:1;padding:2px 4px;font-family:inherit;}
+  .chip-clear{background:transparent;border:1px solid var(--line);color:var(--text-dim);border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;}
+
+  .scenario-block{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:0 0 16px;}
+  .scenario-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;margin-bottom:10px;}
+  .scenario-head .lbl{font-family:var(--font-mono);font-size:11px;color:var(--gold);letter-spacing:.06em;}
+  .scenario-grid{display:flex;flex-wrap:wrap;gap:8px;}
+  .scenario-btn{background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);font-size:12.5px;padding:8px 13px;border-radius:20px;cursor:pointer;font-family:inherit;}
+  .scenario-btn:hover{border-color:var(--gold-soft);}
+  .scenario-btn.active{background:var(--warn);border-color:var(--warn);color:#2a0d0a;font-weight:700;}
+  .scenario-note{margin-top:10px;font-size:12.5px;color:var(--text-dim);line-height:1.55;}
+  .scenario-jump{background:none;border:none;color:var(--gold-soft);text-decoration:underline;text-underline-offset:2px;cursor:pointer;font-size:12.5px;padding:0;font-family:inherit;}
+  .scenario-jump:hover{color:var(--gold);}
+  .scenario-reset{margin-top:12px;width:100%;padding:10px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--text-dim);font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;}
+  .scenario-reset:hover{border-color:var(--text-dim);}
+
+  .statusline{font-family:var(--font-mono);font-size:12.5px;padding:9px 14px;border-radius:9px;border:1px solid var(--line);background:var(--bg-panel);margin-bottom:14px;}
+  .statusline.ok{color:var(--charge);border-color:#2f4a3c;}
+  .statusline.warn{color:var(--gold-soft);border-color:#4a3f22;}
+  .statusline.err{color:var(--warn);border-color:#4a2c28;}
+
+  .grid{display:flex;gap:22px;align-items:flex-start;}
+  .diagram-col{flex:1.15;min-width:0;}
+  .panel-col{flex:1;min-width:360px;}
+
+  svg.chart{width:100%;height:auto;display:block;background:var(--bg-panel-2);border-radius:12px;border:1px solid var(--line);}
+  .badge-bg{fill:var(--bg-panel);stroke:var(--gold);stroke-width:2;cursor:pointer;transition:stroke .15s;}
+  .badge-bg:hover{stroke:var(--gold-soft);}
+  .hotspot{cursor:pointer;}
+  .hotspot.active .badge-bg{stroke:#fff;stroke-width:2.6;}
+  .hotspot.damaged .badge-bg{stroke:var(--warn);stroke-width:2.4;}
+  .hotspot.damaged .badge-num{fill:var(--warn);}
+  .hotspot.sev-1 .badge-bg{stroke:var(--fuel);stroke-width:1.6;}
+  .hotspot.sev-1 .badge-num{fill:var(--fuel);}
+  .hotspot.sev-2 .badge-bg{stroke:var(--warn);stroke-width:2.2;stroke-dasharray:3 2;}
+  .hotspot.sev-2 .badge-num{fill:var(--warn);}
+  .hotspot.sev-3 .badge-bg{stroke:var(--warn);stroke-width:3;}
+  .hotspot.sev-3 .badge-num{fill:var(--warn);}
+  .badge-num{fill:var(--gold-soft);font-family:var(--font-mono);font-size:13px;font-weight:700;text-anchor:middle;pointer-events:none;}
+  .leader{stroke:var(--line);stroke-width:1;opacity:.7;fill:none;}
+  .metal-part{fill:var(--metal);stroke:#5a6270;stroke-width:1.5;}
+  .cyl-wall{fill:var(--bg-panel);stroke:var(--metal);stroke-width:2;}
+  .frame-line{stroke:var(--text-dim);stroke-width:2;fill:none;opacity:.55;}
+  .coolant-line{stroke:var(--coolant);stroke-width:2;fill:none;opacity:.7;}
+  .fuel-line{stroke:var(--fuel);stroke-width:2;fill:none;opacity:.8;}
+  .wire-line{stroke:var(--electric);stroke-width:2;fill:none;opacity:.55;}
+  .bay-label{fill:var(--text-dim);font-family:var(--font-mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;opacity:.7;}
+
+  /* ===== Kap Luar Mobil (bodi eksterior) ===== */
+  .car-body{fill:#2c313b;stroke:#4a5261;stroke-width:2.5;}
+  .car-glass{fill:#3a4f63;stroke:#5b7086;stroke-width:1.5;opacity:.6;}
+  .car-light{fill:#e8d98a;stroke:#c9a24b;stroke-width:1.5;opacity:.85;}
+  .car-grille{stroke:#4a5261;stroke-width:2;opacity:.8;}
+  .car-wheel{fill:#0c0d10;stroke:#000;stroke-width:1;opacity:.92;}
+  .car-bed{stroke:#4a5261;stroke-width:2.5;}
+  .car-bed-floor{fill:#23272f;stroke:#4a5261;stroke-width:1.5;}
+  .car-crease{fill:none;stroke:#4a5261;stroke-width:1.5;opacity:.6;}
+  .car-crease-fill{fill:#1f2329;stroke:#4a5261;stroke-width:1;opacity:.8;}
+
+  /* ===== Tab tampilan diagram ===== */
+  .view-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+  .view-tabs button{background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text-dim);font-size:12.5px;font-weight:600;padding:9px 14px;border-radius:9px;cursor:pointer;font-family:inherit;transition:.15s;}
+  .view-tabs button:hover{border-color:var(--gold);}
+  .view-tabs button.active{background:var(--gold);color:#1a1508;border-color:var(--gold);font-weight:700;}
+
+  /* ===== Ilustrasi Tab 3: Cikal Bakal Mobil ===== */
+  .history-chart{background:var(--bg-panel-2);}
+  .hc-ground{stroke:var(--line);stroke-width:2;}
+  .hc-divider{stroke:var(--line);stroke-width:1.5;stroke-dasharray:6,6;opacity:.6;}
+  .hc-title{fill:var(--gold-soft);font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:.03em;}
+  .hc-sub{fill:var(--text-dim);font-size:11.5px;}
+  .hc-gap{fill:var(--coolant);font-family:var(--font-mono);font-size:12px;letter-spacing:.04em;}
+
+  .hc-wheel-solid circle:first-child{fill:#3a2c1f;stroke:#5a4632;stroke-width:3;}
+  .hc-wheel-solid line{stroke:#5a4632;stroke-width:2;}
+  .hc-hub{fill:#8a93a3;}
+  .hc-cart-body{fill:#3a2c1f;stroke:#5a4632;stroke-width:2;}
+  .hc-cart-rail{fill:#5a4632;}
+  .hc-figure-head{fill:#c9a24b;opacity:.8;}
+  .hc-figure-body{stroke:#c9a24b;stroke-width:4;opacity:.8;}
+  .hc-pole{fill:none;stroke:#5a4632;stroke-width:3;}
+  .hc-onager ellipse,.hc-onager circle{fill:#6b5a47;}
+  .hc-onager .hc-leg{stroke:#6b5a47;stroke-width:4;}
+
+  .hc-wheel-spoke circle:first-child{fill:none;stroke:var(--metal);stroke-width:3;}
+  .hc-wheel-spoke line{stroke:var(--metal);stroke-width:2;}
+  .hc-wheel-front circle:first-child{stroke:var(--metal);}
+  .hc-mw-chassis{fill:none;stroke:var(--metal);stroke-width:4;}
+  .hc-mw-seat{fill:#3a2c1f;stroke:#5a4632;stroke-width:2;}
+  .hc-mw-engine{fill:var(--metal);stroke:#5a6270;stroke-width:1.5;}
+  .hc-mw-tiller{fill:none;stroke:var(--metal);stroke-width:3;}
+  svg.running .car-light{fill:#fff3c2;stroke:#ffe27a;filter:drop-shadow(0 0 6px #ffe27a);opacity:1;}
+  svg.no-exterior #carExteriorBase,
+  svg.no-exterior .body-rear{display:none !important;}
+  .exterior-toggle-btn{margin-left:auto;background:transparent;border:1px solid var(--line);color:var(--text-dim);font-weight:600;font-size:12.5px;padding:7px 12px;border-radius:8px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .exterior-toggle-btn:hover{border-color:var(--fuel);color:var(--fuel);}
+
+  .panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:14px;padding:22px 26px;position:sticky;top:12px;}
+  .panel-empty{color:var(--text-dim);font-size:15px;line-height:1.65;}
+  .panel h2{margin:0 0 4px;font-size:21px;}
+  .panel .fungsi{color:var(--text-dim);font-size:15px;margin:6px 0 12px;line-height:1.6;}
+  .panel .sect-lbl{font-family:var(--font-mono);font-size:12px;color:var(--gold);letter-spacing:.06em;margin:14px 0 6px;}
+  .panel ul{margin:2px 0 0;padding-left:20px;font-size:15px;line-height:1.7;color:var(--text);}
+  .panel-toggle{margin-top:14px;width:100%;padding:11px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--text-dim);font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;}
+  .panel-toggle.mark{color:var(--warn);border-color:#4a2c28;}
+  .panel-toggle.unmark{color:var(--charge);border-color:#2f4a3c;}
+  .panel .efek{margin-top:10px;padding:11px 13px;background:#2a1a17;border:1px solid #4a2c28;border-radius:8px;color:#f2b3a8;font-size:14.5px;line-height:1.6;display:none;}
+  .panel.damaged .efek{display:block;}
+  .sev-seg{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+  .sev-seg button{flex:1;min-width:78px;padding:10px 8px;border-radius:9px;border:1px solid var(--line);background:var(--bg-panel-2);color:var(--text-dim);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s;}
+  .sev-seg button:hover{border-color:var(--gold);}
+  .sev-seg button.active{color:#fff;border-color:transparent;}
+  .sev-seg button[data-lvl="0"].active{background:var(--ok);}
+  .sev-seg button.sev-1.active{background:var(--fuel);color:#2a1c08;}
+  .sev-seg button.sev-2.active{background:#c9673a;}
+  .sev-seg button.sev-3.active{background:var(--warn);}
+  .effect-box{margin-top:12px;padding:11px 13px;border-radius:8px;background:#2a1a17;border:1px solid #4a2c28;color:#f2b3a8;font-size:14.5px;line-height:1.6;}
+  .effect-box.sev-1{background:#2a2417;border-color:#4a3f28;color:#e3c988;}
+  .effect-box.sev-2{background:#2a2117;border-color:#4a3628;color:#e3a23a;}
+  .chip.sev-1{background:#2a2417;border-color:#4a3f28;color:#e3c988;}
+  .chip.sev-1 button{color:#e3c988;}
+  .chip.sev-2{background:#2a2117;border-color:#4a3628;color:#e3a23a;}
+  .chip.sev-2 button{color:#e3a23a;}
+
+  .kaitan-box{margin-top:14px;padding:11px 13px;border-radius:8px;background:var(--bg-panel-2);border:1px solid var(--gold);color:var(--text-dim);font-size:14px;line-height:1.6;}
+  .kaitan-box .lbl{display:block;font-family:var(--font-mono);font-size:10.5px;color:var(--gold);letter-spacing:.06em;margin-bottom:4px;}
+
+  /* ===== Mode Belajar Bertahap (Tur Terpandu) ===== */
+  .learn-ctas{display:flex;flex-wrap:wrap;gap:14px;margin:0 0 16px;}
+  .learn-ctas .tour-cta,
+  .learn-ctas .quiz-cta,
+  .learn-ctas .rev-cta,
+  .learn-ctas .history-cta{flex:1;min-width:260px;margin:0;}
+  .tour-cta{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(135deg,#20242c,#1a1e25);border:1px solid var(--gold);border-radius:12px;padding:14px 18px;margin:0 0 16px;}
+  .tour-cta .lbl{font-family:var(--font-mono);font-size:11px;color:var(--gold);letter-spacing:.08em;}
+  .tour-cta-text p{margin:4px 0 0;font-size:13px;color:var(--text-dim);line-height:1.5;max-width:520px;}
+  .tour-start-btn{background:var(--gold);color:#1a1508;border:none;font-weight:700;font-size:13.5px;padding:11px 20px;border-radius:9px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .tour-start-btn:hover{background:var(--gold-soft);}
+
+  .quiz-cta{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(135deg,#20242c,#1a1e25);border:1px solid var(--electric);border-radius:12px;padding:14px 18px;}
+  .quiz-cta .lbl{font-family:var(--font-mono);font-size:11px;color:var(--electric);letter-spacing:.08em;}
+  .quiz-cta-text p{margin:4px 0 0;font-size:13px;color:var(--text-dim);line-height:1.5;max-width:520px;}
+  .quiz-start-btn{background:var(--electric);color:#0c1520;border:none;font-weight:700;font-size:13.5px;padding:11px 20px;border-radius:9px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .quiz-start-btn:hover{filter:brightness(1.1);}
+
+  .history-cta{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(135deg,#20242c,#1a1e25);border:1px solid var(--coolant);border-radius:12px;padding:14px 18px;}
+  .history-cta .lbl{font-family:var(--font-mono);font-size:11px;color:var(--coolant);letter-spacing:.08em;}
+  .history-cta-text p{margin:4px 0 0;font-size:13px;color:var(--text-dim);line-height:1.5;max-width:520px;}
+  .history-start-btn{background:var(--coolant);color:#062024;border:none;font-weight:700;font-size:13.5px;padding:11px 20px;border-radius:9px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .history-start-btn:hover{filter:brightness(1.1);}
+
+  .rev-cta{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(135deg,#20242c,#1a1e25);border:1px solid var(--fuel);border-radius:12px;padding:14px 18px;}
+  .rev-cta .lbl{font-family:var(--font-mono);font-size:11px;color:var(--fuel);letter-spacing:.08em;}
+  .rev-cta-text p{margin:4px 0 0;font-size:13px;color:var(--text-dim);line-height:1.5;max-width:520px;}
+  .rev-start-btn{background:var(--fuel);color:#2a1808;border:none;font-weight:700;font-size:13.5px;padding:11px 20px;border-radius:9px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .rev-start-btn:hover{filter:brightness(1.1);}
+
+  /* ===== Panel Mode Diagnosa Terbalik ===== */
+  .rev-block{background:var(--bg-panel);border:1px solid var(--fuel);border-radius:12px;padding:16px 18px;margin:0 0 16px;display:none;}
+  .rev-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-bottom:12px;}
+  .rev-head .lbl{font-family:var(--font-mono);font-size:11px;color:var(--fuel);letter-spacing:.08em;}
+  .rev-progress{font-size:12px;color:var(--text-dim);}
+  .rev-close{margin-left:auto;background:transparent;border:1px solid var(--line);color:var(--text-dim);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit;}
+  .rev-case-text{font-size:14.5px;line-height:1.6;margin:0 0 6px;padding:12px 14px;background:var(--bg-panel-2);border-radius:10px;border-left:3px solid var(--fuel);}
+  .rev-hint{font-size:11.5px;color:var(--text-dim);margin:0 0 14px;font-style:italic;}
+  .rev-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+  .rev-row{display:flex;align-items:center;gap:10px;background:var(--bg-panel-2);border:1px solid var(--line);border-radius:9px;padding:9px 12px;}
+  .rev-rank{font-family:var(--font-mono);font-weight:700;color:var(--fuel);min-width:20px;}
+  .rev-name{flex:1;font-size:13.5px;}
+  .rev-arrows{display:flex;gap:4px;}
+  .rev-arrows button{background:var(--bg-panel);border:1px solid var(--line);color:var(--text);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:13px;font-family:inherit;}
+  .rev-arrows button:disabled{opacity:.3;cursor:not-allowed;}
+  .rev-submit{background:var(--fuel);color:#2a1808;border:none;font-weight:700;font-size:13.5px;padding:11px 18px;border-radius:9px;cursor:pointer;font-family:inherit;}
+  .rev-score-line{font-size:13.5px;margin:0 0 12px;padding:10px 12px;border-radius:9px;background:var(--bg-panel-2);border:1px solid var(--line);}
+  .rev-compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+  .rev-compare-col h4{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);}
+  .rev-compare-col ol{margin:0;padding-left:18px;font-size:13px;line-height:1.7;}
+  .rev-alasan{background:var(--bg-panel-2);border-left:3px solid var(--fuel);padding:10px 12px;border-radius:0 8px 8px 0;font-size:13px;line-height:1.6;margin-bottom:14px;}
+  .rev-actions{display:flex;flex-wrap:wrap;gap:10px;}
+  .rev-actions button{font-family:inherit;font-weight:700;font-size:13px;padding:10px 16px;border-radius:8px;cursor:pointer;border:1px solid var(--line);background:var(--bg-panel-2);color:var(--text);}
+  .rev-actions .primary{background:var(--fuel);color:#2a1808;border-color:var(--fuel);}
+  .rev-actions .ghost{background:transparent;color:var(--gold-soft);border-color:var(--gold);}
+  .rev-summary-list{margin:10px 0 0;padding-left:18px;font-size:13px;line-height:1.8;}
+  @media (max-width:600px){
+    .rev-compare{grid-template-columns:1fr;}
+  }
+
+  /* ===== Panel Sejarah Kendaraan Beroda ===== */
+  .history-block{background:var(--bg-panel);border:1px solid var(--coolant);border-radius:12px;padding:18px 20px;margin:0 0 16px;display:none;}
+  .history-block.open{display:block;}
+  .history-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-bottom:14px;}
+  .history-head .lbl{font-family:var(--font-mono);font-size:11px;color:var(--coolant);letter-spacing:.08em;}
+  .history-close{margin-left:auto;background:transparent;border:1px solid var(--line);color:var(--text-dim);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit;}
+  .history-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+  .history-tabs button{background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text-dim);font-size:12.5px;font-weight:600;padding:9px 14px;border-radius:9px;cursor:pointer;font-family:inherit;text-align:left;transition:.15s;}
+  .history-tabs button:hover{border-color:var(--coolant);}
+  .history-tabs button.active{background:var(--coolant);color:#062024;border-color:var(--coolant);font-weight:700;}
+  .history-era-tag{display:inline-block;font-family:var(--font-mono);font-size:11px;color:var(--coolant);background:#122a2e;border:1px solid #1f4a50;border-radius:6px;padding:3px 9px;margin-bottom:8px;}
+  .history-content h3{margin:0 0 8px;font-size:17px;}
+  .history-content p{font-size:14px;line-height:1.65;color:var(--text);margin:0 0 10px;}
+  .history-content .history-note{background:var(--bg-panel-2);border-left:3px solid var(--coolant);padding:10px 12px;border-radius:0 8px 8px 0;font-size:13.5px;line-height:1.6;color:var(--text-dim);margin-top:10px;}
+  .history-table-wrap{overflow-x:auto;margin-top:18px;}
+  .history-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:640px;}
+  .history-table th{font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--coolant);text-align:left;padding:8px 10px;border-bottom:2px solid var(--coolant);}
+  .history-table td{padding:9px 10px;border-bottom:1px solid var(--line);color:var(--text-dim);vertical-align:top;}
+  .history-table tr:last-child td{border-bottom:none;}
+  .history-table td.era-cell{color:var(--text);font-weight:700;white-space:nowrap;}
+
+  body.tour-mode{padding-bottom:96px;}
+  body.tour-mode .bar,
+  body.tour-mode .controlbar,
+  body.tour-mode .scenario-block,
+  body.tour-mode .learn-ctas,
+  body.quiz-mode .bar,
+  body.quiz-mode .controlbar,
+  body.quiz-mode .scenario-block,
+  body.quiz-mode .learn-ctas,
+  body.rev-mode .bar,
+  body.rev-mode .controlbar,
+  body.rev-mode .scenario-block,
+  body.rev-mode .learn-ctas{opacity:.32;pointer-events:none;filter:grayscale(.4);transition:opacity .2s;}
+
+  .hotspot.tour-dim .badge-bg{opacity:.25;transition:opacity .2s;}
+  .hotspot.tour-dim .badge-num{opacity:.25;transition:opacity .2s;}
+  .hotspot.tour-active .badge-bg,
+  .hotspot.quiz-flash .badge-bg{animation:tourPulse 1.5s ease-in-out infinite;}
+  @keyframes tourPulse{
+    0%,100%{stroke-width:2;filter:none;}
+    50%{stroke-width:4;filter:drop-shadow(0 0 7px var(--gold-soft));}
+  }
+
+  .panel .tour-stage-tag{display:inline-block;margin:2px 0 8px;font-family:var(--font-mono);font-size:11px;color:var(--gold);background:#2a2312;border:1px solid #4a3f22;border-radius:6px;padding:3px 8px;}
+  .panel .tour-narasi{background:var(--bg-panel-2);border-left:3px solid var(--gold);padding:10px 12px;margin:0 0 12px;border-radius:0 8px 8px 0;line-height:1.6;font-size:14px;}
+  .panel .tour-label{font-family:var(--font-mono);font-size:10.5px;color:var(--text-dim);letter-spacing:.06em;display:block;margin-bottom:4px;}
+  .tour-restart-btn{margin-top:14px;width:100%;padding:11px;border-radius:8px;border:1px solid var(--gold);background:transparent;color:var(--gold-soft);font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;}
+
+  /* ===== Kuis Diagnostik ===== */
+  .quiz-block{background:var(--bg-panel);border:1px solid var(--electric);border-radius:12px;padding:16px 18px;margin:0 0 16px;display:none;}
+  .quiz-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-bottom:12px;}
+  .quiz-head .lbl{font-family:var(--font-mono);font-size:11px;color:var(--electric);letter-spacing:.08em;}
+  .quiz-progress{font-size:12px;color:var(--text-dim);}
+  .quiz-score{font-family:var(--font-mono);font-size:12.5px;color:var(--gold-soft);}
+  .quiz-close{margin-left:auto;background:transparent;border:1px solid var(--line);color:var(--text-dim);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit;}
+  .quiz-question{font-size:15px;line-height:1.55;margin:0 0 14px;padding:12px 14px;background:var(--bg-panel-2);border-radius:10px;border-left:3px solid var(--electric);}
+  .quiz-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .quiz-opt{background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);font-size:13.5px;padding:11px 14px;border-radius:9px;cursor:pointer;text-align:left;font-family:inherit;transition:border-color .15s,background .15s;}
+  .quiz-opt:hover:not(:disabled){border-color:var(--electric);}
+  .quiz-opt:disabled{cursor:default;}
+  .quiz-opt.correct{background:#173428;border-color:var(--charge);color:var(--charge);font-weight:700;}
+  .quiz-opt.wrong{background:#3a1a17;border-color:var(--warn);color:var(--warn);font-weight:700;}
+  .quiz-feedback{margin-top:14px;padding:12px 14px;border-radius:9px;font-size:13.5px;line-height:1.55;}
+  .quiz-feedback.ok{background:#173428;border:1px solid #2f5c47;color:#bfe8d4;}
+  .quiz-feedback.no{background:#3a1a17;border:1px solid #4a2c28;color:#f2b3a8;}
+  .quiz-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
+  .quiz-actions button{font-family:inherit;font-weight:700;font-size:13px;padding:10px 16px;border-radius:8px;cursor:pointer;border:1px solid var(--line);background:var(--bg-panel-2);color:var(--text);}
+  .quiz-actions .primary{background:var(--electric);color:#0c1520;border-color:var(--electric);}
+  .quiz-actions .ghost{background:transparent;color:var(--gold-soft);border-color:var(--gold);}
+  .quiz-summary-list{margin:10px 0 0;padding-left:18px;font-size:13px;line-height:1.7;}
+  .quiz-summary-list li.wrong-item{color:var(--warn);margin-bottom:4px;}
+
+  @media (max-width:600px){
+    .quiz-options{grid-template-columns:1fr;}
+  }
+
+  .tour-bar{position:fixed;left:0;right:0;bottom:0;z-index:50;display:none;align-items:center;gap:14px;flex-wrap:wrap;background:var(--bg-panel);border-top:1px solid var(--gold);padding:10px 18px;box-shadow:0 -6px 18px rgba(0,0,0,.35);}
+  .tour-info{display:flex;flex-direction:column;gap:1px;min-width:140px;}
+  .tour-info .tour-stage{font-family:var(--font-mono);font-size:10.5px;color:var(--gold);letter-spacing:.05em;}
+  .tour-info .tour-step-count{font-size:12px;color:var(--text-dim);}
+  .tour-dots{display:flex;gap:5px;flex-wrap:wrap;flex:1;}
+  .tour-dot{width:8px;height:8px;border-radius:50%;background:var(--bg-panel-2);border:1px solid var(--line);padding:0;cursor:pointer;}
+  .tour-dot.active{background:var(--gold);border-color:var(--gold);}
+  .tour-nav{display:flex;gap:8px;}
+  .tour-nav button{font-family:inherit;font-size:12.5px;font-weight:700;padding:9px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--line);background:var(--bg-panel-2);color:var(--text);}
+  .tour-nav button:disabled{opacity:.35;cursor:not-allowed;}
+  #tourNextBtn{background:var(--gold);color:#1a1508;border-color:var(--gold);}
+  #tourExitBtn{background:transparent;color:var(--warn);border-color:#4a2c28;}
+
+  @media (max-width:820px){
+    .tour-bar{padding:9px 12px;}
+    .tour-info{min-width:0;}
+  }
+
+  @media (max-width:820px){
+    .grid{flex-direction:column;}
+    .panel-col{min-width:0;width:100%;}
+    .panel{position:static;}
+  }
+
+  /* ===== Animasi mesin hidup ===== */
+  svg.chart{ --spin-dur:2.2s; --flow-dur:1.3s; --spark-dur:0.8s; }
+  .spin-part{ transform-box:fill-box; transform-origin:center; animation:jazmiSpin var(--spin-dur) linear infinite; animation-play-state:paused; }
+  svg.chart.running .spin-part{ animation-play-state:running; }
+  @keyframes jazmiSpin{ to{ transform:rotate(360deg); } }
+
+  .flow-line{ animation:jazmiFlow var(--flow-dur) linear infinite; animation-play-state:paused; }
+  svg.chart.running .flow-line{ animation-play-state:running; }
+  @keyframes jazmiFlow{ to{ stroke-dashoffset:-16; } }
+
+  .spark-cyl{ fill:var(--metal); stroke:#5a6270; stroke-width:1.5; animation:jazmiSpark var(--spark-dur) ease-in-out infinite; animation-play-state:paused; }
+  svg.chart.running .spark-cyl{ animation-play-state:running; }
+  @keyframes jazmiSpark{ 0%,80%,100%{ fill:var(--metal); } 88%{ fill:var(--spark); } }
+  svg.chart.running.ign-trouble .spark-cyl{ animation-name:jazmiSparkBad; }
+  @keyframes jazmiSparkBad{ 0%,72%,100%{ fill:var(--metal); } 80%{ fill:var(--warn); } }
+
+  .exhaust-puff{ opacity:0; fill:var(--text-dim); animation:jazmiPuff 1.5s ease-out infinite; animation-play-state:paused; }
+  svg.chart.running .exhaust-puff{ animation-play-state:running; }
+  svg.chart.exhaust-trouble .exhaust-puff{ fill:#5a4a3a; }
+  @keyframes jazmiPuff{ 0%{ opacity:0; r:3px; } 18%{ opacity:.6; } 100%{ opacity:0; r:15px; } }
+
+  #engineGroup.misfire{ animation:jazmiJitter .16s steps(2) infinite; }
+  @keyframes jazmiJitter{ 0%{ transform:translate(0,0); } 50%{ transform:translate(1.1px,-0.6px); } 100%{ transform:translate(-0.9px,0.7px); } }
+
+  /* ===== Cetak Ringkasan 14 Komponen ===== */
+  .print-btn{background:transparent;color:var(--gold-soft);border:1px solid var(--gold);font-weight:700;font-size:13px;padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit;}
+  .print-btn:hover{background:var(--gold);color:#1a1508;}
+  .export-btn{background:transparent;color:var(--fuel);border:1px solid var(--fuel);font-weight:700;font-size:13px;padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit;}
+  .export-btn:hover{background:var(--fuel);color:#241505;}
+  .export-btn.done{color:var(--charge);border-color:var(--charge);}
+
+  .share-btn{background:transparent;color:var(--electric);border:1px solid var(--electric);font-weight:700;font-size:13px;padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit;}
+  .share-btn:hover{background:var(--electric);color:#0c1520;}
+  .share-panel{background:var(--bg-panel);border:1px solid var(--electric);border-radius:10px;padding:14px 16px;margin:0 0 16px;display:none;}
+  .share-panel.open{display:block;}
+  .share-panel .lbl{font-family:var(--font-mono);font-size:11px;color:var(--electric);letter-spacing:.06em;}
+  .share-summary{font-size:12.5px;color:var(--text-dim);margin:8px 0 12px;line-height:1.55;}
+  .share-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .share-input{flex:1;min-width:220px;background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);font-family:var(--font-mono);font-size:11.5px;padding:9px 12px;border-radius:8px;}
+  .share-copy-btn{background:var(--electric);color:#0c1520;border:none;font-weight:700;font-size:13px;padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .share-copy-btn.copied{background:var(--charge);}
+  .share-applied-banner{display:none;background:#173428;border:1px solid #2f5c47;color:#bfe8d4;border-radius:9px;padding:9px 14px;font-size:12.5px;margin-bottom:14px;line-height:1.5;}
+  .share-applied-banner.show{display:block;}
+
+  .print-summary{display:none;}
+
+  @media print{
+    body{background:#fff;color:#111;padding:0;}
+    .wrap > *:not(.print-summary){display:none !important;}
+    .tour-bar{display:none !important;}
+    .print-summary{display:block !important;}
+  }
+
+  .print-summary{background:#fff;color:#111;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  .print-summary .ps-header{border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:14px;}
+  .print-summary .ps-kicker{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;color:#555;}
+  .print-summary .ps-header h1{margin:3px 0 4px;font-size:20px;}
+  .print-summary .ps-header p{margin:0;font-size:12px;color:#444;line-height:1.5;}
+  .print-summary .ps-legend{display:flex;flex-wrap:wrap;gap:12px;margin:10px 0 18px;font-size:11px;color:#333;}
+  .print-summary .ps-legend span{display:inline-flex;align-items:center;gap:5px;}
+  .print-summary .ps-legend b{display:inline-block;width:9px;height:9px;border-radius:50%;}
+  .print-summary .ps-stage{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.06em;color:#8a6d1f;text-transform:uppercase;margin:18px 0 8px;padding-bottom:3px;border-bottom:1px solid #ccc;break-after:avoid;}
+  .print-summary .ps-stage:first-of-type{margin-top:4px;}
+  .print-summary .ps-item{break-inside:avoid;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #eee;}
+  .print-summary .ps-item-head{display:flex;align-items:baseline;gap:8px;margin-bottom:3px;}
+  .print-summary .ps-num{font-family:var(--font-mono);font-size:11px;color:#999;}
+  .print-summary .ps-name{font-size:14px;font-weight:700;}
+  .print-summary .ps-kat{font-family:var(--font-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:8px;border:1px solid #999;color:#555;}
+  .print-summary .ps-fungsi{font-size:12px;line-height:1.5;margin:0 0 4px;color:#222;}
+  .print-summary .ps-row{font-size:11.5px;line-height:1.55;margin:0 0 3px;color:#333;}
+  .print-summary .ps-row b{color:#111;}
+  .print-summary .ps-gejala{margin:2px 0 0;padding-left:16px;font-size:11.5px;line-height:1.55;color:#333;}
+  .print-summary .ps-kaitan{font-size:11.5px;line-height:1.5;margin:4px 0 0;color:#555;font-style:italic;}
+  .print-summary .ps-scenarios{margin-top:22px;break-before:page;}
+  .print-summary .ps-scenarios h2{font-size:15px;margin:0 0 4px;}
+  .print-summary .ps-scenarios > p{font-size:11.5px;color:#444;margin:0 0 12px;}
+  .print-summary .ps-scen-item{break-inside:avoid;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #eee;}
+  .print-summary .ps-scen-label{font-size:12.5px;font-weight:700;margin-bottom:2px;}
+  .print-summary .ps-scen-ids{font-family:var(--font-mono);font-size:10.5px;color:#8a6d1f;margin-bottom:2px;}
+  .print-summary .ps-scen-desc{font-size:11.5px;line-height:1.5;color:#333;margin:0;}
+  .print-summary .ps-footer{margin-top:18px;padding-top:8px;border-top:1px solid #ccc;font-size:10px;color:#888;}
+
+  @media screen{
+    .print-summary{max-width:900px;margin:0 auto;padding:24px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">JAZMI — VERSI AWAL</div>
+    <h1>Anatomi &amp; Simulasi Mesin Mobil</h1>
+    <div class="sub">Diagram interaktif ruang mesin mobil: tekan nomor untuk mempelajari fungsi tiap komponen, coba simulasikan kerusakan, dan lihat efeknya saat mesin dinyalakan. Ini adalah versi awal yang lebih ringkas dari versi mesin motor — akan terus disempurnakan bertahap.</div>
+  </header>
+
+  <div class="share-applied-banner" id="shareAppliedBanner"></div>
+
+  <div class="learn-ctas">
+    <div class="tour-cta" id="tourCta">
+      <div class="tour-cta-text">
+        <span class="lbl">BARU PERTAMA KALI DI SINI?</span>
+        <p>Ikuti tur terpandu — sistem akan menyorot komponen satu per satu mengikuti alur kerja mesin mobil sungguhan, dari aki sampai transmisi ke roda, lengkap dengan narasi singkat di setiap langkah.</p>
+      </div>
+      <button class="tour-start-btn" id="tourStartBtn">🎓 Mulai Tur Terpandu</button>
+    </div>
+
+    <div class="quiz-cta" id="quizCta">
+      <div class="quiz-cta-text">
+        <span class="lbl">SUDAH IKUT TURNYA?</span>
+        <p>Uji pemahamanmu lewat kuis diagnostik — sistem akan menunjukkan sebuah gejala kerusakan, dan kamu menebak komponen mana yang paling mungkin jadi biang keroknya.</p>
+      </div>
+      <button class="quiz-start-btn" id="quizStartBtn">🧠 Mulai Kuis Diagnostik</button>
+    </div>
+
+    <div class="rev-cta" id="revCta">
+      <div class="rev-cta-text">
+        <span class="lbl">KUIS TERASA TERLALU MUDAH?</span>
+        <p>Coba Mode Diagnosa Terbalik — diberi kasus nyata dengan beberapa kandidat komponen, kamu urutkan sendiri dari yang paling mungkin sampai paling tidak mungkin jadi penyebabnya.</p>
+      </div>
+      <button class="rev-start-btn" id="revStartBtn">🔍 Mode Diagnosa Terbalik</button>
+    </div>
+
+    <div class="history-cta" id="historyCta">
+      <div class="history-cta-text">
+        <span class="lbl">DARI MANA ASALNYA MOBIL?</span>
+        <p>Telusuri cikal bakal kendaraan beroda — dari roda gerobak Sumeria 5.500 tahun lalu, kereta perang Ur, sampai lahirnya mobil bermesin pertama di dunia.</p>
+      </div>
+      <button class="history-start-btn" id="historyStartBtn">🏛️ Sejarah Kendaraan</button>
+    </div>
+  </div>
+
+  <div class="history-block" id="historyBlock"></div>
+  <div class="rev-block" id="revBlock"></div>
+
+  <div class="bar" style="margin-bottom:14px;">
+    <span class="lbl">TIPE BODI MOBIL</span>
+    <div class="seg" id="bodySeg">
+      <button data-body="sedan" class="active">Sedan</button>
+      <button data-body="hatchback">Hatchback</button>
+      <button data-body="suv">SUV</button>
+      <button data-body="mpv">MPV</button>
+      <button data-body="pickup">Pikap</button>
+      <button data-body="sport">Sport/Coupe</button>
+    </div>
+    <button id="exteriorToggleBtn" class="exterior-toggle-btn" title="Sembunyikan/tampilkan bodi eksterior mobil">🚗 Sembunyikan Bodi</button>
+  </div>
+  <div class="bodynote" id="bodyNote"></div>
+
+  <div class="controlbar">
+    <div class="bar ignition">
+      <button id="ignitionBtn" class="off">Nyalakan Mesin</button>
+      <span class="lamp" id="lampIgn"></span>
+      <span class="lbl">STATUS</span>
+    </div>
+    <div class="bar">
+      <span class="lbl">RPM</span>
+      <div class="seg" id="rpmSeg">
+        <button data-level="0" class="active">Langsam</button>
+        <button data-level="1">Normal</button>
+        <button data-level="2">Tinggi</button>
+      </div>
+    </div>
+    <div class="bar">
+      <button id="printBtn" class="print-btn" title="Buka ringkasan 14 komponen dalam format siap cetak/PDF">🖨️ Cetak Ringkasan</button>
+      <button id="exportImgBtn" class="export-btn" title="Simpan tampilan mobil (lengkap dengan bodi eksterior) sebagai gambar PNG">🖼️ Simpan sebagai Gambar</button>
+      <button id="shareBtn" class="share-btn" title="Buat tautan kondisi simulasi saat ini untuk dibagikan">🔗 Bagikan Kondisi</button>
+    </div>
+  </div>
+
+  <div class="share-panel" id="sharePanel"></div>
+
+  <div class="gauges">
+    <div class="gauge rpmg"><span class="lbl">RPM</span><div class="track"><div class="fill" id="fillRpm" style="width:10%"></div></div><b id="rpmVal">Langsam</b></div>
+    <div class="gauge tempg"><span class="lbl">SUHU</span><div class="track"><div class="fill" id="fillTemp" style="width:10%"></div></div><b id="tempVal">Dingin</b></div>
+  </div>
+
+  <div class="statusline ok" id="statusline" style="margin-top:14px;">Mesin mati. Tekan "Nyalakan Mesin" untuk memulai simulasi.</div>
+
+  <div class="chips-row" id="chipsRow" style="display:none;"></div>
+
+  <div class="scenario-block">
+    <div class="scenario-head">
+      <span class="lbl">SKENARIO UMUM — COBA SIMULASIKAN</span>
+    </div>
+    <div class="scenario-grid" id="scenarioGrid"></div>
+    <div class="scenario-note" id="scenarioNote"></div>
+  </div>
+
+  <div class="quiz-block" id="quizBlock"></div>
+
+  <div class="grid">
+    <div class="diagram-col">
+      <div class="view-tabs" id="viewTabs">
+        <button data-view="engine" class="active">🔧 Ruang Mesin (X-Ray)</button>
+        <button data-view="fullcar">🚗 Mobil Utuh</button>
+        <button data-view="history">🏛️ Cikal Bakal Mobil</button>
+      </div>
+
+      <svg class="chart" id="svgMobil" viewBox="-180 -60 1260 1040" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- ===== KAP LUAR MOBIL (bodi eksterior, tampak atas) — di bawah lapisan mesin ===== -->
+        <g id="carExteriorBase">
+          <rect x="70" y="-35" width="760" height="55" rx="26" class="car-body"/>
+          <ellipse cx="150" cy="-8" rx="30" ry="15" class="car-light"/>
+          <ellipse cx="750" cy="-8" rx="30" ry="15" class="car-light"/>
+          <line x1="380" y1="-20" x2="520" y2="-20" class="car-grille"/>
+          <line x1="380" y1="-8" x2="520" y2="-8" class="car-grille"/>
+          <line x1="380" y1="4" x2="520" y2="4" class="car-grille"/>
+          <path d="M40,70 Q-100,80 -140,180 Q-160,260 -140,340 Q-100,430 40,440 Z" class="car-body"/>
+          <path d="M860,70 Q1000,80 1040,180 Q1060,260 1040,340 Q1000,430 860,440 Z" class="car-body"/>
+          <ellipse cx="-95" cy="255" rx="42" ry="70" class="car-wheel"/>
+          <ellipse cx="995" cy="255" rx="42" ry="70" class="car-wheel"/>
+          <path d="M40,540 L860,540 L760,620 L140,620 Z" class="car-glass"/>
+          <rect x="90" y="565" width="30" height="16" rx="5" class="car-body"/>
+          <rect x="780" y="565" width="30" height="16" rx="5" class="car-body"/>
+        </g>
+
+        <g id="bodyRearSedan" class="body-rear">
+          <rect x="170" y="620" width="560" height="130" rx="20" class="car-body"/>
+          <path d="M170,750 L730,750 L790,800 L110,800 Z" class="car-glass"/>
+          <rect x="110" y="795" width="680" height="80" rx="16" class="car-body"/>
+          <rect x="90" y="865" width="720" height="40" rx="18" class="car-body"/>
+          <ellipse cx="-95" cy="790" rx="42" ry="65" class="car-wheel"/>
+          <ellipse cx="995" cy="790" rx="42" ry="65" class="car-wheel"/>
+        </g>
+
+        <g id="bodyRearHatchback" class="body-rear" style="display:none">
+          <rect x="170" y="620" width="560" height="110" rx="20" class="car-body"/>
+          <path d="M170,730 L730,730 L780,800 L120,800 Z" class="car-glass"/>
+          <rect x="110" y="795" width="680" height="45" rx="18" class="car-body"/>
+          <ellipse cx="-95" cy="720" rx="42" ry="62" class="car-wheel"/>
+          <ellipse cx="995" cy="720" rx="42" ry="62" class="car-wheel"/>
+        </g>
+
+        <g id="bodyRearSuv" class="body-rear" style="display:none">
+          <rect x="140" y="620" width="620" height="150" rx="12" class="car-body"/>
+          <rect x="140" y="765" width="620" height="40" rx="6" class="car-glass"/>
+          <rect x="100" y="800" width="700" height="90" rx="10" class="car-body"/>
+          <rect x="85" y="885" width="730" height="40" rx="10" class="car-body"/>
+          <ellipse cx="-95" cy="800" rx="46" ry="70" class="car-wheel"/>
+          <ellipse cx="995" cy="800" rx="46" ry="70" class="car-wheel"/>
+        </g>
+
+        <g id="bodyRearMpv" class="body-rear" style="display:none">
+          <rect x="130" y="620" width="640" height="260" rx="14" class="car-body"/>
+          <rect x="130" y="875" width="640" height="35" rx="6" class="car-glass"/>
+          <rect x="100" y="905" width="700" height="35" rx="10" class="car-body"/>
+          <ellipse cx="-95" cy="840" rx="44" ry="68" class="car-wheel"/>
+          <ellipse cx="995" cy="840" rx="44" ry="68" class="car-wheel"/>
+        </g>
+
+        <g id="bodyRearPickup" class="body-rear" style="display:none">
+          <rect x="170" y="620" width="560" height="100" rx="18" class="car-body"/>
+          <path d="M170,720 L730,720 L770,770 L130,770 Z" class="car-glass"/>
+          <rect x="120" y="775" width="660" height="130" rx="6" fill="none" class="car-bed"/>
+          <rect x="135" y="790" width="630" height="100" rx="4" class="car-bed-floor"/>
+          <rect x="110" y="905" width="680" height="35" rx="10" class="car-body"/>
+          <ellipse cx="-95" cy="840" rx="42" ry="65" class="car-wheel"/>
+          <ellipse cx="995" cy="840" rx="42" ry="65" class="car-wheel"/>
+        </g>
+
+        <g id="bodyRearSport" class="body-rear" style="display:none">
+          <rect x="230" y="620" width="440" height="95" rx="24" class="car-body"/>
+          <path d="M230,715 L670,715 L720,760 L180,760 Z" class="car-glass"/>
+          <path d="M60,755 Q40,790 60,830 Q100,860 250,860 L650,860 Q800,860 840,830 Q860,790 840,755 Q800,730 650,730 L250,730 Q100,730 60,755 Z" class="car-body"/>
+          <rect x="70" y="850" width="760" height="35" rx="16" class="car-body"/>
+          <ellipse cx="-70" cy="800" rx="55" ry="72" class="car-wheel"/>
+          <ellipse cx="970" cy="800" rx="55" ry="72" class="car-wheel"/>
+        </g>
+
+        <g id="engineBayGroup">
+        <rect x="40" y="60" width="820" height="480" rx="60" class="frame-line" fill="none"/>
+        <text x="70" y="90" class="bay-label">Ruang Mesin — Tampak Atas (skematik)</text>
+
+        <!-- Radiator -->
+        <rect x="70" y="190" width="42" height="260" class="metal-part"/>
+        <line x1="80" y1="200" x2="80" y2="440" class="coolant-line flow-line" stroke-dasharray="2,4"/>
+        <line x1="95" y1="200" x2="95" y2="440" class="coolant-line flow-line" stroke-dasharray="2,4"/>
+
+        <!-- Radiator hose to engine -->
+        <path d="M112,220 Q160,220 195,250" class="coolant-line flow-line" stroke-dasharray="5,4"/>
+        <path d="M112,420 Q160,420 195,390" class="coolant-line flow-line" stroke-dasharray="5,4"/>
+
+        <!-- Kipas radiator -->
+        <g class="spin-part" id="radFan">
+          <circle cx="150" cy="270" r="18" fill="none" stroke="var(--metal)" stroke-width="2"/>
+          <path d="M150,270 L150,254 Q160,258 158,268 Z" fill="var(--metal)"/>
+          <path d="M150,270 L166,270 Q162,280 152,278 Z" fill="var(--metal)"/>
+          <path d="M150,270 L150,286 Q140,282 142,272 Z" fill="var(--metal)"/>
+          <path d="M150,270 L134,270 Q138,260 148,262 Z" fill="var(--metal)"/>
+          <circle cx="150" cy="270" r="4" fill="#5a6270"/>
+        </g>
+
+        <!-- Water pump / thermostat -->
+        <g class="spin-part" id="wpPulley">
+          <circle cx="200" cy="270" r="16" class="metal-part"/>
+          <line x1="200" y1="257" x2="200" y2="283" stroke="#5a6270" stroke-width="2"/>
+          <line x1="187" y1="270" x2="213" y2="270" stroke="#5a6270" stroke-width="2"/>
+        </g>
+
+        <!-- Engine block -->
+        <g id="engineGroup">
+          <rect x="250" y="200" width="270" height="190" rx="10" class="cyl-wall"/>
+          <text x="260" y="395" class="bay-label">Blok Mesin</text>
+
+          <!-- Spark plugs / coil pack on top of block -->
+          <circle class="spark-cyl" cx="300" cy="205" r="8"/>
+          <circle class="spark-cyl" cx="355" cy="205" r="8" style="animation-delay:.15s"/>
+          <circle class="spark-cyl" cx="410" cy="205" r="8" style="animation-delay:.3s"/>
+          <circle class="spark-cyl" cx="465" cy="205" r="8" style="animation-delay:.45s"/>
+          <rect x="285" y="178" width="200" height="16" rx="4" class="metal-part"/>
+        </g>
+
+        <!-- Alternator + belt -->
+        <g class="spin-part" id="altBody">
+          <circle cx="240" cy="330" r="20" class="metal-part"/>
+          <line x1="240" y1="313" x2="240" y2="347" stroke="#5a6270" stroke-width="2"/>
+          <line x1="223" y1="330" x2="257" y2="330" stroke="#5a6270" stroke-width="2"/>
+        </g>
+        <g class="spin-part" id="altPulley">
+          <circle cx="290" cy="385" r="26" class="metal-part"/>
+          <line x1="290" y1="362" x2="290" y2="408" stroke="#5a6270" stroke-width="2"/>
+          <line x1="267" y1="385" x2="313" y2="385" stroke="#5a6270" stroke-width="2"/>
+        </g>
+        <path d="M240,350 Q260,375 270,382" class="wire-line flow-line" stroke-dasharray="3,3"/>
+
+        <!-- Starter -->
+        <circle cx="330" cy="400" r="14" class="metal-part"/>
+
+        <!-- Battery -->
+        <rect x="110" y="120" width="80" height="55" rx="4" class="metal-part"/>
+        <line x1="150" y1="175" x2="240" y2="320" class="wire-line" stroke-dasharray="2,4"/>
+
+        <!-- ECU -->
+        <rect x="700" y="120" width="80" height="50" rx="4" class="metal-part"/>
+        <line x1="700" y1="145" x2="530" y2="190" class="wire-line" stroke-dasharray="2,4"/>
+
+        <!-- Air filter box + intake -->
+        <rect x="600" y="220" width="100" height="75" rx="6" class="metal-part"/>
+        <path d="M600,255 Q550,255 520,235" class="frame-line"/>
+
+        <!-- Injector marker on intake manifold -->
+        <rect x="520" y="222" width="55" height="18" rx="3" class="metal-part"/>
+        <line x1="547" y1="240" x2="547" y2="200" class="fuel-line flow-line" stroke-dasharray="4,3"/>
+
+        <!-- Fuel line from tank side (implied off-screen) -->
+        <path d="M780,300 L610,240" class="fuel-line flow-line" stroke-dasharray="4,3"/>
+
+        <!-- Timing cover -->
+        <rect x="255" y="240" width="45" height="55" rx="4" class="metal-part"/>
+
+        <!-- Oil drain / dipstick marker -->
+        <circle cx="400" cy="420" r="10" class="metal-part"/>
+        <line x1="400" y1="410" x2="400" y2="380" class="frame-line"/>
+
+        <!-- Transmission -->
+        <rect x="530" y="255" width="150" height="125" rx="10" class="cyl-wall"/>
+        <text x="545" y="390" class="bay-label">Transmisi</text>
+
+        <!-- Exhaust manifold + catalytic converter -->
+        <path d="M520,330 Q600,360 650,400 Q700,440 770,460" class="frame-line" stroke="var(--metal)" stroke-width="4"/>
+        <rect x="740" y="450" width="90" height="34" rx="8" class="metal-part"/>
+        <circle class="exhaust-puff" cx="835" cy="467" r="3" style="animation-delay:0s"/>
+        <circle class="exhaust-puff" cx="835" cy="467" r="3" style="animation-delay:.5s"/>
+        <circle class="exhaust-puff" cx="835" cy="467" r="3" style="animation-delay:1s"/>
+        <!-- ===== BADGES ===== -->
+        <line class="leader" x1="150" y1="147" x2="188" y2="147"/>
+        <g class="hotspot" data-id="aki"><circle class="badge-bg" cx="150" cy="147" r="13"/><text class="badge-num" x="150" y="151">1</text></g>
+
+        <line class="leader" x1="240" y1="330" x2="255" y2="345"/>
+        <g class="hotspot" data-id="alternator"><circle class="badge-bg" cx="240" cy="330" r="13"/><text class="badge-num" x="240" y="334">2</text></g>
+
+        <line class="leader" x1="330" y1="400" x2="330" y2="418"/>
+        <g class="hotspot" data-id="starter"><circle class="badge-bg" cx="330" cy="418" r="13"/><text class="badge-num" x="330" y="422">3</text></g>
+
+        <line class="leader" x1="355" y1="205" x2="355" y2="150"/>
+        <g class="hotspot" data-id="busi"><circle class="badge-bg" cx="355" cy="150" r="13"/><text class="badge-num" x="355" y="154">4</text></g>
+
+        <line class="leader" x1="410" y1="178" x2="410" y2="150"/>
+        <g class="hotspot" data-id="koil"><circle class="badge-bg" cx="450" cy="150" r="13"/><text class="badge-num" x="450" y="154">5</text></g>
+
+        <line class="leader" x1="740" y1="145" x2="780" y2="145"/>
+        <g class="hotspot" data-id="ecu"><circle class="badge-bg" cx="800" cy="145" r="13"/><text class="badge-num" x="800" y="149">6</text></g>
+
+        <line class="leader" x1="547" y1="231" x2="547" y2="210"/>
+        <g class="hotspot" data-id="injektor"><circle class="badge-bg" cx="547" cy="197" r="13"/><text class="badge-num" x="547" y="201">7</text></g>
+
+        <line class="leader" x1="650" y1="220" x2="650" y2="200"/>
+        <g class="hotspot" data-id="filterudara"><circle class="badge-bg" cx="650" cy="188" r="13"/><text class="badge-num" x="650" y="192">8</text></g>
+
+        <line class="leader" x1="80" y1="320" x2="70" y2="320"/>
+        <g class="hotspot" data-id="radiator"><circle class="badge-bg" cx="50" cy="320" r="13"/><text class="badge-num" x="50" y="324">9</text></g>
+
+        <line class="leader" x1="200" y1="270" x2="200" y2="250"/>
+        <g class="hotspot" data-id="waterpump"><circle class="badge-bg" cx="200" cy="235" r="13"/><text class="badge-num" x="200" y="239">10</text></g>
+
+        <line class="leader" x1="400" y1="420" x2="400" y2="440"/>
+        <g class="hotspot" data-id="oli"><circle class="badge-bg" cx="400" cy="453" r="13"/><text class="badge-num" x="400" y="457">11</text></g>
+
+        <line class="leader" x1="785" y1="467" x2="820" y2="467"/>
+        <g class="hotspot" data-id="knalpot"><circle class="badge-bg" cx="838" cy="467" r="13"/><text class="badge-num" x="838" y="471">12</text></g>
+
+        <line class="leader" x1="277" y1="267" x2="255" y2="267"/>
+        <g class="hotspot" data-id="timing"><circle class="badge-bg" cx="238" cy="267" r="13"/><text class="badge-num" x="238" y="271">13</text></g>
+
+        <line class="leader" x1="605" y1="380" x2="605" y2="400"/>
+        <g class="hotspot" data-id="transmisi"><circle class="badge-bg" cx="605" cy="413" r="13"/><text class="badge-num" x="605" y="417">14</text></g>
+        </g>
+
+        <!-- ===== TAB 2: MOBIL UTUH (kap tertutup) ===== -->
+        <g id="fullCarHood" style="display:none">
+          <rect x="40" y="60" width="820" height="480" rx="60" class="car-body"/>
+          <path d="M60,110 Q450,90 840,110" class="car-crease"/>
+          <path d="M60,150 Q450,135 840,150" class="car-crease"/>
+          <rect x="380" y="70" width="140" height="10" rx="4" class="car-crease-fill"/>
+          <ellipse cx="450" cy="300" rx="150" ry="90" class="car-glass" opacity=".25"/>
+          <text x="450" y="510" text-anchor="middle" class="bay-label">Kap Mesin — Tertutup</text>
+        </g>
+
+      </svg>
+
+      <svg class="chart history-chart" id="svgHistoryCar" viewBox="0 0 900 420" xmlns="http://www.w3.org/2000/svg" style="display:none">
+        <line x1="20" y1="350" x2="880" y2="350" class="hc-ground"/>
+        <line x1="450" y1="40" x2="450" y2="350" class="hc-divider"/>
+
+        <!-- ===== KIRI: Cikal Bakal — Kereta Perang Sumeria ±2500 SM ===== -->
+        <text x="230" y="35" text-anchor="middle" class="hc-title">CIKAL BAKAL — KERETA SUMERIA</text>
+        <text x="230" y="55" text-anchor="middle" class="hc-sub">±2500 SM · roda kayu padat · ditarik onager</text>
+
+        <g class="hc-wheel-solid">
+          <circle cx="250" cy="300" r="46"/>
+          <circle cx="250" cy="300" r="8" class="hc-hub"/>
+          <line x1="250" y1="258" x2="250" y2="342"/>
+          <line x1="210" y1="280" x2="290" y2="320"/>
+          <line x1="210" y1="320" x2="290" y2="280"/>
+        </g>
+        <g class="hc-wheel-solid">
+          <circle cx="350" cy="300" r="46"/>
+          <circle cx="350" cy="300" r="8" class="hc-hub"/>
+          <line x1="350" y1="258" x2="350" y2="342"/>
+          <line x1="310" y1="280" x2="390" y2="320"/>
+          <line x1="310" y1="320" x2="390" y2="280"/>
+        </g>
+
+        <path d="M215,200 L385,200 L385,265 L215,265 Z" class="hc-cart-body"/>
+        <path d="M215,200 L200,175 L400,175 L385,200 Z" class="hc-cart-body"/>
+        <rect x="235" y="215" width="10" height="45" class="hc-cart-rail"/>
+        <rect x="355" y="215" width="10" height="45" class="hc-cart-rail"/>
+
+        <circle cx="300" cy="240" r="16" class="hc-figure-head"/>
+        <line x1="300" y1="255" x2="300" y2="200" class="hc-figure-body"/>
+
+        <path d="M215,232 Q150,230 120,260" class="hc-pole"/>
+        <g class="hc-onager">
+          <ellipse cx="90" cy="270" rx="42" ry="24"/>
+          <circle cx="55" cy="248" r="16"/>
+          <line x1="70" y1="290" x2="65" y2="345" class="hc-leg"/>
+          <line x1="105" y1="290" x2="112" y2="345" class="hc-leg"/>
+          <line x1="60" y1="292" x2="55" y2="345" class="hc-leg"/>
+          <line x1="115" y1="292" x2="122" y2="345" class="hc-leg"/>
+        </g>
+
+        <!-- ===== KANAN: Mobil Pertama — Benz Patent-Motorwagen 1886 ===== -->
+        <text x="670" y="35" text-anchor="middle" class="hc-title">MOBIL PERTAMA — BENZ MOTORWAGEN</text>
+        <text x="670" y="55" text-anchor="middle" class="hc-sub">1886 M · mesin bensin 1 silinder · ~16 km/jam</text>
+
+        <g class="hc-wheel-spoke">
+          <circle cx="600" cy="290" r="62"/>
+          <circle cx="600" cy="290" r="9" class="hc-hub"/>
+          <line x1="600" y1="230" x2="600" y2="350"/>
+          <line x1="545" y1="255" x2="655" y2="325"/>
+          <line x1="545" y1="325" x2="655" y2="255"/>
+          <line x1="538" y1="290" x2="662" y2="290"/>
+        </g>
+        <g class="hc-wheel-spoke">
+          <circle cx="760" cy="290" r="62"/>
+          <circle cx="760" cy="290" r="9" class="hc-hub"/>
+          <line x1="760" y1="230" x2="760" y2="350"/>
+          <line x1="705" y1="255" x2="815" y2="325"/>
+          <line x1="705" y1="325" x2="815" y2="255"/>
+          <line x1="698" y1="290" x2="822" y2="290"/>
+        </g>
+        <g class="hc-wheel-spoke hc-wheel-front">
+          <circle cx="690" cy="320" r="34"/>
+          <circle cx="690" cy="320" r="6" class="hc-hub"/>
+          <line x1="690" y1="288" x2="690" y2="352"/>
+          <line x1="662" y1="300" x2="718" y2="340"/>
+          <line x1="662" y1="340" x2="718" y2="300"/>
+        </g>
+
+        <path d="M600,230 Q670,205 690,286" class="hc-mw-chassis"/>
+        <rect x="605" y="195" width="90" height="35" rx="10" class="hc-mw-seat"/>
+        <rect x="580" y="255" width="70" height="30" rx="6" class="hc-mw-engine"/>
+        <path d="M690,290 Q715,250 705,205" class="hc-mw-tiller"/>
+        <circle cx="703" cy="200" r="7" class="hc-hub"/>
+
+        <text x="450" y="395" text-anchor="middle" class="hc-gap">≈ 4.300 tahun kemudian →</text>
+      </svg>
+    </div>
+
+    <div class="panel-col">
+      <div class="panel" id="panel">
+        <div class="panel-empty">Tekan salah satu nomor pada diagram untuk melihat penjelasan komponen — fungsinya, kenapa penting, dan apa yang terjadi kalau rusak.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="print-summary" id="printSummary"></div>
+</div>
+
+<div class="tour-bar" id="tourBar">
+  <div class="tour-info">
+    <span class="tour-stage" id="tourStage"></span>
+    <span class="tour-step-count" id="tourStepCount"></span>
+  </div>
+  <div class="tour-dots" id="tourDots"></div>
+  <div class="tour-nav">
+    <button id="tourPrevBtn">← Sebelumnya</button>
+    <button id="tourNextBtn">Berikutnya →</button>
+    <button id="tourExitBtn" title="Keluar dari tur">✕ Keluar</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const componentData = {
+    aki: {
+      name: "Aki (Baterai)",
+      fungsi: "Menyimpan dan menyuplai listrik untuk menyalakan starter, ECU, dan seluruh sistem kelistrikan sebelum mesin hidup.",
+      penting: "Tanpa daya awal dari aki, starter tidak punya tenaga untuk memutar mesin pertama kali.",
+      gejala: ["Lampu dashboard redup atau tidak menyala", "Starter berbunyi 'cetak-cetak' saja", "Mesin sama sekali tidak merespons saat kunci diputar"],
+      efek: "Tidak ada daya listrik yang cukup — starter tidak bisa memutar mesin sama sekali.",
+      kaitan: {to:"alternator", text:"Aki hanya menyimpan daya, tidak membuatnya sendiri. Begitu mesin menyala, tugas mengisi ulang aki berpindah ke alternator."},
+      kategori: "blokir"
+    },
+    alternator: {
+      name: "Alternator",
+      fungsi: "Mengubah putaran mesin menjadi listrik untuk mengisi ulang aki dan menyuplai kelistrikan selama mesin menyala.",
+      penting: "Menjaga aki tetap terisi selama berkendara, menggantikan peran aki setelah mesin hidup.",
+      gejala: ["Aki cepat tekor walau baru diganti", "Lampu indikator aki menyala saat mesin hidup", "Lampu meredup saat idle"],
+      efek: "Aki tidak terisi ulang saat mesin menyala — daya listrik lama-lama habis meski mesin tetap hidup.",
+      kaitan: {to:"aki", text:"Alternator dan aki adalah dua sisi satu siklus: aki menyuplai daya di awal, lalu alternator menggantikan perannya sambil mengisinya kembali."},
+      kategori: "degradasi"
+    },
+    starter: {
+      name: "Dinamo Starter",
+      fungsi: "Memutar poros engkol pertama kali menggunakan daya dari aki, sampai mesin bisa berjalan sendiri.",
+      penting: "Titik awal seluruh siklus pembakaran mesin dimulai dari sini.",
+      gejala: ["Terdengar bunyi 'klik' saat kunci diputar tapi mesin tidak berputar", "Perlu didorong atau di-jumper untuk hidup"],
+      efek: "Mesin tidak bisa diputar sama sekali walau aki dalam kondisi baik.",
+      kaitan: {to:"aki", text:"Starter sepenuhnya bergantung pada daya dari aki. Kalau starter rusak, cek dulu apakah akinya juga bermasalah sebelum menyimpulkan penyebabnya."},
+      kategori: "starter"
+    },
+    busi: {
+      name: "Busi",
+      fungsi: "Memercikkan bunga api bertegangan tinggi untuk membakar campuran bahan bakar dan udara di ruang bakar.",
+      penting: "Tanpa percikan api yang tepat waktu, tidak ada ledakan yang mendorong piston.",
+      gejala: ["Mesin brebet terutama saat idle", "Tenaga terasa loyo", "Sulit hidup saat pagi/dingin", "Konsumsi bensin meningkat"],
+      efek: "Pembakaran tidak sempurna di satu atau lebih silinder — mesin pincang, bergetar, dan tenaga berkurang drastis.",
+      kaitan: {to:"koil", text:"Busi tidak menghasilkan tegangan tingginya sendiri. Percikan apinya berasal dari koil pengapian — kalau busi bermasalah, koil layak dicurigai juga."},
+      kategori: "blokir"
+    },
+    koil: {
+      name: "Koil Pengapian",
+      fungsi: "Menaikkan tegangan listrik dari aki menjadi ribuan volt agar cukup kuat memercikkan api di busi.",
+      penting: "Penghubung antara sistem kelistrikan bertegangan rendah dan percikan api bertegangan tinggi di busi.",
+      gejala: ["Mesin mati mendadak saat jalan", "Sulit atau tidak bisa distarter", "Tenaga tersendat di RPM tertentu"],
+      efek: "Tidak ada tegangan tinggi yang sampai ke busi — pengapian gagal total di jalur yang terpengaruh.",
+      kaitan: {to:"busi", text:"Koil menaikkan tegangan, tapi tidak melakukan apa-apa dengan tegangan itu sendiri — semua diteruskan ke busi untuk memercikkan api."},
+      kategori: "blokir"
+    },
+    ecu: {
+      name: "ECU (Otak Elektronik Mesin)",
+      fungsi: "Mengatur waktu pengapian, jumlah bahan bakar yang disemprotkan, dan berbagai parameter mesin lainnya secara real-time.",
+      penting: "Mengoordinasikan seluruh komponen elektronik mesin modern agar bekerja tepat waktu dan efisien.",
+      gejala: ["Lampu 'Check Engine' menyala", "Mesin mogok tanpa gejala awal", "Performa mesin tidak menentu"],
+      efek: "Perintah ke injektor dan pengapian menjadi kacau atau berhenti sama sekali — mesin bisa mogok tiba-tiba.",
+      kaitan: {to:"injektor", text:"ECU adalah otaknya, tapi tidak menyemprotkan bahan bakar sendiri. Perintah takarannya dieksekusi oleh injektor."},
+      kategori: "blokir"
+    },
+    injektor: {
+      name: "Injektor Bahan Bakar",
+      fungsi: "Menyemprotkan bahan bakar ke ruang bakar dengan takaran presisi sesuai perintah ECU.",
+      penting: "Pengganti karburator pada mobil modern — memastikan campuran bahan bakar-udara tepat di setiap kondisi.",
+      gejala: ["Mesin tersendat saat gas ditekan", "Konsumsi bensin boros", "Asap knalpot lebih pekat dari biasanya"],
+      efek: "Takaran bahan bakar ke ruang bakar berantakan — mesin brebet dan boros bahan bakar.",
+      kaitan: {to:"ecu", text:"Injektor hanya mengeksekusi perintah, bukan pengambil keputusan. Kapan dan berapa banyak ia menyemprot, semua diatur oleh ECU."},
+      kategori: "degradasi"
+    },
+    filterudara: {
+      name: "Filter Udara",
+      fungsi: "Menyaring udara yang masuk ke ruang bakar dari debu dan kotoran sebelum bercampur dengan bahan bakar.",
+      penting: "Udara bersih penting agar campuran pembakaran optimal dan komponen dalam mesin tidak cepat aus.",
+      gejala: ["Tenaga mesin ngempos", "Konsumsi bahan bakar meningkat", "Asap knalpot lebih hitam"],
+      efek: "Pasokan udara ke ruang bakar berkurang — campuran jadi terlalu 'kaya' bahan bakar, tenaga turun dan boros.",
+      kaitan: {to:"injektor", text:"Udara dari sini akan bercampur dengan bahan bakar yang disemprotkan injektor. Kalau filter kotor, campurannya jadi tidak seimbang meski injektor bekerja normal."},
+      kategori: "degradasi"
+    },
+    radiator: {
+      name: "Radiator",
+      fungsi: "Melepaskan panas dari cairan pendingin (coolant) yang telah menyerap panas dari mesin.",
+      penting: "Bagian utama sistem pendingin agar suhu mesin tidak melampaui batas aman.",
+      gejala: ["Jarum suhu naik terus tanpa turun", "Muncul uap dari kap mesin", "Coolant cepat habis"],
+      efek: "Panas dari mesin tidak terbuang optimal — suhu mesin naik terus dan berisiko overheat.",
+      kaitan: {to:"waterpump", text:"Radiator hanya melepas panas dari cairan yang sampai kepadanya. Yang mengalirkan cairan itu ke sana adalah pompa air — keduanya harus sama-sama sehat."},
+      kategori: "degradasi"
+    },
+    waterpump: {
+      name: "Pompa Air & Termostat",
+      fungsi: "Mensirkulasikan cairan pendingin ke seluruh blok mesin dan mengatur kapan coolant perlu mengalir ke radiator.",
+      penting: "Tanpa sirkulasi yang lancar, panas hanya menumpuk di satu area mesin.",
+      gejala: ["Suhu mesin naik cepat meski radiator normal", "Terdengar bunyi berdecit dari area mesin depan", "Kebocoran coolant di area pompa"],
+      efek: "Cairan pendingin berhenti bersirkulasi — panas menumpuk cepat di blok mesin walau radiator dalam kondisi baik.",
+      kaitan: {to:"radiator", text:"Pompa air hanya mengalirkan cairan pendingin, bukan mendinginkannya. Pelepasan panas sesungguhnya terjadi di radiator saat cairan itu sampai ke sana."},
+      kategori: "degradasi"
+    },
+    oli: {
+      name: "Oli Mesin",
+      fungsi: "Melumasi komponen logam yang bergesekan di dalam mesin sekaligus membantu mendinginkannya.",
+      penting: "Mencegah keausan dan panas berlebih akibat gesekan logam-ke-logam yang terjadi terus-menerus.",
+      gejala: ["Lampu indikator oli menyala", "Suara mesin lebih kasar dari biasanya", "Suhu mesin cenderung naik"],
+      efek: "Gesekan antar komponen meningkat tajam — mesin cepat panas dan berisiko rusak permanen jika terus dipaksa jalan.",
+      kaitan: {to:"timing", text:"Oli yang buruk membuat semua bagian bergerak jadi lebih kasar, termasuk rantai/belt timing yang terus-menerus bergesekan saat berputar."},
+      kategori: "degradasi"
+    },
+    knalpot: {
+      name: "Knalpot & Catalytic Converter",
+      fungsi: "Mengeluarkan gas sisa pembakaran, meredam suara mesin, dan menyaring sebagian polutan sebelum dibuang ke udara.",
+      penting: "Menjaga tekanan balik gas buang tetap optimal sekaligus mengurangi emisi berbahaya.",
+      gejala: ["Suara mesin jadi sangat kasar/berisik", "Tenaga terasa ngempos", "Muncul bau menyengat dari knalpot"],
+      efek: "Tekanan balik gas buang berantakan — tenaga mesin berkurang dan suara menjadi jauh lebih kasar.",
+      kaitan: {to:"filterudara", text:"Knalpot dan filter udara adalah dua ujung dari siklus yang sama: satu mengatur udara yang masuk ke mesin, satu lagi mengeluarkan sisa hasil pembakarannya."},
+      kategori: "degradasi"
+    },
+    timing: {
+      name: "Timing Belt/Rantai Timing",
+      fungsi: "Menyinkronkan putaran poros engkol dengan poros noken as, memastikan klep membuka-menutup di waktu yang tepat.",
+      penting: "Jika sinkronisasi ini meleset atau putus, piston dan klep bisa bertabrakan di dalam mesin.",
+      gejala: ["Suara berdecit halus dari area timing", "Mesin brebet parah atau langsung mati mendadak", "Mesin tidak bisa distarter sama sekali jika sudah putus"],
+      efek: "Sinkronisasi klep dan piston kacau — mesin bisa langsung mogok total dan berisiko rusak parah secara internal.",
+      kaitan: {to:"oli", text:"Timing belt/rantai terus bergesekan setiap kali mesin berputar, dan pelumasan yang cukup dari oli membantu memperlambat keausannya. Poros engkol yang disinkronkannya sendiri bekerja lewat mekanisme crank-slider — gerak lurus piston diubah jadi putaran oleh batang piston dan pena engkol — mekanisme yang pertama tercatat dijelaskan Al-Jazari (1206 M) untuk mengubah gerak rotasi jadi gerak bolak-balik, dan sebaliknya. <a href=\"piston-aljazari.html\" target=\"_blank\" rel=\"noopener\">Lihat rumus &amp; kinematikanya →</a>"},
+      kategori: "blokir"
+    },
+    transmisi: {
+      name: "Transmisi",
+      fungsi: "Menyalurkan tenaga dari mesin ke roda dengan rasio gigi yang sesuai kecepatan dan beban kendaraan.",
+      penting: "Penghubung akhir dari seluruh kerja mesin menuju gerak roda.",
+      gejala: ["Perpindahan gigi terasa kasar atau tersentak", "Mobil terasa selip saat gas ditekan", "Muncul bunyi mendengung saat melaju"],
+      efek: "Tenaga dari mesin tidak tersalur mulus ke roda — mesin tetap menyala normal, tapi mobil tersentak atau tidak bergerak maksimal.",
+      kaitan: {to:"ecu", text:"Pada mobil bertransmisi otomatis modern, ECU turut membaca kondisi mesin untuk menentukan kapan perpindahan gigi paling tepat dilakukan."},
+      kategori: "transmisi"
+    }
+  };
+
+  const bodyNotes = {
+    sedan: "Sedan umumnya memakai mesin bensin 4 silinder segaris dengan ruang mesin relatif ringkas — susunan komponen di diagram ini paling mendekati tata letak sedan pada umumnya.",
+    hatchback: "Hatchback biasanya memakai mesin lebih kecil dari sedan dengan ruang mesin yang lebih padat — prinsip kerja dan posisi komponen utamanya tetap serupa.",
+    suv: "SUV sering memakai mesin berkapasitas lebih besar (kadang turbo atau diesel) dengan sistem pendingin yang bekerja lebih berat — radiator dan pompa air jadi titik yang lebih krusial diawasi.",
+    mpv: "MPV/mobil keluarga umumnya mengutamakan keandalan jangka panjang — perawatan rutin oli, aki, dan filter udara sangat menentukan karena mobil ini sering dipakai jarak jauh dengan muatan penuh.",
+    pickup: "Pikap sering memakai mesin diesel dengan torsi besar untuk menarik beban berat — sistem pendingin dan pelumasan bekerja ekstra saat membawa muatan penuh.",
+    sport: "Mobil sport/coupe biasanya memakai mesin performa tinggi yang bekerja di RPM lebih tinggi — sistem pengapian dan pendingin dituntut bekerja lebih presisi."
+  };
+
+  const scenarios = [
+    { id:'starter-mati', label:'Mobil Tidak Mau Distarter', ids:['aki','starter'],
+      desc:'Kunci diputar tapi mesin tidak berputar sama sekali, atau cuma terdengar bunyi "klik" berulang. Aki lemah dan dinamo starter yang mulai aus adalah kombinasi penyebab paling umum.' },
+    { id:'mogok-total', label:'Mesin Mogok Total, Tidak Mau Hidup', ids:['busi','koil','ecu'],
+      desc:'Starter berputar normal tapi mesin sama sekali tidak mau menyala. Ini ciri khas kerusakan di jalur pengapian — busi, koil, dan ECU sama-sama membuat tidak ada percikan api yang cukup dan terkoordinasi.' },
+    { id:'overheat', label:'Mesin Overheat / Suhu Naik Terus', ids:['radiator','waterpump'],
+      desc:'Jarum suhu terus naik dan tidak mau turun, bahkan berisiko muncul uap dari kap mesin. Radiator yang tersumbat dan pompa air yang lemah adalah dua penyebab paling sering ditemukan bersamaan.' },
+    { id:'boros-ngempos', label:'Boros Bensin & Tenaga Ngempos', ids:['injektor','filterudara'],
+      desc:'Mesin tetap bisa menyala, tapi bensin cepat habis dan tenaga terasa kurang responsif. Takaran bahan bakar yang berantakan di injektor, ditambah filter udara yang kotor, sering muncul bersamaan.' },
+    { id:'aki-tekor', label:'Aki Cepat Tekor Padahal Baru Diganti', ids:['alternator'],
+      desc:'Aki sudah diganti baru, tapi dalam beberapa hari sudah lemah lagi. Penyebabnya sering kali bukan akinya, melainkan alternator yang tidak lagi mengisi ulang daya aki selama mesin menyala.' },
+    { id:'timing-rusak', label:'Mesin Brebet Parah / Mati Mendadak', ids:['timing'],
+      desc:'Mesin bergetar kasar, brebet parah, atau bahkan mati mendadak tanpa gejala bertahap. Timing belt/rantai yang sudah aus atau meleset dari jalurnya sering jadi penyebab utama, dan berisiko merusak komponen internal lain jika dibiarkan.' }
+  ];
+
+  // ---------- Mode Diagnosa Terbalik: kasus nyata, urutkan kandidat dari paling mungkin ----------
+  const reverseCasesData = [
+    {
+      id: 'starter-lemah',
+      text: 'Kunci diputar ke posisi start, cuma terdengar bunyi "klik-klik" pelan dan mesin tidak mau berputar sama sekali. Lampu dashboard pun terasa lebih redup dari biasanya.',
+      candidates: ['aki','starter','ecu','alternator','busi'],
+      ranking: ['aki','starter','ecu','alternator','busi'],
+      actualCulprits: ['aki','starter'],
+      alasan: 'Lampu redup ditambah starter lemah adalah ciri khas tegangan aki yang drop — itu penyebab paling umum. Dinamo starter yang mulai aus bisa memberi gejala serupa, jadi kandidat kuat berikutnya. ECU yang bermasalah kadang mengganggu relay starter, masih masuk akal tapi jauh lebih jarang. Alternator memang mengisi ulang aki, tapi masalahnya baru terasa lama-lama, bukan penyebab langsung pagi itu. Busi sama sekali tidak berhubungan dengan sistem starter — paling tidak mungkin.'
+    },
+    {
+      id: 'mogok-senyap',
+      text: 'Mesin berhasil distarter (mesin berputar normal), tapi sama sekali tidak mau menyala — tidak ada suara letupan sedikit pun dari knalpot.',
+      candidates: ['busi','koil','ecu','injektor','oli'],
+      ranking: ['busi','koil','ecu','injektor','oli'],
+      actualCulprits: ['busi','koil'],
+      alasan: 'Tidak ada percikan api adalah penyebab paling umum mesin gagal total menyala, dan busi biasanya jadi titik yang paling dulu dicurigai. Koil yang mati menghilangkan tegangan tinggi ke busi, jadi kandidat kuat berikutnya. ECU yang bermasalah bisa menghilangkan perintah pengapian dan injeksi sekaligus, masih relevan tapi lebih jarang dibanding busi/koil. Injektor yang macet total bisa membuat tidak ada bahan bakar sama sekali, tapi biasanya masih ada usaha pembakaran (brebet), bukan diam total. Oli tidak berhubungan sama sekali dengan proses menyalakan pembakaran.'
+    },
+    {
+      id: 'ngebul-putih',
+      text: 'Mobil tetap bisa menyala dan berjalan, tapi knalpot mengepulkan asap putih tebal terus-menerus dan bensin terasa lebih boros dari biasanya.',
+      candidates: ['oli','filterudara','injektor','timing','knalpot'],
+      ranking: ['oli','filterudara','injektor','timing','knalpot'],
+      actualCulprits: ['oli','filterudara'],
+      alasan: 'Asap putih tebal adalah ciri klasik oli yang ikut terbakar di ruang bakar — penyebab paling umum untuk gejala ini. Filter udara yang kotor membuat campuran jadi terlalu kaya bahan bakar, menjelaskan sisi "boros bensin" dengan pas, jadi kandidat kuat kedua. Injektor yang menyemprot berlebih juga bisa bikin boros, tapi lebih jarang jadi penyebab utama dibanding filter yang kotor. Timing yang meleset bisa memengaruhi pembakaran, tapi biasanya memunculkan gejala lain dulu (brebet/nembak), bukan asap putih spesifik. Knalpot sama sekali tidak berhubungan dengan proses pembakaran di ruang bakar.'
+    },
+    {
+      id: 'brebet-nembak',
+      text: 'Mobil menyala dan berjalan, tapi tersendat-sendat (brebet) terutama saat gas diinjak dalam-dalam, dan sesekali terdengar suara "nembak" dari arah knalpot.',
+      candidates: ['timing','knalpot','injektor','ecu','transmisi'],
+      ranking: ['timing','knalpot','injektor','ecu','transmisi'],
+      actualCulprits: ['timing','knalpot'],
+      alasan: 'Timing yang meleset adalah penyebab paling khas brebet disertai suara nembak, karena gas yang belum sepenuhnya terbakar ikut terdorong ke knalpot. Kebocoran pada knalpot sendiri sering memunculkan suara nembak yang mirip, jadi kandidat kuat kedua. Takaran injektor yang salah juga bisa bikin brebet, tapi biasanya tanpa suara nembak yang jelas. ECU yang mulai bermasalah bisa mengacaukan timing pengapian, tapi gejalanya biasanya lebih ke arah mogok total daripada brebet ringan. Transmisi tidak berhubungan dengan proses pembakaran di dalam mesin sama sekali.'
+    },
+    {
+      id: 'selip-halus',
+      text: 'Mobil terasa selip atau tersentak-sentak saat gas diinjak, meski mesin tetap menyala dengan normal.',
+      candidates: ['transmisi','oli','injektor','timing','koil'],
+      ranking: ['transmisi','oli','injektor','timing','koil'],
+      actualCulprits: ['transmisi'],
+      alasan: 'Karena mesin sendiri menyala normal, masalah paling mungkin ada di jalur setelah mesin — transmisi yang bermasalah adalah penyebab paling langsung dari selip/sentakan ke roda. Oli yang buruk bisa membuat komponen bergerak terasa lebih kasar secara umum, jadi masih relevan meski tidak langsung. Injektor dan timing berhubungan dengan pembakaran di dalam mesin, jadi lebih kecil kemungkinannya menyebabkan gejala di roda seperti ini. Koil murni soal listrik pengapian dan sama sekali tidak berkaitan dengan tenaga yang tersalur ke roda — paling tidak mungkin.'
+    },
+    {
+      id: 'mati-mendadak',
+      text: 'Mobil sedang berjalan normal, tiba-tiba mesin mati sendiri tanpa gejala awal, dan susah dihidupkan kembali setelahnya.',
+      candidates: ['ecu','aki','busi','oli','transmisi'],
+      ranking: ['ecu','aki','busi','oli','transmisi'],
+      actualCulprits: ['ecu','aki'],
+      alasan: 'Mesin yang mati mendadak tanpa gejala awal (bukan berangsur-angsur brebet dulu) adalah ciri khas kegagalan tiba-tiba di sistem elektronik utama — ECU yang nge-glitch atau mati bisa memutus seluruh kendali mesin seketika. Sambungan aki yang kendur atau rusak mendadak juga bisa memutus aliran listrik utama secara tiba-tiba, jadi kandidat kuat berikutnya. Busi biasanya melemah berangsur-angsur (brebet dulu), bukan tiba-tiba total, jadi kurang cocok di sini. Oli memengaruhi keausan jangka panjang, bukan pemutusan mendadak. Transmisi sama sekali tidak berhubungan dengan mesin yang mati.'
+    }
+  ];
+
+  function pairwiseScore(order, ranking){
+    let correct = 0, total = 0;
+    for(let i = 0; i < ranking.length; i++){
+      for(let j = i + 1; j < ranking.length; j++){
+        total++;
+        if(order.indexOf(ranking[i]) < order.indexOf(ranking[j])) correct++;
+      }
+    }
+    return { correct, total };
+  }
+
+  const svg = document.getElementById('svgMobil');
+  const svgHistoryCar = document.getElementById('svgHistoryCar');
+  const viewTabs = document.getElementById('viewTabs');
+  const engineBayGroup = document.getElementById('engineBayGroup');
+  const fullCarHood = document.getElementById('fullCarHood');
+  const engineGroup = document.getElementById('engineGroup');
+  const panel = document.getElementById('panel');
+  const ignitionBtn = document.getElementById('ignitionBtn');
+  const lampIgn = document.getElementById('lampIgn');
+  const rpmSeg = document.getElementById('rpmSeg');
+  const fillRpm = document.getElementById('fillRpm');
+  const rpmVal = document.getElementById('rpmVal');
+  const fillTemp = document.getElementById('fillTemp');
+  const tempVal = document.getElementById('tempVal');
+  const statusline = document.getElementById('statusline');
+  const chipsRow = document.getElementById('chipsRow');
+  const scenarioGrid = document.getElementById('scenarioGrid');
+  const scenarioNote = document.getElementById('scenarioNote');
+  const bodySeg = document.getElementById('bodySeg');
+  const exteriorToggleBtn = document.getElementById('exteriorToggleBtn');
+  const bodyNote = document.getElementById('bodyNote');
+  const tourCta = document.getElementById('tourCta');
+  const tourStartBtn = document.getElementById('tourStartBtn');
+  const tourBar = document.getElementById('tourBar');
+  const tourStageEl = document.getElementById('tourStage');
+  const tourStepCountEl = document.getElementById('tourStepCount');
+  const tourDotsEl = document.getElementById('tourDots');
+  const tourPrevBtn = document.getElementById('tourPrevBtn');
+  const tourNextBtn = document.getElementById('tourNextBtn');
+  const tourExitBtn = document.getElementById('tourExitBtn');
+  const printBtn = document.getElementById('printBtn');
+  const exportImgBtn = document.getElementById('exportImgBtn');
+  const shareBtn = document.getElementById('shareBtn');
+  const sharePanel = document.getElementById('sharePanel');
+  const shareAppliedBanner = document.getElementById('shareAppliedBanner');
+  const bodyLabel = { sedan:'Sedan', hatchback:'Hatchback', suv:'SUV', mpv:'MPV', pickup:'Pikap', sport:'Sport/Coupe' };
+  const historyStartBtn = document.getElementById('historyStartBtn');
+  const historyBlock = document.getElementById('historyBlock');
+  const printSummary = document.getElementById('printSummary');
+  const quizStartBtn = document.getElementById('quizStartBtn');
+  const quizBlock = document.getElementById('quizBlock');
+  const revStartBtn = document.getElementById('revStartBtn');
+  const revBlock = document.getElementById('revBlock');
+  let tourActive = false;
+  let tourStep = 0;
+  const QUIZ_LENGTH = 10;
+  let quizActive = false;
+  let quizQuestions = [];
+  let quizIndex = 0;
+  let quizScore = 0;
+  let quizAnswered = false;
+  let quizWrongList = [];
+  let revActive = false;
+  let revCases = [];
+  let revIndex = 0;
+  let revOrder = [];
+  let revAnswered = false;
+  let revScoreSum = 0;
+  let revResults = [];
+
+  // ---------- Tur Terpandu: urutan mengikuti alur kerja mesin mobil sungguhan ----------
+  const tourSteps = [
+    { id:'aki', stage:'Tahap 1 — Persiapan Kelistrikan',
+      narasi:'Semua bermula dari sini. Begitu kunci kontak diputar, aki mengalirkan listrik pertama ke dinamo starter dan ECU — sebelum mesin bisa menghasilkan listriknya sendiri.' },
+    { id:'starter', stage:'Tahap 1 — Persiapan Kelistrikan',
+      narasi:'Dengan daya dari aki, dinamo starter memutar poros engkol untuk pertama kalinya, membuat piston mulai bergerak naik-turun sampai mesin bisa berjalan sendiri.' },
+    { id:'alternator', stage:'Tahap 1 — Persiapan Kelistrikan',
+      narasi:'Begitu mesin hidup dan berputar sendiri, alternator mengambil alih — mengubah putaran mesin menjadi listrik untuk mengisi ulang aki dan menyuplai seluruh kelistrikan selama berkendara.' },
+    { id:'ecu', stage:'Tahap 2 — Otak & Pengapian',
+      narasi:'Sementara mesin berputar, ECU bekerja sebagai otak elektronik mesin — menghitung secara real-time kapan busi harus memercik dan berapa banyak bahan bakar yang perlu disemprotkan.' },
+    { id:'injektor', stage:'Tahap 2 — Otak & Pengapian',
+      narasi:'Mengikuti perintah ECU, injektor menyemprotkan bahan bakar ke ruang bakar dengan takaran presisi — menggantikan peran karburator pada mobil-mobil lama.' },
+    { id:'koil', stage:'Tahap 2 — Otak & Pengapian',
+      narasi:'Perintah pengapian dari ECU butuh tegangan besar agar bisa memercikkan api. Koil menaikkan tegangan listrik dari aki/alternator menjadi ribuan volt agar cukup kuat sampai ke busi.' },
+    { id:'busi', stage:'Tahap 2 — Otak & Pengapian',
+      narasi:'Inilah momen ledakan terjadi. Busi memercikkan bunga api bertegangan tinggi tadi ke campuran bahan bakar-udara yang sudah dikompresi, mendorong piston bergerak dengan tenaga.' },
+    { id:'filterudara', stage:'Tahap 3 — Udara Bersih & Sinkronisasi',
+      narasi:'Sebelum bercampur dengan bahan bakar, udara yang masuk perlu disaring dulu. Filter udara menahan debu dan kotoran agar campuran pembakaran tetap optimal.' },
+    { id:'timing', stage:'Tahap 3 — Udara Bersih & Sinkronisasi',
+      narasi:'Piston dan klep harus bergerak dalam gerakan yang tersinkron sempurna. Timing belt/rantai menyinkronkan putaran poros engkol dengan noken as, memastikan klep membuka-menutup tepat waktu.' },
+    { id:'oli', stage:'Tahap 4 — Menjaga Mesin Tetap Sehat',
+      narasi:'Semua gesekan dari piston dan komponen logam yang bekerja terus-menerus butuh pelumas. Oli mengalir diam-diam di balik layar, mencegah keausan dan panas berlebih.' },
+    { id:'waterpump', stage:'Tahap 4 — Menjaga Mesin Tetap Sehat',
+      narasi:'Sementara itu, pompa air & termostat mensirkulasikan cairan pendingin ke seluruh blok mesin, sekaligus mengatur kapan coolant perlu mengalir ke radiator.' },
+    { id:'radiator', stage:'Tahap 4 — Menjaga Mesin Tetap Sehat',
+      narasi:'Cairan pendingin yang sudah menyerap panas dari mesin akhirnya dibawa ke radiator untuk dilepaskan panasnya, menjaga suhu mesin tetap dalam batas aman.' },
+    { id:'transmisi', stage:'Tahap 5 — Tenaga Sampai ke Roda',
+      narasi:'Setelah seluruh proses tadi menghasilkan tenaga, transmisi menyalurkannya ke roda dengan rasio gigi yang sesuai kecepatan dan beban kendaraan.' },
+    { id:'knalpot', stage:'Tahap 5 — Tenaga Sampai ke Roda',
+      narasi:'Langkah terakhir: gas sisa pembakaran harus dikeluarkan. Knalpot & catalytic converter menyalurkannya keluar sambil meredam suara dan menyaring sebagian polutan — menutup satu siklus penuh kerja mesin mobil.' }
+  ];
+
+  let engineOn = false;
+  let rpmLevel = 0;
+  let tempValue = 20; // 20 (dingin) .. 140 (overheat)
+  let selectedId = null;
+  let activeScenario = null;
+  const damaged = new Map(); // id -> level (1 ringan, 2 sedang, 3 parah)
+  let tempTimer = null;
+
+  function sev(id){ return damaged.get(id) || 0; }
+  const SEV_LABEL = { 1: 'Ringan', 2: 'Sedang', 3: 'Parah' };
+  function catIds(kategori){ return [...damaged.keys()].filter(id => componentData[id].kategori === kategori); }
+  function withLabel(id){ return `${componentData[id].name} (${SEV_LABEL[sev(id)]})`; }
+
+  const rpmLabels = ['Langsam','Normal','Tinggi'];
+  const rpmPct = [12, 45, 85];
+
+  function critical(){
+    const startFail = sev('aki') === 3 || sev('starter') === 3 || (sev('aki') >= 2 && sev('starter') >= 2);
+    const startWarn = !startFail && (sev('aki') >= 1 || sev('starter') >= 1);
+    const ignSum = sev('busi') + sev('koil') + sev('ecu');
+    const ignFail = ignSum >= 4;
+    const ignWarn = !ignFail && ignSum >= 1;
+    const timingFail = sev('timing') === 3;
+    const timingWarn = !timingFail && sev('timing') >= 1;
+    return { startFail, startWarn, ignFail, ignWarn, timingFail, timingWarn, canStart: !startFail && !ignFail && !timingFail };
+  }
+
+  function updateHotspotStyles(){
+    svg.querySelectorAll('.hotspot').forEach(el=>{
+      const id = el.dataset.id;
+      const lvl = sev(id);
+      el.classList.toggle('active', id === selectedId);
+      el.classList.toggle('damaged', lvl > 0);
+      el.classList.remove('sev-1','sev-2','sev-3');
+      if(lvl) el.classList.add('sev-' + lvl);
+      el.classList.toggle('tour-dim', tourActive && id !== selectedId);
+      el.classList.toggle('tour-active', tourActive && id === selectedId);
+    });
+  }
+
+  function renderChips(){
+    if(damaged.size === 0){ chipsRow.style.display = 'none'; chipsRow.innerHTML=''; return; }
+    chipsRow.style.display = 'flex';
+    chipsRow.innerHTML = '';
+    damaged.forEach((lvl, id)=>{
+      const chip = document.createElement('span');
+      chip.className = 'chip' + (lvl < 3 ? ` sev-${lvl}` : '');
+      chip.innerHTML = `${componentData[id].name} <b class="chip-sev">${SEV_LABEL[lvl]}</b><button data-id="${id}">×</button>`;
+      chipsRow.appendChild(chip);
+    });
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'chip-clear';
+    clearBtn.textContent = 'Bersihkan semua';
+    clearBtn.onclick = resetDamage;
+    chipsRow.appendChild(clearBtn);
+    chipsRow.querySelectorAll('.chip button').forEach(b=>{
+      b.onclick = ()=>{ damaged.delete(b.dataset.id); afterDamageChange(); };
+    });
+  }
+
+  function resetDamage(){
+    damaged.clear();
+    activeScenario = null;
+    afterDamageChange();
+  }
+
+  function afterDamageChange(){
+    updateHotspotStyles();
+    renderChips();
+    renderScenarioButtons();
+    updateStatus();
+    if(selectedId) renderPanel(selectedId);
+  }
+
+  function updateStatus(){
+    const c = critical();
+    const degradasi = catIds('degradasi');
+    const transmisi = catIds('transmisi');
+
+    if(!engineOn){
+      if(c.startFail){
+        statusline.className = 'statusline err';
+        statusline.textContent = `Mesin tidak akan bisa distarter — ${['aki','starter'].filter(id=>sev(id)>0).map(withLabel).join(', ')}: tidak ada cukup tenaga untuk memutar mesin.`;
+      } else if(c.timingFail){
+        statusline.className = 'statusline err';
+        statusline.textContent = `Mesin tidak akan bisa hidup jika distarter — ${withLabel('timing')}, sinkronisasi klep dan piston kacau.`;
+      } else if(c.ignFail){
+        statusline.className = 'statusline err';
+        statusline.textContent = `Mesin tidak akan bisa hidup jika distarter — jalur pengapian gagal total: ${['busi','koil','ecu'].filter(id=>sev(id)>0).map(withLabel).join(', ')}.`;
+      } else if(c.startWarn || c.ignWarn || c.timingWarn){
+        const isu = [...['aki','starter'].filter(id=>sev(id)>0), ...['busi','koil','ecu'].filter(id=>sev(id)>0), ...(sev('timing')>0?['timing']:[])];
+        statusline.className = 'statusline warn';
+        statusline.textContent = `Mesin mati. Kemungkinan masih bisa distarter, tapi berisiko tersendat/gagal karena: ${isu.map(withLabel).join(', ')}.`;
+      } else {
+        statusline.className = 'statusline ok';
+        statusline.textContent = damaged.size
+          ? `Mesin mati. Ada ${damaged.size} komponen ditandai bermasalah — tekan "Nyalakan Mesin" untuk melihat efeknya.`
+          : 'Mesin mati. Tekan "Nyalakan Mesin" untuk memulai simulasi.';
+      }
+      updateAnimState();
+      return;
+    }
+
+    if(c.startFail || c.timingFail || c.ignFail){
+      statusline.className = 'statusline err';
+      statusline.textContent = c.timingFail
+        ? `Mesin mati mendadak — ${withLabel('timing')}, sinkronisasi klep dan piston kacau.`
+        : c.ignFail
+          ? `Mesin mati mendadak — jalur pengapian gagal total: ${['busi','koil','ecu'].filter(id=>sev(id)>0).map(withLabel).join(', ')}.`
+          : `Mesin mati mendadak — ${['aki','starter'].filter(id=>sev(id)>0).map(withLabel).join(', ')}.`;
+      engineOn = false;
+      ignitionBtn.textContent = 'Nyalakan Mesin';
+      ignitionBtn.classList.add('off');
+      lampIgn.classList.remove('on');
+      rpmSeg.querySelectorAll('button').forEach(b=> b.disabled = true);
+      updateAnimState();
+      return;
+    }
+
+    const msgs = [];
+    if(c.ignWarn) msgs.push(`tersendat akibat ${['busi','koil','ecu'].filter(id=>sev(id)>0).map(withLabel).join(', ')}`);
+    if(c.timingWarn) msgs.push(`bergetar tidak wajar akibat ${withLabel('timing')}`);
+    if(degradasi.length) msgs.push(`bermasalah pada ${degradasi.map(withLabel).join(', ')}`);
+    if(transmisi.length) msgs.push(`tenaga tak tersalur maksimal ke roda karena ${transmisi.map(withLabel).join(', ')}`);
+    if(msgs.length){
+      statusline.className = 'statusline warn';
+      statusline.textContent = `Mesin menyala, tapi ${msgs.join('; ')}.`;
+    } else {
+      statusline.className = 'statusline ok';
+      statusline.textContent = 'Mesin menyala dan berjalan normal.';
+    }
+    updateAnimState();
+  }
+
+  function updateAnimState(){
+    const c = critical();
+    const spinDurs = ['2.4s','1.3s','0.6s'];
+    const flowDurs = ['1.6s','1.0s','0.5s'];
+    const sparkDurs = ['0.9s','0.55s','0.3s'];
+    svg.style.setProperty('--spin-dur', spinDurs[rpmLevel]);
+    svg.style.setProperty('--flow-dur', flowDurs[rpmLevel]);
+    svg.style.setProperty('--spark-dur', sparkDurs[rpmLevel]);
+    svg.classList.toggle('running', engineOn);
+    svg.classList.toggle('ign-trouble', engineOn && (c.ignWarn || c.ignFail));
+    svg.classList.toggle('exhaust-trouble', sev('knalpot') >= 2);
+    if(engineGroup) engineGroup.classList.toggle('misfire', engineOn && (c.ignWarn || c.ignFail || c.timingWarn || c.timingFail));
+  }
+
+  function updateGauges(){
+    fillRpm.style.width = engineOn ? rpmPct[rpmLevel] + '%' : '0%';
+    rpmVal.textContent = engineOn ? rpmLabels[rpmLevel] : 'Mati';
+    fillTemp.style.width = Math.min(100, (tempValue/140)*100) + '%';
+    tempVal.textContent = tempValue < 40 ? 'Dingin' : tempValue < 95 ? 'Normal' : tempValue < 115 ? 'Tinggi' : 'Overheat!';
+  }
+
+  function tempTick(){
+    const c = critical();
+    if(!engineOn || !c.canStart){ return; }
+    const coolingLvl = Math.max(sev('radiator'), sev('waterpump'));
+    const target = coolingLvl === 3 ? 145 : coolingLvl === 2 ? 118 : coolingLvl === 1 ? 100 : (90 + rpmLevel*4);
+    const speed = coolingLvl === 3 ? 3.2 : coolingLvl === 2 ? 2 : coolingLvl === 1 ? 1.2 : 1.4;
+    if(tempValue < target) tempValue = Math.min(target, tempValue + speed);
+    else if(tempValue > target) tempValue = Math.max(target, tempValue - 0.6);
+    updateGauges();
+    if(tempValue >= 138) updateStatus();
+  }
+
+  function setEngine(on){
+    const c = critical();
+    if(on && !c.canStart){
+      engineOn = false;
+      ignitionBtn.textContent = 'Nyalakan Mesin';
+      ignitionBtn.classList.add('off');
+      lampIgn.classList.remove('on');
+      updateStatus();
+      return;
+    }
+    engineOn = on;
+    ignitionBtn.textContent = on ? 'Matikan Mesin' : 'Nyalakan Mesin';
+    ignitionBtn.classList.toggle('off', !on);
+    lampIgn.classList.toggle('on', on);
+    rpmSeg.querySelectorAll('button').forEach(b=> b.disabled = !on);
+    if(!on){ tempValue = Math.max(20, tempValue - 40); rpmLevel = 0; rpmSeg.querySelectorAll('button').forEach(b=>b.classList.toggle('active', b.dataset.level==='0')); }
+    updateGauges();
+    updateStatus();
+  }
+
+  ignitionBtn.addEventListener('click', ()=> setEngine(!engineOn));
+
+  rpmSeg.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      if(!engineOn) return;
+      rpmLevel = parseInt(b.dataset.level,10);
+      rpmSeg.querySelectorAll('button').forEach(x=>x.classList.toggle('active', x===b));
+      updateGauges();
+      updateAnimState();
+    });
+  });
+
+  const bodyRearGroups = {
+    sedan: document.getElementById('bodyRearSedan'),
+    hatchback: document.getElementById('bodyRearHatchback'),
+    suv: document.getElementById('bodyRearSuv'),
+    mpv: document.getElementById('bodyRearMpv'),
+    pickup: document.getElementById('bodyRearPickup'),
+    sport: document.getElementById('bodyRearSport')
+  };
+
+  function setBodyStyle(style){
+    Object.entries(bodyRearGroups).forEach(([key, g]) => {
+      if(g) g.style.display = (key === style) ? '' : 'none';
+    });
+  }
+
+  function applyBodyType(key){
+    const btn = bodySeg.querySelector(`button[data-body="${key}"]`);
+    if(!btn || !bodyNotes[key]) return false;
+    bodySeg.querySelectorAll('button').forEach(x=>x.classList.toggle('active', x===btn));
+    bodyNote.innerHTML = `<b>${btn.textContent}:</b> ${bodyNotes[key]}`;
+    setBodyStyle(key);
+    return true;
+  }
+
+  bodySeg.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click', ()=> applyBodyType(b.dataset.body));
+  });
+  bodyNote.innerHTML = `<b>Sedan:</b> ${bodyNotes.sedan}`;
+
+  exteriorToggleBtn.addEventListener('click', ()=>{
+    const hidden = svg.classList.toggle('no-exterior');
+    exteriorToggleBtn.textContent = hidden ? '🚗 Tampilkan Bodi' : '🚗 Sembunyikan Bodi';
+    svg.setAttribute('viewBox', hidden ? '0 0 900 600' : '-180 -60 1260 1040');
+  });
+
+  // ---------- Tab tampilan diagram: Ruang Mesin / Mobil Utuh / Cikal Bakal Mobil ----------
+  viewTabs.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      viewTabs.querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      const view = btn.dataset.view;
+      if(view === 'history'){
+        svg.style.display = 'none';
+        svgHistoryCar.style.display = 'block';
+        return;
+      }
+      svg.style.display = 'block';
+      svgHistoryCar.style.display = 'none';
+      if(view === 'fullcar'){
+        engineBayGroup.style.display = 'none';
+        fullCarHood.style.display = '';
+        svg.classList.remove('no-exterior');
+        exteriorToggleBtn.textContent = '🚗 Sembunyikan Bodi';
+        svg.setAttribute('viewBox', '-180 -60 1260 1040');
+      } else {
+        engineBayGroup.style.display = '';
+        fullCarHood.style.display = 'none';
+      }
+    });
+  });
+
+  function severityEfekText(d, level){
+    if(!level) return '';
+    if(level === 3) return d.efek;
+    if(level === 2) return `Gejala Sedang: ${d.efek.replace(/^([A-ZÀ-Ý])/, m => m.toLowerCase())} — namun belum separah itu; efeknya masih naik-turun, sesekali membaik lalu memburuk lagi.`;
+    return `Gejala Ringan: baru mulai muncul tanda-tanda ke arah "${d.efek.replace(/^([A-ZÀ-Ý])/, m => m.toLowerCase())}" — sesekali terasa, belum terus-menerus, dan performa masih relatif terjaga.`;
+  }
+
+  function renderPanel(id){
+    selectedId = id;
+    const d = componentData[id];
+    const level = sev(id);
+    const isDamaged = level > 0;
+    panel.className = 'panel' + (isDamaged ? ' damaged' : '');
+    panel.innerHTML = `
+      <h2>${d.name}</h2>
+      <div class="fungsi">${d.fungsi}</div>
+      <div class="sect-lbl">KENAPA PENTING</div>
+      <div class="fungsi" style="margin:2px 0 0;">${d.penting}</div>
+      <div class="sect-lbl">GEJALA UMUM JIKA RUSAK</div>
+      <ul>${d.gejala.map(g=>`<li>${g}</li>`).join('')}</ul>
+      <div class="sect-lbl" style="margin-top:12px;">SIMULASIKAN TINGKAT KEPARAHAN</div>
+      <div class="sev-seg" id="sevSeg-${id}">
+        <button data-lvl="0" class="${level === 0 ? 'active' : ''}">Normal</button>
+        <button data-lvl="1" class="sev-1 ${level === 1 ? 'active' : ''}">Ringan</button>
+        <button data-lvl="2" class="sev-2 ${level === 2 ? 'active' : ''}">Sedang</button>
+        <button data-lvl="3" class="sev-3 ${level === 3 ? 'active' : ''}">Parah</button>
+      </div>
+      ${isDamaged ? `<div class="effect-box sev-${level}">${severityEfekText(d, level)}</div>` : ''}
+      ${d.kaitan ? `<div class="kaitan-box"><span class="lbl">KAITAN KOMPONEN</span>${d.kaitan.text} <button class="scenario-jump" data-id="${d.kaitan.to}">Lihat ${componentData[d.kaitan.to].name} →</button></div>` : ''}
+    `;
+    if(d.kaitan){
+      panel.querySelector('.kaitan-box .scenario-jump').addEventListener('click', ()=>{
+        renderPanel(d.kaitan.to);
+        const elx = svg.querySelector(`.hotspot[data-id="${d.kaitan.to}"]`);
+        if(elx && elx.scrollIntoView) elx.scrollIntoView({behavior:'smooth', block:'center'});
+      });
+    }
+    document.getElementById(`sevSeg-${id}`).querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const lvl = parseInt(btn.dataset.lvl, 10);
+        if(lvl === 0) damaged.delete(id); else damaged.set(id, lvl);
+        activeScenario = null;
+        afterDamageChange();
+      });
+    });
+    updateHotspotStyles();
+  }
+
+  svg.querySelectorAll('.hotspot').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      if(tourActive) exitTourSilently();
+      renderPanel(el.dataset.id);
+    });
+  });
+
+  function emptyPanelMessage(){
+    selectedId = null;
+    panel.className = 'panel';
+    panel.innerHTML = '<div class="panel-empty">Tekan salah satu nomor pada diagram untuk melihat penjelasan komponen — fungsinya, kenapa penting, dan apa yang terjadi kalau rusak.</div>';
+    updateHotspotStyles();
+  }
+
+  // ---------- Mode Belajar Bertahap (Tur Terpandu) ----------
+  tourDotsEl.innerHTML = tourSteps.map((s,i) => `<button class="tour-dot" type="button" data-i="${i}" title="${componentData[s.id].name}" aria-label="Lompat ke langkah ${i+1}: ${componentData[s.id].name}"></button>`).join('');
+  tourDotsEl.querySelectorAll('.tour-dot').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ tourStep = parseInt(btn.dataset.i, 10); renderTourStep(); });
+  });
+
+  function renderTourPanel(step){
+    const c = componentData[step.id];
+    const num = Array.from(svg.querySelectorAll('.hotspot')).findIndex(h=>h.dataset.id === step.id) + 1;
+    panel.className = 'panel';
+    panel.innerHTML = `
+      <span class="tour-label">TUR TERPANDU — LANGKAH ${tourStep+1} DARI ${tourSteps.length}</span>
+      <span class="tour-stage-tag">${step.stage}</span>
+      <h2>${c.name} <span style="color:var(--text-dim);font-weight:400;font-size:13px;">(komponen #${num} pada diagram)</span></h2>
+      <p class="tour-narasi">${step.narasi}</p>
+      <div class="sect-lbl">FUNGSI SINGKAT</div>
+      <div class="fungsi" style="margin:2px 0 0;">${c.fungsi}</div>
+    `;
+  }
+
+  function renderTourStep(){
+    const step = tourSteps[tourStep];
+    selectedId = step.id;
+    updateHotspotStyles();
+    renderTourPanel(step);
+    tourStageEl.textContent = step.stage;
+    tourStepCountEl.textContent = `Langkah ${tourStep+1} dari ${tourSteps.length}`;
+    tourDotsEl.querySelectorAll('.tour-dot').forEach((d,i)=>d.classList.toggle('active', i === tourStep));
+    tourPrevBtn.disabled = tourStep === 0;
+    tourNextBtn.textContent = tourStep === tourSteps.length - 1 ? 'Selesai ✓' : 'Berikutnya →';
+  }
+
+  function startTour(){
+    if(quizActive) closeQuiz();
+    if(revActive) closeReverse();
+    if(historyBlock.classList.contains('open')) closeHistory();
+    damaged.clear();
+    activeScenario = null;
+    renderChips();
+    renderScenarioButtons();
+    tourActive = true;
+    tourStep = 0;
+    document.body.classList.add('tour-mode');
+    tourBar.style.display = 'flex';
+    renderTourStep();
+    updateStatus();
+  }
+
+  function exitTourSilently(){
+    tourActive = false;
+    document.body.classList.remove('tour-mode');
+    tourBar.style.display = 'none';
+    updateHotspotStyles();
+  }
+
+  function finishTour(){
+    exitTourSilently();
+    selectedId = null;
+    panel.className = 'panel';
+    panel.innerHTML = `
+      <span class="tour-label">TUR SELESAI 🎉</span>
+      <h2>Kamu sudah mengenal ke-14 komponen</h2>
+      <div class="fungsi" style="margin:6px 0 0;">Dari aki sampai transmisi ke roda — begitulah alur kerja mesin mobil secara garis besar. Sekarang coba nyalakan mesin, uji salah satu skenario kerusakan di atas, atau ulangi tur ini kapan saja.</div>
+      <button class="tour-restart-btn" id="tourRestartBtn">↻ Ulangi Tur dari Awal</button>
+    `;
+    document.getElementById('tourRestartBtn').addEventListener('click', startTour);
+    updateHotspotStyles();
+    updateStatus();
+  }
+
+  function nextTourStep(){
+    if(tourStep < tourSteps.length - 1){ tourStep++; renderTourStep(); }
+    else finishTour();
+  }
+
+  function prevTourStep(){
+    if(tourStep > 0){ tourStep--; renderTourStep(); }
+  }
+
+  tourStartBtn.addEventListener('click', startTour);
+  tourNextBtn.addEventListener('click', nextTourStep);
+  tourPrevBtn.addEventListener('click', prevTourStep);
+  tourExitBtn.addEventListener('click', ()=>{ exitTourSilently(); emptyPanelMessage(); updateStatus(); });
+  document.addEventListener('keydown', e=>{
+    if(!tourActive) return;
+    if(e.key === 'Escape'){ exitTourSilently(); emptyPanelMessage(); updateStatus(); }
+    else if(e.key === 'ArrowRight'){ nextTourStep(); }
+    else if(e.key === 'ArrowLeft'){ prevTourStep(); }
+  });
+
+  function renderScenarioButtons(){
+    scenarioGrid.innerHTML = '';
+    scenarios.forEach(sc=>{
+      const btn = document.createElement('button');
+      btn.className = 'scenario-btn' + (activeScenario===sc.id ? ' active' : '');
+      btn.textContent = sc.label;
+      btn.onclick = ()=>{
+        if(activeScenario === sc.id){
+          activeScenario = null;
+          damaged.clear();
+          scenarioNote.innerHTML = '';
+        } else {
+          activeScenario = sc.id;
+          damaged.clear();
+          sc.ids.forEach(id=>damaged.set(id, 3));
+          const jumps = sc.ids.map(id=>`<button class="scenario-jump" data-id="${id}">${componentData[id].name}</button>`).join(' · ');
+          scenarioNote.innerHTML = `${sc.desc}<br><br>Komponen terkait: ${jumps}`;
+          scenarioNote.querySelectorAll('.scenario-jump').forEach(b=>{
+            b.onclick = ()=>{
+              renderPanel(b.dataset.id);
+              const elx = svg.querySelector(`.hotspot[data-id="${b.dataset.id}"]`);
+              if(elx && elx.scrollIntoView) elx.scrollIntoView({behavior:'smooth', block:'center'});
+            };
+          });
+        }
+        updateHotspotStyles();
+        renderChips();
+        renderScenarioButtons();
+        updateStatus();
+      };
+      scenarioGrid.appendChild(btn);
+    });
+  }
+
+  // ---------- Ringkasan cetak/PDF: 14 komponen ----------
+  const categoryMeta = {
+    blokir:    { label: 'Blokir — mesin sama sekali tidak menyala', color: 'var(--warn)' },
+    degradasi: { label: 'Degradasi — mesin tetap menyala tapi bermasalah', color: 'var(--fuel)' },
+    starter:   { label: 'Starter — hanya dinamo starter terganggu', color: 'var(--electric)' },
+    transmisi: { label: 'Transmisi — tenaga tak sampai mulus ke roda', color: 'var(--charge)' }
+  };
+
+  function buildPrintSummary(){
+    let stageSeen = '';
+    let itemsHtml = '';
+    tourSteps.forEach((step, idx) => {
+      const c = componentData[step.id];
+      if(!c) return;
+      if(step.stage !== stageSeen){
+        stageSeen = step.stage;
+        itemsHtml += `<div class="ps-stage">${stageSeen}</div>`;
+      }
+      const kat = categoryMeta[c.kategori] || { label: c.kategori, color: '#999' };
+      itemsHtml += `
+        <div class="ps-item">
+          <div class="ps-item-head">
+            <span class="ps-num">${String(idx+1).padStart(2,'0')}</span>
+            <span class="ps-name">${c.name}</span>
+            <span class="ps-kat" style="border-color:${kat.color};color:${kat.color}">${c.kategori}</span>
+          </div>
+          <p class="ps-fungsi">${c.fungsi}</p>
+          <p class="ps-row"><b>Kenapa penting:</b> ${c.penting}</p>
+          <p class="ps-row"><b>Jika rusak:</b> ${c.efek}</p>
+          <p class="ps-row" style="margin-bottom:1px;"><b>Gejala umum:</b></p>
+          <ul class="ps-gejala">${c.gejala.map(g => `<li>${g}</li>`).join('')}</ul>
+          ${c.kaitan ? `<p class="ps-kaitan">↔ Terkait ${componentData[c.kaitan.to].name}: ${c.kaitan.text}</p>` : ''}
+        </div>`;
+    });
+
+    const legendHtml = Object.values(categoryMeta).map(k =>
+      `<span><b style="background:${k.color}"></b>${k.label}</span>`
+    ).join('');
+
+    const scenarioHtml = scenarios.map(s => `
+      <div class="ps-scen-item">
+        <div class="ps-scen-label">${s.label}</div>
+        <div class="ps-scen-ids">Kemungkinan komponen: ${s.ids.map(id => componentData[id].name).join(', ')}</div>
+        <p class="ps-scen-desc">${s.desc}</p>
+      </div>`).join('');
+
+    printSummary.innerHTML = `
+      <div class="ps-header">
+        <div class="ps-kicker">PROYEK JAZMI — LEMBAR REFERENSI CETAK</div>
+        <h1>Ringkasan 14 Komponen Mesin Mobil</h1>
+        <p>Disusun mengikuti urutan alur kerja mesin sungguhan — dari aki sampai tenaga sampai ke roda. Cocok dibawa sebagai catatan cepat saat servis atau belajar.</p>
+      </div>
+      <div class="ps-legend">${legendHtml}</div>
+      ${itemsHtml}
+      <div class="ps-scenarios">
+        <h2>Skenario Kerusakan Umum (Referensi Cepat)</h2>
+        <p>Kombinasi gejala yang paling sering ditemui di lapangan, beserta komponen yang paling mungkin jadi penyebabnya.</p>
+        ${scenarioHtml}
+      </div>
+      <div class="ps-footer">Dicetak dari simulator interaktif JAZMI — Anatomi &amp; Simulasi Mesin Mobil.</div>
+    `;
+  }
+
+  printBtn.addEventListener('click', () => {
+    buildPrintSummary();
+    window.print();
+  });
+
+  // ---------- Simpan sebagai Gambar (PNG, lengkap dengan kap luar mobil) ----------
+  function buildStyledSvgString(vbW, vbH){
+    const cssText = document.querySelector('style').textContent;
+    const clone = svg.cloneNode(true);
+    clone.setAttribute('width', vbW);
+    clone.setAttribute('height', vbH);
+    const styleEl = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+    styleEl.textContent = cssText;
+    clone.insertBefore(styleEl, clone.firstChild);
+    return new XMLSerializer().serializeToString(clone);
+  }
+
+  function doExportImage(){
+    const vb = svg.viewBox.baseVal;
+    const vbW = vb.width, vbH = vb.height;
+    const scale = 2;
+    const pad = 40;
+    const titleH = 56;
+    const svgString = buildStyledSvgString(vbW, vbH);
+    const dataUri = 'data:image/svg+xml;charset=utf-8;base64,' + btoa(unescape(encodeURIComponent(svgString)));
+
+    const img = new Image();
+    img.onload = () => {
+      const canvasW = vbW + pad * 2;
+      const canvasH = vbH + pad * 2 + titleH;
+      const canvas = document.createElement('canvas');
+      canvas.width = canvasW * scale;
+      canvas.height = canvasH * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(scale, scale);
+
+      ctx.fillStyle = '#14171d';
+      ctx.fillRect(0, 0, canvasW, canvasH);
+
+      ctx.fillStyle = '#c9a24b';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('JAZMI — Anatomi & Simulasi Mesin Mobil', canvasW / 2, 30);
+      ctx.fillStyle = '#9aa1ad';
+      ctx.font = '12px sans-serif';
+      const bodyLabelText = bodySeg.querySelector('button.active')?.textContent || 'Sedan';
+      ctx.fillText(`Tampilan bodi: ${bodyLabelText}`, canvasW / 2, 48);
+
+      ctx.strokeStyle = '#4a5261';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(pad - 12, pad + titleH - 12, vbW + 24, vbH + 24);
+
+      ctx.drawImage(img, pad, pad + titleH, vbW, vbH);
+
+      canvas.toBlob(blob => {
+        if(!blob){
+          exportImgBtn.textContent = 'Gagal — coba lagi';
+          setTimeout(() => { exportImgBtn.textContent = '🖼️ Simpan sebagai Gambar'; }, 2000);
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `jazmi-mobil-${bodySeg.querySelector('button.active')?.dataset.body || 'sedan'}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+        exportImgBtn.textContent = 'Tersimpan ✓';
+        exportImgBtn.classList.add('done');
+        setTimeout(() => { exportImgBtn.textContent = '🖼️ Simpan sebagai Gambar'; exportImgBtn.classList.remove('done'); }, 1800);
+      }, 'image/png');
+    };
+    img.onerror = () => {
+      exportImgBtn.textContent = 'Gagal memuat gambar';
+      setTimeout(() => { exportImgBtn.textContent = '🖼️ Simpan sebagai Gambar'; }, 2000);
+    };
+    img.src = dataUri;
+  }
+
+  exportImgBtn.addEventListener('click', doExportImage);
+
+  // ---------- Bagikan Kondisi Simulasi ----------
+  function currentBodyType(){
+    const btn = bodySeg.querySelector('button.active');
+    return btn ? btn.dataset.body : 'sedan';
+  }
+
+  function buildShareURL(){
+    const params = new URLSearchParams();
+    if(damaged.size) params.set('d', [...damaged.entries()].map(([id,lvl]) => `${id}:${lvl}`).join(','));
+    if(rpmLevel) params.set('rpm', rpmLevel);
+    const body = currentBodyType();
+    if(body !== 'sedan') params.set('body', body);
+    const base = location.origin + location.pathname;
+    const qs = params.toString();
+    return qs ? `${base}?${qs}` : base;
+  }
+
+  function renderSharePanel(){
+    const url = buildShareURL();
+    const list = [...damaged.keys()].map(withLabel);
+    const summary = list.length
+      ? `Kerusakan aktif: <b>${list.join(', ')}</b>.`
+      : 'Tidak ada kerusakan aktif — kondisi mesin normal.';
+    sharePanel.innerHTML = `
+      <span class="lbl">BAGIKAN KONDISI SIMULASI</span>
+      <p class="share-summary">${summary} Putaran mesin: <b>${rpmLabels[rpmLevel]}</b>. Tipe bodi: <b>${bodyLabel[currentBodyType()]}</b>. Siapa pun yang membuka tautan ini akan langsung melihat kondisi yang sama — mesin dimulai dalam keadaan mati, tinggal ditekan "Nyalakan Mesin".</p>
+      <div class="share-row">
+        <input type="text" class="share-input" id="shareUrlInput" value="${url}" readonly>
+        <button class="share-copy-btn" id="shareCopyBtn">Salin Tautan</button>
+      </div>
+    `;
+    const urlInput = document.getElementById('shareUrlInput');
+    urlInput.addEventListener('focus', () => urlInput.select());
+    document.getElementById('shareCopyBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('shareCopyBtn');
+      try{
+        await navigator.clipboard.writeText(url);
+      }catch(err){
+        urlInput.select();
+        document.execCommand('copy');
+      }
+      btn.textContent = 'Tersalin ✓';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Salin Tautan'; btn.classList.remove('copied'); }, 1800);
+    });
+  }
+
+  shareBtn.addEventListener('click', () => {
+    const willOpen = !sharePanel.classList.contains('open');
+    if(willOpen) renderSharePanel();
+    sharePanel.classList.toggle('open', willOpen);
+  });
+
+  // ---------- Sejarah Kendaraan Beroda ----------
+  const historyEras = [
+    {
+      id: 'roda-sumeria',
+      tab: 'Roda Pertama',
+      era: '±3500 SM — Mesopotamia (Sumeria)',
+      title: 'Roda Tembikar, Lalu Roda Gerobak',
+      body: [
+        'Roda yang benar-benar berputar bebas pada porosnya (bukan sekadar batu bundar untuk menggelinding) pertama kali dikenal di Mesopotamia sekitar 4200–4000 SM — tapi awalnya bukan untuk kendaraan, melainkan roda tembikar (potter\'s wheel) untuk membentuk gerabah. Contoh tertua yang ditemukan berasal dari kota Ur, sekitar 3100 SM.',
+        'Penerapan roda pada kendaraan menyusul tidak lama setelahnya: gambar gerobak beroda tertua yang diketahui terukir pada lempengan piktograf dari kota Uruk (kota Sumeria), diperkirakan berasal dari sekitar 3500 SM. Roda-roda paling awal ini masih berupa cakram kayu padat (bukan berjari-jari), dibuat dari satu atau beberapa papan yang disatukan.'
+      ],
+      note: 'Menariknya, bukti kendaraan beroda muncul hampir bersamaan di Eropa Timur dan Kaukasus Utara pada periode yang sama — jadi penemuan roda kemungkinan besar bukan monopoli satu peradaban tunggal, melainkan muncul di beberapa tempat secara nyaris paralel.'
+    },
+    {
+      id: 'kereta-ur',
+      tab: 'Kereta Perang Ur',
+      era: '±2600–2400 SM — Ur, Sumeria Selatan',
+      title: '"Standard of Ur": Bukti Visual Kendaraan Tempur Tertua',
+      body: [
+        'Bukti visual paling terkenal dari kendaraan beroda Sumeria adalah mozaik "Standard of Ur", ditemukan di makam kerajaan kota Ur. Di situ digambarkan gerobak/kereta tempur beroda empat yang ditarik oleh empat ekor keledai liar (onager) — bukan kuda, karena kuda baru masuk ke Mesopotamia dari Asia Tengah sekitar milenium ke-2 SM.',
+        'Kalau ada anggapan rodanya terbuat dari perunggu — sebenarnya bodinya tetap kayu padat (belum berjari-jari), kadang diperkuat paku-paku tembaga dan dilapis kulit di bagian pinggirnya sebagai semacam "ban". Perunggu dan tembaga memang sudah dikenal pada masa ini (karena itu disebut Zaman Perunggu Awal), tapi lebih banyak dipakai untuk senjata, kancing as roda, dan bagian logam kecil lainnya — bukan badan roda itu sendiri.'
+      ],
+      note: 'Belum ada kekang gigit (bit) pada kendali hewan tarik pada masa ini — teknologi itu baru muncul sekitar seribu tahun kemudian.'
+    },
+    {
+      id: 'roda-berjari',
+      tab: 'Roda Berjari-jari',
+      era: '±2000–1800 SM — Asia Tengah, lalu Timur Dekat',
+      title: 'Lahirnya Kereta Perang (Chariot) Sesungguhnya',
+      body: [
+        'Roda kayu padat itu berat, sehingga kendaraan jadi lamban dan boros tenaga hewan penarik. Sekitar 2000 SM, roda berjari-jari (spoked wheel) mulai muncul — kemungkinan pertama di stepa Asia Tengah — lalu menyebar ke Timur Dekat sekitar 1800 SM.',
+        'Roda berjari-jari jauh lebih ringan tanpa mengorbankan kekuatan. Inilah yang melahirkan kereta perang (chariot) dalam arti sesungguhnya: ringan, cepat, dan ditarik kuda yang kala itu sudah mulai masuk dari Asia Tengah. Teknologi ini mengubah wajah peperangan sepanjang Zaman Perunggu di Mesir, Timur Dekat, dan sekitarnya.'
+      ],
+      note: 'Dari titik ini sampai kendaraan bermesin pertama, hampir 3.500 tahun berlalu — sepanjang itu, kendaraan beroda di dunia tetap mengandalkan tenaga hewan tarik.'
+    },
+    {
+      id: 'fardier-cugnot',
+      tab: 'Kendaraan Bermesin Pertama',
+      era: '1769 — Prancis',
+      title: 'Fardier à Vapeur Karya Nicolas-Joseph Cugnot',
+      body: [
+        'Setelah ribuan tahun kendaraan roda selalu ditarik tenaga hewan, kendaraan darat berukuran penuh pertama yang bisa bergerak sendiri (self-propelled) tanpa hewan penarik adalah "Fardier à Vapeur" karya insinyur militer Prancis, Nicolas-Joseph Cugnot, tahun 1769 — bertenaga mesin uap, awalnya dirancang untuk menarik meriam artileri.',
+        'Kendaraannya lambat (sekitar 4 km/jam), berat di bagian depan, dan sulit dikendalikan — bahkan tercatat pernah menabrak tembok dalam salah satu pengujiannya. Tapi ini adalah pembuktian konsep pertama bahwa mesin benar-benar bisa menggantikan otot hewan untuk menggerakkan kendaraan darat.'
+      ],
+      note: 'Setelah Cugnot, berbagai eksperimen mesin pembakaran dalam awal bermunculan sepanjang 1800-an — misalnya rancangan François Isaac de Rivaz (awal 1800-an) dan mesin Lenoir (1860-an) — yang perlahan membuka jalan menuju mobil bensin modern.'
+    },
+    {
+      id: 'benz-motorwagen',
+      tab: 'Mobil Modern Pertama',
+      era: '29 Januari 1886 — Mannheim, Jerman',
+      title: 'Benz Patent-Motorwagen',
+      body: [
+        'Karl Benz mematenkan "Benz Patent-Motorwagen" — mobil beroda tiga bertenaga mesin bensin 1 silinder 4-tak, dengan rangka pipa baja dan kemudi model kemudi batang (tiller). Ini secara luas dianggap sebagai mobil pertama yang dirancang dari nol sebagai kendaraan bermesin mandiri — bukan kereta kuda lama yang sekadar dipasangi mesin.',
+        'Kecepatannya hanya sekitar 16 km/jam, tapi arsitektur dasarnya (rangka + mesin pembakaran dalam + roda karet + kemudi) adalah cikal bakal langsung dari mobil modern, termasuk yang sedang kamu simulasikan di tool ini.'
+      ],
+      note: 'Tahun 1888, istri Karl Benz, Bertha Benz, melakukan perjalanan jarak jauh pertama dengan mobil ini tanpa sepengetahuan suaminya — membuktikan ke publik bahwa "kereta tanpa kuda" ini benar-benar praktis dipakai. Tahun 1913, Henry Ford memperkenalkan jalur produksi massal, yang mengubah mobil dari barang mewah menjadi kendaraan yang terjangkau banyak orang.'
+    }
+  ];
+
+  const historyTableRows = [
+    ['±4000 SM', 'Roda tembikar', 'Tenaga tangan manusia', 'Kayu / batu', '—', 'Membentuk gerabah'],
+    ['±3500 SM', 'Gerobak Sumeria (Uruk)', 'Ditarik hewan', 'Cakram kayu padat', '~3–5 km/jam', 'Angkut barang'],
+    ['±2500 SM', 'Kereta tempur "Standard of Ur"', 'Ditarik onager (keledai liar)', 'Kayu padat + paku tembaga + ban kulit', 'Lambat', 'Perang, prosesi kerajaan'],
+    ['±1800 SM', 'Kereta perang (chariot) berjari-jari', 'Ditarik kuda', 'Kayu ringan berjari-jari', 'Jauh lebih cepat', 'Perang, balap'],
+    ['1769 M', 'Fardier à Vapeur (Cugnot)', 'Mesin uap', 'Kayu + besi', '~4 km/jam', 'Menarik meriam militer'],
+    ['1886 M', 'Benz Patent-Motorwagen', 'Mesin bensin 4-tak', 'Kayu berjari-jari + ban karet', '~16 km/jam', 'Transportasi pribadi — cikal bakal mobil modern']
+  ];
+
+  let historyTabIndex = 0;
+
+  function renderHistoryTabs(){
+    return historyEras.map((e,i) => `<button data-i="${i}" class="${i===historyTabIndex?'active':''}">${e.tab}</button>`).join('');
+  }
+
+  function renderHistoryContent(){
+    const e = historyEras[historyTabIndex];
+    return `
+      <span class="history-era-tag">${e.era}</span>
+      <div class="history-content">
+        <h3>${e.title}</h3>
+        ${e.body.map(p => `<p>${p}</p>`).join('')}
+        <div class="history-note">${e.note}</div>
+      </div>
+    `;
+  }
+
+  function renderHistoryTable(){
+    return `
+      <div class="history-table-wrap">
+        <table class="history-table">
+          <thead><tr><th>Zaman</th><th>Contoh Kendaraan</th><th>Penggerak</th><th>Material Roda</th><th>Kecepatan</th><th>Fungsi Utama</th></tr></thead>
+          <tbody>
+            ${historyTableRows.map(r => `<tr><td class="era-cell">${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td></tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function renderHistoryPanel(){
+    historyBlock.innerHTML = `
+      <div class="history-head">
+        <span class="lbl">SEJARAH KENDARAAN BERODA</span>
+        <button class="history-close" id="historyCloseBtn">✕ Tutup</button>
+      </div>
+      <div class="history-tabs" id="historyTabs">${renderHistoryTabs()}</div>
+      <div id="historyContentArea">${renderHistoryContent()}</div>
+      ${renderHistoryTable()}
+    `;
+    document.getElementById('historyCloseBtn').addEventListener('click', closeHistory);
+    document.getElementById('historyTabs').querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        historyTabIndex = parseInt(btn.dataset.i, 10);
+        document.getElementById('historyTabs').querySelectorAll('button').forEach((b,i) => b.classList.toggle('active', i===historyTabIndex));
+        document.getElementById('historyContentArea').innerHTML = renderHistoryContent();
+      });
+    });
+  }
+
+  function closeHistory(){
+    historyBlock.classList.remove('open');
+    historyBlock.innerHTML = '';
+  }
+
+  historyStartBtn.addEventListener('click', () => {
+    const willOpen = !historyBlock.classList.contains('open');
+    if(willOpen){
+      if(tourActive) exitTourSilently();
+      if(quizActive) closeQuiz();
+      if(revActive) closeReverse();
+      renderHistoryPanel(); historyBlock.classList.add('open'); historyBlock.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }
+    else closeHistory();
+  });
+
+  function applyStateFromURL(){
+    const params = new URLSearchParams(location.search);
+    if(!params.has('d') && !params.has('rpm') && !params.has('body')) return;
+
+    const dParam = params.get('d');
+    if(dParam){
+      dParam.split(',').map(s => s.trim()).filter(Boolean).forEach(entry => {
+        const [id, lvlRaw] = entry.split(':');
+        if(!componentData[id]) return;
+        const lvl = parseInt(lvlRaw, 10);
+        damaged.set(id, (lvl >= 1 && lvl <= 3) ? lvl : 3);
+      });
+    }
+
+    const rpmParam = parseInt(params.get('rpm'), 10);
+    if(!isNaN(rpmParam) && rpmParam >= 0 && rpmParam <= 2){
+      rpmLevel = rpmParam;
+      rpmSeg.querySelectorAll('button').forEach(b => b.classList.toggle('active', parseInt(b.dataset.level, 10) === rpmLevel));
+    }
+
+    const bodyParam = params.get('body');
+    if(bodyParam) applyBodyType(bodyParam);
+
+    updateHotspotStyles();
+    renderChips();
+    renderScenarioButtons();
+    updateGauges();
+    updateStatus();
+
+    shareAppliedBanner.textContent = '🔗 Kondisi dari tautan yang dibagikan berhasil diterapkan — mesin masih mati, tekan "Nyalakan Mesin" untuk melihat efeknya.';
+    shareAppliedBanner.classList.add('show');
+
+    // bersihkan query string dari address bar biar tidak ikut ter-share ulang tanpa sadar
+    history.replaceState(null, '', location.pathname);
+  }
+
+  // ---------- Kuis Diagnostik ----------
+  function shuffleArr(arr){
+    const a = [...arr];
+    for(let i = a.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function flashHotspot(id){
+    const h = svg.querySelector(`.hotspot[data-id="${id}"]`);
+    if(!h) return;
+    h.classList.add('quiz-flash');
+    setTimeout(() => h.classList.remove('quiz-flash'), 2600);
+  }
+
+  function buildQuizQuestions(){
+    const pool = [];
+    Object.entries(componentData).forEach(([id, c]) => {
+      c.gejala.forEach(g => pool.push({ id, text: g }));
+    });
+    const shuffled = shuffleArr(pool);
+    for(let i = 1; i < shuffled.length; i++){
+      if(shuffled[i].id === shuffled[i - 1].id){
+        for(let j = i + 1; j < shuffled.length; j++){
+          if(shuffled[j].id !== shuffled[i - 1].id){
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            break;
+          }
+        }
+      }
+    }
+    return shuffled.slice(0, Math.min(QUIZ_LENGTH, shuffled.length));
+  }
+
+  function buildOptionsFor(correctId){
+    const others = Object.keys(componentData).filter(id => id !== correctId);
+    const distractors = shuffleArr(others).slice(0, 3);
+    return shuffleArr([correctId, ...distractors]);
+  }
+
+  function startQuiz(){
+    if(tourActive) exitTourSilently();
+    if(revActive) closeReverse();
+    if(historyBlock.classList.contains('open')) closeHistory();
+    damaged.clear();
+    activeScenario = null;
+    renderChips();
+    renderScenarioButtons();
+    quizQuestions = buildQuizQuestions();
+    quizIndex = 0;
+    quizScore = 0;
+    quizWrongList = [];
+    quizActive = true;
+    document.body.classList.add('quiz-mode');
+    quizBlock.style.display = 'block';
+    renderQuizQuestion();
+    updateStatus();
+    quizBlock.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function renderQuizQuestion(){
+    const q = quizQuestions[quizIndex];
+    quizAnswered = false;
+    const options = buildOptionsFor(q.id);
+    quizBlock.innerHTML = `
+      <div class="quiz-head">
+        <span class="lbl">KUIS DIAGNOSTIK GEJALA</span>
+        <span class="quiz-progress">Soal ${quizIndex + 1} dari ${quizQuestions.length}</span>
+        <span class="quiz-score">Skor: ${quizScore}/${quizIndex}</span>
+        <button class="quiz-close" id="quizCloseBtn">✕ Tutup Kuis</button>
+      </div>
+      <p class="quiz-question">"${q.text}" — komponen mana yang kemungkinan besar bermasalah?</p>
+      <div class="quiz-options" id="quizOptions">
+        ${options.map(id => `<button class="quiz-opt" data-id="${id}">${componentData[id].name}</button>`).join('')}
+      </div>
+      <div id="quizFeedbackArea"></div>
+    `;
+    document.getElementById('quizCloseBtn').addEventListener('click', closeQuiz);
+    quizBlock.querySelectorAll('.quiz-opt').forEach(btn => {
+      btn.addEventListener('click', () => answerQuiz(btn.dataset.id, q.id));
+    });
+  }
+
+  function answerQuiz(chosenId, correctId){
+    if(quizAnswered) return;
+    quizAnswered = true;
+    const correct = chosenId === correctId;
+    if(correct) quizScore++;
+    else quizWrongList.push({ text: quizQuestions[quizIndex].text, correctId, chosenId });
+
+    quizBlock.querySelectorAll('.quiz-opt').forEach(btn => {
+      btn.disabled = true;
+      if(btn.dataset.id === correctId) btn.classList.add('correct');
+      else if(btn.dataset.id === chosenId) btn.classList.add('wrong');
+    });
+
+    const c = componentData[correctId];
+    const isLast = quizIndex === quizQuestions.length - 1;
+    const scoreEl = quizBlock.querySelector('.quiz-score');
+    if(scoreEl) scoreEl.textContent = `Skor: ${quizScore}/${quizIndex + 1}`;
+
+    document.getElementById('quizFeedbackArea').innerHTML = `
+      <div class="quiz-feedback ${correct ? 'ok' : 'no'}">
+        ${correct ? '✅ Tepat!' : '❌ Belum tepat.'} Gejala itu paling khas menunjuk ke <b>${c.name}</b>. ${c.efek}
+      </div>
+      <div class="quiz-actions">
+        <button class="ghost" id="quizApplyBtn">🔧 Terapkan ke Simulasi</button>
+        <button class="primary" id="quizNextBtn">${isLast ? 'Lihat Hasil Akhir' : 'Soal Berikutnya →'}</button>
+      </div>
+    `;
+    document.getElementById('quizApplyBtn').addEventListener('click', () => {
+      damaged.set(correctId, 3);
+      updateHotspotStyles();
+      renderChips();
+      updateStatus();
+      flashHotspot(correctId);
+    });
+    document.getElementById('quizNextBtn').addEventListener('click', () => {
+      if(isLast){ renderQuizSummary(); } else { quizIndex++; renderQuizQuestion(); }
+    });
+  }
+
+  function renderQuizSummary(){
+    const total = quizQuestions.length;
+    const pct = Math.round((quizScore / total) * 100);
+    let verdict;
+    if(pct >= 85) verdict = 'Mantap — pemahamanmu soal gejala kerusakan mesin mobil sudah kuat.';
+    else if(pct >= 60) verdict = 'Lumayan — beberapa gejala masih perlu diingat ulang, coba lihat lagi komponennya di diagram.';
+    else verdict = 'Masih perlu latihan — coba ikuti dulu Tur Terpandu, lalu ulangi kuis ini.';
+
+    quizBlock.innerHTML = `
+      <div class="quiz-head">
+        <span class="lbl">HASIL KUIS</span>
+        <button class="quiz-close" id="quizCloseBtn">✕ Tutup Kuis</button>
+      </div>
+      <p class="quiz-question">Skor akhir: <b>${quizScore} dari ${total}</b> (${pct}%). ${verdict}</p>
+      ${quizWrongList.length ? `
+        <h3 style="margin:14px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);">Yang perlu diingat ulang</h3>
+        <ul class="quiz-summary-list">
+          ${quizWrongList.map(w => `<li class="wrong-item">"${w.text}" → seharusnya <b>${componentData[w.correctId].name}</b>, kamu jawab ${componentData[w.chosenId].name}</li>`).join('')}
+        </ul>` : `<p style="color:var(--charge);margin-top:10px;">Semua jawaban benar — tidak ada yang perlu diulang. 🎉</p>`}
+      <div class="quiz-actions">
+        <button class="ghost" id="quizRestartBtn">↻ Ulangi Kuis</button>
+        <button class="primary" id="quizDoneBtn">Selesai</button>
+      </div>
+    `;
+    document.getElementById('quizCloseBtn').addEventListener('click', closeQuiz);
+    document.getElementById('quizRestartBtn').addEventListener('click', startQuiz);
+    document.getElementById('quizDoneBtn').addEventListener('click', closeQuiz);
+  }
+
+  function closeQuiz(){
+    quizActive = false;
+    document.body.classList.remove('quiz-mode');
+    quizBlock.style.display = 'none';
+    quizBlock.innerHTML = '';
+  }
+
+  quizStartBtn.addEventListener('click', startQuiz);
+
+  // ---------- Mode Diagnosa Terbalik ----------
+  function startReverse(){
+    if(tourActive) exitTourSilently();
+    if(quizActive) closeQuiz();
+    if(historyBlock.classList.contains('open')) closeHistory();
+    damaged.clear();
+    activeScenario = null;
+    renderChips();
+    renderScenarioButtons();
+    revCases = shuffleArr(reverseCasesData);
+    revIndex = 0;
+    revScoreSum = 0;
+    revResults = [];
+    revActive = true;
+    document.body.classList.add('rev-mode');
+    revBlock.style.display = 'block';
+    renderRevCase();
+    updateStatus();
+    revBlock.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function renderRevOptions(){
+    const container = document.getElementById('revOptions');
+    if(!container) return;
+    container.innerHTML = revOrder.map((id, i) => `
+      <div class="rev-row" data-id="${id}">
+        <span class="rev-rank">${i + 1}.</span>
+        <span class="rev-name">${componentData[id].name}</span>
+        <span class="rev-arrows">
+          <button data-dir="-1" data-idx="${i}" ${i === 0 ? 'disabled' : ''} aria-label="Naikkan ${componentData[id].name}">▲</button>
+          <button data-dir="1" data-idx="${i}" ${i === revOrder.length - 1 ? 'disabled' : ''} aria-label="Turunkan ${componentData[id].name}">▼</button>
+        </span>
+      </div>
+    `).join('');
+    container.querySelectorAll('button[data-dir]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.idx, 10);
+        const dir = parseInt(btn.dataset.dir, 10);
+        const swapWith = idx + dir;
+        if(swapWith < 0 || swapWith >= revOrder.length) return;
+        [revOrder[idx], revOrder[swapWith]] = [revOrder[swapWith], revOrder[idx]];
+        renderRevOptions();
+      });
+    });
+  }
+
+  function renderRevCase(){
+    const rc = revCases[revIndex];
+    revOrder = shuffleArr(rc.candidates);
+    revAnswered = false;
+    revBlock.innerHTML = `
+      <div class="rev-head">
+        <span class="lbl">MODE DIAGNOSA TERBALIK</span>
+        <span class="rev-progress">Kasus ${revIndex + 1} dari ${revCases.length}</span>
+        <button class="rev-close" id="revCloseBtn">✕ Tutup</button>
+      </div>
+      <p class="rev-case-text">${rc.text}</p>
+      <p class="rev-hint">Urutkan 5 komponen di bawah dari yang PALING MUNGKIN jadi penyebab (paling atas) ke yang PALING TIDAK MUNGKIN (paling bawah), pakai tombol ▲▼. Ini latihan cara berpikir, bukan statistik bengkel yang mutlak.</p>
+      <div class="rev-list" id="revOptions"></div>
+      <button class="rev-submit" id="revSubmitBtn">Kunci Urutan &amp; Lihat Hasil</button>
+      <div id="revResultArea"></div>
+    `;
+    renderRevOptions();
+    document.getElementById('revCloseBtn').addEventListener('click', closeReverse);
+    document.getElementById('revSubmitBtn').addEventListener('click', submitRevAnswer);
+  }
+
+  function submitRevAnswer(){
+    if(revAnswered) return;
+    revAnswered = true;
+    const rc = revCases[revIndex];
+    const { correct, total } = pairwiseScore(revOrder, rc.ranking);
+    const pct = Math.round((correct / total) * 100);
+    revScoreSum += pct;
+    revResults.push({ text: rc.text, pct });
+
+    document.getElementById('revSubmitBtn').remove();
+    document.querySelectorAll('#revOptions .rev-arrows').forEach(el => el.remove());
+
+    const isLast = revIndex === revCases.length - 1;
+    let verdict;
+    if(pct >= 90) verdict = 'Urutanmu hampir sama persis dengan yang disarankan — intuisimu sudah bagus.';
+    else if(pct >= 60) verdict = 'Sudah di jalur yang benar, ada beberapa posisi yang tertukar.';
+    else verdict = 'Urutannya masih perlu dipikirkan ulang — coba baca alasannya di bawah.';
+
+    document.getElementById('revResultArea').innerHTML = `
+      <div class="rev-score-line">Ketepatan urutan: <b>${correct} dari ${total}</b> pasang perbandingan tepat (${pct}%). ${verdict}</div>
+      <div class="rev-compare">
+        <div class="rev-compare-col">
+          <h4>Urutanmu</h4>
+          <ol>${revOrder.map(id => `<li>${componentData[id].name}</li>`).join('')}</ol>
+        </div>
+        <div class="rev-compare-col">
+          <h4>Urutan yang disarankan</h4>
+          <ol>${rc.ranking.map(id => `<li>${componentData[id].name}</li>`).join('')}</ol>
+        </div>
+      </div>
+      <div class="rev-alasan">${rc.alasan}</div>
+      <div class="rev-actions">
+        <button class="ghost" id="revApplyBtn">🔧 Terapkan Penyebab Sebenarnya ke Simulasi</button>
+        <button class="primary" id="revNextBtn">${isLast ? 'Lihat Ringkasan' : 'Kasus Berikutnya →'}</button>
+      </div>
+    `;
+    document.getElementById('revApplyBtn').addEventListener('click', () => {
+      damaged.clear();
+      rc.actualCulprits.forEach(id => damaged.set(id, 3));
+      updateHotspotStyles();
+      renderChips();
+      updateStatus();
+      rc.actualCulprits.forEach(id => flashHotspot(id));
+    });
+    document.getElementById('revNextBtn').addEventListener('click', () => {
+      if(isLast){ renderRevSummary(); } else { revIndex++; renderRevCase(); }
+    });
+  }
+
+  function renderRevSummary(){
+    const avg = Math.round(revScoreSum / revCases.length);
+    let verdict;
+    if(avg >= 85) verdict = 'Mantap — cara berpikirmu dalam menimbang kemungkinan penyebab sudah tajam.';
+    else if(avg >= 60) verdict = 'Cukup baik — beberapa kasus masih tertukar urutannya, coba baca lagi alasannya.';
+    else verdict = 'Masih perlu latihan — coba ulangi tur atau kuis dulu, lalu balik lagi ke sini.';
+
+    revBlock.innerHTML = `
+      <div class="rev-head">
+        <span class="lbl">HASIL DIAGNOSA TERBALIK</span>
+        <button class="rev-close" id="revCloseBtn">✕ Tutup</button>
+      </div>
+      <p class="rev-case-text">Rata-rata ketepatan urutan: <b>${avg}%</b> dari ${revCases.length} kasus. ${verdict}</p>
+      <ul class="rev-summary-list">
+        ${revResults.map(r => `<li>"${r.text.slice(0, 60)}${r.text.length > 60 ? '…' : ''}" — ${r.pct}% tepat</li>`).join('')}
+      </ul>
+      <div class="rev-actions">
+        <button class="ghost" id="revRestartBtn">↻ Ulangi dengan Urutan Kasus Baru</button>
+        <button class="primary" id="revDoneBtn">Selesai</button>
+      </div>
+    `;
+    document.getElementById('revCloseBtn').addEventListener('click', closeReverse);
+    document.getElementById('revRestartBtn').addEventListener('click', startReverse);
+    document.getElementById('revDoneBtn').addEventListener('click', closeReverse);
+  }
+
+  function closeReverse(){
+    revActive = false;
+    document.body.classList.remove('rev-mode');
+    revBlock.style.display = 'none';
+    revBlock.innerHTML = '';
+  }
+
+  revStartBtn.addEventListener('click', startReverse);
+
+  updateGauges();
+  updateStatus();
+  renderScenarioButtons();
+  tempTimer = setInterval(tempTick, 500);
+  applyStateFromURL();
+})();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

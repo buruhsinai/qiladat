@@ -1,0 +1,2677 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JAZMI — Anatomi &amp; Simulasi Pesawat Terbang</title>
+<style>
+  :root{
+    --bg:#12151a; --bg-panel:#1a1e25; --bg-panel-2:#20242c; --line:#2c313b;
+    --text:#e9e6df; --text-dim:#9aa1ad;
+    --gold:#c9a24b; --gold-soft:#e3c988;
+    --ok:#4f9c94; --warn:#e3766a; --electric:#5b8fc9; --charge:#7ec98f;
+    --fuel:#e3a23a; --sky:#5b8fc9; --metal:#8a93a3;
+    --font-mono:"JetBrains Mono",monospace;
+  }
+  *{box-sizing:border-box;}
+  body{background:var(--bg);margin:0;padding:18px;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  .wrap{max-width:1180px;margin:0 auto;}
+  header{margin-bottom:14px;}
+  .kicker{color:var(--gold);font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;}
+  h1{margin:4px 0 6px;font-size:22px;font-weight:700;}
+  .sub{color:var(--text-dim);font-size:13.5px;line-height:1.55;max-width:680px;}
+  .classify-box{margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--bg-panel);border:1px solid var(--line);border-left:3px solid var(--gold);font-size:13px;line-height:1.6;color:var(--text-dim);max-width:760px;}
+  .classify-box.jet-classify{border-left-color:var(--electric);}
+
+  .tab-bar{display:flex;gap:8px;margin:16px 0;border-bottom:1px solid var(--line);}
+  .tab-btn{background:transparent;border:none;color:var(--text-dim);font-family:inherit;font-weight:700;font-size:14px;padding:10px 18px;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;}
+  .tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  .jet-intake{fill:#0f1216;stroke:var(--metal);stroke-width:1.4;}
+  .jet-nozzle{fill:#0f1216;stroke:var(--metal);stroke-width:1.8;}
+  .jet-canopy{fill:#2c4a52;stroke:var(--line);stroke-width:2;opacity:.9;}
+  .classify-box b{color:var(--gold-soft);}
+
+  .controlbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:16px 0;}
+  .searchbox{position:relative;flex:1;min-width:220px;}
+  .searchbox input{width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg-panel);color:var(--text);font-size:14px;}
+  .searchbox input:focus{outline:2px solid var(--gold);outline-offset:1px;}
+  .suggestions{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;z-index:20;display:none;max-height:280px;overflow-y:auto;}
+  .suggestions.open{display:block;}
+  .sugg-item{padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer;font-size:13.5px;}
+  .sugg-item:last-child{border-bottom:none;}
+  .sugg-item:hover, .sugg-item:focus{background:var(--bg-panel-2);}
+  .sugg-item b{color:var(--gold-soft);}
+
+  .ignition{display:flex;align-items:center;gap:10px;background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:8px 14px;flex-wrap:wrap;}
+  .ignition button{background:var(--gold);color:#1a1508;border:none;font-weight:700;font-size:13px;padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit;}
+  .ignition button.off{background:var(--bg-panel-2);color:var(--text-dim);border:1px solid var(--line);}
+  .ignition button:disabled{opacity:.5;cursor:not-allowed;}
+  .ignition button.sound-toggle{background:transparent;color:var(--text-dim);border:1px solid var(--line);font-weight:600;}
+  .ignition button.sound-toggle.muted{color:var(--warn);border-color:#4a2c28;}
+  .ignition button.hand-prop{background:transparent;color:var(--gold-soft);border:1px solid var(--gold);display:none;}
+  .ignition button.hand-prop.show{display:inline-block;}
+  .lamp{width:10px;height:10px;border-radius:50%;background:#333;box-shadow:none;transition:.2s;}
+  .lamp.on{background:var(--charge);box-shadow:0 0 8px var(--charge);}
+
+  .rpmbar{display:none;align-items:center;gap:10px;background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:8px 14px;}
+  .rpmbar.show{display:flex;}
+  .rpmbar .lbl{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);letter-spacing:.05em;}
+  .rpm-seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .rpm-seg button{background:var(--bg-panel-2);color:var(--text-dim);border:none;font-size:12.5px;padding:7px 12px;cursor:pointer;font-family:inherit;border-right:1px solid var(--line);}
+  .rpm-seg button:last-child{border-right:none;}
+  .rpm-seg button.active{background:var(--gold);color:#1a1508;font-weight:700;}
+
+  .livery-bar{display:flex;align-items:center;gap:10px;background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:8px 14px;flex-wrap:wrap;margin-top:12px;}
+  .livery-bar .lbl{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);letter-spacing:.05em;}
+  .livery-seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .livery-seg button{background:var(--bg-panel-2);color:var(--text-dim);border:none;font-size:12.5px;padding:7px 12px;cursor:pointer;font-family:inherit;border-right:1px solid var(--line);}
+  .livery-seg button:last-child{border-right:none;}
+  .livery-seg button.active{background:var(--gold);color:#1a1508;font-weight:700;}
+
+  .gauges{display:flex;flex-wrap:wrap;gap:18px;margin:10px 0 4px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-dim);}
+  .gauge{display:flex;align-items:center;gap:8px;}
+  .gauge b{color:var(--text);font-size:13px;}
+  .gauge .track{width:90px;height:6px;border-radius:4px;background:var(--bg-panel-2);border:1px solid var(--line);overflow:hidden;}
+  .gauge .fill{height:100%;border-radius:4px;transition:width .2s linear;}
+  .gauge.rpmg .fill{background:var(--electric);}
+  .gauge.tempg .fill{background:var(--warn);}
+  .status-line{font-size:13px;color:var(--text-dim);margin:8px 0 14px;min-height:18px;}
+  .status-line b{color:var(--gold-soft);}
+
+  .chips-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:-4px 0 14px;}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:#2a1a17;border:1px solid #4a2c28;color:#f2b3a8;border-radius:20px;padding:5px 8px 5px 12px;font-size:12px;}
+  .chip button{background:none;border:none;color:#f2b3a8;cursor:pointer;font-size:14px;line-height:1;padding:2px 4px;font-family:inherit;}
+  .chip.sev-1{background:#2a2417;border-color:#4a3f28;color:#e3c988;}
+  .chip.sev-1 button{color:#e3c988;}
+  .chip.sev-2{background:#2a2117;border-color:#4a3628;color:#e3a23a;}
+  .chip.sev-2 button{color:#e3a23a;}
+  .chip-clear{background:transparent;border:1px solid var(--line);color:var(--text-dim);border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;}
+
+  .scenario-block{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:0 0 16px;}
+  .scenario-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;margin-bottom:10px;}
+  .scenario-head .lbl{font-family:var(--font-mono);font-size:11px;color:var(--gold);letter-spacing:.06em;}
+  .scenario-hint{color:var(--text-dim);font-size:12.5px;}
+  .scenario-grid{display:flex;flex-wrap:wrap;gap:8px;}
+  .scenario-btn{background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);font-size:12.5px;padding:8px 13px;border-radius:20px;cursor:pointer;font-family:inherit;}
+  .scenario-btn:hover{border-color:var(--gold-soft);}
+  .scenario-btn.active{background:var(--warn);border-color:var(--warn);color:#2a0d0a;font-weight:700;}
+  .scenario-reset{margin-top:12px;width:100%;padding:10px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--text-dim);font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;}
+  .scenario-reset:hover{border-color:var(--text-dim);}
+
+  .grid{display:flex;gap:18px;align-items:flex-start;}
+  .stage{flex:1.5;min-width:0;background:var(--bg-panel);border:1px solid var(--line);border-radius:12px;padding:10px;}
+  svg.plane{width:100%;height:auto;display:block;}
+  .hotspot{cursor:pointer;}
+  .hotspot .badge-bg{fill:var(--bg-panel);stroke:var(--gold);stroke-width:1.6;}
+  .hotspot .badge-num{fill:var(--gold-soft);font-family:var(--font-mono);font-size:13px;font-weight:700;text-anchor:middle;}
+  .hotspot .badge-bg:focus{outline:2px solid #fff;outline-offset:2px;}
+  .hotspot.active .badge-bg{stroke:#fff;stroke-width:2.6;}
+  .hotspot.damaged .badge-bg{stroke:var(--warn);}
+  .hotspot.damaged .badge-num{fill:var(--warn);}
+  .hotspot.sev-1 .badge-bg{stroke:var(--fuel);stroke-width:1.6;}
+  .hotspot.sev-1 .badge-num{fill:var(--fuel);}
+  .hotspot.sev-2 .badge-bg{stroke:var(--warn);stroke-width:2.2;stroke-dasharray:3 2;}
+  .hotspot.sev-2 .badge-num{fill:var(--warn);}
+  .hotspot.sev-3 .badge-bg{stroke:var(--warn);stroke-width:3;}
+  .hotspot.sev-3 .badge-num{fill:var(--warn);}
+
+  .fuselage{fill:#20242c;stroke:var(--line);stroke-width:2;}
+  .wing{fill:#242933;stroke:var(--line);stroke-width:2;}
+  .tailpart{fill:#242933;stroke:var(--line);stroke-width:2;}
+  .cockpit{fill:#151a22;stroke:var(--metal);stroke-width:1.4;}
+  .gearline{stroke:var(--metal);stroke-width:2.4;}
+  .wheel{fill:#0f1216;stroke:var(--metal);stroke-width:1.6;}
+  .propblade{fill:#8a93a3;stroke:#4c525d;stroke-width:1;}
+  .hub{fill:#4c525d;stroke:#2c313b;stroke-width:1;}
+  #propGroup{transform-box:fill-box;transform-origin:center;}
+  body.engine-running #propGroup{animation:spinProp 1s linear infinite;}
+  @keyframes spinProp{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+  .tailtext{font-family:var(--font-mono);font-size:11px;fill:var(--text-dim);}
+
+  .panel{flex:1;min-width:280px;background:var(--bg-panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;position:sticky;top:12px;}
+  .panel-empty{color:var(--text-dim);font-size:13.5px;line-height:1.6;}
+  .panel h2{margin:0 0 2px;font-size:17px;}
+  .panel .num{color:var(--gold);font-family:var(--font-mono);font-size:12px;margin-bottom:8px;display:block;}
+  .panel h3{margin:14px 0 5px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);}
+  .panel p{margin:0;font-size:13.5px;line-height:1.55;}
+  .sev-seg{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+  .sev-seg button{flex:1;min-width:70px;padding:8px 6px;border-radius:8px;border:1px solid var(--line);background:var(--bg-panel-2);color:var(--text-dim);font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;}
+  .sev-seg button:hover{border-color:var(--gold);}
+  .sev-seg button.active{color:#fff;border-color:transparent;}
+  .sev-seg button[data-lvl="0"].active{background:var(--ok);}
+  .sev-seg button.sev-1.active{background:var(--fuel);color:#2a1c08;}
+  .sev-seg button.sev-2.active{background:#c9673a;}
+  .sev-seg button.sev-3.active{background:var(--warn);}
+  .effect-box{margin-top:12px;padding:10px 12px;border-radius:8px;background:#2a1a17;border:1px solid #4a2c28;color:#f2b3a8;font-size:13px;line-height:1.5;}
+  .sains-box{margin-top:12px;padding:10px 12px;border-radius:8px;background:#132420;border:1px solid #245049;color:#a9e0d2;font-size:13px;line-height:1.55;}
+  .sains-box b{color:var(--ok);}
+
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:12px;color:var(--text-dim);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+
+  .roadmap{margin-top:22px;padding:12px 14px;border-radius:10px;background:var(--bg-panel);border:1px dashed var(--line);font-size:12.5px;color:var(--text-dim);line-height:1.6;}
+  .roadmap b{color:var(--gold-soft);}
+
+  .further-reading{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--bg-panel);border:1px dashed var(--line);font-size:12.5px;color:var(--text-dim);line-height:1.6;}
+  .further-reading b{color:var(--gold-soft);}
+  .further-reading ul{margin:8px 0 0;padding-left:18px;}
+  .further-reading li{margin-bottom:6px;}
+  .further-reading a{color:var(--electric);text-decoration:none;font-weight:700;}
+  .further-reading a:hover{text-decoration:underline;}
+
+  .flight-panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 16px;}
+  .flight-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px;}
+  .flight-head .lbl{font-family:var(--font-mono);font-size:11px;color:var(--gold);letter-spacing:.06em;}
+  .flight-indicators{display:flex;gap:16px;font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .flight-indicators b{color:var(--text);}
+  svg.flight-svg{width:100%;height:auto;display:block;border-radius:10px;border:1px solid var(--line);background:linear-gradient(var(--bg-panel-2),var(--bg-panel));transition:border-color .2s;}
+  svg.flight-svg.warn{border-color:var(--warn);}
+  .flight-msg{font-family:var(--font-mono);font-size:11px;fill:var(--gold-soft);}
+  .flight-msg.warn{fill:var(--warn);}
+  .flight-warn-icon{opacity:0;transition:opacity .15s;}
+  .flight-warn-icon.show{opacity:1;animation:flightWarnPulse 1s ease-in-out infinite;}
+  @keyframes flightWarnPulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+  /* ===== Cetak Ringkasan 14 Komponen ===== */
+  .print-btn{background:transparent;color:var(--gold-soft);border:1px solid var(--gold);font-weight:700;font-size:13px;padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit;}
+  .print-btn:hover{background:var(--gold);color:#1a1508;}
+
+  .print-summary{display:none;}
+
+  @media print{
+    body{background:#fff;color:#111;padding:0;}
+    .wrap > *:not(.print-summary){display:none !important;}
+    .tour-bar{display:none !important;}
+    .print-summary{display:block !important;}
+  }
+
+  .print-summary{background:#fff;color:#111;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  .print-summary .ps-header{border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:14px;}
+  .print-summary .ps-kicker{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;color:#555;}
+  .print-summary .ps-header h1{margin:3px 0 4px;font-size:20px;}
+  .print-summary .ps-header p{margin:0;font-size:12px;color:#444;line-height:1.5;}
+  .print-summary .ps-stage{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.06em;color:#8a6d1f;text-transform:uppercase;margin:18px 0 8px;padding-bottom:3px;border-bottom:1px solid #ccc;break-after:avoid;}
+  .print-summary .ps-stage:first-of-type{margin-top:4px;}
+  .print-summary .ps-item{break-inside:avoid;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #eee;}
+  .print-summary .ps-item-head{display:flex;align-items:baseline;gap:8px;margin-bottom:3px;}
+  .print-summary .ps-num{font-family:var(--font-mono);font-size:11px;color:#999;}
+  .print-summary .ps-name{font-size:14px;font-weight:700;}
+  .print-summary .ps-fungsi{font-size:12px;line-height:1.5;margin:0 0 4px;color:#222;}
+  .print-summary .ps-row{font-size:11.5px;line-height:1.55;margin:0 0 3px;color:#333;}
+  .print-summary .ps-row b{color:#111;}
+  .print-summary .ps-gejala{margin:2px 0 0;padding-left:16px;font-size:11.5px;line-height:1.55;color:#333;}
+  .print-summary .ps-scenarios{margin-top:22px;break-before:page;}
+  .print-summary .ps-scenarios h2{font-size:15px;margin:0 0 4px;}
+  .print-summary .ps-scenarios > p{font-size:11.5px;color:#444;margin:0 0 12px;}
+  .print-summary .ps-scen-item{break-inside:avoid;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #eee;}
+  .print-summary .ps-scen-label{font-size:12.5px;font-weight:700;margin-bottom:2px;}
+  .print-summary .ps-scen-ids{font-family:var(--font-mono);font-size:10.5px;color:#8a6d1f;margin-bottom:2px;}
+  .print-summary .ps-scen-desc{font-size:11.5px;line-height:1.5;color:#333;margin:0;}
+  .print-summary .ps-footer{margin-top:18px;padding-top:8px;border-top:1px solid #ccc;font-size:10px;color:#888;}
+
+  @media screen{
+    .print-summary{max-width:900px;margin:0 auto;padding:24px;}
+  }
+
+  /* ===== Bagikan Kondisi Simulasi & Ekspor Gambar ===== */
+  .share-btn{background:transparent;color:var(--electric);border:1px solid var(--electric);font-weight:700;font-size:13px;padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit;}
+  .share-btn:hover{background:var(--electric);color:#0c1520;}
+  .export-btn{background:transparent;color:var(--fuel);border:1px solid var(--fuel);font-weight:700;font-size:13px;padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit;}
+  .export-btn:hover{background:var(--fuel);color:#241505;}
+  .export-panel{background:var(--bg-panel);border:1px solid var(--fuel);border-radius:10px;padding:14px 16px;margin:0 0 16px;display:none;}
+  .export-panel.open{display:block;}
+  .export-panel .lbl{font-family:var(--font-mono);font-size:11px;color:var(--fuel);letter-spacing:.06em;}
+  .export-summary{font-size:12.5px;color:var(--text-dim);margin:8px 0 12px;line-height:1.55;}
+  .frame-seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:12px;}
+  .frame-seg button{background:var(--bg-panel-2);color:var(--text-dim);border:none;font-size:12.5px;padding:8px 13px;cursor:pointer;font-family:inherit;border-right:1px solid var(--line);}
+  .frame-seg button:last-child{border-right:none;}
+  .frame-seg button.active{background:var(--fuel);color:#241505;font-weight:700;}
+  .export-opt-row{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-dim);margin-bottom:12px;}
+  .export-download-btn{background:var(--fuel);color:#241505;border:none;font-weight:700;font-size:13px;padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .export-download-btn.done{background:var(--charge);}
+  .share-panel{background:var(--bg-panel);border:1px solid var(--electric);border-radius:10px;padding:14px 16px;margin:0 0 16px;display:none;}
+  .share-panel.open{display:block;}
+  .share-panel .lbl{font-family:var(--font-mono);font-size:11px;color:var(--electric);letter-spacing:.06em;}
+  .share-summary{font-size:12.5px;color:var(--text-dim);margin:8px 0 12px;line-height:1.55;}
+  .share-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .share-input{flex:1;min-width:220px;background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);font-family:var(--font-mono);font-size:11.5px;padding:9px 12px;border-radius:8px;}
+  .share-copy-btn{background:var(--electric);color:#0c1520;border:none;font-weight:700;font-size:13px;padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .share-copy-btn.copied{background:var(--charge);}
+
+  @media (max-width:820px){ .grid{flex-direction:column;} .panel{position:static;} }
+
+  /* ===== Mode Belajar Bertahap (Tur Terpandu) ===== */
+  .tour-cta{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(135deg,#20242c,#1a1e25);border:1px solid var(--gold);border-radius:12px;padding:14px 18px;margin:0 0 16px;}
+  .tour-cta .lbl{font-family:var(--font-mono);font-size:11px;color:var(--gold);letter-spacing:.08em;}
+  .tour-cta-text p{margin:4px 0 0;font-size:13px;color:var(--text-dim);line-height:1.5;max-width:520px;}
+  .tour-start-btn{background:var(--gold);color:#1a1508;border:none;font-weight:700;font-size:13.5px;padding:11px 20px;border-radius:9px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .tour-start-btn:hover{background:var(--gold-soft);}
+
+  body.tour-mode{padding-bottom:96px;}
+  body.jet-tour-mode{padding-bottom:96px;}
+  body.tour-mode .controlbar,
+  body.tour-mode .scenario-block,
+  body.tour-mode .gauges,
+  body.tour-mode .livery-bar,
+  body.tour-mode .tour-cta,
+  body.tour-mode .quiz-cta,
+  body.tour-mode .rev-cta{opacity:.32;pointer-events:none;filter:grayscale(.4);transition:opacity .2s;}
+
+  .hotspot.tour-dim .badge-bg{opacity:.25;transition:opacity .2s;}
+  .hotspot.tour-dim .badge-num{opacity:.25;transition:opacity .2s;}
+  .hotspot.tour-dim{pointer-events:none;}
+  .hotspot.tour-active .badge-bg{animation:tourPulse 1.5s ease-in-out infinite;}
+  @keyframes tourPulse{
+    0%,100%{stroke-width:2;filter:none;}
+    50%{stroke-width:4;filter:drop-shadow(0 0 7px var(--gold-soft));}
+  }
+  .tour-stage-tag{display:inline-block;font-family:var(--font-mono);font-size:11px;color:var(--gold-soft);background:#2a2312;border:1px solid #4a3f22;border-radius:6px;padding:3px 8px;margin-bottom:6px;}
+  .tour-narasi{background:var(--bg-panel-2);border-radius:8px;border-left:3px solid var(--gold);padding:10px 12px;margin:0 0 10px;}
+
+  .tour-bar{position:fixed;left:0;right:0;bottom:0;z-index:50;display:none;align-items:center;gap:14px;flex-wrap:wrap;background:var(--bg-panel);border-top:1px solid var(--gold);padding:10px 18px;box-shadow:0 -6px 18px rgba(0,0,0,.35);}
+  .tour-info{display:flex;flex-direction:column;gap:2px;min-width:160px;}
+  .tour-stage{font-family:var(--font-mono);font-size:11px;color:var(--gold-soft);}
+  .tour-step-count{font-size:12px;color:var(--text-dim);}
+  .tour-dots{display:flex;gap:5px;flex-wrap:wrap;flex:1;}
+  .tour-dot{width:8px;height:8px;border-radius:50%;background:var(--bg-panel-2);border:1px solid var(--line);padding:0;cursor:pointer;}
+  .tour-dot.active{background:var(--gold);border-color:var(--gold);}
+  .tour-nav{display:flex;gap:8px;}
+  .tour-nav button{border:1px solid var(--line);background:var(--bg-panel-2);color:var(--text);font-size:12.5px;padding:8px 14px;border-radius:8px;cursor:pointer;font-family:inherit;}
+  .tour-nav button:disabled{opacity:.4;cursor:not-allowed;}
+  #tourNextBtn, #jetTourNextBtn{background:var(--gold);color:#1a1508;border-color:var(--gold);font-weight:700;}
+  #tourExitBtn, #jetTourExitBtn{background:transparent;color:var(--warn);border-color:#4a2c28;}
+  @media (max-width:600px){ .tour-bar{padding:9px 12px;} }
+
+  /* ===== Kuis Diagnostik ===== */
+  .quiz-cta{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(135deg,#20242c,#1a1e25);border:1px solid var(--electric);border-radius:12px;padding:14px 18px;margin:0 0 16px;}
+  .quiz-cta .lbl{font-family:var(--font-mono);font-size:11px;color:var(--electric);letter-spacing:.08em;}
+  .quiz-cta-text p{margin:4px 0 0;font-size:13px;color:var(--text-dim);line-height:1.5;max-width:520px;}
+  .quiz-start-btn{background:var(--electric);color:#0c1520;border:none;font-weight:700;font-size:13.5px;padding:11px 20px;border-radius:9px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .quiz-start-btn:hover{filter:brightness(1.1);}
+  body.quiz-mode .controlbar,
+  body.quiz-mode .scenario-block,
+  body.quiz-mode .gauges,
+  body.quiz-mode .livery-bar,
+  body.quiz-mode .tour-cta,
+  body.quiz-mode .quiz-cta,
+  body.quiz-mode .rev-cta{opacity:.32;pointer-events:none;filter:grayscale(.4);transition:opacity .2s;}
+
+  body.rev-mode .controlbar,
+  body.rev-mode .scenario-block,
+  body.rev-mode .gauges,
+  body.rev-mode .livery-bar,
+  body.rev-mode .tour-cta,
+  body.rev-mode .quiz-cta,
+  body.rev-mode .rev-cta{opacity:.32;pointer-events:none;filter:grayscale(.4);transition:opacity .2s;}
+
+  body.jet-tour-mode .controlbar,
+  body.jet-tour-mode .scenario-block,
+  body.jet-tour-mode .gauges,
+  body.jet-tour-mode #jetTourCta{opacity:.32;pointer-events:none;filter:grayscale(.4);transition:opacity .2s;}
+  .hotspot.quiz-flash .badge-bg{animation:tourPulse 1.5s ease-in-out infinite;}
+
+  .quiz-block{background:var(--bg-panel);border:1px solid var(--electric);border-radius:12px;padding:16px 18px;margin:0 0 16px;display:none;}
+  .quiz-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-bottom:12px;}
+  .quiz-head .lbl{font-family:var(--font-mono);font-size:11px;color:var(--electric);letter-spacing:.08em;}
+  .quiz-progress{font-size:12px;color:var(--text-dim);}
+  .quiz-score{font-family:var(--font-mono);font-size:12.5px;color:var(--gold-soft);}
+  .quiz-close{margin-left:auto;background:transparent;border:1px solid var(--line);color:var(--text-dim);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit;}
+  .quiz-question{font-size:15px;line-height:1.55;margin:0 0 14px;padding:12px 14px;background:var(--bg-panel-2);border-radius:10px;border-left:3px solid var(--electric);}
+  .quiz-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .quiz-opt{background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);font-size:13.5px;padding:11px 14px;border-radius:9px;cursor:pointer;text-align:left;font-family:inherit;transition:border-color .15s,background .15s;}
+  .quiz-opt:hover:not(:disabled){border-color:var(--electric);}
+  .quiz-opt:disabled{cursor:default;}
+  .quiz-opt.correct{background:#173428;border-color:var(--charge);color:var(--charge);font-weight:700;}
+  .quiz-opt.wrong{background:#3a1a17;border-color:var(--warn);color:var(--warn);font-weight:700;}
+  .quiz-feedback{margin-top:14px;padding:12px 14px;border-radius:9px;font-size:13.5px;line-height:1.55;}
+  .quiz-feedback.ok{background:#173428;border:1px solid #2f5c47;color:#bfe8d4;}
+  .quiz-feedback.no{background:#3a1a17;border:1px solid #4a2c28;color:#f2b3a8;}
+  .quiz-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
+  .quiz-actions button{font-family:inherit;font-weight:700;font-size:13px;padding:10px 16px;border-radius:8px;cursor:pointer;border:1px solid var(--line);background:var(--bg-panel-2);color:var(--text);}
+  .quiz-actions .primary{background:var(--electric);color:#0c1520;border-color:var(--electric);}
+  .quiz-actions .ghost{background:transparent;color:var(--gold-soft);border-color:var(--gold);}
+  .quiz-summary-list{margin:10px 0 0;padding-left:18px;font-size:13px;line-height:1.7;}
+  .quiz-summary-list li.wrong-item{color:var(--warn);margin-bottom:4px;}
+  @media (max-width:560px){ .quiz-options{grid-template-columns:1fr;} }
+
+  .rev-cta{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(135deg,#20242c,#1a1e25);border:1px solid var(--fuel);border-radius:12px;padding:14px 18px;margin:0 0 16px;}
+  .rev-cta .lbl{font-family:var(--font-mono);font-size:11px;color:var(--fuel);letter-spacing:.08em;}
+  .rev-cta-text p{margin:4px 0 0;font-size:13px;color:var(--text-dim);line-height:1.5;max-width:520px;}
+  .rev-start-btn{background:var(--fuel);color:#2a1808;border:none;font-weight:700;font-size:13.5px;padding:11px 20px;border-radius:9px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .rev-start-btn:hover{filter:brightness(1.1);}
+
+  .rev-block{background:var(--bg-panel);border:1px solid var(--fuel);border-radius:12px;padding:16px 18px;margin:0 0 16px;display:none;}
+  .rev-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-bottom:12px;}
+  .rev-head .lbl{font-family:var(--font-mono);font-size:11px;color:var(--fuel);letter-spacing:.08em;}
+  .rev-progress{font-size:12px;color:var(--text-dim);}
+  .rev-close{margin-left:auto;background:transparent;border:1px solid var(--line);color:var(--text-dim);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit;}
+  .rev-case-text{font-size:14.5px;line-height:1.6;margin:0 0 6px;padding:12px 14px;background:var(--bg-panel-2);border-radius:10px;border-left:3px solid var(--fuel);}
+  .rev-hint{font-size:11.5px;color:var(--text-dim);margin:0 0 14px;font-style:italic;}
+  .rev-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+  .rev-row{display:flex;align-items:center;gap:10px;background:var(--bg-panel-2);border:1px solid var(--line);border-radius:9px;padding:9px 12px;}
+  .rev-rank{font-family:var(--font-mono);font-weight:700;color:var(--fuel);min-width:20px;}
+  .rev-name{flex:1;font-size:13.5px;}
+  .rev-arrows{display:flex;gap:4px;}
+  .rev-arrows button{background:var(--bg-panel);border:1px solid var(--line);color:var(--text);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:13px;font-family:inherit;}
+  .rev-arrows button:disabled{opacity:.3;cursor:not-allowed;}
+  .rev-submit{background:var(--fuel);color:#2a1808;border:none;font-weight:700;font-size:13.5px;padding:11px 18px;border-radius:9px;cursor:pointer;font-family:inherit;}
+  .rev-score-line{font-size:13.5px;margin:0 0 12px;padding:10px 12px;border-radius:9px;background:var(--bg-panel-2);border:1px solid var(--line);}
+  .rev-compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+  .rev-compare-col h4{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);}
+  .rev-compare-col ol{margin:0;padding-left:18px;font-size:13px;line-height:1.7;}
+  .rev-alasan{background:var(--bg-panel-2);border-left:3px solid var(--fuel);padding:10px 12px;border-radius:0 8px 8px 0;font-size:13px;line-height:1.6;margin-bottom:14px;}
+  .rev-actions{display:flex;flex-wrap:wrap;gap:10px;}
+  .rev-actions button{font-family:inherit;font-weight:700;font-size:13px;padding:10px 16px;border-radius:8px;cursor:pointer;border:1px solid var(--line);background:var(--bg-panel-2);color:var(--text);}
+  .rev-actions .primary{background:var(--fuel);color:#2a1808;border-color:var(--fuel);}
+  .rev-actions .ghost{background:transparent;color:var(--gold-soft);border-color:var(--gold);}
+  .rev-summary-list{margin:10px 0 0;padding-left:18px;font-size:13px;line-height:1.8;}
+  @media (max-width:600px){ .rev-compare{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">JAZMI — TAHAP AWAL</div>
+    <h1>Anatomi &amp; Simulasi Pesawat Terbang</h1>
+    <p class="sub">Dua varian mesin dalam satu tempat: pesawat latihan piston (lengkap) dan pesawat latihan jet (anatomi dasar, menyusul fitur lain). Pilih komponen untuk melihat fungsinya, atur tingkat kerusakan, coba skenario siap pakai, lalu nyalakan mesin dan lihat efeknya.</p>
+  </header>
+
+  <div class="tab-bar" id="tabBar">
+    <button class="tab-btn active" data-tab="piston">✈️ Pesawat Latihan Piston</button>
+    <button class="tab-btn" data-tab="jet">🚀 Pesawat Latihan Jet</button>
+  </div>
+
+  <div id="tabPistonPanel" class="tab-panel active">
+
+  <div class="classify-box">
+    <b>Klasifikasi yang dipakai:</b> pesawat latihan bermesin piston tunggal, sayap tinggi, baling-baling tunggal — mirip pesawat latihan penerbangan umum yang paling sering dipakai untuk belajar terbang. Dipilih karena paling dekat secara konsep dengan mesin motor yang sudah kita bahas: satu mesin piston, sistem bahan bakar dan pengapian yang bisa dijelaskan tahap-demi-tahap — tanpa kerumitan mesin jet/turbin atau sistem hidrolik pesawat besar. Beberapa bagian (magneto ganda, baling-baling) memang murni bawaan pesawat dan tidak ada padanannya di motor.
+  </div>
+
+  <div class="tour-cta" id="tourCta">
+    <div class="tour-cta-text">
+      <span class="lbl">MODE BELAJAR</span>
+      <p>Belum familiar dengan anatomi pesawat? Ikuti tur 14 langkah dari bahan bakar sampai kendali & pendaratan.</p>
+    </div>
+    <button class="tour-start-btn" id="tourStartBtn">🎓 Mulai Tur Terpandu</button>
+  </div>
+
+  <div class="quiz-cta" id="quizCta">
+    <div class="quiz-cta-text">
+      <span class="lbl">UJI PEMAHAMAN</span>
+      <p>Sudah kenal semua komponen? Coba kuis diagnostik: tebak komponen mana yang bermasalah dari gejalanya.</p>
+    </div>
+    <button class="quiz-start-btn" id="quizStartBtn">🧠 Mulai Kuis Diagnostik</button>
+  </div>
+  <div class="quiz-block" id="quizBlock"></div>
+
+  <div class="rev-cta" id="revCta">
+    <div class="rev-cta-text">
+      <span class="lbl">KUIS TERASA TERLALU MUDAH?</span>
+      <p>Coba Mode Diagnosa Terbalik — diberi kasus nyata dengan beberapa kandidat komponen, kamu urutkan sendiri dari yang paling mungkin sampai paling tidak mungkin jadi penyebabnya.</p>
+    </div>
+    <button class="rev-start-btn" id="revStartBtn">🔍 Mode Diagnosa Terbalik</button>
+  </div>
+  <div class="rev-block" id="revBlock"></div>
+
+  <div class="controlbar">
+    <div class="searchbox">
+      <input type="text" id="searchInput" placeholder="Cari komponen (mis. magneto, baling-baling, busi)..." autocomplete="off">
+      <div class="suggestions" id="suggestions"></div>
+    </div>
+    <div class="ignition">
+      <span class="lamp" id="lampMaster"></span>
+      <button id="ignitionBtn">Nyalakan Mesin</button>
+      <button id="handPropBtn" class="hand-prop" title="Nyalakan mesin dengan memutar baling-baling secara manual, tanpa starter listrik">🌀 Putar Baling-Baling</button>
+      <button id="soundToggleBtn" class="sound-toggle">🔊 Suara: Aktif</button>
+      <button id="printBtn" class="print-btn" title="Buka ringkasan 14 komponen dalam format siap cetak/PDF">🖨️ Cetak Ringkasan</button>
+      <button id="shareBtn" class="share-btn" title="Buat tautan kondisi simulasi saat ini untuk dibagikan">🔗 Bagikan Kondisi</button>
+      <button id="exportImgBtn" class="export-btn" title="Ekspor diagram pesawat sebagai gambar dengan bingkai dekoratif">🖼️ Ekspor Gambar</button>
+    </div>
+    <div class="rpmbar" id="rpmBar">
+      <span class="lbl">GAS</span>
+      <div class="rpm-seg" id="rpmSeg">
+        <button data-lvl="0" class="active">Idle</button>
+        <button data-lvl="1">Jelajah</button>
+        <button data-lvl="2">Penuh</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="livery-bar">
+    <span class="lbl">LIVERY</span>
+    <div class="livery-seg" id="liverySeg">
+      <button data-livery="skematik" class="active">Skematik (X-Ray)</button>
+      <button data-livery="klasik">Klasik Kuning</button>
+      <button data-livery="aerobatic">Aerobatic Merah-Putih</button>
+      <button data-livery="patroli">Patroli Biru</button>
+    </div>
+  </div>
+
+  <div class="share-panel" id="sharePanel"></div>
+  <div class="export-panel" id="exportPanel"></div>
+
+  <div class="gauges">
+    <div class="gauge rpmg"><b id="rpmReadout">0 RPM</b><div class="track"><div class="fill" id="rpmFill" style="width:0%"></div></div></div>
+    <div class="gauge tempg"><b id="tempReadout">Oli: dingin</b><div class="track"><div class="fill" id="tempFill" style="width:12%"></div></div></div>
+    <div class="gauge"><b id="powerReadout">Performa: 100%</b></div>
+  </div>
+  <div class="status-line" id="statusLine">Mesin mati. Tekan <b>Nyalakan Mesin</b> untuk memulai.</div>
+
+  <div id="chipsRow" class="chips-row" style="display:none;"></div>
+
+  <div class="scenario-block">
+    <div class="scenario-head">
+      <span class="lbl">SKENARIO SIAP PAKAI</span>
+      <span class="scenario-hint">Coba kondisi kerusakan umum dan lihat efeknya sekaligus.</span>
+    </div>
+    <div class="scenario-grid" id="scenarioGrid"></div>
+    <button class="scenario-reset" id="scenarioResetBtn">Pulihkan Semua Komponen</button>
+  </div>
+
+  <div class="grid">
+    <div class="stage">
+      <svg class="plane" viewBox="0 0 900 420" xmlns="http://www.w3.org/2000/svg">
+        <!-- roda pendaratan (dekoratif) -->
+        <line class="gearline" x1="330" y1="315" x2="320" y2="355"/>
+        <circle class="wheel" cx="320" cy="362" r="14"/>
+        <line class="gearline" x1="560" y1="315" x2="570" y2="355"/>
+        <circle class="wheel" cx="570" cy="362" r="14"/>
+        <line class="gearline" x1="730" y1="300" x2="735" y2="330"/>
+        <circle class="wheel" cx="735" cy="337" r="11"/>
+
+        <!-- ekor -->
+        <polygon class="tailpart" points="115,150 185,205 185,230 115,230"/>
+        <polygon class="tailpart" points="90,255 210,248 230,262 210,276 90,270"/>
+
+        <!-- badan pesawat -->
+        <path class="fuselage" d="M120,260 C120,225 165,203 235,200 L610,200 C670,200 705,212 735,238 C748,249 748,273 735,284 C705,308 670,318 610,318 L235,318 C165,315 120,295 120,260 Z"/>
+        <text class="tailtext" x="140" y="264">N-JZ1</text>
+
+        <!-- kokpit -->
+        <path class="cockpit" d="M545,208 C575,206 605,210 620,222 L620,244 C600,248 570,248 545,244 Z"/>
+
+        <!-- sayap tinggi + strut -->
+        <rect class="wing" x="330" y="128" width="230" height="16" rx="3"/>
+        <line class="gearline" x1="365" y1="144" x2="330" y2="235" stroke-width="2"/>
+        <line class="gearline" x1="525" y1="144" x2="520" y2="235" stroke-width="2"/>
+
+        <!-- kerucut hidung / cowling mesin -->
+        <path class="fuselage" d="M735,238 C755,235 768,245 772,260 C768,275 755,285 735,284 Z"/>
+
+        <!-- baling-baling -->
+        <g id="propGroup">
+          <circle class="hub" cx="784" cy="260" r="8"/>
+          <rect class="propblade" x="781" y="212" width="6" height="46" rx="3"/>
+          <rect class="propblade" x="781" y="262" width="6" height="46" rx="3"/>
+        </g>
+
+        <!-- hotspot: komponen -->
+        <g class="hotspot" data-id="tangki"><circle class="badge-bg" cx="420" cy="150" r="13"/><text class="badge-num" x="420" y="154">1</text></g>
+        <g class="hotspot" data-id="karburator"><circle class="badge-bg" cx="690" cy="300" r="13"/><text class="badge-num" x="690" y="304">2</text></g>
+        <g class="hotspot" data-id="silinder"><circle class="badge-bg" cx="700" cy="228" r="13"/><text class="badge-num" x="700" y="232">3</text></g>
+        <g class="hotspot" data-id="klep"><circle class="badge-bg" cx="726" cy="204" r="13"/><text class="badge-num" x="726" y="208">4</text></g>
+        <g class="hotspot" data-id="busi"><circle class="badge-bg" cx="705" cy="192" r="13"/><text class="badge-num" x="705" y="196">5</text></g>
+        <g class="hotspot" data-id="magneto"><circle class="badge-bg" cx="652" cy="300" r="13"/><text class="badge-num" x="652" y="304">6</text></g>
+        <g class="hotspot" data-id="kunci"><circle class="badge-bg" cx="580" cy="228" r="13"/><text class="badge-num" x="580" y="232">7</text></g>
+        <g class="hotspot" data-id="aki"><circle class="badge-bg" cx="260" cy="285" r="13"/><text class="badge-num" x="260" y="289">8</text></g>
+        <g class="hotspot" data-id="alternator"><circle class="badge-bg" cx="668" cy="258" r="13"/><text class="badge-num" x="668" y="262">9</text></g>
+        <g class="hotspot" data-id="starter"><circle class="badge-bg" cx="682" cy="282" r="13"/><text class="badge-num" x="682" y="286">10</text></g>
+        <g class="hotspot" data-id="oli"><circle class="badge-bg" cx="716" cy="256" r="13"/><text class="badge-num" x="716" y="260">11</text></g>
+        <g class="hotspot" data-id="baling"><circle class="badge-bg" cx="784" cy="330" r="13"/><text class="badge-num" x="784" y="334">12</text></g>
+        <g class="hotspot" data-id="kemudi"><circle class="badge-bg" cx="150" cy="190" r="13"/><text class="badge-num" x="150" y="194">13</text></g>
+        <g class="hotspot" data-id="roda"><circle class="badge-bg" cx="345" cy="345" r="13"/><text class="badge-num" x="345" y="349">14</text></g>
+      </svg>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--gold)"></span> Normal</span>
+        <span><span class="dot" style="background:var(--fuel)"></span> Ringan</span>
+        <span><span class="dot" style="background:#c9673a"></span> Sedang</span>
+        <span><span class="dot" style="background:var(--warn)"></span> Parah</span>
+      </div>
+    </div>
+
+    <div class="panel" id="panel">
+      <p class="panel-empty">Klik salah satu nomor di gambar pesawat, atau cari lewat kotak pencarian di atas, untuk melihat penjelasan komponennya.</p>
+    </div>
+  </div>
+
+  <div class="flight-panel" id="flightPanel">
+    <div class="flight-head">
+      <span class="lbl">SIMULASI TERBANG — RESPON TERHADAP KERUSAKAN</span>
+      <div class="flight-indicators">
+        <span>Kecepatan: <b id="flightSpeedReadout">0 knot</b></span>
+        <span>Ketinggian: <b id="flightAltReadout">0 ft</b></span>
+      </div>
+    </div>
+    <svg class="flight-svg" id="svgFlight" viewBox="0 0 900 230" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="900" height="230" fill="var(--sky)" opacity=".16"/>
+      <g id="flightCloudG"></g>
+      <g id="flightWindG"></g>
+      <path id="flightGroundPath" fill="var(--bg-panel-2)" stroke="var(--line)" stroke-width="2"/>
+      <g id="flightHazardG"></g>
+      <g id="flightPlaneG" transform="translate(160,75)">
+        <g id="flightPlaneTilt">
+          <rect x="-30" y="-4" width="62" height="9" rx="4" fill="var(--metal)"/>
+          <path d="M-30,0 C-38,-2 -44,0 -48,4 C-44,7 -38,7 -30,5 Z" fill="var(--gold)"/>
+          <rect x="-6" y="-16" width="26" height="6" rx="2" fill="#242933"/>
+          <path d="M-30,-3 L-30,-16 L-16,-3 Z" fill="#242933"/>
+          <circle id="flightProp" cx="32" cy="0" r="3.2" fill="var(--gold-soft)"/>
+          <line id="flightPropLine" x1="32" y1="-9" x2="32" y2="9" stroke="var(--metal)" stroke-width="2.4"/>
+        </g>
+      </g>
+      <text class="flight-msg" id="flightMsg" x="450" y="24" text-anchor="middle"></text>
+      <g id="flightWarnIcon" class="flight-warn-icon" transform="translate(26,20)">
+        <path d="M0,-9 L9,7 L-9,7 Z" fill="var(--warn)" stroke="var(--warn)" stroke-width="1.4" stroke-linejoin="round"/>
+        <rect x="-1.3" y="-3.2" width="2.6" height="6.5" rx="1.2" fill="#1a1010"/>
+        <circle cx="0" cy="4.3" r="1.4" fill="#1a1010"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="roadmap">
+    <b>Status:</b> seluruh tahap pengembangan utama sudah selesai — anatomi 14 komponen (lengkap dengan wawasan "Sains di Baliknya" tiap komponen), trio belajar lengkap (Tur → Kuis → Diagnosa Terbalik), simulasi terbang dengan efek kerusakan, suara mesin sintesis mengikuti RPM & kerusakan, start manual putar baling-baling, livery/skema warna, skenario siap pakai, ekspor gambar, cetak ringkasan, dan bagikan tautan kondisi.
+  </div>
+
+  <div class="further-reading">
+    <b>Simulator JAZMI lainnya</b> — <a href="jazmi-mesin-motor.html" target="_blank" rel="noopener">Anatomi &amp; Simulasi Mesin Sepeda Motor</a> (14 komponen): struktur dan fitur belajarnya sama persis — tur bertahap, kuis diagnostik, diagnosa terbalik, simulasi jalur (jalan raya vs sirkuit terbang), suara mesin sintesis, dan variasi gaya bodi/livery — tinggal beda kendaraannya. Taruh di folder yang sama agar tautannya aktif.
+  </div>
+
+  <div class="further-reading">
+    <b>Bacaan lanjutan dari seri JAZMI</b> — bukan bagian dari simulator ini, tapi memperkaya sudut pandang seputar terbang (letakkan file berikut di folder yang sama agar tautan aktif):
+    <ul>
+      <li><a href="andai-ibn-firnas.html" target="_blank" rel="noopener">Andai Ibn Firnas — Simulator Fisika Percobaan Terbang</a> (Bank Alat JAZMI): paling dekat temanya dengan simulator ini — soal beban sayap, kecepatan minimum melayang (stall speed), dan kenapa <b>tidak adanya ekor/kendali pitch</b> disebut sebagai sebab utama gagalnya pendaratan. Ini persis prinsip yang diwakili komponen "kemudi" &amp; fase pendaratan di panel Simulasi Terbang pada simulator ini, hanya beda konteks: kendali pesawat bermesin vs sayap tetap tanpa mesin.</li>
+      <li><a href="faktor-habibie-crack-propagation.html" target="_blank" rel="noopener">Faktor Habibie — Teori Crack Propagation</a> (Laboratorium Rekayasa Dirgantara): sisi struktur yang tidak disentuh simulator ini — bagaimana retak kelelahan logam (metal fatigue) di badan pesawat, terutama di sambungan sayap-badan dan dudukan mesin, dihitung dan dikendalikan.</li>
+      <li><a href="saffat-yaqbidn-terbang-burung.html" target="_blank" rel="noopener">Ṣāffāt wa Yaqbiḍn — Struktur &amp; Gerak Terbang Burung</a> (Laboratorium Bahasa &amp; Alam): sudut pandang berbeda soal terbang — biomekanika kepakan sayap burung (bilangan Strouhal), disandingkan dengan dua bentuk kata berbeda dalam QS. Al-Mulk (67):19.</li>
+    </ul>
+  </div>
+
+  <div class="print-summary" id="printSummary"></div>
+
+  </div>
+  <!-- /tabPistonPanel -->
+
+  <div id="tabJetPanel" class="tab-panel">
+
+  <div class="tour-cta" id="jetTourCta">
+    <div class="tour-cta-text">
+      <span class="lbl">MODE BELAJAR</span>
+      <p>Belum familiar dengan anatomi pesawat jet? Ikuti tur 8 langkah dari inti mesin (siklus Brayton) sampai sistem pendukung modern.</p>
+    </div>
+    <button class="tour-start-btn" id="jetTourStartBtn">🎓 Mulai Tur Terpandu</button>
+  </div>
+
+  <div class="classify-box jet-classify">
+    <b>Klasifikasi yang dipakai:</b> pesawat latihan jet bermesin turbojet tunggal, mirip pesawat latihan lanjutan (advanced jet trainer) seperti yang dipakai setelah lulus dari pesawat piston. Dipilih justru untuk membuka hal-hal yang <i>tidak ada</i> di tab Piston: siklus termodinamika Brayton (bukan Otto), roda pendaratan yang bisa dilipat lewat sistem hidrolik, kabin bertekanan, dan komputer kendali mesin digital (FADEC). <b>Catatan:</b> ini masih tahap anatomi dasar — tur belajar, kuis, simulasi terbang, dan suara mesin untuk tab ini menyusul di sesi berikutnya, mengikuti pola pengembangan tab Piston.
+  </div>
+
+  <div class="controlbar">
+    <div class="searchbox">
+      <input type="text" id="jetSearchInput" placeholder="Cari komponen jet (mis. kompresor, turbin, hidrolik)..." autocomplete="off">
+      <div class="suggestions" id="jetSuggestions"></div>
+    </div>
+    <div class="ignition">
+      <span class="lamp" id="jetLampMaster"></span>
+      <button id="jetIgnitionBtn">Nyalakan Mesin (Starter-Generator)</button>
+    </div>
+  </div>
+
+  <div class="gauges" id="jetGauges">
+    <span>N1 (Kompresor): <b id="jetN1Readout">0%</b></span>
+    <span>EGT (Suhu Gas Buang): <b id="jetEgtReadout">20°C</b></span>
+    <span>Ketinggian Kabin: <b id="jetCabinReadout">— ft</b></span>
+    <span>Performa: <b id="jetPowerReadout">100%</b></span>
+  </div>
+
+  <div class="status-line" id="jetStatusLine">Mesin mati. Tekan <b>Nyalakan Mesin</b> untuk memulai.</div>
+
+  <div class="scenario-block">
+    <span class="lbl">SKENARIO SIAP PAKAI</span>
+    <div class="scenario-grid" id="jetScenarioGrid"></div>
+    <button class="scenario-reset-btn" id="jetScenarioResetBtn">↺ Kembalikan ke Normal</button>
+    <div class="chips-row" id="jetChipsRow"></div>
+  </div>
+
+  <div class="grid">
+    <div class="stage">
+      <svg class="jetplane" viewBox="0 0 900 420" xmlns="http://www.w3.org/2000/svg">
+        <!-- roda pendaratan (dekoratif, tricycle, bisa dilipat) -->
+        <line class="gearline" x1="330" y1="315" x2="320" y2="358"/>
+        <circle class="wheel" cx="320" cy="365" r="13"/>
+        <line class="gearline" x1="560" y1="318" x2="575" y2="360"/>
+        <circle class="wheel" cx="575" cy="367" r="13"/>
+        <line class="gearline" x1="200" y1="300" x2="185" y2="345"/>
+        <circle class="wheel" cx="185" cy="352" r="11"/>
+
+        <!-- badan pesawat jet: hidung lancip, badan silinder ramping -->
+        <path class="fuselage" d="M95,262 L235,232 L610,232 C655,232 682,246 696,262 C682,278 655,292 610,292 L235,292 L95,262 Z"/>
+        <ellipse class="jet-intake" cx="98" cy="262" rx="9" ry="19"/>
+        <circle class="jet-nozzle" cx="694" cy="262" r="15"/>
+        <text class="tailtext" x="250" y="266">N-JT2</text>
+
+        <!-- kanopi kokpit -->
+        <path class="jet-canopy" d="M260,232 C285,198 335,195 375,205 C355,222 320,232 285,235 Z"/>
+
+        <!-- sayap kecil menyapu -->
+        <polygon class="wing" points="330,222 470,192 508,194 400,232"/>
+
+        <!-- ekor bentuk T: sirip vertikal + stabilizer horizontal di puncaknya -->
+        <polygon class="tailpart" points="598,232 655,155 674,155 636,232"/>
+        <rect class="tailpart" x="628" y="150" width="72" height="9" rx="2"/>
+
+        <!-- hotspot komponen -->
+        <g class="hotspot" data-id="kompresor" tabindex="0"><circle class="badge-bg" cx="150" cy="262" r="16"/><text class="badge-num" x="150" y="267">1</text></g>
+        <g class="hotspot" data-id="ruang-bakar" tabindex="0"><circle class="badge-bg" cx="330" cy="262" r="16"/><text class="badge-num" x="330" y="267">2</text></g>
+        <g class="hotspot" data-id="turbin" tabindex="0"><circle class="badge-bg" cx="480" cy="262" r="16"/><text class="badge-num" x="480" y="267">3</text></g>
+        <g class="hotspot" data-id="nozzle" tabindex="0"><circle class="badge-bg" cx="640" cy="262" r="16"/><text class="badge-num" x="640" y="267">4</text></g>
+        <g class="hotspot" data-id="roda-retract" tabindex="0"><circle class="badge-bg" cx="320" cy="340" r="16"/><text class="badge-num" x="320" y="345">5</text></g>
+        <g class="hotspot" data-id="sistem-hidrolik" tabindex="0"><circle class="badge-bg" cx="440" cy="310" r="16"/><text class="badge-num" x="440" y="315">6</text></g>
+        <g class="hotspot" data-id="kabin-tekan" tabindex="0"><circle class="badge-bg" cx="300" cy="262" r="16"/><text class="badge-num" x="300" y="267">7</text></g>
+        <g class="hotspot" data-id="fadec" tabindex="0"><circle class="badge-bg" cx="290" cy="215" r="16"/><text class="badge-num" x="290" y="220">8</text></g>
+      </svg>
+    </div>
+    <div class="panel" id="jetPanel">
+      <p class="panel-empty">Klik salah satu nomor di gambar pesawat jet untuk melihat penjelasan komponennya.</p>
+    </div>
+  </div>
+
+  <div class="roadmap">
+    <b>Status tab Jet:</b> anatomi dasar (8 komponen) + tur belajar bertahap (2 tahap: Inti Mesin Jet, Sistem Pendukung Modern) + skenario + start/stop sederhana. Menyusul: kuis diagnostik, diagnosa terbalik, simulasi terbang, suara mesin, dan livery — mengikuti persis pola pengembangan tab Piston, dikerjakan bertahap di sesi-sesi berikutnya.
+  </div>
+
+  </div>
+  <!-- /tabJetPanel -->
+</div>
+
+<div class="tour-bar" id="tourBar">
+  <div class="tour-info">
+    <span class="tour-stage" id="tourStage"></span>
+    <span class="tour-step-count" id="tourStepCount"></span>
+  </div>
+  <div class="tour-dots" id="tourDots"></div>
+  <div class="tour-nav">
+    <button id="tourPrevBtn">← Sebelumnya</button>
+    <button id="tourNextBtn">Berikutnya →</button>
+    <button id="tourExitBtn" title="Keluar dari tur">✕ Keluar</button>
+  </div>
+</div>
+
+<div class="tour-bar" id="jetTourBar">
+  <div class="tour-info">
+    <span class="tour-stage" id="jetTourStage"></span>
+    <span class="tour-step-count" id="jetTourStepCount"></span>
+  </div>
+  <div class="tour-dots" id="jetTourDots"></div>
+  <div class="tour-nav">
+    <button id="jetTourPrevBtn">← Sebelumnya</button>
+    <button id="jetTourNextBtn">Berikutnya →</button>
+    <button id="jetTourExitBtn" title="Keluar dari tur">✕ Keluar</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const componentData = {
+    tangki:{ name:"Tangki Bahan Bakar (di Sayap)", fungsi:"Menyimpan bahan bakar (avgas) di kedua sayap dan mengalirkannya ke mesin memakai gaya gravitasi, karena posisi tangki lebih tinggi dari mesin.", efek:"Kotoran/air dalam tangki, kebocoran, atau selector bahan bakar salah posisi bisa membuat mesin tersendat atau mati total saat terbang.", impact:30, gejala:["Mesin tersendat-sendat lalu mati sendiri di tengah penerbangan santai.","Indikator bahan bakar menunjukkan cukup, tapi mesin tetap kehilangan tenaga tiba-tiba."], sains:"Aliran gravitasi ini contoh sederhana tekanan hidrostatis dalam fisika fluida — beda ketinggian saja sudah cukup mendorong cairan mengalir tanpa pompa, prinsip yang sama dipakai infus rumah sakit dan menara air kota." },
+    karburator:{ name:"Karburator / Sistem Injeksi Bahan Bakar", fungsi:"Mencampur udara dan bahan bakar dengan rasio yang tepat sebelum masuk ke silinder.", efek:"Campuran terlalu kurus atau kaya menurunkan tenaga; karburator juga rawan 'icing' di udara dingin-lembab yang bisa membuat RPM turun tiba-tiba.", impact:25, gejala:["RPM tiba-tiba turun drastis tanpa peringatan saat cuaca dingin dan lembap.","Mesin terasa 'kurus' — tenaga kurang padahal tuas gas sudah dibuka penuh."], sains:"Karburator bekerja lewat efek Venturi (turunan prinsip Bernoulli) — udara yang dipercepat melewati penyempitan pipa tekanannya turun, otomatis menyedot bahan bakar masuk. 'Icing' terjadi karena penurunan tekanan itu juga menurunkan suhu drastis (hukum gas ideal), cukup untuk membekukan uap air di udara lembap." },
+    silinder:{ name:"Silinder &amp; Piston", fungsi:"Ruang pembakaran tempat energi bahan bakar diubah menjadi gerak piston naik-turun, yang memutar poros engkol dan akhirnya baling-baling.", efek:"Kebocoran kompresi menurunkan tenaga secara signifikan, menimbulkan getaran tidak wajar, dan bisa membuat satu silinder berhenti bekerja.", impact:35, gejala:["Getaran mesin terasa tidak wajar disertai tenaga yang turun jauh.","Satu bagian mesin terasa 'pincang', seolah tidak ikut bekerja."], sains:"Ini penerapan langsung siklus Otto dalam termodinamika — energi kimia bahan bakar diubah jadi energi panas lewat pembakaran, lalu jadi energi mekanik lewat gerak piston, mengikuti hukum kekekalan energi yang sama yang berlaku di seluruh alam semesta." },
+    klep:{ name:"Klep &amp; Noken As", fungsi:"Mengatur buka-tutup jalur udara masuk dan gas buang secara presisi mengikuti putaran mesin.", efek:"Klep bocor atau telat menutup menurunkan kompresi dan tenaga, serta membuat suara mesin kasar.", impact:20, gejala:["Suara mesin terdengar kasar dan tenaga berkurang meski sistem lain normal.","Kompresi terasa lemah saat mesin dites di darat sebelum terbang."], sains:"Soal mekanika sederhana — noken as berbentuk elips (bukan bulat sempurna) mengubah gerak putar jadi gerak naik-turun klep tepat pada waktunya, prinsip cam mekanik yang sama dipakai di banyak mesin dan mekanisme lain." },
+    busi:{ name:"Busi (Ganda per Silinder)", fungsi:"Memercikkan api untuk membakar campuran udara-bahan bakar. Pesawat memakai dua busi per silinder demi keandalan (redundansi).", efek:"Satu busi kotor masih bisa terbang dengan tenaga berkurang; kedua busi mati di satu silinder membuat silinder itu berhenti bekerja sama sekali.", impact:15, gejala:["Mesin masih hidup tapi tenaganya terasa kurang penuh meski RPM tampak normal.","Salah satu silinder terasa tidak ikut menyala saat mesin dites di darat."], sains:"Percikan busi adalah peristiwa kelistrikan murni — tegangan tinggi memaksa udara yang biasanya bersifat isolator untuk 'tembus' (dielectric breakdown) dan menghantarkan listrik sesaat. Ini fenomena yang sama persis dengan petir, hanya jauh lebih kecil skalanya." },
+    magneto:{ name:"Magneto Pengapian (Ganda)", fungsi:"Menghasilkan listrik sendiri dari putaran mesin untuk memercikkan busi — sengaja dibuat tidak bergantung pada aki, demi keandalan jika kelistrikan pesawat gagal total di udara.", efek:"Satu magneto rusak membuat RPM turun saat dites tapi mesin tetap hidup; kedua magneto rusak membuat mesin mati total.", impact:30, gejala:["RPM anjlok tajam saat pilot menguji sisi Kiri atau Kanan secara terpisah sebelum lepas landas.","Mesin mati total mendadak padahal aki dan bahan bakar dalam kondisi baik."], sains:"Magneto adalah aplikasi langsung induksi elektromagnetik yang dirumuskan Michael Faraday — magnet yang berputar dekat kumparan kawat membangkitkan listrik dari gerakan itu sendiri, tanpa baterai sama sekali." },
+    kunci:{ name:"Saklar Magneto &amp; Master", fungsi:"Mengatur aliran listrik utama pesawat dan memilih magneto mana yang aktif (Off / Kiri / Kanan / Both / Start).", efek:"Saklar aus bisa gagal mematikan magneto sepenuhnya saat posisi Off (berbahaya saat servis baling-baling), atau gagal saat start.", impact:10, gejala:["Mesin tetap hidup meski saklar magneto sudah diposisikan Off saat servis di darat.","Mesin gagal menyala walau starter dan aki dalam kondisi baik."], sains:"Hanya soal rangkaian listrik sederhana — saklar yang menyambung/memutus jalur arus, konsep dasar yang sama dipakai di seluruh perangkat elektronik, dari lampu rumah sampai komputer." },
+    aki:{ name:"Aki (Baterai)", fungsi:"Menyuplai listrik untuk starter, avionik, dan lampu — bukan untuk pengapian utama (itu tugas magneto).", efek:"Aki lemah membuat starter lemah atau mesin sulit dihidupkan, dan avionik/radio bisa mati. Mesin yang sudah menyala tetap jalan normal.", impact:10, gejala:["Starter berputar lemah dan mesin susah dihidupkan pertama kali.","Radio dan lampu kokpit meredup padahal mesin belum dinyalakan."], sains:"Aki menyimpan energi lewat reaksi kimia reversibel (elektrokimia) — saat dipakai, reaksi berjalan satu arah melepaskan elektron; saat diisi ulang, reaksi itu dibalik. Prinsip yang sama dipakai baterai HP dan mobil listrik, hanya beda bahan kimianya." },
+    alternator:{ name:"Alternator / Generator", fungsi:"Mengisi ulang aki dan menyuplai listrik saat mesin menyala.", efek:"Jika gagal, listrik hanya mengandalkan sisa daya aki — lampu dan radio berangsur mati pada penerbangan yang lama.", impact:8, gejala:["Lampu dan radio berangsur meredup setelah terbang cukup lama meski mesin menyala normal.","Indikator pengisian daya menunjukkan tidak ada arus masuk ke aki."], sains:"Kebalikan dari motor listrik — alih-alih listrik menghasilkan gerak, di sini putaran mesin menghasilkan listrik lewat induksi elektromagnetik yang sama seperti magneto, hanya dioptimalkan untuk mengisi aki, bukan memercik busi." },
+    starter:{ name:"Motor Starter", fungsi:"Memutar poros engkol pertama kali agar mesin bisa menyala.", efek:"Jika rusak, mesin tidak bisa dihidupkan memakai starter listrik sama sekali.", impact:5, gejala:["Mesin sama sekali tidak berputar saat tombol starter ditekan.","Terdengar bunyi klik dari motor starter tapi poros engkol tidak ikut berputar."], sains:"Motor listrik sederhana — arus yang melewati kumparan dalam medan magnet menghasilkan gaya (gaya Lorentz), yang memutar poros. Prinsip fisika yang sama berlaku di semua motor listrik, dari starter mobil sampai kipas angin." },
+    oli:{ name:"Sistem Pelumasan &amp; Pendingin Oli", fungsi:"Melumasi dan mendinginkan komponen mesin yang didinginkan udara, sekaligus jadi indikator kesehatan mesin lewat tekanan dan suhu oli.", efek:"Oli kurang atau bocor membuat suhu mesin naik cepat, dengan risiko mesin macet (seize) jika diabaikan.", impact:25, gejala:["Suhu mesin naik cepat dan tekanan oli terus turun selama penerbangan.","Indikator oli menyala peringatan padahal RPM dan bahan bakar normal."], sains:"Soal mekanika fluida & perpindahan panas — oli mengurangi gesekan lewat lapisan tipis yang memisahkan permukaan logam (pelumasan hidrodinamik), sekaligus membawa panas keluar lewat konveksi." },
+    baling:{ name:"Baling-Baling (Propeller)", fungsi:"Mengubah putaran mesin menjadi daya dorong (thrust) yang menerbangkan pesawat.", efek:"Rusak atau tidak seimbang menimbulkan getaran hebat dan daya dorong berkurang drastis, bahkan pada putaran mesin tinggi.", impact:35, gejala:["Getaran hebat terasa di seluruh badan pesawat bahkan pada RPM tinggi.","Daya dorong terasa lemah padahal RPM mesin sudah maksimal."], sains:"Baling-baling menghasilkan dorongan lewat Hukum Newton III (aksi-reaksi) — ia mendorong udara ke belakang, udara mendorong balik pesawat ke depan. Bentuk bilahnya memakai prinsip airfoil yang sama dengan sayap pesawat, dibahas lebih dalam di simulator 'Andai Ibn Firnas' pada bacaan lanjutan." },
+    kemudi:{ name:"Permukaan Kendali Terbang (Aileron, Elevator, Rudder)", fungsi:"Tiga bidang gerak yang mengendalikan arah pesawat: aileron di sayap untuk berguling, elevator di ekor untuk naik-turun hidung, rudder di sirip ekor untuk berbelok arah hidung. Digerakkan lewat kabel/batang dari kemudi di kokpit, bukan oleh mesin.", efek:"Engsel aus atau kabel kendor membuat kemudi terasa berat/kurang responsif dan pesawat sulit dikendalikan presisi; kerusakan parah bisa membuat satu bidang macet total.", impact:15, gejala:["Kemudi terasa berat dan responsnya lambat saat mencoba berbelok.","Pesawat sulit dikendalikan presisi meski mesin bekerja normal."], sains:"Permukaan kendali bekerja dengan mengubah bentuk aliran udara di sekitarnya, menciptakan beda tekanan yang menghasilkan gaya (Bernoulli & Newton III bekerja bersama) — persis prinsip yang membuat ketiadaan ekor jadi sebab utama kegagalan pendaratan Ibn Firnas." },
+    roda:{ name:"Roda Pendaratan (Landing Gear)", fungsi:"Tiga roda tetap (satu di hidung, dua di badan/sayap) yang menopang pesawat di darat serta meredam benturan saat mendarat.", efek:"Ban aus/tekanan kurang membuat pengereman tidak stabil di landasan; peredam kejut rusak membuat pendaratan terasa keras dan berisiko merusak struktur.", impact:12, gejala:["Pengereman di landasan terasa tidak stabil dan pesawat bergeser saat mendarat.","Pendaratan terasa keras dan mengejutkan meski kecepatan sudah pelan."], sains:"Peredam kejut bekerja lewat prinsip pegas & redaman (damping) dalam mekanika — energi benturan diserap dan dilepas perlahan, bukan dipantulkan langsung. Prinsip yang sama dipakai suspensi mobil dan sol sepatu olahraga." }
+  };
+
+  const scenarios = [
+    { id:'starter-mati', label:'Starter Mati', parts:[{id:'aki',sev:2},{id:'starter',sev:3}], note:'Aki lemah dan starter rusak — mesin tidak mau hidup lewat starter listrik.' },
+    { id:'pincang-magneto', label:'Mesin Pincang Saat Tes Magneto', parts:[{id:'magneto',sev:2},{id:'busi',sev:1}], note:'RPM turun mencolok saat salah satu magneto diuji sendiri-sendiri.' },
+    { id:'overheat-oli', label:'Overheat — Oli Bocor', parts:[{id:'oli',sev:3}], note:'Tekanan oli turun, suhu mesin naik cepat menuju batas bahaya.' },
+    { id:'getaran-baling', label:'Getaran Hebat di Udara', parts:[{id:'baling',sev:3},{id:'silinder',sev:1}], note:'Baling-baling tak seimbang plus kompresi bocor ringan di satu silinder — lihat juga panel Simulasi Terbang, climb jadi lebih berat dari biasanya.' },
+    { id:'kendali-berat', label:'Kendali Berat / Aileron Macet', parts:[{id:'kemudi',sev:3}], note:'Kabel kemudi kendor dan satu bidang kendali macet — pesawat sulit dikendalikan presisi. Perhatikan panel Simulasi Terbang saat fase Angin Silang dan saat melewati turbulensi di Jelajah.' },
+    { id:'ban-pecah', label:'Ban Pecah Saat Mendarat', parts:[{id:'roda',sev:3}], note:'Tekanan ban habis dan peredam kejut rusak — pengereman di landasan tidak stabil. Lihat panel Simulasi Terbang tepat saat pesawat menyentuh landasan.' },
+    { id:'climb-gagal', label:'Climb Gagal — Baling-Baling Rusak', parts:[{id:'baling',sev:3},{id:'magneto',sev:2}], note:'Baling-baling nyaris tak menghasilkan dorongan dan magneto ikut lemah — di panel Simulasi Terbang, climb saat Lepas Landas jadi sangat berat, nyaris gagal naik.' },
+    { id:'pendaratan-darurat', label:'Touch-and-Go Kasar — Kemudi & Roda Bermasalah', parts:[{id:'kemudi',sev:2},{id:'roda',sev:3}], note:'Kemudi berat saat angin silang dan roda pendaratan nyaris gagal — amati panel Simulasi Terbang saat fase Angin Silang, lalu saat pesawat menyentuh landasan di fase Landasan.' },
+    { id:'jelajah-berat', label:'Jelajah Panjang Bermasalah — Oli Panas & Kemudi Limbung', parts:[{id:'oli',sev:2},{id:'kemudi',sev:1}], note:'Suhu oli naik cepat selama jelajah, dan kemudi mulai limbung tiap melewati turbulensi — amati gauge suhu sekaligus panel Simulasi Terbang saat fase Jelajah.' }
+  ];
+
+  const tourSteps = [
+    { id:'tangki', stage:'Tahap 1 — Bahan Bakar Masuk', narasi:'Semua bermula dari tangki di sayap. Karena posisinya lebih tinggi dari mesin, bahan bakar bisa mengalir turun ke mesin hanya dengan gaya gravitasi — tanpa perlu pompa listrik sebagai andalan utama.' },
+    { id:'karburator', stage:'Tahap 1 — Bahan Bakar Masuk', narasi:'Sebelum masuk silinder, bahan bakar dicampur dulu dengan udara dalam rasio yang tepat di sini. Campuran yang pas ini yang nanti dibakar untuk menghasilkan tenaga.' },
+    { id:'kunci', stage:'Tahap 2 — Percikan yang Menyalakan', narasi:'Pilot memilih sumber pengapian lewat saklar ini — Kiri, Kanan, atau Both (keduanya). Posisi "Both" dipakai saat terbang normal supaya dua magneto bekerja sekaligus.' },
+    { id:'magneto', stage:'Tahap 2 — Percikan yang Menyalakan', narasi:'Berbeda dari motor yang bergantung pada aki untuk pengapian, magneto menghasilkan listriknya sendiri dari putaran mesin. Itu sebabnya mesin pesawat tetap bisa menyala walau aki mati total.' },
+    { id:'busi', stage:'Tahap 2 — Percikan yang Menyalakan', narasi:'Listrik dari magneto sampai di sini dan memercikkan api. Ada dua busi per silinder — kalau satu mati, silinder masih bisa menyala dari busi satunya.' },
+    { id:'silinder', stage:'Tahap 3 — Tenaga Diproduksi', narasi:'Percikan membakar campuran udara-bahan bakar di ruang ini, mendorong piston turun-naik. Gerakan inilah yang akhirnya diubah jadi putaran.' },
+    { id:'klep', stage:'Tahap 3 — Tenaga Diproduksi', narasi:'Klep mengatur kapan udara segar masuk dan gas sisa pembakaran keluar, tepat mengikuti irama piston di setiap putaran mesin.' },
+    { id:'oli', stage:'Tahap 3 — Tenaga Diproduksi', narasi:'Semua gesekan logam di dalam mesin didinginkan dan dilumasi oli ini. Tekanan dan suhunya jadi salah satu indikator kesehatan mesin yang paling dipantau pilot.' },
+    { id:'baling', stage:'Tahap 3 — Tenaga Diproduksi', narasi:'Putaran poros engkol akhirnya sampai di sini dan diubah jadi daya dorong (thrust) yang menerbangkan pesawat maju menembus udara.' },
+    { id:'aki', stage:'Tahap 4 — Kelistrikan Pendukung', narasi:'Aki bukan sumber pengapian utama (itu tugas magneto) — perannya menyuplai listrik untuk starter, avionik, dan lampu.' },
+    { id:'alternator', stage:'Tahap 4 — Kelistrikan Pendukung', narasi:'Selama mesin menyala, alternator mengisi ulang aki dan menjaga pasokan listrik tetap stabil untuk seluruh sistem.' },
+    { id:'starter', stage:'Tahap 4 — Kelistrikan Pendukung', narasi:'Sebelum mesin bisa jalan sendiri, motor starter inilah yang pertama kali memutar poros engkol memakai listrik dari aki.' },
+    { id:'kemudi', stage:'Tahap 5 — Kendali & Pendaratan', narasi:'Mesin membuat pesawat maju, tapi arah terbangnya diatur di sini — aileron untuk berguling, elevator untuk naik-turun hidung, rudder untuk berbelok.' },
+    { id:'roda', stage:'Tahap 5 — Kendali & Pendaratan', narasi:'Perjalanan berakhir di roda pendaratan — menopang pesawat di darat dan meredam benturan saat mendarat. Dari sini, alur mesin ke kendali sudah lengkap.' }
+  ];
+
+  const svg = document.querySelector('svg.plane');
+  const panel = document.getElementById('panel');
+  const searchInput = document.getElementById('searchInput');
+  const suggestionsBox = document.getElementById('suggestions');
+  const ignitionBtn = document.getElementById('ignitionBtn');
+  const lampMaster = document.getElementById('lampMaster');
+  const rpmBar = document.getElementById('rpmBar');
+  const rpmSeg = document.getElementById('rpmSeg');
+  const rpmFill = document.getElementById('rpmFill');
+  const rpmReadout = document.getElementById('rpmReadout');
+  const tempFill = document.getElementById('tempFill');
+  const tempReadout = document.getElementById('tempReadout');
+  const powerReadout = document.getElementById('powerReadout');
+  const statusLine = document.getElementById('statusLine');
+  const chipsRow = document.getElementById('chipsRow');
+  const scenarioGrid = document.getElementById('scenarioGrid');
+  const scenarioResetBtn = document.getElementById('scenarioResetBtn');
+  const tourCta = document.getElementById('tourCta');
+  const tourStartBtn = document.getElementById('tourStartBtn');
+  const tourBar = document.getElementById('tourBar');
+  const tourStageEl = document.getElementById('tourStage');
+  const tourStepCountEl = document.getElementById('tourStepCount');
+  const tourDotsEl = document.getElementById('tourDots');
+  const tourPrevBtn = document.getElementById('tourPrevBtn');
+  const tourNextBtn = document.getElementById('tourNextBtn');
+  const tourExitBtn = document.getElementById('tourExitBtn');
+  const quizCta = document.getElementById('quizCta');
+  const quizStartBtn = document.getElementById('quizStartBtn');
+  const quizBlock = document.getElementById('quizBlock');
+  const revCta = document.getElementById('revCta');
+  const revStartBtn = document.getElementById('revStartBtn');
+  const revBlock = document.getElementById('revBlock');
+  const printBtn = document.getElementById('printBtn');
+  const soundToggleBtn = document.getElementById('soundToggleBtn');
+  const handPropBtn = document.getElementById('handPropBtn');
+  const liverySeg = document.getElementById('liverySeg');
+  const shareBtn = document.getElementById('shareBtn');
+  const exportImgBtn = document.getElementById('exportImgBtn');
+  const sharePanel = document.getElementById('sharePanel');
+  const exportPanel = document.getElementById('exportPanel');
+  const printSummary = document.getElementById('printSummary');
+
+  // ---------- Elemen panel simulasi terbang ----------
+  const flightGroundPath = document.getElementById('flightGroundPath');
+  const flightHazardG = document.getElementById('flightHazardG');
+  const flightWindG = document.getElementById('flightWindG');
+  const flightCloudG = document.getElementById('flightCloudG');
+  const flightPlaneG = document.getElementById('flightPlaneG');
+  const flightPlaneTilt = document.getElementById('flightPlaneTilt');
+  const flightPropLine = document.getElementById('flightPropLine');
+  const flightMsg = document.getElementById('flightMsg');
+  const svgFlight = document.getElementById('svgFlight');
+  const flightWarnIcon = document.getElementById('flightWarnIcon');
+  const flightSpeedReadout = document.getElementById('flightSpeedReadout');
+  const flightAltReadout = document.getElementById('flightAltReadout');
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const FLIGHT_SCREEN_X = 160;
+
+  const damaged = new Map();
+  const SEV_LABEL = { 1:'Ringan', 2:'Sedang', 3:'Parah' };
+  const SEV_MULT = { 1:0.4, 2:0.7, 3:1 };
+  let selectedId = null;
+  let engineState = 'off'; // off | starting | running
+  let rpmLevel = 0; // 0 idle, 1 jelajah, 2 penuh
+  const RPM_BASE = { 0:750, 1:2300, 2:2700 };
+  const RPM_FILL = { 0:22, 1:70, 2:96 };
+  let activeScenario = null;
+  let tourActive = false;
+  let tourStep = 0;
+  let quizActive = false;
+  let quizQuestions = [];
+  let quizIndex = 0;
+  let quizScore = 0;
+  let quizAnswered = false;
+  let quizWrongList = [];
+  const QUIZ_LENGTH = 10;
+  let revActive = false;
+  let revCases = [];
+  let revIndex = 0;
+  let revOrder = [];
+  let revAnswered = false;
+  let revScoreSum = 0;
+  let revResults = [];
+
+  function powerLoss(){
+    let loss = 0;
+    damaged.forEach((sev,id) => { loss += componentData[id].impact * SEV_MULT[sev]; });
+    return Math.min(95, Math.round(loss));
+  }
+  function getSev(id){ return damaged.get(id) || 0; }
+
+  // ---------- Start manual "putar baling-baling" (hand-prop) ----------
+  // starter listrik & aki murni soal starter, tidak relevan begitu baling-baling diputar manual (magneto tetap hidup sendiri)
+  const ELECTRIC_ONLY_IDS = ['starter','aki'];
+  function electricStartBlockers(){
+    return ELECTRIC_ONLY_IDS.filter(id => getSev(id) === 3);
+  }
+  function handPropPowerLoss(){
+    let loss = 0;
+    damaged.forEach((sv,id) => {
+      if(ELECTRIC_ONLY_IDS.includes(id)) return;
+      loss += componentData[id].impact * SEV_MULT[sv];
+    });
+    return Math.min(95, Math.round(loss));
+  }
+  function updateHandPropVisibility(){
+    const canOffer = engineState === 'off' && electricStartBlockers().length > 0 && handPropPowerLoss() < 90;
+    handPropBtn.classList.toggle('show', canOffer);
+  }
+
+  // ---------- Livery (skema warna, kosmetik semata — bentuk & anatomi tetap sama) ----------
+  const liveryPalettes = {
+    skematik:  { fuselage:'#20242c', wing:'#242933', tailpart:'#242933', label:'Skematik (X-Ray)' },
+    klasik:    { fuselage:'#d9a441', wing:'#c98f3a', tailpart:'#c98f3a', label:'Klasik Kuning' },
+    aerobatic: { fuselage:'#e8e5dc', wing:'#b03a3a', tailpart:'#b03a3a', label:'Aerobatic Merah-Putih' },
+    patroli:   { fuselage:'#3a5a78', wing:'#e9e6df', tailpart:'#e9e6df', label:'Patroli Biru' }
+  };
+  let currentLivery = 'skematik';
+
+  function applyLivery(key){
+    const pal = liveryPalettes[key] ? key : 'skematik';
+    const c = liveryPalettes[pal];
+    svg.querySelectorAll('.fuselage').forEach(el => { el.style.fill = c.fuselage; });
+    svg.querySelectorAll('.wing').forEach(el => { el.style.fill = c.wing; });
+    svg.querySelectorAll('.tailpart').forEach(el => { el.style.fill = c.tailpart; });
+    currentLivery = pal;
+    liverySeg.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.livery === pal));
+  }
+
+  liverySeg.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => applyLivery(btn.dataset.livery));
+  });
+
+  // ---------- Ringkasan cetak/PDF: 14 komponen ----------
+  function buildPrintSummary(){
+    let stageSeen = '';
+    let itemsHtml = '';
+    tourSteps.forEach((step, idx) => {
+      const c = componentData[step.id];
+      if(!c) return;
+      if(step.stage !== stageSeen){
+        stageSeen = step.stage;
+        itemsHtml += `<div class="ps-stage">${stageSeen}</div>`;
+      }
+      itemsHtml += `
+        <div class="ps-item">
+          <div class="ps-item-head">
+            <span class="ps-num">${String(idx+1).padStart(2,'0')}</span>
+            <span class="ps-name">${c.name}</span>
+          </div>
+          <p class="ps-fungsi">${c.fungsi}</p>
+          <p class="ps-row"><b>Jika rusak:</b> ${c.efek}</p>
+          <p class="ps-row" style="margin-bottom:1px;"><b>Gejala umum:</b></p>
+          <ul class="ps-gejala">${c.gejala.map(g => `<li>${g}</li>`).join('')}</ul>
+          <p class="ps-row" style="margin-top:4px;"><b>Sains di baliknya:</b> ${c.sains}</p>
+        </div>`;
+    });
+
+    const scenarioHtml = scenarios.map(s => `
+      <div class="ps-scen-item">
+        <div class="ps-scen-label">${s.label}</div>
+        <div class="ps-scen-ids">Komponen: ${s.parts.map(p => `${componentData[p.id].name} (${SEV_LABEL[p.sev]})`).join(', ')}</div>
+        <p class="ps-scen-desc">${s.note}</p>
+      </div>`).join('');
+
+    printSummary.innerHTML = `
+      <div class="ps-header">
+        <div class="ps-kicker">PROYEK JAZMI — LEMBAR REFERENSI CETAK</div>
+        <h1>Ringkasan 14 Komponen Pesawat Latihan Bermesin Piston Tunggal</h1>
+        <p>Disusun mengikuti urutan alur kerja pesawat sungguhan — dari bahan bakar masuk sampai tenaga sampai ke kendali &amp; pendaratan. Cocok dibawa sebagai catatan cepat saat belajar.</p>
+      </div>
+      ${itemsHtml}
+      <div class="ps-scenarios">
+        <h2>Skenario Kerusakan Umum (Referensi Cepat)</h2>
+        <p>Kombinasi kerusakan yang paling sering dipakai untuk latihan, beserta komponen yang paling mungkin jadi penyebabnya.</p>
+        ${scenarioHtml}
+      </div>
+      <div class="ps-footer">Dicetak dari simulator interaktif JAZMI — Anatomi &amp; Simulasi Pesawat Terbang.</div>
+    `;
+  }
+
+  printBtn.addEventListener('click', () => {
+    buildPrintSummary();
+    window.print();
+  });
+
+  // ---------- Bagikan Kondisi Simulasi ----------
+  const rpmLabelGas = ['Idle', 'Jelajah', 'Penuh'];
+
+  function buildShareURL(){
+    const params = new URLSearchParams();
+    if(damaged.size) params.set('d', [...damaged.entries()].map(([id,lvl]) => `${id}:${lvl}`).join(','));
+    if(rpmLevel) params.set('rpm', rpmLevel);
+    if(currentLivery !== 'skematik') params.set('livery', currentLivery);
+    const base = location.origin + location.pathname;
+    const qs = params.toString();
+    return qs ? `${base}?${qs}` : base;
+  }
+
+  function renderSharePanel(){
+    const url = buildShareURL();
+    const list = [...damaged.keys()].map(id => componentData[id].name);
+    const summary = list.length
+      ? `Kerusakan aktif: <b>${list.join(', ')}</b>.`
+      : 'Tidak ada kerusakan aktif — kondisi pesawat normal.';
+    sharePanel.innerHTML = `
+      <span class="lbl">BAGIKAN KONDISI SIMULASI</span>
+      <p class="share-summary">${summary} Posisi gas: <b>${rpmLabelGas[rpmLevel]}</b>. Livery: <b>${liveryPalettes[currentLivery].label}</b>. Siapa pun yang membuka tautan ini akan langsung melihat kondisi yang sama — mesin dimulai dalam keadaan mati, tinggal ditekan "Nyalakan Mesin".</p>
+      <div class="share-row">
+        <input type="text" class="share-input" id="shareUrlInput" value="${url}" readonly>
+        <button class="share-copy-btn" id="shareCopyBtn">Salin Tautan</button>
+      </div>
+    `;
+    const urlInput = document.getElementById('shareUrlInput');
+    urlInput.addEventListener('focus', () => urlInput.select());
+    document.getElementById('shareCopyBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('shareCopyBtn');
+      try{
+        await navigator.clipboard.writeText(url);
+      }catch(err){
+        urlInput.select();
+        document.execCommand('copy');
+      }
+      btn.textContent = 'Tersalin ✓';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Salin Tautan'; btn.classList.remove('copied'); }, 1800);
+    });
+  }
+
+  shareBtn.addEventListener('click', () => {
+    const willOpen = !sharePanel.classList.contains('open');
+    if(willOpen) renderSharePanel();
+    sharePanel.classList.toggle('open', willOpen);
+  });
+
+  // ---------- Ekspor Gambar (berbagai ekstensi, dengan bingkai dekoratif) ----------
+  const frameStyles = {
+    klasik:   { label:'Klasik Bergaris Emas' },
+    ornamen:  { label:'Berornamen Roda Gigi' },
+    polos:    { label:'Polos Minimalis' }
+  };
+  const formatOptions = {
+    png:  { label:'PNG',  mime:'image/png',  ext:'png' },
+    jpeg: { label:'JPEG', mime:'image/jpeg', ext:'jpg' },
+    webp: { label:'WEBP', mime:'image/webp', ext:'webp' },
+    svg:  { label:'SVG (vektor)', mime:null, ext:'svg' }
+  };
+  let selectedFrame = 'klasik';
+  let selectedFormat = 'png';
+
+  function renderExportPanel(){
+    const dmg = [...damaged.keys()].map(id => componentData[id].name);
+    const summary = dmg.length
+      ? `Kerusakan aktif akan ikut tergambar: <b>${dmg.join(', ')}</b>.`
+      : 'Diagram akan diekspor dalam kondisi normal (tidak ada kerusakan aktif).';
+    exportPanel.innerHTML = `
+      <span class="lbl">EKSPOR DIAGRAM SEBAGAI GAMBAR</span>
+      <p class="export-summary">${summary} Cocok untuk disimpan sebagai gambar referensi, dibagikan, atau dicetak sebagai poster kecil — bukan dokumen data seperti ringkasan cetak, tapi tampilan visualnya.</p>
+      <div class="frame-seg" id="formatSeg">
+        ${Object.entries(formatOptions).map(([key, f]) => `<button data-format="${key}" class="${key === selectedFormat ? 'active' : ''}">${f.label}</button>`).join('')}
+      </div>
+      <div class="frame-seg" id="frameSeg">
+        ${Object.entries(frameStyles).map(([key, f]) => `<button data-frame="${key}" class="${key === selectedFrame ? 'active' : ''}">${f.label}</button>`).join('')}
+      </div>
+      <p class="export-summary" id="svgFrameNote" style="display:${selectedFormat === 'svg' ? 'block' : 'none'};margin-top:-4px;">Catatan: format SVG diekspor sebagai vektor bersih tanpa bingkai dekoratif kanvas (bingkai di atas hanya berlaku untuk PNG/JPEG/WEBP).</p>
+      <label class="export-opt-row"><input type="checkbox" id="exportTitleChk" checked> Sertakan judul di bagian atas gambar</label>
+      <button class="export-download-btn" id="exportDownloadBtn">Unduh ${formatOptions[selectedFormat].label}</button>
+    `;
+    exportPanel.querySelectorAll('#formatSeg button').forEach(b => {
+      b.addEventListener('click', () => {
+        selectedFormat = b.dataset.format;
+        renderExportPanel();
+      });
+    });
+    exportPanel.querySelectorAll('#frameSeg button').forEach(b => {
+      b.addEventListener('click', () => {
+        selectedFrame = b.dataset.frame;
+        exportPanel.querySelectorAll('#frameSeg button').forEach(x => x.classList.toggle('active', x.dataset.frame === selectedFrame));
+      });
+    });
+    document.getElementById('exportDownloadBtn').addEventListener('click', doExportImage);
+  }
+
+  function drawDiamond(ctx, cx, cy, s, color){
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(Math.PI / 4);
+    ctx.fillStyle = color;
+    ctx.fillRect(-s/2, -s/2, s, s);
+    ctx.restore();
+  }
+
+  function drawRivet(ctx, cx, cy, r, color, ringColor){
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = ringColor;
+    ctx.stroke();
+  }
+
+  function drawFrame(ctx, style, fx, fy, fw, fh){
+    const gold = '#c9a24b', goldSoft = '#e3c988', dim = '#5a5238';
+    if(style === 'polos'){
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = gold;
+      ctx.strokeRect(fx, fy, fw, fh);
+      return;
+    }
+    if(style === 'klasik'){
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = gold;
+      ctx.strokeRect(fx, fy, fw, fh);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = goldSoft;
+      ctx.strokeRect(fx + 8, fy + 8, fw - 16, fh - 16);
+      [[fx, fy], [fx + fw, fy], [fx, fy + fh], [fx + fw, fy + fh]].forEach(([cx, cy]) => {
+        drawDiamond(ctx, cx, cy, 16, gold);
+        drawDiamond(ctx, cx, cy, 7, goldSoft);
+      });
+      return;
+    }
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = gold;
+    ctx.strokeRect(fx, fy, fw, fh);
+    const step = 26;
+    for(let x = fx + step / 2; x < fx + fw; x += step){
+      drawRivet(ctx, x, fy, 4.5, goldSoft, dim);
+      drawRivet(ctx, x, fy + fh, 4.5, goldSoft, dim);
+    }
+    for(let y = fy + step / 2; y < fy + fh; y += step){
+      drawRivet(ctx, fx, y, 4.5, goldSoft, dim);
+      drawRivet(ctx, fx + fw, y, 4.5, goldSoft, dim);
+    }
+    [[fx, fy], [fx + fw, fy], [fx, fy + fh], [fx + fw, fy + fh]].forEach(([cx, cy]) => {
+      drawRivet(ctx, cx, cy, 7, gold, dim);
+    });
+  }
+
+  function buildStyledSvgString(includeTitle, vbW, vbH){
+    const cssText = document.querySelector('style').textContent;
+    const clone = svg.cloneNode(true);
+    clone.setAttribute('width', vbW);
+    clone.setAttribute('height', vbH);
+    const styleEl = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+    styleEl.textContent = cssText;
+    clone.insertBefore(styleEl, clone.firstChild);
+    if(includeTitle){
+      const titleEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      titleEl.setAttribute('x', vbW / 2);
+      titleEl.setAttribute('y', 26);
+      titleEl.setAttribute('text-anchor', 'middle');
+      titleEl.setAttribute('font-family', 'sans-serif');
+      titleEl.setAttribute('font-weight', 'bold');
+      titleEl.setAttribute('font-size', '20');
+      titleEl.setAttribute('fill', '#c9a24b');
+      titleEl.textContent = 'JAZMI — Anatomi & Simulasi Pesawat Terbang';
+      clone.appendChild(titleEl);
+    }
+    return new XMLSerializer().serializeToString(clone);
+  }
+
+  function doExportImage(){
+    const btn = document.getElementById('exportDownloadBtn');
+    const includeTitle = document.getElementById('exportTitleChk').checked;
+    const vbW = 900, vbH = 420;
+    const fmt = formatOptions[selectedFormat];
+
+    if(selectedFormat === 'svg'){
+      const svgString = buildStyledSvgString(includeTitle, vbW, vbH);
+      const blob = new Blob([svgString], { type:'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `jazmi-diagram-pesawat-terbang.svg`;
+      a.click();
+      URL.revokeObjectURL(url);
+      btn.textContent = 'Terunduh ✓';
+      btn.classList.add('done');
+      setTimeout(() => { btn.textContent = `Unduh ${fmt.label}`; btn.classList.remove('done'); }, 1800);
+      return;
+    }
+
+    const scale = 2;
+    const pad = 70;
+    const titleH = includeTitle ? 54 : 0;
+    const svgString = buildStyledSvgString(false, vbW, vbH);
+    const dataUri = 'data:image/svg+xml;charset=utf-8;base64,' + btoa(unescape(encodeURIComponent(svgString)));
+
+    const img = new Image();
+    img.onload = () => {
+      const canvasW = vbW + pad * 2;
+      const canvasH = vbH + pad * 2 + titleH;
+      const canvas = document.createElement('canvas');
+      canvas.width = canvasW * scale;
+      canvas.height = canvasH * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(scale, scale);
+
+      ctx.fillStyle = '#12151a';
+      ctx.fillRect(0, 0, canvasW, canvasH);
+
+      if(includeTitle){
+        ctx.fillStyle = '#c9a24b';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('JAZMI — Anatomi & Simulasi Pesawat Terbang', canvasW / 2, 32);
+        ctx.fillStyle = '#9aa1ad';
+        ctx.font = '12px sans-serif';
+        ctx.fillText('Diagram komponen pesawat latihan bermesin piston tunggal', canvasW / 2, 50);
+      }
+
+      ctx.fillStyle = '#20242c';
+      ctx.fillRect(pad, pad + titleH, vbW, vbH);
+      ctx.drawImage(img, pad, pad + titleH, vbW, vbH);
+
+      drawFrame(ctx, selectedFrame, pad - 20, pad + titleH - 20, vbW + 40, vbH + 40);
+
+      canvas.toBlob(blob => {
+        if(!blob){
+          btn.textContent = 'Format tak didukung browser';
+          setTimeout(() => { btn.textContent = `Unduh ${fmt.label}`; }, 2000);
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `jazmi-diagram-pesawat-terbang-${selectedFrame}.${fmt.ext}`;
+        a.click();
+        URL.revokeObjectURL(url);
+        btn.textContent = 'Terunduh ✓';
+        btn.classList.add('done');
+        setTimeout(() => { btn.textContent = `Unduh ${fmt.label}`; btn.classList.remove('done'); }, 1800);
+      }, fmt.mime, fmt.mime === 'image/jpeg' ? 0.92 : undefined);
+    };
+    img.onerror = () => {
+      btn.textContent = 'Gagal, coba lagi';
+      setTimeout(() => { btn.textContent = `Unduh ${fmt.label}`; }, 1800);
+    };
+    img.src = dataUri;
+  }
+
+  exportImgBtn.addEventListener('click', () => {
+    const willOpen = !exportPanel.classList.contains('open');
+    if(willOpen) renderExportPanel();
+    exportPanel.classList.toggle('open', willOpen);
+  });
+
+  // ---------- Muat kondisi dari tautan yang dibagikan ----------
+  function applyJumpFromURL(params){
+    const jumpId = params.get('jump');
+    if(!jumpId || !componentData[jumpId]) return false;
+    selectComponent(jumpId);
+    const el = svg.querySelector(`.hotspot[data-id="${jumpId}"]`);
+    if(el && el.scrollIntoView) el.scrollIntoView({ behavior:'smooth', block:'center' });
+    return true;
+  }
+
+  function applyStateFromURL(){
+    const params = new URLSearchParams(location.search);
+    const liveryParam = params.get('livery');
+    if(liveryParam && liveryPalettes[liveryParam]) applyLivery(liveryParam);
+
+    if(!params.has('d') && !params.has('rpm')){
+      if(applyJumpFromURL(params)) history.replaceState(null, '', location.pathname);
+      return;
+    }
+
+    const dParam = params.get('d');
+    if(dParam){
+      dParam.split(',').map(s => s.trim()).filter(Boolean).forEach(entry => {
+        const [id, lvlRaw] = entry.split(':');
+        if(!componentData[id]) return;
+        const lvl = parseInt(lvlRaw, 10);
+        damaged.set(id, (lvl >= 1 && lvl <= 3) ? lvl : 3);
+      });
+    }
+
+    const rpmParam = parseInt(params.get('rpm'), 10);
+    if(!isNaN(rpmParam) && rpmParam >= 0 && rpmParam <= 2){
+      rpmLevel = rpmParam;
+      rpmSeg.querySelectorAll('button').forEach(b => b.classList.toggle('active', parseInt(b.dataset.lvl,10) === rpmLevel));
+    }
+
+    refreshHotspotClasses();
+    renderChips();
+    updateGauges();
+    updateStatusLine();
+
+    applyJumpFromURL(params);
+    history.replaceState(null, '', location.pathname);
+  }
+
+  // ---------- Suara mesin (Web Audio API) ----------
+  let audioEnabled = true;
+  let audioCtx = null, masterGain = null, engineOsc = null, engineOsc2 = null, engineGain = null, engineFilter = null, noiseBuffer = null;
+
+  function ensureAudio(){
+    if(audioCtx || !audioEnabled) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return;
+    audioCtx = new AC();
+
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0.0001;
+    masterGain.connect(audioCtx.destination);
+
+    engineFilter = audioCtx.createBiquadFilter();
+    engineFilter.type = 'lowpass';
+    engineFilter.frequency.value = 500;
+    engineFilter.connect(masterGain);
+
+    engineGain = audioCtx.createGain();
+    engineGain.gain.value = 0.001;
+    engineGain.connect(engineFilter);
+
+    engineOsc = audioCtx.createOscillator();
+    engineOsc.type = 'sawtooth';
+    engineOsc.frequency.value = 40;
+    engineOsc.connect(engineGain);
+    engineOsc.start();
+
+    engineOsc2 = audioCtx.createOscillator();
+    engineOsc2.type = 'square';
+    engineOsc2.frequency.value = 80;
+    const osc2Gain = audioCtx.createGain();
+    osc2Gain.gain.value = 0.35;
+    engineOsc2.connect(osc2Gain);
+    osc2Gain.connect(engineGain);
+    engineOsc2.start();
+
+    const bufferSize = Math.floor(audioCtx.sampleRate * 0.3);
+    noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for(let i=0;i<bufferSize;i++) data[i] = Math.random()*2-1;
+  }
+
+  function setAudioEnabled(on){
+    audioEnabled = on;
+    soundToggleBtn.textContent = on ? '🔊 Suara: Aktif' : '🔇 Suara: Nonaktif';
+    soundToggleBtn.classList.toggle('muted', !on);
+    if(!on && masterGain && audioCtx) masterGain.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.08);
+    else if(on && running()) startEngineAudio();
+  }
+
+  function startEngineAudio(){
+    if(!audioEnabled) return;
+    ensureAudio();
+    if(!audioCtx) return;
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+    masterGain.gain.setTargetAtTime(0.3, audioCtx.currentTime, 0.15);
+  }
+
+  function stopEngineAudio(){
+    if(!audioCtx) return;
+    masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+    masterGain.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.22);
+  }
+
+  // dipanggil tiap frame lewat flightTick saat mesin hidup: deru mengikuti putaran baling-baling + RPM + gejala pincang
+  function updateEngineAudio(propAngle, rpmLvl){
+    if(!audioEnabled || !audioCtx || !running()) return;
+    const now = audioCtx.currentTime;
+    const baseFreq = [40, 62, 98][rpmLvl];
+    engineOsc.frequency.setTargetAtTime(baseFreq, now, 0.06);
+    engineOsc2.frequency.setTargetAtTime(baseFreq * 2.02, now, 0.06);
+    engineFilter.frequency.setTargetAtTime(360 + rpmLvl * 500, now, 0.08);
+
+    // denyut mengikuti satu putaran baling-baling (2 pulsa per putaran, mendekati langkah usaha mesin piston)
+    const pulse = 0.5 + 0.5 * Math.sin((propAngle % 360) * Math.PI/180 * 2);
+    let vol = 0.10 + 0.11 * pulse;
+
+    // pincang: klep atau karburator rusak membuat volume tersendat acak, makin sering sesuai keparahan
+    const brebetChance = Math.max(SEV_MULT[getSev('klep')] || 0, SEV_MULT[getSev('karburator')] || 0) * 0.2;
+    if(brebetChance && Math.random() < brebetChance) vol *= 0.12;
+    engineGain.gain.setTargetAtTime(vol, now, 0.02);
+  }
+
+  // bunyi "kretek-kretek" motor starter berputar sebelum mesin menyala/gagal menyala
+  function playStarterClicks(){
+    if(!audioEnabled) return;
+    ensureAudio();
+    if(!audioCtx) return;
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    const clicks = 5;
+    for(let i=0;i<clicks;i++){
+      const t = audioCtx.currentTime + i*0.16;
+      const osc = audioCtx.createOscillator();
+      osc.type = 'square';
+      osc.frequency.value = 170;
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(0.001, t);
+      g.gain.exponentialRampToValueAtTime(0.4, t + 0.006);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+      osc.connect(g); g.connect(masterGain);
+      osc.start(t); osc.stop(t + 0.08);
+    }
+  }
+
+  soundToggleBtn.addEventListener('click', () => setAudioEnabled(!audioEnabled));
+
+  // bunyi ayunan baling-baling diputar tangan (hand-prop), khas dan berbeda dari kretek starter listrik
+  function playPropSwing(){
+    if(!audioEnabled) return;
+    ensureAudio();
+    if(!audioCtx) return;
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    const swings = 2;
+    for(let i=0;i<swings;i++){
+      const t = audioCtx.currentTime + i*0.45;
+      const src = audioCtx.createBufferSource();
+      src.buffer = noiseBuffer;
+      const bp = audioCtx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.setValueAtTime(180, t);
+      bp.frequency.linearRampToValueAtTime(60, t + 0.35);
+      bp.Q.value = 0.8;
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(0.001, t);
+      g.gain.linearRampToValueAtTime(0.4, t + 0.08);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+      src.connect(bp); bp.connect(g); g.connect(masterGain);
+      src.start(t); src.stop(t + 0.42);
+    }
+  }
+
+  // ---------- Simulasi terbang: sirkuit latihan berulang (touch-and-go) ----------
+  // landas = menyentuh landasan lalu lepas landas lagi, naik = menanjak, jelajah = datar dengan turbulensi,
+  // silang = angin dari samping, turun = pendekatan mendarat — lalu kembali ke landas, berulang terus.
+  const flightSegPattern = [
+    { type:'landas',  len:170, label:'Landasan — Touch and Go' },
+    { type:'naik',    len:230, label:'Lepas Landas — Menanjak' },
+    { type:'jelajah', len:260, label:'Jelajah' },
+    { type:'silang',  len:150, label:'Angin Silang' },
+    { type:'turun',   len:230, label:'Pendekatan — Turun' }
+  ];
+  const flightCycleLen = flightSegPattern.reduce((s,seg) => s+seg.len, 0);
+  const GROUND_LOW = 175;   // dekat pesawat: di landasan
+  const GROUND_HIGH = 215;  // jauh dari pesawat: ketinggian jelajah
+  // titik turbulensi (posisi dunia tetap) di dalam segmen jelajah, dihitung sekali per siklus
+  const turbWorldX = (() => {
+    const pts = []; let cursor = 0;
+    for(const seg of flightSegPattern){
+      if(seg.type === 'jelajah') pts.push(cursor + seg.len*0.3, cursor + seg.len*0.72);
+      cursor += seg.len;
+    }
+    return pts;
+  })();
+
+  function flightSegmentAt(worldX){
+    let m = ((worldX % flightCycleLen) + flightCycleLen) % flightCycleLen;
+    for(const seg of flightSegPattern){
+      if(m < seg.len) return { seg, t: m/seg.len };
+      m -= seg.len;
+    }
+    return { seg: flightSegPattern[0], t: 0 };
+  }
+  // jarak (gap) ground-ke-pesawat di posisi dunia tertentu — makin besar = makin tinggi
+  function flightGap(type, t){
+    if(type === 'landas') return GROUND_LOW;
+    if(type === 'naik') return GROUND_LOW + (GROUND_HIGH-GROUND_LOW)*Math.sin(t*Math.PI/2);
+    if(type === 'turun') return GROUND_HIGH - (GROUND_HIGH-GROUND_LOW)*Math.sin(t*Math.PI/2);
+    return GROUND_HIGH; // jelajah & silang: ketinggian jelajah tetap
+  }
+
+  let flightDistance = 0;
+  let currentFlightSpeed = 0; // knot, dihaluskan tiap frame
+  let flightPropAngle = 0;
+  let flightRafId = null;
+  let flightLastTs = null;
+  let flightRollKick = 0; // dorongan goyang sesaat saat lewat turbulensi/angin silang
+  let flightJustTouchedAt = -Infinity; // waktu (flightDistance) terakhir masuk fase landas dari arah turun
+
+  function thrustFactor(){
+    return Math.max(0.08, 1 - powerLoss()/100);
+  }
+
+  function renderFlightGround(){
+    const step = 25;
+    const pts = [];
+    for(let sx=0; sx<=900; sx+=step){
+      const { seg, t } = flightSegmentAt(flightDistance + sx);
+      pts.push({ x: sx, y: 230 - flightGap(seg.type, t) });
+    }
+    // kurva halus lewat titik-titik sampel (quadratic Bezier antar-titik-tengah), bukan garis lurus patah-patah
+    let d = `M0,230 L0,${pts[0].y.toFixed(1)} L${pts[0].x},${pts[0].y.toFixed(1)}`;
+    for(let i=1; i<pts.length-1; i++){
+      const midX = (pts[i].x + pts[i+1].x)/2;
+      const midY = (pts[i].y + pts[i+1].y)/2;
+      d += ` Q${pts[i].x},${pts[i].y.toFixed(1)} ${midX.toFixed(1)},${midY.toFixed(1)}`;
+    }
+    const last = pts[pts.length-1];
+    d += ` L${last.x},${last.y.toFixed(1)} L900,230 Z`;
+    flightGroundPath.setAttribute('d', d);
+  }
+
+  function renderFlightHazards(){
+    flightHazardG.innerHTML = '';
+    flightWindG.innerHTML = '';
+    const startW = flightDistance - 40, endW = flightDistance + 940;
+    const kMin = Math.floor(startW/flightCycleLen) - 1;
+    const kMax = Math.floor(endW/flightCycleLen) + 1;
+    // ikon awan turbulensi
+    for(let k=kMin; k<=kMax; k++){
+      for(const hx of turbWorldX){
+        const wx = hx + k*flightCycleLen;
+        if(wx < startW || wx > endW) continue;
+        const sx = wx - flightDistance;
+        const g = document.createElementNS(svgNS,'g');
+        g.setAttribute('transform', `translate(${sx.toFixed(1)},48)`);
+        g.setAttribute('opacity','.55');
+        g.innerHTML = `<ellipse cx="0" cy="0" rx="20" ry="8" fill="#c7d2e0"/><ellipse cx="14" cy="-4" rx="13" ry="7" fill="#c7d2e0"/><ellipse cx="-13" cy="-3" rx="12" ry="6" fill="#c7d2e0"/>`;
+        flightHazardG.appendChild(g);
+      }
+    }
+    // panah angin silang di sepanjang segmen 'silang'
+    let cursor = 0;
+    for(let k=kMin; k<=kMax; k++){
+      cursor = 0;
+      for(const seg of flightSegPattern){
+        const segStart = cursor + k*flightCycleLen;
+        cursor += seg.len;
+        if(seg.type !== 'silang') continue;
+        if(segStart+seg.len < startW || segStart > endW) continue;
+        for(let ox=14; ox<seg.len; ox+=48){
+          const wx = segStart+ox;
+          if(wx < startW || wx > endW) continue;
+          const sx = wx - flightDistance;
+          const t = ox/seg.len;
+          const sy = 230 - flightGap('silang', t) - 40;
+          const arrow = document.createElementNS(svgNS,'path');
+          arrow.setAttribute('d', `M${(sx-10).toFixed(1)},${sy.toFixed(1)} l16,5 l-16,5 l4,-5 Z`);
+          arrow.setAttribute('fill','var(--electric)'); arrow.setAttribute('opacity','.5');
+          flightWindG.appendChild(arrow);
+        }
+      }
+    }
+  }
+
+  function renderFlightPlane(dt){
+    const wx = flightDistance + FLIGHT_SCREEN_X;
+    const p1 = flightSegmentAt(wx), p2 = flightSegmentAt(wx+6);
+    const gap1 = flightGap(p1.seg.type, p1.t), gap2 = flightGap(p2.seg.type, p2.t);
+    const climbSlope = (gap2-gap1); // >0 naik (menjauh dari darat), <0 turun
+    const pitch = Math.max(-16, Math.min(16, climbSlope*2.2));
+
+    const kemudiM = SEV_MULT[getSev('kemudi')] || 0;
+    let roll = 0, bobY = 0;
+    if(p1.seg.type === 'silang'){
+      roll = Math.sin(flightDistance*0.05) * (3 + kemudiM*9);
+    }
+    if(p1.seg.type === 'jelajah'){
+      const nearTurb = turbWorldX.some(hx => {
+        const cyc = Math.round((wx-hx)/flightCycleLen);
+        return Math.abs(wx - (hx+cyc*flightCycleLen)) < 26;
+      });
+      if(nearTurb && running()){
+        bobY = (Math.random()-0.5) * (3 + kemudiM*8);
+        roll += (Math.random()-0.5) * (3 + kemudiM*10);
+      }
+    }
+    // guncangan pendaratan kasar kalau roda rusak parah, sesaat setelah menyentuh landasan dari arah turun
+    const rodaM = SEV_MULT[getSev('roda')] || 0;
+    if(p1.seg.type === 'landas' && p1.t < 0.12 && rodaM > 0 && running()){
+      bobY += (Math.random()-0.5) * 5 * rodaM;
+      roll += (Math.random()-0.5) * 4 * rodaM;
+    }
+
+    flightPlaneG.setAttribute('transform', `translate(${FLIGHT_SCREEN_X},${(75+bobY).toFixed(1)})`);
+    flightPlaneTilt.setAttribute('transform', `rotate(${(pitch+roll).toFixed(1)})`);
+    if(running()){
+      flightPropAngle = (flightPropAngle + dt*(0.25 + rpmLevel*0.35)) % 360;
+      flightPropLine.setAttribute('transform', `rotate(${flightPropAngle.toFixed(1)} 32 0)`);
+    }
+  }
+
+  function updateFlightMsg(seg, t){
+    let text = '', isWarn = false;
+    const kemudiM = SEV_MULT[getSev('kemudi')] || 0;
+    const rodaM = SEV_MULT[getSev('roda')] || 0;
+    if(!running()){ text = 'Mesin mati — pesawat diam di landasan.'; }
+    else if(seg.type === 'landas' && t < 0.12 && rodaM >= 1){ text = 'Ban pecah — pendaratan kasar dan pesawat oleng saat menyentuh landasan!'; isWarn = true; }
+    else if(seg.type === 'landas' && t < 0.12 && rodaM > 0){ text = 'Pengereman di landasan terasa tidak stabil.'; isWarn = true; }
+    else if(seg.type === 'naik' && thrustFactor() < 0.45){ text = 'Lepas landas — climb sangat lambat, tenaga tidak cukup.'; isWarn = true; }
+    else if(seg.type === 'silang' && kemudiM >= 1){ text = 'Angin silang — kendali berat, pesawat nyaris sulit dikendalikan.'; isWarn = true; }
+    else if(seg.type === 'silang' && kemudiM > 0){ text = 'Angin silang — kemudi terasa berat.'; isWarn = true; }
+    else if(seg.label){ text = seg.label; }
+    else { text = ''; }
+    flightMsg.textContent = text;
+    flightMsg.classList.toggle('warn', isWarn);
+    flightWarnIcon.classList.toggle('show', isWarn);
+    svgFlight.classList.toggle('warn', isWarn);
+  }
+
+  function renderFlight(dt){
+    renderFlightGround();
+    renderFlightHazards();
+    renderFlightPlane(dt||16);
+  }
+
+  function running(){ return engineState === 'running'; }
+
+  const FLIGHT_SPEED_BY_LEVEL = { 0:22, 1:85, 2:120 }; // knot dasar per posisi gas
+
+  function flightTick(ts){
+    if(!flightLastTs) flightLastTs = ts;
+    const dt = ts - flightLastTs;
+    flightLastTs = ts;
+
+    const factor = running() ? thrustFactor() : 0;
+    const wx = flightDistance + FLIGHT_SCREEN_X;
+    const here = flightSegmentAt(wx);
+    let targetSpeed = FLIGHT_SPEED_BY_LEVEL[rpmLevel] * factor;
+    if(here.seg.type === 'naik'){
+      targetSpeed *= 0.85;
+      if(factor < 0.45) targetSpeed *= 0.5; // climb berat, tenaga kurang
+    } else if(here.seg.type === 'turun'){
+      targetSpeed *= 1.12;
+    }
+    if(!running()) targetSpeed = 0;
+    currentFlightSpeed += (targetSpeed - currentFlightSpeed) * Math.min(1, dt*0.004);
+    if(currentFlightSpeed > 0.3) flightDistance += currentFlightSpeed * dt * 0.02;
+
+    renderFlight(dt);
+    flightSpeedReadout.textContent = Math.round(currentFlightSpeed) + ' knot';
+    const gapNow = flightGap(here.seg.type, here.t);
+    const ftAlt = Math.max(0, Math.round((gapNow - GROUND_LOW) * 26));
+    flightAltReadout.textContent = ftAlt + ' ft';
+    updateFlightMsg(here.seg, here.t);
+    updateEngineAudio(flightPropAngle, rpmLevel);
+
+    flightRafId = requestAnimationFrame(flightTick);
+  }
+
+  function startFlightLoop(){
+    if(flightRafId) return;
+    flightLastTs = null;
+    flightRafId = requestAnimationFrame(flightTick);
+  }
+  function stopFlightLoop(){
+    if(flightRafId){ cancelAnimationFrame(flightRafId); flightRafId = null; }
+    currentFlightSpeed = 0;
+    flightLastTs = null;
+    flightSpeedReadout.textContent = '0 knot';
+    flightAltReadout.textContent = '0 ft';
+    renderFlight(16);
+    const here = flightSegmentAt(flightDistance + FLIGHT_SCREEN_X);
+    updateFlightMsg(here.seg, here.t);
+  }
+
+  function hotspotEl(id){ return svg.querySelector(`.hotspot[data-id="${id}"]`); }
+
+  function refreshHotspotClasses(){
+    svg.querySelectorAll('.hotspot').forEach(h => {
+      const id = h.dataset.id;
+      h.classList.toggle('active', id === selectedId);
+      h.classList.remove('damaged','sev-1','sev-2','sev-3');
+      if(damaged.has(id)){
+        h.classList.add('damaged', 'sev-'+damaged.get(id));
+      }
+      h.classList.toggle('tour-dim', tourActive && id !== selectedId);
+      h.classList.toggle('tour-active', tourActive && id === selectedId);
+    });
+  }
+
+  function renderChips(){
+    if(damaged.size === 0){ chipsRow.style.display = 'none'; chipsRow.innerHTML=''; return; }
+    chipsRow.style.display = 'flex';
+    chipsRow.innerHTML = Array.from(damaged.entries()).map(([id,sev]) =>
+      `<span class="chip sev-${sev}" data-id="${id}">${componentData[id].name} <b>${SEV_LABEL[sev]}</b><button data-remove="${id}" aria-label="Pulihkan">×</button></span>`
+    ).join('') + `<button class="chip-clear" id="clearAllBtn">Pulihkan Semua</button>`;
+    chipsRow.querySelectorAll('button[data-remove]').forEach(btn => {
+      btn.addEventListener('click', () => setSeverity(btn.dataset.remove, 0));
+    });
+    const clearBtn = document.getElementById('clearAllBtn');
+    if(clearBtn) clearBtn.addEventListener('click', resetAllDamage);
+  }
+
+  function setSeverity(id, sev){
+    if(sev === 0) damaged.delete(id); else damaged.set(id, sev);
+    activeScenario = null;
+    updateScenarioButtons();
+    refreshHotspotClasses();
+    renderChips();
+    if(selectedId === id) renderPanel(id);
+    updateGauges();
+    updateStatusLine();
+  }
+
+  function resetAllDamage(){
+    damaged.clear();
+    activeScenario = null;
+    updateScenarioButtons();
+    refreshHotspotClasses();
+    renderChips();
+    if(selectedId) renderPanel(selectedId);
+    updateGauges();
+    updateStatusLine();
+  }
+
+  function renderPanel(id){
+    const c = componentData[id];
+    const num = Object.keys(componentData).indexOf(id) + 1;
+    const sev = damaged.get(id) || 0;
+    panel.innerHTML = `
+      <span class="num">KOMPONEN ${num}</span>
+      <h2>${c.name}</h2>
+      <h3>Fungsi</h3>
+      <p>${c.fungsi}</p>
+      <h3>Atur Tingkat Kerusakan</h3>
+      <div class="sev-seg">
+        <button data-lvl="0" class="${sev===0?'active':''}">Normal</button>
+        <button data-lvl="1" class="sev-1 ${sev===1?'active':''}">Ringan</button>
+        <button data-lvl="2" class="sev-2 ${sev===2?'active':''}">Sedang</button>
+        <button data-lvl="3" class="sev-3 ${sev===3?'active':''}">Parah</button>
+      </div>
+      ${sev>0 ? `<div class="effect-box">${c.efek}</div>` : ''}
+      <div class="sains-box"><b>🔬 Sains di Baliknya:</b> ${c.sains}</div>
+    `;
+    panel.querySelectorAll('.sev-seg button').forEach(btn => {
+      btn.addEventListener('click', () => setSeverity(id, parseInt(btn.dataset.lvl,10)));
+    });
+  }
+
+  function selectComponent(id){
+    if(tourActive) exitTourSilently();
+    selectedId = id;
+    refreshHotspotClasses();
+    renderPanel(id);
+  }
+
+  svg.querySelectorAll('.hotspot').forEach(h => {
+    h.setAttribute('tabindex','0');
+    h.addEventListener('click', () => selectComponent(h.dataset.id));
+    h.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); selectComponent(h.dataset.id); } });
+  });
+
+  // ---------- Pencarian ----------
+  searchInput.addEventListener('input', () => {
+    const q = searchInput.value.trim().toLowerCase();
+    if(!q){ suggestionsBox.classList.remove('open'); suggestionsBox.innerHTML=''; return; }
+    const matches = Object.entries(componentData).filter(([id,c]) => c.name.toLowerCase().includes(q));
+    if(matches.length === 0){ suggestionsBox.classList.remove('open'); suggestionsBox.innerHTML=''; return; }
+    suggestionsBox.innerHTML = matches.map(([id,c]) => `<div class="sugg-item" data-id="${id}"><b>${c.name}</b></div>`).join('');
+    suggestionsBox.classList.add('open');
+    suggestionsBox.querySelectorAll('.sugg-item').forEach(item => {
+      item.addEventListener('click', () => {
+        selectComponent(item.dataset.id);
+        suggestionsBox.classList.remove('open');
+        searchInput.value = '';
+      });
+    });
+  });
+  document.addEventListener('click', e => {
+    if(!e.target.closest('.searchbox')) suggestionsBox.classList.remove('open');
+  });
+
+  // ---------- Skenario ----------
+  scenarioGrid.innerHTML = scenarios.map(sc => `<button class="scenario-btn" data-id="${sc.id}">${sc.label}</button>`).join('');
+  function updateScenarioButtons(){
+    scenarioGrid.querySelectorAll('.scenario-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.id === activeScenario));
+  }
+  scenarioGrid.querySelectorAll('.scenario-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sc = scenarios.find(s => s.id === btn.dataset.id);
+      damaged.clear();
+      sc.parts.forEach(p => damaged.set(p.id, p.sev));
+      activeScenario = sc.id;
+      updateScenarioButtons();
+      refreshHotspotClasses();
+      renderChips();
+      if(selectedId) renderPanel(selectedId);
+      updateGauges();
+      updateStatusLine();
+    });
+  });
+  scenarioResetBtn.addEventListener('click', resetAllDamage);
+
+  // ---------- Mode Belajar Bertahap (Tur Terpandu) ----------
+  tourDotsEl.innerHTML = tourSteps.map((s,i) => `<button class="tour-dot" type="button" data-i="${i}" title="${componentData[s.id].name}" aria-label="Lompat ke langkah ${i+1}"></button>`).join('');
+  tourDotsEl.querySelectorAll('.tour-dot').forEach(btn => {
+    btn.addEventListener('click', () => { tourStep = parseInt(btn.dataset.i,10); renderTourStep(); });
+  });
+
+  function emptyPanelMessage(){
+    panel.innerHTML = '<p class="panel-empty">Klik salah satu nomor di gambar pesawat, atau cari lewat kotak pencarian di atas, untuk melihat penjelasan komponennya.</p>';
+  }
+
+  function renderTourPanel(step){
+    const c = componentData[step.id];
+    const num = Object.keys(componentData).indexOf(step.id) + 1;
+    panel.innerHTML = `
+      <span class="num">TUR TERPANDU — LANGKAH ${tourStep+1} DARI ${tourSteps.length}</span>
+      <span class="tour-stage-tag">${step.stage}</span>
+      <h2>${c.name} <span style="color:var(--text-dim);font-weight:400;font-size:13px;">(komponen #${num})</span></h2>
+      <p class="tour-narasi">${step.narasi}</p>
+      <h3>Fungsi singkat</h3>
+      <p>${c.fungsi}</p>
+    `;
+  }
+
+  function renderTourStep(){
+    const step = tourSteps[tourStep];
+    selectedId = step.id;
+    refreshHotspotClasses();
+    renderTourPanel(step);
+    tourStageEl.textContent = step.stage;
+    tourStepCountEl.textContent = `Langkah ${tourStep+1} dari ${tourSteps.length}`;
+    tourDotsEl.querySelectorAll('.tour-dot').forEach((d,i) => d.classList.toggle('active', i === tourStep));
+    tourPrevBtn.disabled = tourStep === 0;
+    tourNextBtn.textContent = tourStep === tourSteps.length - 1 ? 'Selesai ✓' : 'Berikutnya →';
+  }
+
+  function startTour(){
+    if(quizActive) closeQuiz();
+    resetAllDamage();
+    if(engineState !== 'off'){ ignitionBtn.click(); }
+    tourActive = true;
+    tourStep = 0;
+    document.body.classList.add('tour-mode');
+    tourBar.style.display = 'flex';
+    renderTourStep();
+  }
+
+  function exitTourSilently(){
+    tourActive = false;
+    document.body.classList.remove('tour-mode');
+    tourBar.style.display = 'none';
+    selectedId = null;
+    refreshHotspotClasses();
+  }
+
+  function finishTour(){
+    exitTourSilently();
+    panel.innerHTML = `
+      <span class="num">TUR SELESAI 🎉</span>
+      <h2>Kamu sudah mengenal ke-14 komponen</h2>
+      <p>Dari tangki bahan bakar sampai roda pendaratan — begitulah alur kerja pesawat latihan bermesin piston secara garis besar. Sekarang coba nyalakan mesin, uji salah satu skenario di atas, atau ulangi tur ini kapan saja.</p>
+      <button class="sim-btn" id="tourRestartBtn" style="border-color:var(--gold);color:var(--gold-soft);width:100%;padding:10px;border-radius:8px;background:transparent;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">↻ Ulangi Tur dari Awal</button>
+    `;
+    document.getElementById('tourRestartBtn').addEventListener('click', startTour);
+  }
+
+  function nextTourStep(){
+    if(tourStep < tourSteps.length - 1){ tourStep++; renderTourStep(); }
+    else finishTour();
+  }
+
+  function prevTourStep(){
+    if(tourStep > 0){ tourStep--; renderTourStep(); }
+  }
+
+  tourStartBtn.addEventListener('click', startTour);
+  tourNextBtn.addEventListener('click', nextTourStep);
+  tourPrevBtn.addEventListener('click', prevTourStep);
+  tourExitBtn.addEventListener('click', () => { exitTourSilently(); emptyPanelMessage(); });
+  document.addEventListener('keydown', e => {
+    if(!tourActive) return;
+    if(e.key === 'Escape'){ exitTourSilently(); emptyPanelMessage(); }
+    else if(e.key === 'ArrowRight'){ nextTourStep(); }
+    else if(e.key === 'ArrowLeft'){ prevTourStep(); }
+  });
+
+  // ---------- Kuis Diagnostik ----------
+  function shuffleArr(arr){
+    const a = [...arr];
+    for(let i = a.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function flashHotspot(id){
+    const h = hotspotEl(id);
+    if(!h) return;
+    h.classList.add('quiz-flash');
+    setTimeout(() => h.classList.remove('quiz-flash'), 2600);
+  }
+
+  function buildQuizQuestions(){
+    const pool = [];
+    Object.entries(componentData).forEach(([id,c]) => { c.gejala.forEach(g => pool.push({ id, text:g })); });
+    const shuffled = shuffleArr(pool);
+    for(let i = 1; i < shuffled.length; i++){
+      if(shuffled[i].id === shuffled[i-1].id){
+        for(let j = i+1; j < shuffled.length; j++){
+          if(shuffled[j].id !== shuffled[i-1].id){ [shuffled[i],shuffled[j]] = [shuffled[j],shuffled[i]]; break; }
+        }
+      }
+    }
+    return shuffled.slice(0, Math.min(QUIZ_LENGTH, shuffled.length));
+  }
+
+  function buildOptionsFor(correctId){
+    const others = Object.keys(componentData).filter(id => id !== correctId);
+    const distractors = shuffleArr(others).slice(0,3);
+    return shuffleArr([correctId, ...distractors]);
+  }
+
+  function startQuiz(){
+    if(tourActive) exitTourSilently();
+    resetAllDamage();
+    quizQuestions = buildQuizQuestions();
+    quizIndex = 0;
+    quizScore = 0;
+    quizWrongList = [];
+    quizActive = true;
+    document.body.classList.add('quiz-mode');
+    quizBlock.style.display = 'block';
+    renderQuizQuestion();
+    quizBlock.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }
+
+  function renderQuizQuestion(){
+    const q = quizQuestions[quizIndex];
+    quizAnswered = false;
+    const options = buildOptionsFor(q.id);
+    quizBlock.innerHTML = `
+      <div class="quiz-head">
+        <span class="lbl">KUIS DIAGNOSTIK GEJALA</span>
+        <span class="quiz-progress">Soal ${quizIndex+1} dari ${quizQuestions.length}</span>
+        <span class="quiz-score">Skor: ${quizScore}/${quizIndex}</span>
+        <button class="quiz-close" id="quizCloseBtn">✕ Tutup Kuis</button>
+      </div>
+      <p class="quiz-question">"${q.text}" — komponen mana yang kemungkinan besar bermasalah?</p>
+      <div class="quiz-options" id="quizOptions">
+        ${options.map(id => `<button class="quiz-opt" data-id="${id}">${componentData[id].name}</button>`).join('')}
+      </div>
+      <div id="quizFeedbackArea"></div>
+    `;
+    document.getElementById('quizCloseBtn').addEventListener('click', closeQuiz);
+    quizBlock.querySelectorAll('.quiz-opt').forEach(btn => {
+      btn.addEventListener('click', () => answerQuiz(btn.dataset.id, q.id));
+    });
+  }
+
+  function answerQuiz(chosenId, correctId){
+    if(quizAnswered) return;
+    quizAnswered = true;
+    const correct = chosenId === correctId;
+    if(correct) quizScore++;
+    else quizWrongList.push({ text:quizQuestions[quizIndex].text, correctId, chosenId });
+
+    quizBlock.querySelectorAll('.quiz-opt').forEach(btn => {
+      btn.disabled = true;
+      if(btn.dataset.id === correctId) btn.classList.add('correct');
+      else if(btn.dataset.id === chosenId) btn.classList.add('wrong');
+    });
+
+    const c = componentData[correctId];
+    const isLast = quizIndex === quizQuestions.length - 1;
+    const scoreEl = quizBlock.querySelector('.quiz-score');
+    if(scoreEl) scoreEl.textContent = `Skor: ${quizScore}/${quizIndex+1}`;
+
+    document.getElementById('quizFeedbackArea').innerHTML = `
+      <div class="quiz-feedback ${correct?'ok':'no'}">
+        ${correct?'✅ Tepat!':'❌ Belum tepat.'} Gejala itu paling khas menunjuk ke <b>${c.name}</b>. ${c.efek}
+      </div>
+      <div class="quiz-actions">
+        <button class="ghost" id="quizApplyBtn">🔧 Terapkan ke Simulasi</button>
+        <button class="primary" id="quizNextBtn">${isLast ? 'Lihat Hasil Akhir' : 'Soal Berikutnya →'}</button>
+      </div>
+    `;
+    document.getElementById('quizApplyBtn').addEventListener('click', () => {
+      damaged.set(correctId, 3);
+      refreshHotspotClasses();
+      renderChips();
+      updateGauges();
+      updateStatusLine();
+      flashHotspot(correctId);
+    });
+    document.getElementById('quizNextBtn').addEventListener('click', () => {
+      if(isLast){ renderQuizSummary(); } else { quizIndex++; renderQuizQuestion(); }
+    });
+  }
+
+  function renderQuizSummary(){
+    const total = quizQuestions.length;
+    const pct = Math.round((quizScore/total)*100);
+    let verdict;
+    if(pct >= 85) verdict = 'Mantap — pemahamanmu soal gejala kerusakan pesawat sudah kuat.';
+    else if(pct >= 60) verdict = 'Lumayan — beberapa gejala masih perlu diingat ulang, coba lihat lagi komponennya di diagram.';
+    else verdict = 'Masih perlu latihan — coba ikuti dulu Tur Terpandu, lalu ulangi kuis ini.';
+
+    quizBlock.innerHTML = `
+      <div class="quiz-head">
+        <span class="lbl">HASIL KUIS</span>
+        <button class="quiz-close" id="quizCloseBtn">✕ Tutup Kuis</button>
+      </div>
+      <p class="quiz-question">Skor akhir: <b>${quizScore} dari ${total}</b> (${pct}%). ${verdict}</p>
+      ${quizWrongList.length ? `
+        <h3 style="margin:14px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);">Yang perlu diingat ulang</h3>
+        <ul class="quiz-summary-list">
+          ${quizWrongList.map(w => `<li class="wrong-item">"${w.text}" → seharusnya <b>${componentData[w.correctId].name}</b>, kamu jawab ${componentData[w.chosenId].name}</li>`).join('')}
+        </ul>` : `<p style="color:var(--charge);margin-top:10px;">Semua jawaban benar — tidak ada yang perlu diulang. 🎉</p>`}
+      <div class="quiz-actions">
+        <button class="ghost" id="quizRestartBtn">↻ Ulangi Kuis</button>
+        <button class="primary" id="quizDoneBtn">Selesai</button>
+      </div>
+    `;
+    document.getElementById('quizCloseBtn').addEventListener('click', closeQuiz);
+    document.getElementById('quizRestartBtn').addEventListener('click', startQuiz);
+    document.getElementById('quizDoneBtn').addEventListener('click', closeQuiz);
+  }
+
+  function closeQuiz(){
+    quizActive = false;
+    document.body.classList.remove('quiz-mode');
+    quizBlock.style.display = 'none';
+    quizBlock.innerHTML = '';
+  }
+
+  quizStartBtn.addEventListener('click', startQuiz);
+
+  // ---------- Mode Diagnosa Terbalik ----------
+  const reverseCasesData = [
+    {
+      id: 'tersendat-mati',
+      text: 'Mesin tersendat-sendat lalu mati sendiri di tengah penerbangan santai, padahal indikator bahan bakar menunjukkan cukup.',
+      candidates: ['tangki','karburator','magneto','busi','oli'],
+      ranking: ['tangki','karburator','magneto','busi','oli'],
+      actualCulprits: ['tangki'],
+      alasan: 'Kotoran atau air dalam tangki, atau selector bahan bakar salah posisi, adalah penyebab paling klasik untuk gejala "indikator cukup tapi mesin tetap kehilangan tenaga" — cocok persis dengan cerita di atas. Karburator yang "icing" di udara dingin-lembap juga bisa membuat RPM turun tiba-tiba, jadi kandidat kuat kedua. Kedua magneto rusak total bisa mematikan mesin, tapi biasanya lebih mendadak tanpa gejala tersendat dulu. Busi kotor lebih sering mengurangi tenaga bertahap, jarang membuat mesin mati total sendiri. Oli bermasalah biasanya didahului suhu naik, bukan tersendat-sendat begini — paling tidak mungkin di sini.'
+    },
+    {
+      id: 'rpm-anjlok-magneto',
+      text: 'RPM anjlok tajam saat pilot menguji magneto sisi Kiri secara terpisah sebelum lepas landas, tapi kembali normal saat diposisikan Both.',
+      candidates: ['magneto','busi','kunci','klep','alternator'],
+      ranking: ['magneto','busi','kunci','klep','alternator'],
+      actualCulprits: ['magneto'],
+      alasan: 'Ini adalah gejala buku teks untuk uji magneto — satu magneto yang lemah membuat RPM anjlok saat sisi itu diuji sendirian, tapi tenaga tertutupi saat kembali ke Both. Busi kotor di beberapa silinder bisa memperkuat gejala serupa karena tiap magneto memercik busi yang berbeda, jadi kandidat kuat kedua. Saklar magneto yang aus bisa memengaruhi perpindahan posisi, tapi lebih sering gagal total daripada RPM drop spesifik begini. Klep yang bermasalah menyebabkan tenaga kurang secara umum, tidak spesifik saat uji magneto. Alternator murni urusan pengisian listrik dan sama sekali tidak berhubungan dengan pengapian — paling tidak mungkin.'
+    },
+    {
+      id: 'getaran-tenaga-lemah',
+      text: 'Getaran hebat terasa di seluruh badan pesawat bahkan pada putaran mesin tinggi, dan daya dorong terasa lemah padahal RPM sudah maksimal.',
+      candidates: ['baling','silinder','klep','roda','kemudi'],
+      ranking: ['baling','silinder','klep','roda','kemudi'],
+      actualCulprits: ['baling'],
+      alasan: 'Baling-baling yang rusak atau tidak seimbang cocok persis dengan dua gejala sekaligus: getaran hebat dan daya dorong lemah meski RPM maksimal. Kebocoran kompresi di silinder juga bisa menimbulkan getaran dan tenaga turun, jadi kandidat kuat kedua, meski biasanya disertai RPM yang tidak stabil juga. Klep yang telat menutup menurunkan tenaga dan bikin suara kasar, tapi jarang menimbulkan getaran "hebat di seluruh badan". Roda pendaratan hanya relevan di darat, tidak berhubungan dengan getaran saat terbang di RPM tinggi. Permukaan kendali terbang sama sekali tidak berhubungan dengan getaran mesin atau tenaga dorong — paling tidak mungkin.'
+    },
+    {
+      id: 'starter-tidak-berputar',
+      text: 'Mesin sama sekali tidak berputar saat tombol starter ditekan, padahal lampu kokpit menyala terang dan radio berfungsi normal.',
+      candidates: ['starter','kunci','magneto','aki','alternator'],
+      ranking: ['starter','kunci','magneto','aki','alternator'],
+      actualCulprits: ['starter'],
+      alasan: 'Karena lampu dan radio terbukti menyala normal, listrik utama dari aki jelas sehat — jadi motor starter itu sendiri yang paling mungkin rusak. Saklar magneto & master yang aus bisa gagal menyalurkan sinyal start, jadi kandidat kuat kedua. Magneto sendiri tidak menggerakkan starter sama sekali, hanya soal pengapian setelah mesin berputar, jadi kandidat lemah. Aki lemah seharusnya juga membuat lampu dan radio redup — bertentangan dengan cerita di atas, jadi kandidatnya sangat lemah. Alternator hanya mengisi ulang aki saat mesin sudah menyala, sama sekali tidak berhubungan dengan starter — paling tidak mungkin.'
+    },
+    {
+      id: 'pendaratan-bergeser',
+      text: 'Pengereman di landasan terasa tidak stabil dan pesawat bergeser saat mendarat, meski kecepatan mendarat sudah pelan.',
+      candidates: ['roda','kemudi','baling','oli','tangki'],
+      ranking: ['roda','kemudi','baling','oli','tangki'],
+      actualCulprits: ['roda'],
+      alasan: 'Tekanan ban yang tidak rata atau peredam kejut yang rusak pada roda pendaratan paling langsung menjelaskan pengereman tidak stabil dan pesawat bergeser saat mendarat. Rudder (bagian dari permukaan kendali) yang berat/kurang responsif bisa membuat pesawat sulit dijaga lurus di landasan, jadi kandidat kuat kedua. Baling-baling, oli, dan tangki bahan bakar sama sekali tidak berhubungan dengan pengereman atau arah pesawat di darat — semuanya paling tidak mungkin di sini.'
+    }
+  ];
+
+  function pairwiseScore(order, ranking){
+    let correct = 0, total = 0;
+    for(let i = 0; i < ranking.length; i++){
+      for(let j = i + 1; j < ranking.length; j++){
+        total++;
+        if(order.indexOf(ranking[i]) < order.indexOf(ranking[j])) correct++;
+      }
+    }
+    return { correct, total };
+  }
+
+  function startReverse(){
+    if(tourActive) exitTourSilently();
+    resetAllDamage();
+    revCases = shuffleArr(reverseCasesData);
+    revIndex = 0;
+    revScoreSum = 0;
+    revResults = [];
+    revActive = true;
+    document.body.classList.add('rev-mode');
+    revBlock.style.display = 'block';
+    renderRevCase();
+    revBlock.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }
+
+  function renderRevOptions(){
+    const container = document.getElementById('revOptions');
+    if(!container) return;
+    container.innerHTML = revOrder.map((id, i) => `
+      <div class="rev-row" data-id="${id}">
+        <span class="rev-rank">${i + 1}.</span>
+        <span class="rev-name">${componentData[id].name}</span>
+        <span class="rev-arrows">
+          <button data-dir="-1" data-idx="${i}" ${i === 0 ? 'disabled' : ''} aria-label="Naikkan ${componentData[id].name}">▲</button>
+          <button data-dir="1" data-idx="${i}" ${i === revOrder.length - 1 ? 'disabled' : ''} aria-label="Turunkan ${componentData[id].name}">▼</button>
+        </span>
+      </div>
+    `).join('');
+    container.querySelectorAll('button[data-dir]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.idx, 10);
+        const dir = parseInt(btn.dataset.dir, 10);
+        const swapWith = idx + dir;
+        if(swapWith < 0 || swapWith >= revOrder.length) return;
+        [revOrder[idx], revOrder[swapWith]] = [revOrder[swapWith], revOrder[idx]];
+        renderRevOptions();
+      });
+    });
+  }
+
+  function renderRevCase(){
+    const rc = revCases[revIndex];
+    revOrder = shuffleArr(rc.candidates);
+    revAnswered = false;
+    revBlock.innerHTML = `
+      <div class="rev-head">
+        <span class="lbl">MODE DIAGNOSA TERBALIK</span>
+        <span class="rev-progress">Kasus ${revIndex + 1} dari ${revCases.length}</span>
+        <button class="rev-close" id="revCloseBtn">✕ Tutup</button>
+      </div>
+      <p class="rev-case-text">${rc.text}</p>
+      <p class="rev-hint">Urutkan 5 komponen di bawah dari yang PALING MUNGKIN jadi penyebab (paling atas) ke yang PALING TIDAK MUNGKIN (paling bawah), pakai tombol ▲▼. Ini latihan cara berpikir, bukan statistik bengkel yang mutlak.</p>
+      <div class="rev-list" id="revOptions"></div>
+      <button class="rev-submit" id="revSubmitBtn">Kunci Urutan &amp; Lihat Hasil</button>
+      <div id="revResultArea"></div>
+    `;
+    renderRevOptions();
+    document.getElementById('revCloseBtn').addEventListener('click', closeReverse);
+    document.getElementById('revSubmitBtn').addEventListener('click', submitRevAnswer);
+  }
+
+  function submitRevAnswer(){
+    if(revAnswered) return;
+    revAnswered = true;
+    const rc = revCases[revIndex];
+    const { correct, total } = pairwiseScore(revOrder, rc.ranking);
+    const pct = Math.round((correct / total) * 100);
+    revScoreSum += pct;
+    revResults.push({ text: rc.text, pct });
+
+    document.getElementById('revSubmitBtn').remove();
+    document.querySelectorAll('#revOptions .rev-arrows').forEach(el => el.remove());
+
+    const isLast = revIndex === revCases.length - 1;
+    let verdict;
+    if(pct >= 90) verdict = 'Urutanmu hampir sama persis dengan yang disarankan — intuisimu sudah bagus.';
+    else if(pct >= 60) verdict = 'Sudah di jalur yang benar, ada beberapa posisi yang tertukar.';
+    else verdict = 'Urutannya masih perlu dipikirkan ulang — coba baca alasannya di bawah.';
+
+    document.getElementById('revResultArea').innerHTML = `
+      <div class="rev-score-line">Ketepatan urutan: <b>${correct} dari ${total}</b> pasang perbandingan tepat (${pct}%). ${verdict}</div>
+      <div class="rev-compare">
+        <div class="rev-compare-col">
+          <h4>Urutanmu</h4>
+          <ol>${revOrder.map(id => `<li>${componentData[id].name}</li>`).join('')}</ol>
+        </div>
+        <div class="rev-compare-col">
+          <h4>Urutan yang disarankan</h4>
+          <ol>${rc.ranking.map(id => `<li>${componentData[id].name}</li>`).join('')}</ol>
+        </div>
+      </div>
+      <div class="rev-alasan">${rc.alasan}</div>
+      <div class="rev-actions">
+        <button class="ghost" id="revApplyBtn">🔧 Terapkan Penyebab Sebenarnya ke Simulasi</button>
+        <button class="primary" id="revNextBtn">${isLast ? 'Lihat Ringkasan' : 'Kasus Berikutnya →'}</button>
+      </div>
+    `;
+    document.getElementById('revApplyBtn').addEventListener('click', () => {
+      damaged.clear();
+      rc.actualCulprits.forEach(id => damaged.set(id, 3));
+      refreshHotspotClasses();
+      renderChips();
+      updateGauges();
+      updateStatusLine();
+      rc.actualCulprits.forEach(id => flashHotspot(id));
+    });
+    document.getElementById('revNextBtn').addEventListener('click', () => {
+      if(isLast){ renderRevSummary(); } else { revIndex++; renderRevCase(); }
+    });
+  }
+
+  function renderRevSummary(){
+    const avg = Math.round(revScoreSum / revCases.length);
+    let verdict;
+    if(avg >= 85) verdict = 'Mantap — cara berpikirmu dalam menimbang kemungkinan penyebab sudah tajam.';
+    else if(avg >= 60) verdict = 'Cukup baik — beberapa kasus masih tertukar urutannya, coba baca lagi alasannya.';
+    else verdict = 'Masih perlu latihan — coba ulangi tur atau kuis dulu, lalu balik lagi ke sini.';
+
+    revBlock.innerHTML = `
+      <div class="rev-head">
+        <span class="lbl">HASIL DIAGNOSA TERBALIK</span>
+        <button class="rev-close" id="revCloseBtn">✕ Tutup</button>
+      </div>
+      <p class="rev-case-text">Rata-rata ketepatan urutan: <b>${avg}%</b> dari ${revCases.length} kasus. ${verdict}</p>
+      <ul class="rev-summary-list">
+        ${revResults.map(r => `<li>"${r.text.slice(0, 60)}${r.text.length > 60 ? '…' : ''}" — ${r.pct}% tepat</li>`).join('')}
+      </ul>
+      <div class="rev-actions">
+        <button class="ghost" id="revRestartBtn">↻ Ulangi dengan Urutan Kasus Baru</button>
+        <button class="primary" id="revDoneBtn">Selesai</button>
+      </div>
+    `;
+    document.getElementById('revCloseBtn').addEventListener('click', closeReverse);
+    document.getElementById('revRestartBtn').addEventListener('click', startReverse);
+    document.getElementById('revDoneBtn').addEventListener('click', closeReverse);
+  }
+
+  function closeReverse(){
+    revActive = false;
+    document.body.classList.remove('rev-mode');
+    revBlock.style.display = 'none';
+    revBlock.innerHTML = '';
+  }
+
+  revStartBtn.addEventListener('click', startReverse);
+
+  // ---------- Mesin & Gauge ----------
+  function updateGauges(){
+    const loss = powerLoss();
+    powerReadout.textContent = `Performa: ${100 - loss}%`;
+    if(engineState !== 'running'){
+      rpmFill.style.width = '0%';
+      rpmReadout.textContent = '0 RPM';
+      tempFill.style.width = '12%';
+      tempReadout.textContent = 'Oli: dingin';
+      return;
+    }
+    const baseFill = RPM_FILL[rpmLevel];
+    const effFill = Math.max(6, Math.round(baseFill * (1 - loss/140)));
+    rpmFill.style.width = effFill + '%';
+    const rpmVal = Math.round(RPM_BASE[rpmLevel] * (1 - loss/180));
+    rpmReadout.textContent = rpmVal + ' RPM';
+    const oliSev = damaged.get('oli') || 0;
+    const tempPct = Math.min(96, 30 + oliSev*22 + rpmLevel*8);
+    tempFill.style.width = tempPct + '%';
+    tempReadout.textContent = tempPct > 75 ? 'Oli: panas berlebih' : (tempPct > 50 ? 'Oli: hangat' : 'Oli: normal');
+  }
+
+  function updateStatusLine(){
+    if(engineState === 'off'){
+      statusLine.innerHTML = 'Mesin mati. Tekan <b>Nyalakan Mesin</b> untuk memulai.';
+    } else if(engineState === 'starting'){
+      statusLine.innerHTML = 'Motor starter memutar poros engkol... menunggu mesin menyala.';
+    } else {
+      const loss = powerLoss();
+      if(loss >= 60){
+        statusLine.innerHTML = `Mesin menyala tapi <b>performa hilang ${loss}%</b> — tenaga dan/atau kendali pesawat sangat terganggu.`;
+      } else if(loss >= 25){
+        statusLine.innerHTML = `Mesin menyala, performa berkurang sekitar <b>${loss}%</b> akibat komponen yang rusak.`;
+      } else {
+        statusLine.innerHTML = 'Mesin menyala normal.';
+      }
+    }
+    updateHandPropVisibility();
+  }
+
+  ignitionBtn.addEventListener('click', () => {
+    if(engineState === 'off'){
+      engineState = 'starting';
+      ignitionBtn.disabled = true;
+      handPropBtn.disabled = true;
+      ignitionBtn.textContent = 'Menstarter...';
+      updateStatusLine();
+      playStarterClicks();
+      setTimeout(() => {
+        ignitionBtn.disabled = false;
+        handPropBtn.disabled = false;
+        const blockers = electricStartBlockers();
+        if(blockers.length){
+          engineState = 'off';
+          ignitionBtn.textContent = 'Nyalakan Mesin';
+          lampMaster.classList.remove('on');
+          statusLine.innerHTML = `Starter elektrik tidak merespons (${blockers.map(id => componentData[id].name).join(', ')}) — coba tombol <b>Putar Baling-Baling</b> di sebelahnya.`;
+          updateHandPropVisibility();
+        } else {
+          const loss = powerLoss();
+          if(loss >= 90){
+            engineState = 'off';
+            statusLine.innerHTML = 'Mesin <b>gagal menyala</b> — kerusakan terlalu berat untuk mesin bekerja.';
+            ignitionBtn.textContent = 'Nyalakan Mesin';
+            lampMaster.classList.remove('on');
+            updateHandPropVisibility();
+          } else {
+            engineState = 'running';
+            lampMaster.classList.add('on');
+            document.body.classList.add('engine-running');
+            document.getElementById('propGroup').style.animationDuration = '0.9s';
+            rpmBar.classList.add('show');
+            ignitionBtn.textContent = 'Matikan Mesin';
+            updateStatusLine();
+            startFlightLoop();
+            startEngineAudio();
+          }
+        }
+        updateGauges();
+      }, 900);
+    } else if(engineState === 'running'){
+      engineState = 'off';
+      document.body.classList.remove('engine-running');
+      lampMaster.classList.remove('on');
+      rpmBar.classList.remove('show');
+      ignitionBtn.textContent = 'Nyalakan Mesin';
+      updateGauges();
+      updateStatusLine();
+      stopFlightLoop();
+      stopEngineAudio();
+    }
+  });
+
+  handPropBtn.addEventListener('click', () => {
+    if(engineState !== 'off') return;
+    engineState = 'starting';
+    ignitionBtn.disabled = true;
+    handPropBtn.disabled = true;
+    statusLine.innerHTML = 'Memutar baling-baling secara manual...';
+    playPropSwing();
+    setTimeout(() => {
+      ignitionBtn.disabled = false;
+      handPropBtn.disabled = false;
+      const loss = handPropPowerLoss();
+      if(loss >= 90){
+        engineState = 'off';
+        statusLine.innerHTML = 'Mesin <b>tetap tidak menyala</b> meski diputar manual — kerusakan lain pada mesin terlalu berat.';
+        lampMaster.classList.remove('on');
+        updateHandPropVisibility();
+      } else {
+        engineState = 'running';
+        lampMaster.classList.add('on');
+        document.body.classList.add('engine-running');
+        document.getElementById('propGroup').style.animationDuration = '0.9s';
+        rpmBar.classList.add('show');
+        ignitionBtn.textContent = 'Matikan Mesin';
+        updateStatusLine();
+        startFlightLoop();
+        startEngineAudio();
+      }
+      updateGauges();
+    }, 1100);
+  });
+
+  rpmSeg.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(engineState !== 'running') return;
+      rpmLevel = parseInt(btn.dataset.lvl,10);
+      rpmSeg.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+      const dur = rpmLevel === 0 ? '1.4s' : (rpmLevel === 1 ? '0.6s' : '0.28s');
+      document.getElementById('propGroup').style.animationDuration = dur;
+      updateGauges();
+      updateStatusLine();
+    });
+  });
+
+  updateGauges();
+  updateStatusLine();
+  renderFlight(16);
+  updateFlightMsg(flightSegmentAt(FLIGHT_SCREEN_X).seg, flightSegmentAt(FLIGHT_SCREEN_X).t);
+  applyLivery('skematik');
+  applyStateFromURL();
+
+  // ==================== TAB 2: PESAWAT LATIHAN JET (anatomi dasar) ====================
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+      const tab = btn.dataset.tab;
+      document.getElementById('tabPistonPanel').classList.toggle('active', tab === 'piston');
+      document.getElementById('tabJetPanel').classList.toggle('active', tab === 'jet');
+      if(tourActive) exitTourSilently();
+      if(quizActive) closeQuiz();
+      if(revActive) closeReverse();
+      if(jetTourActive) exitJetTourSilently();
+    });
+  });
+
+  const jetComponentData = {
+    kompresor:{ name:"Kompresor Bertingkat", fungsi:"Menghisap udara masuk dan memampatkannya berkali-kali lipat lewat serangkaian sudu berputar, sebelum diteruskan ke ruang bakar.", efek:"Sudu aus/retak menurunkan tekanan udara masuk, mengurangi tenaga dorong drastis, dan bisa memicu 'compressor stall' (letupan balik dari arah depan mesin).", impact:30, gejala:["Terdengar dentuman/letupan dari arah depan mesin saat tuas gas dinaikkan cepat.","Tenaga dorong terasa jauh berkurang meski N1 terbaca normal."], sains:"Bagian pertama siklus Brayton (kebalikan siklus Otto milik mesin piston) — kompresor menaikkan tekanan udara secara mekanis sebelum dibakar, prinsip termodinamika gas yang sama dipakai kompresor AC dan kulkas, hanya arah kerjanya dibalik." },
+    "ruang-bakar":{ name:"Ruang Bakar (Combustor)", fungsi:"Bahan bakar disemprotkan terus-menerus ke udara bertekanan tinggi dari kompresor dan dibakar secara berkelanjutan — bukan letusan berkala seperti mesin piston.", efek:"Nozzle bahan bakar tersumbat/retak membuat pembakaran tidak merata, suhu gas buang (EGT) melonjak tidak normal.", impact:30, gejala:["Suhu gas buang (EGT) melonjak tajam di luar batas normal.","Nyala api terasa tidak stabil, RPM mesin naik-turun sendiri."], sains:"Berbeda dari pembakaran letupan (intermittent) di mesin piston, di sini pembakaran berlangsung terus-menerus (continuous combustion) — prinsip termodinamika yang sama dipakai kompor gas industri dan turbin pembangkit listrik." },
+    turbin:{ name:"Turbin", fungsi:"Gas panas bertekanan tinggi dari ruang bakar memutar sudu turbin ini, yang lewat satu poros memutar balik kompresor di depan.", efek:"Sudu retak akibat panas berlebih (thermal fatigue) bisa lepas dan merusak mesin dari dalam, sekaligus melumpuhkan pasokan tenaga ke kompresor.", impact:35, gejala:["Getaran mesin tiba-tiba disertai bau/asap tidak normal dari knalpot.","N1 (RPM kompresor) turun sendiri tanpa perubahan posisi tuas gas."], sains:"Sudu turbin bekerja di suhu yang sering melebihi titik leleh logam biasa — bertahan lewat pendinginan udara internal dan paduan logam super (superalloy) tahan panas, salah satu pencapaian terbesar ilmu material abad ke-20." },
+    nozzle:{ name:"Nozzle Pancaran Gas", fungsi:"Mempercepat gas buang saat keluar dari mesin, mengubah energi panas & tekanan sisa jadi kecepatan tinggi yang menghasilkan daya dorong (thrust).", efek:"Nozzle penyok/macet mengurangi efisiensi dorongan dan bisa membuat performa mesin tidak seimbang.", impact:20, gejala:["Dorongan terasa lebih lemah dari seharusnya meski parameter mesin lain normal.","Suara aliran gas buang terdengar berbeda/berisik dari biasanya."], sains:"Nozzle adalah aplikasi hukum Newton III dalam bentuk paling murni — semakin cepat gas dilontarkan ke belakang, semakin besar dorongan ke depan, prinsip dasar semua propulsi jet dan roket." },
+    "roda-retract":{ name:"Roda Pendaratan Dapat Dilipat", fungsi:"Roda pendaratan yang dilipat masuk ke badan pesawat setelah lepas landas untuk mengurangi hambatan udara (drag), digerakkan sistem hidrolik.", efek:"Aktuator macet bisa membuat roda gagal keluar/masuk sepenuhnya — situasi darurat yang butuh prosedur manual cadangan.", impact:15, gejala:["Lampu indikator roda tidak menyala hijau penuh saat hendak mendarat.","Terasa hambatan/getaran tidak normal saat roda dilipat setelah lepas landas."], sains:"Melipat roda ke badan adalah soal mengurangi hambatan udara (drag) demi efisiensi di kecepatan tinggi — sesuatu yang tidak diperlukan pesawat piston yang lebih lambat, karena drag roda tetapnya relatif kecil di kecepatan rendah." },
+    "sistem-hidrolik":{ name:"Sistem Hidrolik", fungsi:"Memakai cairan bertekanan tinggi untuk menggerakkan roda pendaratan, flap, dan rem — mengangkat beban berat dengan gaya kecil.", efek:"Kebocoran cairan hidrolik menurunkan tekanan, membuat roda/flap bergerak lambat atau gagal bergerak sama sekali.", impact:20, gejala:["Tekanan hidrolik pada indikator kokpit terus turun selama penerbangan.","Flap atau roda pendaratan bergerak lebih lambat dari biasanya, atau macet di tengah jalan."], sains:"Sistem ini bekerja lewat Hukum Pascal — tekanan yang diberikan ke cairan tertutup diteruskan sama rata ke segala arah, memungkinkan gaya kecil di satu ujung menghasilkan gaya jauh lebih besar di ujung lain. Prinsip yang sama dipakai dongkrak hidrolik dan rem mobil." },
+    "kabin-tekan":{ name:"Sistem Kabin Bertekanan", fungsi:"Menjaga tekanan udara di dalam kabin tetap nyaman untuk pernapasan meski pesawat terbang tinggi di udara yang sangat tipis.", efek:"Kegagalan sistem membuat tekanan kabin mendekati tekanan udara luar yang sangat rendah, berisiko hipoksia (kekurangan oksigen) bagi penerbang.", impact:15, gejala:["Indikator ketinggian kabin naik cepat melebihi batas aman meski pesawat belum turun.","Penerbang mulai merasa pusing/bingung tanpa sebab jelas di ketinggian jelajah."], sains:"Soal langsung hukum gas & fisiologi tekanan parsial — makin tinggi terbang, molekul oksigen makin jarang meski persentasenya tetap 21%, sehingga tubuh butuh tekanan udara buatan yang dijaga sistem ini agar oksigen tetap bisa terserap paru-paru." },
+    fadec:{ name:"Komputer Kendali Mesin (FADEC) & Otopilot", fungsi:"Komputer digital yang otomatis mengatur bahan bakar & parameter mesin di setiap kondisi terbang, sekaligus membantu menjaga arah dan ketinggian lewat otopilot.", efek:"Gangguan perangkat lunak/sensor bisa membuat komputer salah membaca kondisi mesin, memberi perintah bahan bakar tidak tepat, atau otopilot melenceng dari jalur.", impact:20, gejala:["Parameter mesin di layar kokpit menunjukkan angka yang tidak masuk akal atau berubah-ubah sendiri.","Pesawat perlahan melenceng dari jalur yang diset padahal otopilot masih aktif."], sains:"Ini wilayah ilmu sistem kendali (control theory) & ilmu komputer — komputer terus-menerus membaca sensor, membandingkan dengan target, dan mengoreksi (feedback loop), prinsip yang sama yang membuat termostat AC bekerja, hanya jauh lebih rumit & cepat." }
+  };
+
+  const jetScenarios = [
+    { id:'compressor-stall', label:'Compressor Stall', parts:[{id:'kompresor',sev:3}], note:'Sudu kompresor rusak parah — letupan balik dan tenaga dorong anjlok drastis.' },
+    { id:'egt-tinggi', label:'EGT Tidak Normal', parts:[{id:'ruang-bakar',sev:2},{id:'turbin',sev:2}], note:'Pembakaran tidak merata dan sudu turbin mulai retak — suhu gas buang melonjak berbahaya.' },
+    { id:'hidrolik-bocor', label:'Hidrolik Bocor Saat Mendarat', parts:[{id:'sistem-hidrolik',sev:3},{id:'roda-retract',sev:2}], note:'Tekanan hidrolik habis — roda pendaratan sulit dikeluarkan penuh menjelang mendarat.' }
+  ];
+
+  const jetDamaged = new Map();
+  let jetSelectedId = null;
+  let jetActiveScenario = null;
+  let jetEngineState = 'off'; // off | starting | running
+
+  const jetSvg = document.querySelector('svg.jetplane');
+  const jetPanel = document.getElementById('jetPanel');
+  const jetSearchInput = document.getElementById('jetSearchInput');
+  const jetSuggestionsBox = document.getElementById('jetSuggestions');
+  const jetIgnitionBtn = document.getElementById('jetIgnitionBtn');
+  const jetLampMaster = document.getElementById('jetLampMaster');
+  const jetN1Readout = document.getElementById('jetN1Readout');
+  const jetEgtReadout = document.getElementById('jetEgtReadout');
+  const jetCabinReadout = document.getElementById('jetCabinReadout');
+  const jetPowerReadout = document.getElementById('jetPowerReadout');
+  const jetStatusLine = document.getElementById('jetStatusLine');
+  const jetScenarioGrid = document.getElementById('jetScenarioGrid');
+  const jetScenarioResetBtn = document.getElementById('jetScenarioResetBtn');
+  const jetChipsRow = document.getElementById('jetChipsRow');
+
+  jetScenarioGrid.innerHTML = jetScenarios.map(sc => `<button class="scenario-btn" data-id="${sc.id}">${sc.label}</button>`).join('');
+
+  function jetPowerLoss(){
+    let loss = 0;
+    jetDamaged.forEach((sev,id) => { loss += jetComponentData[id].impact * SEV_MULT[sev]; });
+    return Math.min(95, Math.round(loss));
+  }
+
+  function jetRefreshHotspotClasses(){
+    jetSvg.querySelectorAll('.hotspot').forEach(h => {
+      const id = h.dataset.id;
+      h.classList.toggle('active', id === jetSelectedId);
+      h.classList.remove('damaged','sev-1','sev-2','sev-3');
+      if(jetDamaged.has(id)) h.classList.add('damaged', 'sev-'+jetDamaged.get(id));
+    });
+  }
+
+  function jetRenderChips(){
+    if(jetDamaged.size === 0){ jetChipsRow.style.display = 'none'; jetChipsRow.innerHTML=''; return; }
+    jetChipsRow.style.display = 'flex';
+    jetChipsRow.innerHTML = Array.from(jetDamaged.entries()).map(([id,sev]) =>
+      `<span class="chip sev-${sev}" data-id="${id}">${jetComponentData[id].name} <b>${SEV_LABEL[sev]}</b><button data-remove="${id}" aria-label="Pulihkan">×</button></span>`
+    ).join('') + `<button class="chip-clear" id="jetClearAllBtn">Pulihkan Semua</button>`;
+    jetChipsRow.querySelectorAll('button[data-remove]').forEach(btn => {
+      btn.addEventListener('click', () => jetSetSeverity(btn.dataset.remove, 0));
+    });
+    const clearBtn = document.getElementById('jetClearAllBtn');
+    if(clearBtn) clearBtn.addEventListener('click', jetResetAllDamage);
+  }
+
+  function jetUpdateScenarioButtons(){
+    jetScenarioGrid.querySelectorAll('.scenario-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.id === jetActiveScenario));
+  }
+
+  function jetRenderPanel(id){
+    const c = jetComponentData[id];
+    const num = Object.keys(jetComponentData).indexOf(id) + 1;
+    const sev = jetDamaged.get(id) || 0;
+    jetPanel.innerHTML = `
+      <span class="num">KOMPONEN ${num}</span>
+      <h2>${c.name}</h2>
+      <h3>Fungsi</h3>
+      <p>${c.fungsi}</p>
+      <h3>Atur Tingkat Kerusakan</h3>
+      <div class="sev-seg">
+        <button data-lvl="0" class="${sev===0?'active':''}">Normal</button>
+        <button data-lvl="1" class="sev-1 ${sev===1?'active':''}">Ringan</button>
+        <button data-lvl="2" class="sev-2 ${sev===2?'active':''}">Sedang</button>
+        <button data-lvl="3" class="sev-3 ${sev===3?'active':''}">Parah</button>
+      </div>
+      ${sev>0 ? `<div class="effect-box">${c.efek}</div>` : ''}
+      <div class="sains-box"><b>🔬 Sains di Baliknya:</b> ${c.sains}</div>
+    `;
+    jetPanel.querySelectorAll('.sev-seg button').forEach(btn => {
+      btn.addEventListener('click', () => jetSetSeverity(id, parseInt(btn.dataset.lvl,10)));
+    });
+  }
+
+  function jetSelectComponent(id){
+    jetSelectedId = id;
+    jetRefreshHotspotClasses();
+    jetRenderPanel(id);
+  }
+
+  function jetSetSeverity(id, sev){
+    if(sev === 0) jetDamaged.delete(id); else jetDamaged.set(id, sev);
+    jetActiveScenario = null;
+    jetUpdateScenarioButtons();
+    jetRefreshHotspotClasses();
+    jetRenderChips();
+    if(jetSelectedId === id) jetRenderPanel(id);
+    jetUpdateGauges();
+    jetUpdateStatusLine();
+  }
+
+  function jetResetAllDamage(){
+    jetDamaged.clear();
+    jetActiveScenario = null;
+    jetUpdateScenarioButtons();
+    jetRefreshHotspotClasses();
+    jetRenderChips();
+    if(jetSelectedId) jetRenderPanel(jetSelectedId);
+    jetUpdateGauges();
+    jetUpdateStatusLine();
+  }
+
+  jetSvg.querySelectorAll('.hotspot').forEach(h => {
+    h.setAttribute('tabindex','0');
+    h.addEventListener('click', () => jetSelectComponent(h.dataset.id));
+    h.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); jetSelectComponent(h.dataset.id); } });
+  });
+
+  jetScenarioGrid.querySelectorAll('.scenario-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sc = jetScenarios.find(s => s.id === btn.dataset.id);
+      jetDamaged.clear();
+      sc.parts.forEach(p => jetDamaged.set(p.id, p.sev));
+      jetActiveScenario = sc.id;
+      jetUpdateScenarioButtons();
+      jetRefreshHotspotClasses();
+      jetRenderChips();
+      if(jetSelectedId) jetRenderPanel(jetSelectedId);
+      jetUpdateGauges();
+      jetUpdateStatusLine();
+    });
+  });
+  jetScenarioResetBtn.addEventListener('click', jetResetAllDamage);
+
+  jetSearchInput.addEventListener('input', () => {
+    const q = jetSearchInput.value.trim().toLowerCase();
+    if(!q){ jetSuggestionsBox.classList.remove('open'); jetSuggestionsBox.innerHTML=''; return; }
+    const matches = Object.entries(jetComponentData).filter(([id,c]) => c.name.toLowerCase().includes(q));
+    if(matches.length === 0){ jetSuggestionsBox.classList.remove('open'); jetSuggestionsBox.innerHTML=''; return; }
+    jetSuggestionsBox.innerHTML = matches.map(([id,c]) => `<div class="sugg-item" data-id="${id}"><b>${c.name}</b></div>`).join('');
+    jetSuggestionsBox.classList.add('open');
+    jetSuggestionsBox.querySelectorAll('.sugg-item').forEach(item => {
+      item.addEventListener('click', () => {
+        jetSelectComponent(item.dataset.id);
+        jetSuggestionsBox.classList.remove('open');
+        jetSearchInput.value = '';
+      });
+    });
+  });
+  document.addEventListener('click', e => {
+    if(!e.target.closest('#tabJetPanel .searchbox')) jetSuggestionsBox.classList.remove('open');
+  });
+
+  function jetUpdateGauges(){
+    const loss = jetPowerLoss();
+    const powerPct = Math.max(5, 100 - loss);
+    jetPowerReadout.textContent = powerPct + '%';
+    if(jetEngineState === 'running'){
+      jetN1Readout.textContent = Math.round(powerPct * 0.98) + '%';
+      jetEgtReadout.textContent = Math.round(520 + loss * 6) + '°C';
+      jetCabinReadout.textContent = Math.round(2000 + (SEV_MULT[jetDamaged.get('kabin-tekan')||0]||0) * 9000) + ' ft';
+    } else {
+      jetN1Readout.textContent = '0%';
+      jetEgtReadout.textContent = '20°C';
+      jetCabinReadout.textContent = '— ft';
+    }
+  }
+
+  function jetUpdateStatusLine(){
+    if(jetEngineState === 'off'){
+      jetStatusLine.innerHTML = 'Mesin mati. Tekan <b>Nyalakan Mesin</b> untuk memulai.';
+    } else if(jetEngineState === 'starting'){
+      jetStatusLine.innerHTML = 'Starter-generator memutar kompresor... menunggu mesin menyala (spool-up).';
+    } else {
+      const loss = jetPowerLoss();
+      if(loss >= 60){
+        jetStatusLine.innerHTML = `Mesin menyala tapi <b>performa hilang ${loss}%</b> — parameter mesin sangat terganggu.`;
+      } else if(loss >= 25){
+        jetStatusLine.innerHTML = `Mesin menyala, performa berkurang sekitar <b>${loss}%</b> akibat komponen yang rusak.`;
+      } else {
+        jetStatusLine.innerHTML = 'Mesin menyala normal.';
+      }
+    }
+  }
+
+  jetIgnitionBtn.addEventListener('click', () => {
+    if(jetEngineState === 'off'){
+      jetEngineState = 'starting';
+      jetIgnitionBtn.disabled = true;
+      jetIgnitionBtn.textContent = 'Menstarter (spool-up)...';
+      jetUpdateStatusLine();
+      setTimeout(() => {
+        jetIgnitionBtn.disabled = false;
+        const loss = jetPowerLoss();
+        if(loss >= 90){
+          jetEngineState = 'off';
+          jetStatusLine.innerHTML = 'Mesin <b>gagal menyala</b> — kerusakan terlalu berat untuk mesin bekerja.';
+          jetIgnitionBtn.textContent = 'Nyalakan Mesin (Starter-Generator)';
+          jetLampMaster.classList.remove('on');
+        } else {
+          jetEngineState = 'running';
+          jetLampMaster.classList.add('on');
+          jetIgnitionBtn.textContent = 'Matikan Mesin';
+          jetUpdateStatusLine();
+        }
+        jetUpdateGauges();
+      }, 1100);
+    } else if(jetEngineState === 'running'){
+      jetEngineState = 'off';
+      jetLampMaster.classList.remove('on');
+      jetIgnitionBtn.textContent = 'Nyalakan Mesin (Starter-Generator)';
+      jetUpdateGauges();
+      jetUpdateStatusLine();
+    }
+  });
+
+  jetUpdateGauges();
+  jetUpdateStatusLine();
+
+  // ---------- Mode Belajar Bertahap untuk Tab Jet (Tur Terpandu) ----------
+  const jetTourSteps = [
+    { id:'kompresor', stage:'Tahap 1 — Inti Mesin Jet (Siklus Brayton)', narasi:'Semua bermula di sini. Udara dihisap masuk dan dimampatkan berkali-kali lipat oleh sudu-sudu berputar — inilah awal siklus Brayton, kebalikan dari siklus Otto pada mesin piston yang sudah kamu kenal di tab sebelumnya.' },
+    { id:'ruang-bakar', stage:'Tahap 1 — Inti Mesin Jet (Siklus Brayton)', narasi:'Udara bertekanan tinggi tadi bertemu bahan bakar di sini dan dibakar terus-menerus (continuous combustion) — beda dari mesin piston yang membakar lewat letusan berkala.' },
+    { id:'turbin', stage:'Tahap 1 — Inti Mesin Jet (Siklus Brayton)', narasi:'Gas panas hasil pembakaran memutar sudu turbin ini. Sebagian energinya dipakai memutar balik kompresor di depan lewat satu poros yang sama — siklus yang menopang dirinya sendiri selama mesin menyala.' },
+    { id:'nozzle', stage:'Tahap 1 — Inti Mesin Jet (Siklus Brayton)', narasi:'Sisa energi gas panas dilontarkan keluar lewat sini dengan kecepatan tinggi, menghasilkan daya dorong murni lewat Hukum Newton III — prinsip dasar semua propulsi jet dan roket.' },
+    { id:'roda-retract', stage:'Tahap 2 — Sistem Pendukung Modern', narasi:'Berbeda dari pesawat piston yang rodanya tetap terpasang, roda pesawat jet ini bisa dilipat masuk ke badan setelah lepas landas, mengurangi hambatan udara di kecepatan tinggi.' },
+    { id:'sistem-hidrolik', stage:'Tahap 2 — Sistem Pendukung Modern', narasi:'Melipat roda seberat itu butuh tenaga besar — di sinilah sistem hidrolik berperan, memakai tekanan cairan (Hukum Pascal) untuk mengangkat beban berat dengan gaya yang relatif kecil.' },
+    { id:'kabin-tekan', stage:'Tahap 2 — Sistem Pendukung Modern', narasi:'Di ketinggian jelajah pesawat jet yang jauh lebih tinggi dari pesawat latihan piston, udara luar terlalu tipis untuk bernapas. Sistem inilah yang menjaga tekanan kabin tetap nyaman.' },
+    { id:'fadec', stage:'Tahap 2 — Sistem Pendukung Modern', narasi:'Perjalanan berakhir di otak digital pesawat ini — komputer FADEC mengatur bahan bakar & mesin secara otomatis, sekaligus membantu otopilot menjaga arah dan ketinggian. Dari sini, alur mesin jet sampai ke sistem paling modern di pesawat ini.' }
+  ];
+
+  let jetTourActive = false;
+  let jetTourStep = 0;
+
+  const jetTourCta = document.getElementById('jetTourCta');
+  const jetTourStartBtn = document.getElementById('jetTourStartBtn');
+  const jetTourBar = document.getElementById('jetTourBar');
+  const jetTourStageEl = document.getElementById('jetTourStage');
+  const jetTourStepCountEl = document.getElementById('jetTourStepCount');
+  const jetTourDotsEl = document.getElementById('jetTourDots');
+  const jetTourPrevBtn = document.getElementById('jetTourPrevBtn');
+  const jetTourNextBtn = document.getElementById('jetTourNextBtn');
+  const jetTourExitBtn = document.getElementById('jetTourExitBtn');
+
+  jetTourDotsEl.innerHTML = jetTourSteps.map((s,i) => `<button class="tour-dot" type="button" data-i="${i}" title="${jetComponentData[s.id].name}" aria-label="Lompat ke langkah ${i+1}"></button>`).join('');
+  jetTourDotsEl.querySelectorAll('.tour-dot').forEach(btn => {
+    btn.addEventListener('click', () => { jetTourStep = parseInt(btn.dataset.i,10); renderJetTourStep(); });
+  });
+
+  function emptyJetPanelMessage(){
+    jetPanel.innerHTML = '<p class="panel-empty">Klik salah satu nomor di gambar pesawat jet untuk melihat penjelasan komponennya.</p>';
+  }
+
+  function renderJetTourPanel(step){
+    const c = jetComponentData[step.id];
+    const num = Object.keys(jetComponentData).indexOf(step.id) + 1;
+    jetPanel.innerHTML = `
+      <span class="num">TUR TERPANDU — LANGKAH ${jetTourStep+1} DARI ${jetTourSteps.length}</span>
+      <span class="tour-stage-tag">${step.stage}</span>
+      <h2>${c.name} <span style="color:var(--text-dim);font-weight:400;font-size:13px;">(komponen #${num})</span></h2>
+      <p class="tour-narasi">${step.narasi}</p>
+      <h3>Fungsi singkat</h3>
+      <p>${c.fungsi}</p>
+    `;
+  }
+
+  function renderJetTourStep(){
+    const step = jetTourSteps[jetTourStep];
+    jetSelectedId = step.id;
+    jetRefreshHotspotClasses();
+    renderJetTourPanel(step);
+    jetTourStageEl.textContent = step.stage;
+    jetTourStepCountEl.textContent = `Langkah ${jetTourStep+1} dari ${jetTourSteps.length}`;
+    jetTourDotsEl.querySelectorAll('.tour-dot').forEach((d,i) => d.classList.toggle('active', i === jetTourStep));
+    jetTourPrevBtn.disabled = jetTourStep === 0;
+    jetTourNextBtn.textContent = jetTourStep === jetTourSteps.length - 1 ? 'Selesai ✓' : 'Berikutnya →';
+  }
+
+  function startJetTour(){
+    jetResetAllDamage();
+    if(jetEngineState !== 'off'){ jetIgnitionBtn.click(); }
+    jetTourActive = true;
+    jetTourStep = 0;
+    document.body.classList.add('jet-tour-mode');
+    jetTourBar.style.display = 'flex';
+    renderJetTourStep();
+  }
+
+  function exitJetTourSilently(){
+    jetTourActive = false;
+    document.body.classList.remove('jet-tour-mode');
+    jetTourBar.style.display = 'none';
+    jetSelectedId = null;
+    jetRefreshHotspotClasses();
+  }
+
+  function finishJetTour(){
+    exitJetTourSilently();
+    jetPanel.innerHTML = `
+      <span class="num">TUR SELESAI 🎉</span>
+      <h2>Kamu sudah mengenal ke-8 komponen pesawat jet</h2>
+      <p>Dari kompresor sampai komputer FADEC — begitulah alur kerja pesawat latihan jet secara garis besar, lengkap dengan hal-hal yang tidak ada di pesawat piston: siklus Brayton, roda lipat, hidrolik, kabin bertekanan, dan otopilot digital. Sekarang coba nyalakan mesin atau uji salah satu skenario di atas.</p>
+      <button class="sim-btn" id="jetTourRestartBtn" style="border-color:var(--gold);color:var(--gold-soft);width:100%;padding:10px;border-radius:8px;background:transparent;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">↻ Ulangi Tur dari Awal</button>
+    `;
+    document.getElementById('jetTourRestartBtn').addEventListener('click', startJetTour);
+  }
+
+  function nextJetTourStep(){
+    if(jetTourStep < jetTourSteps.length - 1){ jetTourStep++; renderJetTourStep(); }
+    else finishJetTour();
+  }
+
+  function prevJetTourStep(){
+    if(jetTourStep > 0){ jetTourStep--; renderJetTourStep(); }
+  }
+
+  jetTourStartBtn.addEventListener('click', startJetTour);
+  jetTourNextBtn.addEventListener('click', nextJetTourStep);
+  jetTourPrevBtn.addEventListener('click', prevJetTourStep);
+  jetTourExitBtn.addEventListener('click', () => { exitJetTourSilently(); emptyJetPanelMessage(); });
+  document.addEventListener('keydown', e => {
+    if(!jetTourActive) return;
+    if(e.key === 'Escape'){ exitJetTourSilently(); emptyJetPanelMessage(); }
+    else if(e.key === 'ArrowRight'){ nextJetTourStep(); }
+    else if(e.key === 'ArrowLeft'){ prevJetTourStep(); }
+  });
+})();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

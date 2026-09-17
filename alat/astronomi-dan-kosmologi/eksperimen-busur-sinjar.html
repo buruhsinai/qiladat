@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Busur Sinjar — Andaikan Variabelnya Berbeda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #10131c;
+    --bg-raise: #161b29;
+    --panel: #1b2133;
+    --panel-line: #2a3149;
+    --sand: #ece3ce;
+    --sand-dim: #b9b2a0;
+    --brass: #c9a24d;
+    --brass-soft: #8a7038;
+    --star: #7f9fe8;
+    --terra: #c1705a;
+    --ok: #7fb88f;
+    --radius-s: 6px;
+    --radius-m: 12px;
+    --serif: 'Spectral', Georgia, serif;
+    --sans: 'Work Sans', -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(201,162,77,0.10), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 10%, rgba(127,159,232,0.08), transparent 60%),
+      var(--bg);
+    color: var(--sand);
+    font-family: var(--sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap{max-width: 880px; margin: 0 auto; padding: 0 20px 90px;}
+
+  /* ---- HERO ---- */
+  .hero{
+    padding: 56px 20px 40px;
+    text-align:center;
+    position:relative;
+    border-bottom:1px solid var(--panel-line);
+    margin-bottom: 44px;
+  }
+  .hero .eyebrow{
+    font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color: var(--brass); margin-bottom:18px; display:flex; align-items:center; justify-content:center; gap:10px;
+  }
+  .hero .eyebrow::before, .hero .eyebrow::after{content:""; height:1px; width:28px; background:var(--brass-soft);}
+  .hero h1{
+    font-family: var(--serif); font-weight:500; font-size: clamp(28px, 6vw, 44px);
+    margin: 0 0 14px; letter-spacing:-.01em; color:#f6efdd;
+  }
+  .hero h1 em{font-style:italic; color:var(--brass);}
+  .hero p.lede{
+    max-width:560px; margin: 0 auto; color: var(--sand-dim); font-size:16px;
+  }
+  .hero .stars{
+    position:absolute; inset:0; pointer-events:none; overflow:hidden;
+  }
+  .hero .stars span{
+    position:absolute; width:2px; height:2px; background:var(--star); border-radius:50%;
+    opacity:.5; animation: twinkle 3.5s ease-in-out infinite;
+  }
+  @keyframes twinkle{ 0%,100%{opacity:.15;} 50%{opacity:.75;} }
+
+  /* ---- SECTION SCAFFOLD ---- */
+  section{margin-bottom: 52px;}
+  .sec-head{display:flex; align-items:baseline; gap:12px; margin-bottom:18px;}
+  .sec-head .tag{
+    font-family:var(--mono); font-size:11px; color:var(--brass); border:1px solid var(--brass-soft);
+    padding:3px 8px; border-radius:20px; letter-spacing:.06em; white-space:nowrap;
+  }
+  .sec-head h2{
+    font-family:var(--serif); font-weight:500; font-size:23px; margin:0; color:#f2ead9;
+  }
+  p{color: var(--sand-dim); font-size:15.5px;}
+  strong{color:var(--sand); font-weight:600;}
+
+  .card{
+    background: var(--panel); border:1px solid var(--panel-line); border-radius: var(--radius-m);
+    padding: 22px 22px;
+  }
+  .card + .card{margin-top:14px;}
+
+  .callout{
+    border-left:3px solid var(--terra); background: rgba(193,112,90,0.08);
+    padding: 14px 18px; border-radius: 0 var(--radius-s) var(--radius-s) 0; margin: 18px 0;
+  }
+  .callout p{margin:0; color: #ecd8d0; font-size:14.5px;}
+  .callout .lbl{font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--terra); display:block; margin-bottom:6px;}
+
+  .quote-box{
+    border-left:3px solid var(--brass); background: rgba(201,162,77,0.07);
+    padding: 14px 18px; border-radius: 0 var(--radius-s) var(--radius-s) 0; margin: 14px 0;
+  }
+  .quote-box p{margin:0; font-style:italic; color:#e3d7b8; font-size:14.5px;}
+
+  /* ---- DIAGRAM ---- */
+  .diagram-wrap{ text-align:center; }
+  .diagram-wrap svg{ max-width:100%; height:auto; }
+  .diagram-cap{ font-size:13px; color:var(--sand-dim); margin-top:10px; }
+
+  /* ---- SIMULATOR ---- */
+  .sim{
+    background: linear-gradient(180deg, var(--bg-raise), var(--panel));
+    border:1px solid var(--panel-line); border-radius: var(--radius-m);
+    padding: 26px;
+  }
+  .sim-grid{
+    display:grid; grid-template-columns: 1fr; gap:22px;
+  }
+  @media(min-width:720px){ .sim-grid{grid-template-columns: 1fr 1fr;} }
+
+  .field{ margin-bottom:20px; }
+  .field label{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-family:var(--mono); font-size:12.5px; color:var(--sand-dim); margin-bottom:8px; letter-spacing:.02em;
+  }
+  .field label .val{ color:var(--brass); font-size:15px; font-weight:700; }
+  input[type=range]{
+    width:100%; height:4px; -webkit-appearance:none; appearance:none;
+    background: var(--panel-line); border-radius:4px; outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:18px; height:18px; border-radius:50%;
+    background: var(--brass); cursor:pointer; border:3px solid #10131c; box-shadow:0 0 0 1px var(--brass-soft);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:18px; height:18px; border-radius:50%; background: var(--brass); cursor:pointer;
+    border:3px solid #10131c;
+  }
+  .field .hint{font-size:12px; color:#8b8672; margin-top:6px;}
+
+  .presets{ display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; margin-bottom:24px;}
+  .preset-btn{
+    font-family:var(--sans); font-size:12.5px; background:transparent; border:1px solid var(--panel-line);
+    color: var(--sand-dim); padding:7px 12px; border-radius:20px; cursor:pointer; transition: all .15s;
+  }
+  .preset-btn:hover{ border-color:var(--brass-soft); color:var(--sand); }
+  .preset-btn.active{ background: rgba(201,162,77,0.15); border-color:var(--brass); color:var(--brass); }
+
+  .result-panel{
+    background: var(--bg); border:1px solid var(--panel-line); border-radius: var(--radius-m);
+    padding: 22px; display:flex; flex-direction:column; justify-content:center;
+  }
+  .result-row{ display:flex; justify-content:space-between; align-items:baseline; padding: 12px 0; border-bottom:1px dashed var(--panel-line); }
+  .result-row:last-child{ border-bottom:none; }
+  .result-row .rl{ font-size:13px; color:var(--sand-dim); }
+  .result-row .rv{ font-family:var(--mono); font-size:19px; color:var(--brass); font-weight:700; }
+  .result-row .rv small{ font-size:12px; color:var(--sand-dim); font-weight:400; margin-left:4px;}
+
+  .compare-bar{ margin-top:18px; }
+  .compare-bar .cb-label{ display:flex; justify-content:space-between; font-size:12px; color:var(--sand-dim); margin-bottom:6px; font-family:var(--mono);}
+  .cb-track{ height:8px; border-radius:6px; background: var(--panel-line); position:relative; overflow:hidden; }
+  .cb-fill{ height:100%; border-radius:6px; background: linear-gradient(90deg, var(--star), var(--ok)); transition: width .25s ease; }
+  .cb-note{ font-size:12px; color:#8b8672; margin-top:8px; }
+
+  /* ---- METODE ---- */
+  .formula{
+    font-family: var(--mono); background: var(--bg); border:1px solid var(--panel-line);
+    border-radius: var(--radius-s); padding: 16px 18px; color: var(--sand); font-size:14.5px;
+    overflow-x:auto; margin: 10px 0;
+  }
+  .formula .op{ color: var(--brass); }
+  .formula .cm{ color: #6b7280; }
+
+  ol.steps{ padding-left: 20px; }
+  ol.steps li{ color: var(--sand-dim); margin-bottom:10px; font-size:15px; }
+  ol.steps li strong{color:var(--sand);}
+
+  /* ---- BATASAN ---- */
+  .limit-list{ list-style:none; padding:0; margin:0; }
+  .limit-list li{
+    display:flex; gap:12px; padding: 12px 0; border-bottom:1px solid var(--panel-line); font-size:14.5px; color:var(--sand-dim);
+  }
+  .limit-list li:last-child{border-bottom:none;}
+  .limit-list .marker{ color:var(--terra); font-family:var(--mono); flex-shrink:0; }
+
+  /* ---- REFERENSI ---- */
+  .ref-list{ list-style:none; padding:0; margin:0; font-size:13.5px; }
+  .ref-list li{ padding:10px 0; border-bottom:1px solid var(--panel-line); color: var(--sand-dim); }
+  .ref-list li:last-child{border-bottom:none;}
+  .ref-list .src{ color:var(--brass); font-family:var(--mono); font-size:11.5px; }
+
+  footer{
+    text-align:center; padding-top: 30px; border-top:1px solid var(--panel-line);
+    color:#6b6656; font-size:12.5px; font-family:var(--mono);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .hero .stars span{animation:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="stars">
+    <span style="top:20%;left:12%;"></span><span style="top:35%;left:80%;animation-delay:.6s;"></span>
+    <span style="top:55%;left:30%;animation-delay:1.2s;"></span><span style="top:15%;left:60%;animation-delay:1.8s;"></span>
+    <span style="top:70%;left:75%;animation-delay:2.4s;"></span><span style="top:40%;left:45%;animation-delay:.3s;"></span>
+  </div>
+  <div class="eyebrow">Laboratorium Geometri &amp; Sejarah Sains</div>
+  <h1>Busur Sinjar: Bukan Soal<br><em>Bulat atau Datar</em>, Tapi Soal<br>Seberapa Besar Lingkaran Ini</h1>
+  <p class="lede">Sebuah simulasi "andaikan" berdasarkan ekspedisi para astronom Al-Ma'mun (±827 M) — mengukur satu busur, lalu mempertanyakan: kalau angkanya berbeda, apa konsekuensinya?</p>
+</div>
+
+<div class="wrap">
+
+  <!-- LEVEL 1: BELAJAR / PELURUSAN -->
+  <section>
+    <div class="sec-head"><span class="tag">01 — Belajar</span><h2>Meluruskan Ceritanya Dulu</h2></div>
+    <div class="card">
+      <p>Cerita yang sering beredar: "Al-Khawarizmi dan ilmuwan Muslim membuktikan bumi itu bulat." Ini kurang tepat pada bagian yang paling penting — <strong>tujuannya bukan itu</strong>.</p>
+      <div class="quote-box">
+        <p>"Sejak zaman Aristoteles, orang sudah tahu bumi berbentuk bulat — sehingga mengalikan panjang satu derajat busur meridian dengan 360 akan menghasilkan perkiraan ukuran bumi yang baik."</p>
+      </div>
+      <p>Kebulatan bumi sudah menjadi pengetahuan yang diterima kalangan ilmuwan Yunani berabad-abad sebelumnya. Yang belum diketahui secara akurat bukan <em>bentuknya</em>, tapi <strong>ukurannya</strong> — berapa keliling dan jari-jarinya. Itulah yang ingin dijawab Khalifah Al-Ma'mun ketika mengutus tim astronom (termasuk Al-Khawarizmi di dalamnya) ke padang Sinjar, sekitar tahun 827 M.</p>
+      <p>Metodenya sederhana secara prinsip: dua kelompok berjalan berlawanan arah dari satu titik yang sama di padang datar, membawa tongkat kayu sebagai alat ukur jarak, sampai mereka mencatat perubahan <strong>satu derajat</strong> pada sudut elevasi bintang kutub. Jarak yang mereka tempuh itulah yang dianggap setara dengan "satu derajat busur" di permukaan.</p>
+      <div class="callout">
+        <span class="lbl">Titik penting</span>
+        <p>Titik keberangkatan mereka di Sinjar <strong>bukan kutub bumi, bukan pula pusat bumi</strong> — itu cuma titik pengamatan sembarang di permukaan datar tempat mereka mulai berjalan dan mulai mengukur perubahan sudut. Asumsi "titik tengah" di sini murni asumsi geometris untuk keperluan hitungan, bukan klaim tentang pusat planet.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEVEL 1b: PERTANYAAN ILMIAH -->
+  <section>
+    <div class="sec-head"><span class="tag">02 — Pertanyaan Ilmiah</span><h2>Sebelum Masuk Rumus</h2></div>
+    <div class="card">
+      <p>Beberapa pertanyaan yang perlu jelas dulu, sebelum kita bermain dengan angka:</p>
+      <ol class="steps">
+        <li><strong>Apa yang sebenarnya diukur?</strong> Bukan "apakah lingkaran", tapi <em>seberapa besar</em> lingkaran itu — dengan menganggap lintasan yang ditempuh membentuk busur dari sebuah lingkaran besar.</li>
+        <li><strong>Prinsip apa yang menghubungkan jarak dan sudut?</strong> Kalau satu potongan busur sepanjang <em>s</em> berkorespondensi dengan perubahan sudut sebesar <em>θ</em>, maka seluruh lingkaran (360°) tinggal soal perbandingan sederhana.</li>
+        <li><strong>Apa yang harus diasumsikan?</strong> Lintasan berjalan lurus mengikuti satu meridian, sudut diukur akurat terhadap satu bintang tetap, dan permukaan berperilaku konsisten sebagai busur lingkaran sepanjang lintasan itu.</li>
+        <li><strong>Seberapa sensitif hasilnya terhadap kesalahan input?</strong> — ini pertanyaan yang paling jarang diajukan orang, dan justru inti dari alat di bawah ini.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- DIAGRAM -->
+  <section>
+    <div class="sec-head"><span class="tag">03 — Model</span><h2>Satu Busur, Satu Lingkaran Penuh</h2></div>
+    <div class="card diagram-wrap">
+      <svg viewBox="0 0 600 340" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="300" cy="180" r="130" fill="none" stroke="#2a3149" stroke-width="1.5" stroke-dasharray="4 4"/>
+        <circle cx="300" cy="180" r="2.5" fill="#7f9fe8"/>
+        <text x="300" y="168" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#8b8672">pusat lingkaran (bukan diukur)</text>
+
+        <!-- radius lines to two points on arc -->
+        <line x1="300" y1="180" x2="300" y2="50" stroke="#c9a24d" stroke-width="1.5"/>
+        <line x1="300" y1="180" x2="386" y2="72" stroke="#c9a24d" stroke-width="1.5"/>
+
+        <!-- arc highlighted -->
+        <path d="M 300 50 A 130 130 0 0 1 386 72" fill="none" stroke="#c1705a" stroke-width="4" stroke-linecap="round"/>
+
+        <!-- start / end markers -->
+        <circle cx="300" cy="50" r="5" fill="#ece3ce"/>
+        <text x="300" y="34" text-anchor="middle" font-family="Work Sans" font-size="12" fill="#ece3ce" font-weight="600">Titik Sinjar</text>
+        <text x="300" y="20" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8b8672">(titik pengamatan awal)</text>
+
+        <circle cx="386" cy="72" r="5" fill="#ece3ce"/>
+        <text x="410" y="68" text-anchor="start" font-family="Work Sans" font-size="12" fill="#ece3ce" font-weight="600">Titik akhir</text>
+        <text x="410" y="84" text-anchor="start" font-family="JetBrains Mono" font-size="10" fill="#8b8672">(bintang bergeser 1°)</text>
+
+        <!-- angle arc at center -->
+        <path d="M 300 130 A 50 50 0 0 1 336 137" fill="none" stroke="#7f9fe8" stroke-width="2"/>
+        <text x="352" y="120" font-family="JetBrains Mono" font-size="13" fill="#7f9fe8" font-weight="700">θ</text>
+
+        <!-- s label on the arc -->
+        <text x="345" y="52" font-family="JetBrains Mono" font-size="13" fill="#c1705a" font-weight="700">s</text>
+
+        <text x="300" y="300" text-anchor="middle" font-family="Work Sans" font-size="13" fill="#b9b2a0">Jarak tempuh <tspan fill="#c1705a" font-weight="600">s</tspan> ↔ perubahan sudut <tspan fill="#7f9fe8" font-weight="600">θ</tspan></text>
+        <text x="300" y="320" text-anchor="middle" font-family="Work Sans" font-size="12" fill="#8b8672">Dari sepasang angka ini, seluruh lingkaran (360°) dihitung lewat perbandingan.</text>
+      </svg>
+      <div class="diagram-cap">Pusat lingkaran di diagram ini adalah konstruksi geometris untuk hitungan — bukan sesuatu yang pernah benar-benar didatangi atau diukur langsung.</div>
+    </div>
+  </section>
+
+  <!-- SIMULATOR -->
+  <section>
+    <div class="sec-head"><span class="tag">04 — Eksplorasi</span><h2>Andaikan Angkanya Berbeda…</h2></div>
+    <p>Riwayat sejarah sendiri tidak sepakat: ada yang mencatat 1° = 56 mil, ada yang mencatat 56⅔ mil, dengan definisi "mil Arab" yang juga diperdebatkan konversinya. Daripada memaksakan satu angka "yang benar", coba geser sendiri kedua variabelnya dan lihat konsekuensinya.</p>
+
+    <div class="sim">
+      <div class="presets" id="presets">
+        <button class="preset-btn" data-s="111.8" data-t="1">Riwayat A: 111.8 km/°</button>
+        <button class="preset-btn" data-s="115.35" data-t="1">Riwayat B: 115.35 km/°</button>
+        <button class="preset-btn" data-s="110.6" data-t="1">Nilai modern: 110.6 km/°</button>
+        <button class="preset-btn" data-s="90" data-t="1">Andai jarak lebih pendek</button>
+        <button class="preset-btn" data-s="111.8" data-t="2">Andai sudutnya 2°, bukan 1°</button>
+      </div>
+
+      <div class="sim-grid">
+        <div>
+          <div class="field">
+            <label>Jarak tempuh sepanjang meridian (s) <span class="val" id="sVal">111.8 km</span></label>
+            <input type="range" id="sInput" min="60" max="160" step="0.1" value="111.8">
+            <div class="hint">Ini analog jarak yang ditempuh tim Al-Ma'mun — panjang satu "potongan busur".</div>
+          </div>
+          <div class="field">
+            <label>Perubahan sudut elevasi bintang (θ) <span class="val" id="tVal">1.0°</span></label>
+            <input type="range" id="tInput" min="0.25" max="5" step="0.05" value="1">
+            <div class="hint">Ini analog "satu derajat" yang mereka amati — andaikan mereka berhenti di sudut yang berbeda.</div>
+          </div>
+        </div>
+
+        <div class="result-panel">
+          <div class="result-row">
+            <span class="rl">Keliling lingkaran tersirat</span>
+            <span class="rv" id="circResult">—</span>
+          </div>
+          <div class="result-row">
+            <span class="rl">Jari-jari lingkaran tersirat</span>
+            <span class="rv" id="radResult">—</span>
+          </div>
+          <div class="compare-bar">
+            <div class="cb-label"><span>Dibanding jari-jari bumi rata-rata modern (6.371 km)</span><span id="diffPct">—</span></div>
+            <div class="cb-track"><div class="cb-fill" id="cbFill" style="width:0%"></div></div>
+            <div class="cb-note">Pembanding ini sekadar rujukan angka modern — bukan pembuktian bentuk bumi. Kalkulator ini murni geometri busur-lingkaran.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- METODE -->
+  <section>
+    <div class="sec-head"><span class="tag">05 — Metode</span><h2>Rumus yang Dipakai</h2></div>
+    <div class="card">
+      <p>Prinsipnya cuma perbandingan sederhana antara sepotong busur dan lingkaran penuhnya:</p>
+      <div class="formula">Keliling <span class="op">=</span> s <span class="op">×</span> (360 <span class="op">÷</span> θ)<br><span class="cm">// s = jarak tempuh, θ = perubahan sudut dalam derajat</span></div>
+      <div class="formula">Jari-jari <span class="op">=</span> Keliling <span class="op">÷</span> (2 <span class="op">×</span> π)</div>
+      <p>Tidak ada trigonometri rumit di sini — inti akalnya sama seperti memotong kue: kalau sepotong kecil sudah diketahui besarnya, dan kita tahu potongan itu mewakili berapa derajat dari keseluruhan, seluruh kue tinggal dihitung dengan perbandingan.</p>
+    </div>
+  </section>
+
+  <!-- BATASAN -->
+  <section>
+    <div class="sec-head"><span class="tag">06 — Batasan</span><h2>Yang Tidak Dimodelkan di Sini</h2></div>
+    <div class="card">
+      <ul class="limit-list">
+        <li><span class="marker">—</span> Tidak memodelkan kesalahan pengukuran fisik: lengkungan medan, kelelahan pejalan, ketidaklurusan lintasan tongkat kayu di padang Sinjar.</li>
+        <li><span class="marker">—</span> Tidak memodelkan refraksi atmosfer yang bisa menggeser posisi tampak bintang saat diamati dekat ufuk.</li>
+        <li><span class="marker">—</span> Angka "111.8 km" dan "115.35 km" di preset bukan angka yang pasti disepakati sejarawan — keduanya berasal dari penafsiran satuan "mil" yang berbeda pada sumber Arab abad pertengahan. Anggap sebagai dua kemungkinan pembacaan, bukan dua fakta yang bersaing untuk "benar".</li>
+        <li><span class="marker">—</span> Kalkulator ini sengaja tidak mengambil sikap soal bentuk bumi. Ia hanya menjawab: <em>jika</em> permukaan berperilaku sebagai busur lingkaran sepanjang lintasan yang diukur, <em>maka</em> berapa besar lingkaran itu tersirat oleh angka yang dimasukkan.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- REFERENSI -->
+  <section>
+    <div class="sec-head"><span class="tag">07 — Referensi</span><h2>Sumber</h2></div>
+    <div class="card">
+      <ul class="ref-list">
+        <li><span class="src">Britannica</span> — Al-Khwārizmī, biografi &amp; kontribusi geografi/astronomi.</li>
+        <li><span class="src">Wikipedia</span> — "Earth's circumference", bagian ekspedisi Al-Ma'mun.</li>
+        <li><span class="src">A.C. Sparavigna (ResearchGate)</span> — "Al-Biruni and the Mathematical Geography", konversi mil-ke-km via Al-Farghani.</li>
+        <li><span class="src">arXiv 1403.6638</span> — tinjauan sejarah pengukuran bentuk bumi, termasuk estimasi galat ekspedisi Al-Ma'mun.</li>
+        <li><span class="src">Springs of Islamic Civilization</span> — catatan riwayat Habash tentang hasil "56 mil per derajat".</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    Laboratorium Geometri &amp; Sejarah Sains — bagian dari Bank Alat JAZMI/Qiladat
+  </footer>
+</div>
+
+<script>
+  const sInput = document.getElementById('sInput');
+  const tInput = document.getElementById('tInput');
+  const sVal = document.getElementById('sVal');
+  const tVal = document.getElementById('tVal');
+  const circResult = document.getElementById('circResult');
+  const radResult = document.getElementById('radResult');
+  const diffPct = document.getElementById('diffPct');
+  const cbFill = document.getElementById('cbFill');
+  const presetBtns = document.querySelectorAll('.preset-btn');
+
+  const EARTH_R = 6371; // km, rujukan modern rata-rata
+
+  function compute(){
+    const s = parseFloat(sInput.value);
+    const t = parseFloat(tInput.value);
+    sVal.textContent = s.toFixed(1) + ' km';
+    tVal.textContent = t.toFixed(2) + '°';
+
+    const circumference = s * (360 / t);
+    const radius = circumference / (2 * Math.PI);
+
+    circResult.innerHTML = Math.round(circumference).toLocaleString('id-ID') + ' <small>km</small>';
+    radResult.innerHTML = Math.round(radius).toLocaleString('id-ID') + ' <small>km</small>';
+
+    const diff = ((radius - EARTH_R) / EARTH_R) * 100;
+    diffPct.textContent = (diff >= 0 ? '+' : '') + diff.toFixed(1) + '%';
+
+    // bar: map |diff| 0-50% to 0-100% width, clamp
+    const barWidth = Math.min(100, Math.abs(diff) * 2);
+    cbFill.style.width = barWidth + '%';
+    cbFill.style.background = Math.abs(diff) < 5
+      ? 'linear-gradient(90deg, #7fb88f, #7fb88f)'
+      : 'linear-gradient(90deg, #7f9fe8, #c1705a)';
+  }
+
+  sInput.addEventListener('input', () => { clearActivePreset(); compute(); });
+  tInput.addEventListener('input', () => { clearActivePreset(); compute(); });
+
+  function clearActivePreset(){
+    presetBtns.forEach(b => b.classList.remove('active'));
+  }
+
+  presetBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      clearActivePreset();
+      btn.classList.add('active');
+      sInput.value = btn.dataset.s;
+      tInput.value = btn.dataset.t;
+      compute();
+    });
+  });
+
+  compute();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

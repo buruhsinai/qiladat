@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Universal Data / Text Analyzer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0D1117; --bg-panel:#161B22; --bg-deep:#010409;
+    --text:#C9D1D9; --text-soft:#8B949E;
+    --green:#3FB950; --blue:#58A6FF; --amber:#D29922; --red:#F85149; --violet:#BC8CFF;
+    --line:#30363D;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.6;}
+  h1,h2,h3{font-family:'Inter',sans-serif;color:#fff;margin:0;}
+  code, .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:1140px;margin:0 auto;padding:36px 20px 90px;}
+
+  header.hero{padding-bottom:22px;border-bottom:1px solid var(--line);margin-bottom:28px;}
+  header.hero h1{font-size:1.9rem;font-weight:700;}
+  header.hero p{margin:8px 0 0;color:var(--text-soft);max-width:74ch;font-size:0.96rem;}
+
+  section{margin-bottom:32px;}
+  section > h2{font-size:1.15rem;font-weight:700;color:#fff;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+
+  .panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:8px;padding:18px 20px;}
+
+  textarea{
+    width:100%;min-height:160px;background:var(--bg-deep);color:var(--text);
+    border:1px solid var(--line);border-radius:6px;padding:12px;font-family:'JetBrains Mono',monospace;
+    font-size:0.84rem;resize:vertical;
+  }
+  .input-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center;}
+  input[type=file]{color:var(--text-soft);font-size:0.82rem;}
+  button.act{
+    padding:8px 14px;border-radius:6px;border:1px solid var(--line);background:#21262D;
+    color:var(--text);font-family:'Inter',sans-serif;font-weight:600;font-size:0.82rem;cursor:pointer;
+  }
+  button.act.primary{background:var(--blue);color:#0D1117;border-color:var(--blue);}
+  button.act:hover{border-color:var(--blue);}
+
+  .format-badge{
+    display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;
+    font-size:0.8rem;font-weight:700;font-family:'JetBrains Mono',monospace;
+  }
+  .format-badge.json{background:rgba(63,185,80,0.15);color:var(--green);}
+  .format-badge.csv{background:rgba(88,166,255,0.15);color:var(--blue);}
+  .format-badge.markdown{background:rgba(188,140,255,0.15);color:var(--violet);}
+  .format-badge.html{background:rgba(210,153,34,0.15);color:var(--amber);}
+  .format-badge.text{background:rgba(139,148,158,0.15);color:var(--text-soft);}
+  .format-badge.empty{background:rgba(248,81,73,0.15);color:var(--red);}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px;}
+  .stat-card{background:var(--bg-deep);border:1px solid var(--line);border-radius:6px;padding:10px 12px;}
+  .stat-card .k{font-size:0.72rem;color:var(--text-soft);margin-bottom:3px;}
+  .stat-card .v{font-family:'JetBrains Mono',monospace;font-size:1.15rem;font-weight:700;color:#fff;}
+
+  .search-row{margin-bottom:12px;}
+  .search-row input{
+    width:100%;padding:9px 12px;background:var(--bg-deep);border:1px solid var(--line);border-radius:6px;
+    color:var(--text);font-family:'JetBrains Mono',monospace;font-size:0.86rem;
+  }
+
+  .tree{font-family:'JetBrains Mono',monospace;font-size:0.83rem;}
+  .tree details{margin-left:14px;border-left:1px dashed var(--line);padding-left:10px;}
+  .tree summary{cursor:pointer;padding:3px 0;list-style:none;}
+  .tree summary::-webkit-details-marker{display:none;}
+  .tree summary::before{content:'▸ ';color:var(--text-soft);}
+  .tree details[open] > summary::before{content:'▾ ';}
+  .leaf{padding:3px 0 3px 14px;}
+  .k-name{color:var(--blue);}
+  .t-badge{font-size:0.68rem;padding:1px 6px;border-radius:4px;margin-left:6px;}
+  .t-badge.string{background:rgba(63,185,80,0.15);color:var(--green);}
+  .t-badge.number{background:rgba(88,166,255,0.15);color:var(--blue);}
+  .t-badge.boolean{background:rgba(210,153,34,0.15);color:var(--amber);}
+  .t-badge.null{background:rgba(248,81,73,0.15);color:var(--red);}
+  .t-badge.object{background:rgba(188,140,255,0.15);color:var(--violet);}
+  .t-badge.array{background:rgba(188,140,255,0.15);color:var(--violet);}
+  .pattern-tag{font-size:0.68rem;color:var(--amber);margin-left:6px;}
+  .val-display{color:var(--text);}
+
+  table.data-table{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:0.8rem;}
+  table.data-table th,table.data-table td{text-align:left;padding:6px 10px;border-bottom:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;}
+  table.data-table th{color:var(--blue);font-weight:700;background:var(--bg-deep);position:sticky;top:0;}
+  .table-wrap{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:6px;}
+
+  .col-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:14px;}
+  .col-stat-card{background:var(--bg-deep);border:1px solid var(--line);border-radius:6px;padding:10px 12px;font-size:0.8rem;}
+  .col-stat-card h4{margin:0 0 6px;font-size:0.85rem;color:#fff;font-family:'JetBrains Mono',monospace;}
+  .col-stat-card .row{display:flex;justify-content:space-between;color:var(--text-soft);margin-bottom:2px;}
+  .col-stat-card .row b{color:var(--text);}
+
+  .callout{background:var(--bg-panel);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:6px;padding:14px 16px;font-size:0.86rem;color:var(--text-soft);margin-top:12px;}
+  .callout p{margin:0 0 6px;} .callout p:last-child{margin-bottom:0;}
+
+  .example-row{display:flex;gap:6px;flex-wrap:wrap;}
+  .example-row button{font-size:0.76rem;padding:5px 10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <h1>Universal Data / Text Analyzer</h1>
+    <p>Tempel data apa saja — JSON, CSV, Markdown, HTML, atau teks biasa — tool ini otomatis mendeteksi formatnya, membongkar strukturnya, dan menampilkannya secara interaktif. Bukan sekadar penampil, ini cara melihat bagaimana komputer benar-benar memparsing informasi.</p>
+  </header>
+
+  <!-- INPUT -->
+  <section>
+    <h2>Masukkan Data</h2>
+    <div class="panel">
+      <textarea id="input-area" placeholder="Tempel JSON / CSV / Markdown / HTML / teks di sini...">{"users":[{"id":1,"name":"Ayu","email":"ayu@mail.com","address":{"city":"Bandung","country":"Indonesia"}},{"id":2,"name":"Budi","email":"budi@mail.com","address":{"city":"Jakarta","country":"Indonesia"}}],"products":[{"sku":"A1","price":15000},{"sku":"A2","price":22000,"discount":null}]}</textarea>
+      <div class="input-row">
+        <input type="file" id="file-input" accept=".json,.csv,.md,.html,.txt">
+        <button class="act primary" id="btn-analyze">Analisis</button>
+        <span class="example-row">
+          <button class="act" data-ex="json">Contoh JSON</button>
+          <button class="act" data-ex="csv">Contoh CSV</button>
+          <button class="act" data-ex="markdown">Contoh Markdown</button>
+          <button class="act" data-ex="html">Contoh HTML</button>
+          <button class="act" data-ex="text">Contoh Teks</button>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- OVERVIEW -->
+  <section>
+    <h2>Ringkasan <span id="format-badge" class="format-badge text">—</span></h2>
+    <div class="panel">
+      <div class="stat-grid" id="stat-grid"></div>
+    </div>
+  </section>
+
+  <!-- MAIN VIEW -->
+  <section>
+    <h2>Struktur Interaktif</h2>
+    <div class="panel">
+      <div class="search-row"><input type="text" id="search-box" placeholder="Cari key/nilai... (menyaring tree/tabel di bawah)"></div>
+      <div id="main-view"></div>
+    </div>
+  </section>
+
+  <!-- EXPORT -->
+  <section>
+    <h2>Export</h2>
+    <div class="panel">
+      <div class="input-row">
+        <button class="act" id="btn-export-json">Export sebagai JSON</button>
+        <button class="act" id="btn-export-summary">Export Ringkasan (.txt)</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="callout">
+    <p><strong>Cara kerja singkat:</strong> deteksi format mencoba parse sebagai JSON dulu, lalu memeriksa pola tag HTML, sintaks Markdown (heading/list/link), konsistensi kolom bertanda pemisah (CSV), baru jatuh ke teks biasa. Setelah terdeteksi, data diubah jadi struktur pohon generik lewat rekursi, lalu setiap simpul dihitung tipe, kedalaman, nilai kosong, dan polanya (email/URL/tanggal/angka) sebelum dirender jadi tampilan yang bisa dibuka-tutup ini.</p>
+    <p><strong>Batasan:</strong> parser CSV di sini sederhana (menangani tanda kutip dasar, belum semua edge-case RFC 4180); parser Markdown hanya menandai heading/link/list/kode, bukan rendering penuh; file besar (&gt;5 MB) mungkin terasa lambat karena semua diproses di browser tanpa server.</p>
+  </div>
+
+</div>
+
+<script>
+/* ===================== FORMAT DETECTION ===================== */
+function detectFormat(text){
+  const t = text.trim();
+  if(!t) return 'empty';
+  try { JSON.parse(t); return 'json'; } catch(e){}
+  const tagCount = (t.match(/<\/?[a-zA-Z][^>]*>/g)||[]).length;
+  if(/<!doctype/i.test(t) || /<html[\s>]/i.test(t) || tagCount >= 4) return 'html';
+  if(/^#{1,6}\s/m.test(t) || /\[[^\]]+\]\([^)]+\)/.test(t) || /^\s*[-*+]\s/m.test(t) || /```/.test(t)) return 'markdown';
+  const lines = t.split('\n').filter(l=>l.trim().length);
+  if(lines.length >= 2){
+    for(const d of [',',';','\t','|']){
+      const counts = lines.slice(0, Math.min(12,lines.length)).map(l=>l.split(d).length);
+      if(counts[0] > 1 && counts.every(c=>c===counts[0])) return 'csv';
+    }
+  }
+  return 'text';
+}
+
+/* ===================== HELPERS ===================== */
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function detectPattern(str){
+  if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str)) return 'email';
+  if(/^https?:\/\/\S+$/.test(str)) return 'url';
+  if(/^\d{4}-\d{2}-\d{2}/.test(str)) return 'tanggal(ISO)';
+  if(/^-?\d+$/.test(str)) return 'angka-string';
+  if(/^-?\d*\.\d+$/.test(str)) return 'desimal-string';
+  if(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str)) return 'uuid';
+  return null;
+}
+function downloadText(filename, content, mime){
+  const blob = new Blob([content], {type: mime||'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ===================== JSON ANALYSIS ===================== */
+function buildJsonTree(value, key, depth, acc){
+  acc.maxDepth = Math.max(acc.maxDepth, depth);
+  acc.totalNodes++;
+  const node = {key, depth};
+  if(value === null){
+    node.type='null'; node.display='null'; acc.typeCounts.null=(acc.typeCounts.null||0)+1; acc.nullCount++;
+  } else if(Array.isArray(value)){
+    node.type='array'; node.length=value.length;
+    acc.typeCounts.array=(acc.typeCounts.array||0)+1;
+    node.children = value.slice(0,300).map((v,i)=>buildJsonTree(v, '['+i+']', depth+1, acc));
+    node.truncated = value.length>300;
+    if(value.length && value.every(v=>v && typeof v==='object' && !Array.isArray(v))){
+      const keySet = {};
+      value.forEach(obj => Object.keys(obj).forEach(k => keySet[k]=(keySet[k]||0)+1));
+      node.schema = Object.keys(keySet).map(k=>({key:k, coverage: Math.round(keySet[k]/value.length*100)}));
+    }
+  } else if(typeof value === 'object'){
+    node.type='object';
+    acc.typeCounts.object=(acc.typeCounts.object||0)+1;
+    const keys = Object.keys(value);
+    node.children = keys.map(k=>{ acc.fieldSet.add(k); return buildJsonTree(value[k], k, depth+1, acc); });
+  } else {
+    node.type = typeof value;
+    acc.typeCounts[node.type] = (acc.typeCounts[node.type]||0)+1;
+    node.display = typeof value==='string' ? JSON.stringify(value) : String(value);
+    if(typeof value === 'string'){
+      if(value==='') { node.empty=true; acc.emptyCount++; }
+      node.pattern = detectPattern(value);
+      const vk = 'S:'+value;
+      acc.valueFreq[vk] = (acc.valueFreq[vk]||0)+1;
+    } else {
+      const vk = typeof value+':'+value;
+      acc.valueFreq[vk] = (acc.valueFreq[vk]||0)+1;
+    }
+  }
+  return node;
+}
+
+function renderJsonNode(node, query){
+  if(query && !jsonNodeMatches(node, query)) return null;
+  const label = node.key!==undefined ? `<span class="k-name">${esc(node.key)}</span>` : '';
+  if(node.type==='object' || node.type==='array'){
+    const childrenHTML = (node.children||[]).map(c=>renderJsonNode(c, query)).filter(Boolean).join('');
+    const count = node.type==='array' ? node.length : (node.children?node.children.length:0);
+    const schemaHTML = node.schema ? `<div style="margin:4px 0 4px 14px;font-size:0.75rem;color:var(--text-soft)">Skema: ${node.schema.map(s=>`${esc(s.key)} <span style="color:${s.coverage<100?'var(--amber)':'var(--green)'}">(${s.coverage}%)</span>`).join(', ')}</div>` : '';
+    return `<details ${node.depth<2?'open':''}><summary>${label} <span class="t-badge ${node.type}">${node.type}[${count}]</span></summary>${schemaHTML}${childrenHTML}${node.truncated?'<div class="leaf" style="color:var(--text-soft)">... dipotong, terlalu banyak elemen</div>':''}</details>`;
+  } else {
+    const patternTag = node.pattern ? `<span class="pattern-tag">${node.pattern}</span>` : '';
+    const emptyTag = node.empty ? `<span class="pattern-tag" style="color:var(--red)">kosong</span>` : '';
+    return `<div class="leaf">${label} <span class="t-badge ${node.type}">${node.type}</span> <span class="val-display">${esc(node.display)}</span>${patternTag}${emptyTag}</div>`;
+  }
+}
+function jsonNodeMatches(node, query){
+  const q = query.toLowerCase();
+  if(node.key && String(node.key).toLowerCase().includes(q)) return true;
+  if(node.display && String(node.display).toLowerCase().includes(q)) return true;
+  if(node.children) return node.children.some(c=>jsonNodeMatches(c,q));
+  return false;
+}
+
+function analyzeJSON(text){
+  const data = JSON.parse(text);
+  const acc = {maxDepth:0, totalNodes:0, typeCounts:{}, nullCount:0, emptyCount:0, fieldSet:new Set(), valueFreq:{}};
+  const tree = buildJsonTree(data, undefined, 0, acc);
+  const dupes = Object.entries(acc.valueFreq).filter(([k,v])=>v>1).length;
+  const stats = [
+    ['Ukuran', (new Blob([text])).size + ' bytes'],
+    ['Total simpul', acc.totalNodes],
+    ['Kedalaman maks', acc.maxDepth],
+    ['Field unik', acc.fieldSet.size],
+    ['Nilai kosong/null', acc.nullCount+acc.emptyCount],
+    ['Nilai berulang', dupes],
+  ];
+  Object.entries(acc.typeCounts).forEach(([t,c])=>stats.push(['Tipe: '+t, c]));
+  return {tree, stats, raw:data};
+}
+
+/* ===================== CSV ANALYSIS ===================== */
+function parseCSV(text){
+  const rows = []; let row=[], field='', inQ=false;
+  for(let i=0;i<text.length;i++){
+    const c = text[i];
+    if(inQ){
+      if(c==='"'){ if(text[i+1]==='"'){field+='"'; i++;} else inQ=false; }
+      else field+=c;
+    } else {
+      if(c==='"') inQ=true;
+      else if(c===','){ row.push(field); field=''; }
+      else if(c==='\n' || c==='\r'){
+        if(c==='\r' && text[i+1]==='\n') i++;
+        row.push(field); field=''; rows.push(row); row=[];
+      } else field+=c;
+    }
+  }
+  if(field!=='' || row.length){ row.push(field); rows.push(row); }
+  return rows.filter(r=>!(r.length===1 && r[0]===''));
+}
+function inferColType(values){
+  const nonEmpty = values.filter(v=>v!=='');
+  if(!nonEmpty.length) return 'kosong';
+  if(nonEmpty.every(v=>/^-?\d+$/.test(v))) return 'integer';
+  if(nonEmpty.every(v=>/^-?\d*\.?\d+$/.test(v))) return 'angka';
+  if(nonEmpty.every(v=>/^\d{4}-\d{2}-\d{2}/.test(v))) return 'tanggal';
+  if(nonEmpty.every(v=>/^(true|false)$/i.test(v))) return 'boolean';
+  return 'teks';
+}
+function analyzeCSV(text){
+  const rows = parseCSV(text);
+  const headers = rows[0]||[];
+  const dataRows = rows.slice(1);
+  const colStats = headers.map((h,ci) => {
+    const values = dataRows.map(r=>r[ci]!==undefined?r[ci]:'');
+    const type = inferColType(values);
+    const emptyCount = values.filter(v=>v==='').length;
+    const unique = new Set(values).size;
+    return {name:h, type, emptyCount, unique, samples:[...new Set(values)].slice(0,3)};
+  });
+  const stats = [
+    ['Ukuran', (new Blob([text])).size + ' bytes'],
+    ['Jumlah baris', dataRows.length],
+    ['Jumlah kolom', headers.length],
+    ['Kolom kosong sebagian', colStats.filter(c=>c.emptyCount>0).length],
+  ];
+  return {headers, dataRows, colStats, stats};
+}
+
+/* ===================== MARKDOWN ANALYSIS ===================== */
+function analyzeMarkdown(text){
+  const lines = text.split('\n');
+  const headings = [];
+  lines.forEach(l => { const m = l.match(/^(#{1,6})\s+(.*)/); if(m) headings.push({level:m[1].length, text:m[2]}); });
+  const links = (text.match(/\[[^\]]+\]\([^)]+\)/g)||[]).length;
+  const images = (text.match(/!\[[^\]]*\]\([^)]+\)/g)||[]).length;
+  const codeBlocks = (text.match(/```/g)||[]).length/2;
+  const listItems = (text.match(/^\s*[-*+]\s/gm)||[]).length;
+  const bold = (text.match(/\*\*[^*]+\*\*/g)||[]).length;
+
+  let tree = ''; const stack = [{level:0, html:''}];
+  headings.forEach(h => {
+    while(stack.length>1 && stack[stack.length-1].level>=h.level) {
+      const done = stack.pop();
+      stack[stack.length-1].html += `<details open><summary>${esc(done.title||'')}</summary>${done.html}</details>`;
+    }
+    stack.push({level:h.level, title:h.text, html:''});
+  });
+  while(stack.length>1){
+    const done = stack.pop();
+    stack[stack.length-1].html += `<details open><summary>${esc(done.title||'')}</summary>${done.html}</details>`;
+  }
+  tree = stack[0].html || '<div class="leaf" style="color:var(--text-soft)">Tidak ada heading terdeteksi</div>';
+
+  const stats = [
+    ['Ukuran', (new Blob([text])).size + ' bytes'],
+    ['Jumlah heading', headings.length],
+    ['Tautan (link)', links],
+    ['Gambar', images],
+    ['Blok kode', Math.round(codeBlocks)],
+    ['Item list', listItems],
+    ['Teks tebal', bold],
+    ['Jumlah kata', (text.match(/\S+/g)||[]).length],
+  ];
+  return {tree, stats};
+}
+
+/* ===================== HTML ANALYSIS ===================== */
+function buildHtmlTree(el, depth, acc){
+  acc.maxDepth = Math.max(acc.maxDepth, depth);
+  acc.totalElements++;
+  acc.tagCounts[el.tagName] = (acc.tagCounts[el.tagName]||0)+1;
+  if(el.id) acc.withId++;
+  if(el.className) acc.withClass++;
+  if(el.tagName==='A') acc.links++;
+  if(el.tagName==='IMG') acc.images++;
+  const childEls = Array.from(el.children);
+  const childrenHTML = childEls.slice(0,200).map(c=>buildHtmlTree(c, depth+1, acc)).join('');
+  const attrs = [];
+  if(el.id) attrs.push('#'+el.id);
+  if(el.className) attrs.push('.'+String(el.className).split(' ').join('.'));
+  const textLen = childEls.length===0 ? el.textContent.trim().length : 0;
+  return `<details ${depth<2?'open':''}><summary><span class="k-name">&lt;${el.tagName.toLowerCase()}&gt;</span> ${esc(attrs.join(''))} <span class="t-badge object">${childEls.length} anak</span></summary>${childrenHTML}${textLen?`<div class="leaf" style="color:var(--text-soft)">teks: ${textLen} karakter</div>`:''}</details>`;
+}
+function analyzeHTML(text){
+  const doc = new DOMParser().parseFromString(text, 'text/html');
+  const acc = {maxDepth:0, totalElements:0, tagCounts:{}, withId:0, withClass:0, links:0, images:0};
+  const root = doc.body.children.length ? doc.body : doc.documentElement;
+  const tree = Array.from(root.children).map(c=>buildHtmlTree(c,0,acc)).join('') || '<div class="leaf">Tidak ada elemen ditemukan</div>';
+  const stats = [
+    ['Ukuran', (new Blob([text])).size + ' bytes'],
+    ['Total elemen', acc.totalElements],
+    ['Kedalaman maks', acc.maxDepth],
+    ['Punya id', acc.withId],
+    ['Punya class', acc.withClass],
+    ['Tautan (a)', acc.links],
+    ['Gambar (img)', acc.images],
+  ];
+  return {tree, stats};
+}
+
+/* ===================== TEXT ANALYSIS ===================== */
+const STOPWORDS = new Set(['yang','dan','di','ke','dari','untuk','pada','dengan','ini','itu','atau','adalah','the','a','an','of','to','in','is','and','for']);
+function analyzeText(text){
+  const words = (text.match(/[\p{L}\p{N}']+/gu)||[]).map(w=>w.toLowerCase());
+  const freq = {};
+  words.forEach(w => { if(!STOPWORDS.has(w) && w.length>2) freq[w]=(freq[w]||0)+1; });
+  const top = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const sentences = (text.match(/[^.!?]+[.!?]+/g)||[]).length;
+  const lines = text.split('\n').length;
+  const stats = [
+    ['Ukuran', (new Blob([text])).size + ' bytes'],
+    ['Jumlah kata', words.length],
+    ['Kata unik', Object.keys(freq).length],
+    ['Jumlah kalimat', sentences],
+    ['Jumlah baris', lines],
+    ['Rata-rata panjang kata', words.length?(words.reduce((s,w)=>s+w.length,0)/words.length).toFixed(1):0],
+  ];
+  const topHTML = '<div class="col-stats">'+top.map(([w,c])=>`<div class="col-stat-card"><div class="row"><span>${esc(w)}</span><b>${c}×</b></div></div>`).join('')+'</div>';
+  return {tree: '<h3 style="font-size:0.9rem;color:#fff;margin-bottom:8px">Kata paling sering muncul</h3>'+topHTML, stats};
+}
+
+/* ===================== MAIN ANALYZE FLOW ===================== */
+let currentResult = null, currentFormat = null;
+
+function analyze(){
+  const text = document.getElementById('input-area').value;
+  const format = detectFormat(text);
+  currentFormat = format;
+  const badge = document.getElementById('format-badge');
+  badge.className = 'format-badge ' + format;
+  badge.textContent = format.toUpperCase();
+
+  let result;
+  try{
+    if(format==='json') result = analyzeJSON(text);
+    else if(format==='csv') result = analyzeCSV(text);
+    else if(format==='markdown') result = analyzeMarkdown(text);
+    else if(format==='html') result = analyzeHTML(text);
+    else if(format==='text') result = analyzeText(text);
+    else result = {stats:[], tree:'<div class="leaf">Input kosong</div>'};
+  } catch(e){
+    result = {stats:[['Error', e.message]], tree:'<div class="leaf" style="color:var(--red)">Gagal memparsing: '+esc(e.message)+'</div>'};
+  }
+  currentResult = result;
+
+  const statGrid = document.getElementById('stat-grid');
+  statGrid.innerHTML = (result.stats||[]).map(([k,v])=>`<div class="stat-card"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div></div>`).join('');
+
+  renderMainView('');
+}
+
+function renderMainView(query){
+  const mv = document.getElementById('main-view');
+  if(currentFormat==='json' && currentResult.tree){
+    mv.innerHTML = '<div class="tree">'+(renderJsonNode(currentResult.tree, query) || '<div class="leaf" style="color:var(--text-soft)">Tidak ada yang cocok</div>')+'</div>';
+  } else if(currentFormat==='csv'){
+    const q = query.toLowerCase();
+    const filteredRows = query ? currentResult.dataRows.filter(r=>r.some(cell=>String(cell).toLowerCase().includes(q))) : currentResult.dataRows;
+    let html = '<div class="table-wrap"><table class="data-table"><thead><tr>'+currentResult.headers.map(h=>`<th>${esc(h)}</th>`).join('')+'</tr></thead><tbody>';
+    filteredRows.slice(0,500).forEach(r => { html += '<tr>'+currentResult.headers.map((h,i)=>`<td>${esc(r[i]!==undefined?r[i]:'')}</td>`).join('')+'</tr>'; });
+    html += '</tbody></table></div>';
+    html += '<div class="col-stats">'+currentResult.colStats.map(c=>`
+      <div class="col-stat-card"><h4>${esc(c.name)} <span class="t-badge string">${c.type}</span></h4>
+      <div class="row"><span>Kosong</span><b>${c.emptyCount}</b></div>
+      <div class="row"><span>Nilai unik</span><b>${c.unique}</b></div>
+      <div class="row"><span>Contoh</span><b>${c.samples.map(esc).join(', ')}</b></div></div>`).join('')+'</div>';
+    mv.innerHTML = html;
+  } else if(currentFormat==='markdown' || currentFormat==='html'){
+    mv.innerHTML = '<div class="tree">'+currentResult.tree+'</div>';
+  } else {
+    mv.innerHTML = currentResult.tree || '<div class="leaf">—</div>';
+  }
+}
+
+document.getElementById('btn-analyze').addEventListener('click', analyze);
+document.getElementById('search-box').addEventListener('input', function(){ renderMainView(this.value); });
+
+document.getElementById('file-input').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => { document.getElementById('input-area').value = ev.target.result; analyze(); };
+  reader.readAsText(file);
+});
+
+const EXAMPLES = {
+  json: '{"users":[{"id":1,"name":"Ayu","email":"ayu@mail.com","address":{"city":"Bandung","country":"Indonesia"}},{"id":2,"name":"Budi","email":"budi@mail.com","address":{"city":"Jakarta","country":"Indonesia"}}],"products":[{"sku":"A1","price":15000},{"sku":"A2","price":22000,"discount":null}]}',
+  csv: 'nama,usia,kota,email\nAyu,28,Bandung,ayu@mail.com\nBudi,34,Jakarta,budi@mail.com\nCitra,,Surabaya,citra@mail.com\nDedi,41,Bandung,',
+  markdown: '# Judul Utama\n\nIni paragraf pembuka dengan **teks tebal** dan [tautan](https://example.com).\n\n## Sub Bagian A\n- item satu\n- item dua\n\n## Sub Bagian B\n```\nkode contoh\n```\n![gambar](foto.png)',
+  html: '<!DOCTYPE html><html><body><div id="main" class="container"><h1>Judul</h1><p>Paragraf teks di sini.</p><ul><li>Satu</li><li>Dua</li></ul><a href="#">tautan</a><img src="x.png"></div><script src="../alat-nav-kembali.js" defer></script>
+</body></html>',
+  text: 'Ini contoh teks biasa untuk dianalisis. Teks biasa tidak memiliki struktur formal seperti JSON atau HTML. Analisis teks biasa berfokus pada statistik kata dan kalimat, bukan struktur data.'
+};
+document.querySelectorAll('[data-ex]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.getElementById('input-area').value = EXAMPLES[btn.dataset.ex];
+    analyze();
+  });
+});
+
+document.getElementById('btn-export-json').addEventListener('click', () => {
+  const content = currentFormat==='json' ? JSON.stringify(currentResult.raw, null, 2) : JSON.stringify(currentResult, (k,v)=> k==='tree'?undefined:v, 2);
+  downloadText('analisis.json', content, 'application/json');
+});
+document.getElementById('btn-export-summary').addEventListener('click', () => {
+  let lines = ['Ringkasan Analisis Data', 'Format: '+currentFormat, ''];
+  (currentResult.stats||[]).forEach(([k,v]) => lines.push(k+': '+v));
+  downloadText('ringkasan.txt', lines.join('\n'), 'text/plain');
+});
+
+analyze();
+</script>
+</body>
+</html>

@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Karakuri — Robot Mekanik Jepang</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Vollkorn:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --parchment:#F1E6D0; --parchment-deep:#E7D8B8; --ink:#2B2018; --ink-soft:#5A4A38;
+    --teal:#16423C; --teal-deep:#0E2E29; --brass:#C99A3B; --brass-bright:#E3B655;
+    --water:#3E7C8A; --marker:#7A2E2E; --good:#3C7A5E; --bad:#9A3B2E;
+    --lacquer:#8B2E2E; --silhouette:#111; --rule: rgba(43,32,24,0.18);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--parchment);color:var(--ink);font-family:'Vollkorn', serif;line-height:1.65;}
+  h1,h2,h3{font-family:'Cinzel', serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:880px;margin:0 auto;padding:0 24px 96px;}
+  header.hero{background:linear-gradient(180deg,var(--teal) 0%, var(--teal-deep) 100%);color:var(--parchment);padding:56px 24px 40px;}
+  header.hero .wrap{padding-bottom:0;}
+  .eyebrow{color:var(--brass-bright);font-size:0.95rem;margin:0 0 6px;}
+  h1{font-size:clamp(1.8rem,4vw,2.5rem);margin:0 0 14px;font-weight:600;color:#fff;}
+  .lede{max-width:600px;color:#DCE4E1;font-size:1.05rem;margin:0;}
+  .note{max-width:600px;color:#B9CFC7;font-size:0.88rem;margin:14px 0 0;border-left:2px solid var(--brass);padding-left:12px;}
+  section{padding:44px 0;border-bottom:1px solid var(--rule);}
+  section:last-of-type{border-bottom:none;}
+  h2{font-size:1.45rem;font-weight:600;margin:0 0 8px;color:var(--teal-deep);}
+  .sub{color:var(--ink-soft);font-size:0.92rem;margin:0 0 18px;}
+  h3{font-size:1.02rem;font-weight:600;margin:22px 0 8px;color:var(--ink);}
+  p{margin:0 0 14px;}
+  ul,ol{padding-left:22px;}
+  li{margin-bottom:8px;}
+  .qbox{background:var(--parchment-deep);border-left:3px solid var(--brass);padding:14px 16px;margin:14px 0;font-size:0.95rem;}
+
+  .panel{background:var(--teal-deep);border-radius:6px;padding:20px;margin-top:18px;color:var(--parchment);}
+  .stage-holder{width:100%;background:linear-gradient(180deg,#0A2320,#123A34);border-radius:4px;overflow:hidden;}
+  svg{display:block;width:100%;height:auto;}
+  .controls{display:flex;flex-wrap:wrap;gap:20px;margin-top:16px;}
+  .control{flex:1 1 170px;}
+  .control label{display:block;font-size:0.8rem;color:#BFD2CC;margin-bottom:6px;}
+  .control input[type=range]{width:100%;accent-color:var(--brass-bright);}
+  .control .value{font-family:'JetBrains Mono',monospace;color:var(--brass-bright);font-size:0.85rem;}
+  .btn-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+  button{font-family:'Cinzel',serif;background:var(--brass);color:var(--teal-deep);border:none;padding:9px 16px;border-radius:3px;font-size:0.82rem;cursor:pointer;}
+  button:hover:not(:disabled){background:var(--brass-bright);}
+  button:disabled{opacity:0.35;cursor:not-allowed;}
+  button.secondary{background:transparent;color:var(--parchment);border:1px solid var(--brass);}
+  .readout{display:flex;gap:22px;margin-top:14px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:0.85rem;}
+  .readout div{min-width:100px;}
+  .readout span.n{color:var(--brass-bright);font-size:1.1rem;display:block;}
+  .readout small{color:#9FB6AF;font-size:0.66rem;}
+
+  .timeline-track{position:relative;margin:26px 0 10px;}
+  .timeline-dots{display:flex;justify-content:space-between;margin-bottom:8px;}
+  .timeline-dots span{width:10px;height:10px;border-radius:50%;background:#4A6A62;display:block;}
+  .timeline-dots span.active{background:var(--brass-bright);}
+  #timeline-year{font-family:'Cinzel',serif;color:var(--brass-bright);font-size:1.05rem;}
+  #timeline-desc{color:var(--parchment);font-size:0.94rem;margin-top:8px;}
+
+  .figure{fill:var(--silhouette);}
+  .lacquer{fill:var(--lacquer);}
+
+  .limits{background:#EFE0D5;border:1px solid var(--rule);border-radius:4px;padding:20px;}
+  .limits h3{margin-top:0;}
+  footer{padding:32px 24px;text-align:center;color:var(--ink-soft);font-size:0.85rem;}
+  a{color:var(--teal);}
+  @media (max-width:640px){header.hero{padding:40px 18px 32px;}section{padding:32px 0;}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">JAZMI — Laboratorium Sains &amp; Peradaban · Alat 004</p>
+    <h1>Karakuri — Robot Mekanik Jepang</h1>
+    <p class="lede">Menelusuri boneka mekanis Jepang dari zaman Edo — leluhur budaya robotika Jepang modern — lewat garis waktu dan tiga simulasi mekanisme yang menggerakkannya.</p>
+    <p class="note">Catatan desain: figur boneka (ningyō) pada alat ini digambarkan sebagai siluet hitam pekat tanpa wajah maupun mata, mengikuti prinsip desain yang sama seperti pada alat Jam Gajah.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <h2>Belajar</h2>
+    <p>"Karakuri" (からくり) berasal dari kata kerja arkais <em>karakuru</em> — menggerakkan sesuatu dengan menarik tali. Istilah ini mulai tercatat penggunaannya akhir abad ke-16, tetapi kisah tentang boneka mekanis di Jepang sudah muncul jauh lebih awal, dalam cerita rakyat <em>Konjaku Monogatari</em> (abad ke-12) tentang boneka yang menuangkan air untuk mengairi sawah.</p>
+    <p>Karakuri mencapai puncaknya di zaman Edo (1603–1868) dalam tiga kategori utama:</p>
+    <ul>
+      <li><strong>Zashiki karakuri</strong> — boneka meja untuk hiburan pribadi di ruang tamu, seperti boneka pembawa teh (chahakobi ningyō) dan anak pemanah (yumihiki dōji).</li>
+      <li><strong>Butai karakuri</strong> — automata untuk pertunjukan panggung/teater.</li>
+      <li><strong>Dashi karakuri</strong> — automata besar di atas kereta hias untuk arak-arakan festival.</li>
+    </ul>
+    <div class="qbox"><strong>Kemiripan dengan Al-Jazari:</strong> Karakuri, seperti karya Al-Jazari, digerakkan murni oleh energi tersimpan (pegas, bandul, air) dan diterjemahkan menjadi urutan gerak lewat cam, roda gigi, dan tali — tanpa listrik maupun sensor elektronik sama sekali. Keduanya adalah automata dalam pengertian aslinya: mesin yang menjalankan urutan gerak tetap, bukan yang "berpikir".</div>
+
+    <h3>Garis Waktu — geser untuk menjelajah</h3>
+    <div class="panel">
+      <div class="timeline-track">
+        <input type="range" id="timeline" min="0" max="6" value="0" step="1" style="width:100%;accent-color:var(--brass-bright);">
+        <div class="timeline-dots" id="timeline-dots"></div>
+      </div>
+      <div id="timeline-year"></div>
+      <div id="timeline-desc"></div>
+    </div>
+  </section>
+
+  <section id="mekanisme-cam">
+    <h2>Eksplorasi 1 — Mekanisme Cam</h2>
+    <p class="sub">Bagaimana satu putaran sederhana bisa menjadi urutan gerak rumit seperti mengangkat busur dan melepas anak panah?</p>
+    <p>Jawabannya: <strong>cam</strong> — piringan berbentuk tidak beraturan yang saat berputar, mendorong sebuah pengikut (follower) naik-turun mengikuti bentuk tepinya. Inilah "otak mekanis" di balik yumihiki dōji, sang anak pemanah karya Hisashige Tanaka.</p>
+
+    <div class="panel">
+      <div class="stage-holder">
+        <svg viewBox="0 0 640 240" xmlns="http://www.w3.org/2000/svg">
+          <g id="cam-group" transform="translate(140,150)">
+            <circle r="3" fill="var(--parchment)"/>
+            <path id="cam-shape" fill="var(--brass)" stroke="#7A5A1E" stroke-width="1.5"/>
+          </g>
+          <line id="follower-rod" x1="140" y1="150" x2="140" y2="60" stroke="var(--parchment)" stroke-width="5" stroke-linecap="round"/>
+          <rect id="follower-tip" x="130" y="40" width="20" height="14" fill="var(--brass-bright)" stroke="#7A5A1E"/>
+          <text x="140" y="30" text-anchor="middle" fill="#9FB6AF" font-size="10" font-family="Cinzel">GERAK OUTPUT (mis. LENGAN)</text>
+
+          <g transform="translate(340,60)">
+            <rect x="0" y="0" width="260" height="130" fill="none" stroke="#3E5850"/>
+            <text x="0" y="-8" fill="#9FB6AF" font-size="10" font-family="Cinzel">PERPINDAHAN PENGIKUT</text>
+            <polyline id="cam-trace" fill="none" stroke="var(--brass-bright)" stroke-width="2"/>
+          </g>
+        </svg>
+      </div>
+      <div class="readout">
+        <div><span class="n" id="read-cam-mode">4 lobus</span><small>BENTUK CAM</small></div>
+      </div>
+      <div class="controls">
+        <div class="control">
+          <label>Jumlah lobus cam — <span class="value" id="cam-n-val">4</span></label>
+          <input type="range" id="cam-n" min="1" max="6" value="4">
+        </div>
+        <div class="control">
+          <label>Tinggi angkat — <span class="value" id="cam-amp-val">28</span> px</label>
+          <input type="range" id="cam-amp" min="8" max="40" value="28">
+        </div>
+        <div class="control">
+          <label>Kecepatan putar — <span class="value" id="cam-rpm-val">20</span> RPM</label>
+          <input type="range" id="cam-rpm" min="4" max="60" value="20">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button id="cam-play">▶ Jalankan</button>
+        <button class="secondary" id="cam-reset">↺ Ulang</button>
+      </div>
+      <p style="font-size:0.85rem;color:#9FB6AF;margin-top:12px;">Setiap "lobus" pada cam menghasilkan satu siklus naik-turun per putaran. Yumihiki dōji memakai serangkaian cam seperti ini yang disusun berurutan pada satu poros, sehingga satu putaran tunggal menghasilkan urutan gerak: mengambil anak panah, menariknya, membidik, lalu melepas.</p>
+    </div>
+  </section>
+
+  <section id="mekanisme-pegas">
+    <h2>Eksplorasi 2 — Boneka Pembawa Teh (Chahakobi Ningyō)</h2>
+    <p class="sub">Bagaimana boneka ini tahu kapan harus berhenti dan berbalik — padahal tidak ada sensor sama sekali?</p>
+    <p>Rahasianya: <strong>energi tersimpan dan gesekan</strong>. Pegas dari bilah balin paus (kujira no hige) dililit untuk menyimpan energi. Berat cangkir teh yang diletakkan di atas nampan melepas kunci pegas, mendorong boneka maju di atas tiga roda hingga energinya habis diserap gesekan lantai — persis pada saat itulah ia "berhenti" di depan tamu.</p>
+
+    <div class="panel">
+      <div class="stage-holder">
+        <svg viewBox="0 0 640 160" xmlns="http://www.w3.org/2000/svg">
+          <line x1="40" y1="120" x2="600" y2="120" stroke="#3E5850" stroke-width="2"/>
+          <circle cx="40" cy="120" r="4" fill="var(--brass)"/>
+          <text x="40" y="140" text-anchor="middle" fill="#9FB6AF" font-size="10" font-family="Cinzel">TITIK AWAL</text>
+          <circle cx="440" cy="120" r="4" fill="var(--marker)"/>
+          <text x="440" y="140" text-anchor="middle" fill="#9FB6AF" font-size="10" font-family="Cinzel">TAMU</text>
+
+          <g id="doll" transform="translate(40,120)">
+            <path class="figure" d="M-10 0 Q-12 -26 0 -30 Q12 -26 10 0 Q6 4 0 4 Q-6 4 -10 0 Z"/>
+            <rect x="-14" y="-34" width="28" height="6" class="lacquer"/>
+            <circle cx="0" cy="-38" r="3" fill="#111"/>
+          </g>
+        </svg>
+      </div>
+      <div class="readout">
+        <div><span class="n" id="doll-status">Menunggu cangkir</span><small>STATUS</small></div>
+        <div><span class="n" id="doll-dist">0</span><small>JARAK TEMPUH (px)</small></div>
+      </div>
+      <div class="controls">
+        <div class="control">
+          <label>Putaran pegas (energi) — <span class="value" id="turns-val">5</span></label>
+          <input type="range" id="turns" min="1" max="10" value="5">
+        </div>
+        <div class="control">
+          <label>Gesekan lantai — <span class="value" id="friction-val">5</span></label>
+          <input type="range" id="friction" min="1" max="10" value="5">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button id="btn-place">🍵 Letakkan Cangkir Teh</button>
+        <button id="btn-lift" disabled>✋ Angkat Cangkir (setelah berhenti)</button>
+        <button class="secondary" id="btn-doll-reset">↺ Ulang</button>
+      </div>
+      <p style="font-size:0.85rem;color:#9FB6AF;margin-top:12px;">Coba naikkan putaran pegas tapi turunkan gesekan — boneka akan melesat jauh melewati posisi tamu. Inilah tantangan nyata pengrajin karakuri: mengkalibrasi energi dan gesekan setepat mungkin agar boneka berhenti persis di depan tamu, setiap kali.</p>
+    </div>
+  </section>
+
+  <section id="mekanisme-jam">
+    <h2>Eksplorasi 3 — Jam Sepuluh Ribu Tahun (Mannen Jimeishō)</h2>
+    <p class="sub">Karya paling rumit Hisashige Tanaka: satu mesin, dua sistem waktu berbeda, berjalan bersamaan.</p>
+    <p>Sebelum era Meiji, Jepang memakai sistem waktu tradisional yang membagi siang dan malam masing-masing menjadi 6 "toki" — sama seperti jam temporal Al-Jazari, panjang setiap toki berubah mengikuti musim. Mannen Dokei ciptaan Tanaka menampilkan sistem ini <em>berdampingan</em> dengan jam Barat 24-jam yang tetap, dalam satu mesin. Geser rasio siang:malam di bawah untuk melihat jarum jam tradisional berubah kecepatan saat melintasi batas siang/malam.</p>
+
+    <div class="panel">
+      <div class="stage-holder">
+        <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg">
+          <g transform="translate(180,130)">
+            <circle r="80" fill="none" stroke="var(--brass)" stroke-width="2"/>
+            <text y="-90" text-anchor="middle" fill="#9FB6AF" font-size="11" font-family="Cinzel">WAKTU BARAT</text>
+            <line id="hand-west" x1="0" y1="0" x2="0" y2="-64" stroke="var(--parchment)" stroke-width="3" stroke-linecap="round"/>
+            <circle r="4" fill="var(--brass-bright)"/>
+          </g>
+          <g transform="translate(460,130)">
+            <circle r="80" fill="none" stroke="var(--brass)" stroke-width="2"/>
+            <path d="M0 -80 A80 80 0 0 1 0 80" fill="none" stroke="var(--brass-bright)" stroke-width="1" opacity="0.5"/>
+            <text y="-90" text-anchor="middle" fill="#9FB6AF" font-size="11" font-family="Cinzel">WAKTU TRADISIONAL (6 TOKI)</text>
+            <text x="0" y="-4" text-anchor="middle" fill="#9FB6AF" font-size="9">SIANG</text>
+            <text x="0" y="14" text-anchor="middle" fill="#9FB6AF" font-size="9">MALAM</text>
+            <line id="hand-toki" x1="0" y1="0" x2="0" y2="-64" stroke="var(--marker)" stroke-width="3" stroke-linecap="round"/>
+            <circle r="4" fill="var(--brass-bright)"/>
+          </g>
+        </svg>
+      </div>
+      <div class="readout">
+        <div><span class="n" id="read-toki">—</span><small>TOKI SAAT INI</small></div>
+        <div><span class="n" id="read-moon">0%</span><small>FASE BULAN (ILUSTRATIF)</small></div>
+      </div>
+      <div class="controls">
+        <div class="control">
+          <label>Kecepatan simulasi — <span class="value" id="speed-val">200×</span></label>
+          <input type="range" id="clock-speed" min="20" max="2000" value="200">
+        </div>
+        <div class="control">
+          <label>Rasio siang — <span class="value" id="dayfrac-val">50%</span> dari 24 jam</label>
+          <input type="range" id="dayfrac" min="30" max="70" value="50">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button id="clock-play">▶ Jalankan</button>
+        <button class="secondary" id="clock-reset">↺ Ulang</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="perhitungan">
+    <h2>Perhitungan &amp; Metode Verifikasi</h2>
+    <p><strong>Cam:</strong> tinggi pengikut dimodelkan sebagai <span class="mono">h(θ) = R₀ + A·(0.5 − 0.5·cos(N·θ))</span>, dengan N jumlah lobus dan A tinggi angkat — pola umum profil cam sederhana pada mesin mekanis.</p>
+    <p><strong>Boneka teh:</strong> kecepatan awal sebanding dengan putaran pegas, perlambatan sebanding dengan gesekan; jarak tempuh mengikuti <span class="mono">d = v₀² / (2a)</span> — hukum gerak dengan perlambatan konstan yang sama dipakai untuk memperkirakan jarak pengereman kendaraan.</p>
+    <p>Klaim sejarah pada alat ini kami periksa terhadap sekurangnya tiga jenis sumber: ensiklopedia seni pertunjukan (World Encyclopedia of Puppetry Arts), museum resmi (Toshiba Science Museum, National Museum of Nature and Science Tokyo), dan tulisan sejarah teknologi independen — untuk memastikan detail seperti nama pengrajin dan urutan waktu konsisten di lebih dari satu sumber.</p>
+  </section>
+
+  <section id="batasan">
+    <div class="limits">
+      <h3>Batasan</h3>
+      <ul>
+        <li>Simulasi cam, pegas, dan jam di atas adalah model kinematika/fisika yang disederhanakan — bukan replika ukuran atau parameter mesin asli, yang detailnya sebagian tidak terdokumentasi lengkap.</li>
+        <li>Fase bulan pada simulasi Mannen Dokei bersifat ilustratif untuk menunjukkan konsep "banyak sistem waktu dalam satu mesin" — bukan perhitungan astronomis akurat. Untuk itu, rujuk alat Fase Bulan JAZMI (segera hadir).</li>
+        <li>Klaim "Konjaku Monogatari abad ke-12" berasal dari kisah rakyat, bukan catatan teknik — kami tampilkan sebagai titik asal budaya, bukan bukti rekayasa.</li>
+        <li>Figur boneka digambarkan sebagai siluet non-figuratif tanpa wajah, sesuai preferensi desain yang berlaku di seluruh proyek ini — bukan representasi rupa yang akurat secara historis.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="referensi">
+    <h2>Referensi</h2>
+    <ul>
+      <li>World Encyclopedia of Puppetry Arts, entri "Karakuri Ningyō".</li>
+      <li>Toshiba Science Museum, arsip "Hisashige Tanaka" dan Mannen Jimeishō (Jam Sepuluh Ribu Tahun).</li>
+      <li>Kamm Teapot Foundation, "Chahakobi Ningyō (Tea Serving Doll)"; Kitchen, Studio, Factory: Making in East Asia, "Chahakobi Ningyo".</li>
+      <li>Japanese Wiki Corpus, entri "Karakuri (Japanese traditional mechanical devices)".</li>
+      <li>Senda, Yasuko. <em>Karakuri Ningyo: Japanese Automata</em>. Terj. Tom Slemmons. Nagoya, 2012.</li>
+    </ul>
+  </section>
+
+  <section id="artikel-terkait">
+    <h2>Alat Terkait</h2>
+    <p><a href="jam-istana-aljazari.html">Jam Istana Al-Jazari</a> · <a href="jam-gajah-aljazari.html">Jam Gajah Al-Jazari</a> · <a href="piston-aljazari.html">Piston: Sebelum &amp; Sesudah Al-Jazari</a> — satu keluarga besar automata dan mesin bertenaga mekanis dari peradaban berbeda.</p>
+  </section>
+
+</div>
+
+<footer>JAZMI — Laboratorium Sains &amp; Peradaban · Disusun mengikuti metode Belajar → Memodelkan → Menguji → Membuat</footer>
+
+<script>
+(function(){
+  /* ---------- Timeline ---------- */
+  const timelineData = [
+    {year:'Abad ke-12 M', desc:'Cerita rakyat Konjaku Monogatari menyebut boneka mekanis yang menuangkan air untuk mengairi sawah — titik asal budaya automata di Jepang, meski ini kisah rakyat, bukan catatan teknik.'},
+    {year:'Akhir Abad 16 M', desc:'Istilah "karakuri" — dari kata kerja karakuru, menggerakkan sesuatu dengan menarik tali — mulai tercatat digunakan.'},
+    {year:'Periode Edo (1603–1868)', desc:'Masa keemasan karakuri; tiga kategori berkembang: zashiki karakuri (meja), butai karakuri (panggung), dashi karakuri (kereta festival).'},
+    {year:'1796 M', desc:'Karakuri Zui, kompendium bergambar oleh Hosokawa Hanzō Yorinao, mendokumentasikan mekanisme seperti boneka pembawa teh — mempopulerkan karakuri lintas kalangan masyarakat Edo.'},
+    {year:'Awal Abad 19 M', desc:'Hisashige Tanaka ("Karakuri Giemon") menciptakan yumihiki dōji (anak pemanah) dan menyempurnakan chahakobi ningyō, memadukan rangaku ("ilmu Belanda") dengan kerajinan Jepang.'},
+    {year:'1850-an M', desc:'Tanaka menciptakan Mannen Jimeishō ("Jam Sepuluh Ribu Tahun") — jam paling rumit di Jepang saat itu, menampilkan waktu tradisional dan waktu Barat sekaligus dalam satu mesin.'},
+    {year:'1868 M dst.', desc:'Restorasi Meiji membawa teknologi Barat masuk deras; budaya karakuri meredup, tapi bengkel Tanaka berkembang menjadi cikal-bakal perusahaan yang kini dikenal sebagai Toshiba.'}
+  ];
+  const tlInput = document.getElementById('timeline');
+  const tlYear = document.getElementById('timeline-year');
+  const tlDesc = document.getElementById('timeline-desc');
+  const tlDots = document.getElementById('timeline-dots');
+  timelineData.forEach((_,i)=>{
+    const d = document.createElement('span'); d.id='dot-'+i; tlDots.appendChild(d);
+  });
+  function renderTimeline(){
+    const i = parseInt(tlInput.value,10);
+    tlYear.textContent = timelineData[i].year;
+    tlDesc.textContent = timelineData[i].desc;
+    timelineData.forEach((_,j)=> document.getElementById('dot-'+j).classList.toggle('active', j===i));
+  }
+  tlInput.addEventListener('input', renderTimeline);
+  renderTimeline();
+
+  /* ---------- Cam mechanism ---------- */
+  const camN = document.getElementById('cam-n');
+  const camAmp = document.getElementById('cam-amp');
+  const camRpm = document.getElementById('cam-rpm');
+  const camNVal = document.getElementById('cam-n-val');
+  const camAmpVal = document.getElementById('cam-amp-val');
+  const camRpmVal = document.getElementById('cam-rpm-val');
+  const camShape = document.getElementById('cam-shape');
+  const camGroup = document.getElementById('cam-group');
+  const followerRod = document.getElementById('follower-rod');
+  const followerTip = document.getElementById('follower-tip');
+  const camTrace = document.getElementById('cam-trace');
+  const readCamMode = document.getElementById('read-cam-mode');
+
+  const R0 = 24;
+  let camTheta = 0, camRunning=false, camTimer=null;
+  let camTracePoints = [];
+
+  function camRadius(N,A,th){ return R0 + A*(0.5 - 0.5*Math.cos(N*th)); }
+
+  function drawCamShape(){
+    const N = parseInt(camN.value,10);
+    const A = parseInt(camAmp.value,10);
+    let d = '';
+    for(let i=0;i<=120;i++){
+      const th = (i/120)*Math.PI*2;
+      const r = camRadius(N,A,th);
+      const x = r*Math.cos(th), y = r*Math.sin(th);
+      d += (i===0?'M':'L')+x.toFixed(1)+','+y.toFixed(1)+' ';
+    }
+    d += 'Z';
+    camShape.setAttribute('d', d);
+    readCamMode.textContent = N+' lobus';
+  }
+
+  function renderCam(){
+    const N = parseInt(camN.value,10);
+    const A = parseInt(camAmp.value,10);
+    camGroup.setAttribute('transform','translate(140,150) rotate('+(camTheta*180/Math.PI)+')');
+    const h = camRadius(N,A,camTheta);
+    const topY = 150 - h;
+    followerRod.setAttribute('y2', topY);
+    followerTip.setAttribute('y', topY-14);
+    camTracePoints.push({x:(camTracePoints.length*2)%260, y: 130 - (h-R0)});
+    if(camTracePoints.length>130) camTracePoints.shift();
+    camTrace.setAttribute('points', camTracePoints.map((p,idx)=> (idx*2)+','+Math.max(2,Math.min(128,p.y))).join(' '));
+  }
+  function camTick(){
+    const rpm = parseInt(camRpm.value,10);
+    camTheta += (rpm*2*Math.PI/60)*0.05;
+    renderCam();
+  }
+  document.getElementById('cam-play').addEventListener('click', function(){
+    if(camRunning){ camRunning=false; this.textContent='▶ Jalankan'; clearInterval(camTimer); }
+    else { camRunning=true; this.textContent='❙❙ Jeda'; camTimer=setInterval(camTick,50); }
+  });
+  document.getElementById('cam-reset').addEventListener('click', ()=>{
+    camRunning=false; document.getElementById('cam-play').textContent='▶ Jalankan';
+    clearInterval(camTimer); camTheta=0; camTracePoints=[]; drawCamShape(); renderCam();
+  });
+  camN.addEventListener('input', ()=>{ camNVal.textContent=camN.value; drawCamShape(); });
+  camAmp.addEventListener('input', ()=>{ camAmpVal.textContent=camAmp.value; drawCamShape(); });
+  camRpm.addEventListener('input', ()=>{ camRpmVal.textContent=camRpm.value; });
+  drawCamShape(); renderCam();
+
+  /* ---------- Chahakobi ningyo ---------- */
+  const turnsInput = document.getElementById('turns');
+  const frictionInput = document.getElementById('friction');
+  const turnsVal = document.getElementById('turns-val');
+  const frictionVal = document.getElementById('friction-val');
+  const doll = document.getElementById('doll');
+  const dollStatus = document.getElementById('doll-status');
+  const dollDist = document.getElementById('doll-dist');
+  const btnPlace = document.getElementById('btn-place');
+  const btnLift = document.getElementById('btn-lift');
+  const btnDollReset = document.getElementById('btn-doll-reset');
+
+  let dollPos=0, dollVel=0, dollState='idle', dollTimer=null;
+  const TRACK_MAX = 400;
+
+  function renderDoll(){
+    doll.setAttribute('transform','translate('+(40+dollPos)+',120)');
+    dollDist.textContent = Math.round(dollPos);
+  }
+  function dollTick(){
+    if(dollState==='forward'){
+      const friction = parseInt(frictionInput.value,10);
+      dollVel -= 0.05*friction;
+      if(dollVel<=0){ dollVel=0; dollState='waiting'; dollStatus.textContent='Berhenti — menunggu cangkir diangkat'; btnLift.disabled=false; clearInterval(dollTimer); }
+      dollPos = Math.min(dollPos+dollVel, TRACK_MAX);
+      if(dollPos>=TRACK_MAX){ dollState='waiting'; dollStatus.textContent='Berhenti di batas jalur'; btnLift.disabled=false; clearInterval(dollTimer); }
+    } else if(dollState==='return'){
+      dollPos -= 3;
+      if(dollPos<=0){ dollPos=0; dollState='idle'; dollStatus.textContent='Menunggu cangkir'; btnPlace.disabled=false; clearInterval(dollTimer); }
+    }
+    renderDoll();
+  }
+  btnPlace.addEventListener('click', ()=>{
+    if(dollState!=='idle') return;
+    const turns = parseInt(turnsInput.value,10);
+    dollVel = 1.5 + turns*1.0;
+    dollState='forward'; dollStatus.textContent='Berjalan menuju tamu…';
+    btnPlace.disabled=true; btnLift.disabled=true;
+    clearInterval(dollTimer); dollTimer=setInterval(dollTick,30);
+  });
+  btnLift.addEventListener('click', ()=>{
+    if(dollState!=='waiting') return;
+    dollState='return'; dollStatus.textContent='Kembali ke titik awal…';
+    btnLift.disabled=true;
+    clearInterval(dollTimer); dollTimer=setInterval(dollTick,30);
+  });
+  btnDollReset.addEventListener('click', ()=>{
+    clearInterval(dollTimer); dollPos=0; dollVel=0; dollState='idle';
+    dollStatus.textContent='Menunggu cangkir'; dollDist.textContent='0';
+    btnPlace.disabled=false; btnLift.disabled=true; renderDoll();
+  });
+  turnsInput.addEventListener('input', ()=> turnsVal.textContent=turnsInput.value);
+  frictionInput.addEventListener('input', ()=> frictionVal.textContent=frictionInput.value);
+  renderDoll();
+
+  /* ---------- Mannen Dokei ---------- */
+  const clockSpeed = document.getElementById('clock-speed');
+  const dayFrac = document.getElementById('dayfrac');
+  const speedVal = document.getElementById('speed-val');
+  const dayfracVal = document.getElementById('dayfrac-val');
+  const handWest = document.getElementById('hand-west');
+  const handToki = document.getElementById('hand-toki');
+  const readToki = document.getElementById('read-toki');
+  const readMoon = document.getElementById('read-moon');
+  let elapsedHours=0, clockRunning=false, clockTimer=null;
+
+  function renderClock(){
+    const dfrac = parseInt(dayFrac.value,10)/100;
+    const t = elapsedHours % 24;
+    const westAngle = (t/24)*360;
+    handWest.setAttribute('transform','rotate('+westAngle+')');
+
+    let tokiAngle, tokiLabel;
+    const dayLen = dfrac*24, nightLen = 24-dayLen;
+    if(t < dayLen){
+      const p = t/dayLen;
+      tokiAngle = p*180;
+      tokiLabel = 'Toki '+(Math.min(6,Math.floor(p*6)+1))+' (Siang)';
+    } else {
+      const p = (t-dayLen)/nightLen;
+      tokiAngle = 180 + p*180;
+      tokiLabel = 'Toki '+(Math.min(6,Math.floor(p*6)+1))+' (Malam)';
+    }
+    handToki.setAttribute('transform','rotate('+tokiAngle+')');
+    readToki.textContent = tokiLabel;
+
+    const moonPct = Math.round(((elapsedHours/(24*6))%1)*100);
+    readMoon.textContent = moonPct+'%';
+  }
+  function clockTick(){
+    const speed = parseInt(clockSpeed.value,10);
+    elapsedHours += speed*0.05/60;
+    renderClock();
+  }
+  document.getElementById('clock-play').addEventListener('click', function(){
+    if(clockRunning){ clockRunning=false; this.textContent='▶ Jalankan'; clearInterval(clockTimer); }
+    else { clockRunning=true; this.textContent='❙❙ Jeda'; clockTimer=setInterval(clockTick,50); }
+  });
+  document.getElementById('clock-reset').addEventListener('click', ()=>{
+    clockRunning=false; document.getElementById('clock-play').textContent='▶ Jalankan';
+    clearInterval(clockTimer); elapsedHours=0; renderClock();
+  });
+  clockSpeed.addEventListener('input', ()=> speedVal.textContent = clockSpeed.value+'×');
+  dayFrac.addEventListener('input', ()=>{ dayfracVal.textContent = dayFrac.value+'%'; renderClock(); });
+  renderClock();
+})();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

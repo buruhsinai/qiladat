@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kebun Waktu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fdf6e8; --card:#ffffff; --line:#f0e2c4;
+    --ink:#3a3226; --dim:#8a7c62;
+    --accent:#5cb87a; --accent-soft:#e6f5ea; --soil:#8a6a4a;
+    --display:'Fredoka',sans-serif; --sans:'Quicksand',sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;}
+  .wrap{max-width:480px;margin:0 auto;padding:0 18px 60px;}
+
+  .hero{padding:36px 10px 20px;text-align:center;}
+  .hero h1{font-family:var(--display);font-weight:700;font-size:clamp(24px,7vw,32px);margin:0 0 8px;color:#3a6b4a;}
+  .hero p{color:var(--dim);font-size:14px;margin:0;}
+
+  .setup-card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:20px;margin-bottom:18px;}
+  .setup-card.hidden{display:none;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-family:var(--mono);font-size:11px;color:var(--dim);text-transform:uppercase;margin-bottom:6px;}
+  .field input{width:100%;padding:11px 13px;border:2px solid var(--line);border-radius:10px;font-family:var(--sans);font-size:15px;background:#fffdf8;color:var(--ink);}
+  .field input:focus{outline:none;border-color:var(--accent);}
+  .swatch-row{display:flex;gap:8px;}
+  .swatch{width:36px;height:36px;border-radius:50%;border:3px solid transparent;cursor:pointer;}
+  .swatch.active{border-color:var(--ink);}
+  .btn{width:100%;font-family:var(--display);font-weight:600;font-size:15px;padding:13px;border-radius:12px;border:none;cursor:pointer;background:var(--accent);color:#fff;margin-top:6px;}
+
+  .garden-card{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:24px 20px;text-align:center;}
+  .garden-title{font-family:var(--display);font-size:19px;color:#3a6b4a;margin-bottom:2px;}
+  .garden-sub{font-size:13px;color:var(--dim);margin-bottom:14px;}
+
+  .plant-stage{display:flex;justify-content:center;margin:6px 0 10px;}
+  .plant-stage svg{width:180px;height:200px;}
+
+  .dots{display:flex;justify-content:center;gap:7px;margin-bottom:16px;}
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--line);}
+  .dot.filled{background:var(--accent);}
+
+  .water-btn{width:100%;font-family:var(--display);font-weight:700;font-size:17px;padding:18px;border-radius:16px;border:none;cursor:pointer;
+    background:var(--accent);color:#fff;box-shadow:0 6px 0 rgba(0,0,0,0.08);transition:transform .1s;}
+  .water-btn:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,0.08);}
+  .water-btn:disabled{background:#e6ddc6;color:#b9ad94;cursor:not-allowed;box-shadow:none;}
+
+  .status-msg{margin-top:12px;font-size:13.5px;color:var(--dim);min-height:20px;}
+
+  .stat-row{display:flex;gap:10px;margin-top:20px;}
+  .stat-box{flex:1;background:var(--accent-soft);border-radius:12px;padding:12px;}
+  .stat-num{font-family:var(--display);font-size:20px;color:#3a6b4a;}
+  .stat-lbl{font-size:11px;color:var(--dim);}
+
+  .gallery{margin-top:18px;padding-top:16px;border-top:1px dashed var(--line);}
+  .gallery-title{font-size:12px;color:var(--dim);font-family:var(--mono);text-transform:uppercase;margin-bottom:10px;}
+  .gallery-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;}
+  .gallery-item{flex-shrink:0;width:36px;height:36px;}
+
+  .note-card{background:var(--accent-soft);border-radius:14px;padding:16px 18px;margin-top:18px;font-size:13.5px;color:#3a5a45;}
+  .note-card strong{color:#2a4a35;}
+
+  .demo-toggle{text-align:center;margin-top:16px;}
+  .demo-toggle button{background:none;border:none;color:#b9ad94;font-size:12px;font-family:var(--mono);cursor:pointer;text-decoration:underline;}
+  .demo-row{display:none;justify-content:center;gap:8px;margin-top:10px;}
+  .demo-row.show{display:flex;}
+  .demo-row button{font-family:var(--mono);font-size:11px;background:#fff;border:1px solid var(--line);color:var(--dim);padding:6px 12px;border-radius:8px;cursor:pointer;}
+
+  footer{text-align:center;padding-top:26px;color:#b9ad94;font-size:11.5px;font-family:var(--mono);}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>🌱 Kebun Waktu</h1>
+    <p>Setiap hari nyata cuma boleh disiram sekali — tanaman ini tidak bisa buru-buru mekar.</p>
+  </div>
+
+  <div class="setup-card" id="setupCard">
+    <div class="field"><label>Nama Anak</label><input id="setupNama" placeholder="Adek" value="Adek"></div>
+    <div class="field"><label>Nama Kebun</label><input id="setupKebun" placeholder="Kebun Adek" value="Kebun Adek"></div>
+    <div class="field">
+      <label>Warna Bunga</label>
+      <div class="swatch-row" id="setupSwatch">
+        <div class="swatch active" style="background:#5cb87a" data-color="#5cb87a"></div>
+        <div class="swatch" style="background:#e0a83f" data-color="#e0a83f"></div>
+        <div class="swatch" style="background:#e0699a" data-color="#e0699a"></div>
+        <div class="swatch" style="background:#4f86c6" data-color="#4f86c6"></div>
+        <div class="swatch" style="background:#a878d9" data-color="#a878d9"></div>
+      </div>
+    </div>
+    <button class="btn" onclick="mulaiKebun()">Mulai Menanam</button>
+  </div>
+
+  <div class="garden-card hidden" id="gardenCard">
+    <div class="garden-title" id="gTitle">Kebun Adek</div>
+    <div class="garden-sub" id="gSub">Tahap 1 dari 7</div>
+
+    <div class="plant-stage" id="plantStage"></div>
+    <div class="dots" id="dots"></div>
+
+    <button class="water-btn" id="waterBtn" onclick="siram()">💧 Siram Hari Ini</button>
+    <div class="status-msg" id="statusMsg"></div>
+
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-num" id="statTotal">0</div><div class="stat-lbl">total hari disiram</div></div>
+      <div class="stat-box"><div class="stat-num" id="statSelesai">0</div><div class="stat-lbl">tanaman selesai</div></div>
+    </div>
+
+    <div class="gallery">
+      <div class="gallery-title">Kebunmu</div>
+      <div class="gallery-row" id="galleryRow"></div>
+    </div>
+
+    <div class="note-card">
+      <strong>Kenapa cuma boleh sekali sehari?</strong> Karena satu tahap tumbuh = satu kali Matahari terbit dan tenggelam. Kamu bisa menekan tombolnya berkali-kali, tapi tanamannya tetap menunggu sampai besok — persis seperti waktu, yang tidak bisa dipercepat sekencang apa pun kita ingin.
+    </div>
+
+    <div class="demo-toggle">
+      <button onclick="toggleDemo()">🔧 mode demo (untuk mencoba)</button>
+      <div class="demo-row" id="demoRow">
+        <button onclick="demoLewatiHari()">Lewati ke hari berikutnya</button>
+        <button onclick="resetKebun()">Reset kebun</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>Laboratorium Pendidikan Anak — Bank Alat JAZMI/Qiladat</footer>
+</div>
+
+<script>
+  // ---- storage dengan fallback aman ----
+  let storage;
+  try {
+    localStorage.setItem('__test__','1'); localStorage.removeItem('__test__');
+    storage = localStorage;
+  } catch(e) {
+    const mem = {};
+    storage = { getItem:k => (k in mem ? mem[k] : null), setItem:(k,v) => mem[k]=v, removeItem:k => delete mem[k] };
+  }
+
+  const KEY = 'kebunWaktu_v1';
+  let warnaAktif = '#5cb87a';
+  let demoOffsetHari = 0; // untuk mode demo saja
+
+  document.querySelectorAll('#setupSwatch .swatch').forEach(s => {
+    s.addEventListener('click', () => {
+      document.querySelectorAll('#setupSwatch .swatch').forEach(x => x.classList.remove('active'));
+      s.classList.add('active');
+      warnaAktif = s.dataset.color;
+    });
+  });
+
+  function todayStr(){
+    const d = new Date();
+    d.setDate(d.getDate() + demoOffsetHari);
+    return d.toISOString().slice(0,10);
+  }
+
+  function loadState(){
+    try { return JSON.parse(storage.getItem(KEY)); } catch(e){ return null; }
+  }
+  function saveState(state){
+    storage.setItem(KEY, JSON.stringify(state));
+  }
+
+  function mulaiKebun(){
+    const nama = document.getElementById('setupNama').value || 'Adek';
+    const kebun = document.getElementById('setupKebun').value || `Kebun ${nama}`;
+    const state = {
+      nama, kebun, warna: warnaAktif,
+      stage: 0, totalDisiram: 0, selesai: 0,
+      lastWatered: null, gallery: []
+    };
+    saveState(state);
+    document.getElementById('setupCard').classList.add('hidden');
+    document.getElementById('gardenCard').classList.remove('hidden');
+    render(state);
+  }
+
+  function siram(){
+    const state = loadState();
+    if(!state) return;
+    const today = todayStr();
+    if(state.lastWatered === today){
+      document.getElementById('statusMsg').textContent = 'Sudah disiram hari ini — tanaman lagi istirahat, kembali besok ya 🌙';
+      return;
+    }
+    state.lastWatered = today;
+    state.totalDisiram += 1;
+    state.stage += 1;
+
+    if(state.stage >= 6){
+      state.stage = 6; // tampilkan mekar penuh dulu
+      state.selesai += 1;
+      state.gallery.push(state.warna);
+      saveState(state);
+      render(state);
+      document.getElementById('statusMsg').textContent = `🎉 ${state.kebun} mekar penuh! Tanaman baru akan mulai besok.`;
+      setTimeout(() => {
+        state.stage = 0;
+        saveState(state);
+        render(state);
+      }, 1800);
+      return;
+    }
+
+    saveState(state);
+    render(state);
+    document.getElementById('statusMsg').textContent = 'Tumbuh satu tahap! Sampai jumpa besok 🌱';
+  }
+
+  function render(state){
+    document.getElementById('gTitle').textContent = state.kebun;
+    document.getElementById('gSub').textContent = `Tahap ${state.stage + 1} dari 7`;
+    document.getElementById('plantStage').innerHTML = plantSVG(state.stage, state.warna);
+
+    let dotsHtml = '';
+    for(let i=0;i<7;i++) dotsHtml += `<div class="dot ${i<=state.stage ? 'filled' : ''}" style="${i<=state.stage ? `background:${state.warna}` : ''}"></div>`;
+    document.getElementById('dots').innerHTML = dotsHtml;
+
+    document.getElementById('statTotal').textContent = state.totalDisiram;
+    document.getElementById('statSelesai').textContent = state.selesai;
+
+    const today = todayStr();
+    const btn = document.getElementById('waterBtn');
+    if(state.lastWatered === today){
+      btn.disabled = true;
+      btn.textContent = '🌙 Sampai Besok';
+      document.getElementById('statusMsg').textContent = 'Sudah disiram hari ini — kembali besok ya!';
+    } else {
+      btn.disabled = false;
+      btn.textContent = '💧 Siram Hari Ini';
+    }
+
+    document.getElementById('galleryRow').innerHTML = state.gallery.map(c => flowerIconSVG(c)).join('') || '<span style="font-size:12px;color:#b9ad94;">Belum ada tanaman selesai</span>';
+  }
+
+  function toggleDemo(){
+    document.getElementById('demoRow').classList.toggle('show');
+  }
+  function demoLewatiHari(){
+    demoOffsetHari += 1;
+    const state = loadState();
+    if(state) render(state);
+  }
+  function resetKebun(){
+    storage.removeItem(KEY);
+    demoOffsetHari = 0;
+    document.getElementById('setupCard').classList.remove('hidden');
+    document.getElementById('gardenCard').classList.add('hidden');
+  }
+
+  // ---- SVG tanaman: murni botani, tanpa makhluk bernyawa ----
+  function plantSVG(stage, color){
+    const soil = `<ellipse cx="90" cy="182" rx="55" ry="10" fill="#c9b48a"/><ellipse cx="90" cy="178" rx="50" ry="8" fill="#8a6a4a"/>`;
+    let stem = '', leaves = '', bloom = '';
+
+    const stemHeights = [0, 15, 40, 70, 95, 110, 115];
+    const h = stemHeights[stage];
+    if(h > 0){
+      stem = `<line x1="90" y1="178" x2="90" y2="${178-h}" stroke="#5a8a5a" stroke-width="5" stroke-linecap="round"/>`;
+    }
+    if(stage === 0){
+      stem = `<circle cx="90" cy="174" r="6" fill="#8a6a4a"/>`;
+    }
+    if(stage >= 3){
+      const ly = 178 - h*0.55;
+      leaves = `
+        <path d="M90 ${ly} Q65 ${ly-8} 62 ${ly+14} Q80 ${ly+10} 90 ${ly}" fill="#6fae6f"/>
+        <path d="M90 ${ly} Q115 ${ly-8} 118 ${ly+14} Q100 ${ly+10} 90 ${ly}" fill="#6fae6f"/>
+      `;
+    }
+    if(stage === 4){
+      bloom = `<circle cx="90" cy="${178-h}" r="8" fill="${color}" opacity="0.55"/>`;
+    }
+    if(stage === 5){
+      bloom = `
+        <circle cx="90" cy="${178-h}" r="12" fill="${color}" opacity="0.85"/>
+        ${petals(90, 178-h, color, 5, 10)}
+      `;
+    }
+    if(stage === 6){
+      bloom = `
+        <circle cx="90" cy="${178-h}" r="10" fill="#f4d35e"/>
+        ${petals(90, 178-h, color, 7, 20)}
+      `;
+    }
+
+    return `<svg viewBox="0 0 180 200" xmlns="http://www.w3.org/2000/svg">${soil}${stem}${leaves}${bloom}</svg>`;
+  }
+
+  function petals(cx, cy, color, n, r){
+    let out = '';
+    for(let i=0;i<n;i++){
+      const angle = (i / n) * 2 * Math.PI;
+      const px = cx + Math.cos(angle) * r;
+      const py = cy + Math.sin(angle) * r;
+      out += `<ellipse cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" rx="9" ry="6" fill="${color}" opacity="0.9" transform="rotate(${(angle*180/Math.PI).toFixed(1)} ${px.toFixed(1)} ${py.toFixed(1)})"/>`;
+    }
+    return out;
+  }
+
+  function flowerIconSVG(color){
+    return `<svg class="gallery-item" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+      <line x1="20" y1="38" x2="20" y2="24" stroke="#5a8a5a" stroke-width="3"/>
+      <circle cx="20" cy="16" r="5" fill="#f4d35e"/>
+      ${petals(20,16,color,6,10)}
+    </svg>`;
+  }
+
+  // ---- init ----
+  (function init(){
+    const state = loadState();
+    if(state){
+      document.getElementById('setupCard').classList.add('hidden');
+      document.getElementById('gardenCard').classList.remove('hidden');
+      render(state);
+    }
+  })();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

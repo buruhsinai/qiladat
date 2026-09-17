@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulator Evolusi Sederhana</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12151a; --bg-panel:#1a1e25; --bg-panel-2:#20242c; --line:#2c313b;
+    --text:#e9e6df; --text-dim:#9aa1ad;
+    --gold:#c9a24b; --gold-soft:#e3c988;
+    --ok:#4f9c94; --warn:#e3766a; --blue:#5b8fc9; --purple:#9b7fc9;
+    --font-display:"Fraunces",serif; --font-body:"Karla",sans-serif; --font-mono:"JetBrains Mono",monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;}
+  .wrap{max-width:940px;margin:0 auto;padding:0 20px 80px;}
+  header.hero{padding:56px 20px 40px;text-align:center;border-bottom:1px solid var(--line);
+    background:radial-gradient(ellipse at 50% 0%, rgba(79,156,148,0.10), transparent 60%);}
+  .eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ok);margin-bottom:14px;}
+  h1{font-family:var(--font-display);font-weight:600;font-size:clamp(26px,5vw,40px);margin:0 0 12px;}
+  .subtitle{color:var(--text-dim);font-size:15px;max-width:640px;margin:0 auto;}
+  section{padding:36px 0;border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  h2{font-family:var(--font-display);font-weight:600;font-size:22px;color:var(--gold-soft);margin:0 0 6px;display:flex;align-items:baseline;gap:10px;}
+  h2 .num{font-family:var(--font-mono);font-size:13px;color:var(--text-dim);font-weight:400;}
+  p{font-size:15.5px;} p.dim{color:var(--text-dim);font-size:14px;}
+  ul{padding-left:20px;} li{margin-bottom:6px;font-size:14.5px;}
+
+  .panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:22px;}
+  .controls-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:16px;}
+  .field label{display:flex;justify-content:space-between;font-size:12px;color:var(--text-dim);margin-bottom:6px;font-family:var(--font-mono);text-transform:uppercase;}
+  .field label .val{color:var(--gold-soft);}
+  .field input[type=range]{width:100%;accent-color:var(--ok);}
+
+  .toggle-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+  .toggle-btn{background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text-dim);
+    padding:11px 16px;border-radius:8px;font-weight:700;cursor:pointer;font-size:13.5px;}
+  .toggle-btn.active-on{border-color:var(--ok);color:var(--ok);background:rgba(79,156,148,0.1);}
+  .toggle-btn.active-off{border-color:var(--warn);color:var(--warn);background:rgba(227,118,106,0.1);}
+  .action-btn{background:var(--gold);color:#1a1608;font-weight:700;padding:11px 18px;border-radius:8px;border:none;cursor:pointer;font-size:13.5px;}
+  .action-btn:hover{background:var(--gold-soft);}
+  .action-btn.secondary{background:var(--bg-panel-2);color:var(--text);border:1px solid var(--line);}
+  .action-btn.env{background:var(--purple);color:#1a1330;}
+
+  svg.chart{width:100%;height:auto;display:block;background:var(--bg-panel-2);border-radius:8px;border:1px solid var(--line);margin-top:14px;}
+  .results{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px;}
+  .result-card{background:var(--bg-panel-2);border:1px solid var(--line);border-radius:8px;padding:11px 13px;}
+  .result-card .l{font-family:var(--font-mono);font-size:10.5px;color:var(--text-dim);text-transform:uppercase;}
+  .result-card .v{font-family:var(--font-display);font-size:18px;color:var(--gold-soft);}
+  .insight-box{margin-top:16px;background:var(--bg-panel-2);border:1px dashed var(--gold);border-radius:8px;padding:14px 18px;font-size:14px;color:var(--text);}
+  .insight-box b{color:var(--gold-soft);}
+
+  .benefit-list{display:grid;gap:10px;}
+  .benefit-item{background:var(--bg-panel);border:1px solid var(--line);border-radius:8px;padding:14px 18px;}
+  .benefit-item .btitle{font-weight:700;color:var(--gold-soft);font-size:15px;margin-bottom:4px;}
+  .limit-item{background:var(--bg-panel);border:1px solid var(--line);border-left:3px solid var(--warn);
+    padding:12px 16px;border-radius:6px;margin-bottom:8px;font-size:14.5px;color:var(--text-dim);}
+  table.refs{width:100%;border-collapse:collapse;font-size:14px;}
+  table.refs td{padding:8px 4px;border-bottom:1px solid var(--line);color:var(--text-dim);vertical-align:top;}
+  table.refs td:first-child{color:var(--text);width:32%;font-weight:600;}
+  footer{text-align:center;padding:36px 20px 10px;color:var(--text-dim);font-size:12.5px;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="eyebrow">Genetika Populasi · Simulasi Interaktif</div>
+  <h1>Simulator Evolusi Sederhana</h1>
+  <p class="subtitle">Bukan untuk membuktikan atau membantah evolusi — tapi untuk melihat sendiri, generasi demi generasi, apa yang benar-benar dikerjakan seleksi alam, dan apa yang tidak bisa ia kerjakan sendirian.</p>
+</header>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <h2><span class="num">01</span> Belajar</h2>
+    <p>Model ini mengikuti satu sifat (misalnya: kegelapan warna kamuflase) pada populasi berjumlah N individu. Setiap individu punya nilai sifat sendiri. Tiap generasi:</p>
+    <ul>
+      <li><strong>Seleksi</strong> — individu yang nilainya lebih dekat ke "nilai optimal" lingkungan (θ) lebih besar peluangnya bereproduksi.</li>
+      <li><strong>Mutasi</strong> (bisa dimatikan) — keturunan bisa mewarisi nilai sifat dengan sedikit perubahan acak dari induknya.</li>
+      <li><strong>Drift genetik</strong> — karena populasi terbatas, ada unsur keberuntungan murni dalam siapa yang berhasil bereproduksi.</li>
+    </ul>
+    <p>Poin inti yang bisa Anda uji sendiri di bawah: <strong>seleksi hanya menyaring variasi yang SUDAH ADA</strong> dalam populasi — ia tidak menciptakan variasi baru. Sumber variasi/informasi genetik baru dalam teori evolusi standar adalah <strong>mutasi</strong> (juga rekombinasi &amp; migrasi, tidak dimodelkan di sini). Matikan mutasi, dan lihat sendiri apa yang terjadi pada variasi populasi dari waktu ke waktu.</p>
+  </section>
+
+  <section id="simulator">
+    <h2><span class="num">02</span> Simulator</h2>
+    <div class="panel">
+      <div class="controls-row">
+        <div class="field"><label>Ukuran Populasi (N) <span class="val" id="vN">200</span></label><input type="range" id="inN" min="20" max="500" step="10" value="200"></div>
+        <div class="field"><label>Laju Mutasi (simpangan) <span class="val" id="vMu">0.020</span></label><input type="range" id="inMu" min="0" max="0.08" step="0.002" value="0.02"></div>
+        <div class="field"><label>Tekanan Seleksi (kecil = ketat) <span class="val" id="vS">0.15</span></label><input type="range" id="inS" min="0.03" max="0.6" step="0.01" value="0.15"></div>
+      </div>
+
+      <div class="toggle-row">
+        <button class="toggle-btn active-on" id="btnMutasi" data-on="true">🧬 Mutasi: AKTIF</button>
+        <button class="action-btn" id="btnStep">▶ Jalankan 1 Generasi</button>
+        <button class="action-btn" id="btnPlay">⏵ Putar Otomatis</button>
+        <button class="action-btn env" id="btnEnv">🌪️ Ubah Lingkungan Tiba-tiba</button>
+        <button class="action-btn secondary" id="btnReset">↺ Reset</button>
+      </div>
+
+      <svg class="chart" id="svgHist" viewBox="0 0 800 200"></svg>
+      <svg class="chart" id="svgVar" viewBox="0 0 800 160"></svg>
+
+      <div class="results">
+        <div class="result-card"><div class="l">Generasi</div><div class="v" id="rGen">0</div></div>
+        <div class="result-card"><div class="l">Rata-rata Sifat</div><div class="v" id="rMean">–</div></div>
+        <div class="result-card"><div class="l">Variasi (Variance)</div><div class="v" id="rVar">–</div></div>
+        <div class="result-card"><div class="l">Kebugaran Rata-rata</div><div class="v" id="rFit">–</div></div>
+      </div>
+
+      <div class="insight-box" id="insightBox"></div>
+    </div>
+  </section>
+
+  <section id="manfaat">
+    <h2><span class="num">03</span> Manfaat &amp; Kegunaan</h2>
+    <div class="benefit-list">
+      <div class="benefit-item"><div class="btitle">Membedakan peran seleksi vs mutasi</div>Menunjukkan secara langsung bahwa dua mekanisme ini mengerjakan tugas yang berbeda: mutasi menyediakan bahan baku (variasi), seleksi menyaringnya.</div>
+      <div class="benefit-item"><div class="btitle">Mendemonstrasikan mengapa keragaman genetik penting</div>Populasi yang kehilangan variasi (mis. akibat populasi kecil/bottleneck lama tanpa mutasi) kesulitan merespons perubahan lingkungan mendadak — konsep nyata di balik kekhawatiran konservasi keanekaragaman hayati.</div>
+      <div class="benefit-item"><div class="btitle">Media diskusi jujur tentang batas model sederhana</div>Membantu membedakan klaim yang bisa diuji langsung lewat simulasi kecil ini, dari klaim lebih besar tentang asal-usul kompleksitas biologis yang butuh model jauh lebih kaya (lihat Batasan).</div>
+    </div>
+  </section>
+
+  <section id="batasan">
+    <h2><span class="num">04</span> Batasan</h2>
+    <div class="limit-item">Model ini hanya satu sifat kontinu pada satu populasi — evolusi nyata melibatkan ribuan gen berinteraksi (epistasis, pleiotropi), rekombinasi seksual, migrasi antar-populasi, dan banyak lagi yang tidak dimodelkan di sini.</div>
+    <div class="limit-item">Ini BUKAN simulasi asal-usul kompleksitas biologis (mis. asal organ atau sistem biokimia tertentu) — itu pertanyaan berbeda yang butuh model jauh lebih kaya &amp; data spesifik, di luar cakupan alat ini.</div>
+    <div class="limit-item">"Mutasi" di sini disederhanakan sebagai pergeseran acak kecil pada satu nilai sifat — mutasi nyata bermacam-macam (titik, duplikasi, inversi, dll.) dengan efek sangat beragam, dari netral hingga sangat merugikan/menguntungkan.</div>
+    <div class="limit-item">Simulasi ini menunjukkan MEKANISME (bagaimana seleksi &amp; mutasi bekerja secara matematis), bukan bukti langsung untuk atau menentang klaim filosofis/teologis tertentu tentang asal-usul kehidupan.</div>
+  </section>
+
+  <section id="referensi">
+    <h2><span class="num">05</span> Referensi</h2>
+    <table class="refs">
+      <tr><td>R.A. Fisher</td><td>The Genetical Theory of Natural Selection — fondasi genetika populasi modern</td></tr>
+      <tr><td>Hardy–Weinberg</td><td>Prinsip dasar frekuensi alel dalam populasi tanpa gaya evolusioner</td></tr>
+      <tr><td>Model Seleksi-Mutasi Standar</td><td>Keseimbangan mutasi-seleksi dalam mempertahankan variasi populasi</td></tr>
+    </table>
+  </section>
+
+</div>
+
+<footer>Simulator edukasi genetika populasi — bagian dari seri eksplorasi epistemologi sains.</footer>
+
+<script>
+(function(){
+  const el = id => document.getElementById(id);
+
+  let state = {
+    N: 200, mu: 0.02, s: 0.15, theta: 0.5,
+    mutationOn: true,
+    pop: [], gen: 0,
+    varHistory: [], fitHistory: [],
+    playing: false, playTimer: null,
+  };
+
+  function gaussian(mean, std){
+    let u=0,v=0;
+    while(u===0) u=Math.random();
+    while(v===0) v=Math.random();
+    return mean + std*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+  }
+
+  function initPop(){
+    state.pop = Array.from({length: state.N}, ()=> gaussian(state.theta, 0.12));
+    state.gen = 0;
+    state.varHistory = [];
+    state.fitHistory = [];
+  }
+
+  function fitnessOf(x){
+    const d = x - state.theta;
+    return Math.exp(-(d*d)/(2*state.s*state.s));
+  }
+
+  function stepGeneration(){
+    const fitnesses = state.pop.map(fitnessOf);
+    const total = fitnesses.reduce((a,b)=>a+b,0) || 1e-9;
+    // build cumulative weights for roulette-wheel sampling
+    const cum = [];
+    let acc=0;
+    for(const f of fitnesses){ acc += f/total; cum.push(acc); }
+    const newPop = [];
+    for(let i=0;i<state.N;i++){
+      const r = Math.random();
+      let lo=0, hi=cum.length-1;
+      while(lo<hi){ const mid=(lo+hi)>>1; if(cum[mid]<r) lo=mid+1; else hi=mid; }
+      let val = state.pop[lo];
+      if(state.mutationOn) val += gaussian(0, state.mu);
+      newPop.push(val);
+    }
+    state.pop = newPop;
+    state.gen++;
+    const mean = state.pop.reduce((a,b)=>a+b,0)/state.N;
+    const variance = state.pop.reduce((a,b)=>a+(b-mean)*(b-mean),0)/state.N;
+    const meanFit = state.pop.map(fitnessOf).reduce((a,b)=>a+b,0)/state.N;
+    state.varHistory.push(variance);
+    state.fitHistory.push(meanFit);
+    if(state.varHistory.length>200){ state.varHistory.shift(); state.fitHistory.shift(); }
+    return {mean, variance, meanFit};
+  }
+
+  function drawHistogram(){
+    const W=800,H=200,padL=40,padR=20,padT=15,padB=25;
+    const bins=30, minX=-0.3, maxX=1.3;
+    const counts = new Array(bins).fill(0);
+    state.pop.forEach(x=>{
+      let idx = Math.floor((x-minX)/(maxX-minX)*bins);
+      idx = Math.max(0,Math.min(bins-1,idx));
+      counts[idx]++;
+    });
+    const maxCount = Math.max(1,...counts);
+    const plotW=W-padL-padR, plotH=H-padT-padB;
+    const binW = plotW/bins;
+    let s='';
+    for(let i=0;i<bins;i++){
+      const h = (counts[i]/maxCount)*plotH;
+      const x = padL+i*binW;
+      const y = padT+plotH-h;
+      s += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${(binW-1).toFixed(1)}" height="${h.toFixed(1)}" fill="#4f9c94" opacity="0.85"/>`;
+    }
+    // theta marker
+    const thetaX = padL + ((state.theta-minX)/(maxX-minX))*plotW;
+    s += `<line x1="${thetaX.toFixed(1)}" y1="${padT}" x2="${thetaX.toFixed(1)}" y2="${padT+plotH}" stroke="#c9a24b" stroke-width="2" stroke-dasharray="4,3"/>`;
+    s += `<text x="${thetaX.toFixed(1)}" y="${padT-4}" font-size="11" fill="#c9a24b" text-anchor="middle" font-family="JetBrains Mono, monospace">θ optimal</text>`;
+    s += `<text x="${padL}" y="${H-6}" font-size="10" fill="#9aa1ad" font-family="JetBrains Mono, monospace">Distribusi nilai sifat populasi (Generasi ${state.gen})</text>`;
+    el('svgHist').innerHTML = s;
+  }
+
+  function drawVarChart(){
+    const W=800,H=160,padL=40,padR=20,padT=15,padB=25;
+    const plotW=W-padL-padR, plotH=H-padT-padB;
+    const data = state.varHistory;
+    if(data.length<2){ el('svgVar').innerHTML=''; return; }
+    const maxV = Math.max(0.001, ...data);
+    let path='';
+    data.forEach((v,i)=>{
+      const x = padL + (i/(Math.max(1,data.length-1)))*plotW;
+      const y = padT + plotH - (v/maxV)*plotH;
+      path += (i===0?'M':'L')+x.toFixed(1)+','+y.toFixed(1)+' ';
+    });
+    let s = `<path d="${path}" fill="none" stroke="#5b8fc9" stroke-width="2"/>`;
+    s += `<text x="${padL}" y="${H-6}" font-size="10" fill="#9aa1ad" font-family="JetBrains Mono, monospace">Variasi populasi sepanjang waktu (biru) — makin rendah, makin seragam</text>`;
+    el('svgVar').innerHTML = s;
+  }
+
+  function updateResults(mean, variance, meanFit){
+    el('rGen').textContent = state.gen;
+    el('rMean').textContent = mean.toFixed(3);
+    el('rVar').textContent = variance.toFixed(4);
+    el('rFit').textContent = (meanFit*100).toFixed(1)+'%';
+
+    const box = el('insightBox');
+    if(variance < 0.0008 && state.mutationOn===false){
+      box.innerHTML = `<b>Amati:</b> variasi populasi sudah nyaris habis (${variance.toFixed(5)}) — semua individu kini mirip satu sama lain. Tanpa mutasi, seleksi tidak punya bahan baku baru untuk disaring. Coba tekan <b>"Ubah Lingkungan Tiba-tiba"</b> sekarang dan lihat apa yang terjadi pada kebugaran rata-rata.`;
+    } else if(variance < 0.0008 && state.mutationOn===true){
+      box.innerHTML = `<b>Amati:</b> meski variasi rendah, mutasi terus menyuntikkan variasi kecil setiap generasi — populasi tetap punya "cadangan" untuk merespons perubahan mendadak.`;
+    } else {
+      box.innerHTML = `Jalankan beberapa generasi lagi, lalu bandingkan dengan mutasi AKTIF vs NONAKTIF — perhatikan grafik variasi biru di atas.`;
+    }
+  }
+
+  function renderAll(res){
+    drawHistogram();
+    drawVarChart();
+    updateResults(res.mean, res.variance, res.meanFit);
+  }
+
+  function doStep(){
+    const res = stepGeneration();
+    renderAll(res);
+  }
+
+  el('inN').addEventListener('input', ()=>{ state.N=+el('inN').value; el('vN').textContent=state.N; initPop(); renderAll({mean:state.theta,variance:0,meanFit:1}); });
+  el('inMu').addEventListener('input', ()=>{ state.mu=+el('inMu').value; el('vMu').textContent=state.mu.toFixed(3); });
+  el('inS').addEventListener('input', ()=>{ state.s=+el('inS').value; el('vS').textContent=state.s.toFixed(2); });
+
+  el('btnMutasi').addEventListener('click', ()=>{
+    state.mutationOn = !state.mutationOn;
+    const b = el('btnMutasi');
+    if(state.mutationOn){ b.textContent='🧬 Mutasi: AKTIF'; b.className='toggle-btn active-on'; }
+    else { b.textContent='🧬 Mutasi: NONAKTIF'; b.className='toggle-btn active-off'; }
+  });
+
+  el('btnStep').addEventListener('click', doStep);
+
+  el('btnPlay').addEventListener('click', ()=>{
+    state.playing = !state.playing;
+    const b = el('btnPlay');
+    if(state.playing){
+      b.textContent='⏸ Jeda';
+      state.playTimer = setInterval(doStep, 250);
+    } else {
+      b.textContent='⏵ Putar Otomatis';
+      clearInterval(state.playTimer);
+    }
+  });
+
+  el('btnEnv').addEventListener('click', ()=>{
+    state.theta = Math.random()*1.0;
+    el('insightBox').innerHTML = `<b>Lingkungan berubah!</b> Nilai optimal baru: θ=${state.theta.toFixed(2)}. Perhatikan kebugaran rata-rata — bila mutasi NONAKTIF dan variasi sudah habis, populasi akan kesulitan mengejar target baru ini.`;
+  });
+
+  el('btnReset').addEventListener('click', ()=>{
+    if(state.playing){ clearInterval(state.playTimer); state.playing=false; el('btnPlay').textContent='⏵ Putar Otomatis'; }
+    state.theta=0.5;
+    initPop();
+    renderAll({mean:state.theta, variance:0, meanFit:1});
+  });
+
+  initPop();
+  renderAll({mean:state.theta, variance:0, meanFit:1});
+})();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

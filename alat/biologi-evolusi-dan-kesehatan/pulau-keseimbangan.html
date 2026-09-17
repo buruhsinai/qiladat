@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pulau Keseimbangan — Simulasi Rantai Makanan — JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --emerald-deep:#0F3D2E; --emerald-mid:#1D5C43; --ivory:#FAF6ED; --ivory-soft:#F1EADA;
+    --ink:#1C2B24; --gold:#B8934A; --gold-soft:#E7D2A0; --line:rgba(15,61,46,0.14);
+    --c1:#B8934A; --c2:#C77B5B; --c3:#5B8FC7; --c4:#7BAE8F;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--ivory);color:var(--ink);font-family:'Karla',sans-serif;line-height:1.65;}
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;color:var(--emerald-deep);letter-spacing:-0.01em;}
+  .wrap{max-width:860px;margin:0 auto;padding:0 24px;}
+
+  .versi-awal{background:var(--emerald-deep);color:var(--ivory);padding:14px 24px;}
+  .versi-awal .wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap;max-width:860px;}
+  .versi-awal .badge{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;background:var(--gold);color:var(--emerald-deep);padding:4px 9px;border-radius:2px;flex-shrink:0;}
+  .versi-awal p{margin:0;font-size:14px;color:rgba(250,246,237,0.92);flex:1;min-width:220px;}
+  .versi-awal a.wa-inline{color:var(--gold-soft);font-weight:700;text-decoration:underline;white-space:nowrap;}
+
+  .crumb{padding:20px 24px 0;max-width:860px;margin:0 auto;font-size:13px;letter-spacing:0.04em;text-transform:uppercase;color:var(--emerald-mid);opacity:0.75;}
+  .crumb span{color:var(--ink);opacity:0.4;margin:0 6px;}
+
+  .hero{padding:32px 0 24px;}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:14px;}
+  .eyebrow::before{content:"";width:18px;height:1px;background:var(--gold);display:inline-block;}
+  .hero h1{font-size:clamp(24px,4.5vw,34px);margin:0 0 12px;line-height:1.2;}
+  .hero p.lede{font-size:16px;color:var(--emerald-deep);opacity:0.85;max-width:62ch;margin:0;}
+
+  section{padding:32px 0;border-top:1px solid var(--line);}
+  section:first-of-type{border-top:none;}
+  .label{font-size:12px;letter-spacing:0.09em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:10px;}
+  section h2{font-size:20px;margin:0 0 14px;}
+  section p{margin:0 0 12px;font-size:15px;}
+  ul.plain{margin:0 0 12px;padding-left:20px;}
+  ul.plain li{margin-bottom:8px;font-size:15px;}
+
+  .kartu{background:var(--emerald-deep);color:var(--ivory);border-radius:4px;padding:26px;}
+  .kartu h3{color:var(--ivory);margin:0 0 16px;font-size:17px;}
+
+  .paket-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px;}
+  @media (max-width:640px){.paket-grid{grid-template-columns:1fr 1fr;}}
+  .paket-btn{
+    padding:10px 8px;border-radius:3px;border:1px solid rgba(231,210,160,0.3);
+    background:rgba(250,246,237,0.06);color:rgba(250,246,237,0.8);font-family:'Karla',sans-serif;
+    font-size:12.5px;cursor:pointer;text-align:center;line-height:1.3;
+  }
+  .paket-btn.aktif{background:var(--gold);color:var(--emerald-deep);font-weight:700;border-color:var(--gold);}
+
+  .rantai-visual{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:22px;padding:16px;background:rgba(250,246,237,0.06);border-radius:4px;}
+  .rantai-item{text-align:center;font-size:12px;color:rgba(250,246,237,0.85);max-width:90px;}
+  .rantai-item .ikon-siluet{display:flex;justify-content:center;margin-bottom:4px;color:var(--gold-soft);}
+  .ikon-siluet-kecil{display:inline-flex;align-items:center;color:var(--emerald-mid);}
+  .legenda .ikon-siluet-kecil svg, .ringkasan-item .ikon-siluet-kecil svg{vertical-align:middle;}
+  .rantai-panah{color:var(--gold-soft);font-size:16px;}
+
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:13px;margin-bottom:6px;color:var(--gold-soft);}
+  .field select{width:100%;padding:10px 12px;border-radius:3px;border:1px solid rgba(231,210,160,0.35);background:rgba(250,246,237,0.06);color:var(--ivory);font-family:'Karla',sans-serif;font-size:14.5px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media (max-width:560px){.grid2{grid-template-columns:1fr;}}
+
+  button.hitung{width:100%;padding:13px;border:none;border-radius:3px;background:var(--gold);color:var(--emerald-deep);font-family:'Karla',sans-serif;font-weight:700;font-size:14.5px;cursor:pointer;margin-top:4px;}
+  button.hitung:hover{background:var(--gold-soft);}
+
+  .hasil-box{margin-top:24px;display:none;}
+  .hasil-box.tampil{display:block;}
+  .chart-box{background:#FFFFFF;border-radius:4px;padding:14px;margin-bottom:16px;}
+  .legenda{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:12px;justify-content:center;}
+  .legenda span{display:flex;align-items:center;gap:5px;color:var(--emerald-deep);}
+  .legenda .swatch{width:10px;height:10px;border-radius:2px;display:inline-block;}
+
+  .ringkasan-item{
+    background:rgba(250,246,237,0.07);border-radius:4px;padding:14px 16px;margin-bottom:8px;
+    display:flex;justify-content:space-between;align-items:center;font-size:14px;
+  }
+  .ringkasan-item .arah{font-weight:700;padding:2px 8px;border-radius:2px;font-size:12.5px;}
+  .arah.naik{background:rgba(123,174,143,0.25);color:#7BAE8F;}
+  .arah.turun{background:rgba(199,123,91,0.25);color:#C77B5B;}
+  .arah.stabil{background:rgba(250,246,237,0.15);color:rgba(250,246,237,0.75);}
+
+  .narasi-box{background:rgba(184,147,74,0.15);border-radius:4px;padding:16px 18px;margin-top:14px;font-size:14px;line-height:1.7;}
+
+  .langkah{border-left:2px solid var(--gold-soft);padding-left:16px;margin-bottom:14px;}
+  .langkah .no{font-family:'Fraunces',serif;color:var(--gold);font-size:13px;margin-bottom:3px;}
+  code.formula{display:block;background:var(--ivory-soft);padding:12px 14px;border-radius:3px;font-family:monospace;font-size:13px;margin:10px 0;color:var(--emerald-deep);overflow-x:auto;}
+
+  .verifikasi-box{background:var(--ivory-soft);border-radius:4px;padding:16px 18px;margin:14px 0;font-size:13.5px;}
+  .verifikasi-box .baris-cek{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);}
+  .verifikasi-box .baris-cek:last-child{border-bottom:none;}
+
+  .batasan-item{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start;}
+  .batasan-item .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:8px;flex-shrink:0;}
+  .disclaimer-box{background:var(--ivory-soft);border-left:3px solid var(--gold);padding:14px 16px;border-radius:2px;font-size:14px;margin-top:14px;}
+
+  .konsultasi{margin-top:8px;padding:20px;border:1px dashed var(--line);border-radius:4px;text-align:center;}
+  .konsultasi p{font-size:14px;margin-bottom:12px;color:var(--emerald-deep);}
+  .btn-konsul{display:inline-block;padding:10px 22px;border-radius:3px;background:var(--emerald-mid);color:var(--ivory);font-family:'Karla',sans-serif;font-weight:600;font-size:14px;cursor:pointer;text-decoration:none;}
+
+  footer{padding:24px 24px 50px;font-size:13px;color:var(--emerald-mid);opacity:0.7;max-width:860px;margin:0 auto;}
+</style>
+</head>
+<body>
+
+<div class="versi-awal">
+  <div class="wrap">
+    <span class="badge">Versi Awal</span>
+    <p>Parameter pertumbuhan/predasi di simulasi ini bersifat generik-ilustratif (sama untuk semua paket), bukan angka riset lapangan spesies tertentu. Yang akurat secara ilmiah adalah polanya, bukan angka persisnya.</p>
+    <a class="wa-inline" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20diskusi%20terkait%20Pulau%20Keseimbangan%20JAZMI." target="_blank" rel="noopener">Diskusikan via WhatsApp →</a>
+  </div>
+</div>
+
+<div class="crumb">JAZMI <span>/</span> Alat <span>/</span> Pulau Keseimbangan</div>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">Alat — Sains Ekologi</div>
+    <h1>Pulau Keseimbangan</h1>
+    <p class="lede">Simulasi rantai makanan nyata dari berbagai wilayah dunia — lihat apa yang benar-benar terjadi (bukan tebakan) ketika satu mata rantai terganggu, dan kenapa efeknya tidak sesederhana "predator hilang, mangsa meledak".</p>
+  </div>
+
+  <section id="belajar" style="border-top:none;padding-top:0;">
+    <div class="label">01 — Belajar</div>
+    <h2>Kenapa efek gangguan tidak berhenti di satu level?</h2>
+    <p>Anggapan umum: predator puncak punah → mangsanya meledak tak terkendali. Ini <strong>setengah benar</strong>. Predasi memang berkurang, tapi populasi mangsa tetap dibatasi oleh <em>makanannya sendiri</em> — level di bawahnya. Begitu mangsa terlalu banyak, makanannya menipis, pertumbuhannya melambat sendiri.</p>
+    <p>Efeknya bahkan bisa menjalar lebih jauh — disebut <strong>kaskade trofik</strong> (trophic cascade): predator puncak hilang → mangsa langsungnya naik → makanan si mangsa (level di bawahnya lagi) malah tertekan turun → level paling dasar (tumbuhan/produsen) yang tadinya ditekan si mangsa itu, bisa balik naik. Efek riak yang melewati beberapa level sekaligus, bukan cuma satu.</p>
+    <p>Ini bukan cerita — dua kasus di simulasi ini (Yellowstone: serigala-elk-vegetasi, dan Alaska: paus orca-berang berang laut-bulu babi laut-kelp) adalah kaskade trofik yang benar-benar didokumentasikan ilmuwan ekologi.</p>
+  </section>
+
+  <section id="simulasi">
+    <div class="label">02 — Eksplorasi</div>
+    <div class="kartu">
+      <h3>Pilih Paket Rantai Makanan</h3>
+      <div class="paket-grid" id="paketGrid"></div>
+
+      <div class="rantai-visual" id="rantaiVisual"></div>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="levelGangguan">Level yang mengalami gangguan</label>
+          <select id="levelGangguan"></select>
+        </div>
+        <div class="field">
+          <label for="jenisGangguan">Jenis gangguan</label>
+          <select id="jenisGangguan">
+            <option value="punah">Kepunahan total (permanen)</option>
+            <option value="turun">Penurunan drastis (−70%, sesaat)</option>
+            <option value="naik">Ledakan populasi/invasi (×3, sesaat)</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="hitung" onclick="jalankanSimulasi()">Jalankan Simulasi</button>
+
+      <div class="hasil-box" id="hasilBox">
+        <div class="chart-box">
+          <svg id="chartSvg" viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg"></svg>
+          <div class="legenda" id="legendaChart"></div>
+        </div>
+        <div id="ringkasanList"></div>
+        <div class="narasi-box" id="narasiHasil"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="metode">
+    <div class="label">03 — Metode</div>
+    <h2>Bagaimana simulasi ini menghitung</h2>
+    <div class="langkah">
+      <div class="no">Langkah 1</div>
+      <p>Setiap level dimodelkan dengan persamaan rantai Lotka-Volterra: produsen tumbuh logistik (dibatasi daya tampung K) dan dimakan level di atasnya; setiap level predator tumbuh dari hasil memakan level di bawahnya, dikurangi kematian alami dan predasi dari level di atasnya.</p>
+      <code class="formula">dProdusen/dt = r·P·(1−P/K) − a·P·H
+dHerbivora/dt = e·a·P·H − m·H − a'·H·C
+dPredator/dt  = e'·a'·H·C − m'·C</code>
+    </div>
+    <div class="langkah">
+      <div class="no">Langkah 2</div>
+      <p>Persamaan diselesaikan secara numerik (metode Runge-Kutta orde-4) selangkah demi selangkah, bukan rumus tertutup — ini yang memungkinkan simulasi menangkap dinamika naik-turun yang realistis, termasuk efek berantai antar level.</p>
+    </div>
+    <div class="langkah">
+      <div class="no">Langkah 3</div>
+      <p>Gangguan (kepunahan/penurunan/ledakan) diterapkan pada satu level di tengah simulasi, lalu sistem dibiarkan berjalan sesuai persamaannya sendiri — tidak ada hasil yang "diskrip" sebelumnya.</p>
+    </div>
+
+    <h2 style="margin-top:24px;">Verifikasi</h2>
+    <p>Sebelum dipasang, model diuji dengan skenario yang hasilnya bisa diprediksi dari teori ekologi:</p>
+    <div class="verifikasi-box">
+      <div class="baris-cek"><span>Rantai 3 level, predator puncak dipunahkan</span><strong>Herbivora naik ringan (27,6→30,0) lalu MENDATAR — bukan meledak tak terbatas ✓</strong></div>
+      <div class="baris-cek"><span>Rantai 4 level, predator puncak dipunahkan</span><strong>Level di bawahnya naik, level berikutnya turun, produsen dasar naik — pola kaskade lengkap ✓</strong></div>
+    </div>
+  </section>
+
+  <section id="batasan">
+    <div class="label">04 — Batasan</div>
+    <h2>Yang perlu diperhatikan</h2>
+    <div class="batasan-item"><div class="dot"></div><p>Rantai makanan nyata di alam jarang melebihi 4-5 level trofik — setiap perpindahan energi antar level kehilangan sekitar 90% energinya (hukum 10%), sehingga rantai yang sangat panjang (6-7 level) secara ekologis tidak realistis untuk disimulasikan sebagai rantai linear sederhana. Alat ini membatasi diri di 3-4 level yang benar secara sains, bukan memaksakan jumlah level yang diminta jika itu tidak berdasar.</p></div>
+    <div class="batasan-item"><div class="dot"></div><p>Parameter numerik (laju tumbuh, laju predasi, dst.) bersifat generik-ilustratif — sama nilainya di semua paket, hanya nama spesies yang berbeda. Untuk angka spesifik satu ekosistem nyata, dibutuhkan data riset lapangan yang alat ini tidak punya.</p></div>
+    <div class="batasan-item"><div class="dot"></div><p>Dunia nyata punya jaring-jaring makanan (satu spesies bisa punya banyak predator/mangsa), bukan rantai linear tunggal seperti di sini — penyederhanaan ini demi kejelasan konsep, bukan gambaran ekosistem yang utuh.</p></div>
+    <div class="disclaimer-box">Alat ini untuk membangun intuisi tentang pola kaskade trofik berdasarkan model matematis ekologi yang sudah baku. Untuk kajian konservasi/kebijakan nyata, dibutuhkan data lapangan dan model yang jauh lebih rinci.</div>
+  </section>
+
+  <section id="referensi">
+    <div class="label">05 — Referensi</div>
+    <h2>Rujukan</h2>
+    <ul class="plain">
+      <li>Model rantai makanan Lotka-Volterra multi-level sebagai kerangka baku ekologi matematis untuk dinamika predator-mangsa.</li>
+      <li>Kaskade trofik Yellowstone (serigala-elk-vegetasi) dan Pasifik Utara (orca-berang berang laut-bulu babi laut-kelp) sebagai dua kasus kaskade trofik yang paling banyak didokumentasikan dalam literatur ekologi.</li>
+    </ul>
+  </section>
+
+  <section id="konsultasi">
+    <div class="konsultasi">
+      <p>Ingin menambah paket wilayah/spesies lain, atau memperdalam satu kasus kaskade trofik tertentu?</p>
+      <a class="btn-konsul" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20diskusi%20lebih%20lanjut%20terkait%20Pulau%20Keseimbangan%20JAZMI." target="_blank" rel="noopener">Diskusikan via WhatsApp</a>
+    </div>
+  </section>
+
+  <footer>
+    <p>Bagian dari Laboratorium Alat JAZMI. Prototipe berdiri sendiri — belum terhubung ke Beranda atau modul lain.</p>
+  </footer>
+</div>
+
+<script>
+/* ================= DATA PAKET ================= */
+// levels: urutan dari PUNCAK (predator teratas) ke DASAR (produsen)
+const PAR3 = {r:1.0, K:100, a:[0.02,0.02], e:[0.5,0.5], m:[0.4,0.3], awal:[80,20,5]}; // awal: dasar->puncak
+const PAR4 = {r:1.2, K:100, a:[0.03,0.03,0.02], e:[0.5,0.5,0.4], m:[0.35,0.25,0.15], awal:[70,25,10,3]};
+
+const PAKET = [
+  { id:'gir', nama:'Asia — Hutan Gir', levels:['Singa Asia','Rusa Chital','Rumput Savana'], ikon:['kucing-besar','rusa','tumbuhan-kecil'], par:PAR3 },
+  { id:'serengeti', nama:'Afrika — Savana Serengeti', levels:['Singa Afrika','Wildebeest','Rumput Savana'], ikon:['kucing-besar','kerbau','tumbuhan-kecil'], par:PAR3 },
+  { id:'amazon', nama:'Amerika Selatan — Amazon', levels:['Jaguar','Capybara','Vegetasi Hutan'], ikon:['kucing-besar','capybara','pohon'], par:PAR3 },
+  { id:'yellowstone', nama:'Amerika Utara — Yellowstone', levels:['Serigala Abu-abu','Rusa Elk','Vegetasi Riparian'], ikon:['serigala','rusa','tumbuhan-kecil'], par:PAR3 },
+  { id:'alaska', nama:'Pasifik Utara — Laut Alaska', levels:['Paus Orca','Berang-berang Laut','Bulu Babi Laut','Hutan Kelp'], ikon:['paus','berang','bulu-babi','tumbuhan-kecil'], par:PAR4 },
+  { id:'sumatra', nama:'Nusantara — Sumatra', levels:['Harimau Sumatera','Rusa Sambar/Babi Hutan','Vegetasi Hutan Hujan'], ikon:['kucing-besar','babi-hutan','pohon'], par:PAR3 },
+];
+
+/* ================= LIBRARI IKON SILUET (hitam, non-makhluk detail — sesuai preferensi tanpa gambar bernyawa) ================= */
+const ICON_SVG = {
+  'kucing-besar': `<ellipse cx="42" cy="66" rx="26" ry="19"/><circle cx="70" cy="46" r="15"/><polygon points="61,33 67,19 73,34"/><polygon points="75,33 81,19 87,34"/><path d="M18,60 Q4,52 9,32 Q12,24 20,29 Q14,40 20,55 Z"/>`,
+  'serigala': `<ellipse cx="44" cy="56" rx="28" ry="12"/><path d="M68,44 L86,50 L68,58 Z"/><circle cx="64" cy="47" r="9"/><polygon points="58,37 62,24 68,38"/><path d="M18,52 Q4,44 14,32 Q18,40 24,50 Z"/><rect x="24" y="64" width="5" height="16"/><rect x="38" y="66" width="5" height="16"/><rect x="54" y="66" width="5" height="16"/><rect x="66" y="64" width="5" height="16"/>`,
+  'rusa': `<ellipse cx="42" cy="58" rx="20" ry="12"/><path d="M60,50 Q70,42 68,30" fill="none" stroke="#000" stroke-width="4"/><circle cx="68" cy="28" r="7"/><path d="M68,22 Q62,10 54,14 M68,22 Q76,8 84,14 M68,22 Q72,14 80,10" fill="none" stroke="#000" stroke-width="2.5"/><rect x="24" y="66" width="4" height="16"/><rect x="36" y="68" width="4" height="16"/><rect x="52" y="68" width="4" height="16"/><rect x="60" y="66" width="4" height="16"/>`,
+  'kerbau': `<rect x="18" y="46" width="48" height="22" rx="8"/><circle cx="74" cy="50" r="11"/><path d="M70,42 Q60,30 66,22 M78,42 Q88,30 82,22" fill="none" stroke="#000" stroke-width="4" stroke-linecap="round"/><polygon points="72,58 76,68 80,58"/><rect x="24" y="66" width="5" height="16"/><rect x="38" y="68" width="5" height="16"/><rect x="52" y="68" width="5" height="16"/><rect x="62" y="66" width="5" height="16"/>`,
+  'babi-hutan': `<ellipse cx="44" cy="60" rx="27" ry="17"/><ellipse cx="74" cy="56" rx="12" ry="10"/><rect x="83" y="52" width="9" height="8" rx="2"/><polygon points="90,60 96,56 91,66"/><path d="M18,58 Q10,54 14,46" fill="none" stroke="#000" stroke-width="4" stroke-linecap="round"/><rect x="26" y="72" width="5" height="12"/><rect x="40" y="74" width="5" height="12"/><rect x="56" y="74" width="5" height="12"/><rect x="64" y="72" width="5" height="12"/>`,
+  'capybara': `<ellipse cx="48" cy="62" rx="34" ry="18"/><ellipse cx="82" cy="58" rx="12" ry="10"/><ellipse cx="18" cy="66" rx="6" ry="10"/><rect x="30" y="76" width="6" height="10"/><rect x="60" y="76" width="6" height="10"/>`,
+  'pohon': `<rect x="46" y="58" width="8" height="26"/><circle cx="50" cy="42" r="20"/><circle cx="32" cy="52" r="14"/><circle cx="68" cy="52" r="14"/>`,
+  'tumbuhan-kecil': `<path d="M50,84 Q40,55 48,30 Q52,55 50,84 Z"/><path d="M50,84 Q60,50 78,38 Q66,58 50,84 Z"/><path d="M50,84 Q40,50 22,38 Q34,58 50,84 Z"/>`,
+  'paus': `<path d="M10,55 Q30,30 65,38 Q85,42 90,55 Q85,50 65,50 Q35,50 15,62 Z"/><polygon points="55,38 62,20 66,39"/><path d="M88,50 Q98,44 96,52 Q98,60 88,58 Z"/>`,
+  'berang': `<ellipse cx="46" cy="52" rx="34" ry="15"/><circle cx="80" cy="48" r="10"/><ellipse cx="16" cy="58" rx="8" ry="5"/><ellipse cx="34" cy="66" rx="8" ry="5"/><ellipse cx="60" cy="66" rx="8" ry="5"/>`,
+  'bulu-babi': `<circle cx="50" cy="50" r="16"/>` + Array.from({length:18}, (_,i)=>{
+    const a = (i/18)*2*Math.PI;
+    const x1 = 50+Math.cos(a)*17, y1=50+Math.sin(a)*17;
+    const x2 = 50+Math.cos(a)*38, y2=50+Math.sin(a)*38;
+    return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#000" stroke-width="2.5"/>`;
+  }).join('')
+};
+function renderIkon(kunci, ukuran){
+  return `<svg viewBox="0 0 100 100" width="${ukuran}" height="${ukuran}" fill="currentColor">${ICON_SVG[kunci]}</svg>`;
+}
+
+let paketAktif = PAKET[0];
+
+/* ================= MODEL ODE GENERIK ================= */
+// state: array dari DASAR ke PUNCAK [L0=produsen, L1, ..., Ln-1=puncak]
+function turunan(state, par){
+  const n = state.length;
+  const d = new Array(n).fill(0);
+  d[0] = par.r*state[0]*(1 - state[0]/par.K) - par.a[0]*state[0]*state[1];
+  for (let i=1; i<n-1; i++){
+    d[i] = par.e[i-1]*par.a[i-1]*state[i-1]*state[i] - par.m[i-1]*state[i] - par.a[i]*state[i]*state[i+1];
+  }
+  d[n-1] = par.e[n-2]*par.a[n-2]*state[n-2]*state[n-1] - par.m[n-2]*state[n-1];
+  return d;
+}
+function langkahRK4(state, par, dt){
+  const tambah = (s,d,f) => s.map((v,i) => v + d[i]*f);
+  const k1 = turunan(state, par);
+  const k2 = turunan(tambah(state,k1,dt/2), par);
+  const k3 = turunan(tambah(state,k2,dt/2), par);
+  const k4 = turunan(tambah(state,k3,dt), par);
+  return state.map((v,i) => Math.max(0, v + dt/6*(k1[i]+2*k2[i]+2*k3[i]+k4[i])));
+}
+function simulasi(par, totalSteps, dt, gangguan){
+  let state = [...par.awal];
+  const riwayat = [];
+  for (let i=0; i<totalSteps; i++){
+    if (gangguan && i === gangguan.waktu){
+      const idx = gangguan.idx; // index dari dasar
+      if (gangguan.jenis === 'punah') state[idx] = 0;
+      if (gangguan.jenis === 'turun') state[idx] = state[idx]*0.3;
+      if (gangguan.jenis === 'naik') state[idx] = state[idx]*3;
+    }
+    state = langkahRK4(state, par, dt);
+    if (gangguan && gangguan.jenis === 'punah' && i >= gangguan.waktu){
+      state[gangguan.idx] = 0;
+    }
+    riwayat.push([...state]);
+  }
+  return riwayat;
+}
+
+/* ================= UI ================= */
+const WARNA = ['var(--c1)','var(--c2)','var(--c3)','var(--c4)'];
+
+function renderPaketGrid(){
+  const grid = document.getElementById('paketGrid');
+  grid.innerHTML = PAKET.map(p => `<button class="paket-btn ${p.id===paketAktif.id?'aktif':''}" onclick="pilihPaket('${p.id}')">${p.nama}</button>`).join('');
+}
+function pilihPaket(id){
+  paketAktif = PAKET.find(p => p.id===id);
+  renderPaketGrid();
+  renderRantaiVisual();
+  renderLevelGangguan();
+  document.getElementById('hasilBox').classList.remove('tampil');
+}
+function renderRantaiVisual(){
+  const box = document.getElementById('rantaiVisual');
+  const n = paketAktif.levels.length;
+  let html = '';
+  for (let i=0; i<n; i++){
+    html += `<div class="rantai-item"><span class="ikon-siluet">${renderIkon(paketAktif.ikon[i], 32)}</span>${paketAktif.levels[i]}</div>`;
+    if (i<n-1) html += `<span class="rantai-panah">→ memakan →</span>`;
+  }
+  box.innerHTML = html;
+}
+function renderLevelGangguan(){
+  const sel = document.getElementById('levelGangguan');
+  sel.innerHTML = paketAktif.levels.map((nama,i) => `<option value="${i}">${nama}</option>`).join('');
+}
+
+function jalankanSimulasi(){
+  const n = paketAktif.levels.length;
+  const idxUiTerpilih = parseInt(document.getElementById('levelGangguan').value, 10); // 0=puncak (urutan UI)
+  const idxDasar = n - 1 - idxUiTerpilih; // konversi ke index dari dasar (untuk array state)
+  const jenis = document.getElementById('jenisGangguan').value;
+
+  const totalSteps = paketAktif.par === PAR4 ? 3000 : 2000;
+  const dt = 0.05;
+  const waktuGangguan = Math.floor(totalSteps*0.33);
+
+  const riwayat = simulasi(paketAktif.par, totalSteps, dt, {idx:idxDasar, jenis, waktu:waktuGangguan});
+
+  gambarChart(riwayat, waktuGangguan, totalSteps);
+  tampilkanRingkasan(riwayat, waktuGangguan, idxUiTerpilih, jenis);
+
+  document.getElementById('hasilBox').classList.add('tampil');
+}
+
+function gambarChart(riwayat, waktuGangguan, totalSteps){
+  const n = paketAktif.levels.length;
+  const svg = document.getElementById('chartSvg');
+  const W=700, H=300, marginL=40, marginB=20, marginT=10, marginR=10;
+  const plotW = W-marginL-marginR, plotH = H-marginT-marginB;
+
+  // sampling titik agar polyline tidak terlalu berat
+  const sampelN = 150;
+  const step = Math.floor(riwayat.length/sampelN);
+  const sampel = [];
+  for (let i=0; i<riwayat.length; i+=step) sampel.push(riwayat[i]);
+
+  let maxVal = 0;
+  sampel.forEach(s => s.forEach(v => { if (v>maxVal) maxVal = v; }));
+  maxVal = maxVal*1.15 || 1;
+
+  const xOf = i => marginL + (i/(sampel.length-1))*plotW;
+  const yOf = v => marginT + plotH - (v/maxVal)*plotH;
+
+  let svgInner = `<rect x="0" y="0" width="${W}" height="${H}" fill="#FFFFFF"/>`;
+  // sumbu
+  svgInner += `<line x1="${marginL}" y1="${marginT}" x2="${marginL}" y2="${marginT+plotH}" stroke="#ccc"/>`;
+  svgInner += `<line x1="${marginL}" y1="${marginT+plotH}" x2="${marginL+plotW}" y2="${marginT+plotH}" stroke="#ccc"/>`;
+
+  // garis waktu gangguan
+  const xGangguan = xOf(Math.floor(waktuGangguan/step));
+  svgInner += `<line x1="${xGangguan}" y1="${marginT}" x2="${xGangguan}" y2="${marginT+plotH}" stroke="#C77B5B" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+  svgInner += `<text x="${xGangguan+4}" y="${marginT+12}" font-size="10" fill="#C77B5B">gangguan</text>`;
+
+  // urutan level di array state: 0=dasar..n-1=puncak. Kita gambar sesuai urutan UI (puncak dulu) dengan warna berbeda.
+  for (let uiIdx=0; uiIdx<n; uiIdx++){
+    const idxDasar = n-1-uiIdx;
+    const pts = sampel.map((s,i) => `${xOf(i).toFixed(1)},${yOf(s[idxDasar]).toFixed(1)}`).join(' ');
+    svgInner += `<polyline points="${pts}" fill="none" stroke="${WARNA[uiIdx]}" stroke-width="2"/>`;
+  }
+
+  svg.innerHTML = svgInner;
+
+  const legenda = document.getElementById('legendaChart');
+  legenda.innerHTML = paketAktif.levels.map((nama,i) => `<span><span class="swatch" style="background:${WARNA[i]}"></span><span class="ikon-siluet-kecil">${renderIkon(paketAktif.ikon[i], 16)}</span>${nama}</span>`).join('');
+}
+
+function tampilkanRingkasan(riwayat, waktuGangguan, idxUiGangguan, jenis){
+  const n = paketAktif.levels.length;
+  const jendelaSebelum = riwayat.slice(Math.max(0,waktuGangguan-100), waktuGangguan);
+  const jendelaAkhir = riwayat.slice(riwayat.length-100);
+
+  const rataRata = (arr, idx) => arr.reduce((a,s)=>a+s[idx],0)/arr.length;
+
+  let htmlRingkasan = '';
+  const perubahan = [];
+  for (let uiIdx=0; uiIdx<n; uiIdx++){
+    const idxDasar = n-1-uiIdx;
+    const sebelum = rataRata(jendelaSebelum, idxDasar);
+    const akhir = rataRata(jendelaAkhir, idxDasar);
+    const persenUbah = sebelum>0.01 ? ((akhir-sebelum)/sebelum*100) : (akhir>0.01 ? 100 : 0);
+    let arah = 'stabil', label = 'relatif stabil';
+    if (persenUbah > 12){ arah='naik'; label = `↑ naik ${persenUbah.toFixed(0)}%`; }
+    else if (persenUbah < -12){ arah='turun'; label = `↓ turun ${Math.abs(persenUbah).toFixed(0)}%`; }
+    perubahan.push({uiIdx, arah, persenUbah});
+    htmlRingkasan += `<div class="ringkasan-item"><span style="display:flex;align-items:center;gap:8px;"><span class="ikon-siluet-kecil">${renderIkon(paketAktif.ikon[uiIdx], 18)}</span>${paketAktif.levels[uiIdx]}</span><span class="arah ${arah}">${label}</span></div>`;
+  }
+  document.getElementById('ringkasanList').innerHTML = htmlRingkasan;
+
+  // narasi otomatis
+  const namaLevelGangguan = paketAktif.levels[idxUiGangguan];
+  const jenisTeks = {punah:'punah total', turun:'turun drastis', naik:'meledak (invasi)'}[jenis];
+  let narasi = `<strong>${namaLevelGangguan}</strong> mengalami ${jenisTeks}. `;
+
+  if (idxUiGangguan < n-1){
+    const levelDiBawah = perubahan[idxUiGangguan+1];
+    if (levelDiBawah){
+      narasi += `Level di bawahnya (${paketAktif.levels[idxUiGangguan+1]}) ${levelDiBawah.arah==='naik' ? 'naik, tapi tidak meledak tak terbatas — pertumbuhannya berhenti sendiri begitu makanannya (level berikutnya) mulai menipis' : levelDiBawah.arah==='turun' ? 'justru ikut turun' : 'relatif tidak banyak berubah'}. `;
+    }
+    if (idxUiGangguan+2 < n){
+      const levelDuaBawah = perubahan[idxUiGangguan+2];
+      narasi += `Efeknya menjalar lebih jauh: ${paketAktif.levels[idxUiGangguan+2]} ${levelDuaBawah.arah==='naik' ? 'ikut naik' : levelDuaBawah.arah==='turun' ? 'malah tertekan turun' : 'relatif stabil'} — inilah kaskade trofik: gangguan di satu level merambat lewat beberapa level sekaligus, bukan berhenti di satu titik.`;
+    }
+  } else {
+    narasi += `Karena ini level paling dasar (produsen), gangguan padanya membatasi makanan bagi seluruh level di atasnya.`;
+  }
+
+  document.getElementById('narasiHasil').innerHTML = narasi;
+}
+
+renderPaketGrid();
+renderRantaiVisual();
+renderLevelGangguan();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

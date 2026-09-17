@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ruang Rasa — Poligon Bintang &amp; Struktur di Balik Selera</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..900&family=Karla:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0F1424; --bg-deep:#0A0E1B; --panel:#161C33; --panel-2:#1D2440;
+    --line:rgba(232,227,211,0.10); --line-strong:rgba(232,227,211,0.20);
+    --ink:#E7E2D2; --ink-dim:#9AA0BE; --ink-faint:#6A7092;
+    --gold:#D8B45C; --gold-deep:#8A6A22; --teal:#4FB3AA; --copper:#C97B4A; --violet:#9E8FD8;
+    --serif:"Fraunces",Georgia,serif; --sans:"Karla",-apple-system,sans-serif; --arabic:"Amiri",serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:radial-gradient(ellipse 1200px 600px at 50% -10%, rgba(216,180,92,0.06), transparent 60%),var(--bg);
+    color:var(--ink);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  ::selection{background:rgba(216,180,92,0.3);}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 24px;}
+  .topbar{border-bottom:1px solid var(--line);padding:16px 0;}
+  .topbar .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;align-items:baseline;}
+  .brand{font-family:var(--serif);font-size:15px;color:var(--ink-dim);}
+  .brand b{color:var(--ink);}
+  .breadcrumb{font-size:13px;color:var(--ink-faint);}
+
+  .hero{padding:50px 0 26px;}
+  .hero-arabic{font-family:var(--arabic);font-size:22px;color:var(--copper);margin:0 0 6px;}
+  h1{font-family:var(--serif);font-weight:340;font-size:clamp(34px,5.4vw,54px);line-height:1.05;margin:0 0 16px;max-width:16ch;}
+  h1 em{font-style:italic;color:var(--gold);}
+  .lede{font-size:16.5px;color:var(--ink-dim);max-width:64ch;margin:0;}
+
+  .stage{display:grid;grid-template-columns:280px 1fr;gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:3px;overflow:hidden;margin:30px 0 4px;}
+  @media (max-width:820px){.stage{grid-template-columns:1fr;}}
+
+  .controls{background:var(--panel);padding:20px 18px 24px;display:flex;flex-direction:column;gap:18px;}
+  .ctrl-label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-dim);}
+  .ctrl-label span{font-family:var(--serif);color:var(--gold);font-size:14px;}
+  input[type=range]{-webkit-appearance:none;width:100%;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold-deep));
+    border-radius:2px;outline:none;margin:8px 0 2px;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;
+    background:var(--ink);border:2px solid var(--gold);cursor:pointer;margin-top:-6px;}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--ink);border:2px solid var(--gold);cursor:pointer;}
+  input[type=range]::-moz-range-track{height:3px;background:var(--panel-2);border-radius:2px;}
+  select{background:var(--panel-2);border:1px solid var(--line-strong);color:var(--ink);font-family:var(--sans);
+    font-size:13px;padding:8px 10px;border-radius:3px;width:100%;}
+  .toggle-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--ink-dim);
+    cursor:pointer;user-select:none;}
+  .toggle-row input{display:none;}
+  .toggle-pill{width:34px;height:19px;border-radius:10px;background:var(--panel-2);border:1px solid var(--line-strong);
+    position:relative;flex:none;}
+  .toggle-pill::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;
+    background:var(--ink-faint);transition:transform .15s,background .15s;}
+  .toggle-row input:checked + .toggle-pill{background:rgba(216,180,92,0.18);border-color:var(--gold-deep);}
+  .toggle-row input:checked + .toggle-pill::after{transform:translateX(15px);background:var(--gold);}
+  .divider{height:1px;background:var(--line);}
+
+  .readout{background:var(--panel-2);border:1px solid var(--line-strong);border-radius:3px;padding:14px;font-size:13px;}
+  .readout .big{font-family:var(--serif);font-size:26px;color:var(--gold);margin:0 0 2px;}
+  .readout .desc{color:var(--ink-dim);font-size:13px;line-height:1.5;}
+
+  .canvas-side{background:var(--bg-deep);display:flex;flex-direction:column;align-items:center;padding:20px;}
+  #mainSvg{width:100%;max-width:440px;aspect-ratio:1/1;}
+  #mainSvg path{fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke-dashoffset 900ms cubic-bezier(.2,.7,.3,1);}
+
+  .grid-wrap{padding:16px 20px 22px;border-top:1px solid var(--line);width:100%;}
+  .grid-title{font-size:12px;color:var(--ink-faint);margin:0 0 12px;letter-spacing:0.02em;}
+  .thumb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;}
+  .thumb{background:var(--panel-2);border:1.5px solid var(--line-strong);border-radius:3px;cursor:pointer;
+    padding:6px;transition:border-color .12s,transform .12s;position:relative;}
+  .thumb:hover{transform:translateY(-2px);}
+  .thumb.active{border-color:var(--gold);}
+  .thumb svg{width:100%;display:block;}
+  .thumb .k-label{position:absolute;bottom:2px;right:4px;font-size:9px;color:var(--ink-faint);font-family:var(--sans);}
+
+  section.text-section{padding:46px 0;border-top:1px solid var(--line);}
+  .kicker{font-size:12.5px;color:var(--copper);font-weight:600;margin:0 0 10px;}
+  h2{font-family:var(--serif);font-weight:340;font-size:clamp(24px,3vw,32px);margin:0 0 18px;max-width:22ch;}
+  .prose{max-width:66ch;font-size:15.5px;color:var(--ink-dim);}
+  .prose p{margin:0 0 15px;}
+  .prose strong{color:var(--ink);font-weight:600;}
+  .prose code{font-family:ui-monospace,Menlo,monospace;background:var(--panel-2);color:var(--gold);
+    padding:1px 6px;border-radius:3px;font-size:0.88em;}
+  .formula-block{background:var(--panel);border:1px solid var(--line);border-left:2px solid var(--gold-deep);
+    padding:14px 18px;margin:16px 0;font-family:ui-monospace,Menlo,monospace;font-size:13.5px;color:var(--gold);
+    max-width:66ch;}
+  footer{border-top:1px solid var(--line);padding:24px 0 46px;font-size:12.5px;color:var(--ink-faint);}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="wrap">
+  <div class="brand"><b>JAZMI</b> · Laboratorium Alat — Refleksi Metode</div>
+  <div class="breadcrumb">Bukan tentang indah/tidak — tentang struktur di baliknya</div>
+</div></div>
+
+<div class="wrap">
+  <div class="hero">
+    <p class="hero-arabic">ذوق</p>
+    <h1>Ruang <em>Rasa.</em></h1>
+    <p class="lede">
+      Alat ini memakai bentuk paling sederhana dalam geometri Islam — poligon bintang
+      {n/k}: ambil n titik melingkar, sambungkan tiap titik ke titik ke-k berikutnya,
+      terus sampai kembali ke awal. Aturan ini persis sama untuk setiap n dan k. Tapi
+      hasilnya kadang satu untai bintang yang anggun, kadang tumpukan beberapa salinan
+      yang terasa ramai. Bukan karena aturannya kadang benar kadang salah —
+      <strong>selisih itu murni soal hubungan aritmetika antara n dan k.</strong>
+      Geser saja, dan lihat sendiri kapan sesuatu terasa "jadi" dan kapan tidak.
+    </p>
+  </div>
+
+  <div class="stage">
+    <div class="controls">
+      <div>
+        <label class="ctrl-label" for="ctrlN">Jumlah titik (n) <span id="valN">12</span></label>
+        <input type="range" id="ctrlN" min="3" max="30" step="1" value="12">
+      </div>
+      <div>
+        <label class="ctrl-label" for="ctrlK">Lompatan (k) <span id="valK">5</span></label>
+        <input type="range" id="ctrlK" min="1" max="11" step="1" value="5">
+      </div>
+      <div>
+        <label class="ctrl-label" for="ctrlRot">Rotasi <span id="valRot">0°</span></label>
+        <input type="range" id="ctrlRot" min="0" max="360" step="1" value="0">
+      </div>
+      <div>
+        <label class="ctrl-label" for="ctrlWidth">Lebar garis <span id="valWidth">3</span></label>
+        <input type="range" id="ctrlWidth" min="1" max="8" step="0.5" value="3">
+      </div>
+      <div class="divider"></div>
+      <label class="toggle-row" for="ctrlAnimate">Animasikan penggambaran
+        <input type="checkbox" id="ctrlAnimate" checked><span class="toggle-pill"></span>
+      </label>
+      <label class="toggle-row" for="ctrlRainbow">Warnai tiap untai berbeda
+        <input type="checkbox" id="ctrlRainbow" checked><span class="toggle-pill"></span>
+      </label>
+      <div class="divider"></div>
+      <div class="readout">
+        <p class="big" id="readoutBig">gcd = 1</p>
+        <p class="desc" id="readoutDesc">Satu untai tunggal — jalur ini kembali ke titik awal setelah menyentuh semua 12 titik, tanpa pernah putus.</p>
+      </div>
+    </div>
+
+    <div class="canvas-side">
+      <svg id="mainSvg" viewBox="0 0 400 400"></svg>
+      <div class="grid-wrap">
+        <p class="grid-title">PETA KEMUNGKINAN — semua k untuk n = <span id="gridNLabel">12</span> (klik untuk melompat)</p>
+        <div class="thumb-grid" id="thumbGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="text-section" id="refleksi">
+    <p class="kicker">Refleksi</p>
+    <h2>Kenapa sebagian karya terasa "belum jadi"</h2>
+    <div class="prose">
+      <p>
+        Cobalah geser <code>k</code> perlahan dari 1 ke atas dengan <code>n</code> tetap
+        di 12. Beberapa nilai k menghasilkan satu bintang dua belas ujung yang utuh dan
+        rapi. Nilai k yang lain menghasilkan enam pasang garis yang saling tumpuk,
+        terasa "ramai" tanpa arah. Tidak ada satu pun dari proses itu yang cacat — kedua
+        hasil lahir dari aturan yang sama persis, dijalankan dengan sempurna. Yang
+        berbeda hanya posisinya di ruang kemungkinan.
+      </p>
+      <p>
+        Ini yang ingin dijadikan pengingat: ketika sebagian karya geometris terasa belum
+        pas — entah soal estetika, atau soal di mana ia akan ditempelkan — kemungkinan
+        besar bukan karena metodenya keliru. Lebih sering itu tanda bahwa parameter yang
+        dipilih untuk percobaan itu kebetulan jatuh di titik yang "berantakan" dalam
+        ruang kemungkinannya sendiri — dan solusinya bukan meragukan seluruh metode,
+        melainkan menggeser satu-dua parameter, atau memindahkan penempatannya, sampai
+        menemukan titik yang cocok. Rasa puas atau tidak puas terhadap sebuah bentuk
+        bukan sifat tetap si bentuk — ia relasional terhadap posisi parameter dan
+        konteks tempatnya berdiri.
+      </p>
+      <p>
+        Dan inilah kenapa ini harus berupa website, bukan gambar yang diunggah ke media
+        sosial: satu unggahan hanya menunjukkan satu titik di ruang kemungkinan. Alat
+        yang bisa dijalankan membiarkan orang lain benar-benar merasakan seluruh ruang
+        itu — mengalami sendiri kapan sesuatu "jadi" dan kapan tidak — bukan sekadar
+        membaca kesimpulannya.
+      </p>
+    </div>
+  </section>
+
+  <section class="text-section" id="metode">
+    <p class="kicker">Metode</p>
+    <h2>Satu bilangan yang menentukan semuanya: FPB</h2>
+    <div class="prose">
+      <p>
+        Titik-titik diberi nomor 0 sampai n−1 mengelilingi lingkaran. Dari titik manapun,
+        melompat k langkah searah membentuk barisan 0, k, 2k, 3k, … (mod n). Barisan ini
+        pasti kembali ke 0 — pertanyaannya, setelah berapa langkah, dan apakah sempat
+        menyentuh seluruh n titik sebelum itu.
+      </p>
+      <div class="formula-block">
+        jumlah untai terpisah = FPB(n, k)<br>
+        satu untai tunggal (bintang utuh) ⟺ FPB(n, k) = 1
+      </div>
+      <p>
+        Ketika n dan k tidak punya faktor bersama (koprima), barisan lompatan itu wajib
+        menyentuh semua n titik dulu sebelum kembali ke 0 — hasilnya satu bintang utuh.
+        Begitu keduanya berbagi faktor <code>g</code>, barisan itu hanya akan pernah
+        menyentuh n/g titik sebelum kembali — sehingga dibutuhkan g barisan terpisah
+        (dimulai dari titik-titik yang belum tersentuh) untuk menghabiskan semua titik.
+        Itulah asal setiap "salinan bertumpuk" yang terlihat di layar: bukan kegagalan
+        gambar, melainkan konsekuensi aritmetika yang bisa dihitung sebelum satu garis
+        pun digambar.
+      </p>
+    </div>
+  </section>
+</div>
+
+<footer><div class="wrap">
+  <span>JAZMI — Jalinan Zamrud Islamiah · Laboratorium Alat</span>
+  <span>Refleksi metode, bukan tutorial estetika</span>
+</div></footer>
+
+<script>
+(function(){
+  "use strict";
+  const NS = "http://www.w3.org/2000/svg";
+  const PALETTE = ['#D8B45C','#4FB3AA','#C97B4A','#9E8FD8','#7FB3D8','#D87FA0','#8FD8A0','#D8CB6F'];
+
+  function gcd(a,b){ return b===0 ? a : gcd(b, a%b); }
+
+  function circlePoints(n, radius, rotationDeg){
+    const rot = (rotationDeg*Math.PI/180) - Math.PI/2;
+    const pts = [];
+    for(let i=0;i<n;i++){
+      const a = rot + i*2*Math.PI/n;
+      pts.push([radius*Math.cos(a), radius*Math.sin(a)]);
+    }
+    return pts;
+  }
+
+  function buildSubpaths(n, k){
+    const visited = new Array(n).fill(false);
+    const subpaths = [];
+    for(let start=0; start<n; start++){
+      if(visited[start]) continue;
+      let cur = start;
+      const idxPath = [cur];
+      visited[cur] = true;
+      while(true){
+        cur = (cur + k) % n;
+        idxPath.push(cur);
+        if(cur === start) break;
+        visited[cur] = true;
+      }
+      subpaths.push(idxPath);
+    }
+    return subpaths;
+  }
+
+  function pathD(idxPath, pts, cx, cy){
+    return idxPath.map((idx,i)=>{
+      const [x,y] = pts[idx];
+      return (i===0?'M':'L') + (cx+x).toFixed(2) + ',' + (cy+y).toFixed(2);
+    }).join(' ') + ' Z';
+  }
+
+  const state = { n:12, k:5, rotation:0, width:3, animate:true, rainbow:true };
+
+  const mainSvg = document.getElementById('mainSvg');
+  const thumbGrid = document.getElementById('thumbGrid');
+  const readoutBig = document.getElementById('readoutBig');
+  const readoutDesc = document.getElementById('readoutDesc');
+  const gridNLabel = document.getElementById('gridNLabel');
+
+  function renderMain(){
+    mainSvg.innerHTML = '';
+    const pts = circlePoints(state.n, 160, state.rotation);
+    const subpaths = buildSubpaths(state.n, state.k);
+    subpaths.forEach((sp, i)=>{
+      const el = document.createElementNS(NS,'path');
+      el.setAttribute('d', pathD(sp, pts, 200, 200));
+      el.setAttribute('stroke', state.rainbow ? PALETTE[i % PALETTE.length] : '#D8B45C');
+      el.setAttribute('stroke-width', state.width);
+      mainSvg.appendChild(el);
+      if(state.animate){
+        const len = el.getTotalLength();
+        el.style.strokeDasharray = len;
+        el.style.strokeDashoffset = len;
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{ el.style.strokeDashoffset = 0; }));
+      }
+    });
+
+    const g = gcd(state.n, state.k);
+    readoutBig.textContent = 'FPB = ' + g;
+    if(g === 1){
+      readoutDesc.textContent = 'Satu untai tunggal — jalur ini menyentuh seluruh ' + state.n + ' titik sebelum kembali ke awal, tanpa pernah putus.';
+    } else {
+      readoutDesc.textContent = 'Terpecah jadi ' + g + ' salinan terpisah, masing-masing hanya menyentuh ' + (state.n/g) + ' dari ' + state.n + ' titik. Bukan cacat — konsekuensi langsung dari faktor bersama antara n dan k.';
+    }
+  }
+
+  function renderGrid(){
+    thumbGrid.innerHTML = '';
+    gridNLabel.textContent = state.n;
+    const maxK = Math.max(1, Math.floor(state.n/2));
+    const pts = circlePoints(state.n, 40, state.rotation);
+    for(let k=1;k<=maxK;k++){
+      const g = gcd(state.n, k);
+      const subpaths = buildSubpaths(state.n, k);
+      const cell = document.createElement('div');
+      cell.className = 'thumb' + (k===state.k ? ' active' : '');
+      cell.style.borderColor = g===1 ? 'var(--gold-deep)' : 'var(--line-strong)';
+      const svg = document.createElementNS(NS,'svg');
+      svg.setAttribute('viewBox','0 0 100 100');
+      subpaths.forEach((sp,i)=>{
+        const el = document.createElementNS(NS,'path');
+        el.setAttribute('d', pathD(sp, pts, 50, 50));
+        el.setAttribute('stroke', state.rainbow ? PALETTE[i % PALETTE.length] : '#D8B45C');
+        el.setAttribute('stroke-width', 1.6);
+        el.setAttribute('fill', 'none');
+        el.setAttribute('stroke-linejoin','round');
+        svg.appendChild(el);
+      });
+      cell.appendChild(svg);
+      const label = document.createElement('span');
+      label.className = 'k-label';
+      label.textContent = k;
+      cell.appendChild(label);
+      cell.addEventListener('click', ()=>{
+        state.k = k;
+        document.getElementById('ctrlK').max = state.n-1;
+        document.getElementById('ctrlK').value = k;
+        document.getElementById('valK').textContent = k;
+        renderMain(); renderGrid();
+      });
+      thumbGrid.appendChild(cell);
+    }
+  }
+
+  function bind(id, key, labelId, suffix, redrawGrid){
+    const el = document.getElementById(id);
+    const lab = document.getElementById(labelId);
+    el.addEventListener('input', ()=>{
+      state[key] = +el.value;
+      lab.textContent = el.value + (suffix||'');
+      if(key==='n'){
+        const kEl = document.getElementById('ctrlK');
+        kEl.max = Math.max(1, state.n-1);
+        if(state.k > state.n-1){ state.k = state.n-1; kEl.value = state.k; document.getElementById('valK').textContent = state.k; }
+      }
+      renderMain();
+      if(redrawGrid) renderGrid();
+    });
+  }
+  bind('ctrlN','n','valN','',true);
+  bind('ctrlK','k','valK','',true);
+  bind('ctrlRot','rotation','valRot','°',true);
+  bind('ctrlWidth','width','valWidth','',false);
+
+  document.getElementById('ctrlAnimate').addEventListener('change', e=>{ state.animate = e.target.checked; });
+  document.getElementById('ctrlRainbow').addEventListener('change', e=>{ state.rainbow = e.target.checked; renderMain(); renderGrid(); });
+
+  renderMain();
+  renderGrid();
+})();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

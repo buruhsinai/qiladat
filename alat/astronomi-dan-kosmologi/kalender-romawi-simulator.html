@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulator Kekacauan Kalender Romawi</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#14171c; --panel2:#1b1f26; --line:#2a2f38;
+    --text:#e8e6df; --muted:#9aa1ab; --accent:#c9a24d; --accent2:#6fae8c;
+    --warn:#d98c5f; --danger:#c1595a; --blue:#7f9fe8; --font-d:'Georgia',serif; --font-b:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-b);margin:0;padding:0;line-height:1.6}
+  .wrap{max-width:840px;margin:0 auto;padding:28px 18px 80px}
+  header{border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:28px}
+  h1{font-family:var(--font-d);font-size:1.45rem;margin:0 0 8px;color:var(--accent)}
+  .tagline{color:var(--muted);font-size:.95rem}
+  h2{font-family:var(--font-d);font-size:1.2rem;color:var(--accent2);border-left:3px solid var(--accent2);padding-left:10px;margin-top:40px}
+  h3{color:var(--text);font-size:1rem;margin-top:0}
+  section{margin-bottom:10px}
+  p{color:#d7d5cd}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;margin:14px 0}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px}
+  @media(min-width:640px){.grid-2{grid-template-columns:1fr 1fr}}
+  @media(min-width:640px){.grid-3{grid-template-columns:1fr 1fr 1fr}}
+  .slider-field label{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);margin-bottom:6px}
+  .slider-field label b{color:var(--accent);font-weight:600}
+  .slider-field input[type=range]{width:100%;accent-color:var(--accent2)}
+  .slider-hint{font-size:.78rem;color:#767c85;margin-top:3px}
+  .result{background:var(--panel2);border:1px solid var(--accent);border-radius:8px;padding:14px;margin-top:14px;font-size:1.02rem}
+  .result b{color:var(--accent)}
+  .bigread{font-size:1.5rem;font-weight:700;color:var(--accent);margin:4px 0}
+  .verdict{border-radius:8px;padding:14px;margin-top:10px;font-size:.95rem}
+  .v-ok{background:#152a1f;border:1px solid var(--accent2);color:#bfe6cf}
+  .v-warn{background:#2a2416;border:1px solid var(--warn);color:#f0dcc4}
+  .v-bad{background:#2a1616;border:1px solid var(--danger);color:#f0c4c4}
+  .note{font-size:.82rem;color:var(--muted);margin-top:6px}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:.86rem}
+  th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left}
+  th{color:var(--accent2)}
+  .wa{display:inline-block;margin-top:14px;background:#25D366;color:#04250f;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:600}
+  .limitbox{background:#241a14;border:1px solid var(--warn);border-radius:8px;padding:14px;color:#e8d3c1}
+  .histbox{background:#161a20;border:1px dashed var(--line);border-radius:8px;padding:14px;color:#c7c4bb;font-size:.92rem}
+  ul{color:#d7d5cd}
+  svg{width:100%;height:auto;background:var(--panel2);border-radius:8px;border:1px solid var(--line)}
+  .chartbox{margin-top:10px}
+  .era-box{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:12px}
+  .era-title{font-weight:600;color:var(--accent2);margin-bottom:8px;font-size:.92rem}
+  footer{margin-top:50px;border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:.8rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Simulator Kekacauan Kalender Romawi</h1>
+  <div class="tagline">Bukan sekadar "46 SM punya 445 hari" — tapi bagaimana ketidakjujuran politik menumpuk, tahun demi tahun, sampai koreksi sebesar itu jadi satu-satunya jalan keluar.</div>
+</header>
+
+<section>
+  <h2>1. Belajar — Kalender yang Diatur Manusia, Bukan Matahari</h2>
+  <p>Kalender Republik Romawi bukan kalender matahari murni. Tahun sipilnya hanya <b>355 hari</b> — dekat dengan siklus bulan, tapi jauh lebih pendek dari tahun matahari sesungguhnya (~365,25 hari). Selisih ~10,25 hari tiap tahun ini seharusnya ditutup lewat <b>interkalasi</b>: menyisipkan bulan tambahan bernama <i>Mercedonius</i> (sekitar 22-23 hari) setelah tanggal 23 Februari, kira-kira setiap dua tahun.</p>
+  <div class="card">
+    <p><b>Masalahnya:</b> keputusan kapan dan berapa lama interkalasi dilakukan bukan di tangan astronom, tapi di tangan <i>Pontifex Maximus</i> dan Dewan Pendeta (College of Pontiffs) — jabatan yang sangat politis. Interkalasi bisa "dilupakan" untuk memperpendek masa jabatan musuh politik, atau ditambah untuk memperpanjang masa jabatan sekutu, mempercepat/menunda pemungutan pajak, atau menggeser tanggal pemilihan. Cicero sendiri pernah mengeluh soal kekacauan ini dalam suratnya.</p>
+    <p style="margin-bottom:0">Sepanjang tahun-tahun kacau menjelang 46 SM — terutama saat Julius Caesar berperang di Galia (58-49 SM) dan kemudian Perang Saudara (49-46 SM) — interkalasi nyaris tidak diterapkan sama sekali selama bertahun-tahun. Kalender sipil perlahan-lahan melenceng jauh dari musim sesungguhnya, sampai akhirnya "bulan panen" secara kalender jatuh di tengah musim dingin.</p>
+  </div>
+</section>
+
+<section>
+  <h2>2. Eksplorasi A — Simulasi Akumulasi: 63-46 SM</h2>
+  <p>Ini bukan satu angka, tapi tiga keputusan politik berurutan. Geser "kejujuran interkalasi" di tiap era dan lihat sendiri bagaimana kesenjangan menumpuk tahun demi tahun — sebelum akhirnya menentukan seberapa panjang koreksi yang harus dilakukan Caesar.</p>
+  <div class="card">
+    <div class="era-box">
+      <div class="era-title">Era 1 — 63-58 SM (Caesar terpilih Pontifex Maximus, kondisi relatif lebih terkendali)</div>
+      <div class="slider-field">
+        <label>Kejujuran interkalasi diterapkan <b id="valEra1">70</b>%</label>
+        <input type="range" id="era1" min="0" max="100" step="5" value="70">
+      </div>
+    </div>
+    <div class="era-box">
+      <div class="era-title">Era 2 — 58-49 SM (Caesar berperang di Galia, pengawasan longgar)</div>
+      <div class="slider-field">
+        <label>Kejujuran interkalasi diterapkan <b id="valEra2">15</b>%</label>
+        <input type="range" id="era2" min="0" max="100" step="5" value="15">
+      </div>
+    </div>
+    <div class="era-box">
+      <div class="era-title">Era 3 — 49-46 SM (Perang Saudara, administrasi nyaris lumpuh)</div>
+      <div class="slider-field">
+        <label>Kejujuran interkalasi diterapkan <b id="valEra3">10</b>%</label>
+        <input type="range" id="era3" min="0" max="100" step="5" value="10">
+      </div>
+    </div>
+    <div class="chartbox">
+      <svg id="chartA" viewBox="0 0 600 240"></svg>
+    </div>
+    <div class="result">
+      Total kesenjangan menumpuk hingga 46 SM: <div class="bigread" id="hasilDriftA">-</div>
+      <div id="hasilTahunKonfusi"></div>
+    </div>
+    <div class="verdict" id="verdictA"></div>
+  </div>
+  <div class="histbox">
+    <p style="margin:0">Menurut catatan Suetonius dan Plutarch, tahun 46 SM sungguhan (dijuluki <i>Annus Confusionis</i>, "Tahun Kebingungan") diperpanjang jadi sekitar <b>445 hari</b> — interkalasi biasa (~23 hari) DITAMBAH dua bulan sisipan luar biasa (33 dan 34 hari) yang disisipkan antara November dan Desember, atas saran astronom Aleksandria, Sosigenes. Cobalah geser ketiga era di atas ke 100% — lihat berapa pendek seharusnya koreksi itu jika interkalasi selalu dijalankan jujur.</p>
+  </div>
+</section>
+
+<section>
+  <h2>3. Eksplorasi B — Drift Julian ke Gregorian: 325-1582 M</h2>
+  <p>Setelah reformasi Caesar, interkalasi politik berakhir — digantikan aturan mekanis: tahun kabisat tiap 4 tahun, rata-rata 365,25 hari. Tapi tahun matahari sesungguhnya (tropis) adalah <b>365,24219 hari</b> — Julian kelebihan sekitar 0,0078 hari (≈11 menit) tiap tahun. Kecil, tapi terus menumpuk selama lebih dari seribu tahun.</p>
+  <div class="card">
+    <div class="slider-field">
+      <label>Geser ke tahun <b id="valTahunB">1582</b> M</label>
+      <input type="range" id="tahunB" min="325" max="1582" step="1" value="1582">
+      <div class="slider-hint">325 M = Konsili Nicea, ekuinoks musim semi ditetapkan 21 Maret sebagai rujukan</div>
+    </div>
+    <div class="chartbox">
+      <svg id="chartB" viewBox="0 0 600 220"></svg>
+    </div>
+    <div class="result" id="hasilDriftB"></div>
+    <div class="verdict" id="verdictB"></div>
+  </div>
+</section>
+
+<section>
+  <h2>4. Metode / Rumus</h2>
+  <div class="card">
+    <p><b>Akumulasi drift Republik (per tahun dalam satu era):</b> drift_tahunan = 10,25 × (1 − kejujuran%/100)</p>
+    <p><b>Panjang Tahun Kebingungan:</b> total_hari = 355 + interkalasi_normal(23) + akumulasi_drift(dibulatkan)</p>
+    <p><b>Drift Julian terhadap tahun tropis:</b> drift(t) = (t − 325) × (365,25 − 365,24219) hari, t dalam tahun Masehi</p>
+    <p><b>Setelah reformasi Gregorius (365,2425 hari/tahun):</b> drift baru jauh lebih lambat, ≈1 hari tiap ~3.200 tahun</p>
+  </div>
+</section>
+
+<section>
+  <h2>5. Batasan</h2>
+  <div class="limitbox">
+    <ul>
+      <li><b>Aturan interkalasi Republik Romawi yang persis masih diperdebatkan sejarawan</b> — sumber kuno (Censorinus, Macrobius) tidak sepenuhnya konsisten, dan siklus pastinya (apakah benar-benar 2 tahunan teratur) masih jadi topik kajian filologi-sejarah. Simulator ini memakai model yang disederhanakan untuk keperluan edukasi, bukan rekonstruksi akademik definitif.</li>
+      <li><b>Angka historis drift 46 SM bervariasi antarsumber (~67 hingga ~90 hari)</b> tergantung metode rekonstruksi — simulator ini memberi satu angka berdasarkan parameter yang Anda pilih, bukan angka tunggal yang disepakati semua sejarawan.</li>
+      <li><b>Era 1-3 dan persentase default adalah penyederhanaan naratif</b> dari periode yang kompleks — kejujuran interkalasi kemungkinan bervariasi tahun ke tahun, bukan konstan sepanjang satu era 5-9 tahun seperti dimodelkan di sini.</li>
+      <li>Klaim bahwa "orang di Konsili Nicea sudah mendeteksi keanehan" perlu diluruskan: yang terjadi di Nicea (325 M) adalah penetapan 21 Maret sebagai rujukan tetap ekuinoks untuk perhitungan Paskah — bukti kuat bahwa drift sudah jadi masalah <i>disadari luas</i> baru muncul jelas pada abad ke-13 (surat Roger Bacon ke Paus), berabad-abad setelah Nicea.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>6. Referensi</h2>
+  <ul>
+    <li>Suetonius — <i>De Vita Caesarum</i>, "Divus Julius" 40</li>
+    <li>Plutarch — <i>Life of Caesar</i>, 59</li>
+    <li>Censorinus — <i>De Die Natali</i> (sumber kuno utama soal kalender Romawi)</li>
+    <li>Michels, A.K. (1967) — <i>The Calendar of the Roman Republic</i></li>
+    <li>Feeney, D. (2007) — <i>Caesar's Calendar: Ancient Time and the Beginnings of History</i></li>
+    <li>Paus Gregorius XIII — bulla <i>Inter gravissimas</i> (1582), reformasi kalender Gregorian</li>
+  </ul>
+</section>
+
+<div class="card" style="text-align:center">
+  <p style="margin:0 0 8px">Ingin diskusi lebih lanjut soal topik ini?</p>
+  <a class="wa" id="waLink" href="#" target="_blank">Konsultasi via WhatsApp</a>
+</div>
+
+<footer>
+  Bagian dari Bank Alat JAZMI — Level 1–5 (Belajar → Eksplorasi → Metode → Batasan → Referensi).<br>
+  Alat ini edukasi sejarah &amp; matematika kalender, bukan rekonstruksi akademik definitif.
+</footer>
+</div>
+
+<script>
+function fmt(x, d=1){
+  if(!isFinite(x)) return "-";
+  return parseFloat(x.toFixed(d)).toString();
+}
+
+// ===== Panel A =====
+const era1El = document.getElementById('era1');
+const era2El = document.getElementById('era2');
+const era3El = document.getElementById('era3');
+
+const eraDef = [
+  {label:'63-58 SM', tahunMulai:-63, tahunSelesai:-58, panjang:5},
+  {label:'58-49 SM', tahunMulai:-58, tahunSelesai:-49, panjang:9},
+  {label:'49-46 SM', tahunMulai:-49, tahunSelesai:-46, panjang:3}
+];
+
+function hitungA(){
+  const f1 = parseFloat(era1El.value);
+  const f2 = parseFloat(era2El.value);
+  const f3 = parseFloat(era3El.value);
+  document.getElementById('valEra1').textContent = f1;
+  document.getElementById('valEra2').textContent = f2;
+  document.getElementById('valEra3').textContent = f3;
+
+  const fidelitas = [f1,f2,f3];
+  let seri = []; // {tahun, driftKumulatif}
+  let kumulatif = 0;
+  let tahun = -63;
+  eraDef.forEach((era, idx)=>{
+    const driftPerTahun = 10.25*(1-fidelitas[idx]/100);
+    for(let i=0;i<era.panjang;i++){
+      kumulatif += driftPerTahun;
+      seri.push({tahun: tahun+1, drift: kumulatif, era: idx});
+      tahun++;
+    }
+  });
+
+  const totalDrift = kumulatif;
+  const interkalasiNormal = 23;
+  const totalHari = Math.round(355 + interkalasiNormal + totalDrift);
+
+  document.getElementById('hasilDriftA').textContent = fmt(totalDrift,1)+' hari';
+  document.getElementById('hasilTahunKonfusi').innerHTML = `
+    Perkiraan panjang Tahun Kebingungan (46 SM) menurut skenario Anda: <b>${totalHari} hari</b><br>
+    <span class="note">(355 hari dasar + ${interkalasiNormal} hari interkalasi normal + ${fmt(totalDrift,0)} hari koreksi ekstra)</span>
+  `;
+
+  const verdict = document.getElementById('verdictA');
+  if(totalDrift < 15){
+    verdict.className='verdict v-ok';
+    verdict.innerHTML = 'Dengan kejujuran interkalasi setinggi ini, kesenjangan nyaris tidak menumpuk — Caesar hampir tidak perlu koreksi ekstra sama sekali. Skenario ini jauh lebih rapi dari sejarah aslinya.';
+  } else if(totalDrift < 50){
+    verdict.className='verdict v-warn';
+    
+    verdict.innerHTML = `Kesenjangan menumpuk cukup berarti tapi masih jauh dari kekacauan sejarah asli (~67-90 hari) — pola ini menunjukkan sebagian era masih cukup taat menjalankan interkalasi.`;
+  } else {
+    verdict.className='verdict v-bad';
+    
+    verdict.innerHTML = `Pola ini mendekati kekacauan sejarah asli — perhatikan di grafik bagaimana kemiringan garis jauh lebih curam begitu memasuki Era 2 dan 3 (masa Perang Galia dan Perang Saudara), persis periode yang oleh sejarawan dianggap paling parah pengabaian interkalasinya.`;
+  }
+
+  gambarChartA(seri);
+}
+
+function gambarChartA(seri){
+  const svg = document.getElementById('chartA');
+  const W=600,H=240,padL=48,padR=14,padT=16,padB=32;
+  const n = seri.length;
+  const maxDrift = Math.max(...seri.map(s=>s.drift), 10);
+
+  function px(i){ return padL + (i/n)*(W-padL-padR); }
+  function py(v){ return (H-padB) - (v/maxDrift)*(H-padT-padB); }
+
+  const warnaEra = ['#6fae8c','#d98c5f','#c1595a'];
+  let paths = [[],[],[]];
+  seri.forEach((s,i)=>{ paths[s.era].push([px(i),py(s.drift)]); });
+
+  let pathsSvg = '';
+  // sambungkan antar era dengan titik terakhir era sebelumnya
+  let prevPoint = [px(0), py(0)];
+  paths.forEach((pts, idx)=>{
+    if(pts.length===0) return;
+    let d = `M${prevPoint[0].toFixed(1)},${prevPoint[1].toFixed(1)} `;
+    pts.forEach(p=>{ d+= `L${p[0].toFixed(1)},${p[1].toFixed(1)} `; });
+    pathsSvg += `<path d="${d}" fill="none" stroke="${warnaEra[idx]}" stroke-width="2.5"/>`;
+    prevPoint = pts[pts.length-1];
+  });
+
+  let ticks='';
+  [0,4,8,12,16].forEach(i=>{
+    if(i<n){
+      const x = px(i);
+      ticks += `<text x="${x}" y="${H-padB+18}" fill="#9aa1ab" font-size="10" text-anchor="middle">${seri[i].tahun} SM</text>`;
+    }
+  });
+
+  svg.innerHTML = `
+    <line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#2a2f38"/>
+    <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-padB}" stroke="#2a2f38"/>
+    ${ticks}
+    ${pathsSvg}
+    <text x="${W/2}" y="${H-4}" fill="#9aa1ab" font-size="11" text-anchor="middle">tahun</text>
+    <text x="${padL-6}" y="${padT+6}" fill="#9aa1ab" font-size="9" text-anchor="end">${fmt(maxDrift,0)} hari</text>
+  `;
+}
+
+[era1El,era2El,era3El].forEach(el=>el.addEventListener('input', hitungA));
+
+// ===== Panel B =====
+const tahunBEl = document.getElementById('tahunB');
+const DRIFT_JULIAN = 365.25-365.24219; // per tahun
+const DRIFT_GREGORIAN = 365.2425-365.24219;
+
+function hitungB(){
+  const t = parseFloat(tahunBEl.value);
+  document.getElementById('valTahunB').textContent = t;
+
+  const drift = (t-325)*DRIFT_JULIAN;
+  const tanggalEkuinoks = 21 - drift; // Maret, mundur dari tgl 21
+
+  document.getElementById('hasilDriftB').innerHTML = `
+    Akumulasi drift sejak Konsili Nicea (325 M): <b>${fmt(drift,1)} hari</b><br>
+    Perkiraan tanggal ekuinoks musim semi aktual saat itu: <b>${fmt(tanggalEkuinoks,1)} Maret</b> (rujukan tetap: 21 Maret)
+  `;
+
+  const verdict = document.getElementById('verdictB');
+  if(t < 1200){
+    verdict.className='verdict v-ok';
+    
+    verdict.innerHTML = 'Pada tahap ini drift masih relatif kecil dan mungkin belum terasa mengganggu dalam kehidupan sehari-hari, meski sudah bisa dihitung astronom yang cermat.';
+  } else if(t < 1580){
+    verdict.className='verdict v-warn';
+    
+    verdict.innerHTML = 'Drift sudah cukup besar untuk disadari luas — inilah periode ketika astronom seperti Roger Bacon (abad ke-13) mulai menulis surat resmi ke Paus memperingatkan pergeseran musim dari kalender.';
+  } else {
+    verdict.className='verdict v-bad';
+    
+    verdict.innerHTML = `Mendekati 1582 M — drift mencapai hampir 10 hari, cukup besar untuk mengganggu perhitungan tanggal Paskah gerejawi. Inilah yang mendorong reformasi Paus Gregorius XIII: melompat langsung 10 hari (4 Oktober 1582 diikuti 15 Oktober 1582) dan mengubah aturan kabisat jadi 365,2425 hari/tahun.`;
+  }
+
+  gambarChartB(t);
+}
+
+function gambarChartB(tNow){
+  const svg = document.getElementById('chartB');
+  const W=600,H=220,padL=48,padR=14,padT=16,padB=32;
+  const tMax = 1750;
+  function px(t){ return padL + ((t-325)/(tMax-325))*(W-padL-padR); }
+  function py(d){ return (H-padB) - (d/12)*(H-padT-padB); }
+
+  let path1 = "";
+  for(let t=325;t<=1582;t+=5){
+    const d = (t-325)*DRIFT_JULIAN;
+    const x=px(t), y=py(d);
+    path1 += (t===325?'M':'L')+x.toFixed(1)+','+y.toFixed(1);
+  }
+  const driftAt1582 = (1582-325)*DRIFT_JULIAN;
+  let path2 = `M${px(1582).toFixed(1)},${py(0).toFixed(1)} `;
+  for(let t=1582;t<=tMax;t+=5){
+    const d = (t-1582)*DRIFT_GREGORIAN;
+    const x=px(t), y=py(d);
+    path2 += `L${x.toFixed(1)},${y.toFixed(1)} `;
+  }
+
+  const xNow = px(Math.min(tNow,1582));
+  const yNow = py((Math.min(tNow,1582)-325)*DRIFT_JULIAN);
+
+  svg.innerHTML = `
+    <line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#2a2f38"/>
+    <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-padB}" stroke="#2a2f38"/>
+    <path d="${path1}" fill="none" stroke="#d98c5f" stroke-width="2.5"/>
+    <path d="${path2}" fill="none" stroke="#6fae8c" stroke-width="2.5"/>
+    <circle cx="${xNow}" cy="${yNow}" r="5" fill="#c9a24d"/>
+    <text x="${px(325)}" y="${H-padB+18}" fill="#9aa1ab" font-size="10">325 M</text>
+    <text x="${px(1582)}" y="${H-padB+18}" fill="#c9a24d" font-size="10" text-anchor="middle">1582 M</text>
+    <text x="${px(tMax)}" y="${H-padB+18}" fill="#9aa1ab" font-size="10" text-anchor="end">${tMax} M</text>
+    <text x="${W/2}" y="${H-4}" fill="#9aa1ab" font-size="11" text-anchor="middle">tahun Masehi (garis oranye=Julian, hijau=setelah Gregorian)</text>
+  `;
+}
+
+tahunBEl.addEventListener('input', hitungB);
+
+const waMsg = encodeURIComponent("Assalamu'alaikum, saya ingin diskusi terkait Simulator Kekacauan Kalender Romawi JAZMI.");
+document.getElementById('waLink').href = `https://wa.me/6281356572588?text=${waMsg}`;
+
+hitungA();
+hitungB();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

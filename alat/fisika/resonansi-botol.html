@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resonansi Botol — Laboratorium JAZMI</title>
+<style>
+  :root{--bg:#0a1512;--bg2:#0f1e19;--card:#122420;--line:#1f3d34;--emerald:#22c98a;--emerald-dim:#0e6b4f;--gold:#e0b354;--text:#e9f3ee;--muted:#8fada0;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Georgia',serif;line-height:1.6;}
+  header{padding:28px 20px 20px;text-align:center;background:radial-gradient(ellipse at top,#113b2e 0%,var(--bg) 70%);border-bottom:1px solid var(--line);}
+  header .kicker{font-family:-apple-system,sans-serif;letter-spacing:.12em;text-transform:uppercase;font-size:12px;color:var(--gold);margin-bottom:8px;}
+  header h1{font-size:1.3rem;margin:0 0 8px;font-weight:600;}
+  header p{color:var(--muted);font-family:-apple-system,sans-serif;font-size:13.5px;max-width:600px;margin:0 auto;}
+  main{max-width:720px;margin:0 auto;padding:20px 18px 50px;}
+  section{padding:22px 0;border-bottom:1px solid var(--line);}
+  section:last-child{border-bottom:none;}
+  h2{font-size:1.05rem;color:var(--emerald);margin:0 0 8px;}
+  p{margin:0 0 12px;font-size:15px;}
+  .eq{font-family:Georgia,serif;text-align:center;font-size:1.1rem;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:14px;margin:12px 0;color:var(--emerald);}
+  .eq small{display:block;font-family:-apple-system,sans-serif;font-size:11px;color:var(--muted);margin-top:6px;}
+  .sim-card{font-family:-apple-system,sans-serif;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:14px 0;}
+  .sim-card label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px;}
+  .sim-card input[type=range]{width:100%;accent-color:var(--emerald);margin-bottom:14px;}
+  .val{color:var(--gold);font-weight:700;}
+  .plot-wrap{background:var(--bg2);border-radius:10px;border:1px solid var(--line);padding:8px;}
+  .plot-wrap svg{width:100%;height:auto;}
+  .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;font-family:-apple-system,sans-serif;}
+  .result-box{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center;}
+  .result-box .rlabel{font-size:10.5px;color:var(--muted);text-transform:uppercase;}
+  .result-box .rval{font-size:1.1rem;color:var(--emerald);font-weight:800;margin-top:3px;}
+  .warn{background:#241407;border:1px solid #5c3a12;border-radius:10px;padding:12px 14px;margin:12px 0;font-family:-apple-system,sans-serif;font-size:13px;color:#f0d3a8;}
+  ul{padding-left:18px;font-size:14.5px;}
+  footer{text-align:center;padding:24px 20px;color:var(--muted);font-family:-apple-system,sans-serif;font-size:11.5px;}
+</style>
+</head>
+<body>
+<header>
+  <div class="kicker">Laboratorium JAZMI · Versi Sehari-hari Lain dari Tier 3 No.17</div>
+  <h1>Kenapa Meniup Mulut Botol Cuma Menghasilkan Satu Nada Rendah</h1>
+  <p>Sama-sama kuantisasi gelombang berdiri seperti tool sebelumnya — tapi kali ini syarat batasnya beda: satu ujung TERTUTUP, satu ujung TERBUKA. Bedanya kecil di rumus, besar di akibatnya.</p>
+</header>
+<main>
+
+<section>
+  <h2>Belajar</h2>
+  <p>Di dalam botol, ujung dasar tertutup <strong>memaksa udara di situ diam</strong> (simpul gerakan), sementara ujung mulut botol yang terbuka justru <strong>bebas bergerak paling leluasa</strong> (perut gelombang). Kombinasi satu ujung terjepit-satu ujung bebas ini secara matematis hanya mengizinkan <strong>harmonik ganjil saja</strong> (1, 3, 5, ...) — beda dari senar gitar (kedua ujung terjepit) yang mengizinkan semua harmonik.</p>
+  <div class="eq">
+    fₙ = n·v / (4L) &nbsp;,&nbsp; n = 1,3,5,...
+    <small>L = tinggi kolom udara dari air/dasar ke mulut botol · v = kecepatan suara di udara (≈343 m/s)</small>
+  </div>
+</section>
+
+<section>
+  <h2>Simulator</h2>
+  <p style="color:var(--muted); font-family:-apple-system,sans-serif; font-size:13.5px;">Geser tinggi kolom udara (makin banyak air di botol = makin pendek kolom udaranya) dan harmonik ganjil yang dipilih.</p>
+  <div class="sim-card">
+    <label>Tinggi kolom udara (L): <span class="val" id="lVal">15 cm</span></label>
+    <input type="range" id="lRange" min="2" max="30" step="0.5" value="15">
+    <label>Harmonik (hanya ganjil): <span class="val" id="nVal">1 (nada dasar)</span></label>
+    <input type="range" id="nRange" min="0" max="3" step="1" value="0">
+    <div class="plot-wrap"><svg id="tubeSVG" viewBox="0 0 200 260"></svg></div>
+    <div class="result-grid">
+      <div class="result-box"><div class="rlabel">Frekuensi</div><div class="rval" id="fVal">– Hz</div></div>
+      <div class="result-box"><div class="rlabel">Perkiraan Nada</div><div class="rval" id="noteVal">–</div></div>
+    </div>
+  </div>
+  <div class="warn">Kenapa cuma "1 nada rendah" yang biasa terdengar saat iseng meniup botol: harmonik dasar (n=1) paling gampang terpicu tiupan biasa — harmonik ganjil lebih tinggi (n=3,5) butuh teknik tiup khusus, makanya jarang terdengar spontan.</div>
+</section>
+
+<section>
+  <h2>Batasan</h2>
+  <ul>
+    <li>Kecepatan suara dianggap konstan 343 m/s (udara ~20°C) — sebenarnya sedikit berubah dengan suhu &amp; kelembapan.</li>
+    <li>Koreksi ujung terbuka (end correction, mulut botol menambah sedikit "panjang efektif") diabaikan untuk kesederhanaan.</li>
+  </ul>
+</section>
+
+</main>
+<footer>Laboratorium JAZMI — versi ringkas, pasangan lain dari "Partikel dalam Kotak".</footer>
+
+<script>
+const lRange=document.getElementById('lRange'), nRange=document.getElementById('nRange');
+const NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const V=343;
+function freqToNote(f){
+  if(f<=0) return '–';
+  const n = Math.round(12*Math.log2(f/440)) + 57;
+  const octave = Math.floor(n/12);
+  const name = NOTES[((n%12)+12)%12];
+  return name+octave;
+}
+function update(){
+  const L=parseFloat(lRange.value)/100; // cm -> m
+  const nIdx=parseInt(nRange.value);
+  const n=[1,3,5,7][nIdx];
+  document.getElementById('lVal').textContent=(L*100).toFixed(1)+' cm';
+  document.getElementById('nVal').textContent = n + (n===1?' (nada dasar)':'');
+  const f = n*V/(4*L);
+  document.getElementById('fVal').textContent=f.toFixed(1)+' Hz';
+  document.getElementById('noteVal').textContent=freqToNote(f);
+
+  const W=200,H=260,tubeX1=70,tubeX2=130,bottomY=240,topY=20;
+  let html=`<rect x="${tubeX1}" y="${topY}" width="${tubeX2-tubeX1}" height="${bottomY-topY}" fill="none" stroke="#3a5a50" stroke-width="2"/>`;
+  html+=`<line x1="${tubeX1}" y1="${bottomY}" x2="${tubeX2}" y2="${bottomY}" stroke="#7a5a3a" stroke-width="4"/>`;
+  html+=`<text x="100" y="${bottomY+18}" font-size="9" fill="#8fada0" text-anchor="middle" font-family="sans-serif">tertutup (dasar)</text>`;
+  html+=`<text x="100" y="${topY-6}" font-size="9" fill="#8fada0" text-anchor="middle" font-family="sans-serif">terbuka (mulut botol)</text>`;
+
+  // gambar amplitudo perpindahan udara: simpul di bawah, perut di atas
+  const midX=100, amp=25;
+  let path='';
+  const steps=80;
+  for(let i=0;i<=steps;i++){
+    const yf=i/steps; // 0=bottom(closed) .. 1=top(open)
+    const y = bottomY - yf*(bottomY-topY);
+    const disp = Math.sin(n*Math.PI*yf/2); // closed-open condition
+    const x = midX + disp*amp;
+    path += (i===0?'M':'L')+x.toFixed(1)+','+y.toFixed(1)+' ';
+  }
+  html+=`<path d="${path}" stroke="#e0b354" stroke-width="2.5" fill="none"/>`;
+  document.getElementById('tubeSVG').innerHTML=html;
+}
+[lRange,nRange].forEach(el=>el.addEventListener('input',update));
+update();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

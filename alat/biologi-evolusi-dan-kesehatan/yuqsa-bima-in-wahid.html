@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>يُسْقَىٰ بِمَاءٍ وَاحِدٍ — Simulasi Diferensiasi Tanaman</title>
+<style>
+  :root {
+    --bg: #080c0a;
+    --bg2: #0e1612;
+    --bg3: #162018;
+    --border: #1e3020;
+    --text: #b8d0b8;
+    --text-dim: #4a6050;
+    --accent: #5ab47a;
+    --accent2: #a0d880;
+    --accent3: #d4b060;
+    --accent4: #d06860;
+    --water: #5a90c0;
+    --soil: #9a7050;
+    --sun: #d4c060;
+    --font: 'Georgia', serif;
+    --mono: 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; line-height: 1.7; }
+
+  header { max-width: 1080px; margin: 0 auto; padding: 2.5rem 2rem 1.5rem; border-bottom: 1px solid var(--border); }
+  .eyebrow { font-family: var(--mono); font-size: 0.68rem; color: var(--text-dim); letter-spacing: 0.15em; margin-bottom: 0.6rem; }
+  h1 { font-size: clamp(1.4rem, 3vw, 2rem); font-weight: normal; color: #d0e8c0; line-height: 1.3; margin-bottom: 0.5rem; }
+  .ayat { font-size: clamp(1.2rem, 2.5vw, 1.6rem); direction: rtl; color: var(--accent3); display: block; margin-bottom: 0.4rem; text-align: right; line-height: 1.8; }
+  .terjemah { font-size: 0.85rem; color: var(--text-dim); font-style: italic; margin-bottom: 0.5rem; }
+  .sub { font-size: 0.85rem; color: var(--text-dim); max-width: 600px; }
+
+  .main { max-width: 1080px; margin: 0 auto; padding: 1.5rem 2rem; display: grid; grid-template-columns: 340px 1fr; gap: 1.2rem; }
+  @media(max-width:750px){ .main { grid-template-columns:1fr; padding:1rem; } }
+  .full { grid-column: 1/-1; }
+
+  .panel { background: var(--bg2); border: 1px solid var(--border); border-radius: 3px; padding: 1.4rem; }
+  .ptitle { font-family: var(--mono); font-size: 0.68rem; color: var(--text-dim); letter-spacing: 0.12em; border-bottom: 1px solid var(--border); padding-bottom: 0.6rem; margin-bottom: 1.1rem; }
+
+  /* INPUT TETAP */
+  .fixed-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.6rem; margin-bottom: 1rem; }
+  .fixed-card { background: var(--bg); border: 1px solid var(--border); padding: 0.7rem; border-radius: 3px; text-align: center; }
+  .fixed-icon { font-size: 1.3rem; display: block; margin-bottom: 0.2rem; }
+  .fixed-label { font-size: 0.7rem; color: var(--text-dim); font-family: var(--mono); }
+  .fixed-val { font-size: 0.82rem; color: var(--accent2); font-family: var(--mono); margin-top: 0.15rem; }
+  .fixed-note { font-size: 0.62rem; color: var(--text-dim); margin-top: 0.1rem; font-style: italic; }
+
+  /* SLIDERS */
+  .sl-group { margin-bottom: 0.85rem; }
+  .sl-head { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.2rem; }
+  .sl-val { font-family: var(--mono); font-size: 0.75rem; color: var(--accent); }
+  .sl-note { font-size: 0.68rem; color: var(--text-dim); font-style: italic; margin-bottom: 0.28rem; }
+  input[type=range] { width:100%; height:4px; background:var(--bg3); border-radius:2px; outline:none; -webkit-appearance:none; cursor:pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:12px; height:12px; border-radius:50%; background:var(--accent); cursor:pointer; }
+
+  .layer-title { font-size: 0.72rem; font-family: var(--mono); color: var(--accent3); letter-spacing: 0.1em; margin: 0.9rem 0 0.5rem; padding-top: 0.7rem; border-top: 1px solid var(--border); }
+
+  /* CANVAS TANAMAN */
+  .plants-canvas-wrap { position: relative; }
+  canvas#plantsCanvas { display: block; width: 100%; background: linear-gradient(180deg, #080c0a 0%, #0a1008 60%, #12180e 100%); border: 1px solid var(--border); border-radius: 3px; }
+
+  /* LAYER INSIGHT */
+  .layer-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 0.9rem; flex-wrap: wrap; }
+  .ltab { padding: 0.38rem 0.75rem; font-size: 0.7rem; color: var(--text-dim); cursor: pointer; border-bottom: 2px solid transparent; font-family: var(--mono); transition: all 0.2s; white-space: nowrap; }
+  .ltab.on { color: var(--accent2); border-bottom-color: var(--accent2); }
+  .ltc { display: none; font-size: 0.82rem; line-height: 1.8; color: var(--text-dim); }
+  .ltc.on { display: block; }
+  .ltc em { color: var(--accent2); font-style: normal; }
+  .ltc .ql { color: var(--accent4); font-size: 0.78rem; margin-top: 0.5rem; display: block; border-left: 2px solid var(--accent4); padding-left: 0.6rem; font-style: italic; }
+  .ltc .ar { direction: rtl; color: var(--accent3); font-size: 0.9rem; display: block; margin-top: 0.5rem; text-align: right; }
+
+  /* OUTPUT CARDS */
+  .plants-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.7rem; margin-top: 0.8rem; }
+  @media(max-width:600px){ .plants-grid { grid-template-columns: repeat(2,1fr); } }
+  .plant-card { background: var(--bg); border: 1px solid var(--border); padding: 0.7rem; border-radius: 3px; text-align: center; transition: border-color 0.4s; }
+  .plant-card:hover { border-color: var(--accent); }
+  .plant-name { font-size: 0.72rem; color: var(--accent2); font-family: var(--mono); margin-bottom: 0.3rem; }
+  .plant-trait { font-size: 0.68rem; color: var(--text-dim); line-height: 1.6; }
+  .plant-trait span { color: var(--accent3); }
+
+  /* READOUT */
+  .readout { background: var(--bg); border-left: 3px solid var(--accent); padding: 0.85rem 1rem; font-size: 0.82rem; line-height: 1.8; border-radius: 0 3px 3px 0; margin-top: 0.8rem; transition: border-color 0.4s; }
+  .readout em { color: var(--accent2); font-style: normal; }
+  .readout .ar { direction: rtl; color: var(--accent3); font-size: 0.92rem; display: block; margin-top: 0.5rem; text-align: right; }
+
+  .sep { height: 1px; background: var(--border); margin: 1rem 0; }
+
+  .infobox { background: var(--bg3); border: 1px solid var(--border); padding: 0.85rem; border-radius: 3px; font-size: 0.8rem; color: var(--text-dim); line-height: 1.75; }
+  .infobox strong { color: var(--text); }
+  .infobox em { color: var(--accent2); font-style: normal; }
+
+  .btn-row { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
+  button.b { padding: 0.28rem 0.7rem; border: 1px solid var(--border); background: var(--bg); color: var(--text-dim); font-size: 0.72rem; border-radius: 3px; cursor: pointer; font-family: var(--mono); transition: all 0.2s; }
+  button.b:hover { border-color: var(--accent); color: var(--accent); }
+  button.b.on { border-color: var(--accent2); color: var(--accent2); background: #102010; }
+
+  .depth-indicator { display: flex; align-items: center; gap: 0.5rem; margin: 0.8rem 0; }
+  .depth-label { font-family: var(--mono); font-size: 0.68rem; color: var(--text-dim); }
+  .depth-bar { flex: 1; height: 6px; background: var(--bg); border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
+  .depth-fill { height: 100%; border-radius: 3px; transition: width 0.5s, background 0.5s; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">LABORATORIUM INTERAKTIF · QIDALAT.COM</div>
+  <h1>Diferensiasi dari Sumber yang Sama</h1>
+  <span class="ayat">وَيُسْقَىٰ بِمَاءٍ وَٰحِدٍ وَنُفَضِّلُ بَعْضَهَا عَلَىٰ بَعْضٍ فِى ٱلْأُكُلِ</span>
+  <div class="terjemah">"Disiram dengan air yang sama, namun Kami lebihkan sebagian atas sebagian yang lain dalam buah/rasanya." — QS. Ar-Ra'd: 4</div>
+  <p class="sub">Ubah parameter genetik, epigenetik, dan mikrobioma. Lihat bagaimana input yang sama menghasilkan output yang berbeda — dan bagaimana setiap layer penjelasan membuka layer pertanyaan yang lebih dalam.</p>
+</header>
+
+<div class="main">
+
+  <!-- PANEL KIRI: KONTROL -->
+  <div class="panel">
+    <div class="ptitle">PARAMETER</div>
+
+    <!-- INPUT TETAP -->
+    <div style="font-size:0.72rem;color:var(--text-dim);font-family:var(--mono);margin-bottom:0.5rem;letter-spacing:0.08em;">INPUT YANG SAMA UNTUK SEMUA TANAMAN:</div>
+    <div class="fixed-inputs">
+      <div class="fixed-card">
+        <span class="fixed-icon">💧</span>
+        <div class="fixed-label">Air</div>
+        <div class="fixed-val" id="fv-water">100%</div>
+        <div class="fixed-note">sama persis</div>
+      </div>
+      <div class="fixed-card">
+        <span class="fixed-icon">🌱</span>
+        <div class="fixed-label">Tanah</div>
+        <div class="fixed-val" id="fv-soil">100%</div>
+        <div class="fixed-note">sama persis</div>
+      </div>
+      <div class="fixed-card">
+        <span class="fixed-icon">☀️</span>
+        <div class="fixed-label">Cahaya</div>
+        <div class="fixed-val" id="fv-sun">100%</div>
+        <div class="fixed-note">sama persis</div>
+      </div>
+    </div>
+
+    <div style="font-size:0.7rem;color:var(--accent4);font-style:italic;margin-bottom:1rem;padding:0.5rem 0.7rem;border:1px solid var(--border);border-radius:3px;background:var(--bg);">
+      ↑ Slider di atas dikunci — semua tanaman menerima input yang identik. Perbedaan muncul dari layer di bawah ini.
+    </div>
+
+    <!-- LAYER 1: GENETIK -->
+    <div class="layer-title">▸ LAYER 1 — GENETIK</div>
+
+    <div class="sl-group">
+      <div class="sl-head"><span>Variasi sekuens DNA</span><span class="sl-val" id="v-dna">30%</span></div>
+      <div class="sl-note">SNP — Single Nucleotide Polymorphism antar individu</div>
+      <input type="range" id="sl-dna" min="0" max="100" value="30" oninput="update()">
+    </div>
+
+    <div class="sl-group">
+      <div class="sl-head"><span>Ekspresi gen aktif</span><span class="sl-val" id="v-gene">60%</span></div>
+      <div class="sl-note">Tidak semua gen aktif — meski sekuens sama</div>
+      <input type="range" id="sl-gene" min="0" max="100" value="60" oninput="update()">
+    </div>
+
+    <!-- LAYER 2: EPIGENETIK -->
+    <div class="layer-title">▸ LAYER 2 — EPIGENETIK</div>
+
+    <div class="sl-group">
+      <div class="sl-head"><span>Metilasi DNA</span><span class="sl-val" id="v-methyl">50%</span></div>
+      <div class="sl-note">Penanda kimia yang "membungkam" atau "mengaktifkan" gen tanpa mengubah sekuens</div>
+      <input type="range" id="sl-methyl" min="0" max="100" value="50" oninput="update()">
+    </div>
+
+    <div class="sl-group">
+      <div class="sl-head"><span>Modifikasi histon</span><span class="sl-val" id="v-histone">40%</span></div>
+      <div class="sl-note">Protein penggulungan DNA — menentukan gen mana yang bisa "dibaca"</div>
+      <input type="range" id="sl-histone" min="0" max="100" value="40" oninput="update()">
+    </div>
+
+    <div class="sl-group">
+      <div class="sl-head"><span>Memori epigenetik (warisan)</span><span class="sl-val" id="v-epimem">25%</span></div>
+      <div class="sl-note">Penanda dari kondisi nenek moyang yang diwariskan</div>
+      <input type="range" id="sl-epimem" min="0" max="100" value="25" oninput="update()">
+    </div>
+
+    <!-- LAYER 3: MIKROBIOMA -->
+    <div class="layer-title">▸ LAYER 3 — MIKROBIOMA</div>
+
+    <div class="sl-group">
+      <div class="sl-head"><span>Keragaman bakteri tanah</span><span class="sl-val" id="v-bacteria">70%</span></div>
+      <div class="sl-note">Rhizobium, Mycorrhiza — mitra tak terlihat yang menentukan serapan nutrisi</div>
+      <input type="range" id="sl-bacteria" min="0" max="100" value="70" oninput="update()">
+    </div>
+
+    <div class="sl-group">
+      <div class="sl-head"><span>Fungi mikoriza</span><span class="sl-val" id="v-fungi">55%</span></div>
+      <div class="sl-note">Jaringan bawah tanah yang menghubungkan tanaman — "internet hutan"</div>
+      <input type="range" id="sl-fungi" min="0" max="100" value="55" oninput="update()">
+    </div>
+
+    <div class="sl-group">
+      <div class="sl-head"><span>Interaksi kuantum fotosintesis</span><span class="sl-val" id="v-quantum">45%</span></div>
+      <div class="sl-note">Efisiensi transfer energi kuantum dalam kloroplas — masih aktif diteliti</div>
+      <input type="range" id="sl-quantum" min="0" max="100" value="45" oninput="update()">
+    </div>
+
+    <div class="sep"></div>
+    <div class="btn-row">
+      <button class="b" onclick="setPreset('identical')">Identik</button>
+      <button class="b" onclick="setPreset('genetic')">Beda Genetik</button>
+      <button class="b" onclick="setPreset('epi')">Beda Epigenetik</button>
+      <button class="b" onclick="setPreset('micro')">Beda Mikrobioma</button>
+      <button class="b" onclick="setPreset('all')">Beda Semua</button>
+    </div>
+  </div>
+
+  <!-- PANEL KANAN -->
+  <div style="display:flex;flex-direction:column;gap:1.2rem;">
+
+    <!-- VISUALISASI TANAMAN -->
+    <div class="panel">
+      <div class="ptitle">VISUALISASI — 4 TANAMAN, INPUT IDENTIK</div>
+      <canvas id="plantsCanvas" height="280"></canvas>
+      <div class="plants-grid" id="plantsGrid"></div>
+    </div>
+
+    <!-- LAYER INSIGHT -->
+    <div class="panel">
+      <div class="ptitle">SETIAP LAYER MEMBUKA PERTANYAAN BARU</div>
+
+      <div class="depth-indicator">
+        <div class="depth-label">Kedalaman penjelasan:</div>
+        <div class="depth-bar"><div class="depth-fill" id="depth-fill" style="width:20%;background:var(--accent)"></div></div>
+        <div class="depth-label" id="depth-label">Permukaan</div>
+      </div>
+
+      <div class="layer-tabs">
+        <div class="ltab on" onclick="switchLayer('surface')">Permukaan</div>
+        <div class="ltab" onclick="switchLayer('genetic')">Genetik</div>
+        <div class="ltab" onclick="switchLayer('epigenetic')">Epigenetik</div>
+        <div class="ltab" onclick="switchLayer('microbiome')">Mikrobioma</div>
+        <div class="ltab" onclick="switchLayer('quantum')">Kuantum</div>
+        <div class="ltab" onclick="switchLayer('abyss')">Jurang</div>
+      </div>
+
+      <div class="ltc on" id="ltc-surface">
+        Dua tanaman, air sama, tanah sama, cahaya sama. Tapi buahnya berbeda rasa, ukuran, warna. Penjelasan paling mudah: <em>"pasti ada yang berbeda."</em>
+        <br><br>
+        Ya — tapi apa yang berbeda? Dan dari mana perbedaan itu datang? Setiap jawaban membuka lapisan pertanyaan berikutnya.
+        <span class="ql">Pertanyaan tersisa: apa tepatnya yang berbeda jika semua input eksternal sama?</span>
+        <span class="ar">وَيُسْقَىٰ بِمَاءٍ وَٰحِدٍ</span>
+      </div>
+
+      <div class="ltc" id="ltc-genetic">
+        <em>Genetik</em> — sekuens DNA. Ini jawaban pertama yang diberikan sains modern, dan ia benar sejauh ini. Perbedaan pada urutan basa-basa DNA menghasilkan protein yang berbeda, sifat yang berbeda.
+        <br><br>
+        Tapi: tidak semua gen aktif. Dua tanaman dengan DNA hampir identik bisa sangat berbeda karena <em>gen yang sama diekspresikan atau tidak</em>. Ini membuka layer berikutnya.
+        <span class="ql">Pertanyaan tersisa: apa yang menentukan gen mana yang aktif — jika bukan sekuens DNA itu sendiri?</span>
+      </div>
+
+      <div class="ltc" id="ltc-epigenetic">
+        <em>Epigenetik</em> — penanda kimia di atas DNA yang mengatur ekspresi gen tanpa mengubah sekuensnya. Metilasi, modifikasi histon. Satu gen bisa "dibungkam" atau "dinyalakan" tergantung penanda ini.
+        <br><br>
+        Yang lebih mengejutkan: penanda epigenetik bisa <em>diwariskan</em>. Kondisi yang dialami nenek moyang bisa memengaruhi cucu — melalui jalur yang bukan perubahan sekuens DNA. Lamarck tidak sepenuhnya salah.
+        <span class="ql">Pertanyaan tersisa: bagaimana "memori" kondisi leluhur bisa tersimpan dan diwariskan di luar sekuens DNA?</span>
+      </div>
+
+      <div class="ltc" id="ltc-microbiome">
+        <em>Mikrobioma</em> — komunitas bakteri dan fungi yang hidup bersama akar. Rhizobium menambat nitrogen. Mikoriza memperluas area serapan hingga 700 kali. Tanaman yang tumbuh di "tanah yang sama" bisa memiliki komunitas mikroba yang sangat berbeda.
+        <br><br>
+        "Internet hutan" — jaringan fungi yang menghubungkan pohon-pohon berbeda, mentransfer karbon dan nutrisi. Pohon "berbagi" dengan anak-anaknya melalui jaringan ini. Ini bukan metafora — ini terukur.
+        <span class="ql">Pertanyaan tersisa: bagaimana sistem tanpa otak ini "memutuskan" ke mana dan berapa banyak yang dialirkan?</span>
+      </div>
+
+      <div class="ltc" id="ltc-quantum">
+        <em>Efek kuantum dalam fotosintesis</em> — penemuan yang mengejutkan komunitas fisika: transfer energi dalam kloroplas terjadi dengan efisiensi mendekati 100% karena <em>superposisi kuantum</em>. Foton "mencoba" semua jalur sekaligus dan memilih yang paling efisien.
+        <br><br>
+        Ini bukan analogi — ini mekanika kuantum yang benar-benar terjadi pada suhu kamar, dalam sistem biologis yang "kotor" dan berisik. Fisikawan masih belum sepenuhnya mengerti mengapa ini bisa terjadi.
+        <span class="ql">Pertanyaan tersisa: bagaimana sistem biologis mempertahankan koherensi kuantum di lingkungan yang seharusnya menghancurkannya?</span>
+      </div>
+
+      <div class="ltc" id="ltc-abyss">
+        Setelah semua layer — genetik, epigenetik, mikrobioma, kuantum — kita sampai di pertanyaan yang tidak bisa dijawab oleh layer manapun:
+        <br><br>
+        <em>Dari mana "sistem" yang mengintegrasikan semua layer ini pertama kali ada?</em>
+        <br><br>
+        DNA tidak bisa dibaca tanpa protein. Protein tidak bisa dibuat tanpa DNA yang dibaca. Epigenetik membutuhkan sistem yang sudah berfungsi untuk memodifikasinya. Mikrobioma membutuhkan inang yang sudah ada.
+        <br><br>
+        Setiap penjelasan membutuhkan sesuatu yang sudah ada sebelumnya. Dan di ujung rantai ini — ada yang belum terjawab, mungkin tidak bisa dijawab dengan cara yang sama.
+        <span class="ql">Ini bukan kegagalan sains. Ini batas jujur dari pertanyaan yang berbeda jenis — yang mendahului sains itu sendiri.</span>
+        <span class="ar">وَنُفَضِّلُ بَعْضَهَا عَلَىٰ بَعْضٍ فِى ٱلْأُكُلِ</span>
+      </div>
+
+      <!-- READOUT DINAMIS -->
+      <div class="readout" id="main-readout">
+        Geser parameter untuk melihat bagaimana tanaman berdiferensiasi dari input yang identik.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PANEL BAWAH -->
+  <div class="panel full">
+    <div class="ptitle">MENGAPA AYAT INI TIDAK LUNTUR</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;">
+      <div class="infobox">
+        <strong>Bukan klaim saintifik</strong><br><br>
+        Ayat ini tidak berkata "karena genetik" atau "karena epigenetik." Ia berkata <em>وَنُفَضِّلُ — Kami lebihkan.</em> Aktif. Disengaja. Itu bukan klaim mekanisme — itu pernyataan tentang fakta diferensiasi itu sendiri. Dan fakta itu tidak bisa difalsifikasi oleh layer mekanisme manapun.
+      </div>
+      <div class="infobox">
+        <strong>Bahasa yang tidak akan usang</strong><br><br>
+        Kalau ayat berkata "karena perbedaan nitrogen di tanah" — ia bisa salah begitu sains berkembang. Tapi "air sama, hasil berbeda" adalah fakta observasional yang semakin dalam diteliti, semakin terkonfirmasi — dan semakin dalam pertanyaannya.
+      </div>
+      <div class="infobox">
+        <strong>نُفَضِّلُ — fitur, bukan bug</strong><br><br>
+        Diferensiasi bukan ketidaksempurnaan sistem. Ekosistem monokultur itu rapuh. Keanekaragaman adalah <em>ketahanan</em>. Dan ayat ini menegaskan: perbedaan itu disengaja — نُفَضِّلُ, bukan "terjadi begitu saja."
+      </div>
+      <div class="infobox">
+        <strong>Setiap layer sains mengkonfirmasi</strong><br><br>
+        Genetik: dikonfirmasi. Epigenetik: semakin kompleks. Mikrobioma: lebih kompleks lagi. Kuantum: mengejutkan. Dan di ujung semua layer: tetap ada yang tidak terjawab. Sains menggali lebih dalam — dan menemukan ayat ini semakin relevan.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ==========================================
+// CANVAS TANAMAN
+// ==========================================
+const canvas = document.getElementById('plantsCanvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  canvas.width = canvas.parentElement.offsetWidth - 2;
+  canvas.height = 280;
+}
+
+// Data tanaman yang dihasilkan dari parameter
+let plantData = [{}, {}, {}, {}];
+
+function drawPlants() {
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Tanah
+  ctx.fillStyle = '#1a1208';
+  ctx.fillRect(0, H * 0.78, W, H * 0.22);
+
+  // Garis tanah
+  ctx.strokeStyle = '#2a2010';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, H * 0.78); ctx.lineTo(W, H * 0.78); ctx.stroke();
+
+  // Label input
+  ctx.fillStyle = '#4a6050';
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('Air: sama  ·  Tanah: sama  ·  Cahaya: sama', W/2, H * 0.96);
+
+  const positions = [W*0.15, W*0.38, W*0.62, W*0.85];
+  const labels = ['Tanaman A', 'Tanaman B', 'Tanaman C', 'Tanaman D'];
+
+  plantData.forEach((p, i) => {
+    drawOnePlant(positions[i], H * 0.78, p, labels[i]);
+  });
+}
+
+function drawOnePlant(x, groundY, p, label) {
+  const height = p.height || 80;
+  const leafSize = p.leafSize || 20;
+  const fruitCount = p.fruitCount || 2;
+  const stemColor = p.stemColor || '#3a6030';
+  const leafColor = p.leafColor || '#4a8040';
+  const fruitColor = p.fruitColor || '#c04040';
+  const fruitSize = p.fruitSize || 8;
+  const branchAngle = p.branchAngle || 0.4;
+
+  // Akar (microbiome visual)
+  ctx.strokeStyle = p.rootColor || '#3a2810';
+  ctx.lineWidth = 1;
+  for (let r = 0; r < 4; r++) {
+    const ang = (Math.PI * 0.2) + r * (Math.PI * 0.2);
+    const len = 15 + (p.rootLength || 10) * Math.random() * 0.3;
+    ctx.beginPath();
+    ctx.moveTo(x, groundY);
+    ctx.lineTo(x + Math.cos(ang) * len, groundY + Math.sin(ang) * len * 0.5);
+    ctx.stroke();
+  }
+
+  // Batang
+  ctx.strokeStyle = stemColor;
+  ctx.lineWidth = Math.max(2, height / 40);
+  ctx.beginPath();
+  ctx.moveTo(x, groundY);
+  ctx.lineTo(x, groundY - height);
+  ctx.stroke();
+
+  // Cabang + daun
+  const branchPoints = [0.4, 0.65, 0.85];
+  branchPoints.forEach((bp, bi) => {
+    const by = groundY - height * bp;
+    [-1, 1].forEach(dir => {
+      const bLen = leafSize * (0.6 + bi * 0.2);
+      const bx2 = x + dir * Math.cos(branchAngle) * bLen;
+      const by2 = by - Math.sin(branchAngle) * bLen * 0.6;
+
+      ctx.strokeStyle = stemColor;
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x, by); ctx.lineTo(bx2, by2); ctx.stroke();
+
+      // Daun
+      ctx.beginPath();
+      ctx.ellipse(bx2, by2, leafSize * 0.5, leafSize * 0.25, dir * branchAngle * 0.5, 0, Math.PI * 2);
+      ctx.fillStyle = leafColor;
+      ctx.fill();
+    });
+  });
+
+  // Mahkota daun
+  ctx.beginPath();
+  ctx.ellipse(x, groundY - height - leafSize * 0.4, leafSize * 0.7, leafSize * 0.5, 0, 0, Math.PI * 2);
+  ctx.fillStyle = leafColor;
+  ctx.fill();
+
+  // Buah
+  for (let f = 0; f < fruitCount; f++) {
+    const fa = (f / fruitCount) * Math.PI * 2;
+    const fr = leafSize * 0.5;
+    const fx = x + Math.cos(fa) * fr;
+    const fy = groundY - height * 0.6 + Math.sin(fa) * fr * 0.5;
+    ctx.beginPath();
+    ctx.arc(fx, fy, fruitSize * 0.5, 0, Math.PI * 2);
+    ctx.fillStyle = fruitColor;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  }
+
+  // Label
+  ctx.fillStyle = '#4a7050';
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(label, x, groundY + 16);
+
+  // Trait indicators
+  ctx.fillStyle = p.quality > 70 ? '#4a8050' : p.quality > 40 ? '#8a7030' : '#803030';
+  ctx.font = '9px monospace';
+  ctx.fillText(`Q:${Math.round(p.quality)}`, x, groundY + 27);
+}
+
+// ==========================================
+// LOGIKA UPDATE
+// ==========================================
+function update() {
+  const dna = +document.getElementById('sl-dna').value;
+  const gene = +document.getElementById('sl-gene').value;
+  const methyl = +document.getElementById('sl-methyl').value;
+  const histone = +document.getElementById('sl-histone').value;
+  const epimem = +document.getElementById('sl-epimem').value;
+  const bacteria = +document.getElementById('sl-bacteria').value;
+  const fungi = +document.getElementById('sl-fungi').value;
+  const quantum = +document.getElementById('sl-quantum').value;
+
+  document.getElementById('v-dna').textContent = dna + '%';
+  document.getElementById('v-gene').textContent = gene + '%';
+  document.getElementById('v-methyl').textContent = methyl + '%';
+  document.getElementById('v-histone').textContent = histone + '%';
+  document.getElementById('v-epimem').textContent = epimem + '%';
+  document.getElementById('v-bacteria').textContent = bacteria + '%';
+  document.getElementById('v-fungi').textContent = fungi + '%';
+  document.getElementById('v-quantum').textContent = quantum + '%';
+
+  // Generate 4 tanaman dengan variasi dari parameter
+  const COLORS_LEAF = ['#3a7030','#5a9040','#2a6020','#6aaa50'];
+  const COLORS_FRUIT = ['#c04040','#d09030','#9040a0','#408040'];
+  const COLORS_STEM = ['#3a5020','#4a6030','#2a4010','#5a7040'];
+
+  const totalVariation = (dna * 0.3 + methyl * 0.25 + histone * 0.15 + epimem * 0.1 + bacteria * 0.1 + fungi * 0.07 + quantum * 0.03) / 100;
+
+  plantData = [0, 1, 2, 3].map(i => {
+    const seed = (i + 1) * 0.618;
+    const variant = totalVariation;
+    const geneEffect = gene / 100;
+    const epiEffect = (methyl + histone + epimem) / 300;
+    const microEffect = (bacteria + fungi) / 200;
+    const quantumEffect = quantum / 100;
+
+    const baseHeight = 100 + Math.sin(seed * 5 + dna * 0.1) * 40 * variant;
+    const height = Math.max(40, baseHeight + i * 15 * variant);
+    const leafSize = 18 + Math.cos(seed * 3 + methyl * 0.05) * 8 * variant;
+    const fruitCount = Math.max(0, Math.round(2 + Math.sin(seed * 7 + bacteria * 0.1) * 3 * variant));
+    const fruitSize = 6 + Math.sin(seed * 4 + fungi * 0.05) * 4 * variant;
+    const quality = Math.max(10, Math.min(95,
+      50 + geneEffect * 20 + epiEffect * 15 + microEffect * 10 + quantumEffect * 5
+      + Math.sin(seed * 6) * 15 * variant
+    ));
+
+    return {
+      height,
+      leafSize,
+      fruitCount,
+      fruitSize,
+      quality,
+      leafColor: COLORS_LEAF[i],
+      fruitColor: COLORS_FRUIT[i],
+      stemColor: COLORS_STEM[i],
+      rootColor: '#3a2810',
+      rootLength: 10 + microEffect * 20,
+      branchAngle: 0.3 + variant * 0.3,
+      traits: {
+        tinggi: Math.round(height * 0.5) + 'cm',
+        daun: Math.round(leafSize) + ' unit',
+        buah: fruitCount + ' buah',
+        kualitas: Math.round(quality) + '%',
+        layer: getDominantLayer(dna, methyl+histone, bacteria+fungi, quantum)
+      }
+    };
+  });
+
+  drawPlants();
+  updateCards();
+  updateReadout(dna, gene, methyl, histone, epimem, bacteria, fungi, quantum, totalVariation);
+  updateDepth(dna, methyl+histone+epimem, bacteria+fungi, quantum);
+}
+
+function getDominantLayer(dna, epi, micro, quantum) {
+  const vals = [dna, epi/2, micro/2, quantum];
+  const max = Math.max(...vals);
+  if (max === dna) return 'Genetik';
+  if (max === epi/2) return 'Epigenetik';
+  if (max === micro/2) return 'Mikrobioma';
+  return 'Kuantum';
+}
+
+function updateCards() {
+  const labels = ['A','B','C','D'];
+  const grid = document.getElementById('plantsGrid');
+  grid.innerHTML = plantData.map((p, i) => `
+    <div class="plant-card">
+      <div class="plant-name">Tanaman ${labels[i]}</div>
+      <div class="plant-trait">
+        Tinggi: <span>${p.traits.tinggi}</span><br>
+        Buah: <span>${p.traits.buah}</span><br>
+        Kualitas: <span>${p.traits.kualitas}</span><br>
+        Driver: <span>${p.traits.layer}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateDepth(dna, epi, micro, quantum) {
+  const active = [dna > 20, epi > 30, micro > 40, quantum > 60];
+  const depth = active.filter(Boolean).length;
+  const pct = [20, 45, 68, 90][Math.min(depth, 3)];
+  const labels = ['Permukaan', 'Genetik', 'Epigenetik+', 'Mikrobioma+', 'Semua Layer'];
+  document.getElementById('depth-fill').style.width = pct + '%';
+  document.getElementById('depth-fill').style.background =
+    pct < 40 ? 'var(--accent)' : pct < 70 ? 'var(--accent3)' : 'var(--accent2)';
+  document.getElementById('depth-label').textContent = labels[depth];
+}
+
+function updateReadout(dna, gene, methyl, histone, epimem, bacteria, fungi, quantum, variant) {
+  const el = document.getElementById('main-readout');
+  const totalEpi = methyl + histone + epimem;
+  const totalMicro = bacteria + fungi;
+
+  if (variant < 0.1) {
+    el.innerHTML = `Parameter sangat rendah — semua tanaman hampir identik. Ini kondisi hipotetis. Di alam nyata, bahkan klon yang dipotong dari tanaman yang sama akan berbeda setelah beberapa generasi karena akumulasi variasi epigenetik.`;
+    el.style.borderColor = 'var(--text-dim)';
+  } else if (dna > 70 && totalEpi < 30) {
+    el.innerHTML = `Variasi dominan dari <em>sekuens DNA</em>. Penjelasan paling sederhana dan paling sering disebutkan. Tapi hanya ini saja tidak cukup — kembar identik dengan DNA sama bisa sangat berbeda karena epigenetik. Layer ini nyata tapi tidak lengkap.`;
+    el.style.borderColor = 'var(--accent)';
+  } else if (totalEpi > 150 && dna < 40) {
+    el.innerHTML = `Dominan epigenetik — meski sekuens DNA hampir sama, <em>metilasi dan modifikasi histon</em> menghasilkan ekspresi yang sangat berbeda. Ini yang terjadi pada kembar identik yang hidup di lingkungan berbeda puluhan tahun: secara genetik sama, secara epigenetik makin berbeda.`;
+    el.style.borderColor = 'var(--accent2)';
+  } else if (totalMicro > 100 && quantum > 60) {
+    el.innerHTML = `Layer terdalam aktif: mikrobioma dan efek kuantum. Di sinilah sains berada di ujung pengetahuannya. <em>Koherensi kuantum dalam kloroplas</em> pada suhu kamar — sistem biologis yang "seharusnya" tidak bisa mempertahankan efek kuantum, tapi ternyata bisa. Penjelasannya belum tuntas.`;
+    el.style.borderColor = 'var(--accent3)';
+  } else {
+    el.innerHTML = `Air sama. Tanah sama. Cahaya sama. Tapi output berbeda — dalam tinggi, jumlah buah, kualitas rasa. <em>نُفَضِّلُ بَعْضَهَا عَلَىٰ بَعْضٍ.</em> Setiap layer sains yang mengkonfirmasi ini sekaligus membuka pertanyaan yang lebih dalam.
+    <span class="ar">وَيُسْقَىٰ بِمَاءٍ وَٰحِدٍ وَنُفَضِّلُ بَعْضَهَا عَلَىٰ بَعْضٍ فِى ٱلْأُكُلِ</span>`;
+    el.style.borderColor = 'var(--accent2)';
+  }
+}
+
+// ==========================================
+// PRESET SKENARIO
+// ==========================================
+function setPreset(p) {
+  const presets = {
+    identical: { dna:5, gene:50, methyl:5, histone:5, epimem:5, bacteria:5, fungi:5, quantum:5 },
+    genetic:   { dna:85, gene:80, methyl:10, histone:10, epimem:10, bacteria:10, fungi:10, quantum:10 },
+    epi:       { dna:10, gene:60, methyl:85, histone:80, epimem:75, bacteria:10, fungi:10, quantum:10 },
+    micro:     { dna:10, gene:50, methyl:10, histone:10, epimem:10, bacteria:90, fungi:85, quantum:10 },
+    all:       { dna:70, gene:75, methyl:65, histone:70, epimem:60, bacteria:80, fungi:75, quantum:65 },
+  };
+  const sc = presets[p];
+  if (!sc) return;
+  Object.entries(sc).forEach(([k, v]) => {
+    const el = document.getElementById('sl-'+k);
+    if (el) el.value = v;
+  });
+  update();
+
+  // Auto-switch layer tab
+  if (p === 'genetic') switchLayer('genetic');
+  else if (p === 'epi') switchLayer('epigenetic');
+  else if (p === 'micro') switchLayer('microbiome');
+  else if (p === 'all') switchLayer('abyss');
+  else switchLayer('surface');
+}
+
+// ==========================================
+// LAYER TABS
+// ==========================================
+function switchLayer(id) {
+  const ids = ['surface','genetic','epigenetic','microbiome','quantum','abyss'];
+  document.querySelectorAll('.ltab').forEach((t,i) => t.classList.toggle('on', ids[i] === id));
+  document.querySelectorAll('.ltc').forEach(c => c.classList.toggle('on', c.id === 'ltc-'+id));
+}
+
+// ==========================================
+// INIT
+// ==========================================
+window.addEventListener('load', () => {
+  resizeCanvas();
+  update();
+});
+window.addEventListener('resize', () => { resizeCanvas(); update(); });
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

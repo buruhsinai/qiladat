@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator Arah Kiblat — Qiladat/JAZMI</title>
+<style>
+  :root{
+    --bg:#141210; --panel:#1c1916; --panel2:#211d19;
+    --gold:#c9a24b; --gold-soft:#8a7440; --text:#e8e0d0; --text-dim:#a89a80;
+    --line:#3a332a; --danger:#c25c4a; --ok:#6f9e6a; --blue:#6a91c2;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Georgia,'Times New Roman',serif;line-height:1.6;}
+  .container{max-width:880px;margin:0 auto;padding:24px 16px 60px;}
+  header{text-align:center;margin-bottom:26px;border-bottom:1px solid var(--line);padding-bottom:18px;}
+  header h1{font-size:1.45rem;color:var(--gold);margin:0 0 6px;}
+  header p{color:var(--text-dim);margin:0;font-size:0.9rem;font-style:italic;}
+  h2{color:var(--gold);font-size:1.08rem;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+  h2 .num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;
+    border:1px solid var(--gold-soft);border-radius:50%;font-size:0.78rem;color:var(--gold);flex-shrink:0;}
+  h3{color:var(--gold);font-size:0.95rem;margin:14px 0 8px;}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:16px;}
+  p{margin:0 0 9px;font-size:0.92rem;} p:last-child{margin-bottom:0;}
+  .dim{color:var(--text-dim);font-size:0.84rem;}
+  ul{margin:6px 0;padding-left:20px;} li{margin-bottom:5px;font-size:0.9rem;}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:9px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .row:last-child{border-bottom:none;}
+  .row label{font-size:0.88rem;flex:1;min-width:150px;}
+  input[type=number],input[type=text]{background:var(--panel2);border:1px solid var(--gold-soft);color:var(--text);
+    border-radius:6px;padding:7px 9px;font-family:inherit;font-size:0.88rem;}
+  input[type=number]{width:110px;text-align:right;}
+  input[type=text]{width:100%;}
+  button{font-family:inherit;cursor:pointer;border-radius:8px;border:none;}
+  button.primary{background:var(--gold-soft);color:#1a1712;padding:12px 18px;font-weight:bold;font-size:0.92rem;width:100%;margin-top:8px;}
+  button.secondary{background:var(--panel2);border:1px solid var(--gold-soft);color:var(--text);padding:10px 16px;font-size:0.85rem;width:100%;}
+  .search-row{display:flex;gap:8px;margin-bottom:10px;}
+  .search-row input{flex:1;}
+  .gps-box{background:rgba(106,145,194,0.08);border:1px solid var(--blue);border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:0.87rem;}
+  .status-msg{margin-top:8px;font-size:0.85rem;padding:8px 10px;border-radius:6px;}
+  .status-msg.ok{background:rgba(111,158,106,0.1);color:var(--ok);border:1px solid var(--ok);}
+  .status-msg.err{background:rgba(194,92,74,0.1);color:var(--danger);border:1px solid var(--danger);}
+  .status-msg.info{background:rgba(106,145,194,0.1);color:var(--blue);border:1px solid var(--blue);}
+  .loclabel{color:var(--gold);font-weight:bold;}
+  svg.compass{display:block;margin:0 auto;}
+  .readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:16px;}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;text-align:center;}
+  .stat .label{font-size:0.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.4px;}
+  .stat .value{font-size:1.15rem;color:var(--gold);margin-top:2px;}
+  .formula{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:10px 14px;
+    font-family:'Courier New',monospace;font-size:0.84rem;margin:8px 0;overflow-x:auto;}
+  .refs li{font-size:0.82rem;color:var(--text-dim);}
+  footer{text-align:center;color:var(--text-dim);font-size:0.76rem;margin-top:22px;}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Kalkulator Arah Kiblat</h1>
+  <p>Arah terpendek (great-circle) menuju Ka'bah dari lokasi Anda</p>
+</header>
+
+<section id="belajar">
+  <h2><span class="num">1</span>Belajar</h2>
+  <p>Arah kiblat yang benar bukan garis lurus di atas peta datar, melainkan <strong>jalur terpendek di permukaan bola Bumi</strong> (disebut <em>great-circle</em>/lingkaran besar). Ini kadang menghasilkan arah yang terasa berlawanan dengan intuisi — misalnya dari New York, arah kiblat yang benar adalah ke arah timur laut, bukan tenggara seperti kalau menarik garis lurus di peta datar. Ini murni akibat proyeksi peta datar mendistorsi jarak sudut di dekat kutub.</p>
+  <p>Ka'bah terletak di koordinat <strong>21,4225° LU, 39,8262° BT</strong> (Makkah, Arab Saudi). Alat ini menghitung sudut arah (azimuth) dari lokasi Anda menuju titik tersebut, diukur searah jarum jam dari Utara sejati (bukan utara kompas magnetik).</p>
+</section>
+
+<section id="pertanyaan">
+  <h2><span class="num">2</span>Pertanyaan Ilmiah</h2>
+  <ul>
+    <li>Kenapa arah terpendek ke suatu tempat di Bumi tidak selalu terlihat seperti "garis lurus" di peta biasa?</li>
+    <li>Bagaimana menghitung arah itu secara matematis hanya dari koordinat lintang-bujur dua titik?</li>
+  </ul>
+</section>
+
+<section id="inputLokasi">
+  <h2><span class="num">3</span>Lokasi Anda</h2>
+  <div class="gps-box">
+    <strong>Sebelum menekan tombol GPS:</strong> pastikan Layanan Lokasi/GPS aktif di perangkat Anda dan izinkan akses lokasi saat diminta browser. Jika gagal, gunakan pencarian kota atau isi koordinat manual di bawah.
+  </div>
+  <button class="secondary" id="btnGPS">📍 Cek Lokasi Anda Sekarang (GPS)</button>
+  <div id="gpsStatus"></div>
+
+  <h3>Atau Cari Berdasarkan Nama Kota</h3>
+  <div class="search-row">
+    <input type="text" id="citySearch" placeholder="mis. Surabaya, Indonesia">
+    <button class="secondary" id="btnSearchCity" style="width:auto;padding:10px 16px;">Cari</button>
+  </div>
+  <div id="cityStatus"></div>
+
+  <h3>Koordinat (bisa diubah manual)</h3>
+  <div class="row"><label>Lintang (° — positif = LU, negatif = LS)</label><input type="number" id="lat" value="-6.2" step="0.0001"></div>
+  <div class="row"><label>Bujur (° — positif = BT, negatif = BB)</label><input type="number" id="lon" value="106.8" step="0.0001"></div>
+
+  <button class="primary" id="btnHitung">Hitung Arah Kiblat</button>
+</section>
+
+<section id="hasil" style="display:none;">
+  <h2><span class="num">4</span>Hasil</h2>
+  <svg id="compassSVG" class="compass" viewBox="0 0 300 300" width="260" height="260"></svg>
+  <div class="readout">
+    <div class="stat"><div class="label">Azimuth Kiblat</div><div class="value" id="out_azimuth">—</div></div>
+    <div class="stat"><div class="label">Arah Mata Angin</div><div class="value" id="out_arah">—</div></div>
+    <div class="stat"><div class="label">Jarak ke Ka'bah</div><div class="value" id="out_jarak">—</div></div>
+  </div>
+  <p class="dim" style="margin-top:12px;"><strong>Cara pakai:</strong> hadapkan diri Anda ke Utara sejati (bukan kompas HP tanpa kalibrasi — kompas magnetik punya deklinasi/selisih dari utara sejati yang berbeda tiap lokasi), lalu putar sejumlah sudut azimuth di atas searah jarum jam.</p>
+</section>
+
+<section id="metode">
+  <h2><span class="num">5</span>Metode &amp; Rumus</h2>
+  <p>Menggunakan rumus <em>initial bearing</em> pada bola (spherical trigonometry):</p>
+  <div class="formula">θ = atan2( sin(Δλ)×cos(φ₂), cos(φ₁)×sin(φ₂) − sin(φ₁)×cos(φ₂)×cos(Δλ) )
+Azimuth = (θ dalam derajat + 360) mod 360</div>
+  <p class="dim">φ₁,λ₁ = lintang/bujur lokasi Anda; φ₂,λ₂ = lintang/bujur Ka'bah; Δλ = λ₂−λ₁.</p>
+  <p class="dim">Verifikasi: rumus ini memberi hasil Jakarta ≈295° (Barat Laut), New York ≈58° (Timur Laut), London ≈119° (Timur-Tenggara) — ketiganya cocok dengan nilai arah kiblat yang sudah dikenal luas untuk kota-kota tersebut.</p>
+</section>
+
+<section id="batasan">
+  <h2><span class="num">6</span>Batasan</h2>
+  <ul>
+    <li>Perhitungan mengasumsikan Bumi sebagai bola sempurna (bukan elipsoid presisi WGS84) — selisihnya biasanya kurang dari 0,1° dan tidak signifikan untuk penggunaan praktis sehari-hari.</li>
+    <li>Hasil azimuth diukur dari Utara SEJATI (geografis), bukan Utara kompas magnetik. Kompas HP/kompas biasa perlu dikoreksi dengan nilai deklinasi magnetik lokasi Anda (berbeda tiap tempat dan berubah tiap tahun) agar akurat — untuk keperluan yang presisi, sebaiknya gunakan aplikasi kompas yang sudah terkalibrasi deklinasi magnetik, atau acuan seperti posisi matahari/bintang.</li>
+    <li>Pencarian kota memakai layanan pihak ketiga (OpenStreetMap Nominatim) — jika gagal, gunakan GPS atau koordinat manual.</li>
+  </ul>
+</section>
+
+<section id="referensi">
+  <h2><span class="num">7</span>Referensi</h2>
+  <ul class="refs">
+    <li>Rumus initial bearing/great-circle bearing — standar navigasi dan geodesi, dipakai luas dalam kalkulator arah kiblat manapun.</li>
+    <li>Koordinat Ka'bah 21,4225°LU, 39,8262°BT — nilai survei GPS yang umum dikutip.</li>
+  </ul>
+</section>
+
+<footer>Bagian dari Laboratorium Astronomi/Falak — Bank Ide Qiladat/JAZMI.</footer>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const KAABA_LAT = 21.422487, KAABA_LON = 39.826206;
+
+  $('btnGPS').addEventListener('click', ()=>{
+    const st = $('gpsStatus');
+    st.innerHTML = '<div class="status-msg info">Mencari lokasi... mohon tunggu.</div>';
+    if (!navigator.geolocation){
+      st.innerHTML = '<div class="status-msg err">Browser ini tidak mendukung GPS. Gunakan pencarian kota atau isi koordinat manual.</div>';
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos)=>{
+        $('lat').value = pos.coords.latitude.toFixed(4);
+        $('lon').value = pos.coords.longitude.toFixed(4);
+        st.innerHTML = '<div class="status-msg ok">Lokasi ditemukan! Koordinat sudah terisi otomatis.</div>';
+      },
+      (err)=>{
+        let msg = 'Gagal mengambil lokasi. ';
+        if (err.code===1) msg += 'Izin lokasi ditolak — aktifkan izin lokasi untuk browser ini di pengaturan perangkat, lalu coba lagi.';
+        else if (err.code===2) msg += 'Posisi tidak tersedia — pastikan GPS/Layanan Lokasi aktif di perangkat Anda.';
+        else if (err.code===3) msg += 'Waktu tunggu habis — coba lagi, atau gunakan pencarian kota/koordinat manual.';
+        st.innerHTML = '<div class="status-msg err">'+msg+'</div>';
+      },
+      {enableHighAccuracy:true, timeout:12000}
+    );
+  });
+
+  $('btnSearchCity').addEventListener('click', async ()=>{
+    const q = $('citySearch').value.trim();
+    const st = $('cityStatus');
+    if (!q){ st.innerHTML = '<div class="status-msg err">Isi dulu nama kotanya.</div>'; return; }
+    st.innerHTML = '<div class="status-msg info">Mencari "'+q+'"...</div>';
+    try{
+      const resp = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(q));
+      const data = await resp.json();
+      if (data && data.length>0){
+        $('lat').value = parseFloat(data[0].lat).toFixed(4);
+        $('lon').value = parseFloat(data[0].lon).toFixed(4);
+        st.innerHTML = '<div class="status-msg ok">Ditemukan: '+data[0].display_name+'</div>';
+      } else {
+        st.innerHTML = '<div class="status-msg err">Kota tidak ditemukan. Coba nama lain atau isi koordinat manual.</div>';
+      }
+    } catch(e){
+      st.innerHTML = '<div class="status-msg err">Layanan pencarian sedang tidak bisa diakses. Gunakan GPS atau koordinat manual.</div>';
+    }
+  });
+
+  function toRad(d){return d*Math.PI/180;}
+  function toDeg(r){return r*180/Math.PI;}
+  function bearing(lat1,lon1,lat2,lon2){
+    const phi1=toRad(lat1), phi2=toRad(lat2);
+    const dLambda=toRad(lon2-lon1);
+    const y=Math.sin(dLambda)*Math.cos(phi2);
+    const x=Math.cos(phi1)*Math.sin(phi2)-Math.sin(phi1)*Math.cos(phi2)*Math.cos(dLambda);
+    return (toDeg(Math.atan2(y,x))+360)%360;
+  }
+  function haversine(lat1,lon1,lat2,lon2){
+    const R=6371;
+    const phi1=toRad(lat1), phi2=toRad(lat2);
+    const dphi=toRad(lat2-lat1), dl=toRad(lon2-lon1);
+    const a=Math.sin(dphi/2)**2 + Math.cos(phi1)*Math.cos(phi2)*Math.sin(dl/2)**2;
+    return 2*R*Math.asin(Math.sqrt(a));
+  }
+  function arahMataAngin(az){
+    const arr = ['Utara','Timur Laut','Timur','Tenggara','Selatan','Barat Daya','Barat','Barat Laut'];
+    const idx = Math.round(az/45)%8;
+    return arr[idx];
+  }
+
+  function gambarKompas(az){
+    const cx=150, cy=150, R=120;
+    const rad = az*Math.PI/180;
+    const x2 = cx + R*0.85*Math.sin(rad);
+    const y2 = cy - R*0.85*Math.cos(rad);
+    let html = `
+      <circle cx="${cx}" cy="${cy}" r="${R}" fill="#1c1916" stroke="#3a332a" stroke-width="2"/>
+      <text x="${cx}" y="${cy-R+18}" fill="#c9a24b" font-size="16" text-anchor="middle" font-family="Georgia,serif">U</text>
+      <text x="${cx+R-14}" y="${cy+5}" fill="#a89a80" font-size="14" text-anchor="middle" font-family="Georgia,serif">T</text>
+      <text x="${cx}" y="${cy+R-8}" fill="#a89a80" font-size="14" text-anchor="middle" font-family="Georgia,serif">S</text>
+      <text x="${cx-R+14}" y="${cy+5}" fill="#a89a80" font-size="14" text-anchor="middle" font-family="Georgia,serif">B</text>
+      <line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" stroke="#c9a24b" stroke-width="3"/>
+      <circle cx="${x2}" cy="${y2}" r="6" fill="#c9a24b"/>
+      <circle cx="${cx}" cy="${cy}" r="4" fill="#e8e0d0"/>
+    `;
+    return html;
+  }
+
+  $('btnHitung').addEventListener('click', ()=>{
+    const lat = parseFloat($('lat').value);
+    const lon = parseFloat($('lon').value);
+    const az = bearing(lat, lon, KAABA_LAT, KAABA_LON);
+    const jarak = haversine(lat, lon, KAABA_LAT, KAABA_LON);
+
+    $('out_azimuth').textContent = az.toFixed(2)+'°';
+    $('out_arah').textContent = arahMataAngin(az);
+    $('out_jarak').textContent = Math.round(jarak).toLocaleString('id-ID')+' km';
+    $('compassSVG').innerHTML = gambarKompas(az);
+
+    $('hasil').style.display='block';
+    $('hasil').scrollIntoView({behavior:'smooth'});
+  });
+})();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Siklus Carnot & Efisiensi Mesin Kalor — JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-900:#150f0e; --ink-800:#1c1513; --ink-700:#251c19; --ink-600:#352824;
+    --crimson-500:#c1503a; --crimson-300:#dd8a76;
+    --steel-500:#4a7a9b; --steel-300:#87b3cf;
+    --brass-500:#c39a54; --brass-300:#d9bc85;
+    --text-hi:#f2ede4; --text-mid:#b3a99a; --text-dim:#7e7565;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--ink-900);color:var(--text-hi);font-family:'Karla',sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;}
+  ::selection{background:var(--crimson-500);color:#fff;}
+  a{color:var(--brass-300);}
+  .wrap{max-width:900px;margin:0 auto;padding:0 20px;}
+
+  .hero{position:relative;padding:56px 0 40px;overflow:hidden;border-bottom:1px solid var(--ink-600);
+    background:linear-gradient(135deg, rgba(193,80,58,0.14), rgba(74,122,155,0.14)), var(--ink-900);}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--brass-300);margin:0 0 14px;}
+  h1{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(24px,4.6vw,38px);line-height:1.16;margin:0 0 16px;color:var(--text-hi);}
+  .hero p.lede{font-size:17px;color:var(--text-mid);max-width:66ch;margin:0 0 6px;}
+  .hero-lineage{margin-top:22px;display:flex;gap:10px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-dim);}
+  .hero-lineage span{border:1px solid var(--ink-600);padding:4px 10px;border-radius:999px;}
+  .hero-lineage span b{color:var(--brass-300);font-weight:600;}
+
+  section{padding:44px 0;border-bottom:1px solid var(--ink-700);}
+  section:last-of-type{border-bottom:none;}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin:0 0 18px;}
+  .sec-num{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--brass-300);border:1px solid var(--ink-600);border-radius:4px;padding:2px 7px;}
+  h2{font-family:'Fraunces',serif;font-weight:600;font-size:22px;margin:0;color:var(--text-hi);}
+  h3{font-family:'Fraunces',serif;font-weight:600;font-size:16px;margin:0 0 8px;color:var(--text-hi);}
+  p{color:var(--text-mid);margin:0 0 12px;}
+  ul{color:var(--text-mid);padding-left:20px;margin:0 0 12px;}
+  li{margin-bottom:6px;}
+  code,.mono{font-family:'IBM Plex Mono',monospace;}
+  code{background:var(--ink-700);color:var(--brass-300);padding:1px 6px;border-radius:4px;font-size:.92em;}
+
+  .stage-grid{display:grid;grid-template-columns:1fr;gap:12px;margin:18px 0;}
+  @media(min-width:720px){.stage-grid{grid-template-columns:1fr 1fr;}}
+  .stage-card{background:var(--ink-800);border:1px solid var(--ink-600);border-radius:8px;padding:14px 16px;}
+  .stage-card .n{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--brass-300);text-transform:uppercase;letter-spacing:.03em;}
+  .stage-card h3{font-size:14px;margin:6px 0 6px;}
+  .stage-card p{font-size:13px;margin:0;}
+
+  .panel{background:var(--ink-800);border:1px solid var(--ink-600);border-radius:10px;padding:22px;}
+
+  .slider-row label{display:flex;justify-content:space-between;font-size:13px;color:var(--text-mid);margin-bottom:6px;}
+  .slider-row label b{color:var(--text-hi);font-family:'IBM Plex Mono',monospace;}
+  input[type="range"]{width:100%;accent-color:var(--crimson-500);}
+  .slider-row{margin-bottom:16px;}
+
+  .pv-wrap{background:var(--ink-900);border:1px solid var(--ink-600);border-radius:8px;padding:10px;margin:16px 0;}
+  .pv-wrap svg{width:100%;height:auto;display:block;}
+
+  .result-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:6px;}
+  @media(min-width:520px){.result-grid{grid-template-columns:repeat(4,1fr);}}
+  .result-card{background:var(--ink-700);border:1px solid var(--ink-600);border-radius:8px;padding:10px 12px;}
+  .result-card .label{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;}
+  .result-card .value{font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--text-hi);margin-top:4px;}
+  .result-card.eta .value{color:var(--crimson-300);}
+
+  .verdict{margin-top:14px;padding:14px 16px;border-radius:8px;font-size:13.5px;border:1px solid var(--ink-600);
+    background:rgba(195,154,84,0.08);border-color:rgba(195,154,84,0.35);color:var(--text-hi);}
+  .verdict.warn{background:rgba(193,80,58,0.1);border-color:rgba(193,80,58,0.4);}
+
+  table.ttable{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:12.5px;margin-top:6px;}
+  table.ttable td,table.ttable th{border:1px solid var(--ink-600);padding:6px 8px;text-align:left;color:var(--text-mid);}
+  table.ttable th{color:var(--brass-300);background:var(--ink-700);}
+
+  .whatsapp-box{display:flex;gap:14px;align-items:center;background:var(--ink-700);border:1px solid var(--ink-600);border-radius:10px;padding:16px 18px;margin-top:8px;}
+  .whatsapp-box a{font-family:'Karla',sans-serif;font-weight:700;font-size:13px;color:var(--ink-900);background:var(--brass-500);padding:9px 16px;border-radius:6px;text-decoration:none;white-space:nowrap;}
+  .whatsapp-box a:hover{background:var(--brass-300);}
+
+  footer{padding:30px 0 60px;color:var(--text-dim);font-size:12px;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <p class="eyebrow">JAZMI · Laboratorium Fisika — Termodinamika</p>
+    <h1>Siklus Carnot &amp; Efisiensi Mesin Kalor</h1>
+    <p class="lede">Tidak ada mesin kalor apa pun — sehebat apa pun teknologinya — yang bisa mengubah 100% panas menjadi kerja. Sadi Carnot membuktikan tahun 1824 bahwa ada batas atas teoretis, ditentukan murni oleh dua suhu reservoir. Atur suhu &amp; kerja yang diinginkan, lihat langsung diagram P-V empat tahapnya.</p>
+    <div class="hero-lineage">
+      <span><b>η = 1 − Tc/Th</b> · batas efisiensi mutlak</span>
+      <span><b>4 tahap</b> · 2 isotermal, 2 adiabatik</span>
+      <span><b>Reversibel ideal</b> · mesin nyata selalu di bawahnya</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- BELAJAR -->
+  <section id="belajar">
+    <div class="sec-head"><span class="sec-num">01</span><h2>Belajar</h2></div>
+    <p>Sadi Carnot, insinyur muda Prancis, mengajukan pertanyaan mendasar tahun 1824: <i>seberapa efisien mesin kalor bisa dibuat, secara prinsip?</i> Jawabannya mengejutkan — efisiensi maksimum sebuah mesin kalor <b>tidak bergantung sama sekali pada jenis mesin, fluida kerja, atau desainnya</b>. Ia hanya bergantung pada suhu reservoir panas (T<sub>h</sub>) dan reservoir dingin (T<sub>c</sub>) yang dipakai:</p>
+    <p style="text-align:center;font-size:20px;font-family:'Fraunces',serif;color:var(--text-hi);">η<sub>maks</sub> = 1 − T<sub>c</sub> / T<sub>h</sub></p>
+    <p>Siklus Carnot — versi ideal yang mencapai batas ini — terdiri dari empat tahap bolak-balik sempurna (reversibel):</p>
+    <div class="stage-grid">
+      <div class="stage-card"><div class="n">Tahap 1 → 2</div><h3>Ekspansi Isotermal (T<sub>h</sub>)</h3><p>Gas menyerap kalor Q<sub>h</sub> dari reservoir panas, memuai sambil suhu tetap T<sub>h</sub>, mendorong piston melakukan kerja.</p></div>
+      <div class="stage-card"><div class="n">Tahap 2 → 3</div><h3>Ekspansi Adiabatik</h3><p>Gas terus memuai tanpa pertukaran kalor sama sekali — suhunya turun sendiri dari T<sub>h</sub> ke T<sub>c</sub> murni karena kerja yang dilakukan.</p></div>
+      <div class="stage-card"><div class="n">Tahap 3 → 4</div><h3>Kompresi Isotermal (T<sub>c</sub>)</h3><p>Gas dimampatkan, melepas kalor Q<sub>c</sub> ke reservoir dingin, suhu tetap T<sub>c</sub>.</p></div>
+      <div class="stage-card"><div class="n">Tahap 4 → 1</div><h3>Kompresi Adiabatik</h3><p>Gas terus dimampatkan tanpa pertukaran kalor — suhunya naik sendiri kembali dari T<sub>c</sub> ke T<sub>h</sub>, siklus kembali ke titik awal.</p></div>
+    </div>
+    <p>Kerja bersih per siklus adalah selisih kalor: <code>W = Qh − Qc</code>. Karena reservoir dingin selalu menerima sebagian kalor (Qc tidak pernah nol kecuali Tc=0 K — mustahil dicapai), efisiensi 100% secara fisik tidak mungkin.</p>
+  </section>
+
+  <!-- EKSPLORASI -->
+  <section id="eksplorasi">
+    <div class="sec-head"><span class="sec-num">02</span><h2>Eksplorasi</h2></div>
+    <p>Atur suhu kedua reservoir dan kerja yang ingin diambil per siklus — diagram P-V &amp; hasil kalor terhitung otomatis (gas ideal monoatomik, 1 mol, γ=5/3).</p>
+
+    <div class="panel">
+      <div class="slider-row">
+        <label for="thRange">Suhu reservoir panas (T<sub>h</sub>) <b id="thVal">— K</b></label>
+        <input type="range" id="thRange" min="310" max="1000" value="600">
+      </div>
+      <div class="slider-row">
+        <label for="tcRange">Suhu reservoir dingin (T<sub>c</sub>) <b id="tcVal">— K</b></label>
+        <input type="range" id="tcRange" min="200" max="990" value="300">
+      </div>
+      <div class="slider-row">
+        <label for="wRange">Kerja diambil per siklus (W) <b id="wVal">— J</b></label>
+        <input type="range" id="wRange" min="100" max="2000" step="10" value="800">
+      </div>
+
+      <div class="pv-wrap"><svg viewBox="0 0 500 260" id="pvSvg">
+        <line x1="45" y1="20" x2="45" y2="220" stroke="#352824" stroke-width="1"/>
+        <line x1="45" y1="220" x2="480" y2="220" stroke="#352824" stroke-width="1"/>
+        <text x="10" y="18" font-family="IBM Plex Mono" font-size="9" fill="#7e7565">P</text>
+        <text x="470" y="235" font-family="IBM Plex Mono" font-size="9" fill="#7e7565">V</text>
+        <polyline id="curve12" points="" fill="none" stroke="#c1503a" stroke-width="2.4"/>
+        <polyline id="curve23" points="" fill="none" stroke="#d9bc85" stroke-width="2"/>
+        <polyline id="curve34" points="" fill="none" stroke="#4a7a9b" stroke-width="2.4"/>
+        <polyline id="curve41" points="" fill="none" stroke="#d9bc85" stroke-width="2"/>
+      </svg></div>
+
+      <div class="result-grid">
+        <div class="result-card eta"><div class="label">Efisiensi maksimum</div><div class="value" id="etaOut">—</div></div>
+        <div class="result-card"><div class="label">Kalor diserap (Qh)</div><div class="value" id="qhOut">—</div></div>
+        <div class="result-card"><div class="label">Kalor dibuang (Qc)</div><div class="value" id="qcOut">—</div></div>
+        <div class="result-card"><div class="label">Kerja bersih (W)</div><div class="value" id="wOut">—</div></div>
+      </div>
+      <div class="verdict" id="verdict"></div>
+    </div>
+  </section>
+
+  <!-- METODE -->
+  <section id="metode">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Metode</h2></div>
+    <p>Fluida kerja diasumsikan gas ideal monoatomik 1 mol (<code>γ = 5/3</code>), volume acuan <code>V₁ = 1 liter</code>. Dari efisiensi <code>η = 1 − Tc/Th</code> dan target kerja <code>W</code>, dihitung mundur: <code>Qh = W/η</code>, rasio ekspansi isotermal <code>V₂/V₁ = exp(Qh / (nRTh))</code> (dari <code>Qh = nRTh·ln(V₂/V₁)</code>), lalu rasio adiabatik <code>V₃/V₂ = V₄/V₁ = (Th/Tc)^(1/(γ−1))</code>. Keempat titik ini dipakai menggambar kurva sungguhan: isotermal mengikuti <code>P = nRT/V</code>, adiabatik mengikuti <code>PV^γ = konstan</code> — bukan garis lurus perkiraan.</p>
+  </section>
+
+  <!-- BATASAN -->
+  <section id="batasan">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Batasan</h2></div>
+    <ul>
+      <li><b>Ini batas atas teoretis</b>, bukan efisiensi mesin sungguhan. Mesin nyata (motor bensin ~25-30%, turbin uap PLTU ~40-45%) selalu di bawah batas Carnot pada suhu operasi yang sama, karena gesekan, kebocoran kalor, dan proses yang tidak benar-benar reversibel.</li>
+      <li><b>Fluida kerja diasumsikan gas ideal monoatomik</b> (γ=5/3) — mesin nyata memakai uap air, campuran bahan bakar-udara, dsb. dengan γ berbeda; bentuk kurva adiabatiknya akan sedikit berbeda.</li>
+      <li><b>Saat beda suhu Th−Tc sangat kecil</b>, efisiensi mendekati nol, sehingga mencapai kerja W yang diminta membutuhkan rasio ekspansi volume yang sangat besar — jika ini terjadi, diagram akan memberi peringatan alih-alih menggambar kurva yang tidak proporsional.</li>
+      <li>Volume acuan V₁ = 1 liter dipilih sembarang untuk keperluan visualisasi — bukan spesifikasi mesin nyata mana pun.</li>
+    </ul>
+  </section>
+
+  <!-- REFERENSI -->
+  <section id="referensi">
+    <div class="sec-head"><span class="sec-num">05</span><h2>Referensi</h2></div>
+    <ul>
+      <li>S. Carnot, "Réflexions sur la puissance motrice du feu", 1824 — memoar asli yang pertama merumuskan batas efisiensi mesin kalor.</li>
+      <li>Persamaan gas ideal &amp; proses adiabatik (PV^γ=konstan) — materi baku termodinamika klasik.</li>
+      <li>Kisaran efisiensi mesin nyata (motor bensin, turbin uap) — data umum teknik mesin/pembangkit listrik.</li>
+    </ul>
+
+    <table class="ttable" style="margin-top:14px;">
+      <tr><th>Asumsi tetap</th><td>Nilai</td></tr>
+      <tr><th>Jumlah mol (n)</th><td>1 mol</td></tr>
+      <tr><th>Rasio kalor jenis (γ)</th><td>5/3 (gas monoatomik ideal)</td></tr>
+      <tr><th>Volume acuan (V₁)</th><td>1 liter</td></tr>
+    </table>
+
+    <div class="whatsapp-box">
+      <p style="margin:0;color:var(--text-mid);font-size:13.5px;">Alat ini bagian dari pengembangan tahap awal JAZMI. Ada koreksi rumus, saran tampilan lain, atau mau diskusi lebih lanjut?</p>
+      <a id="waLink" href="#" target="_blank" rel="noopener">WhatsApp</a>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">Siklus Carnot &amp; Efisiensi Mesin Kalor — bagian dari Laboratorium Fisika, JAZMI (Jalinan Zamrud Islamiah). Versi awal, dibangun mengikuti metode Belajar → Model → Uji → Tool.</div>
+</footer>
+
+<script>
+(function(){
+  const R = 8.314, n = 1, GAMMA = 5/3, V1 = 0.001; // m3 (1 liter)
+
+  const els = {
+    th: document.getElementById('thRange'), thVal: document.getElementById('thVal'),
+    tc: document.getElementById('tcRange'), tcVal: document.getElementById('tcVal'),
+    w: document.getElementById('wRange'), wVal: document.getElementById('wVal'),
+    etaOut: document.getElementById('etaOut'), qhOut: document.getElementById('qhOut'),
+    qcOut: document.getElementById('qcOut'), wOut: document.getElementById('wOut'),
+    verdict: document.getElementById('verdict'),
+    c12: document.getElementById('curve12'), c23: document.getElementById('curve23'),
+    c34: document.getElementById('curve34'), c41: document.getElementById('curve41')
+  };
+
+  function isoCurve(T, Va, Vb, steps){
+    const pts = [];
+    for(let i=0;i<=steps;i++){
+      const V = Va + (Vb-Va)*i/steps;
+      const P = n*R*T/V;
+      pts.push([V,P]);
+    }
+    return pts;
+  }
+  function adiaCurve(Pa, Va, Vb, steps){
+    const pts = [];
+    for(let i=0;i<=steps;i++){
+      const V = Va + (Vb-Va)*i/steps;
+      const P = Pa*Math.pow(Va/V, GAMMA);
+      pts.push([V,P]);
+    }
+    return pts;
+  }
+
+  function render(){
+    const Th = parseFloat(els.th.value);
+    let Tc = parseFloat(els.tc.value);
+    if(Tc >= Th) Tc = Th - 5; // jaga validitas fisis
+    const W = parseFloat(els.w.value);
+
+    els.thVal.textContent = Th + ' K';
+    els.tcVal.textContent = Tc + ' K';
+    els.wVal.textContent = W + ' J';
+
+    const eta = 1 - Tc/Th;
+    const Qh = W/eta;
+    const Qc = Qh - W;
+
+    els.etaOut.textContent = (eta*100).toFixed(1) + '%';
+    els.qhOut.textContent = Qh.toFixed(0) + ' J';
+    els.qcOut.textContent = Qc.toFixed(0) + ' J';
+    els.wOut.textContent = W + ' J';
+
+    const r = Math.exp(Qh/(n*R*Th)); // V2/V1
+    const rasioAdiabat = Math.pow(Th/Tc, 1/(GAMMA-1)); // V3/V2 = V4/V1
+    const V2 = V1*r, V3 = V2*rasioAdiabat, V4 = V1*rasioAdiabat;
+
+    const V3V1 = V3/V1;
+    if(V3V1 > 30 || !isFinite(V3V1)){
+      [els.c12,els.c23,els.c34,els.c41].forEach(c=>c.setAttribute('points',''));
+      els.verdict.className = 'verdict warn';
+      els.verdict.innerHTML = '<b>Rasio volume terlalu ekstrem untuk digambarkan</b> pada kombinasi suhu &amp; kerja ini (beda Th−Tc terlalu kecil relatif terhadap W yang diminta, sehingga efisiensinya rendah dan Qh yang dibutuhkan sangat besar). Angka Qh/Qc/η di atas tetap valid — coba naikkan beda suhu atau turunkan W untuk melihat diagramnya.';
+      return;
+    }
+
+    const P1 = n*R*Th/V1, P2 = n*R*Th/V2, P3 = n*R*Tc/V3, P4 = n*R*Tc/V4;
+
+    const seg12 = isoCurve(Th, V1, V2, 20);
+    const seg23 = adiaCurve(P2, V2, V3, 20);
+    const seg34 = isoCurve(Tc, V3, V4, 20);
+    const seg41 = adiaCurve(P4, V4, V1, 20);
+
+    const allV = [...seg12,...seg23,...seg34,...seg41].map(p=>p[0]);
+    const allP = [...seg12,...seg23,...seg34,...seg41].map(p=>p[1]);
+    const Vmin=Math.min(...allV), Vmax=Math.max(...allV);
+    const Pmin=Math.min(...allP), Pmax=Math.max(...allP);
+
+    const padL=45, padR=480, padT=20, padB=220;
+    function toXY([V,P]){
+      const x = padL + (V-Vmin)/(Vmax-Vmin)*(padR-padL);
+      const y = padB - (P-Pmin)/(Pmax-Pmin)*(padB-padT);
+      return x.toFixed(1)+','+y.toFixed(1);
+    }
+    els.c12.setAttribute('points', seg12.map(toXY).join(' '));
+    els.c23.setAttribute('points', seg23.map(toXY).join(' '));
+    els.c34.setAttribute('points', seg34.map(toXY).join(' '));
+    els.c41.setAttribute('points', seg41.map(toXY).join(' '));
+
+    els.verdict.className = 'verdict';
+    els.verdict.innerHTML = 'Untuk mengambil <b>'+W+' J</b> kerja per siklus di antara reservoir '+Th+'K dan '+Tc+'K (efisiensi maksimum '+(eta*100).toFixed(1)+'%), mesin Carnot ideal harus menyerap <b>'+Qh.toFixed(0)+' J</b> dari sumber panas dan membuang <b>'+Qc.toFixed(0)+' J</b> ke reservoir dingin — kalor itu tidak hilang, hanya tidak bisa diubah jadi kerja pada siklus ini.';
+
+    const waMsg = encodeURIComponent(
+      'Halo, saya baru mencoba alat Siklus Carnot & Efisiensi Mesin Kalor (JAZMI). Ingin diskusi/validasi lebih lanjut.'
+    );
+    document.getElementById('waLink').href = 'https://wa.me/6281356572588?text=' + waMsg;
+  }
+
+  [els.th, els.tc, els.w].forEach(el=>el.addEventListener('input', render));
+  render();
+})();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

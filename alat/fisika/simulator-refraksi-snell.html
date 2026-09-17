@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulator Refraksi &amp; Hukum Snell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0F16; --surface:#131B24; --surface-2:#1B2530; --line:#2B3A48;
+    --ink:#EAF1F7; --muted:#8FA3B5; --blue:#5B9BD9; --amber:#E5A439; --red:#E1614E; --teal:#3FBF95;
+    --font-display:'Space Grotesk',sans-serif; --font-body:'IBM Plex Sans',sans-serif; --font-mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--font-body); line-height:1.55; padding-bottom:80px;}
+  .wrap{max-width:980px; margin:0 auto; padding:0 20px;}
+  h1,h2,h3{font-family:var(--font-display); font-weight:600; margin:0 0 12px;}
+  p{margin:0 0 14px; max-width:70ch;}
+  .muted{color:var(--muted);}
+  .mono{font-family:var(--font-mono);}
+  section{padding:48px 0; border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+
+  .hero{padding-top:44px;}
+  .hero-tag{font-family:var(--font-mono); font-size:13px; color:var(--blue); margin-bottom:10px;}
+  .hero h1{font-size:clamp(24px,4vw,36px); max-width:24ch; line-height:1.2;}
+  .hero p.lead{font-size:17px; color:var(--muted); max-width:60ch;}
+
+  .sec-head{display:flex; align-items:baseline; gap:10px; margin-bottom:22px;}
+  .sec-num{font-family:var(--font-mono); font-size:13px; color:var(--blue);}
+
+  .panel{background:var(--surface); border:1px solid var(--line); padding:24px;}
+  .grid-ctl{display:grid; grid-template-columns:1fr; gap:20px;}
+  @media(min-width:640px){ .grid-ctl{grid-template-columns:repeat(3,1fr);} }
+  .field{display:flex; flex-direction:column; gap:6px;}
+  .field label{font-size:13px; color:var(--muted);}
+  input[type=range]{width:100%; accent-color:var(--blue);}
+  .range-val{font-family:var(--font-mono); color:var(--blue); font-size:14px; font-weight:600;}
+  .preset-row{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;}
+  .preset-btn{background:var(--bg); border:1px solid var(--line); color:var(--muted); padding:5px 9px; font-family:var(--font-mono); font-size:10.5px; cursor:pointer;}
+  .preset-btn:hover{border-color:var(--blue); color:var(--blue);}
+
+  .kpis{display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--line); margin-top:20px; border:1px solid var(--line);}
+  @media(min-width:640px){ .kpis{grid-template-columns:repeat(4,1fr);} }
+  .kpi{background:var(--surface); padding:14px;}
+  .kpi .val{font-family:var(--font-mono); font-size:17px;}
+  .kpi .lbl{font-size:11.5px; color:var(--muted); margin-top:2px;}
+  .kpi.warn .val{color:var(--red);}
+  .kpi.good .val{color:var(--teal);}
+
+  .chart-wrap{background:var(--surface); border:1px solid var(--line); padding:20px; margin-top:20px;}
+  svg text{font-family:var(--font-mono); fill:var(--muted);}
+  .legend{display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; font-size:11px; color:var(--muted);}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .ln{width:14px; height:2px; display:inline-block;}
+
+  .takeaway{background:var(--surface-2); border-left:3px solid var(--blue); padding:16px 18px; margin-top:20px; font-size:14px;}
+  .takeaway strong{color:var(--blue);}
+
+  .formula{background:var(--surface); border:1px solid var(--line); padding:16px 18px; font-family:var(--font-mono); font-size:13px; color:var(--blue); margin:14px 0; overflow-x:auto;}
+  ul.limits{padding-left:20px;}
+  ul.limits li{margin-bottom:10px; font-size:14px;}
+  .ref-list{list-style:none; padding:0; margin:0;}
+  .ref-list li{padding:12px 0; border-bottom:1px solid var(--line);}
+  .ref-list li:last-child{border-bottom:none;}
+  .ref-list .src{font-family:var(--font-mono); font-size:12px; color:var(--muted);}
+
+  footer{padding:40px 0 20px; text-align:center;}
+  footer p{margin:0; font-size:12px; color:var(--muted); max-width:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <section class="hero">
+    <div class="hero-tag">OPTIK — HUKUM SNELL, SUDUT KRITIS &amp; SERAT OPTIK</div>
+    <h1>Ada satu sudut yang membuat cahaya berhenti mau keluar sama sekali</h1>
+    <p class="lead">Cahaya yang pindah ke medium yang lebih "encer" (indeks bias lebih kecil) selalu dibelokkan menjauhi garis normal. Kalau sudut datangnya cukup miring, pembelokan itu bisa mencapai 90° — dan begitu melewati titik itu, cahaya berhenti menembus sama sekali. Ia terpantul sempurna, seolah permukaannya berubah jadi cermin. Inilah yang menjebak cahaya di dalam serat optik sepanjang puluhan kilometer.</p>
+  </section>
+
+  <section id="eksplorasi">
+    <div class="sec-head"><span class="sec-num">01</span><h2>Eksplorasi</h2></div>
+    <div class="panel">
+      <div class="grid-ctl">
+        <div class="field">
+          <label>Sudut datang dari normal: <span class="range-val" id="valTheta"></span></label>
+          <input type="range" id="theta1" min="0" max="89" step="1" value="30">
+        </div>
+        <div class="field">
+          <label>Indeks bias medium 1: <span class="range-val" id="valN1"></span></label>
+          <input type="range" id="n1" min="1.0" max="2.6" step="0.01" value="1.5">
+        </div>
+        <div class="field">
+          <label>Indeks bias medium 2: <span class="range-val" id="valN2"></span></label>
+          <input type="range" id="n2" min="1.0" max="2.6" step="0.01" value="1.0">
+        </div>
+      </div>
+      <div class="preset-row">
+        <button class="preset-btn" onclick="setPreset(1.5,1.0)">Kaca → udara (n1=1,5 / n2=1,0)</button>
+        <button class="preset-btn" onclick="setPreset(1.0,1.33)">Udara → air (n1=1,0 / n2=1,33)</button>
+        <button class="preset-btn" onclick="setPreset(1.46,1.44)">Inti → kelongsong serat optik (1,46/1,44)</button>
+      </div>
+    </div>
+
+    <div class="kpis" id="kpis"></div>
+  </section>
+
+  <section id="visualisasi">
+    <div class="sec-head"><span class="sec-num">02</span><h2>Sinar membelok</h2></div>
+    <div class="chart-wrap">
+      <svg id="refraksi" viewBox="0 0 900 380" style="width:100%; height:auto;"></svg>
+      <div class="legend">
+        <span><span class="ln" style="background:var(--amber);"></span>Sinar datang</span>
+        <span><span class="ln" style="background:var(--teal);"></span>Sinar bias (menembus medium 2)</span>
+        <span><span class="ln" style="background:var(--red);"></span>Sinar pantul</span>
+      </div>
+    </div>
+    <div class="takeaway" id="takeaway"></div>
+  </section>
+
+  <section id="fiber">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Jembatan ke serat optik</h2></div>
+    <p>Serat optik cuma memanfaatkan trik yang sama persis: inti (n1, lebih rapat) dikelilingi kelongsong (n2, lebih encer). Selama cahaya di dalam inti selalu mengenai dinding kelongsong dengan sudut lebih besar dari sudut kritis, ia terus terpantul sempurna berulang-ulang — tidak pernah bocor keluar — sehingga bisa merambat lurus sepanjang serat meski seratnya sendiri dibengkokkan.</p>
+    <div class="chart-wrap">
+      <svg id="fiberSvg" viewBox="0 0 900 220" style="width:100%; height:auto;"></svg>
+    </div>
+    <div class="takeaway" id="fiberTakeaway"></div>
+  </section>
+
+  <section id="metode">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Metode</h2></div>
+    <div class="formula">Hukum Snell:  n₁·sin(θ₁) = n₂·sin(θ₂)</div>
+    <p>Sudut kritis (hanya ada jika n₁ &gt; n₂, cahaya berpindah dari medium rapat ke medium encer) adalah sudut datang yang membuat sinar bias tepat menyusur permukaan (θ₂=90°):</p>
+    <div class="formula">θ_kritis = arcsin(n₂ / n₁)</div>
+    <p>Begitu sudut datang melebihi θ_kritis, persamaan Snell tidak lagi punya solusi nyata (sin θ₂ akan &gt;1) — inilah pemantulan internal total: seluruh cahaya terpantul, tidak ada yang menembus.</p>
+  </section>
+
+  <section id="batasan">
+    <div class="sec-head"><span class="sec-num">05</span><h2>Batasan</h2></div>
+    <ul class="limits">
+      <li><strong>Intensitas sinar pantul di sini bersifat skematik</strong> — dalam kenyataan, bahkan sebelum sudut kritis tercapai, sebagian cahaya sudah terpantul sebagian (dijelaskan oleh persamaan Fresnel) — bukan cuma "semua tembus" lalu tiba-tiba "semua pantul".</li>
+      <li><strong>Diagram serat optik disederhanakan jadi satu bidang datar</strong> (bukan silinder 3D sungguhan), dan mengabaikan efek dispersi mode/panjang gelombang yang muncul di serat optik nyata.</li>
+      <li>Simulator ini untuk membangun intuisi geometris — bukan alat desain sistem optik atau serat optik presisi.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <div class="sec-head"><span class="sec-num">06</span><h2>Referensi</h2></div>
+    <ul class="ref-list">
+      <li>Hukum Snell dan konsep sudut kritis/pemantulan internal total sebagai dasar standar optik geometris.
+        <div class="src">Rujukan umum fisika optik</div>
+      </li>
+      <li>Prinsip pemanduan cahaya pada serat optik lewat pemantulan internal total antara inti dan kelongsong.
+        <div class="src">Rujukan umum fotonika/telekomunikasi serat optik</div>
+      </li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Simulator edukasi optik geometris — bukan alat desain sistem optik presisi.</p>
+  </footer>
+
+</div>
+
+<script>
+function setPreset(a,b){ document.getElementById('n1').value=a; document.getElementById('n2').value=b; hitung(); }
+
+function hitung(){
+  const theta1deg = parseFloat(document.getElementById('theta1').value);
+  const n1 = parseFloat(document.getElementById('n1').value);
+  const n2 = parseFloat(document.getElementById('n2').value);
+  document.getElementById('valTheta').textContent = theta1deg+'°';
+  document.getElementById('valN1').textContent = n1.toFixed(2);
+  document.getElementById('valN2').textContent = n2.toFixed(2);
+
+  const theta1 = theta1deg*Math.PI/180;
+  const sinTheta2 = n1*Math.sin(theta1)/n2;
+  const TIR = Math.abs(sinTheta2)>1;
+  const theta2 = TIR? null : Math.asin(sinTheta2);
+
+  let thetaKritisDeg = null;
+  if(n1>n2){ thetaKritisDeg = Math.asin(n2/n1)*180/Math.PI; }
+
+  const kpis = document.getElementById('kpis');
+  kpis.innerHTML = `
+    <div class="kpi ${TIR?'warn':'good'}"><div class="val">${TIR?'—':(theta2*180/Math.PI).toFixed(1)+'°'}</div><div class="lbl">sudut bias (θ₂)</div></div>
+    <div class="kpi"><div class="val">${thetaKritisDeg!==null?thetaKritisDeg.toFixed(1)+'°':'Tidak berlaku'}</div><div class="lbl">sudut kritis (n1&gt;n2 saja)</div></div>
+    <div class="kpi ${TIR?'warn':'good'}"><div class="val">${TIR?'Pemantulan total':'Refraksi normal'}</div><div class="lbl">status</div></div>
+    <div class="kpi"><div class="val">${n1>n2?'Rapat → encer':n1<n2?'Encer → rapat':'Sama'}</div><div class="lbl">arah perpindahan medium</div></div>
+  `;
+
+  document.getElementById('takeaway').innerHTML = TIR
+    ? `<strong>Pemantulan internal total terjadi.</strong> Pada sudut datang ${theta1deg}° (melebihi sudut kritis ${thetaKritisDeg.toFixed(1)}°), tidak ada solusi nyata untuk sudut bias — seluruh cahaya dipantulkan kembali ke medium 1, tidak ada yang menembus ke medium 2 sama sekali.`
+    : `<strong>Cahaya menembus ke medium 2</strong> dengan sudut bias ${(theta2*180/Math.PI).toFixed(1)}°. ${n2<n1 ? 'Karena medium 2 lebih encer, sinar dibelokkan menjauhi garis normal.' : n2>n1 ? 'Karena medium 2 lebih rapat, sinar dibelokkan mendekati garis normal.' : 'Karena kedua indeks sama, sinar tidak dibelokkan sama sekali.'}`;
+
+  renderRefraksi(theta1, theta2, TIR);
+  renderFiber(theta1deg, n1, n2, thetaKritisDeg);
+}
+
+function renderRefraksi(theta1, theta2, TIR){
+  const svg = document.getElementById('refraksi');
+  const cx=450, cy=190, L=170;
+  let parts=[];
+
+  // area medium
+  parts.push(`<rect x="0" y="0" width="900" height="${cy}" fill="#131B24"/>`);
+  parts.push(`<rect x="0" y="${cy}" width="900" height="${380-cy}" fill="#1B2530"/>`);
+  parts.push(`<line x1="0" y1="${cy}" x2="900" y2="${cy}" stroke="#2B3A48" stroke-width="1.5"/>`);
+  parts.push(`<line x1="${cx}" y1="20" x2="${cx}" y2="360" stroke="#2B3A48" stroke-width="1" stroke-dasharray="4,4"/>`);
+  parts.push(`<text x="20" y="20" font-size="12" fill="#8FA3B5">Medium 1</text>`);
+  parts.push(`<text x="20" y="${380-10}" font-size="12" fill="#8FA3B5">Medium 2</text>`);
+
+  // sinar datang: dari kiri-atas ke titik pusat
+  const x0 = cx - L*Math.sin(theta1), y0 = cy - L*Math.cos(theta1);
+  parts.push(`<line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${cx}" y2="${cy}" stroke="#E5A439" stroke-width="3"/>`);
+
+  // sinar pantul: mirror ke kanan-atas
+  const xr = cx + L*Math.sin(theta1), yr = cy - L*Math.cos(theta1);
+  parts.push(`<line x1="${cx}" y1="${cy}" x2="${xr.toFixed(1)}" y2="${yr.toFixed(1)}" stroke="#E1614E" stroke-width="${TIR?3:1.5}" opacity="${TIR?1:0.5}"/>`);
+
+  if(!TIR){
+    const x2 = cx - L*Math.sin(theta2), y2 = cy + L*Math.cos(theta2);
+    parts.push(`<line x1="${cx}" y1="${cy}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#3FBF95" stroke-width="3"/>`);
+  }
+
+  svg.innerHTML = parts.join('');
+}
+
+function renderFiber(theta1deg, n1, n2, thetaKritisDeg){
+  const svg = document.getElementById('fiberSvg');
+  const W=900, H=220;
+  const coreTop=70, coreBottom=150;
+  let parts=[];
+
+  parts.push(`<rect x="0" y="0" width="${W}" height="${coreTop}" fill="#1B2530"/>`);
+  parts.push(`<rect x="0" y="${coreBottom}" width="${W}" height="${H-coreBottom}" fill="#1B2530"/>`);
+  parts.push(`<rect x="0" y="${coreTop}" width="${W}" height="${coreBottom-coreTop}" fill="#131B24"/>`);
+  parts.push(`<text x="10" y="20" font-size="11" fill="#8FA3B5">kelongsong (n2=${n2.toFixed(2)})</text>`);
+  parts.push(`<text x="10" y="${(coreTop+coreBottom)/2}" font-size="11" fill="#8FA3B5">inti (n1=${n1.toFixed(2)})</text>`);
+  parts.push(`<text x="10" y="${H-10}" font-size="11" fill="#8FA3B5">kelongsong</text>`);
+
+  const bisaTIR = thetaKritisDeg!==null && theta1deg>thetaKritisDeg;
+  const theta = theta1deg*Math.PI/180;
+  const tanT = Math.tan(theta);
+  const tinggi = coreBottom-coreTop;
+  const dx = tinggi*tanT;
+
+  let x = 30, y = coreTop, arahBawah=true;
+  let path = `M${x},${y}`;
+  if(bisaTIR){
+    for(let i=0;i<6;i++){
+      const xNext = x+dx;
+      const yNext = arahBawah? coreBottom : coreTop;
+      if(xNext>W-30){ break; }
+      path += ` L${xNext.toFixed(1)},${yNext}`;
+      x=xNext; arahBawah=!arahBawah;
+    }
+    parts.push(`<path d="${path}" fill="none" stroke="#3FBF95" stroke-width="3"/>`);
+  } else {
+    // hanya sampai dinding pertama, lalu bocor keluar
+    const xNext = x+dx;
+    path += ` L${Math.min(xNext,W-30).toFixed(1)},${coreBottom}`;
+    parts.push(`<path d="${path}" fill="none" stroke="#3FBF95" stroke-width="3"/>`);
+    parts.push(`<line x1="${Math.min(xNext,W-30).toFixed(1)}" y1="${coreBottom}" x2="${Math.min(xNext,W-30)+60}" y2="${H-5}" stroke="#E1614E" stroke-width="2" stroke-dasharray="4,3"/>`);
+    parts.push(`<text x="${Math.min(xNext,W-30)+10}" y="${H-8}" font-size="11" fill="#E1614E">bocor keluar</text>`);
+  }
+
+  svg.innerHTML = parts.join('');
+
+  document.getElementById('fiberTakeaway').innerHTML = bisaTIR
+    ? `<strong>Dipandu dengan sempurna.</strong> Sudut ${theta1deg}° melebihi sudut kritis (${thetaKritisDeg.toFixed(1)}°) untuk pasangan inti/kelongsong ini — cahaya terus terpantul sempurna dan merambat sepanjang serat tanpa bocor.`
+    : `<strong>Gagal dipandu — cahaya bocor.</strong> ${thetaKritisDeg===null ? 'Indeks inti tidak lebih besar dari kelongsong, jadi pemanduan lewat pemantulan internal total tidak mungkin terjadi sama sekali.' : `Sudut ${theta1deg}° masih di bawah sudut kritis (${thetaKritisDeg.toFixed(1)}°) — sebagian cahaya menembus keluar dinding inti alih-alih terpantul, dan serat gagal memandunya.`}`;
+}
+
+document.getElementById('theta1').addEventListener('input', hitung);
+document.getElementById('n1').addEventListener('input', hitung);
+document.getElementById('n2').addEventListener('input', hitung);
+hitung();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

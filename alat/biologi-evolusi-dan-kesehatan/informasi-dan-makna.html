@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Informasi, Makna & Batas Sains — Laboratorium Interaktif</title>
+<style>
+  :root {
+    --bg: #0d0d14;
+    --bg2: #13131f;
+    --bg3: #1a1a2e;
+    --border: #2a2a45;
+    --text: #d0d0e8;
+    --text-dim: #6060a0;
+    --accent: #8888ff;
+    --accent2: #88ddbb;
+    --accent3: #ffcc66;
+    --accent4: #ff8888;
+    --font: 'Georgia', serif;
+    --mono: 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; line-height: 1.7; }
+
+  header {
+    max-width: 1080px; margin: 0 auto;
+    padding: 2.5rem 2rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .eyebrow { font-family: var(--mono); font-size: 0.68rem; color: var(--text-dim); letter-spacing: 0.15em; margin-bottom: 0.6rem; }
+  h1 { font-size: clamp(1.5rem, 3.5vw, 2.2rem); font-weight: normal; color: #e0e0ff; line-height: 1.3; margin-bottom: 0.6rem; }
+  h1 em { color: var(--accent2); font-style: normal; }
+  .sub { color: var(--text-dim); font-size: 0.88rem; font-style: italic; max-width: 580px; }
+
+  .main { max-width: 1080px; margin: 0 auto; padding: 1.5rem 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+  @media(max-width:700px){ .main { grid-template-columns:1fr; padding:1rem; } }
+  .full { grid-column: 1/-1; }
+
+  .panel { background: var(--bg2); border: 1px solid var(--border); border-radius: 3px; padding: 1.4rem; }
+  .ptitle { font-family: var(--mono); font-size: 0.68rem; color: var(--text-dim); letter-spacing: 0.12em; border-bottom: 1px solid var(--border); padding-bottom: 0.6rem; margin-bottom: 1.1rem; }
+
+  /* ALPHABET MACHINE */
+  .alpha-row { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
+  .alpha-cell {
+    width: 34px; height: 34px; border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 0.85rem;
+    cursor: pointer; border-radius: 2px; transition: all 0.2s;
+    user-select: none;
+  }
+  .alpha-cell:hover { border-color: var(--accent); color: var(--accent); }
+  .alpha-cell.selected { background: var(--bg3); border-color: var(--accent2); color: var(--accent2); }
+  .alpha-cell.meaning { background: #1a2e1a; border-color: var(--accent2); color: var(--accent2); }
+  .alpha-cell.noise { background: #2e1a1a; border-color: var(--accent4); color: var(--accent4); }
+
+  .output-box {
+    min-height: 54px; background: var(--bg); border: 1px solid var(--border);
+    padding: 0.7rem 0.9rem; border-radius: 3px; font-family: var(--mono);
+    font-size: 0.88rem; letter-spacing: 0.08em; margin: 0.7rem 0;
+    color: var(--accent2); word-break: break-all; line-height: 1.9;
+  }
+  .output-box.noise-mode { color: var(--accent4); }
+
+  .insight-box {
+    background: var(--bg); border-left: 3px solid var(--accent);
+    padding: 0.8rem 1rem; font-size: 0.82rem; color: var(--text);
+    border-radius: 0 3px 3px 0; line-height: 1.8; margin-top: 0.8rem;
+    min-height: 60px; transition: border-color 0.4s;
+  }
+  .insight-box em { color: var(--accent2); font-style: normal; }
+  .insight-box .ar { direction: rtl; color: var(--accent3); font-size: 0.95rem; display: block; margin-top: 0.4rem; text-align: right; }
+
+  /* CONSCIOUSNESS SLIDER */
+  .sl-group { margin-bottom: 1rem; }
+  .sl-head { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.3rem; }
+  .sl-val { font-family: var(--mono); font-size: 0.78rem; color: var(--accent); }
+  .sl-note { font-size: 0.7rem; color: var(--text-dim); font-style: italic; margin-bottom: 0.35rem; }
+  input[type=range] { width:100%; height:4px; background:var(--bg3); border-radius:2px; outline:none; -webkit-appearance:none; cursor:pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:var(--accent); cursor:pointer; }
+
+  /* HARD PROBLEM VIZ */
+  .levels-wrap { margin: 1rem 0; }
+  .level-row { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.5rem; }
+  .level-icon { font-size: 1rem; width: 24px; text-align: center; }
+  .level-bar-track { flex: 1; height: 10px; background: var(--bg); border-radius: 5px; overflow: hidden; border: 1px solid var(--border); }
+  .level-bar-fill { height: 100%; border-radius: 5px; transition: width 0.5s; }
+  .level-label { font-size: 0.72rem; color: var(--text-dim); width: 90px; text-align: right; font-family: var(--mono); }
+  .level-q { font-size: 0.68rem; color: var(--accent4); width: 16px; text-align: center; cursor: help; }
+
+  /* PROBABILITY EXPLORER */
+  .prob-display {
+    font-family: var(--mono); font-size: 1.6rem; color: var(--accent3);
+    text-align: center; padding: 1rem; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 3px; margin: 0.8rem 0;
+    letter-spacing: 0.05em;
+  }
+  .prob-context { font-size: 0.78rem; color: var(--text-dim); text-align: center; margin-top: 0.4rem; }
+
+  /* SAINTISME METER */
+  .meter-wrap { position: relative; height: 24px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 0.8rem 0; }
+  .meter-fill { height: 100%; border-radius: 12px; transition: width 0.5s, background 0.5s; }
+  .meter-labels { display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--text-dim); font-family: var(--mono); margin-top: 0.25rem; }
+
+  /* TABS */
+  .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 1rem; }
+  .tab { padding: 0.4rem 0.9rem; font-size: 0.75rem; color: var(--text-dim); cursor: pointer; border-bottom: 2px solid transparent; font-family: var(--mono); transition: all 0.2s; }
+  .tab.active { color: var(--accent2); border-bottom-color: var(--accent2); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .sep { height: 1px; background: var(--border); margin: 1rem 0; }
+  .tag { display: inline-block; padding: 0.15rem 0.5rem; border: 1px solid var(--border); border-radius: 2px; font-family: var(--mono); font-size: 0.68rem; color: var(--text-dim); margin: 0.15rem; cursor: default; }
+  .tag.open { border-color: var(--accent4); color: var(--accent4); }
+  .tag.closed { border-color: var(--accent2); color: var(--accent2); }
+
+  .quote-block { border-left: 3px solid var(--accent3); padding: 0.8rem 1rem; background: var(--bg3); border-radius: 0 3px 3px 0; font-size: 0.85rem; font-style: italic; color: var(--text); margin: 0.8rem 0; }
+  .quote-source { font-style: normal; font-size: 0.72rem; color: var(--text-dim); margin-top: 0.4rem; font-family: var(--mono); }
+
+  .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 1rem; }
+  .card { background: var(--bg3); border: 1px solid var(--border); padding: 1rem; border-radius: 3px; font-size: 0.82rem; color: var(--text-dim); line-height: 1.8; }
+  .card strong { color: var(--text); display: block; margin-bottom: 0.4rem; }
+  .card em { color: var(--accent2); font-style: normal; }
+
+  button.act { padding: 0.3rem 0.8rem; border: 1px solid var(--border); background: var(--bg); color: var(--text-dim); font-size: 0.75rem; border-radius: 3px; cursor: pointer; font-family: var(--mono); margin: 0.2rem; transition: all 0.2s; }
+  button.act:hover { border-color: var(--accent); color: var(--accent); }
+  button.act.on { border-color: var(--accent2); color: var(--accent2); background: #1a2e1a; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">LABORATORIUM INTERAKTIF · QIDALAT.COM</div>
+  <h1>Informasi, Makna, <em>dan Batas Sains</em></h1>
+  <p class="sub">Dari mana informasi bermakna pertama kali muncul? Dan mengapa pertanyaan ini berbeda dari semua pertanyaan sains lainnya?</p>
+</header>
+
+<div class="main">
+
+  <!-- MESIN HURUF -->
+  <div class="panel">
+    <div class="ptitle">MESIN HURUF — SINTAKSIS VS MAKNA</div>
+    <p style="font-size:0.8rem;color:var(--text-dim);margin-bottom:0.8rem;line-height:1.7;">
+      Klik huruf-huruf di bawah. Perhatikan kapan susunan huruf menjadi "bermakna" — dan kapan tetap hanya noise. Apa yang berubah?
+    </p>
+
+    <div class="alpha-row" id="alphaRow"></div>
+
+    <div style="display:flex;gap:0.5rem;margin:0.5rem 0;flex-wrap:wrap;">
+      <button class="act" onclick="randomLetters()">Acak</button>
+      <button class="act" onclick="setWord('KEHIDUPAN')">KEHIDUPAN</button>
+      <button class="act" onclick="setWord('KITAB')">كتاب</button>
+      <button class="act" onclick="setWord('ATGCATGC')">DNA: ATGC</button>
+      <button class="act" onclick="clearLetters()">Kosongkan</button>
+    </div>
+
+    <div class="output-box" id="alphaOutput">—</div>
+
+    <div style="display:flex;gap:1rem;font-size:0.75rem;color:var(--text-dim);margin-bottom:0.5rem;">
+      <span>Unsur: <b id="cnt-elem" style="color:var(--accent)">0</b></span>
+      <span>Urutan: <b id="cnt-seq" style="color:var(--accent3)">—</b></span>
+      <span>Status: <b id="cnt-status" style="color:var(--accent4)">—</b></span>
+    </div>
+
+    <div class="insight-box" id="alphaInsight">
+      Pilih huruf untuk memulai eksplorasi...
+    </div>
+  </div>
+
+  <!-- HARD PROBLEM -->
+  <div class="panel">
+    <div class="ptitle">HIERARKI PENJELASAN — APA YANG SAINS BISA & TIDAK BISA</div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab2('easy')">Easy Problems</div>
+      <div class="tab" onclick="switchTab2('hard')">Hard Problem</div>
+    </div>
+
+    <div class="tab-content active" id="tab2-easy">
+      <p style="font-size:0.8rem;color:var(--text-dim);margin-bottom:0.8rem;line-height:1.7;">
+        "Easy problems" bukan berarti mudah — hanya berarti <em style="color:var(--accent2)">jelas cara menjawabnya</em>: dengan mekanisme.
+      </p>
+      <div class="levels-wrap">
+        <div class="level-row">
+          <div class="level-icon">🔬</div>
+          <div style="flex:1">
+            <div style="font-size:0.78rem;margin-bottom:0.2rem;">Bagaimana neuron memproses sinyal?</div>
+            <div class="level-bar-track"><div class="level-bar-fill" style="width:92%;background:var(--accent2)"></div></div>
+          </div>
+          <div class="level-label">Terjawab ~92%</div>
+          <div class="level-q" title="Mekanisme elektrokimia dipahami sangat baik">✓</div>
+        </div>
+        <div class="level-row">
+          <div class="level-icon">🧠</div>
+          <div style="flex:1">
+            <div style="font-size:0.78rem;margin-bottom:0.2rem;">Bagaimana memori disimpan?</div>
+            <div class="level-bar-track"><div class="level-bar-fill" style="width:65%;background:var(--accent)"></div></div>
+          </div>
+          <div class="level-label">Terjawab ~65%</div>
+          <div class="level-q" title="LTP dipahami, tapi sistem penuh masih kompleks">~</div>
+        </div>
+        <div class="level-row">
+          <div class="level-icon">👁</div>
+          <div style="flex:1">
+            <div style="font-size:0.78rem;margin-bottom:0.2rem;">Bagaimana otak memproses warna?</div>
+            <div class="level-bar-track"><div class="level-bar-fill" style="width:85%;background:var(--accent2)"></div></div>
+          </div>
+          <div class="level-label">Terjawab ~85%</div>
+          <div class="level-q">✓</div>
+        </div>
+        <div class="level-row">
+          <div class="level-icon">😴</div>
+          <div style="flex:1">
+            <div style="font-size:0.78rem;margin-bottom:0.2rem;">Mengapa kita butuh tidur?</div>
+            <div class="level-bar-track"><div class="level-bar-fill" style="width:45%;background:var(--accent3)"></div></div>
+          </div>
+          <div class="level-label">Terjawab ~45%</div>
+          <div class="level-q" title="Masih aktif diteliti">?</div>
+        </div>
+        <div class="level-row">
+          <div class="level-icon">❓</div>
+          <div style="flex:1">
+            <div style="font-size:0.78rem;margin-bottom:0.2rem;color:var(--accent4);">Mengapa ada pengalaman sama sekali?</div>
+            <div class="level-bar-track"><div class="level-bar-fill" style="width:3%;background:var(--accent4)"></div></div>
+          </div>
+          <div class="level-label" style="color:var(--accent4);">Hard Problem</div>
+          <div class="level-q" title="Ini bukan easy problem — beda jenis pertanyaan">✗</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab2-hard">
+      <p style="font-size:0.8rem;color:var(--text-dim);margin-bottom:0.8rem;line-height:1.7;">
+        David Chalmers (1995): ada satu pertanyaan yang tidak bisa dijawab dengan menjelaskan mekanisme, betapapun lengkapnya.
+      </p>
+
+      <div class="quote-block">
+        "Bahkan jika kita menjelaskan seluruh fungsi otak secara sempurna — mengapa ada sesuatu yang <em>terasa seperti</em> melihat merah, merasakan sakit, mendengar musik? Mengapa proses fisik tidak terjadi dalam kegelapan total?"
+        <div class="quote-source">— David Chalmers, The Conscious Mind, 1996</div>
+      </div>
+
+      <div style="margin-top:0.8rem;">
+        <div style="font-size:0.78rem;color:var(--text-dim);margin-bottom:0.4rem;">Geser untuk eksplorasi:</div>
+        <div class="sl-group">
+          <div class="sl-head"><span style="font-size:0.82rem;">Kelengkapan penjelasan neurosains</span><span class="sl-val" id="v-neuro">50%</span></div>
+          <div class="sl-note">Seberapa lengkap kita jelaskan seluruh mekanisme otak</div>
+          <input type="range" id="sl-neuro" min="0" max="100" value="50" oninput="updateHard()">
+        </div>
+        <div class="insight-box" id="hard-insight" style="border-color:var(--accent4);">
+          Meski penjelasan mekanisme 50% lengkap — pertanyaan <em>"mengapa ada rasa?"</em> tetap tidak terjawab.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROBABILITAS ABIOGENESIS -->
+  <div class="panel">
+    <div class="ptitle">KALKULATOR PROBABILITAS — INFORMASI PERTAMA</div>
+    <p style="font-size:0.8rem;color:var(--text-dim);margin-bottom:0.8rem;line-height:1.7;">
+      Berapa peluang satu protein fungsional muncul secara acak? Ubah parameter:
+    </p>
+
+    <div class="sl-group">
+      <div class="sl-head"><span style="font-size:0.82rem;">Panjang rantai asam amino</span><span class="sl-val" id="v-aa">150</span></div>
+      <div class="sl-note">Protein fungsional minimal ~50–300 asam amino</div>
+      <input type="range" id="sl-aa" min="10" max="300" value="150" oninput="updateProb()">
+    </div>
+
+    <div class="sl-group">
+      <div class="sl-head"><span style="font-size:0.82rem;">Toleransi kesalahan urutan</span><span class="sl-val" id="v-tol">1%</span></div>
+      <div class="sl-note">Seberapa banyak variasi yang masih menghasilkan protein fungsional</div>
+      <input type="range" id="sl-tol" min="1" max="30" value="1" oninput="updateProb()">
+    </div>
+
+    <div class="sl-group">
+      <div class="sl-head"><span style="font-size:0.82rem;">Jumlah percobaan per tahun (×10⁹)</span><span class="sl-val" id="v-trials">1</span></div>
+      <div class="sl-note">Perkiraan jumlah reaksi kimia di lautan purba per tahun</div>
+      <input type="range" id="sl-trials" min="1" max="100" value="1" oninput="updateProb()">
+    </div>
+
+    <div class="prob-display" id="prob-display">10⁻¹⁸⁰</div>
+    <div class="prob-context" id="prob-context">Lebih kecil dari jumlah atom di alam semesta yang bisa diobservasi (~10⁸⁰)</div>
+
+    <div class="insight-box" id="prob-insight" style="border-color:var(--accent3);">
+      Ini bukan argumen teologi. Ini adalah <em>batas matematika yang jujur</em> — yang saintisme sering melewatinya terlalu cepat.
+    </div>
+  </div>
+
+  <!-- SAINTISME METER -->
+  <div class="panel">
+    <div class="ptitle">SPEKTRUM EPISTEMOLOGIS</div>
+    <p style="font-size:0.8rem;color:var(--text-dim);margin-bottom:0.8rem;line-height:1.7;">
+      Di mana posisi sebuah klaim dalam spektrum kejujuran intelektual? Pilih klaim:
+    </p>
+
+    <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1rem;" id="claimBtns"></div>
+
+    <div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.3rem;font-family:var(--mono);">POSISI DALAM SPEKTRUM:</div>
+    <div class="meter-wrap">
+      <div class="meter-fill" id="meter-fill" style="width:50%;"></div>
+    </div>
+    <div class="meter-labels">
+      <span>Saintisme Keras ←</span>
+      <span>Agnostik/Terbuka</span>
+      <span>→ Dogmatisme</span>
+    </div>
+
+    <div class="insight-box" id="claim-insight" style="margin-top:0.8rem;">
+      Pilih klaim di atas untuk melihat analisisnya.
+    </div>
+
+    <div class="sep"></div>
+
+    <div class="quote-block" style="font-size:0.8rem;">
+      Saintisme melakukan hal yang tak saintifik: menutup pertanyaan dengan klaim "pada prinsipnya sudah bisa dijelaskan" — sambil tidak bisa menjelaskan dari mana <em style="color:var(--accent2)">makna, nilai, dan kesadaran</em> itu muncul.
+      <div class="quote-source">— Dari percakapan ini</div>
+    </div>
+  </div>
+
+  <!-- PANEL BAWAH: PERTANYAAN YANG TERSISA -->
+  <div class="panel full">
+    <div class="ptitle">TIGA PERTANYAAN YANG TETAP TERBUKA — DAN MENGAPA ITU PENTING</div>
+    <div class="grid3">
+      <div class="card">
+        <strong>Dari mana informasi?</strong>
+        C, H, O, N tidak membawa instruksi. Atom karbon tidak "tahu" apakah ia membangun selulosa atau sianida. Yang menentukan adalah <em>urutan</em> — yang tersimpan dalam DNA. Tapi sistem pembacaan DNA membutuhkan protein. Protein membutuhkan DNA untuk dibuat.
+        <br><br>
+        <span class="tag open">Belum terjawab</span>
+        <span class="tag">Lingkaran bootstrap</span>
+      </div>
+      <div class="card">
+        <strong>Dari mana kesadaran?</strong>
+        Kita bisa jelaskan seluruh kimia cinta — oksitosin, dopamin, aktivasi prefrontal. Tapi tidak ada satu pun dari itu yang menyentuh <em>mengapa ada rasa</em>. Zombie filosofis — identik fisik dengan manusia tapi tanpa pengalaman — tidak bisa dibuktikan mustahil oleh sains.
+        <br><br>
+        <span class="tag open">Hard problem</span>
+        <span class="tag">Chalmers, 1995</span>
+      </div>
+      <div class="card">
+        <strong>Dari mana makna?</strong>
+        Sebelum sains berjalan, seseorang sudah harus percaya: alam bisa dipahami, kebenaran bernilai, usaha layak dilakukan. Sains tidak bisa membuktikan bahwa sains layak dilakukan — itu <em>lingkaran</em>. Makna mendahului sains, tapi sains tidak bisa memproduksinya.
+        <br><br>
+        <span class="tag open">Pra-saintifik</span>
+        <span class="tag">Wigner, Wheeler</span>
+      </div>
+    </div>
+
+    <div style="margin-top:1.2rem;padding:1.1rem;background:var(--bg);border:1px solid var(--border);border-left:3px solid var(--accent3);border-radius:0 3px 3px 0;font-size:0.85rem;line-height:1.8;">
+      <div style="font-family:var(--mono);font-size:0.68rem;color:var(--text-dim);letter-spacing:0.1em;margin-bottom:0.5rem;">DISTINGSI TERPENTING</div>
+      Saintisme menutup ketiga pertanyaan ini dengan berkata <em style="color:var(--accent4)">"pada prinsipnya sudah bisa dijelaskan."</em>
+      Sikap ilmiah yang jujur berkata: <em style="color:var(--accent2)">"Kami belum tahu — dan ketidaktahuan ini bukan kegagalan sementara, melainkan mungkin batas struktural dari pertanyaan jenis ini."</em>
+      <br><br>
+      Seseorang yang merenungi hal ini lalu <em style="color:var(--accent3)">terharu dan bertuhan</em> — tidak sedang melompat. Ia sedang merespons dengan jujur terhadap apa yang memang ada di sana.
+      <br><br>
+      <span style="direction:rtl;display:block;text-align:right;color:var(--accent3);font-size:1rem;">إِنَّمَا يَخْشَى اللَّهَ مِنْ عِبَادِهِ الْعُلَمَاءُ</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ==========================================
+// ALPHA MACHINE
+// ==========================================
+const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('');
+const ARABIC = 'كتابعلمنورحقصدق'.split('');
+const DNA_BASES = ['A','T','G','C'];
+
+let selectedLetters = [];
+
+const MEANINGS = {
+  'KEHIDUPAN': 'Kata bermakna dalam Bahasa Indonesia — sama persis unsurnya dengan noise, berbeda di urutan.',
+  'ATGCATGC': 'Urutan DNA — 4 "huruf" yang sama, tapi urutannya mengkode instruksi biologis spesifik.',
+  'KITAB': 'كِتَاب — dari akar k-t-b, sama dengan كَتَبَ dan كَاتِب. Urutan yang sama, makna berbeda.',
+  'NUR': 'نُور — cahaya. Tiga huruf yang sama bisa jadi نَارٌ (api) jika diubah satu harakat.',
+};
+
+function renderAlpha() {
+  const row = document.getElementById('alphaRow');
+  row.innerHTML = [...LETTERS, ...ARABIC.slice(0,8)].map(l =>
+    `<div class="alpha-cell" onclick="toggleLetter('${l}')" id="ac-${l.charCodeAt(0)}">${l}</div>`
+  ).join('');
+}
+
+function toggleLetter(l) {
+  const idx = selectedLetters.indexOf(l);
+  if (idx >= 0) selectedLetters.splice(idx, 1);
+  else selectedLetters.push(l);
+  updateAlpha();
+}
+
+function updateAlpha() {
+  const out = selectedLetters.join('');
+  document.getElementById('alphaOutput').textContent = out || '—';
+  document.getElementById('cnt-elem').textContent = new Set(selectedLetters).size;
+  document.getElementById('cnt-seq').textContent = selectedLetters.length > 0 ? selectedLetters.length + ' posisi' : '—';
+
+  // Check meaning
+  let status = 'Noise / Belum bermakna';
+  let insight = `<em>${selectedLetters.length} huruf</em> telah dipilih. Unsur yang sama bisa membentuk makna yang berbeda atau tidak bermakna sama sekali — tergantung urutan dan konteks. Inilah yang terjadi pada DNA: 4 huruf, miliaran kombinasi, hanya sebagian kecil yang "bermakna" secara biologis.`;
+  let insightColor = 'var(--accent4)';
+
+  for (const [word, desc] of Object.entries(MEANINGS)) {
+    if (out.toUpperCase().includes(word) || [...word].every(c => selectedLetters.includes(c))) {
+      status = 'Bermakna — urutan membentuk kata/instruksi';
+      insight = `<em>${out}</em> — ${desc}<br><br>Perhatikan: unsur-unsurnya tidak berubah. Yang berubah adalah <em>urutan dan konteks</em>. Dari mana "sistem" yang menetapkan bahwa urutan tertentu bermakna itu pertama kali ada?`;
+      insightColor = 'var(--accent2)';
+      break;
+    }
+  }
+
+  if (selectedLetters.length === 0) {
+    status = '—';
+    insight = 'Pilih huruf untuk memulai eksplorasi...';
+    insightColor = 'var(--accent)';
+  }
+
+  document.getElementById('cnt-status').textContent = status;
+  document.getElementById('cnt-status').style.color = insightColor;
+  document.getElementById('alphaInsight').innerHTML = insight;
+  document.getElementById('alphaInsight').style.borderColor = insightColor;
+}
+
+function randomLetters() {
+  selectedLetters = Array.from({length: 6+Math.floor(Math.random()*6)}, () =>
+    LETTERS[Math.floor(Math.random()*LETTERS.length)]
+  );
+  updateAlpha();
+}
+
+function setWord(w) {
+  selectedLetters = w.split('');
+  updateAlpha();
+}
+
+function clearLetters() {
+  selectedLetters = [];
+  updateAlpha();
+}
+
+// ==========================================
+// HARD PROBLEM
+// ==========================================
+function switchTab2(id) {
+  document.querySelectorAll('.tabs .tab').forEach((t,i) => {
+    t.classList.toggle('active', ['easy','hard'][i] === id);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => {
+    c.classList.toggle('active', c.id === 'tab2-'+id);
+  });
+}
+
+function updateHard() {
+  const v = +document.getElementById('sl-neuro').value;
+  document.getElementById('v-neuro').textContent = v + '%';
+  const el = document.getElementById('hard-insight');
+  if (v < 30) {
+    el.innerHTML = `Penjelasan ${v}% lengkap. Bahkan di sini pun pertanyaan "mengapa ada rasa?" belum muncul — kita masih di level mekanisme dasar.`;
+  } else if (v < 70) {
+    el.innerHTML = `Penjelasan ${v}% lengkap. Kita sudah bisa menjelaskan banyak mekanisme — tapi <em>pertanyaan tentang pengalaman subjektif belum satu kali pun tersentuh</em>. Ia beda jenis.`;
+  } else if (v < 95) {
+    el.innerHTML = `Penjelasan ${v}% lengkap — hampir sempurna. Namun seseorang yang melihat merah, merasakan sakit, mendengar musik — pengalaman itu sendiri belum dijelaskan satu kata pun. Penjelasan mekanisme tidak menyentuh <em>mengapa ada yang merasakan</em>.`;
+  } else {
+    el.innerHTML = `Penjelasan <em>100% lengkap</em> — seluruh mekanisme otak dipahami sempurna. Dan tetap: pertanyaan "mengapa ada pengalaman?" tidak terjawab. Ini bukan kekurangan data — ini pertanyaan yang <em>berbeda jenis</em> dari semua pertanyaan lainnya.`;
+  }
+}
+
+// ==========================================
+// PROBABILITAS
+// ==========================================
+function updateProb() {
+  const aa = +document.getElementById('sl-aa').value;
+  const tol = +document.getElementById('sl-tol').value;
+  const trials = +document.getElementById('sl-trials').value;
+
+  document.getElementById('v-aa').textContent = aa;
+  document.getElementById('v-tol').textContent = tol + '%';
+  document.getElementById('v-trials').textContent = trials;
+
+  // 20 amino acids, tolerance reduces search space
+  const tolFactor = tol / 100;
+  const searchSpace = 20;
+  const effectiveExp = Math.round(aa * Math.log10(searchSpace) * (1 - tolFactor * 0.8));
+  const universeAge = 1.38e10; // years
+  const trialsTotal = trials * 1e9 * universeAge;
+  const trialsExp = Math.round(Math.log10(trialsTotal));
+  const netExp = effectiveExp - trialsExp;
+
+  let display, context, color;
+
+  if (netExp > 50) {
+    display = `10⁻${netExp}`;
+    context = `Jauh lebih kecil dari jumlah atom di alam semesta yang bisa diobservasi (~10⁸⁰). Secara matematis mustahil.`;
+    color = 'var(--accent4)';
+  } else if (netExp > 10) {
+    display = `10⁻${netExp}`;
+    context = `Sangat kecil — bahkan dengan seluruh waktu alam semesta dan kondisi paling optimis.`;
+    color = 'var(--accent3)';
+  } else if (netExp > 0) {
+    display = `10⁻${netExp}`;
+    context = `Sangat kecil, tapi tidak mustahil secara absolut dengan toleransi tinggi dan percobaan masif.`;
+    color = 'var(--accent3)';
+  } else {
+    display = `~1`;
+    context = `Dengan toleransi sangat tinggi dan percobaan masif, kemungkinan mendekati 1 — tapi ini berarti protein hampir tidak perlu spesifik.`;
+    color = 'var(--accent2)';
+  }
+
+  document.getElementById('prob-display').textContent = display;
+  document.getElementById('prob-display').style.color = color;
+  document.getElementById('prob-context').textContent = context;
+
+  const insight = document.getElementById('prob-insight');
+  if (netExp > 50) {
+    insight.innerHTML = `Yockey dan Shannon menunjukkan: ini bukan soal "belum cukup waktu." Ini soal <em>jumlah yang secara matematis melampaui semua sumber daya yang tersedia di alam semesta</em>. Saintisme menjawab dengan "multiverse" — tapi itu bukan jawaban saintifik, itu <em>memindahkan masalah ke tempat yang tidak bisa diverifikasi</em>.`;
+    insight.style.borderColor = 'var(--accent4)';
+  } else {
+    insight.innerHTML = `Dengan toleransi ${tol}% — artinya protein tidak harus sangat spesifik. Tapi semakin longgar toleransinya, semakin dipertanyakan apakah protein itu benar-benar fungsional. Ada tradeoff mendasar antara <em>spesifisitas dan probabilitas</em>.`;
+    insight.style.borderColor = 'var(--accent3)';
+  }
+}
+
+// ==========================================
+// SAINTISME METER
+// ==========================================
+const CLAIMS = [
+  {
+    label: '"Sains sudah jelaskan segalanya"',
+    pos: 5,
+    color: 'var(--accent4)',
+    analysis: `<em>Saintisme keras.</em> Klaim ini tidak saintifik — ia menutup pertanyaan sebelum bertanya. Sains tidak bisa menjelaskan dari mana makna muncul, dari mana kesadaran muncul, dari mana informasi pertama muncul, atau mengapa realitas bisa dipahami sama sekali.`
+  },
+  {
+    label: '"Pada prinsipnya bisa dijelaskan"',
+    pos: 20,
+    color: '#ff9944',
+    analysis: `<em>Saintisme halus</em> — lebih umum dan lebih berbahaya karena terdengar ilmiah. "Pada prinsipnya" adalah klaim besar yang tidak dibuktikan. Ia mengasumsikan bahwa pertanyaan tentang kesadaran, makna, dan informasi adalah pertanyaan mekanisme — padahal belum tentu.`
+  },
+  {
+    label: '"Sains belum tahu, tapi akan tahu"',
+    pos: 35,
+    color: 'var(--accent3)',
+    analysis: `<em>Optimisme induktif</em> — lebih jujur dari saintisme, tapi masih mengandung asumsi tersembunyi: bahwa semua pertanyaan adalah pertanyaan empiris yang bisa dijawab dengan metode sains. Mungkin benar. Mungkin tidak. Keduanya perlu dipertahankan terbuka.`
+  },
+  {
+    label: '"Ini batas sains — bukan kelemahannya"',
+    pos: 60,
+    color: 'var(--accent2)',
+    analysis: `<em>Posisi paling jujur secara epistemologis.</em> Mengakui bahwa ada jenis pertanyaan yang berbeda dari pertanyaan empiris — tanpa menolak sains dan tanpa mengklaim sudah ada jawaban. Ini yang dilakukan Chalmers, Wheeler, dan banyak filsuf sains terbaik.`
+  },
+  {
+    label: '"Tuhan menjelaskan semuanya"',
+    pos: 85,
+    color: '#aa88ff',
+    analysis: `<em>Penutupan prematur dari arah berbeda.</em> Menggunakan Tuhan sebagai jawaban akhir untuk semua pertanyaan adalah sikap yang sama dengan saintisme — menutup pertanyaan terlalu cepat. Berbeda dengan: mengakui keterbatasan sains lalu <em>membiarkan pertanyaan tetap terbuka</em> sambil beragama.`
+  },
+  {
+    label: '"Agama dan sains tak bisa bertemu"',
+    pos: 95,
+    color: 'var(--accent4)',
+    analysis: `<em>Dikotomi palsu.</em> Sains menjawab <em>bagaimana</em>. Pertanyaan tentang <em>mengapa ada sesuatu, dari mana makna, untuk apa</em> — bukan pertanyaan sains. Konflik muncul ketika salah satu mengklaim otoritas di wilayah yang bukan miliknya.`
+  },
+];
+
+function renderClaims() {
+  const wrap = document.getElementById('claimBtns');
+  wrap.innerHTML = CLAIMS.map((c,i) =>
+    `<button class="act" onclick="selectClaim(${i})">${c.label}</button>`
+  ).join('');
+}
+
+function selectClaim(i) {
+  const c = CLAIMS[i];
+  document.getElementById('meter-fill').style.width = c.pos + '%';
+  document.getElementById('meter-fill').style.background =
+    `linear-gradient(90deg, var(--accent4), ${c.color})`;
+  document.getElementById('claim-insight').innerHTML = c.analysis;
+  document.getElementById('claim-insight').style.borderColor = c.color;
+
+  document.querySelectorAll('#claimBtns .act').forEach((b,j) => {
+    b.classList.toggle('on', j === i);
+  });
+}
+
+// ==========================================
+// INIT
+// ==========================================
+renderAlpha();
+renderClaims();
+updateAlpha();
+updateHard();
+updateProb();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

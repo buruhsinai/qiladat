@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulasi Roda Bergigi Leibniz — JAZMI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&display=swap');
+
+:root{
+  --bg:#12141c; --bg-panel:#1b1f2b; --bg-panel-2:#20263a;
+  --line:#333a4f; --text:#eee7d6; --text-dim:#a9a6ac;
+  --gold:#c9a15a; --gold-soft:#8a713c; --teal:#5a9c92; --radius:10px;
+}
+*{box-sizing:border-box;}
+body{ margin:0; background:var(--bg); color:var(--text); font-family:'Karla',sans-serif; line-height:1.6; }
+h1,h2,h3{ font-family:'Fraunces',serif; font-weight:600; margin:0 0 0.5em; }
+.wrap{ max-width:780px; margin:0 auto; padding:0 20px; }
+
+.hero{ padding:52px 0 34px; border-bottom:1px solid var(--line); text-align:center; }
+.hero .eyebrow{ text-transform:uppercase; font-size:0.72rem; letter-spacing:2.5px; color:var(--gold); margin-bottom:12px; }
+.hero h1{ font-size:clamp(1.6rem,5vw,2.4rem); color:#fff; }
+.hero p.tag{ color:var(--text-dim); max-width:540px; margin:10px auto 0; font-size:0.96rem; }
+
+section{ padding:40px 0; border-bottom:1px solid var(--line); }
+section:last-of-type{ border-bottom:none; }
+.kicker{ display:flex; align-items:center; gap:10px; margin-bottom:18px; }
+.kicker .num{ font-family:'Fraunces',serif; color:var(--gold); font-size:0.85rem; border:1px solid var(--gold-soft); border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.kicker h2{ font-size:1.25rem; margin:0; color:#fff; }
+p{ color:var(--text); }
+p.dim{ color:var(--text-dim); font-size:0.9rem; }
+.panel{ background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-top:16px; }
+
+/* SIM LAYOUT */
+.sim-grid{ display:flex; flex-wrap:wrap; gap:22px; align-items:flex-start; }
+.sim-visual{ flex:1; min-width:220px; text-align:center; }
+.sim-controls{ flex:1; min-width:220px; }
+
+label{ display:block; font-size:0.82rem; color:var(--text-dim); margin:14px 0 6px; }
+label:first-of-type{ margin-top:0; }
+input[type=range]{ width:100%; accent-color:var(--gold); }
+input[type=number]{
+  width:100%; background:#0e1017; border:1px solid var(--line); color:var(--text);
+  padding:9px 10px; border-radius:8px; font-family:'Karla',sans-serif; font-size:0.95rem;
+}
+.digit-display{ font-family:'Fraunces',serif; font-size:1.6rem; color:var(--gold); text-align:center; margin-top:4px; }
+
+.btn{
+  margin-top:14px; width:100%; background:var(--teal); color:#0e1017; border:none;
+  padding:12px; border-radius:8px; font-weight:700; font-size:0.92rem; cursor:pointer;
+}
+.btn.gold{ background:var(--gold); }
+.btn.outline{ background:transparent; border:1px solid var(--line); color:var(--text-dim); }
+
+.readout{ margin-top:18px; padding:16px; border-radius:var(--radius); background:var(--bg-panel-2); border:1px solid var(--gold-soft); text-align:center; }
+.readout .big{ font-family:'Fraunces',serif; font-size:2.1rem; color:var(--gold); }
+.readout .row{ display:flex; justify-content:space-between; font-size:0.85rem; color:var(--text-dim); padding:5px 14px; border-top:1px dashed var(--line); margin-top:8px; }
+
+.formula{ font-family:'Fraunces',serif; font-style:italic; background:var(--bg-panel-2); border-radius:8px; padding:14px 18px; margin:14px 0; overflow-x:auto; color:#f4eede; }
+ul{ padding-left:20px; }
+ul.batas li{ margin-bottom:10px; }
+.refs li{ margin-bottom:10px; font-size:0.9rem; color:var(--text-dim); }
+.consult{ background:linear-gradient(135deg,var(--bg-panel-2),var(--bg-panel)); border:1px solid var(--gold-soft); border-radius:var(--radius); padding:22px; text-align:center; }
+.consult a.wa{ display:inline-block; margin-top:14px; background:var(--teal); color:#0e1017; text-decoration:none; font-weight:700; padding:12px 26px; border-radius:30px; }
+footer{ text-align:center; padding:26px 0; color:var(--text-dim); font-size:0.8rem; }
+
+#gear{ transition: transform 0.35s ease-out; }
+.tooth-row{ transition: fill 0.2s ease; }
+.tooth-row.aktif{ fill: var(--gold); }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">JAZMI · Sains &amp; Sejarah Komputasi</div>
+    <h1>Simulasi Roda Bergigi Leibniz</h1>
+    <p class="tag">Mekanisme "roda tangga" (Staffelwalze) yang menjadi cara pertama sebuah mesin mekanik mengalikan angka — dengan satu roda bergigi yang bisa mewakili digit 0 sampai 9.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <div class="kicker"><div class="num">1</div><h2>Belajar</h2></div>
+    <p>Mesin hitung mekanik pertama (buatan Blaise Pascal, 1642) hanya bisa menjumlah dan mengurangi. Gottfried Wilhelm Leibniz, mulai tahun 1672, ingin lebih jauh: sebuah mesin yang juga bisa mengalikan dan membagi tanpa manusia harus menjumlah berulang-ulang sendiri secara manual.</p>
+    <p>Jawabannya adalah komponen yang sekarang disebut <strong>roda Leibniz</strong> (Leibniz wheel) — sebuah drum berbentuk silinder dengan gigi yang panjangnya bertingkat seperti anak tangga: baris pertama sepanjang drum hanya bergigi satu, baris kedua bergigi dua, dan seterusnya sampai baris kesembilan bergigi sembilan. Sebuah roda hitung kecil bisa digeser sepanjang drum untuk memilih baris mana yang akan dikaitkan dengannya.</p>
+    <p>Begitu drum diputar satu putaran penuh oleh engkol, roda hitung ikut bergerak maju sebanyak jumlah gigi yang ia kaitkan pada baris tersebut. Jadi kalau roda hitung diposisikan di baris angka 6, satu putaran engkol memajukan hasil sebanyak 6. Putar tiga kali, hasilnya maju 18 — perkalian 6×3 terjadi lewat penjumlahan berulang yang dimesinkan, bukan lewat tabel perkalian yang dihafal.</p>
+    <p class="dim">Mesin asli Leibniz (selesai 1694, kini tersimpan di Hanover) punya 8 digit input dan akumulator 16 digit, dengan drum-drum ini disusun berjajar untuk tiap posisi angka. Sayangnya mekanisme <em>carry</em> (menyimpan kelebihan ke digit berikutnya) pada mesin aslinya cacat desain, sehingga mesinnya tidak pernah benar-benar bisa diandalkan pada masanya — meski prinsip roda bertingkatnya sendiri dipakai pada kalkulator mekanik selama hampir 300 tahun sesudahnya, sampai era kalkulator saku Curta di tahun 1970-an.</p>
+  </section>
+
+  <section id="simulasi">
+    <div class="kicker"><div class="num">2</div><h2>Simulasi</h2></div>
+    <p class="dim">Ini simulasi edukatif satu kolom digit — bukan kalkulator praktis. Geser posisi roda hitung untuk memilih angka, lalu putar engkol.</p>
+
+    <div class="panel">
+      <div class="sim-grid">
+        <div class="sim-visual">
+          <svg id="drum-svg" viewBox="0 0 200 220" width="100%" style="max-width:220px;">
+            <!-- drum body -->
+            <rect x="70" y="10" width="24" height="200" rx="4" fill="#2a2f42" stroke="#555c78" stroke-width="1.5"/>
+            <!-- 9 stepped teeth rows -->
+            <g id="teeth-rows"></g>
+            <!-- counting wheel (pinion) -->
+            <g id="gear">
+              <circle id="gear-circle" cx="140" cy="120" r="16" fill="#0e1017" stroke="var(--gold)" stroke-width="2.5"/>
+              <line x1="140" y1="104" x2="140" y2="136" stroke="var(--gold)" stroke-width="2"/>
+              <line x1="124" y1="120" x2="156" y2="120" stroke="var(--gold)" stroke-width="2"/>
+            </g>
+            <line id="link-line" x1="94" y1="120" x2="124" y2="120" stroke="var(--gold)" stroke-width="2" stroke-dasharray="2,2"/>
+          </svg>
+          <div class="digit-display" id="pos-label">Posisi: 0</div>
+        </div>
+
+        <div class="sim-controls">
+          <label>Posisi roda hitung (digit pengali), 0–9</label>
+          <input type="range" id="posisi" min="0" max="9" value="0" step="1" oninput="ubahPosisi(this.value)">
+          <label>Jumlah putaran engkol (pengali)</label>
+          <input type="number" id="putaran" min="0" max="20" value="3">
+          <button class="btn gold" onclick="putarOtomatis()">⚙️ Putar engkol otomatis</button>
+          <button class="btn outline" onclick="resetSim()">Reset</button>
+        </div>
+      </div>
+
+      <div class="readout">
+        <div class="big" id="hasil-akhir">0</div>
+        <div class="row"><span>Digit terpasang</span><span id="ro-digit">0</span></div>
+        <div class="row"><span>Jumlah putaran</span><span id="ro-putar">0</span></div>
+        <div class="row"><span>Ekspresi</span><span id="ro-expr">0 × 0 = 0</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="metode">
+    <div class="kicker"><div class="num">3</div><h2>Metode</h2></div>
+    <p>Prinsipnya murni penjumlahan berulang yang dimesinkan lewat geometri gigi:</p>
+    <div class="formula">hasil = digit × putaran<br>(setiap satu putaran engkol menambahkan sejumlah "digit" ke akumulator)</div>
+    <p class="dim">Pada mesin asli, digit tiap posisi angka (satuan, puluhan, dst.) diatur lewat drum yang berbeda, dan seluruh drum diputar bersama oleh satu engkol utama — lalu sebuah "kereta geser" (carriage) dipindah satu posisi setiap kali berpindah ke digit pengali berikutnya, sehingga nilai tempat (satuan/puluhan/ratusan) tetap benar.</p>
+  </section>
+
+  <section id="batasan">
+    <div class="kicker"><div class="num">4</div><h2>Batasan</h2></div>
+    <ul class="batas">
+      <li>Simulasi ini hanya menampilkan <strong>satu kolom digit</strong>, bukan mesin 8-digit input/16-digit akumulator seperti mesin aslinya.</li>
+      <li>Mekanisme <em>carry</em> antar-digit (yang justru menjadi titik lemah mesin asli Leibniz) tidak dimodelkan di sini — simulasi ini murni demonstrasi prinsip roda bertingkat, bukan replika presisi mekanis mesinnya.</li>
+      <li>Ini alat bantu belajar konsep, bukan kalkulator untuk pekerjaan hitung sehari-hari.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <div class="kicker"><div class="num">5</div><h2>Referensi</h2></div>
+    <ul class="refs">
+      <li>Wikipedia, <em>"Stepped reckoner"</em> dan <em>"Leibniz wheel"</em> — deskripsi teknis drum bergigi bertingkat dan sejarah mesin 16-digit di Hanover.</li>
+      <li>Computer History Museum, <em>"The Leibniz Step Reckoner and Curta Calculators"</em> — jejak pengaruh mekanisme roda Leibniz hingga kalkulator saku abad ke-20.</li>
+      <li>History of Information, <em>"Leibniz Invents the Stepped Drum Gear Calculator"</em> — konteks sejarah penemuan tahun 1672–1694.</li>
+    </ul>
+  </section>
+
+  <section id="konsultasi">
+    <div class="consult">
+      <h3 style="color:#fff;">Ada yang ingin didiskusikan soal mekanisme ini?</h3>
+      <p class="dim">Alat ini masih pengembangan versi awal. Silakan hubungi kami kalau ada koreksi atau ide pengembangan lanjutan.</p>
+      <a class="wa" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20bertanya%20seputar%20Simulasi%20Roda%20Bergigi%20Leibniz%20JAZMI." target="_blank">Hubungi via WhatsApp</a>
+    </div>
+  </section>
+
+</div>
+<footer>JAZMI — Laboratorium Pengetahuan Digital · Prototipe, belum masuk struktur menu utama.</footer>
+
+<script>
+let posisi = 0;
+let totalPutaran = 0;
+let akumulator = 0;
+
+function gambarGigi(){
+  const g = document.getElementById('teeth-rows');
+  g.innerHTML = '';
+  // 9 rows from top (row 9, longest) to bottom mapped so row index 1..9 top-to-bottom with increasing length
+  for(let i=1; i<=9; i++){
+    const y = 10 + (i-1)*22;
+    const panjang = 6 + i*3; // teeth length grows with digit
+    const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    rect.setAttribute('x', 94);
+    rect.setAttribute('y', y);
+    rect.setAttribute('width', panjang);
+    rect.setAttribute('height', 18);
+    rect.setAttribute('fill', '#555c78');
+    rect.setAttribute('class', 'tooth-row');
+    rect.setAttribute('data-digit', i);
+    rect.setAttribute('id', 'row-'+i);
+    g.appendChild(rect);
+  }
+}
+
+function tandaiBarisAktif(){
+  for(let i=1;i<=9;i++){
+    const el = document.getElementById('row-'+i);
+    if(el) el.classList.toggle('aktif', i===posisi);
+  }
+  const gearY = posisi===0 ? 120 : 10 + (posisi-1)*22 + 9;
+  document.getElementById('gear').setAttribute('transform', 'translate(0,'+(gearY-120)+')');
+  document.getElementById('link-line').setAttribute('y1', gearY);
+  document.getElementById('link-line').setAttribute('y2', gearY);
+}
+
+function ubahPosisi(val){
+  posisi = parseInt(val);
+  document.getElementById('pos-label').textContent = 'Posisi: '+posisi;
+  tandaiBarisAktif();
+  perbaruiReadout();
+}
+
+function perbaruiReadout(putarSaatIni){
+  const p = putarSaatIni!==undefined ? putarSaatIni : totalPutaran;
+  document.getElementById('ro-digit').textContent = posisi;
+  document.getElementById('ro-putar').textContent = p;
+  document.getElementById('hasil-akhir').textContent = akumulator;
+  document.getElementById('ro-expr').textContent = posisi+' × '+p+' = '+akumulator;
+}
+
+function putarOtomatis(){
+  const n = Math.max(0, Math.min(20, parseInt(document.getElementById('putaran').value)||0));
+  totalPutaran = 0; akumulator = 0;
+  let i = 0;
+  const gearEl = document.getElementById('gear-circle');
+  const iv = setInterval(()=>{
+    i++;
+    totalPutaran = i;
+    akumulator += posisi;
+    gearEl.setAttribute('stroke-width', i%2===0 ? 2.5 : 4.5);
+    perbaruiReadout();
+    if(i>=n){ clearInterval(iv); gearEl.setAttribute('stroke-width',2.5); }
+  }, 260);
+}
+
+function resetSim(){
+  posisi = 0; totalPutaran = 0; akumulator = 0;
+  document.getElementById('posisi').value = 0;
+  document.getElementById('pos-label').textContent = 'Posisi: 0';
+  tandaiBarisAktif();
+  perbaruiReadout();
+}
+
+gambarGigi();
+tandaiBarisAktif();
+perbaruiReadout();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

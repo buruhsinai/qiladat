@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Potensial Listrik & Energi Potensial — Alat JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#141922; --panel:#1b2230; --panel-line:#2c3547;
+    --paper:#f2ead9; --paper-line:#d9cba9;
+    --brass:#c19a5b; --brass-bright:#dab476;
+    --azure:#5f8fae; --ember:#c1795a;
+    --pos:#c1595a; --neg:#5f8fae;
+    --probeA:#dab476; --probeB:#8fd0a8;
+    --text:#e9e5da; --text-dim:#8d94a3;
+    --ink-on-paper:#241d10; --ink-on-paper-dim:#6b5f45;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{ background:var(--ink); color:var(--text); font-family:'Karla',sans-serif; line-height:1.5; padding:0 0 64px; }
+  .wrap{ max-width:980px; margin:0 auto; padding:0 20px; }
+
+  header{ padding:48px 0 32px; border-bottom:1px solid var(--panel-line); margin-bottom:32px; }
+  .eyebrow-row{ display:flex; align-items:baseline; gap:10px; margin-bottom:14px; color:var(--brass); font-size:0.9rem; }
+  .eyebrow-row .sep{ color:var(--text-dim); }
+  h1{ font-family:'Fraunces',serif; font-weight:600; font-size:clamp(1.8rem,5vw,2.6rem); line-height:1.15; margin:0 0 14px; color:#f5f1e8; }
+  header p{ color:var(--text-dim); max-width:64ch; font-size:1.02rem; margin:0; }
+  header p em{ color:var(--text); font-style:normal; border-bottom:1px solid var(--brass); }
+
+  .stage{ display:grid; grid-template-columns:1fr minmax(280px,360px); gap:28px; align-items:start; }
+  @media (max-width:820px){ .stage{ grid-template-columns:1fr; } }
+
+  .dial-card{ background:var(--panel); border:1px solid var(--panel-line); border-radius:10px; padding:20px; }
+  #field{ width:100%; height:auto; display:block; touch-action:none; cursor:grab; }
+  .legend{ display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; font-size:0.78rem; color:var(--text-dim); }
+  .legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .dot{ width:11px; height:11px; border-radius:50%; display:inline-block; }
+  .dot.pos{ background:var(--pos); }
+  .dot.neg{ background:var(--neg); }
+  .dot.a{ background:var(--probeA); }
+  .dot.b{ background:var(--probeB); }
+  .hint{ font-size:0.78rem; color:var(--text-dim); margin-top:10px; }
+
+  .controls{ display:flex; flex-direction:column; gap:18px; }
+  .field-card{ background:var(--panel); border:1px solid var(--panel-line); border-radius:10px; padding:18px 18px 20px; }
+  .field-card h2{ font-family:'Fraunces',serif; font-weight:600; font-size:1.05rem; margin:0 0 14px; color:#f5f1e8; }
+
+  .charge-row{ display:flex; align-items:center; gap:8px; margin-bottom:10px; padding:9px 10px; background:var(--ink); border:1px solid var(--panel-line); border-radius:7px; }
+  .charge-row:last-child{ margin-bottom:0; }
+  .charge-dot{ width:14px; height:14px; border-radius:50%; flex-shrink:0; }
+  .charge-row input[type=number]{ width:72px; background:var(--panel); border:1px solid var(--panel-line); color:var(--text); border-radius:5px; padding:6px 7px; font-family:'JetBrains Mono',monospace; font-size:0.85rem; }
+  .charge-row span.unit{ font-size:0.78rem; color:var(--text-dim); }
+  .charge-remove{ margin-left:auto; background:none; border:1px solid var(--panel-line); color:var(--text-dim); border-radius:5px; padding:4px 8px; cursor:pointer; font-size:0.76rem; }
+  .charge-remove:hover{ border-color:var(--ember); color:var(--ember); }
+
+  button.btn-ghost{
+    font-family:'Karla',sans-serif; font-size:0.8rem; font-weight:600;
+    background:transparent; color:var(--text-dim); border:1px solid var(--panel-line); border-radius:6px;
+    padding:8px 12px; cursor:pointer; width:100%; margin-top:6px;
+  }
+  button.btn-ghost:hover:not(:disabled){ color:var(--text); border-color:var(--brass); }
+  button.btn-ghost:disabled{ opacity:0.4; cursor:not-allowed; }
+
+  .qtest-row{ display:flex; align-items:center; gap:8px; }
+  .qtest-row input[type=number]{ width:80px; background:var(--ink); border:1px solid var(--panel-line); color:var(--text); border-radius:5px; padding:7px 8px; font-family:'JetBrains Mono',monospace; font-size:0.88rem; }
+
+  /* ---- Output ---- */
+  .output{ background:var(--paper); border:1px solid var(--paper-line); color:var(--ink-on-paper); border-radius:10px; padding:20px; margin-top:18px; }
+  .output h2{ font-family:'Fraunces',serif; font-size:1.05rem; margin:0 0 14px; color:var(--ink-on-paper); }
+  .stat-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; }
+  .stat{ border-left:3px solid var(--brass); padding-left:12px; }
+  .stat .label{ font-size:0.76rem; color:var(--ink-on-paper-dim); margin-bottom:3px; }
+  .stat .value{ font-family:'Fraunces',serif; font-size:1.2rem; }
+  .stat .sub{ font-size:0.78rem; color:var(--ink-on-paper-dim); margin-top:2px; }
+  .interpret{ margin-top:16px; font-size:0.86rem; padding:12px 14px; border-radius:8px; background:rgba(95,143,174,0.12); color:var(--ink-on-paper); }
+
+  /* ---- Reference / study ---- */
+  .study{ margin-top:52px; }
+  details.section{ border-top:1px solid var(--panel-line); }
+  details.section summary{ cursor:pointer; font-family:'Fraunces',serif; font-size:1.15rem; color:#f5f1e8; padding:16px 0; list-style:none; }
+  details.section summary::-webkit-details-marker{ display:none; }
+  details.section summary::before{ content:'+ '; color:var(--brass); font-family:'Karla',sans-serif; font-weight:700; }
+  details.section[open] summary::before{ content:'– '; }
+  .section-body{ padding:0 0 26px; color:var(--text-dim); font-size:0.95rem; }
+  .section-body p{ margin:0 0 12px; max-width:72ch; }
+  .section-body strong{ color:var(--text); }
+  .formula{
+    font-family:'JetBrains Mono',monospace; background:var(--panel); border:1px solid var(--panel-line);
+    border-radius:8px; padding:12px 14px; color:var(--brass-bright); font-size:0.88rem; margin:10px 0 16px; overflow-x:auto;
+  }
+  .section-body ul{ padding-left:20px; margin:0 0 12px; }
+  .section-body li{ margin-bottom:6px; }
+
+  footer{ margin-top:32px; padding-top:20px; border-top:1px solid var(--panel-line); color:var(--text-dim); font-size:0.82rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow-row">JAZMI <span class="sep">/</span> Bank Alat <span class="sep">/</span> Fisika — sambungan dari Hukum Coulomb</div>
+    <h1>Potensial Listrik &amp; Energi Potensial</h1>
+    <p>Medan listrik (alat sebelumnya) adalah besaran <em>vektor</em> — punya arah. Potensial listrik adalah besaran <em>skalar</em> dari muatan yang sama persis — tidak punya arah, tapi jauh lebih mudah dijumlahkan (tinggal ditambah biasa, tanpa vektor). Garis-garis kontur di bawah adalah <em>permukaan ekuipotensial</em>: sepanjang satu garis, potensialnya sama di mana pun — memindah muatan sepanjang garis itu tidak butuh usaha sama sekali.</p>
+  </header>
+
+  <div class="stage">
+    <div class="dial-card">
+      <svg id="field" viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="legend">
+        <span><span class="dot pos"></span>Muatan positif</span>
+        <span><span class="dot neg"></span>Muatan negatif</span>
+        <span><span class="dot a"></span>Titik A</span>
+        <span><span class="dot b"></span>Titik B</span>
+      </div>
+      <div class="hint">Seret bulatan warna untuk memindah muatan; seret titik A &amp; B untuk membandingkan potensial di dua tempat berbeda. Garis kontur = permukaan ekuipotensial (semakin rapat, semakin curam perubahan potensialnya).</div>
+    </div>
+
+    <div class="controls">
+      <div class="field-card">
+        <h2>Muatan-muatan</h2>
+        <div id="chargeList"></div>
+        <button class="btn-ghost" id="addChargeBtn" type="button">+ Tambah muatan ketiga</button>
+      </div>
+
+      <div class="field-card">
+        <h2>Muatan uji (untuk usaha &amp; energi)</h2>
+        <div class="qtest-row">
+          <input type="number" id="qtest" step="0.5" value="2">
+          <span class="unit" style="font-size:0.85rem;color:var(--text-dim);">nC — dipindah dari A ke B</span>
+        </div>
+        <div class="hint">Ini muatan bayangan/hipotetis untuk menghitung usaha &amp; energi — bukan muatan sungguhan yang ikut memengaruhi medan.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="output">
+    <h2>Beda Potensial &amp; Usaha, A → B</h2>
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="interpret" id="interpretNote"></div>
+  </div>
+
+  <div class="study">
+    <details class="section" open>
+      <summary>Apa yang sedang dihitung</summary>
+      <div class="section-body">
+        <p><strong>Potensial listrik</strong> di suatu titik akibat satu muatan titik adalah energi potensial per satuan muatan yang akan dimiliki muatan uji +1 Coulomb di titik itu:</p>
+        <div class="formula">V = k · q / r &nbsp;&nbsp;&nbsp; (skalar — bertanda sesuai q, tanpa arah)</div>
+        <p>Karena ini skalar, superposisi dari beberapa muatan tinggal <strong>dijumlahkan langsung</strong> (bukan dijumlah sebagai vektor seperti medan):</p>
+        <div class="formula">V_total = V₁ + V₂ + V₃ + …</div>
+        <p><strong>Energi potensial</strong> antara dua muatan U = k·q₁·q₂/r, dan <strong>usaha</strong> yang dilakukan medan listrik saat muatan uji q berpindah dari titik A ke titik B:</p>
+        <div class="formula">W (oleh medan, A→B) = q · (V_A − V_B) = −ΔU</div>
+        <p>Kalau W positif, medan sendiri yang mendorong muatan itu bergerak (seperti bola menggelinding menuruni bukit). Kalau W negatif, dibutuhkan usaha dari luar untuk memindahkannya (seperti mendorong bola naik).</p>
+      </div>
+    </details>
+
+    <details class="section">
+      <summary>Kenapa garis konturnya berguna</summary>
+      <div class="section-body">
+        <p>Permukaan ekuipotensial selalu <strong>tegak lurus</strong> terhadap garis medan listrik di titik yang sama — kalau Anda menumpuk gambar alat ini dengan alat Medan Listrik sebelumnya, anak panah medan akan selalu memotong garis kontur secara tegak lurus.</p>
+        <p>Coba geser dua muatan sama besar tapi berlawanan tanda (dipol) berdekatan — perhatikan bidang tegak lurus tepat di tengah keduanya selalu berada pada kontur <strong>V = 0</strong>, karena sumbangan potensial dari kedua muatan saling meniadakan persis di sana. Ini kesimetrian yang lebih halus daripada yang terlihat di diagram medan.</p>
+      </div>
+    </details>
+
+    <details class="section">
+      <summary>Sumber &amp; batasan</summary>
+      <div class="section-body">
+        <ul>
+          <li>Titik acuan potensial nol di sini adalah <strong>jarak tak hingga</strong> dari semua muatan — konvensi paling umum dipakai untuk muatan titik, konsisten dengan alat Medan Listrik sebelumnya (k = 8,9875×10⁹ N·m²/C², medium vakum).</li>
+          <li>Kontur digambar lewat pengambilan sampel grid + interpolasi linear antar titik grid (metode <em>marching squares</em> sederhana) — bukan solusi analitik tertutup, jadi kontur sangat dekat muatan bisa sedikit kurang presisi secara visual.</li>
+          <li>Model ini elektrostatik (muatan diam, medium vakum) — sama seperti alat Medan Listrik, tidak memodelkan efek medium/material di sini demi menjaga fokus pada konsep potensial itu sendiri.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <footer>
+    Bagian dari kurikulum laboratorium alat JAZMI — kelanjutan langsung dari Hukum Coulomb &amp; Medan Listrik (bukan dari urutan Tier peta prioritas). Rumus superposisi &amp; usaha diuji dulu lewat kesimetrian dipol dan cross-check energi potensial sebelum dibungkus jadi alat ini.
+  </footer>
+</div>
+
+<script>
+const K0 = 8.9875e9;
+const WORLD = 0.22;
+
+/* ===================== STATE ===================== */
+let charges = [
+  {id:1, q:5,  x:-0.10, y:0},
+  {id:2, q:-5, x:0.10,  y:0}
+];
+let probeA = {x:-0.05, y:0.14};
+let probeB = {x:0.05,  y:-0.14};
+let nextId = 3;
+
+const el = id => document.getElementById(id);
+const chargeListEl = el('chargeList'), addChargeBtn = el('addChargeBtn');
+const qtestEl = el('qtest'), statGrid = el('statGrid'), interpretNote = el('interpretNote');
+const svg = el('field');
+
+qtestEl.addEventListener('input', render);
+addChargeBtn.addEventListener('click', ()=>{
+  if(charges.length>=3) return;
+  charges.push({id:nextId++, q:3, x:0, y:0.10});
+  renderChargeList(); render();
+});
+
+/* ===================== PHYSICS ===================== */
+function potentialAt(px,py, chargeArr){
+  let V=0;
+  chargeArr.forEach(c=>{
+    const dx=px-c.x, dy=py-c.y;
+    const r = Math.max(Math.hypot(dx,dy), 1e-6);
+    V += K0*(c.q*1e-9)/r;
+  });
+  return V;
+}
+
+function fmtNum(x){
+  if(!isFinite(x)) return '—';
+  const ax = Math.abs(x);
+  if(ax !== 0 && (ax >= 1e5 || ax < 1e-3)) return x.toExponential(3);
+  return x.toLocaleString('id-ID', {maximumSignificantDigits:4});
+}
+
+/* ===================== COORD MAPPING ===================== */
+const CX=240, CY=240, PXPM = (480-60)/(WORLD*2);
+function toPx(x,y){ return {px: CX + x*PXPM, py: CY - y*PXPM}; }
+function toWorld(px,py){ return {x:(px-CX)/PXPM, y:(CY-py)/PXPM}; }
+
+/* ===================== CHARGE LIST UI ===================== */
+function renderChargeList(){
+  chargeListEl.innerHTML = '';
+  charges.forEach(c=>{
+    const row = document.createElement('div');
+    row.className = 'charge-row';
+    row.innerHTML = `
+      <span class="charge-dot" style="background:${c.q>=0?'var(--pos)':'var(--neg)'}"></span>
+      <input type="number" step="0.5" value="${c.q}" data-id="${c.id}" class="q-input">
+      <span class="unit">nC</span>
+      ${charges.length>2 ? `<button class="charge-remove" data-id="${c.id}">Hapus</button>` : ''}
+    `;
+    chargeListEl.appendChild(row);
+  });
+  chargeListEl.querySelectorAll('.q-input').forEach(inp=>{
+    inp.addEventListener('input', ()=>{
+      const id = parseInt(inp.dataset.id);
+      const c = charges.find(x=>x.id===id);
+      c.q = parseFloat(inp.value)||0;
+      render();
+    });
+  });
+  chargeListEl.querySelectorAll('.charge-remove').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = parseInt(btn.dataset.id);
+      charges = charges.filter(x=>x.id!==id);
+      renderChargeList(); render();
+    });
+  });
+  addChargeBtn.disabled = charges.length>=3;
+}
+
+/* ===================== DRAG HANDLING ===================== */
+let dragTarget = null;
+
+function svgPointFromEvent(evt){
+  const rect = svg.getBoundingClientRect();
+  const scaleX = 480/rect.width, scaleY = 480/rect.height;
+  const px = (evt.clientX - rect.left)*scaleX;
+  const py = (evt.clientY - rect.top)*scaleY;
+  return {px,py};
+}
+function clampWorld(x,y){
+  const lim = WORLD*0.95;
+  return {x: Math.max(-lim, Math.min(lim,x)), y: Math.max(-lim, Math.min(lim,y))};
+}
+
+svg.addEventListener('pointerdown', (evt)=>{
+  const {px,py} = svgPointFromEvent(evt);
+  let best=null, bestD=22;
+  const pA = toPx(probeA.x,probeA.y), pB = toPx(probeB.x,probeB.y);
+  const dA = Math.hypot(px-pA.px, py-pA.py), dB = Math.hypot(px-pB.px, py-pB.py);
+  if(dA<bestD){ best={type:'A'}; bestD=dA; }
+  if(dB<bestD){ best={type:'B'}; bestD=dB; }
+  charges.forEach(c=>{
+    const cpx = toPx(c.x,c.y);
+    const d = Math.hypot(px-cpx.px, py-cpx.py);
+    if(d<bestD){ best={type:'charge', id:c.id}; bestD=d; }
+  });
+  if(best){ dragTarget = best; svg.setPointerCapture(evt.pointerId); svg.style.cursor='grabbing'; }
+});
+svg.addEventListener('pointermove', (evt)=>{
+  if(!dragTarget) return;
+  const {px,py} = svgPointFromEvent(evt);
+  const w = clampWorld(...Object.values(toWorld(px,py)));
+  if(dragTarget.type==='A'){ probeA.x=w.x; probeA.y=w.y; }
+  else if(dragTarget.type==='B'){ probeB.x=w.x; probeB.y=w.y; }
+  else { const c = charges.find(x=>x.id===dragTarget.id); c.x=w.x; c.y=w.y; }
+  render();
+});
+function endDrag(){ dragTarget=null; svg.style.cursor='grab'; }
+svg.addEventListener('pointerup', endDrag);
+svg.addEventListener('pointercancel', endDrag);
+
+/* ===================== MARCHING SQUARES (kontur ekuipotensial) ===================== */
+function computeContours(chargeArr){
+  const GRID = 46;
+  const lim = WORLD*0.92;
+  const vals = [];
+  for(let j=0;j<=GRID;j++){
+    const row = [];
+    const y = lim - (2*lim)*j/GRID;
+    for(let i=0;i<=GRID;i++){
+      const x = -lim + (2*lim)*i/GRID;
+      row.push(potentialAt(x,y,chargeArr));
+    }
+    vals.push(row);
+  }
+  // pilih level kontur berdasarkan sebaran nilai absolut (skala log supaya merata dekat & jauh dari muatan)
+  let maxAbs = 1;
+  vals.forEach(row=>row.forEach(v=>{ if(isFinite(v)) maxAbs = Math.max(maxAbs, Math.abs(v)); }));
+  const levels = [];
+  const steps = [0.05,0.12,0.25,0.45,0.7];
+  steps.forEach(s=>{ levels.push(maxAbs*s); levels.push(-maxAbs*s); });
+
+  const segmentsByLevel = [];
+  levels.forEach(L=>{
+    const segs = [];
+    for(let j=0;j<GRID;j++){
+      for(let i=0;i<GRID;i++){
+        const x0 = -lim + (2*lim)*i/GRID, x1 = -lim + (2*lim)*(i+1)/GRID;
+        const y0 = lim - (2*lim)*j/GRID, y1 = lim - (2*lim)*(j+1)/GRID;
+        const a = vals[j][i], b = vals[j][i+1], c = vals[j+1][i+1], d = vals[j+1][i];
+        const pts = [];
+        function interp(v1,v2,p1,p2){
+          const t = (L-v1)/(v2-v1);
+          return [p1[0]+(p2[0]-p1[0])*t, p1[1]+(p2[1]-p1[1])*t];
+        }
+        if((a>=L)!==(b>=L)) pts.push(interp(a,b,[x0,y0],[x1,y0]));
+        if((b>=L)!==(c>=L)) pts.push(interp(b,c,[x1,y0],[x1,y1]));
+        if((d>=L)!==(c>=L)) pts.push(interp(d,c,[x0,y1],[x1,y1]));
+        if((a>=L)!==(d>=L)) pts.push(interp(a,d,[x0,y0],[x0,y1]));
+        if(pts.length===2) segs.push(pts);
+      }
+    }
+    segmentsByLevel.push({level:L, segs});
+  });
+  return segmentsByLevel;
+}
+
+/* ===================== SVG RENDER ===================== */
+const NS='http://www.w3.org/2000/svg';
+function svgEl(tag, attrs){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); return e; }
+
+function render(){
+  svg.innerHTML = '';
+  svg.appendChild(svgEl('rect',{x:15,y:15,width:450,height:450,fill:'none',stroke:'#2c3547','stroke-width':1}));
+
+  const contourSets = computeContours(charges);
+  contourSets.forEach(({level,segs})=>{
+    if(segs.length===0) return;
+    const isNeg = level<0;
+    const color = isNeg ? '#5f8fae' : '#c19a5b';
+    const opacity = 0.35 + 0.4*Math.min(1, Math.abs(level)/ (contourSets[contourSets.length-1] ? Math.abs(contourSets[0].level)+1e-9 : 1));
+    segs.forEach(([p1,p2])=>{
+      const a = toPx(p1[0],p1[1]), b = toPx(p2[0],p2[1]);
+      svg.appendChild(svgEl('line',{x1:a.px,y1:a.py,x2:b.px,y2:b.py,stroke:color,'stroke-width':1.3,opacity:0.55}));
+    });
+  });
+
+  // charges
+  charges.forEach(c=>{
+    const {px,py} = toPx(c.x,c.y);
+    const isPos = c.q>=0;
+    const r = 10 + Math.min(12, Math.abs(c.q)*0.9);
+    svg.appendChild(svgEl('circle',{cx:px,cy:py,r, fill: isPos?'#c1595a':'#5f8fae', stroke:'#141922','stroke-width':2}));
+    const t = svgEl('text',{x:px,y:py+5,'text-anchor':'middle','font-family':"'Fraunces',serif",'font-size':15,'font-weight':700,fill:'#141922'});
+    t.textContent = isPos?'+':'−';
+    svg.appendChild(t);
+    const lbl = svgEl('text',{x:px,y:py-r-8,'text-anchor':'middle','font-family':'JetBrains Mono,monospace','font-size':10.5,fill:'#dab476'});
+    lbl.textContent = (c.q>=0?'+':'')+c.q+' nC';
+    svg.appendChild(lbl);
+  });
+
+  // A-B connecting line
+  const pA = toPx(probeA.x,probeA.y), pB = toPx(probeB.x,probeB.y);
+  svg.appendChild(svgEl('line',{x1:pA.px,y1:pA.py,x2:pB.px,y2:pB.py,stroke:'#f5f1e8','stroke-width':1.6,'stroke-dasharray':'5 5',opacity:0.7}));
+
+  // probes
+  svg.appendChild(svgEl('circle',{cx:pA.px,cy:pA.py,r:8,fill:'#dab476',stroke:'#141922','stroke-width':2}));
+  const la = svgEl('text',{x:pA.px,y:pA.py-14,'text-anchor':'middle','font-family':"'Fraunces',serif",'font-size':13,'font-weight':700,fill:'#dab476'});
+  la.textContent = 'A'; svg.appendChild(la);
+
+  svg.appendChild(svgEl('circle',{cx:pB.px,cy:pB.py,r:8,fill:'#8fd0a8',stroke:'#141922','stroke-width':2}));
+  const lb = svgEl('text',{x:pB.px,y:pB.py-14,'text-anchor':'middle','font-family':"'Fraunces',serif",'font-size':13,'font-weight':700,fill:'#8fd0a8'});
+  lb.textContent = 'B'; svg.appendChild(lb);
+
+  /* ---- stats ---- */
+  const VA = potentialAt(probeA.x, probeA.y, charges);
+  const VB = potentialAt(probeB.x, probeB.y, charges);
+  const qtest = parseFloat(qtestEl.value)||0;
+  const W = (qtest*1e-9)*(VA-VB);
+  const dU = -W;
+
+  statGrid.innerHTML = '';
+  [
+    ['Potensial di A (V_A)', fmtNum(VA)+' V', ''],
+    ['Potensial di B (V_B)', fmtNum(VB)+' V', ''],
+    ['Beda potensial (V_A − V_B)', fmtNum(VA-VB)+' V', ''],
+    ['Usaha oleh medan, A→B', fmtNum(W)+' J', ''],
+    ['Perubahan energi potensial (ΔU)', fmtNum(dU)+' J', ''],
+  ].forEach(([label,value,sub])=>{
+    const div = document.createElement('div');
+    div.className='stat';
+    div.innerHTML = `<div class="label">${label}</div><div class="value">${value}</div>${sub?`<div class="sub">${sub}</div>`:''}`;
+    statGrid.appendChild(div);
+  });
+
+  let note;
+  if(Math.abs(VA-VB) < Math.abs(VA)*0.01 + 1e-6){
+    note = 'V_A hampir sama dengan V_B — titik A dan B kira-kira berada pada permukaan ekuipotensial yang sama, jadi memindahkan muatan uji di antara keduanya nyaris tidak butuh usaha.';
+  } else if(W>0){
+    note = 'Usaha bernilai positif — medan listrik sendiri yang mendorong muatan uji dari A ke B, seperti muatan "menggelinding menuruni bukit potensial".';
+  } else {
+    note = 'Usaha bernilai negatif — dibutuhkan usaha dari luar untuk memindahkan muatan uji dari A ke B melawan medan listrik, seperti mendorong sesuatu naik ke bukit potensial.';
+  }
+  interpretNote.textContent = note;
+}
+
+renderChargeList();
+render();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

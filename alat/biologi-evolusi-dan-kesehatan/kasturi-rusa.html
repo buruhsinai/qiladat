@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kasturi Rusa — Laboratorium JAZMI</title>
+<style>
+  :root{
+    --bg:#0a1512; --bg2:#0f1e19; --card:#122420; --card2:#16302a; --line:#1f3d34;
+    --emerald:#22c98a; --emerald-dim:#0e6b4f; --gold:#e0b354; --text:#e9f3ee;
+    --muted:#8fada0; --danger:#e07a5f; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:'Georgia','Iowan Old Style',serif; line-height:1.65;}
+  .sans{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;}
+  header{padding:34px 20px 24px; text-align:center; background:radial-gradient(ellipse at top, #113b2e 0%, var(--bg) 70%); border-bottom:1px solid var(--line);}
+  header .kicker{font-family:-apple-system,sans-serif; letter-spacing:.14em; text-transform:uppercase; font-size:12px; color:var(--gold); margin-bottom:10px;}
+  header h1{font-size:1.5rem; margin:0 0 10px; font-weight:600; line-height:1.35;}
+  header p{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px; max-width:640px; margin:0 auto;}
+  nav.tabs{position:sticky; top:0; z-index:10; display:flex; overflow-x:auto; gap:6px; padding:10px 14px; background:rgba(10,21,18,.96); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); font-family:-apple-system,sans-serif; -webkit-overflow-scrolling:touch;}
+  nav.tabs a{flex:0 0 auto; padding:7px 13px; border-radius:999px; font-size:12.5px; color:var(--muted); text-decoration:none; border:1px solid var(--line); white-space:nowrap;}
+  main{max-width:780px; margin:0 auto; padding:8px 18px 60px;}
+  section{padding:32px 0; border-bottom:1px solid var(--line);}
+  section:last-child{border-bottom:none;}
+  h2{font-size:1.12rem; color:var(--emerald); margin:0 0 6px; display:flex; align-items:center; gap:8px;}
+  h2 .num{font-family:-apple-system,sans-serif; font-size:11px; background:var(--emerald-dim); color:#dff7ec; padding:2px 8px; border-radius:6px;}
+  h3{color:var(--gold); font-size:1rem; margin:20px 0 8px;}
+  p{margin:0 0 14px; font-size:15.5px;}
+  .lead{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px; margin:14px 0;}
+  .qbox{background:var(--card2); border-left:3px solid var(--gold); border-radius:8px; padding:14px 16px; margin:16px 0; font-style:italic; color:#f0e6cc; font-size:14.5px;}
+  ul{padding-left:20px; margin:10px 0;} li{margin-bottom:7px; font-size:15px;}
+  .sourceline{font-family:-apple-system,sans-serif; font-size:11.5px; color:var(--muted); margin-top:6px; padding-top:6px; border-top:1px dashed var(--line);}
+  .warn{background:#241407; border:1px solid #5c3a12; border-radius:10px; padding:14px 16px; margin:14px 0; font-family:-apple-system,sans-serif; font-size:13.5px; color:#f0d3a8;}
+  .warn b{color:var(--gold);}
+  .conserve{background:#1a0f0f; border-left:3px solid var(--danger); border-radius:8px; padding:14px 16px; margin:14px 0; font-family:-apple-system,sans-serif; font-size:14px;}
+  .conserve .lbl{color:var(--danger); font-size:11px; text-transform:uppercase; letter-spacing:.08em; display:block; margin-bottom:6px; font-weight:700;}
+  .insight{background:#0e2a20; border-left:3px solid var(--emerald); border-radius:8px; padding:14px 16px; margin:14px 0; font-family:-apple-system,sans-serif; font-size:14px; color:#dff7ec;}
+  .insight .lbl{color:var(--emerald); font-size:11px; text-transform:uppercase; letter-spacing:.08em; display:block; margin-bottom:6px; font-weight:700;}
+
+  .stage-grid{display:flex; flex-direction:column; gap:8px; margin:14px 0;}
+  .stage-item{display:flex; gap:12px; align-items:flex-start; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px;}
+  .stage-num{flex:0 0 26px; height:26px; border-radius:50%; background:var(--emerald-dim); color:#dff7ec; display:flex; align-items:center; justify-content:center; font-family:-apple-system,sans-serif; font-size:12px; font-weight:700;}
+  .stage-text{font-family:-apple-system,sans-serif; font-size:13.5px; color:var(--text);}
+  .stage-text b{color:var(--gold);}
+
+  .method-compare{display:flex; gap:10px; flex-wrap:wrap; margin:14px 0;}
+  .method-col{flex:1 1 240px; background:var(--card); border-radius:var(--radius); padding:14px; font-family:-apple-system,sans-serif; font-size:13px;}
+  .method-col.trad{border:1.5px solid var(--danger);}
+  .method-col.modern{border:1.5px solid var(--emerald);}
+  .method-col h4{margin:0 0 8px; font-size:14px;}
+  .method-col.trad h4{color:var(--danger);}
+  .method-col.modern h4{color:var(--emerald);}
+
+  .ctrl-card{font-family:-apple-system,sans-serif; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin:14px 0;}
+  .ctrl-card label{font-size:13px; color:var(--muted); display:block; margin-bottom:6px;}
+  .ctrl-card input[type=range]{width:100%; accent-color:var(--emerald); margin-bottom:14px;}
+  .val{color:var(--gold); font-weight:700;}
+  .toggle-btns{display:flex; gap:8px; margin-bottom:14px;}
+  .toggle-btn{flex:1; text-align:center; padding:10px; border-radius:9px; border:1.5px solid var(--line); background:var(--card2); font-size:13px; font-weight:600; color:var(--muted); cursor:pointer;}
+  .toggle-btn.active.trad{background:#3a1414; color:var(--danger); border-color:var(--danger);}
+  .toggle-btn.active.modern{background:#0e2a20; color:var(--emerald); border-color:var(--emerald);}
+
+  .result-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; font-family:-apple-system,sans-serif;}
+  .result-box{background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:12px; text-align:center;}
+  .result-box .rlabel{font-size:11px; color:var(--muted); text-transform:uppercase;}
+  .result-box .rval{font-size:1.3rem; font-weight:800; margin-top:4px;}
+  .result-box.trad .rval{color:var(--danger);}
+  .result-box.modern .rval{color:var(--emerald);}
+
+  .bar-wrap{margin-top:16px; font-family:-apple-system,sans-serif;}
+  .bar-row{display:flex; align-items:center; gap:10px; margin-bottom:10px;}
+  .bar-label{flex:0 0 130px; font-size:12px; color:var(--muted);}
+  .bar-track{flex:1; background:var(--bg2); border-radius:6px; height:22px; overflow:hidden;}
+  .bar-fill{height:100%; border-radius:6px; display:flex; align-items:center; padding-left:6px; font-size:10.5px; color:#0a1512; font-weight:700;}
+
+  .refs{font-family:-apple-system,sans-serif; font-size:12.5px; color:var(--muted);} .refs li{margin-bottom:8px;}
+  footer{text-align:center; padding:30px 20px; color:var(--muted); font-family:-apple-system,sans-serif; font-size:12px;}
+  @media(max-width:420px){ .result-grid{grid-template-columns:1fr;} .bar-label{flex:0 0 95px; font-size:11px;} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kicker">Laboratorium JAZMI · Biologi &amp; Sains Material</div>
+  <h1>Kasturi Rusa: Biologi, Tradisi, dan Timbangan yang Menghancurkan Populasinya</h1>
+  <p>Level 1–5: Belajar → Model → Verifikasi → Eksplorasi. Bukan cuma "kasturi itu wangi mahal" — tapi dari kelenjar apa, lewat proses apa, dan apa yang berubah kalau caranya diganti.</p>
+</header>
+
+<nav class="tabs">
+  <a href="#belajar">Belajar</a>
+  <a href="#pertanyaan">Pertanyaan Ilmiah</a>
+  <a href="#biologi">Biologi Kelenjar</a>
+  <a href="#tradisi">Sejarah &amp; Tradisi</a>
+  <a href="#tahapan">Tahapan Proses</a>
+  <a href="#eksplorasi">Simulator Perbandingan</a>
+  <a href="#verifikasi">Verifikasi</a>
+  <a href="#batasan">Batasan</a>
+  <a href="#referensi">Referensi</a>
+</nav>
+
+<main>
+
+  <section id="belajar">
+    <h2><span class="num">01</span>Belajar</h2>
+    <p>Kasturi (musk) bukan berasal dari tumbuhan seperti kebanyakan wewangian lain — ia sekresi dari kelenjar seekor rusa jantan liar yang hidup di pegunungan tinggi Asia. Selama berabad-abad, kasturi murni tercatat sebagai salah satu zat wangi paling mahal yang pernah diperdagangkan manusia, kadang disebut lebih berharga daripada emas seberat yang sama.</p>
+    <p>Yang membuatnya layak disimulasikan bukan cuma keindahan aromanya, tapi <strong>ongkos biologisnya</strong>: cara tradisional mendapatkan kasturi selama ribuan tahun mengharuskan rusa itu mati. Simulasi di halaman ini akan menunjukkan langsung apa yang terjadi pada populasi rusa kalau permintaan pasar naik, dan apa yang berubah kalau metodenya diganti dengan cara yang tidak mematikan.</p>
+    <div class="qbox">"Satu kantung kasturi mewakili satu ekor rusa yang mati di cara lama — angka itu yang membuat wewangian ini, secara harfiah, dibayar dengan populasi spesiesnya sendiri."</div>
+  </section>
+
+  <section id="pertanyaan">
+    <h2><span class="num">02</span>Pertanyaan Ilmiah</h2>
+    <ul>
+      <li>Kelenjar apa sebenarnya yang menghasilkan kasturi, dan kenapa hanya rusa jantan yang punya?</li>
+      <li>Senyawa apa yang membuat kasturi berbau khas, dan untuk apa sebenarnya senyawa itu bagi si rusa sendiri (bukan bagi manusia)?</li>
+      <li>Bagaimana cara tradisional mendapatkan kasturi, dan kenapa cara itu selalu berakhir dengan kematian rusa?</li>
+      <li>Apakah mungkin mendapatkan kasturi tanpa membunuh rusa-nya — dan kalau mungkin, apa konsekuensinya terhadap jumlah yang bisa dipanen?</li>
+      <li>Kalau permintaan pasar dunia terhadap kasturi dinaikkan, seberapa cepat itu bisa menghabisi populasi liar dibanding kalau dipenuhi lewat cara tidak mematikan?</li>
+    </ul>
+  </section>
+
+  <section id="biologi">
+    <h2><span class="num">03</span>Biologi Kelenjar Kasturi</h2>
+    <p>Kelenjar kasturi (secara anatomis disebut <em>kelenjar preputial</em>) terletak di antara pusar dan alat kelamin rusa jantan dewasa — <strong>betina tidak memilikinya sama sekali</strong>. Kelenjar ini membentuk kantung kecil (disebut "musk pod") yang perlahan mengisi dengan sekresi lilin selama masa pematangan.</p>
+    <ul>
+      <li><strong>Senyawa aktifnya</strong>: sebuah keton bernama <em>muskon (muscone)</em>, yang bertanggung jawab atas aroma khasnya.</li>
+      <li><strong>Fungsi asli bagi si rusa</strong>: bukan untuk manusia sama sekali — muskon diduga kuat berfungsi sebagai penanda wilayah dan daya tarik seksual untuk memikat betina. Riset genetik pada rusa kasturi hutan Tiongkok menemukan rusa jantan yang belum kawin justru menghasilkan muskon lebih banyak daripada yang sudah kawin — konsisten dengan fungsi "menarik pasangan".</li>
+      <li><strong>Tahap pematangan</strong>: sekresi berubah warna seiring waktu — dari krem terang (belum matang) → cokelat kemerahan (setengah matang) → cokelat kehitaman pekat (matang penuh) — proses ini memakan waktu berbulan-bulan.</li>
+      <li><strong>Ada 6 spesies</strong> dalam genus <em>Moschus</em> (famili Moschidae) tersebar dari Himalaya, Tiongkok, hingga Siberia — semuanya berstatus terancam punah.</li>
+    </ul>
+    <div class="sourceline">Sumber: ScienceDirect (Animal Welfare in the Musk Deer), Scientific Reports/Nature (Musk Chemical Composition Chinese Forest Musk Deer), Wikipedia (Deer Musk, Musk).</div>
+  </section>
+
+  <section id="tradisi">
+    <h2><span class="num">04</span>Sejarah &amp; Tradisi</h2>
+    <p>Nama "kasturi" sendiri berasal dari bahasa Sanskerta <em>muṣka</em>. Kasturi diperdagangkan lintas benua lewat jalur perdagangan kuno, dipakai baik sebagai bahan wewangian mewah maupun dalam pengobatan tradisional Tiongkok — dipercaya berkhasiat sebagai perangsang jantung/saraf dan afrodisiak.</p>
+    <p>Dalam khazanah Islam, kata "kasturi" (misk) juga muncul sebagai gambaran keindahan surgawi — Al-Qur'an menyebut minuman penghuni surga yang disegel dengan kasturi (QS. Al-Muthaffifin: 25-26), menempatkannya sebagai simbol kenikmatan tertinggi dalam budaya sastra dan spiritual, jauh melampaui sekadar komoditas dagang.</p>
+    <div class="sourceline">Catatan: bagian ini merangkum makna budaya secara umum, bukan kajian tafsir — untuk pembahasan fiqih/tafsir yang presisi, rujuk kitab tafsir langsung.</div>
+  </section>
+
+  <section id="tahapan">
+    <h2><span class="num">05</span>Tahapan Proses: Dua Jalur yang Sangat Berbeda</h2>
+
+    <div class="method-compare">
+      <div class="method-col trad">
+        <h4>⚠ Cara Tradisional (Mematikan)</h4>
+        <div class="stage-grid">
+          <div class="stage-item"><div class="stage-num">1</div><div class="stage-text">Rusa jantan dewasa diburu di habitat pegunungan liar.</div></div>
+          <div class="stage-item"><div class="stage-num">2</div><div class="stage-text">Rusa <b>dibunuh</b>, lalu seluruh kantung kelenjar diangkat utuh dari tubuhnya.</div></div>
+          <div class="stage-item"><div class="stage-num">3</div><div class="stage-text">Kantung dikeringkan, menghasilkan sekitar <b>25 gram</b> serbuk kasturi kering per ekor (perkiraan umum di literatur).</div></div>
+          <div class="stage-item"><div class="stage-num">4</div><div class="stage-text">Satu rusa = satu kali panen, tidak bisa diulang.</div></div>
+        </div>
+      </div>
+      <div class="method-col modern">
+        <h4>✓ Cara Modern (Non-Lethal / Live Extraction)</h4>
+        <div class="stage-grid">
+          <div class="stage-item"><div class="stage-num">1</div><div class="stage-text">Rusa dipelihara di penangkaran (dimulai di Tiongkok sejak 1958 untuk mengurangi tekanan perburuan liar).</div></div>
+          <div class="stage-item"><div class="stage-num">2</div><div class="stage-text">Rusa jantan disedasi ringan, pangkal kelenjar dijepit.</div></div>
+          <div class="stage-item"><div class="stage-num">3</div><div class="stage-text">Kuret dipakai mengambil sekresi tanpa mengangkat kelenjarnya — rata-rata <b>±0,5 gram</b> per sesi panen (data studi penangkaran).</div></div>
+          <div class="stage-item"><div class="stage-num">4</div><div class="stage-text">Rusa dilepas kembali sehat, bisa dipanen ulang tiap beberapa bulan seiring kelenjarnya matang lagi.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="eksplorasi">
+    <h2><span class="num">06</span>Simulator Perbandingan: Normalnya Begini — Bagaimana Kalau...?</h2>
+    <p class="lead">Tentukan target produksi kasturi per tahun, lalu bandingkan dampaknya kalau dipenuhi lewat cara tradisional vs cara non-lethal.</p>
+
+    <div class="ctrl-card">
+      <label>Target produksi kasturi per tahun: <span class="val" id="targetVal">1000</span> gram</label>
+      <input type="range" id="targetRange" min="100" max="10000" step="100" value="1000">
+
+      <label>Untuk cara non-lethal — jumlah sesi panen per ekor per tahun: <span class="val" id="sesiVal">2</span> kali</label>
+      <input type="range" id="sesiRange" min="1" max="4" step="1" value="2">
+    </div>
+
+    <div class="result-grid">
+      <div class="result-box trad">
+        <div class="rlabel">Cara Tradisional</div>
+        <div class="rval" id="tradResult">40 ekor</div>
+        <div class="rlabel" style="margin-top:4px;">rusa <b>mati</b> per tahun, terus-menerus</div>
+      </div>
+      <div class="result-box modern">
+        <div class="rlabel">Cara Non-Lethal</div>
+        <div class="rval" id="modernResult">1.000 ekor</div>
+        <div class="rlabel" style="margin-top:4px;">rusa hidup dipelihara, dipanen berulang</div>
+      </div>
+    </div>
+
+    <div class="bar-wrap">
+      <div class="bar-row">
+        <div class="bar-label">vs Populasi Liar Tersisa (~66.300, data 2000)</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Tradisional/tahun</div>
+        <div class="bar-track"><div class="bar-fill" id="barTrad" style="background:var(--danger); width:5%;">0%</div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Non-lethal (populasi ternak)</div>
+        <div class="bar-track"><div class="bar-fill" id="barModern" style="background:var(--emerald); width:5%;">0%</div></div>
+      </div>
+    </div>
+
+    <div class="insight">
+      <span class="lbl">Yang terlihat dari simulasi ini</span>
+      <span id="insightText">Geser slider di atas untuk melihat bagaimana dua pendekatan yang sama-sama "menghasilkan kasturi" punya konsekuensi keberlanjutan yang sangat berbeda.</span>
+    </div>
+
+    <div class="conserve">
+      <span class="lbl">Konteks nyata, bukan simulasi</span>
+      Populasi rusa kasturi liar diperkirakan anjlok dari sekitar <strong>2,5 juta ekor pada 1950-an</strong> menjadi hanya sekitar <strong>66.300 ekor pada tahun 2000</strong> — akibat kombinasi perburuan untuk kasturi dan kerusakan habitat. Semua spesies Moschus kini masuk Appendix I CITES (dilindungi penuh dari perdagangan internasional) sejak 1979, dan Tiongkok sudah mengembangkan kasturi sintetis sejak 1994 khusus untuk kebutuhan pengobatan tradisional, guna mengurangi tekanan terhadap populasi liar.
+    </div>
+  </section>
+
+  <section id="verifikasi">
+    <h2><span class="num">07</span>Verifikasi</h2>
+    <ul>
+      <li>Angka ~25 gram/ekor (tradisional) dan ~0,5 gram/sesi (non-lethal) diambil dari literatur ilmiah yang dikutip di Referensi — bukan angka rekaan untuk keperluan simulasi semata.</li>
+      <li>Data populasi liar (2,5 juta → 66.300 ekor) dan status Appendix I CITES sejak 1979 dikonfirmasi dari sumber akademik &amp; konservasi independen (ScienceDirect, IUCN, Scentspiracy/Chemistry of Fragrances).</li>
+      <li>Sesi panen non-lethal 1–4 kali/tahun konsisten dengan siklus pematangan kasturi (muda→sedang→matang) yang berlangsung berbulan-bulan seperti dilaporkan studi mikrobiota kelenjar kasturi.</li>
+    </ul>
+  </section>
+
+  <section id="batasan">
+    <h2><span class="num">08</span>Batasan</h2>
+    <ul>
+      <li>Angka ~25 gram/ekor adalah rata-rata umum di literatur — dalam praktiknya sangat bervariasi tergantung usia, spesies, dan musim.</li>
+      <li>Simulator mengasumsikan seluruh target produksi dipenuhi oleh satu metode saja untuk memperjelas perbandingan — dalam sejarah nyata, pasar kasturi adalah campuran keduanya (dan sebagian besar ilegal/tidak tercatat).</li>
+      <li>Perbandingan dengan "populasi liar 66.300 ekor" memakai data tahun 2000 sebagai patokan historis, bukan angka populasi terkini — populasi liar saat ini kemungkinan sudah berbeda dan perlu dicek dari sumber konservasi terbaru.</li>
+      <li>Ini alat edukatif untuk memahami biologi &amp; dampak konservasi — bukan panduan berburu, menangkap, atau memperdagangkan rusa kasturi maupun produknya, yang keduanya dilindungi hukum internasional (CITES Appendix I) dan hukum banyak negara.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <h2><span class="num">09</span>Referensi</h2>
+    <ul class="refs">
+      <li>ScienceDirect — "Animal welfare in the musk deer" (biologi, sejarah eksploitasi, ekstraksi non-lethal).</li>
+      <li>Wikipedia — "Deer musk", "Musk" (etimologi, metode tradisional, kasturi sintetis Tiongkok 1994).</li>
+      <li>Scientific Reports (Nature) — "The musk chemical composition and microbiota of Chinese forest musk deer males" (lokasi kelenjar, muskon, tahap pematangan, data panen ±0,5g/sesi).</li>
+      <li>PMC/NCBI — "Analysis of Genetic Diversity... Forest Musk Deer Captive Populations" (data populasi 2,5 juta → 66.300 ekor, sejarah penangkaran Tiongkok sejak 1958).</li>
+      <li>Scentspiracy — "The Musks, an Insight" (status CITES 1979, sejarah perdagangan &amp; harga).</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  Laboratorium JAZMI — Jalinan Zamrud Islamiah · Belajar → Model → Uji → Tool<br>
+  Versi pengembangan awal. Silakan diperiksa ulang, dikoreksi, dan didiskusikan lebih lanjut.
+</footer>
+
+<script>
+const targetRange = document.getElementById('targetRange');
+const targetVal = document.getElementById('targetVal');
+const sesiRange = document.getElementById('sesiRange');
+const sesiVal = document.getElementById('sesiVal');
+
+const TRAD_YIELD = 25;   // gram per ekor (mati)
+const MODERN_YIELD = 0.5; // gram per sesi panen
+
+function fmt(n){ return Math.round(n).toLocaleString('id-ID'); }
+
+function update(){
+  const target = parseInt(targetRange.value);
+  const sesi = parseInt(sesiRange.value);
+  targetVal.textContent = fmt(target);
+  sesiVal.textContent = sesi;
+
+  const tradDeer = target / TRAD_YIELD;
+  const modernYieldPerDeerPerYear = MODERN_YIELD * sesi;
+  const modernDeer = target / modernYieldPerDeerPerYear;
+
+  document.getElementById('tradResult').textContent = fmt(tradDeer) + ' ekor';
+  document.getElementById('modernResult').textContent = fmt(modernDeer) + ' ekor';
+
+  const WILD_POP = 66300;
+  const tradPct = Math.min(100, (tradDeer/WILD_POP)*100);
+  const modernPct = Math.min(100, (modernDeer/WILD_POP)*100);
+
+  const barTrad = document.getElementById('barTrad');
+  const barModern = document.getElementById('barModern');
+  barTrad.style.width = Math.max(3,tradPct) + '%';
+  barTrad.textContent = tradPct.toFixed(2) + '%';
+  barModern.style.width = Math.max(3,modernPct) + '%';
+  barModern.textContent = modernPct.toFixed(2) + '%';
+
+  let insight;
+  if(tradDeer > modernDeer * 5){
+    insight = `Untuk target ${fmt(target)} gram/tahun, cara tradisional butuh membunuh ${fmt(tradDeer)} ekor SETIAP TAHUN tanpa henti — sementara cara non-lethal cukup memelihara ${fmt(modernDeer)} ekor yang bisa terus dipanen bertahun-tahun. Angka rusa "mati per tahun" pada cara tradisional akan terus berulang; angka rusa "dipelihara" pada cara non-lethal cukup dipenuhi sekali di awal.`;
+  } else {
+    insight = `Pada target ini, jumlah ekor yang terlibat di kedua metode mulai mendekati — tapi ingat: angka cara tradisional berarti kematian yang berulang tiap tahun, sedangkan angka cara non-lethal adalah populasi ternak yang tetap hidup dan terus produktif.`;
+  }
+  document.getElementById('insightText').textContent = insight;
+}
+
+targetRange.addEventListener('input', update);
+sesiRange.addEventListener('input', update);
+update();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

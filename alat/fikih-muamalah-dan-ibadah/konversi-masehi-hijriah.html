@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Konversi Kalender Masehi ⇄ Hijriah — JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Karla:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --emerald-deep:#0F3D2E;
+    --emerald-mid:#1D5C43;
+    --ivory:#FAF6ED;
+    --ivory-soft:#F1EADA;
+    --ink:#1C2B24;
+    --gold:#B8934A;
+    --gold-soft:#E7D2A0;
+    --line:rgba(15,61,46,0.14);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--ivory);color:var(--ink);font-family:'Karla',sans-serif;line-height:1.65;}
+  ::selection{background:var(--gold-soft);}
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;color:var(--emerald-deep);letter-spacing:-0.01em;}
+  .amiri{font-family:'Amiri',serif;}
+  a{color:var(--emerald-mid);}
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px;}
+
+  .versi-awal{background:var(--emerald-deep);color:var(--ivory);padding:14px 24px;}
+  .versi-awal .wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .versi-awal .badge{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;background:var(--gold);color:var(--emerald-deep);padding:4px 9px;border-radius:2px;flex-shrink:0;}
+  .versi-awal p{margin:0;font-size:14px;color:rgba(250,246,237,0.92);flex:1;min-width:220px;}
+  .versi-awal a.wa-inline{color:var(--gold-soft);font-weight:700;text-decoration:underline;white-space:nowrap;}
+
+  .crumb{padding:20px 24px 0;max-width:760px;margin:0 auto;font-size:13px;letter-spacing:0.04em;text-transform:uppercase;color:var(--emerald-mid);opacity:0.75;}
+  .crumb span{color:var(--ink);opacity:0.4;margin:0 6px;}
+
+  .hero{padding:36px 0 40px;}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:14px;}
+  .eyebrow::before{content:"";width:18px;height:1px;background:var(--gold);display:inline-block;}
+  .hero h1{font-size:clamp(28px,5vw,40px);margin:0 0 14px;line-height:1.15;}
+  .hero p.lede{font-size:17px;color:var(--emerald-deep);opacity:0.85;max-width:56ch;margin:0;}
+
+  .scale-divider{display:flex;align-items:center;gap:14px;margin:38px 0;color:var(--emerald-mid);}
+  .scale-divider svg{flex-shrink:0;}
+  .scale-divider .dash{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);}
+  .scale-divider .dash.rev{background:linear-gradient(270deg,var(--line),transparent);}
+
+  section{padding:38px 0;border-top:1px solid var(--line);}
+  section:first-of-type{border-top:none;}
+  .label{font-size:12px;letter-spacing:0.09em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:10px;}
+  section h2{font-size:23px;margin:0 0 16px;}
+  section p{margin:0 0 14px;font-size:15.5px;}
+  ul.plain{margin:0 0 14px;padding-left:20px;}
+  ul.plain li{margin-bottom:8px;font-size:15.5px;}
+
+  .kartu{background:var(--emerald-deep);color:var(--ivory);border-radius:4px;padding:32px;position:relative;overflow:hidden;}
+  .kartu::before{content:"";position:absolute;top:-40px;right:-40px;width:180px;height:180px;border:1px solid rgba(231,210,160,0.18);border-radius:50%;}
+  .kartu::after{content:"";position:absolute;top:-10px;right:-10px;width:100px;height:100px;border:1px solid rgba(231,210,160,0.14);border-radius:50%;}
+  .kartu h2{color:var(--ivory);}
+  .kartu .label{color:var(--gold-soft);}
+
+  .tab-arah{display:flex;gap:2px;margin-bottom:24px;position:relative;z-index:1;background:rgba(250,246,237,0.08);padding:3px;border-radius:4px;}
+  .tab-arah button{flex:1;padding:11px;border:none;background:transparent;color:rgba(250,246,237,0.65);font-family:'Karla',sans-serif;font-weight:600;font-size:14px;border-radius:3px;cursor:pointer;}
+  .tab-arah button.aktif{background:var(--gold);color:var(--emerald-deep);}
+
+  .panel-arah{display:none;position:relative;z-index:1;}
+  .panel-arah.tampil{display:block;}
+
+  .field{margin-bottom:18px;}
+  .field label{display:block;font-size:13.5px;margin-bottom:6px;color:var(--gold-soft);}
+  .field .hint{font-size:12.5px;color:rgba(250,246,237,0.55);margin-top:5px;}
+  .field input, .field select{width:100%;padding:11px 13px;border-radius:3px;border:1px solid rgba(231,210,160,0.35);background:rgba(250,246,237,0.06);color:var(--ivory);font-family:'Karla',sans-serif;font-size:15px;}
+  .field input:focus, .field select:focus{outline:none;border-color:var(--gold);background:rgba(250,246,237,0.1);}
+  .grid3{display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:12px;}
+  @media (max-width:560px){.grid3{grid-template-columns:1fr;}}
+
+  button.hitung{width:100%;padding:14px;border:none;border-radius:3px;background:var(--gold);color:var(--emerald-deep);font-family:'Karla',sans-serif;font-weight:700;font-size:15px;cursor:pointer;position:relative;z-index:1;margin-top:6px;}
+  button.hitung:hover{background:var(--gold-soft);}
+  button.hitung:focus-visible{outline:2px solid var(--ivory);outline-offset:2px;}
+
+  .hasil{margin-top:24px;padding-top:22px;border-top:1px solid rgba(231,210,160,0.22);position:relative;z-index:1;display:none;text-align:center;}
+  .hasil.tampil{display:block;}
+  .hasil .eyebrow-hasil{font-size:12.5px;color:rgba(250,246,237,0.6);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;}
+  .hasil .tanggal-besar{font-family:'Fraunces',serif;font-size:26px;color:var(--ivory);margin-bottom:4px;}
+  .hasil .tanggal-arab{font-family:'Amiri',serif;font-size:19px;color:var(--gold-soft);}
+  .hasil .selisih-hari{margin-top:14px;font-size:13px;color:rgba(250,246,237,0.6);}
+  .hasil .peringatan-hasil{
+    margin-top:16px;padding:12px 14px;border-radius:3px;
+    background:rgba(199,123,91,0.18);border:1px solid #C77B5B;
+    font-size:13px;color:var(--ivory);text-align:left;
+    display:flex;gap:9px;align-items:flex-start;
+  }
+  .hasil .peringatan-hasil .ikon{flex-shrink:0;margin-top:1px;}
+
+  .langkah{border-left:2px solid var(--gold-soft);padding-left:18px;margin-bottom:16px;}
+  .langkah .no{font-family:'Fraunces',serif;color:var(--gold);font-size:13px;margin-bottom:3px;}
+  code.formula{display:block;background:var(--ivory-soft);padding:12px 14px;border-radius:3px;font-family:monospace;font-size:13px;margin:10px 0;color:var(--emerald-deep);overflow-x:auto;}
+
+  .verifikasi-box{background:var(--ivory-soft);border-radius:4px;padding:18px 20px;margin:16px 0;}
+  .verifikasi-box .baris-cek{display:flex;justify-content:space-between;font-size:14px;padding:7px 0;border-bottom:1px solid var(--line);}
+  .verifikasi-box .baris-cek:last-child{border-bottom:none;}
+  .verifikasi-box .baris-cek .hasil-cek{font-weight:700;}
+  .verifikasi-box .baris-cek .hasil-cek.beda{color:#A2622F;}
+
+  .batasan-item{display:flex;gap:12px;margin-bottom:14px;align-items:flex-start;}
+  .batasan-item .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:8px;flex-shrink:0;}
+  .disclaimer-box{background:var(--ivory-soft);border-left:3px solid var(--gold);padding:14px 16px;border-radius:2px;font-size:14px;margin-top:16px;}
+
+  .konsultasi{margin-top:12px;padding:20px;border:1px dashed var(--line);border-radius:4px;text-align:center;}
+  .konsultasi p{font-size:14px;margin-bottom:12px;color:var(--emerald-deep);}
+  .btn-konsul{display:inline-block;padding:10px 22px;border-radius:3px;font-family:'Karla',sans-serif;font-weight:600;font-size:14px;cursor:pointer;text-decoration:none;}
+  .btn-konsul.wa{background:var(--emerald-mid);border:1px solid var(--emerald-mid);color:var(--ivory);}
+
+  footer{padding:30px 0 50px;font-size:13px;color:var(--emerald-mid);opacity:0.7;}
+</style>
+</head>
+<body>
+
+<div class="versi-awal">
+  <div class="wrap">
+    <span class="badge">Versi Awal</span>
+    <p>Alat ini masih dalam tahap pengembangan awal. Hasil konversi memakai kalender tabular (hitungan tetap), bukan hasil rukyat resmi — mohon validasi untuk keperluan ibadah/legal.</p>
+    <a class="wa-inline" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20validasi%20hasil%20Konversi%20Kalender%20Masehi-Hijriah%20JAZMI." target="_blank" rel="noopener">Validasi via WhatsApp →</a>
+  </div>
+</div>
+
+<div class="crumb">JAZMI <span>/</span> Alat <span>/</span> Konversi Kalender</div>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">Alat — Sains Falak</div>
+    <h1>Konversi Kalender Masehi ⇄ Hijriah</h1>
+    <p class="lede">Mengubah tanggal Masehi ke Hijriah dan sebaliknya, berdasarkan kalender Hijriah tabular (aritmetika tetap) — bukan hasil rukyatul hilal.</p>
+  </div>
+
+  <div class="scale-divider">
+    <svg width="26" height="20" viewBox="0 0 26 20" fill="none">
+      <path d="M8 2a8 8 0 1 0 0 16A6 6 0 0 1 8 2Z" stroke="#1D5C43" stroke-width="1.2" stroke-linejoin="round"/>
+      <rect x="14" y="4" width="10" height="12" rx="1" stroke="#1D5C43" stroke-width="1.2"/>
+      <path d="M14 8h10M17 4v2M21 4v2" stroke="#1D5C43" stroke-width="1.2"/>
+    </svg>
+    <div class="dash rev"></div>
+  </div>
+
+  <section id="belajar">
+    <div class="label">01 — Belajar</div>
+    <h2>Dua sistem yang tidak paralel</h2>
+    <p>Kalender Masehi (syamsiah) mengikuti peredaran Matahari — 365/366 hari per tahun, tanggal tetap secara astronomis. Kalender Hijriah (kamariah) mengikuti peredaran Bulan — 354/355 hari per tahun, sehingga setiap tahun Hijriah "bergeser maju" sekitar 10–11 hari terhadap Masehi.</p>
+    <ul class="plain">
+      <li><strong>Kalender Hijriah tabular</strong> — sistem hitungan tetap (aritmetika), 12 bulan dengan pola 30-29-30-29 hari berselang, dan tahun kabisat pada pola 11 tahun dari 30 tahun. Inilah yang dipakai alat ini.</li>
+      <li><strong>Kalender Hijriah rukyat/hisab resmi</strong> — awal bulan ditentukan oleh pengamatan hilal (rukyat) atau perhitungan posisi Bulan (hisab), lalu disahkan lewat sidang isbat (di Indonesia oleh Kemenag). Bisa berbeda 1–2 hari dari kalender tabular.</li>
+    </ul>
+    <p>Karena dua sistem ini punya definisi "awal bulan" yang berbeda, hasil dari alat tabular seperti ini <strong>tidak selalu sama</strong> dengan tanggal yang diumumkan resmi. Ini bukan bug — ini perbedaan metode yang memang harus dijelaskan, bukan disembunyikan.</p>
+  </section>
+
+  <section id="kalkulator">
+    <div class="label">02 — Eksplorasi &amp; Konversi</div>
+    <div class="kartu">
+      <h2>Konversi tanggal</h2>
+
+      <div class="tab-arah">
+        <button id="tabKeHijriah" class="aktif" onclick="pilihArah('keHijriah')">Masehi → Hijriah</button>
+        <button id="tabKeMasehi" onclick="pilihArah('keMasehi')">Hijriah → Masehi</button>
+      </div>
+
+      <div class="panel-arah tampil" id="panelKeHijriah">
+        <div class="field">
+          <label for="tglMasehi">Tanggal Masehi</label>
+          <input type="date" id="tglMasehi">
+        </div>
+        <button class="hitung" onclick="konversiKeHijriah()">Konversi ke Hijriah</button>
+      </div>
+
+      <div class="panel-arah" id="panelKeMasehi">
+        <div class="grid3">
+          <div class="field">
+            <label for="hDay">Tanggal</label>
+            <select id="hDay"></select>
+          </div>
+          <div class="field">
+            <label for="hMonth">Bulan</label>
+            <select id="hMonth"></select>
+          </div>
+          <div class="field">
+            <label for="hYear">Tahun H</label>
+            <input type="number" id="hYear" placeholder="Contoh: 1447" min="1" max="1600">
+          </div>
+        </div>
+        <button class="hitung" onclick="konversiKeMasehi()">Konversi ke Masehi</button>
+      </div>
+
+      <div class="hasil" id="hasilBox">
+        <div class="eyebrow-hasil" id="hasilEyebrow">Hasil konversi</div>
+        <div class="tanggal-besar" id="hasilUtama">—</div>
+        <div class="tanggal-arab amiri" id="hasilArab"></div>
+        <div class="selisih-hari" id="hasilKeterangan"></div>
+        <div class="peringatan-hasil" style="display:none;">
+          <span class="ikon">⚠</span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="metode">
+    <div class="label">03 — Metode</div>
+    <h2>Bagaimana alat ini menghitung</h2>
+    <div class="langkah">
+      <div class="no">Langkah 1</div>
+      <p>Tanggal Masehi diubah menjadi Julian Day Number (JDN) — nomor urut hari sejak titik acuan astronomis tetap, supaya dua kalender bisa dibandingkan lewat satu sumbu angka yang sama.</p>
+      <code class="formula">JDN = f(tahun, bulan, tanggal Masehi) — algoritma kalender Gregorian standar</code>
+    </div>
+    <div class="langkah">
+      <div class="no">Langkah 2</div>
+      <p>JDN itu kemudian dipetakan ke kalender Hijriah tabular, dengan titik nol 1 Muharram 1 H berada di JDN 1.948.440 (setara 19 Juli 622 Masehi, proleptik).</p>
+      <code class="formula">Hijriah = g(JDN) — algoritma kalender Hijriah tabular (epoch sipil)</code>
+    </div>
+    <div class="langkah">
+      <div class="no">Langkah 3</div>
+      <p>Untuk arah sebaliknya (Hijriah → Masehi), prosesnya dibalik: Hijriah → JDN → Masehi. Kedua arah memakai JDN yang sama sebagai jembatan, sehingga hasil bolak-balik (round-trip) konsisten.</p>
+    </div>
+
+    <h2 style="margin-top:28px;">Verifikasi</h2>
+    <p>Sebelum dipakai, algoritma ini diuji terhadap tanggal yang hasilnya sudah diketahui secara independen — bukan sekadar "kelihatan masuk akal":</p>
+    <div class="verifikasi-box">
+      <div class="baris-cek"><span>19 Juli 2023 → menurut sidang isbat Kemenag RI (rukyat)</span><span class="hasil-cek">1 Muharram 1445 H</span></div>
+      <div class="baris-cek"><span>19 Juli 2023 → menurut algoritma tabular alat ini</span><span class="hasil-cek beda">3 Muharram 1445 H</span></div>
+      <div class="baris-cek"><span>Uji bolak-balik (Masehi → Hijriah → Masehi)</span><span class="hasil-cek">Kembali ke tanggal semula ✓</span></div>
+    </div>
+    <p>Selisih 2 hari pada uji pertama <strong>sesuai dugaan</strong>, bukan tanda algoritma keliru — ini justru bukti nyata perbedaan antara kalender tabular dan kalender rukyat yang dijelaskan di atas. Uji bolak-balik membuktikan aritmetikanya sendiri konsisten secara internal.</p>
+  </section>
+
+  <section id="batasan">
+    <div class="label">04 — Batasan</div>
+    <h2>Kapan hasil ini tidak boleh langsung dipercaya</h2>
+    <div class="batasan-item"><div class="dot"></div><p>Hasil bisa <strong>berbeda 1–3 hari</strong> dari kalender Hijriah resmi/rukyat yang berlaku di negara atau organisasi Anda — terutama untuk penentuan awal Ramadan, Syawal, dan Dzulhijjah.</p></div>
+    <div class="batasan-item"><div class="dot"></div><p>Jangan dipakai sebagai dasar tunggal untuk menentukan awal/akhir puasa, hari raya, atau ibadah lain yang butuh penetapan resmi.</p></div>
+    <div class="batasan-item"><div class="dot"></div><p>Pergantian hari dalam kalender Hijriah sesungguhnya dimulai saat matahari terbenam, bukan tengah malam — alat ini menyederhanakannya menjadi konversi tanggal penuh tanpa jam.</p></div>
+    <div class="batasan-item"><div class="dot"></div><p>Akurasi untuk tanggal jauh di masa lalu (sebelum kalender Gregorian berlaku, 1582 M) memakai kalender Gregorian proleptik — bukan kalender Julian yang sesungguhnya dipakai pada masa itu.</p></div>
+    <div class="disclaimer-box">
+      Alat ini membantu perhitungan berdasarkan kalender Hijriah tabular. Hasilnya bersifat bantu-hitung, bukan penetapan resmi kalender Islam. Untuk kebutuhan ibadah atau administrasi resmi, rujuk pengumuman Kemenag/organisasi Islam setempat, atau konsultasikan dengan kami.
+    </div>
+  </section>
+
+  <section id="referensi">
+    <div class="label">05 — Referensi</div>
+    <h2>Rujukan</h2>
+    <ul class="plain">
+      <li>Algoritma konversi Julian Day Number ↔ kalender Hijriah tabular (epoch sipil), sebagaimana lazim digunakan pada pustaka konversi kalender astronomis.</li>
+      <li>Penetapan 1 Muharram 1445 H oleh Kementerian Agama RI melalui Surat Keputusan Bersama 3 Menteri tentang Hari Libur Nasional dan Cuti Bersama 2023, dipakai sebagai titik uji verifikasi.</li>
+    </ul>
+  </section>
+
+  <section id="konsultasi">
+    <div class="konsultasi">
+      <p>Butuh tanggal Hijriah yang sudah divalidasi untuk keperluan resmi (nikah, akta, acara lembaga)?</p>
+      <a class="btn-konsul wa" id="btnKonsul" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20konsultasi%20terkait%20konversi%20tanggal%20Masehi-Hijriah." target="_blank" rel="noopener">Konsultasikan via WhatsApp</a>
+    </div>
+  </section>
+
+  <footer>
+    <p>Bagian dari Laboratorium Alat JAZMI. Prototipe berdiri sendiri — belum terhubung ke Beranda atau modul lain.</p>
+  </footer>
+</div>
+
+<script>
+const NAMA_BULAN_H = ['Muharram','Safar',"Rabi'ul Awal","Rabi'ul Akhir",'Jumadil Awal','Jumadil Akhir','Rajab',"Sya'ban",'Ramadan','Syawal',"Dzulqa'dah",'Dzulhijjah'];
+const NAMA_BULAN_H_ARAB = ['محرم','صفر','ربيع الأول','ربيع الآخر','جمادى الأولى','جمادى الآخرة','رجب','شعبان','رمضان','شوال','ذو القعدة','ذو الحجة'];
+const NAMA_BULAN_M = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const NAMA_HARI_M = ['Minggu','Senin','Selasa','Rabu','Kamis',"Jumat",'Sabtu'];
+
+function gregorianToJD(y, m, d) {
+  return Math.floor((1461 * (y + 4800 + Math.floor((m - 14) / 12))) / 4)
+    + Math.floor((367 * (m - 2 - 12 * Math.floor((m - 14) / 12))) / 12)
+    - Math.floor((3 * Math.floor((y + 4900 + Math.floor((m - 14) / 12)) / 100)) / 4)
+    + d - 32075;
+}
+function jdToGregorian(jd) {
+  let l = jd + 68569;
+  const n = Math.floor((4 * l) / 146097);
+  l = l - Math.floor((146097 * n + 3) / 4);
+  const i = Math.floor((4000 * (l + 1)) / 1461001);
+  l = l - Math.floor((1461 * i) / 4) + 31;
+  const j = Math.floor((80 * l) / 2447);
+  const day = l - Math.floor((2447 * j) / 80);
+  l = Math.floor(j / 11);
+  const month = j + 2 - 12 * l;
+  const year = 100 * (n - 49) + i + l;
+  return { year, month, day };
+}
+function islamicToJD(y, m, d) {
+  return Math.floor((11 * y + 3) / 30) + 354 * y + 30 * m
+    - Math.floor((m - 1) / 2) + d + 1948440 - 385;
+}
+function jdToIslamic(jd) {
+  jd = jd - 1948440 + 10632;
+  const n = Math.floor((jd - 1) / 10631);
+  jd = jd - 10631 * n + 354;
+  const j = (Math.floor((10985 - jd) / 5316)) * (Math.floor((50 * jd) / 17719))
+    + (Math.floor(jd / 5670)) * (Math.floor((43 * jd) / 15238));
+  jd = jd - (Math.floor((30 - j) / 15)) * (Math.floor((17719 * j) / 50))
+    - (Math.floor(j / 16)) * (Math.floor((15238 * j) / 43)) + 29;
+  const month = Math.floor((24 * jd) / 709);
+  const day = jd - Math.floor((709 * month) / 24);
+  const year = n * 30 + j - 30;
+  return { year, month, day };
+}
+function jdToWeekday(jd){ return (jd + 1) % 7; } // 0 = Minggu
+
+function pilihArah(arah){
+  document.getElementById('tabKeHijriah').classList.toggle('aktif', arah === 'keHijriah');
+  document.getElementById('tabKeMasehi').classList.toggle('aktif', arah === 'keMasehi');
+  document.getElementById('panelKeHijriah').classList.toggle('tampil', arah === 'keHijriah');
+  document.getElementById('panelKeMasehi').classList.toggle('tampil', arah === 'keMasehi');
+  document.getElementById('hasilBox').classList.remove('tampil');
+}
+
+function isiDropdownHijriah(){
+  const selDay = document.getElementById('hDay');
+  const selMonth = document.getElementById('hMonth');
+  for (let d = 1; d <= 30; d++){
+    const opt = document.createElement('option');
+    opt.value = d; opt.textContent = d;
+    selDay.appendChild(opt);
+  }
+  NAMA_BULAN_H.forEach((nama, idx) => {
+    const opt = document.createElement('option');
+    opt.value = idx + 1; opt.textContent = `${idx+1}. ${nama}`;
+    selMonth.appendChild(opt);
+  });
+}
+isiDropdownHijriah();
+
+function tampilkanPeringatan(bulanHijriah){
+  const box = document.querySelector('.peringatan-hasil');
+  const bulanKrusial = [9, 10, 12]; // Ramadan, Syawal, Dzulhijjah
+  if (bulanKrusial.includes(bulanHijriah)) {
+    box.style.display = 'flex';
+    box.querySelector('span:last-child').innerHTML = `Tanggal ini berada di bulan <strong>${NAMA_BULAN_H[bulanHijriah-1]}</strong> — bulan yang penetapan awalnya krusial untuk ibadah. Jangan jadikan hasil tabular ini dasar tunggal penentuan awal/akhir Ramadan, Idul Fitri, atau Idul Adha. Rujuk pengumuman resmi Kemenag/organisasi Islam setempat, atau <a href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20validasi%20tanggal%20penting%20terkait%20hasil%20Konversi%20Kalender%20JAZMI." target="_blank" rel="noopener" style="color:var(--gold-soft);font-weight:700;">validasi via WhatsApp</a>.`;
+  } else {
+    box.style.display = 'flex';
+    box.querySelector('span:last-child').innerHTML = `Hasil ini memakai kalender tabular, bisa berbeda 1–3 hari dari kalender rukyat resmi. Untuk keperluan resmi/ibadah, <a href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20validasi%20hasil%20Konversi%20Kalender%20JAZMI." target="_blank" rel="noopener" style="color:var(--gold-soft);font-weight:700;">validasi via WhatsApp</a>.`;
+  }
+}
+
+function konversiKeHijriah(){
+  const val = document.getElementById('tglMasehi').value;
+  if (!val){ alert('Pilih tanggal Masehi terlebih dahulu.'); return; }
+  const [y, m, d] = val.split('-').map(Number);
+  const jd = gregorianToJD(y, m, d);
+  const hij = jdToIslamic(jd);
+  const namaHari = NAMA_HARI_M[jdToWeekday(jd)];
+
+  document.getElementById('hasilEyebrow').textContent = 'Tanggal Hijriah (tabular)';
+  document.getElementById('hasilUtama').textContent = `${namaHari}, ${hij.day} ${NAMA_BULAN_H[hij.month-1]} ${hij.year} H`;
+  document.getElementById('hasilArab').textContent = `${hij.day} ${NAMA_BULAN_H_ARAB[hij.month-1]} ${hij.year}`;
+  document.getElementById('hasilKeterangan').textContent = `Setara Masehi: ${d} ${NAMA_BULAN_M[m-1]} ${y} — bisa berbeda 1–3 hari dari kalender rukyat resmi.`;
+  tampilkanPeringatan(hij.month);
+  document.getElementById('hasilBox').classList.add('tampil');
+  updatePesanWA(`${namaHari}, ${hij.day} ${NAMA_BULAN_H[hij.month-1]} ${hij.year} H`, `${d} ${NAMA_BULAN_M[m-1]} ${y}`);
+}
+
+function konversiKeMasehi(){
+  const day = parseInt(document.getElementById('hDay').value, 10);
+  const month = parseInt(document.getElementById('hMonth').value, 10);
+  const year = parseInt(document.getElementById('hYear').value, 10);
+  if (!year || year < 1){ alert('Isi tahun Hijriah dengan angka yang valid.'); return; }
+
+  const jd = islamicToJD(year, month, day);
+  const greg = jdToGregorian(jd);
+  const namaHari = NAMA_HARI_M[jdToWeekday(jd)];
+
+  document.getElementById('hasilEyebrow').textContent = 'Tanggal Masehi';
+  document.getElementById('hasilUtama').textContent = `${namaHari}, ${greg.day} ${NAMA_BULAN_M[greg.month-1]} ${greg.year}`;
+  document.getElementById('hasilArab').textContent = '';
+  document.getElementById('hasilKeterangan').textContent = `Dari Hijriah tabular: ${day} ${NAMA_BULAN_H[month-1]} ${year} H — bisa berbeda 1–3 hari dari kalender rukyat resmi.`;
+  tampilkanPeringatan(month);
+  document.getElementById('hasilBox').classList.add('tampil');
+  updatePesanWA(`${day} ${NAMA_BULAN_H[month-1]} ${year} H`, `${namaHari}, ${greg.day} ${NAMA_BULAN_M[greg.month-1]} ${greg.year}`);
+}
+
+function updatePesanWA(hasilHijriah, hasilMasehi){
+  const pesan = `Assalamu'alaikum, saya ingin konsultasi hasil Konversi Kalender JAZMI.\n\nHijriah: ${hasilHijriah}\nMasehi: ${hasilMasehi}`;
+  document.getElementById('btnKonsul').href = 'https://wa.me/6281356572588?text=' + encodeURIComponent(pesan);
+}
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

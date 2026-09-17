@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meteorologi Numerik (NWP) — Kenapa Ramalan Bisa Meledak</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#10141A; --panel:#171D25; --panel-2:#1D2530;
+    --border:rgba(232,236,244,0.09); --border-strong:rgba(232,236,244,0.17);
+    --text:#ECEFF3; --muted:#8C97A6;
+    --gold:#E0A94D; --gold-dim:224,169,77;
+    --cyan:#4FC7D9; --cyan-dim:79,199,217;
+    --true:#4FBF8A; --true-dim:79,191,138;
+    --warn:#D9677A; --warn-dim:217,103,122;
+    --radius:4px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(79,199,217,0.06), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 0%, rgba(224,169,77,0.05), transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:'Karla',sans-serif;font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:'Fraunces',serif;font-weight:500;letter-spacing:-0.01em;margin:0;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 26px 80px;}
+  .rule{height:1px;background:var(--border);margin:44px 0;}
+  .eyebrow-num{font-family:'Fraunces',serif;font-style:italic;color:var(--cyan);font-size:15px;margin:0 0 10px;}
+  section h2{font-size:clamp(22px,3.4vw,28px);margin-bottom:10px;}
+  section > p.desc{color:var(--muted);max-width:66ch;margin:0 0 20px;font-size:15px;}
+
+  header.top{padding:44px 0 6px;}
+  header.top .kicker{font-size:13px;color:var(--muted);margin:0 0 14px;}
+  header.top h1{font-size:clamp(28px,5vw,40px);margin-bottom:12px;max-width:22ch;}
+  header.top p.lede{color:var(--muted);max-width:64ch;font-size:16px;margin:0;}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
+  .badge{font-size:12px;padding:4px 11px;border-radius:100px;border:1px solid var(--border-strong);color:var(--muted);}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  @media (max-width:720px){.grid-2{grid-template-columns:1fr;}}
+
+  .slider-row{ margin:14px 0; }
+  .slider-row label{ display:flex; justify-content:space-between; font-size:13.5px; font-weight:600; color:var(--text); margin-bottom:7px; }
+  .slider-row label span.val{ font-family:'JetBrains Mono',monospace; color:var(--gold); }
+  input[type=range]{ width:100%; accent-color:var(--gold); }
+  .toggle-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .toggle-chip{padding:7px 14px;border-radius:100px;border:1px solid var(--border-strong);background:var(--panel-2);color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer;}
+  .toggle-chip.active{border-color:var(--gold);color:var(--gold);}
+  .preset-row{ display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 4px; }
+  .preset-chip{ padding:7px 13px; border-radius:100px; border:1px solid var(--border-strong); background:var(--panel-2); color:var(--muted); font-size:12.5px; font-weight:600; cursor:pointer; }
+  .preset-chip:hover{border-color:var(--cyan);color:var(--cyan);}
+
+  .result-box{ margin-top:16px; background:var(--panel-2); border:1px solid var(--border); border-radius:3px; padding:16px 18px; display:flex; flex-wrap:wrap; gap:22px; }
+  .result-item .lbl{ font-size:12px; color:var(--muted); margin-bottom:3px; }
+  .result-item .num{ font-family:'JetBrains Mono',monospace; font-size:20px; color:var(--gold); }
+  .result-item .num.big{ font-size:26px; }
+  .result-item .num.warn{ color:var(--warn); }
+  .result-item .num.ok{ color:var(--true); }
+  .formula-note{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted); margin-top:12px; line-height:1.7; }
+
+  .chart-svg-wrap{background:var(--panel-2);border:1px solid var(--border);border-radius:3px;padding:12px 14px;margin-top:14px;}
+  .chart-svg-wrap svg{width:100%;height:auto;display:block;}
+  .chart-caption{font-size:11.5px;color:var(--muted);margin-top:6px;}
+
+  .callout{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--cyan);border-radius:3px;padding:15px 18px;font-size:14px;color:var(--muted);margin-top:12px;}
+  .callout.warn-border{border-left-color:var(--warn);}
+  .callout p{margin:0 0 8px;} .callout p:last-child{margin-bottom:0;}
+  .callout b{color:var(--text);}
+
+  .ref-list{list-style:none;padding:0;margin:16px 0;}
+  .ref-list li{padding:12px 0;border-top:1px solid var(--border);font-size:14px;color:var(--muted);}
+  .ref-list li:last-child{border-bottom:1px solid var(--border);}
+  .ref-list .who{color:var(--text);}
+  .related-links{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted);margin-top:10px;}
+
+  footer{padding-top:40px;font-size:13px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <p class="kicker">Laboratorium Qiladat / JAZMI — Meteorologi Numerik (NWP)</p>
+    <h1>Kenapa Ramalan Richardson Meledak, dan ENIAC Tidak</h1>
+    <p class="lede">Meteorologi numerik mengambil persamaan meteorologi dinamik (halaman sebelumnya) dan menghitungnya maju ke depan lewat komputer, langkah demi langkah waktu. Lewis Fry Richardson mencobanya lebih dulu secara manual pada 1922 — hasilnya perubahan tekanan 145 hPa dalam 6 jam, dua orde besaran terlalu besar. Baru pada 1950, lewat ENIAC, percobaan serupa berhasil. Dua titik ini juga muncul di garis waktu Bagian 3 pada halaman evolusi klimatologi→meteorologi — di sini kita bongkar <em>kenapa</em> yang satu gagal dan yang satu berhasil.</p>
+    <div class="badge-row">
+      <span class="badge">Meteorologi Numerik</span>
+      <span class="badge">Syarat CFL</span>
+      <span class="badge">Bilangan Courant</span>
+      <span class="badge">Simulator Interaktif</span>
+    </div>
+  </header>
+
+  <div class="rule"></div>
+
+  <!-- 1 -->
+  <section id="konsep">
+    <p class="eyebrow-num">1 — Konsep</p>
+    <h2>Dari Persamaan Kontinu ke Langkah Diskrit</h2>
+    <p class="desc">Persamaan gerak atmosfer (Meteorologi Dinamik) ditulis untuk waktu &amp; ruang yang berubah mulus tak berhingga kecilnya. Komputer tidak bisa menghitung itu — ia hanya bisa melompat dari satu titik grid ke titik berikutnya, dari satu langkah waktu (Δt) ke langkah berikutnya. Richardson pertama kali mencoba lompatan ini secara manual: ia membagi Eropa jadi kotak-kotak grid, membaca data cuaca nyata sebagai kondisi awal, lalu menghitung dengan tangan. Metodenya nyaris sempurna secara matematis — tapi hasilnya meledak. Bukan karena rumusnya salah, melainkan karena <b style="color:var(--text)">data awalnya tidak "seimbang"</b>: gelombang gravitasi berkecepatan tinggi yang seharusnya nyaris tak terlihat dalam data cuaca nyata, justru muncul dengan amplitudo besar dalam datanya — dan begitu dihitung maju, gelombang cepat itu membesar tak terkendali, membanjiri sinyal cuaca sesungguhnya yang jauh lebih lambat.</p>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 2 -->
+  <section id="kalkulator">
+    <p class="eyebrow-num">2 — Simulator Interaktif</p>
+    <h2>Simulator Bilangan Courant &amp; Syarat Kestabilan</h2>
+    <p class="desc">Pilih jenis sinyal yang dihitung, lalu geser langkah waktu &amp; jarak grid — lihat apakah hasilnya tetap terkendali atau meledak setelah 20 langkah, persis pertaruhan yang dihadapi Richardson.</p>
+    <div class="card">
+      <div class="grid-2">
+        <div>
+          <div class="toggle-row">
+            <span class="toggle-chip active" data-c="15">Sinyal lambat, meteorologis (~15 m/dtk)</span>
+            <span class="toggle-chip" data-c="340">Sinyal cepat, gelombang gravitasi (~340 m/dtk)</span>
+          </div>
+          <div class="slider-row">
+            <label>Langkah waktu Δt <span class="val" id="v-dt">300 detik</span></label>
+            <input type="range" id="in-dt" min="10" max="900" step="10" value="300">
+          </div>
+          <div class="slider-row">
+            <label>Jarak antar-titik grid Δx <span class="val" id="v-dx">150 km</span></label>
+            <input type="range" id="in-dx" min="10" max="300" step="5" value="150">
+          </div>
+          <div class="result-box">
+            <div class="result-item"><div class="lbl">Bilangan Courant (C = c·Δt/Δx)</div><div class="num big" id="out-c">—</div></div>
+            <div class="result-item"><div class="lbl">Status</div><div class="num big" id="out-status">—</div></div>
+          </div>
+          <p class="formula-note">Syarat CFL untuk skema eksplisit sederhana: stabil hanya jika C ≤ 1. Kalau C &gt; 1, kesalahan pembulatan sekecil apa pun membesar sendiri tiap langkah — persis apa yang terjadi pada gelombang gravitasi dalam data Richardson.</p>
+        </div>
+        <div class="chart-svg-wrap">
+          <svg id="svg-chart" viewBox="0 0 400 300"></svg>
+          <div class="chart-caption">
+            <span style="color:var(--gold)">■</span> Amplitudo relatif sinyal setelah tiap langkah (skala log) — mendatar berarti stabil, melonjak berarti meledak.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 3 -->
+  <section id="kasus">
+    <p class="eyebrow-num">3 — Kasus-Kasus</p>
+    <h2>Dari Grid Kasar sampai Trik Charney</h2>
+    <p class="desc">Klik untuk memuat tiap kasus ke simulator di atas.</p>
+    <div class="preset-row" id="presetRow">
+      <span class="preset-chip" data-c="15" data-dt="600" data-dx="150">Sinyal meteorologis, langkah besar</span>
+      <span class="preset-chip" data-c="340" data-dt="600" data-dx="150">Δt sama, tapi sinyalnya gravitasi</span>
+      <span class="preset-chip" data-c="340" data-dt="60" data-dx="150">Sinyal gravitasi, Δt diperkecil 10×</span>
+      <span class="preset-chip" data-c="15" data-dt="900" data-dx="60">Trik Charney: buang saja sinyal cepatnya</span>
+    </div>
+    <div class="callout" id="kasusNote"></div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 4 -->
+  <section id="metode">
+    <p class="eyebrow-num">4 — Metode &amp; Rumus</p>
+    <div class="callout">
+      <p><strong>Diskritisasi:</strong> turunan kontinu ∂a/∂t &amp; ∂a/∂x diganti selisih hingga antar-titik grid yang berjarak Δx, dihitung maju tiap Δt. Semakin kecil Δt &amp; Δx, semakin dekat ke persamaan aslinya — tapi juga semakin banyak langkah &amp; semakin mahal dihitung.</p>
+      <p><strong>Bilangan Courant:</strong> C = c·Δt/Δx, dengan c = kecepatan rambat sinyal yang dihitung. Syarat Courant–Friedrichs–Lewy (1928): skema eksplisit semacam ini hanya stabil kalau C ≤ 1 — jarak yang ditempuh sinyal dalam satu langkah waktu tidak boleh melompati lebih dari satu titik grid. Model amplifikasi yang dipakai simulator di atas (amplitudo ≈ C^langkah untuk C &gt; 1) adalah penyederhanaan untuk ilustrasi, bukan rumus analisis kestabilan von Neumann yang persis untuk skema tertentu.</p>
+      <p><strong>Kenapa Charney (1950) berhasil:</strong> alih-alih memakai persamaan primitif penuh seperti Richardson (yang memuat gelombang gravitasi cepat), Charney, Fjørtoft, &amp; von Neumann memakai <b style="color:var(--text)">persamaan vortisitas barotropik</b> — versi tersaring yang secara matematis <em>tidak memuat</em> gelombang cepat sama sekali. Bukan trik menghitung lebih cepat, tapi menyingkirkan sumber ketidakstabilannya dari persamaan itu sendiri, sehingga langkah waktu besar tetap stabil untuk sinyal meteorologis yang memang ingin diramalkan.</p>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 5 -->
+  <section id="batasan">
+    <p class="eyebrow-num">5 — Batasan</p>
+    <div class="callout warn-border">
+      <p>Simulator ini menyederhanakan atmosfer jadi <b style="color:var(--text)">satu gelombang, satu dimensi, satu kecepatan tetap</b> — sekadar untuk menunjukkan mekanisme dasarnya. Atmosfer nyata tiga dimensi, memuat banyak mode gelombang sekaligus dengan kecepatan berbeda-beda, dan model NWP modern jarang lagi memakai skema eksplisit sederhana seperti ini.</p>
+      <p>Model operasional masa kini umumnya memakai skema <b style="color:var(--text)">semi-implisit &amp; semi-Lagrangian</b> yang secara matematis melonggarkan syarat CFL untuk mode cepat, sehingga bisa memakai langkah waktu jauh lebih besar daripada yang diizinkan skema eksplisit murni — pendekatan yang berbeda dari trik Charney (membuang mode cepat), tapi tujuannya sama: menjinakkan gelombang tercepat tanpa mengorbankan sinyal yang sebenarnya ingin diramalkan.</p>
+      <p>Kegagalan Richardson sendiri sesungguhnya bersumber dari dua hal sekaligus menurut kajian sejarah (Lynch): data awal yang tidak seimbang (memuat gelombang gravitasi yang seharusnya nyaris tak ada), <em>dan</em> langkah waktu yang memang terlalu besar untuk gelombang secepat itu — dua persoalan yang saling memperparah, bukan satu penyebab tunggal.</p>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 6 -->
+  <section id="referensi">
+    <p class="eyebrow-num">6 — Referensi &amp; Terkait</p>
+    <h2>Sumber</h2>
+    <ul class="ref-list">
+      <li><span class="who">Richardson, L. F. (1922).</span> <i>Weather Prediction by Numerical Process.</i> Cambridge University Press — percobaan manual pertama, hasil 145 hPa/6 jam yang jadi bahan Bagian 1 &amp; 2 di atas.</li>
+      <li><span class="who">Charney, J. G., Fjørtoft, R., &amp; von Neumann, J. (1950).</span> "Numerical Integration of the Barotropic Vorticity Equation." <i>Tellus.</i> — perhitungan sukses pertama lewat ENIAC.</li>
+      <li><span class="who">Courant, R., Friedrichs, K., &amp; Lewy, H. (1928).</span> Syarat kestabilan skema beda hingga — dasar bilangan Courant yang dipakai simulator di atas.</li>
+      <li><span class="who">Lynch, P.</span> Kajian historis "Richardson's Forecast" — analisis kenapa data awal yang tak seimbang menjadi penyebab utama kegagalan 1922.</li>
+    </ul>
+    <div class="related-links">
+      <span>→ Meteorologi Dinamik — Kenapa Angin Tak Mengalir Lurus ke Tekanan Rendah (persamaan yang diintegrasikan maju oleh NWP)</span>
+      <span>→ Dari Klimatologi ke Meteorologi — Titik Balik Kecepatan Informasi (Richardson 1922 &amp; ENIAC 1950 dalam garis waktu penuh)</span>
+    </div>
+  </section>
+
+  <footer>Disusun sebagai bagian dari laboratorium Qiladat/JAZMI — kalkulator interaktif untuk konsep inti Meteorologi Numerik: bilangan Courant &amp; syarat kestabilan CFL.</footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var c = 15; // m/s
+  var N_STEPS = 20;
+
+  function fmt(n,d){ if(d===undefined) d=2; return (Math.round(n*Math.pow(10,d))/Math.pow(10,d)).toLocaleString('id-ID'); }
+  function svgEl(tag, attrs){
+    var e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for(var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  var inDt = document.getElementById('in-dt');
+  var inDx = document.getElementById('in-dx');
+  var vDt = document.getElementById('v-dt');
+  var vDx = document.getElementById('v-dx');
+  var outC = document.getElementById('out-c');
+  var outStatus = document.getElementById('out-status');
+
+  function update(){
+    var dt = parseFloat(inDt.value);
+    var dxKm = parseFloat(inDx.value);
+    var dx = dxKm*1000;
+    vDt.textContent = dt + ' detik';
+    vDx.textContent = dxKm + ' km';
+
+    var C = c*dt/dx;
+    outC.textContent = fmt(C,2);
+    var stable = C<=1;
+    outStatus.textContent = stable ? 'STABIL' : 'MELEDAK';
+    outStatus.className = 'num big ' + (stable?'ok':'warn');
+
+    drawChart(C, stable);
+  }
+
+  function drawChart(C, stable){
+    var svg = document.getElementById('svg-chart');
+    svg.innerHTML = '';
+    var W=400,H=300,padL=44,padB=28,padT=14,padR=10;
+    var plotW = W-padL-padR, plotH = H-padT-padB;
+
+    var logMin=-4, logMax=4;
+    for(var lv=logMin; lv<=logMax; lv+=2){
+      var y = padT + plotH - ((lv-logMin)/(logMax-logMin))*plotH;
+      svg.appendChild(svgEl('line',{x1:padL,y1:y,x2:W-padR,y2:y,stroke:'rgba(232,236,244,0.08)','stroke-width':1}));
+      var t = svgEl('text',{x:padL-6,y:y+3,'text-anchor':'end','font-size':9,fill:'#8C97A6','font-family':'JetBrains Mono, monospace'});
+      t.textContent = '1e'+lv;
+      svg.appendChild(t);
+    }
+
+    var pts = [];
+    for(var s=0; s<=N_STEPS; s++){
+      var amp = stable ? 1 : Math.pow(C, s);
+      var logAmp = Math.log(Math.max(amp,1e-9))/Math.LN10;
+      var clipped = Math.max(logMin, Math.min(logMax, logAmp));
+      var x = padL + (s/N_STEPS)*plotW;
+      var y = padT + plotH - ((clipped-logMin)/(logMax-logMin))*plotH;
+      pts.push(x+','+y);
+    }
+    svg.appendChild(svgEl('polyline',{points:pts.join(' '), fill:'none', stroke: stable?'#4FBF8A':'#D9677A', 'stroke-width':2.4}));
+
+    var axisColor = 'rgba(232,236,244,0.25)';
+    svg.appendChild(svgEl('line',{x1:padL,y1:padT,x2:padL,y2:padT+plotH,stroke:axisColor,'stroke-width':1}));
+    svg.appendChild(svgEl('line',{x1:padL,y1:padT+plotH,x2:W-padR,y2:padT+plotH,stroke:axisColor,'stroke-width':1}));
+    var xt = svgEl('text',{x:W-padR, y:H-8, 'text-anchor':'end','font-size':10, fill:'#8C97A6'});
+    xt.textContent = 'langkah ke-'+N_STEPS;
+    svg.appendChild(xt);
+  }
+
+  inDt.addEventListener('input', update);
+  inDx.addEventListener('input', update);
+  document.querySelectorAll('.toggle-chip[data-c]').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      document.querySelectorAll('.toggle-chip[data-c]').forEach(function(ch){ch.classList.remove('active');});
+      chip.classList.add('active');
+      c = parseFloat(chip.getAttribute('data-c'));
+      update();
+    });
+  });
+
+  var kasusNotes = {
+    '15-600-150': 'Sinyal meteorologis (~15 m/dtk) dengan langkah waktu 10 menit di grid 150 km: C jauh di bawah 1 — stabil dengan sangat nyaman. Inilah mengapa jika atmosfer hanya berisi gelombang lambat ini, komputasinya akan mudah.',
+    '340-600-150': 'Δt &amp; Δx-nya sama persis dengan kasus sebelumnya — satu-satunya yang berubah adalah jenis sinyalnya. Karena gelombang gravitasi menjalar >20× lebih cepat, C melompat jauh di atas 1: meledak. Inilah persis nasib data Richardson — mode cepat yang tersembunyi di baliknya yang menghancurkan hasilnya, bukan salah rumus.',
+    '340-60-150': 'Δt diperkecil 10× dari kasus sebelumnya, dan sinyal cepatnya sekarang stabil — tapi harganya adalah 10× lebih banyak langkah untuk mencapai jangka waktu ramalan yang sama. Ini beban komputasi nyata yang harus ditanggung kalau ingin menghitung persamaan primitif penuh secara eksplisit.',
+    '15-900-60': 'Ini bukan cuma menggeser slider — ini mengganti jenis sinyalnya jadi meteorologis saja, walau Δt dibuat besar &amp; grid dihaluskan. Itulah strategi Charney 1950: bukan mempercepat komputer atau memperkecil langkah, tapi menghapus gelombang cepat dari persamaannya sejak awal, sehingga langkah besar tetap aman.'
+  };
+  document.querySelectorAll('#presetRow .preset-chip').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      var cv = chip.getAttribute('data-c');
+      var dt = chip.getAttribute('data-dt');
+      var dx = chip.getAttribute('data-dx');
+      document.querySelectorAll('.toggle-chip[data-c]').forEach(function(ch){ch.classList.toggle('active', ch.getAttribute('data-c')===cv);});
+      c = parseFloat(cv);
+      inDt.value = dt;
+      inDx.value = dx;
+      update();
+      document.getElementById('kasusNote').innerHTML = kasusNotes[cv+'-'+dt+'-'+dx] || '';
+    });
+  });
+
+  update();
+})();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

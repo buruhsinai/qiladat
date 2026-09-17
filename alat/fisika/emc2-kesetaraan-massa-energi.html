@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E=mc² — Kesetaraan Massa-Energi | Tools Qiladat JAZMI</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Karla:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0E1526;--panel:#141C33;--panel2:#1A233C;--line:rgba(220,230,245,.15);--text:#E4EAF5;--muted:#8792AD;--violet:#8B7FD9;--amber:#D9A441;}
+*{box-sizing:border-box;}body{margin:0;background:var(--ink);color:var(--text);font-family:'Karla',sans-serif;padding:0 18px 50px;}
+.wrap{max-width:640px;margin:0 auto;}
+h1{font-family:'Fraunces',serif;font-size:28px;margin:24px 0 4px;}
+p.sub{color:var(--muted);font-size:14.5px;margin:0 0 20px;}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:18px;margin-bottom:14px;}
+label{display:block;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);margin-bottom:6px;}
+input[type=range]{width:100%;accent-color:var(--violet);}
+select{width:100%;background:var(--ink);color:var(--text);border:1px solid var(--line);padding:8px;border-radius:3px;font-family:'JetBrains Mono',monospace;}
+.stat{background:var(--panel2);border-radius:3px;padding:10px 14px;margin-top:8px;}
+.stat .l{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);text-transform:uppercase;}
+.stat .v{font-family:'Fraunces',serif;font-size:20px;color:var(--amber);}
+.note{font-size:12px;color:var(--muted);margin-top:10px;}
+.formula{font-family:'JetBrains Mono',monospace;background:var(--ink);padding:10px;border-radius:3px;font-size:13px;margin-top:10px;}
+.formula .r{color:var(--amber);}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>E = mc²</h1>
+<p class="sub">Kelanjutan dari energi ikat inti — cacat massa (mass defect) itu sebenarnya massa yang berubah jadi energi lewat rumus ini. Geser massanya, rasakan betapa besar energi yang tersimpan bahkan di benda sekecil apa pun.</p>
+
+<div class="card">
+  <label for="mass">Massa <span id="mVal" style="color:var(--violet)">1</span> <span id="unitLabel">gram</span></label>
+  <input type="range" id="mass" min="1" max="1000" value="1" step="1">
+  <select id="unit" style="margin-top:8px;">
+    <option value="1e-3">gram</option>
+    <option value="1e-6">miligram</option>
+    <option value="1">kilogram</option>
+  </select>
+
+  <div class="stat"><div class="l">Energi (Joule)</div><div class="v" id="outJ">–</div></div>
+  <div class="stat"><div class="l">Setara listrik rumah tangga</div><div class="v" id="outKwh">–</div></div>
+  <div class="stat"><div class="l">Setara TNT</div><div class="v" id="outTnt">–</div></div>
+
+  <div class="formula" id="formulaBox"></div>
+  <p class="note">c = 299.792.458 m/s (kecepatan cahaya, nilai pasti/definisi SI). 1 ton TNT = 4,184×10⁹ J (definisi standar). Sebagai gambaran: bom atom Hiroshima diperkirakan ±15 kiloton TNT — hanya berasal dari massa yang berubah jadi energi sekitar 0,7 gram saja.</p>
+</div>
+
+<div class="card">
+  <p class="note" style="margin:0;"><strong>Batasan:</strong> ini menghitung energi MAKSIMUM jika seluruh massa berubah total jadi energi (konversi 100%) — reaksi nuklir sungguhan (fisi/fusi) hanya mengonversi sebagian kecil massa (hitungan promil), sisanya tetap sebagai massa produk. Bom/reaktor nyata jauh lebih "boros massa" dari angka ideal di atas.</p>
+</div>
+
+</div>
+<script>
+const C = 299792458;
+function fmt(n){ return n.toLocaleString('id-ID',{maximumSignificantDigits:4}); }
+function compute(){
+  const raw = parseFloat(document.getElementById('mass').value);
+  const factor = parseFloat(document.getElementById('unit').value); // ke kg
+  const unitSel = document.getElementById('unit');
+  const label = unitSel.options[unitSel.selectedIndex].text;
+  document.getElementById('mVal').textContent = raw;
+  document.getElementById('unitLabel').textContent = label;
+
+  const massKg = raw*factor;
+  const E = massKg*C*C;
+  const kwh = E/3.6e6;
+  const tonTnt = E/4.184e9;
+
+  document.getElementById('outJ').textContent = fmt(E)+' J';
+  document.getElementById('outKwh').textContent = fmt(kwh)+' kWh (≈'+fmt(kwh/900)+' bulan tagihan rumah biasa)';
+  document.getElementById('outTnt').textContent = fmt(tonTnt)+' ton TNT';
+  document.getElementById('formulaBox').innerHTML = `E = mc² = ${fmt(massKg)} kg × (299.792.458 m/s)² = <span class="r">${fmt(E)} J</span>`;
+}
+['mass','unit'].forEach(id=>document.getElementById(id).addEventListener('input', compute));
+compute();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

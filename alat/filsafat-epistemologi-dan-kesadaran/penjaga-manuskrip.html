@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Penjaga Manuskrip — Rantai Transmisi Ilmu</title>
+<style>
+  :root {
+    --bg: #0a0908;
+    --bg2: #121008;
+    --bg3: #1a1810;
+    --border: #2a2418;
+    --text: #d0c8a8;
+    --text-dim: #6a6040;
+    --accent: #c8a848;
+    --accent2: #a0c878;
+    --accent3: #7898c8;
+    --accent4: #c87858;
+    --broken: #c84040;
+    --font: 'Georgia', serif;
+    --mono: 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; line-height: 1.7; }
+
+  header { max-width: 1080px; margin: 0 auto; padding: 2.5rem 2rem 1.5rem; border-bottom: 1px solid var(--border); }
+  .eyebrow { font-family: var(--mono); font-size: 0.68rem; color: var(--text-dim); letter-spacing: 0.15em; margin-bottom: 0.6rem; }
+  h1 { font-size: clamp(1.4rem, 3vw, 2rem); font-weight: normal; color: #e0d8b0; line-height: 1.3; margin-bottom: 0.5rem; }
+  h1 em { color: var(--accent); font-style: normal; }
+  .sub { font-size: 0.85rem; color: var(--text-dim); max-width: 620px; font-style: italic; }
+
+  .main { max-width: 1080px; margin: 0 auto; padding: 1.5rem 2rem; display: flex; flex-direction: column; gap: 1.2rem; }
+  @media(max-width:700px){ .main { padding: 1rem; } }
+
+  .panel { background: var(--bg2); border: 1px solid var(--border); border-radius: 3px; padding: 1.4rem; }
+  .ptitle { font-family: var(--mono); font-size: 0.68rem; color: var(--text-dim); letter-spacing: 0.12em; border-bottom: 1px solid var(--border); padding-bottom: 0.6rem; margin-bottom: 1.1rem; }
+
+  /* CHAIN VISUAL */
+  .chain-wrap { position: relative; overflow-x: auto; padding-bottom: 0.5rem; }
+  canvas#chainCanvas { display: block; min-width: 700px; }
+
+  /* LINK CARDS */
+  .links-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; margin-top: 1rem; min-width: 700px; }
+  @media(max-width:750px){ .links-row { grid-template-columns: repeat(4,1fr); min-width: unset; } }
+
+  .link-card {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 3px;
+    padding: 0.6rem 0.5rem; text-align: center; cursor: pointer;
+    transition: all 0.25s; position: relative; user-select: none;
+  }
+  .link-card:hover { border-color: var(--accent); }
+  .link-card.broken { border-color: var(--broken); background: #1a0808; opacity: 0.7; }
+  .link-card.broken .lc-name { color: var(--broken); }
+  .link-card.active-card { border-color: var(--accent2); background: #101a08; }
+
+  .lc-icon { font-size: 1.2rem; display: block; margin-bottom: 0.2rem; }
+  .lc-name { font-size: 0.68rem; color: var(--accent); font-family: var(--mono); display: block; }
+  .lc-year { font-size: 0.62rem; color: var(--text-dim); display: block; }
+  .lc-toggle { position: absolute; top: 4px; right: 4px; width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg); cursor: pointer; font-size: 0.6rem; display: flex; align-items: center; justify-content: center; color: var(--text-dim); transition: all 0.2s; }
+  .link-card.broken .lc-toggle { background: var(--broken); border-color: var(--broken); color: #fff; }
+
+  /* DETAIL PANEL */
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media(max-width:600px){ .detail-grid { grid-template-columns: 1fr; } }
+
+  .detail-section { background: var(--bg); border: 1px solid var(--border); padding: 0.9rem; border-radius: 3px; }
+  .ds-title { font-family: var(--mono); font-size: 0.65rem; color: var(--text-dim); letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+  .ds-content { font-size: 0.82rem; color: var(--text-dim); line-height: 1.75; }
+  .ds-content em { color: var(--accent2); font-style: normal; }
+  .ds-content strong { color: var(--text); }
+  .ds-content .ar { direction: rtl; color: var(--accent); font-size: 0.9rem; display: block; margin-top: 0.4rem; text-align: right; }
+
+  /* WHAT MOVES THEM */
+  .motivasi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem; margin-top: 0.6rem; }
+  .mot-card { background: var(--bg3); border: 1px solid var(--border); padding: 0.6rem; border-radius: 3px; font-size: 0.75rem; text-align: center; transition: all 0.3s; }
+  .mot-card.dominant { border-color: var(--accent); background: #1a1608; }
+  .mot-icon { font-size: 1rem; display: block; margin-bottom: 0.2rem; }
+  .mot-label { color: var(--text-dim); display: block; font-family: var(--mono); font-size: 0.65rem; }
+  .mot-bar { height: 4px; background: var(--bg); border-radius: 2px; margin-top: 0.3rem; overflow: hidden; }
+  .mot-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
+
+  /* LOSS CALCULATOR */
+  .loss-display { background: var(--bg); border: 1px solid var(--border); padding: 1rem; border-radius: 3px; }
+  .loss-title { font-family: var(--mono); font-size: 0.65rem; color: var(--text-dim); letter-spacing: 0.1em; margin-bottom: 0.6rem; }
+  .loss-item { display: flex; justify-content: space-between; align-items: center; padding: 0.3rem 0; border-bottom: 1px solid var(--border); font-size: 0.8rem; }
+  .loss-item:last-child { border-bottom: none; }
+  .loss-label { color: var(--text-dim); }
+  .loss-val { font-family: var(--mono); }
+  .loss-val.lost { color: var(--broken); }
+  .loss-val.safe { color: var(--accent2); }
+
+  /* READOUT */
+  .readout { background: var(--bg); border-left: 3px solid var(--accent); padding: 0.9rem 1.1rem; font-size: 0.83rem; line-height: 1.85; border-radius: 0 3px 3px 0; transition: border-color 0.4s; }
+  .readout em { color: var(--accent2); font-style: normal; }
+  .readout .ar { direction: rtl; color: var(--accent); font-size: 0.9rem; display: block; margin-top: 0.4rem; text-align: right; }
+  .readout.broken-state { border-color: var(--broken); }
+  .readout.warning { border-color: var(--accent4); }
+
+  .sep { height: 1px; background: var(--border); margin: 1rem 0; }
+
+  .btn-row { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+  button.b { padding: 0.28rem 0.7rem; border: 1px solid var(--border); background: var(--bg); color: var(--text-dim); font-size: 0.72rem; border-radius: 3px; cursor: pointer; font-family: var(--mono); transition: all 0.2s; }
+  button.b:hover { border-color: var(--accent); color: var(--accent); }
+  button.b.on { border-color: var(--accent2); color: var(--accent2); background: #101a08; }
+  button.b.danger { border-color: var(--broken); color: var(--broken); }
+
+  .infobox { background: var(--bg3); border: 1px solid var(--border); padding: 0.9rem; border-radius: 3px; font-size: 0.8rem; color: var(--text-dim); line-height: 1.75; }
+  .infobox strong { color: var(--text); }
+  .infobox em { color: var(--accent2); font-style: normal; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 0.6rem; margin: 0.8rem 0; }
+  @media(max-width:500px){ .stat-row { grid-template-columns: repeat(2,1fr); } }
+  .stat { background: var(--bg); border: 1px solid var(--border); padding: 0.6rem; border-radius: 3px; text-align: center; }
+  .stat-n { font-family: var(--mono); font-size: 1.3rem; font-weight: bold; }
+  .stat-l { font-size: 0.62rem; color: var(--text-dim); font-family: var(--mono); margin-top: 0.1rem; }
+
+  /* MOTIVASI SELECTOR */
+  .mot-selector { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+  .mot-btn { padding: 0.25rem 0.65rem; border: 1px solid var(--border); background: var(--bg); color: var(--text-dim); font-size: 0.7rem; border-radius: 3px; cursor: pointer; font-family: var(--mono); transition: all 0.2s; }
+  .mot-btn:hover { border-color: var(--accent3); color: var(--accent3); }
+  .mot-btn.on { border-color: var(--accent); color: var(--accent); background: #1a1608; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">LABORATORIUM INTERAKTIF · QIDALAT.COM</div>
+  <h1>Penjaga <em>Manuskrip</em></h1>
+  <p class="sub">Rantai transmisi ilmu dari penulis hingga pembaca hari ini. Putuskan satu mata rantai — lihat apa yang hilang. Dan tanya: apa yang sebenarnya menggerakkan setiap orang untuk menjaga?</p>
+</header>
+
+<div class="main">
+
+  <!-- PILIH MANUSKRIP -->
+  <div class="panel">
+    <div class="ptitle">PILIH MANUSKRIP / KARYA</div>
+    <div class="btn-row" id="manuskrip-btns"></div>
+    <div id="manuskrip-desc" class="infobox" style="font-size:0.82rem;"></div>
+  </div>
+
+  <!-- RANTAI VISUAL -->
+  <div class="panel">
+    <div class="ptitle">RANTAI TRANSMISI — KLIK MATA RANTAI UNTUK MEMUTUS / MENYAMBUNG</div>
+    <div class="chain-wrap">
+      <canvas id="chainCanvas" height="120"></canvas>
+      <div class="links-row" id="linksRow"></div>
+    </div>
+
+    <div class="stat-row" id="statRow"></div>
+
+    <div class="readout" id="main-readout">
+      Pilih mata rantai untuk melihat detail dan dampak pemutusannya.
+    </div>
+  </div>
+
+  <!-- DETAIL MATA RANTAI -->
+  <div class="panel" id="detail-panel" style="display:none;">
+    <div class="ptitle" id="detail-title">DETAIL MATA RANTAI</div>
+    <div class="detail-grid" id="detail-grid"></div>
+  </div>
+
+  <!-- APA YANG MENGGERAKKAN -->
+  <div class="panel">
+    <div class="ptitle">APA YANG SEBENARNYA MENGGERAKKAN SETIAP PENJAGA?</div>
+    <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:0.8rem;line-height:1.75;">
+      Sains bisa menjelaskan neurokimia motivasi. Tapi dari mana motivasi untuk menjaga ilmu — bahkan dengan risiko nyawa, kebutaan, pengasingan — itu pertanyaan yang lebih dalam. Pilih faktor dan lihat seberapa jauh ia menjelaskan:
+    </p>
+
+    <div class="mot-selector" id="motSelector"></div>
+    <div class="motivasi-grid" id="motivasiGrid"></div>
+
+    <div class="readout" id="mot-readout" style="margin-top:0.8rem;">
+      Pilih faktor motivasi untuk melihat analisisnya.
+    </div>
+  </div>
+
+  <!-- PENUTUP -->
+  <div class="panel">
+    <div class="ptitle">YANG TAK BISA DIJELASKAN SAINS TENTANG PENJAGAAN INI</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;">
+      <div class="infobox">
+        <strong>Bukan insentif material</strong><br><br>
+        Imam Bukhari menyalin ribuan hadits dalam kondisi hampir buta. Tidak ada gaji, tidak ada penerbitan, tidak ada royalti. <em>Seluruh hidupnya adalah biaya, bukan keuntungan.</em> Penjelasan ekonomi kolaps di sini.
+      </div>
+      <div class="infobox">
+        <strong>Bukan tekanan sosial</strong><br><br>
+        Banyak penyalin manuskrip bekerja dalam pengasingan, di bawah penguasa yang memusuhi isi tulisan itu. Mereka justru <em>melawan tekanan sosial</em>, bukan mengikutinya. Penjelasan konformitas kolaps di sini.
+      </div>
+      <div class="infobox">
+        <strong>Bukan sekadar "gen egoistik"</strong><br><br>
+        Dawkins: altruisme bisa dijelaskan sebagai strategi reproduktif. Tapi menjaga manuskrip ilmu yang tidak berhubungan dengan keturunan langsung, tanpa harapan imbalan, di luar jangkauan komunitas sendiri — <em>ini melampaui kalkulasi gen manapun.</em>
+      </div>
+      <div class="infobox">
+        <strong>Yang tersisa: makna</strong><br><br>
+        Satu-satunya penjelasan yang konsisten di semua kasus: orang-orang ini percaya bahwa ilmu itu <em>amanah</em> — sesuatu yang dipercayakan, bukan milik mereka. Dan amanah itu lebih nyata dari rasa sakit, risiko, atau ketidaknyamanan apapun.
+      </div>
+    </div>
+
+    <div style="margin-top:1.2rem;padding:1.1rem;background:var(--bg);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:0 3px 3px 0;font-size:0.85rem;line-height:1.9;">
+      <div style="font-family:var(--mono);font-size:0.68rem;color:var(--text-dim);letter-spacing:0.1em;margin-bottom:0.5rem;">PERTANYAAN AKHIR</div>
+      Bukan Einstein yang menyampaikan relativitas kepada kita. Ada rantai panjang: mahasiswa, penerjemah, penerbit, perpustakaan, guru. Setiap mata rantai memilih untuk melanjutkan — bukan karena diwajibkan secara fisik, tapi karena <em style="color:var(--accent2)">sesuatu di dalam diri mereka menganggap ini layak untuk diteruskan.</em>
+      <br><br>
+      "Layak diteruskan" — itu penilaian bermakna. Dan makna bukan produk sains. Ia mendahului sains — dan ia yang membuat sains mungkin untuk diwariskan.
+      <br><br>
+      <span style="direction:rtl;display:block;text-align:right;color:var(--accent);font-size:1rem;">عَلَّمَ بِالْقَلَمِ · عَلَّمَ الْإِنسَانَ مَا لَمْ يَعْلَمْ</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ==========================================
+// DATA MANUSKRIP
+// ==========================================
+const MANUSKRIP = [
+  {
+    id: 'bukhari',
+    nama: 'Sahih Bukhari',
+    penulis: 'Imam al-Bukhari',
+    tahun: '846 M',
+    desc: 'Koleksi hadits paling sahih dalam tradisi Islam. Ditulis oleh Muhammad ibn Ismail al-Bukhari (810–870 M) yang menghabiskan 16 tahun menyaring 600.000 hadits menjadi 7.563 — dalam kondisi hampir buta dan dalam pengasingan politik.',
+    chain: [
+      { id:'author', label:'Al-Bukhari', year:'810–870 M', icon:'✍️', role:'Penulis & Penghafal', motivasi:'iman', nearly_lost:'Wafat dalam pengasingan di Samarkand. Murid-muridnya menyebarkan naskah secara diam-diam.', saved_by:'Murid yang setia membawa salinan keluar dari Bukhara sebelum penguasa membakarnya.' },
+      { id:'copyist1', label:'Al-Firabri', year:'~ 894 M', icon:'📜', role:'Penyalin Utama', motivasi:'amanah', nearly_lost:'Satu-satunya perawi yang meriwayatkan langsung dari Bukhari dalam jumlah besar.', saved_by:'Usianya panjang — sempat meriwayatkan kepada ribuan orang sebelum wafat.' },
+      { id:'copyist2', label:'Para Huffaz', year:'900–1100 M', icon:'🧠', role:'Penghafal & Penyalin', motivasi:'makna', nearly_lost:'Perang Salib dan invasi Mongol menghancurkan sebagian besar perpustakaan.', saved_by:'Tradisi hafalan menjadi backup biologis — ilmu hidup di kepala manusia, bukan hanya kertas.' },
+      { id:'scholar1', label:'Ibn Hajar', year:'1372–1449 M', icon:'🖊️', role:'Pensyarah', motivasi:'amanah', nearly_lost:'Mesir di bawah tekanan Mamluk. Ibn Hajar menulis Fathul Bari selama 25 tahun.', saved_by:'Posisi sebagai Qadi Agung memberinya perlindungan dan sumber daya untuk menyelesaikan karya.' },
+      { id:'printer', label:'Pencetak Turki', year:'1834 M', icon:'🖨️', role:'Percetakan Pertama', motivasi:'preservasi', nearly_lost:'Debat panjang apakah percetakan halal untuk teks keagamaan.',saved_by:'Fatwa para ulama Turki yang membolehkan — argumen: menyebarkan ilmu adalah kewajiban.' },
+      { id:'orientalis', label:'Krehl & Juynboll', year:'1862–1908 M', icon:'🔬', role:'Edit & Indeks Eropa', motivasi:'akademik', nearly_lost:'Tanpa edisi kritis, akses akademik terbatas pada manuskrip yang berbeda-beda.', saved_by:'Ironi sejarah: orientalis Eropa yang membantu membuat Bukhari lebih accessible secara global.' },
+      { id:'reader', label:'Pembaca Hari Ini', year:'2024 M', icon:'📱', role:'Penerima', motivasi:'', nearly_lost:'', saved_by:'' },
+    ]
+  },
+  {
+    id: 'euclid',
+    nama: 'Euclid — Elemen',
+    penulis: 'Euclid dari Alexandria',
+    tahun: '~ 300 SM',
+    desc: 'Karya matematika paling berpengaruh sepanjang sejarah. Ditulis sekitar 300 SM, digunakan sebagai buku teks geometri selama 2000+ tahun. Salinan aslinya tidak ada — kita memiliki teks ini karena rantai panjang penyalinan.',
+    chain: [
+      { id:'author', label:'Euclid', year:'~300 SM', icon:'📐', role:'Penulis', motivasi:'kebenaran', nearly_lost:'Tidak ada satu pun salinan tangan Euclid yang selamat.', saved_by:'Tradisi lisan dan salinan di Perpustakaan Alexandria bertahan ratusan tahun.' },
+      { id:'library', label:'Perpustakaan Alexandria', year:'300 SM–642 M', icon:'🏛️', role:'Penyimpan', motivasi:'preservasi', nearly_lost:'Terbakar sebagian di zaman Caesar, dihancurkan bertahap selama berabad-abad.', saved_by:'Salinan sudah tersebar ke seluruh dunia Yunani-Romawi sebelum kehancuran total.' },
+      { id:'arabic', label:'Penerjemah Arab', year:'~ 820 M', icon:'📖', role:'Penerjemah ke Arab', motivasi:'amanah', nearly_lost:'Tanpa Bayt al-Hikmah Baghdad, Elemen mungkin tidak bertahan dari Dark Ages Eropa.', saved_by:'Khalifah Al-Makmun mensponsori penerjemahan sistematis — motivasi keilmuan dan politik.' },
+      { id:'tusi', label:'Nasir al-Din al-Tusi', year:'1247 M', icon:'🌙', role:'Edisi Kritis Arab', motivasi:'kebenaran', nearly_lost:'Invasi Mongol menghancurkan Baghdad 1258. Al-Tusi bernegosiasi dengan Hulagu untuk menyelamatkan perpustakaan.', saved_by:'Al-Tusi meyakinkan Hulagu bahwa astronom dan ilmuwan berguna — mendapat perlindungan.' },
+      { id:'latin', label:'Adelard of Bath', year:'1120 M', icon:'✝️', role:'Penerjemah ke Latin', motivasi:'akademik', nearly_lost:'Eropa tanpa Euclid selama 600 tahun setelah jatuhnya Roma.', saved_by:'Perjalanan Adelard ke Toledo — kota lintas budaya Islam-Kristen — membuka akses ke teks Arab.' },
+      { id:'print', label:'Erhard Ratdolt', year:'1482 M', icon:'🖨️', role:'Cetakan Pertama', motivasi:'komersial', nearly_lost:'Sebelum Gutenberg, setiap salinan butuh berbulan-bulan kerja tangan.', saved_by:'Gutenberg memungkinkan ribuan salinan dalam hitungan minggu — distribusi massal pertama.' },
+      { id:'reader', label:'Pembaca Hari Ini', year:'2024 M', icon:'💻', role:'Penerima', motivasi:'', nearly_lost:'', saved_by:'' },
+    ]
+  },
+  {
+    id: 'ibnsina',
+    nama: 'Ibn Sina — Al-Qanun',
+    penulis: 'Ibn Sina (Avicenna)',
+    tahun: '1025 M',
+    desc: 'Al-Qanun fi al-Tibb (Kanon Kedokteran) — ensiklopedia medis yang menjadi buku ajar kedokteran di Eropa dan Timur Tengah selama 600 tahun. Ditulis oleh Ibn Sina (980–1037 M) sambil menjadi dokter, filsuf, dan politikus.',
+    chain: [
+      { id:'author', label:'Ibn Sina', year:'980–1037 M', icon:'🏥', role:'Penulis', motivasi:'kebenaran', nearly_lost:'Ibn Sina hidup dalam pelarian politik — perpindahan kota ke kota sambil terus menulis.', saved_by:'Menulis di atas kuda saat dalam perjalanan. Murid-murid mencatat dan menyalin.' },
+      { id:'copyist1', label:'Sekolah Bukhara', year:'1050–1150 M', icon:'🎓', role:'Penyalin & Penyebar', motivasi:'amanah', nearly_lost:'Persia di bawah tekanan Seljuk — beberapa karya Ibn Sina dianggap kontroversial.', saved_by:'Sistem madrasah Seljuk justru menjadi saluran penyebaran — kurikulum standar.' },
+      { id:'gerard', label:'Gerard of Cremona', year:'~1175 M', icon:'✝️', role:'Penerjemah Latin', motivasi:'akademik', nearly_lost:'Tanpa penerjemah Toledo, kedokteran Eropa abad pertengahan tidak mengenal Ibn Sina.', saved_by:'Komunitas penerjemah multikultural di Toledo — Muslim, Kristen, Yahudi bekerja bersama.' },
+      { id:'univ', label:'Universitas Bologna', year:'1200–1400 M', icon:'🏫', role:'Buku Teks Resmi', motivasi:'institusi', nearly_lost:'Gereja sempat mencurigai ilmu Arab sebagai sumber "bid\'ah."', saved_by:'Kebutuhan praktis kedokteran lebih kuat dari resistensi dogma — dokter butuh teks terbaik.' },
+      { id:'print2', label:'Padua, Cetakan', year:'1472 M', icon:'🖨️', role:'Cetakan Pertama Latin', motivasi:'komersial', nearly_lost:'Sebelum cetak, hanya institusi kaya yang bisa memiliki Al-Qanun.', saved_by:'Pasar buku yang berkembang di Italia Renaissance membuat cetak menguntungkan.' },
+      { id:'orientalis2', label:'Goichon & Gruner', year:'1900-an M', icon:'🔬', role:'Terjemahan Modern', motivasi:'akademik', nearly_lost:'Tanpa terjemahan modern, Al-Qanun hanya bisa diakses pembaca Latin dan Arab klasik.', saved_by:'Minat akademik Barat terhadap sejarah sains membuat proyek terjemahan terfundangi.' },
+      { id:'reader', label:'Pembaca Hari Ini', year:'2024 M', icon:'📱', role:'Penerima', motivasi:'', nearly_lost:'', saved_by:'' },
+    ]
+  },
+];
+
+const MOTIVASI_DATA = [
+  { id:'iman', label:'Iman / Keyakinan', icon:'🌙', color:'#c8a848', desc:'Keyakinan bahwa menjaga ilmu adalah ibadah — kewajiban kepada sesuatu yang lebih besar dari diri sendiri. Ini yang menggerakkan Bukhari menulis dalam kebutaan dan pengasingan. Tidak ada kalkulasi untung-rugi.', limit:'Penjelasan ini memuaskan secara internal bagi yang beriman. Tapi bagi yang mencari penjelasan "dari luar," pertanyaan menjadi: dari mana datangnya kekuatan keyakinan itu?', score:95 },
+  { id:'amanah', label:'Rasa Amanah', icon:'⚖️', color:'#a0c878', desc:'Perasaan bahwa ilmu ini bukan milikku — ia dititipkan. Saya hanya mata rantai. Harus diteruskan. Ini lintas agama dan budaya — muncul di penyalin Yunani, biksu Kristen, ulama Muslim, ilmuwan ateis.', limit:'Dari mana datangnya rasa "wajib meneruskan" ini? Mengapa manusia merasa ada kewajiban kepada sesuatu yang tidak ada kontraknya?', score:88 },
+  { id:'kebenaran', label:'Cinta Kebenaran', icon:'🔍', color:'#7898c8', desc:'Matematikawan, filsuf, dan ilmuwan sering mendeskripsikan pengalaman menemukan kebenaran sebagai sesuatu yang "lebih nyata" dari kenyataan sehari-hari. Ini yang menggerakkan penyalin Euclid bahkan saat gereja memusuhi geometri.', limit:'Dari mana datangnya nilai "kebenaran layak dijaga"? Ini bukan fakta empiris — ini komitmen nilai yang mendahului sains.', score:82 },
+  { id:'makna', label:'Pencarian Makna', icon:'✨', color:'#c8a848', desc:'Manusia adalah makhluk yang mencari makna. Menjaga manuskrip memberikan hidup seseorang bobot, kontribusi, keberlanjutan. Psikologi eksistensial (Frankl, Yalom) mendokumentasikan ini.', limit:'Tapi psikologi hanya mendeskripsi — tidak menjelaskan mengapa makna itu "nyata" dan bukan sekadar ilusi kognitif yang membantu kelangsungan hidup.', score:75 },
+  { id:'preservasi', label:'Naluri Preservasi', icon:'🧬', color:'#a0c878', desc:'Sosiobiologi: manusia menyimpan informasi karena itu meningkatkan fitness kelompok. Meneruskan pengetahuan adalah strategi kelompok yang dipilih evolusi.', limit:'Tapi ini tidak menjelaskan kasus-kasus di mana penjagaan justru bertentangan dengan kepentingan kelompok — seperti penyalin yang menyembunyikan teks "berbahaya" dari penguasa.', score:55 },
+  { id:'akademik', label:'Ambisi Akademik', icon:'🎓', color:'#7898c8', desc:'Reputasi, karir, pengakuan. Penerjemah seperti Gerard of Cremona mendapat status tinggi. Ini insentif yang bisa diukur dan diverifikasi.', limit:'Tapi ini hanya menjelaskan sebagian kasus — dan tidak menjelaskan penjaga yang bekerja anonim, dalam pengasingan, tanpa harapan pengakuan.', score:48 },
+  { id:'komersial', label:'Insentif Komersial', icon:'💰', color:'#c87858', desc:'Penerbit cetak termotivasi keuntungan. Ini jelas dan terverifikasi. Ratdolt dan percetakan Venice mendapat untung besar dari Euclid.', limit:'Ini menjelaskan era cetak ke atas — tapi tidak menjelaskan 1500 tahun sebelumnya ketika setiap salinan adalah kerugian waktu dan materi bagi penyalin.', score:30 },
+  { id:'institusi', label:'Institusi / Otoritas', icon:'🏛️', color:'#9878c8', desc:'Universitas, perpustakaan, negara — institusi menciptakan insentif sistemik untuk preservasi. Bayt al-Hikmah didanai khalifah.', limit:'Tapi institusi juga bisa menghancurkan — dan di sinilah individu yang bergerak melawan institusi menjadi justru yang paling penting dalam rantai ini.', score:40 },
+];
+
+// ==========================================
+// STATE
+// ==========================================
+let currentMs = MANUSKRIP[0];
+let brokenLinks = new Set();
+let activeLink = null;
+let activeMot = null;
+
+// ==========================================
+// RENDER MANUSKRIP SELECTOR
+// ==========================================
+function renderMsButtons() {
+  const wrap = document.getElementById('manuskrip-btns');
+  wrap.innerHTML = MANUSKRIP.map(m =>
+    `<button class="b ${m.id === currentMs.id ? 'on' : ''}" onclick="selectMs('${m.id}')">${m.nama}</button>`
+  ).join('');
+  document.getElementById('manuskrip-desc').innerHTML =
+    `<strong>${currentMs.nama}</strong> · ${currentMs.penulis} · ${currentMs.tahun}<br><br>${currentMs.desc}`;
+}
+
+function selectMs(id) {
+  currentMs = MANUSKRIP.find(m => m.id === id);
+  brokenLinks.clear();
+  activeLink = null;
+  renderMsButtons();
+  renderLinks();
+  drawChain();
+  updateStats();
+  updateMainReadout();
+  document.getElementById('detail-panel').style.display = 'none';
+}
+
+// ==========================================
+// RENDER RANTAI
+// ==========================================
+function renderLinks() {
+  const row = document.getElementById('linksRow');
+  row.innerHTML = currentMs.chain.map((l, i) => `
+    <div class="link-card ${brokenLinks.has(i) ? 'broken' : ''} ${activeLink === i ? 'active-card' : ''}"
+         id="lcard-${i}" onclick="selectLink(${i})">
+      ${l.id !== 'reader' ? `<div class="lc-toggle" onclick="event.stopPropagation();toggleBreak(${i})">${brokenLinks.has(i) ? '✗' : '·'}</div>` : ''}
+      <span class="lc-icon">${l.icon}</span>
+      <span class="lc-name">${l.label}</span>
+      <span class="lc-year">${l.year}</span>
+    </div>
+  `).join('');
+}
+
+function toggleBreak(i) {
+  if (currentMs.chain[i].id === 'reader') return;
+  if (brokenLinks.has(i)) brokenLinks.delete(i);
+  else brokenLinks.add(i);
+  renderLinks();
+  drawChain();
+  updateStats();
+  updateMainReadout();
+}
+
+function selectLink(i) {
+  activeLink = i;
+  renderLinks();
+  showDetail(i);
+}
+
+// ==========================================
+// CANVAS CHAIN
+// ==========================================
+const chainCanvas = document.getElementById('chainCanvas');
+const chainCtx = chainCanvas.getContext('2d');
+
+function resizeChain() {
+  chainCanvas.width = Math.max(700, chainCanvas.parentElement.offsetWidth);
+  chainCanvas.height = 120;
+  drawChain();
+}
+
+function drawChain() {
+  const W = chainCanvas.width, H = chainCanvas.height;
+  const ctx = chainCtx;
+  ctx.clearRect(0, 0, W, H);
+
+  const n = currentMs.chain.length;
+  const spacing = W / (n + 0.5);
+  const cy = H / 2;
+
+  // Gambar koneksi dulu
+  for (let i = 0; i < n - 1; i++) {
+    const x1 = spacing * (i + 1);
+    const x2 = spacing * (i + 2);
+    const broken = brokenLinks.has(i) || brokenLinks.has(i + 1);
+
+    if (broken) {
+      // Koneksi putus
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = 'rgba(200,64,64,0.4)';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x1, cy); ctx.lineTo(x2, cy); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Simbol X
+      const mx = (x1 + x2) / 2;
+      ctx.fillStyle = 'rgba(200,64,64,0.7)';
+      ctx.font = '14px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('✗', mx, cy + 5);
+    } else {
+      ctx.strokeStyle = 'rgba(200,168,72,0.5)';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x1, cy); ctx.lineTo(x2, cy); ctx.stroke();
+
+      // Panah
+      const mx = (x1 + x2) / 2;
+      ctx.fillStyle = 'rgba(200,168,72,0.6)';
+      ctx.beginPath();
+      ctx.moveTo(mx + 6, cy);
+      ctx.lineTo(mx - 2, cy - 4);
+      ctx.lineTo(mx - 2, cy + 4);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  // Gambar node
+  for (let i = 0; i < n; i++) {
+    const x = spacing * (i + 1);
+    const link = currentMs.chain[i];
+    const broken = brokenLinks.has(i);
+    const active = activeLink === i;
+
+    // Lingkaran
+    ctx.beginPath();
+    ctx.arc(x, cy, active ? 20 : 16, 0, Math.PI * 2);
+    ctx.fillStyle = broken ? '#2a0808' : active ? '#1a2010' : '#12180e';
+    ctx.fill();
+    ctx.strokeStyle = broken ? '#c84040' : active ? '#a0c878' : '#c8a848';
+    ctx.lineWidth = broken ? 2 : active ? 2 : 1;
+    ctx.stroke();
+
+    // Icon
+    ctx.font = `${active ? 16 : 13}px serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(link.icon, x, cy + 5);
+
+    // Tahun
+    ctx.fillStyle = broken ? '#804040' : '#6a6040';
+    ctx.font = '9px monospace';
+    ctx.fillText(link.year.substring(0, 7), x, cy + 28);
+  }
+}
+
+// ==========================================
+// DETAIL PANEL
+// ==========================================
+function showDetail(i) {
+  const link = currentMs.chain[i];
+  if (link.id === 'reader') {
+    document.getElementById('detail-panel').style.display = 'none';
+    return;
+  }
+
+  document.getElementById('detail-panel').style.display = 'block';
+  document.getElementById('detail-title').textContent =
+    `DETAIL — ${link.label} (${link.year})`;
+
+  const broken = brokenLinks.has(i);
+  const mot = MOTIVASI_DATA.find(m => m.id === link.motivasi);
+
+  document.getElementById('detail-grid').innerHTML = `
+    <div class="detail-section">
+      <div class="ds-title">PERAN & KONTRIBUSI</div>
+      <div class="ds-content">
+        <strong>${link.role}</strong><br><br>
+        ${link.icon} ${link.label} — ${link.year}
+        <br><br>
+        <strong>Hampir hilang karena:</strong><br>
+        ${link.nearly_lost || '—'}
+        <br><br>
+        <strong>Diselamatkan oleh:</strong><br>
+        <em>${link.saved_by || '—'}</em>
+      </div>
+    </div>
+    <div class="detail-section">
+      <div class="ds-title">APA YANG MENGGERAKKAN</div>
+      <div class="ds-content">
+        ${mot ? `
+          <strong>${mot.icon} ${mot.label}</strong><br><br>
+          ${mot.desc}
+          <br><br>
+          <em>Batas penjelasan ini:</em><br>
+          ${mot.limit}
+        ` : 'Tidak diidentifikasi.'}
+        ${broken ? `<br><br><strong style="color:var(--broken);">⚠ Mata rantai ini DIPUTUS — lihat dampaknya di bawah.</strong>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+// ==========================================
+// STATS
+// ==========================================
+function updateStats() {
+  const total = currentMs.chain.length - 1; // tidak hitung reader
+  const broken = brokenLinks.size;
+  const intact = total - broken;
+  const pct = Math.round((intact / total) * 100);
+
+  // Hitung berapa generasi hilang setelah putus pertama
+  let reachable = 0;
+  for (let i = 0; i < currentMs.chain.length; i++) {
+    if (brokenLinks.has(i)) break;
+    reachable++;
+  }
+
+  document.getElementById('statRow').innerHTML = `
+    <div class="stat">
+      <div class="stat-n" style="color:var(--accent2)">${intact}</div>
+      <div class="stat-l">Mata rantai utuh</div>
+    </div>
+    <div class="stat">
+      <div class="stat-n" style="color:var(--broken)">${broken}</div>
+      <div class="stat-l">Diputus</div>
+    </div>
+    <div class="stat">
+      <div class="stat-n" style="color:${pct > 70 ? 'var(--accent2)' : pct > 40 ? 'var(--accent3)' : 'var(--broken)'}">${pct}%</div>
+      <div class="stat-l">Integritas rantai</div>
+    </div>
+    <div class="stat">
+      <div class="stat-n" style="color:var(--accent3)">${reachable}</div>
+      <div class="stat-l">Generasi terjangkau</div>
+    </div>
+  `;
+}
+
+// ==========================================
+// MAIN READOUT
+// ==========================================
+function updateMainReadout() {
+  const el = document.getElementById('main-readout');
+  const broken = brokenLinks.size;
+  const total = currentMs.chain.length - 1;
+
+  if (broken === 0) {
+    el.className = 'readout';
+    el.innerHTML = `Semua mata rantai utuh. <em>${currentMs.nama}</em> sampai kepada kita melalui ${total} generasi penjaga. Setiap dari mereka membuat keputusan aktif untuk meneruskan — bukan karena wajib secara fisik, tapi karena sesuatu yang mereka anggap <em>layak diteruskan.</em>
+    <span class="ar">عَلَّمَ بِالْقَلَمِ</span>`;
+  } else if (brokenLinks.has(0)) {
+    el.className = 'readout broken-state';
+    el.innerHTML = `Mata rantai pertama diputus — <em>penulis asli tidak meneruskan.</em> Teks tidak pernah ada. Tidak ada yang bisa diselamatkan oleh penjaga berikutnya, betapapun setianya. Kehilangan total. Ini menunjukkan: semuanya dimulai dari satu keputusan pertama untuk <em>menulis dan mempercayakan.</em>`;
+  } else if (broken >= Math.floor(total / 2)) {
+    el.className = 'readout broken-state';
+    el.innerHTML = `${broken} mata rantai diputus. Teks kemungkinan <em>tidak sampai ke pembaca hari ini.</em> Sejarah penuh dengan karya yang hilang karena satu mata rantai yang gagal — perpustakaan yang terbakar, ulama yang wafat tanpa mewariskan, penguasa yang melarang penyalinan.`;
+  } else {
+    el.className = 'readout warning';
+    const brokenNames = [...brokenLinks].map(i => currentMs.chain[i].label).join(', ');
+    el.innerHTML = `${broken} mata rantai diputus: <em>${brokenNames}.</em> Rantai masih berpeluang bertahan — tapi setiap keputusan untuk tidak meneruskan adalah taruhan besar. Di dunia nyata, tidak selalu ada mata rantai alternatif.`;
+  }
+}
+
+// ==========================================
+// MOTIVASI PANEL
+// ==========================================
+function renderMotivasi() {
+  const sel = document.getElementById('motSelector');
+  sel.innerHTML = MOTIVASI_DATA.map(m =>
+    `<button class="mot-btn ${activeMot === m.id ? 'on' : ''}" onclick="selectMot('${m.id}')">${m.icon} ${m.label}</button>`
+  ).join('');
+
+  const grid = document.getElementById('motivasiGrid');
+  grid.innerHTML = MOTIVASI_DATA.map(m => `
+    <div class="mot-card ${activeMot === m.id ? 'dominant' : ''}">
+      <span class="mot-icon">${m.icon}</span>
+      <span class="mot-label">${m.label}</span>
+      <div class="mot-bar">
+        <div class="mot-fill" style="width:${activeMot === m.id ? m.score : 30}%;background:${m.color}"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function selectMot(id) {
+  activeMot = activeMot === id ? null : id;
+  renderMotivasi();
+
+  const el = document.getElementById('mot-readout');
+  if (!activeMot) {
+    el.innerHTML = 'Pilih faktor motivasi untuk melihat analisisnya.';
+    el.style.borderColor = 'var(--accent)';
+    return;
+  }
+
+  const m = MOTIVASI_DATA.find(x => x.id === id);
+  el.style.borderColor = m.color;
+
+  let power = m.score > 80 ? 'kuat' : m.score > 60 ? 'sedang' : 'lemah';
+  el.innerHTML = `<strong>${m.icon} ${m.label}</strong> — kekuatan penjelasan: <em>${m.score}%</em> (${power})<br><br>
+    ${m.desc}<br><br>
+    <em>Batas penjelasan ini:</em> ${m.limit}
+    ${m.score < 60 ? `<br><br>Ini penjelasan yang valid untuk sebagian kasus — tapi tidak cukup untuk menjelaskan seluruh rantai. Penjagaan manuskrip sering terjadi justru ketika faktor ini <em>tidak ada.</em>` : ''}`;
+}
+
+// ==========================================
+// INIT
+// ==========================================
+window.addEventListener('load', () => {
+  resizeChain();
+  renderMsButtons();
+  renderLinks();
+  updateStats();
+  updateMainReadout();
+  renderMotivasi();
+});
+window.addEventListener('resize', resizeChain);
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

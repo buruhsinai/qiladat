@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rangkaian RC — Pengisian & Pengosongan Kapasitor — JAZMI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --bg:#12141c; --bg-panel:#1b1f2b; --bg-panel-2:#20263a;
+  --line:#333a4f; --text:#eee7d6; --text-dim:#a9a6ac;
+  --gold:#c9a15a; --gold-soft:#8a713c; --teal:#5a9c92; --blue:#6f9bd1; --radius:10px;
+}
+*{box-sizing:border-box;}
+body{ margin:0; background:var(--bg); color:var(--text); font-family:'Karla',sans-serif; line-height:1.6; }
+h1,h2,h3{ font-family:'Fraunces',serif; font-weight:600; margin:0 0 0.5em; }
+.mono{ font-family:'JetBrains Mono', monospace; }
+.wrap{ max-width:840px; margin:0 auto; padding:0 20px; }
+.hero{ padding:48px 0 30px; border-bottom:1px solid var(--line); text-align:center; }
+.hero .eyebrow{ text-transform:uppercase; font-size:0.7rem; letter-spacing:2.5px; color:var(--gold); margin-bottom:12px; }
+.hero h1{ font-size:clamp(1.5rem,4.6vw,2.2rem); color:#fff; }
+.hero p.tag{ color:var(--text-dim); max-width:580px; margin:10px auto 0; font-size:0.94rem; }
+section{ padding:36px 0; border-bottom:1px solid var(--line); }
+section:last-of-type{ border-bottom:none; }
+.kicker{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+.kicker .num{ font-family:'Fraunces',serif; color:var(--gold); font-size:0.85rem; border:1px solid var(--gold-soft); border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.kicker h2{ font-size:1.2rem; margin:0; color:#fff; }
+p{ color:var(--text); } p.dim{ color:var(--text-dim); font-size:0.9rem; }
+.panel{ background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-top:16px; }
+
+label{ display:block; font-size:0.82rem; color:var(--text-dim); margin:14px 0 6px; }
+label:first-of-type{ margin-top:0; }
+input[type=range]{ width:100%; accent-color:var(--gold); }
+.slider-row{ display:flex; justify-content:space-between; font-size:0.74rem; color:var(--text-dim); margin-top:4px; }
+.tab-row{ display:flex; gap:8px; margin-bottom:16px; }
+.tab-btn{ flex:1; background:var(--bg-panel-2); border:1px solid var(--line); color:var(--text-dim); padding:10px; border-radius:8px; font-weight:700; font-size:0.85rem; cursor:pointer; }
+.tab-btn.active{ background:var(--gold); color:#12141c; border-color:var(--gold); }
+
+.hasil-grid{ display:grid; grid-template-columns:1fr; gap:8px; margin-top:16px; }
+.hasil-card{ background:var(--bg-panel-2); border:1px solid var(--line); border-radius:8px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.hasil-card .lbl{ font-size:0.82rem; color:var(--text-dim); }
+.hasil-card .val{ font-family:'JetBrains Mono',monospace; font-size:1rem; color:var(--gold); text-align:right; }
+
+.grafik-wrap{ margin-top:18px; }
+.grafik-wrap svg{ width:100%; background:var(--bg-panel-2); border-radius:8px; }
+.legend-row{ display:flex; gap:16px; flex-wrap:wrap; margin-top:8px; font-size:0.76rem; color:var(--text-dim); }
+.legend-row span.sw{ display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; }
+
+.formula{ font-family:'Fraunces',serif; font-style:italic; background:var(--bg-panel-2); border-radius:8px; padding:14px 18px; margin:14px 0; overflow-x:auto; color:#f4eede; }
+ul{ padding-left:20px; } ul.batas li{ margin-bottom:10px; }
+.refs li{ margin-bottom:10px; font-size:0.9rem; color:var(--text-dim); }
+.consult{ background:linear-gradient(135deg,var(--bg-panel-2),var(--bg-panel)); border:1px solid var(--gold-soft); border-radius:var(--radius); padding:22px; text-align:center; }
+.consult a.wa{ display:inline-block; margin-top:14px; background:var(--teal); color:#12141c; text-decoration:none; font-weight:700; padding:12px 26px; border-radius:30px; }
+footer{ text-align:center; padding:26px 0; color:var(--text-dim); font-size:0.8rem; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">JAZMI · Sains Elektromagnetika</div>
+    <h1>Rangkaian RC: Pengisian &amp; Pengosongan Kapasitor</h1>
+    <p class="tag">Kenapa kapasitor tidak pernah terisi/kosong "sekaligus", melainkan makin lambat mendekati batasnya? Geser resistansi, kapasitansi, dan tegangan — lihat sendiri kurva eksponensialnya berubah bentuk.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <div class="kicker"><div class="num">1</div><h2>Belajar</h2></div>
+    <p>Kapasitor menyimpan muatan listrik di antara dua pelat konduktor. Saat dihubungkan ke sumber tegangan lewat resistor, arus yang mengalir mengisi kapasitor — tapi semakin penuh kapasitor, semakin kecil beda tegangan yang mendorong arus masuk, sehingga proses pengisian melambat sendiri. Inilah kenapa bentuk kurvanya eksponensial, bukan garis lurus naik.</p>
+    <p>Kecepatan proses ini diringkas dalam satu angka: <strong>konstanta waktu τ = RC</strong> — waktu yang dibutuhkan tegangan mencapai 63,2% dari tegangan sumber saat pengisian (atau turun ke 36,8% saat pengosongan). Setelah 5τ, rangkaian dianggap praktis selesai (99,3% terisi/kosong) — konsep ini dipakai di mana-mana, dari lampu kilat kamera sampai pengatur waktu sirkuit elektronik sederhana.</p>
+  </section>
+
+  <section id="eksplorasi">
+    <div class="kicker"><div class="num">2</div><h2>Eksplorasi</h2></div>
+    <div class="panel">
+      <div class="tab-row">
+        <button class="tab-btn active" onclick="pilihMode('isi')">Pengisian</button>
+        <button class="tab-btn" onclick="pilihMode('kosong')">Pengosongan</button>
+      </div>
+
+      <label>Resistansi R (ohm)</label>
+      <input type="range" id="r-slider" min="10" max="10000" step="10" value="1000">
+      <div class="slider-row"><span id="r-label">1000 Ω</span><span></span></div>
+
+      <label>Kapasitansi C (mikrofarad, µF)</label>
+      <input type="range" id="c-slider" min="1" max="1000" step="1" value="100">
+      <div class="slider-row"><span id="c-label">100 µF</span><span></span></div>
+
+      <label>Tegangan sumber V₀ (volt)</label>
+      <input type="range" id="v-slider" min="1" max="24" step="0.5" value="5">
+      <div class="slider-row"><span id="v-label">5 V</span><span></span></div>
+
+      <div class="hasil-grid">
+        <div class="hasil-card"><span class="lbl">Konstanta waktu τ = RC</span><span class="val" id="tau-out">—</span></div>
+        <div class="hasil-card"><span class="lbl">Arus awal (t=0)</span><span class="val" id="i0-out">—</span></div>
+        <div class="hasil-card"><span class="lbl">Energi maksimum tersimpan (½CV₀²)</span><span class="val" id="energi-out">—</span></div>
+      </div>
+
+      <div class="grafik-wrap">
+        <svg id="grafik-svg" viewBox="0 0 380 220"></svg>
+        <div class="legend-row">
+          <div><span class="sw" style="background:var(--gold)"></span>Tegangan V(t)</div>
+          <div><span class="sw" style="background:var(--blue)"></span>Arus I(t) (skala relatif)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="metode">
+    <div class="kicker"><div class="num">3</div><h2>Metode</h2></div>
+    <p>Persamaan diturunkan dari Hukum Kirchhoff pada rangkaian seri R-C, diselesaikan sebagai persamaan diferensial orde satu:</p>
+    <div class="formula">Pengisian: V(t) = V₀(1 − e^(−t/RC)) &nbsp;•&nbsp; I(t) = (V₀/R)e^(−t/RC)<br>Pengosongan: V(t) = V₀·e^(−t/RC) &nbsp;•&nbsp; I(t) = −(V₀/R)e^(−t/RC)</div>
+    <p class="dim">Diverifikasi: pada t=τ pengisian mencapai tepat 63,2% V₀ (1−e⁻¹), pada t=5τ mencapai 99,3% — angka ini dihitung ulang otomatis di atas setiap slider digeser.</p>
+  </section>
+
+  <section id="batasan">
+    <div class="kicker"><div class="num">4</div><h2>Batasan</h2></div>
+    <ul class="batas">
+      <li>Mengasumsikan sumber tegangan &amp; kapasitor <strong>ideal</strong> — kapasitor sungguhan punya kebocoran arus (leakage) dan resistansi seri internal (ESR) yang tidak dimodelkan di sini.</li>
+      <li>Mengasumsikan resistor &amp; kabel tanpa induktansi parasit — pada frekuensi sangat tinggi, efek ini bisa mengubah bentuk kurva.</li>
+      <li>Grafik memotong sumbu waktu di 5τ untuk keterbacaan — proses sesungguhnya mendekati asimtot tanpa pernah benar-benar mencapai nol/penuh secara matematis sempurna.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <div class="kicker"><div class="num">5</div><h2>Referensi</h2></div>
+    <ul class="refs">
+      <li>Materi standar rangkaian listrik arus-searah (mis. Halliday-Resnick, <em>Fundamentals of Physics</em>, bab Rangkaian RC) — turunan persamaan diferensial &amp; konstanta waktu.</li>
+      <li>Konvensi 5τ sebagai "praktis selesai" — standar umum teknik elektro (≈99,3%, dianggap cukup dekat kondisi mantap/steady-state).</li>
+    </ul>
+  </section>
+
+  <section id="konsultasi">
+    <div class="consult">
+      <h3 style="color:#fff;">Lanjut ke Tier 2 berikutnya?</h3>
+      <p class="dim">Alat ini masih pengembangan versi awal. Siap lanjut ke Siklus Carnot atau Spektrum Elektromagnetik kapan pun diminta.</p>
+      <a class="wa" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20bertanya%20seputar%20Rangkaian%20RC%20JAZMI." target="_blank">Hubungi via WhatsApp</a>
+    </div>
+  </section>
+
+</div>
+<footer>JAZMI — Laboratorium Pengetahuan Digital · Tier 2 No.11 · Prototipe, belum masuk struktur menu utama.</footer>
+
+<script>
+let mode = 'isi';
+function pilihMode(m){
+  mode = m;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  update();
+}
+
+function fmtR(r){ return r>=1000 ? (r/1000).toFixed(2)+' kΩ' : r.toFixed(0)+' Ω'; }
+function fmtTau(tau){
+  if(tau>=1) return tau.toFixed(3)+' detik';
+  if(tau>=0.001) return (tau*1000).toFixed(2)+' ms';
+  return (tau*1e6).toFixed(1)+' µs';
+}
+
+function update(){
+  const R = parseFloat(document.getElementById('r-slider').value);
+  const Cuf = parseFloat(document.getElementById('c-slider').value);
+  const C = Cuf * 1e-6;
+  const V0 = parseFloat(document.getElementById('v-slider').value);
+
+  document.getElementById('r-label').textContent = fmtR(R);
+  document.getElementById('c-label').textContent = Cuf + ' µF';
+  document.getElementById('v-label').textContent = V0.toFixed(1) + ' V';
+
+  const tau = R*C;
+  const i0 = V0/R;
+  const energi = 0.5*C*V0*V0;
+
+  document.getElementById('tau-out').textContent = fmtTau(tau);
+  document.getElementById('i0-out').textContent = (i0*1000).toFixed(2) + ' mA';
+  document.getElementById('energi-out').textContent = (energi*1000).toFixed(3) + ' mJ';
+
+  gambarGrafik(V0, R, tau, mode);
+}
+
+function gambarGrafik(V0, R, tau, mode){
+  const svg = document.getElementById('grafik-svg');
+  const W=380,H=220,padL=40,padR=10,padT=14,padB=28;
+  const tMax = 5*tau;
+  const I0 = V0/R;
+
+  const xOf = t => padL + (t/tMax)*(W-padL-padR);
+  const yOfV = v => padT + (1-v/V0)*(H-padT-padB);
+  const yOfI = i => padT + (1-Math.abs(i)/I0)*(H-padT-padB);
+
+  let pathV='', pathI='';
+  const N=80;
+  for(let k=0;k<=N;k++){
+    const t = tMax*k/N;
+    const v = mode==='isi' ? V0*(1-Math.exp(-t/tau)) : V0*Math.exp(-t/tau);
+    const i = mode==='isi' ? I0*Math.exp(-t/tau) : -I0*Math.exp(-t/tau);
+    pathV += xOf(t).toFixed(1)+','+yOfV(v).toFixed(1)+' ';
+    pathI += xOf(t).toFixed(1)+','+yOfI(i).toFixed(1)+' ';
+  }
+
+  let sumbu = `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-padB}" stroke="#453a42"/><line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#453a42"/>`;
+  for(let k=0;k<=5;k++){
+    const x = xOf(k*tau);
+    sumbu += `<line x1="${x}" y1="${padT}" x2="${x}" y2="${H-padB}" stroke="#2a2f42" stroke-dasharray="2,3"/><text x="${x}" y="${H-8}" font-size="8" fill="#a9a6ac" text-anchor="middle">${k}τ</text>`;
+  }
+  [0,0.5,1].forEach(f=>{
+    const y = yOfV(f*V0);
+    sumbu += `<text x="${padL-6}" y="${y+3}" font-size="8" fill="#a9a6ac" text-anchor="end">${(f*V0).toFixed(1)}V</text>`;
+  });
+
+  svg.innerHTML = sumbu
+    + `<polyline points="${pathV}" fill="none" stroke="var(--gold)" stroke-width="2.3"/>`
+    + `<polyline points="${pathI}" fill="none" stroke="var(--blue)" stroke-width="1.8" stroke-dasharray="4,2"/>`;
+}
+
+['r-slider','c-slider','v-slider'].forEach(id=> document.getElementById(id).addEventListener('input', update));
+update();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

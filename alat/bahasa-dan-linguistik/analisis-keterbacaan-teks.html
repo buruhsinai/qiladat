@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analisis Keterbacaan Teks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0D1117;--panel:#161B22;--deep:#010409;--text:#C9D1D9;--soft:#8B949E;--blue:#58A6FF;--green:#3FB950;--amber:#D29922;--red:#F85149;--line:#30363D;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.6}
+.mono{font-family:'JetBrains Mono',monospace}
+.wrap{max-width:820px;margin:0 auto;padding:32px 18px 70px}
+h1{font-size:1.5rem;margin:0 0 6px;color:#fff}
+h2{font-size:1rem;margin:0 0 12px;color:#fff}
+p.lede{color:var(--soft);font-size:.9rem;margin:0 0 20px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin-bottom:18px}
+textarea{width:100%;min-height:160px;background:var(--deep);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:12px;font-size:.9rem;font-family:'Inter',sans-serif}
+.row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+button{padding:9px 16px;border-radius:6px;border:1px solid var(--line);background:var(--deep);color:var(--text);font-size:.85rem;cursor:pointer}
+button.primary{background:var(--blue);color:#0D1117;border-color:var(--blue);font-weight:700}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat-card{background:var(--deep);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.stat-card .k{font-size:.72rem;color:var(--soft);margin-bottom:4px}
+.stat-card .v{font-size:1.3rem;font-weight:700;color:#fff}
+.slider-row label{display:flex;justify-content:space-between;font-size:.84rem;color:var(--soft);margin-bottom:8px}
+input[type=range]{width:100%}
+.badge{display:inline-flex;padding:6px 14px;border-radius:100px;font-size:.85rem;font-weight:700;margin-bottom:12px}
+.b-mudah{background:rgba(63,185,80,.15);color:var(--green);border:1px solid rgba(63,185,80,.4)}
+.b-sedang{background:rgba(210,153,34,.15);color:var(--amber);border:1px solid rgba(210,153,34,.4)}
+.b-sulit{background:rgba(248,81,73,.15);color:var(--red);border:1px solid rgba(248,81,73,.4)}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:.82rem}
+.bar-label{width:110px;flex-shrink:0;color:var(--soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{flex:1;height:15px;background:var(--deep);border-radius:4px;overflow:hidden;border:1px solid var(--line)}
+.bar-fill{height:100%;background:var(--blue);border-radius:4px}
+.bar-value{width:34px;text-align:right;font-family:'JetBrains Mono',monospace}
+.sent-box{background:var(--deep);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-size:.86rem;color:var(--text);margin-bottom:8px}
+.sent-box .tag{font-size:.72rem;color:var(--soft);margin-bottom:4px}
+.foot{font-size:.78rem;color:#565D66;margin-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Analisis Keterbacaan Teks</h1>
+  <p class="lede">Tempel teks apa saja — tulisan blog, draf artikel, caption, dll. Tool ini membongkar statistiknya: seberapa panjang kalimatnya, seberapa cepat dibaca, dan kata apa yang paling sering muncul.</p>
+
+  <div class="panel">
+    <textarea id="input" placeholder="Tempel teks di sini..."></textarea>
+    <div class="row">
+      <button class="primary" id="btnAnalyze">Analisis</button>
+      <button id="btnSample">Coba Contoh</button>
+      <button id="btnClear">Bersihkan</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Statistik Dasar</h2>
+    <div class="stat-grid" id="statGrid"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Kecepatan Baca</h2>
+    <div class="slider-row">
+      <label>Kecepatan baca (kata/menit) <span id="wpmPos">200</span></label>
+      <input type="range" id="wpmSlider" min="100" max="400" step="10" value="200">
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="k">Perkiraan waktu baca</div><div class="v" id="readTime">-</div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Indeks Kerumitan Kalimat</h2>
+    <div id="complexityArea"></div>
+    <p class="foot">Heuristik sederhana berdasarkan rata-rata panjang kalimat &amp; kata — bukan formula keterbacaan baku (seperti Flesch), karena formula itu dirancang untuk bahasa Inggris dan tidak akurat dipakai langsung ke Bahasa Indonesia.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Kalimat Terpanjang &amp; Terpendek</h2>
+    <div id="sentExtremes"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Kata Paling Sering Muncul</h2>
+    <div id="wordFreq"></div>
+  </div>
+</div>
+
+<script>
+const STOPWORDS = new Set(['yang','dan','di','ke','dari','untuk','pada','dengan','ini','itu','adalah','akan','atau','juga','tidak','ada','sebagai','oleh','dalam','saya','kita','kami','kamu','dia','mereka','ia','se','se-','tersebut','dapat','bisa','telah','sudah','belum','karena','jika','kalau','maka','agar','supaya','yaitu','antara','lebih','sangat','hanya','saja','pun','lah','kah','nya','para','satu','dua','tiga','apa','siapa','bagaimana','mengapa','kenapa']);
+
+function splitSentences(text){
+  return text.split(/(?<=[.!?])\s+/).map(s=>s.trim()).filter(s=>s.length>0);
+}
+function splitWords(text){
+  return (text.match(/[A-Za-zÀ-ÖØ-öø-ÿ']+/g) || []);
+}
+
+function analyze(text){
+  const trimmed = text.trim();
+  if(!trimmed) return null;
+  const chars = trimmed.length;
+  const charsNoSpace = trimmed.replace(/\s/g,'').length;
+  const words = splitWords(trimmed);
+  const sentences = splitSentences(trimmed).filter(s=>splitWords(s).length>0);
+  const paragraphs = trimmed.split(/\n\s*\n/).filter(p=>p.trim().length>0);
+
+  const wordCount = words.length;
+  const sentCount = sentences.length || 1;
+  const avgWordsPerSentence = wordCount / sentCount;
+  const avgCharsPerWord = words.length ? words.reduce((a,w)=>a+w.length,0)/words.length : 0;
+
+  const freq = {};
+  words.forEach(w=>{
+    const lw = w.toLowerCase();
+    if(lw.length<=2 || STOPWORDS.has(lw)) return;
+    freq[lw] = (freq[lw]||0)+1;
+  });
+  const top = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,10);
+
+  const sentLengths = sentences.map(s=>({text:s, len:splitWords(s).length}));
+  sentLengths.sort((a,b)=>b.len-a.len);
+  const longest = sentLengths[0];
+  const shortest = sentLengths[sentLengths.length-1];
+
+  return {chars, charsNoSpace, wordCount, sentCount, paraCount: paragraphs.length||1, avgWordsPerSentence, avgCharsPerWord, top, longest, shortest};
+}
+
+function complexityLevel(avgWords, avgChars){
+  const score = avgWords*0.6 + avgChars*4;
+  if(score < 16) return {label:'Mudah dibaca', cls:'b-mudah', desc:'Kalimat relatif pendek dan kata-katanya relatif sederhana — cocok untuk pembaca umum.'};
+  if(score < 24) return {label:'Sedang', cls:'b-sedang', desc:'Kalimat mulai cukup panjang atau kata-katanya cukup panjang — masih nyaman dibaca, tapi mulai butuh perhatian lebih.'};
+  return {label:'Cukup sulit', cls:'b-sulit', desc:'Kalimat panjang dan/atau kata-katanya panjang — pertimbangkan memecah kalimat supaya lebih mudah dicerna.'};
+}
+
+let lastResult = null;
+
+function render(){
+  const text = document.getElementById('input').value;
+  const r = analyze(text);
+  lastResult = r;
+  const statGrid = document.getElementById('statGrid');
+  if(!r){
+    statGrid.innerHTML = '<div class="stat-card"><div class="k">Status</div><div class="v" style="font-size:.95rem">Tempel teks dulu</div></div>';
+    document.getElementById('complexityArea').innerHTML = '';
+    document.getElementById('sentExtremes').innerHTML = '';
+    document.getElementById('wordFreq').innerHTML = '';
+    document.getElementById('readTime').textContent = '-';
+    return;
+  }
+  statGrid.innerHTML = `
+    <div class="stat-card"><div class="k">Karakter</div><div class="v">${r.chars}</div></div>
+    <div class="stat-card"><div class="k">Kata</div><div class="v">${r.wordCount}</div></div>
+    <div class="stat-card"><div class="k">Kalimat</div><div class="v">${r.sentCount}</div></div>
+    <div class="stat-card"><div class="k">Paragraf</div><div class="v">${r.paraCount}</div></div>
+    <div class="stat-card"><div class="k">Rata² kata/kalimat</div><div class="v">${r.avgWordsPerSentence.toFixed(1)}</div></div>
+    <div class="stat-card"><div class="k">Rata² huruf/kata</div><div class="v">${r.avgCharsPerWord.toFixed(1)}</div></div>
+  `;
+
+  updateReadTime();
+
+  const c = complexityLevel(r.avgWordsPerSentence, r.avgCharsPerWord);
+  document.getElementById('complexityArea').innerHTML = `<span class="badge ${c.cls}">${c.label}</span><p style="color:var(--soft);font-size:.88rem;margin:0">${c.desc}</p>`;
+
+  document.getElementById('sentExtremes').innerHTML = `
+    <div class="sent-box"><div class="tag">Terpanjang (${r.longest?r.longest.len:0} kata)</div>${esc(r.longest?r.longest.text:'-')}</div>
+    <div class="sent-box"><div class="tag">Terpendek (${r.shortest?r.shortest.len:0} kata)</div>${esc(r.shortest?r.shortest.text:'-')}</div>
+  `;
+
+  const maxFreq = Math.max(...r.top.map(t=>t[1]), 1);
+  document.getElementById('wordFreq').innerHTML = r.top.length ? r.top.map(([w,c])=>`
+    <div class="bar-row">
+      <div class="bar-label" title="${esc(w)}">${esc(w)}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(c/maxFreq*100)}%"></div></div>
+      <div class="bar-value mono">${c}×</div>
+    </div>
+  `).join('') : '<p style="color:var(--soft);font-size:.85rem">Belum cukup kata bermakna untuk dianalisis.</p>';
+}
+
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function updateReadTime(){
+  const wpm = +document.getElementById('wpmSlider').value;
+  document.getElementById('wpmPos').textContent = wpm;
+  if(!lastResult){ document.getElementById('readTime').textContent = '-'; return; }
+  const minutes = lastResult.wordCount / wpm;
+  const label = minutes < 1 ? Math.round(minutes*60)+' detik' : minutes.toFixed(1)+' menit';
+  document.getElementById('readTime').textContent = label;
+}
+
+document.getElementById('btnAnalyze').addEventListener('click', render);
+document.getElementById('btnClear').addEventListener('click', () => { document.getElementById('input').value=''; render(); });
+document.getElementById('btnSample').addEventListener('click', () => {
+  document.getElementById('input').value = "Menulis dengan jelas bukan berarti menulis dengan sederhana secara berlebihan. Kalimat yang baik menyampaikan satu gagasan utuh tanpa membuat pembaca kehilangan arah di tengah jalan. Banyak penulis pemula justru menumpuk terlalu banyak anak kalimat dalam satu kalimat panjang, sehingga pembaca harus membaca ulang untuk benar-benar memahami maksudnya. Sebaliknya, kalimat yang terlalu pendek dan terputus-putus juga bisa terasa kaku dan tidak mengalir. Kuncinya adalah variasi: sesekali kalimat pendek untuk penekanan, sesekali kalimat lebih panjang untuk menjelaskan hubungan antar gagasan. Alat ini membantu melihat pola itu secara langsung dari tulisan Anda sendiri.";
+  render();
+});
+document.getElementById('wpmSlider').addEventListener('input', updateReadTime);
+
+render();
+document.getElementById('btnSample').click();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

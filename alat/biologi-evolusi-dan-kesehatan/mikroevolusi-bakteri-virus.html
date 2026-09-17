@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mikroevolusi Bakteri &amp; Virus — JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-900:#0f1614; --ink-800:#151f1c; --ink-700:#1c2925; --ink-600:#293a34;
+    --teal-500:#3f9188; --teal-300:#7fc4b8;
+    --brass-500:#c39a54; --brass-300:#d9bc85;
+    --rust-500:#b1543a; --rust-300:#d38a76;
+    --text-hi:#eef3f1; --text-mid:#a7b8b3; --text-dim:#71827d;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--ink-900);color:var(--text-hi);font-family:'Karla',sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;}
+  ::selection{background:var(--teal-500);color:#fff;}
+  a{color:var(--brass-300);}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+
+  .hero{position:relative;padding:56px 0 40px;overflow:hidden;border-bottom:1px solid var(--ink-600);
+    background:radial-gradient(ellipse at 75% -10%, rgba(63,145,136,0.15), transparent 55%), var(--ink-900);}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal-300);margin:0 0 14px;}
+  h1{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(24px,4.6vw,38px);line-height:1.16;margin:0 0 16px;color:var(--text-hi);}
+  .hero p.lede{font-size:17px;color:var(--text-mid);max-width:66ch;margin:0 0 6px;}
+  .hero-lineage{margin-top:22px;display:flex;gap:10px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-dim);}
+  .hero-lineage span{border:1px solid var(--ink-600);padding:4px 10px;border-radius:999px;}
+  .hero-lineage span b{color:var(--teal-300);font-weight:600;}
+
+  section{padding:44px 0;border-bottom:1px solid var(--ink-700);}
+  section:last-of-type{border-bottom:none;}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin:0 0 18px;}
+  .sec-num{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--teal-300);border:1px solid var(--ink-600);border-radius:4px;padding:2px 7px;}
+  h2{font-family:'Fraunces',serif;font-weight:600;font-size:22px;margin:0;color:var(--text-hi);}
+  h3{font-family:'Fraunces',serif;font-weight:600;font-size:16px;margin:0 0 8px;color:var(--text-hi);}
+  p{color:var(--text-mid);margin:0 0 12px;}
+  ul{color:var(--text-mid);padding-left:20px;margin:0 0 12px;}
+  li{margin-bottom:6px;}
+  code,.mono{font-family:'IBM Plex Mono',monospace;}
+  code{background:var(--ink-700);color:var(--brass-300);padding:1px 6px;border-radius:4px;font-size:.92em;}
+
+  .panel{background:var(--ink-800);border:1px solid var(--ink-600);border-radius:10px;padding:22px;margin-bottom:22px;}
+  .panel h3{color:var(--teal-300);}
+
+  .case-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px;}
+  .case-card{background:var(--ink-700);border:2px solid var(--ink-600);border-radius:8px;padding:12px 10px;cursor:pointer;transition:all .15s ease;}
+  .case-card.active{border-color:var(--teal-500);background:rgba(63,145,136,0.12);}
+  .case-card .nm{font-family:'Karla',sans-serif;font-weight:700;font-size:13px;color:var(--text-hi);}
+  .case-card .tag{font-size:10px;color:var(--text-dim);margin-top:4px;}
+  .case-detail{background:var(--ink-700);border:1px solid var(--ink-600);border-radius:8px;padding:16px 18px;font-size:13.5px;}
+  .case-detail .why{color:var(--teal-300);font-family:'IBM Plex Mono',monospace;font-size:12px;margin-top:10px;border-top:1px dashed var(--ink-600);padding-top:10px;}
+
+  select{
+    font-family:'Karla',sans-serif;font-weight:700;font-size:13px;color:var(--text-hi);
+    background:var(--ink-700);border:1px solid var(--ink-600);border-radius:6px;padding:8px 10px;margin-bottom:14px;
+  }
+  .slider-row label{display:flex;justify-content:space-between;font-size:13px;color:var(--text-mid);margin-bottom:6px;}
+  .slider-row label b{color:var(--text-hi);font-family:'IBM Plex Mono',monospace;}
+  input[type="range"]{width:100%;accent-color:var(--teal-500);}
+  .slider-row{margin-bottom:16px;}
+
+  .result-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:6px;}
+  @media(min-width:480px){.result-grid{grid-template-columns:repeat(2,1fr);}}
+  .result-card{background:var(--ink-700);border:1px solid var(--ink-600);border-radius:8px;padding:12px;}
+  .result-card .label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;}
+  .result-card .value{font-family:'IBM Plex Mono',monospace;font-size:16px;color:var(--text-hi);margin-top:4px;}
+
+  .graph-wrap{margin-top:16px;background:var(--ink-900);border:1px solid var(--ink-600);border-radius:8px;padding:10px;}
+  .graph-wrap svg{width:100%;height:auto;display:block;}
+
+  .verdict{margin-top:14px;padding:14px 16px;border-radius:8px;font-size:13.5px;border:1px solid var(--ink-600);}
+  .verdict.safe{background:rgba(63,145,136,0.1);border-color:rgba(63,145,136,0.4);color:var(--text-hi);}
+  .verdict.danger{background:rgba(177,84,58,0.1);border-color:rgba(177,84,58,0.4);color:var(--text-hi);}
+
+  table.ttable{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:12.5px;margin-top:6px;}
+  table.ttable td,table.ttable th{border:1px solid var(--ink-600);padding:6px 8px;text-align:left;color:var(--text-mid);}
+  table.ttable th{color:var(--teal-300);background:var(--ink-700);}
+
+  .whatsapp-box{display:flex;gap:14px;align-items:center;background:var(--ink-700);border:1px solid var(--ink-600);border-radius:10px;padding:16px 18px;margin-top:8px;}
+  .whatsapp-box a{font-family:'Karla',sans-serif;font-weight:700;font-size:13px;color:var(--ink-900);background:var(--brass-500);padding:9px 16px;border-radius:6px;text-decoration:none;white-space:nowrap;}
+  .whatsapp-box a:hover{background:var(--brass-300);}
+
+  footer{padding:30px 0 60px;color:var(--text-dim);font-size:12px;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <p class="eyebrow">JAZMI · Laboratorium Evolusi &amp; Adaptasi — Mikrobiologi</p>
+    <h1>Mikroevolusi Bakteri &amp; Virus: Bukan Cuma Terbukti, Tapi Vital</h1>
+    <p class="lede">Di sinilah mikroevolusi berhenti menjadi sekadar contoh pelajaran biologi — ia jadi alasan mengapa dokter meresepkan tiga obat sekaligus untuk HIV, mengapa vaksin flu diperbarui tiap tahun, dan mengapa antibiotik bisa berhenti mempan dalam hitungan hari. Semua kalkulator di bawah memakai model matematis nyata yang dipakai dunia kedokteran dan mikrobiologi.</p>
+    <div class="hero-lineage">
+      <span><b>Generasi menit, bukan tahun</b> · sapuan seleksi bisa selesai dalam sehari</span>
+      <span><b>Matematikanya nyata</b> · dasar rasional terapi kombinasi</span>
+      <span><b>Bukan hipotetis</b> · terjadi tiap hari di klinik &amp; rumah sakit</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- BELAJAR -->
+  <section id="belajar">
+    <div class="sec-head"><span class="sec-num">01</span><h2>Belajar</h2></div>
+    <p>Bakteri dan virus adalah "laboratorium evolusi" alami: populasinya sangat besar, waktu generasinya sangat singkat (bakteri: menit; virus: jam-hari), dan tekanan seleksinya bisa sangat kuat &amp; terukur (dosis obat). Kombinasi ini membuat mikroevolusi pada mereka bukan cuma teramati — tapi jadi pertimbangan matematis nyata dalam merancang terapi.</p>
+    <p>Lima kasus di bagian Eksplorasi mewakili lima mekanisme/pelajaran berbeda: sapuan mutasi-seleksi bertahap (MEGA-plate), pembuktian bahwa mutasi terjadi acak sebelum seleksi bukan sesudahnya (Luria-Delbrück), dasar matematis mengapa terapi kombinasi mengalahkan resistensi HIV, penyebaran resistensi lewat transfer gen antar-bakteri (bukan mutasi), dan pergeseran genetik virus influenza yang memaksa vaksin diperbarui tahunan.</p>
+  </section>
+
+  <!-- EKSPLORASI -->
+  <section id="eksplorasi">
+    <div class="sec-head"><span class="sec-num">02</span><h2>Eksplorasi</h2></div>
+
+    <div class="panel">
+      <h3>Lima kasus nyata</h3>
+      <div class="case-grid" id="caseGrid"></div>
+      <div class="case-detail" id="caseDetail"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Kalkulator A — Laju Sapuan Resistensi (simulasi kering)</h3>
+      <p style="font-size:13px;">Pilih organisme, atur seberapa besar keunggulan bertahan hidup galur resisten saat terpapar obat, dan berapa lama waktu nyata berlalu. Simulator menghitung kapan galur resisten mendominasi populasi.</p>
+      <select id="orgSelect"></select>
+      <div class="slider-row">
+        <label for="p0Range">Fraksi awal populasi yang resisten <b id="p0Val">—</b></label>
+        <input type="range" id="p0Range" min="-8" max="-2" step="0.1" value="-3">
+      </div>
+      <div class="slider-row">
+        <label for="sRange">Koefisien seleksi (keunggulan bertahan galur resisten) <b id="sVal">—</b></label>
+        <input type="range" id="sRange" min="0.05" max="2" step="0.05" value="0.5">
+      </div>
+      <div class="slider-row">
+        <label for="tRange">Waktu nyata berlalu <b id="tVal">—</b></label>
+        <input type="range" id="tRange" min="1" max="200" value="30">
+      </div>
+      <div class="result-grid">
+        <div class="result-card"><div class="label">Jumlah generasi</div><div class="value" id="outGen">—</div></div>
+        <div class="result-card"><div class="label">Fraksi resisten saat ini</div><div class="value" id="outFrac">—</div></div>
+      </div>
+      <div class="graph-wrap"><svg viewBox="0 0 500 180" id="sweepSvg">
+        <line x1="35" y1="10" x2="35" y2="150" stroke="#293a34" stroke-width="1"/>
+        <line x1="35" y1="150" x2="480" y2="150" stroke="#293a34" stroke-width="1"/>
+        <line id="halfLine" x1="35" y1="80" x2="480" y2="80" stroke="#71827d" stroke-width="1" stroke-dasharray="3 3"/>
+        <polyline id="sweepCurve" points="" fill="none" stroke="#3f9188" stroke-width="2.2"/>
+      </svg></div>
+      <div class="verdict" id="sweepVerdict"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Kalkulator B — Mengapa Terapi Kombinasi Mengalahkan HIV</h3>
+      <p style="font-size:13px;">HIV bermutasi begitu cepat sehingga galur resisten terhadap satu obat nyaris pasti muncul. Tapi berapa peluang satu virus bermutasi resisten terhadap <i>beberapa</i> obat sekaligus, secara bersamaan, di satu siklus replikasi yang sama?</p>
+      <div class="slider-row">
+        <label for="pSingleRange">Peluang mutasi resisten per obat, per siklus replikasi <b id="pSingleVal">—</b></label>
+        <input type="range" id="pSingleRange" min="-6" max="-3" step="0.05" value="-4.5">
+      </div>
+      <div class="slider-row">
+        <label for="kRange">Jumlah obat dipakai bersamaan <b id="kVal">—</b></label>
+        <input type="range" id="kRange" min="1" max="5" step="1" value="1">
+      </div>
+      <div class="result-grid">
+        <div class="result-card"><div class="label">Peluang gabungan (resisten ke semua obat sekaligus)</div><div class="value" id="outPComb">—</div></div>
+        <div class="result-card"><div class="label">Perkiraan virion resisten/hari*</div><div class="value" id="outVirion">—</div></div>
+      </div>
+      <div class="verdict" id="haartVerdict"></div>
+      <p style="font-size:11px;color:var(--text-dim);margin-top:10px;">*mengasumsikan ~10 miliar partikel virus baru diproduksi per hari pada infeksi tak tertekan — angka pada kisaran atas literatur, dipakai di sini sebagai skenario terburuk.</p>
+    </div>
+  </section>
+
+  <!-- METODE -->
+  <section id="metode">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Metode</h2></div>
+    <p><b>Kalkulator A</b> memakai persamaan seleksi logistik populasi genetika standar (haploid, aseksual): jika galur resisten punya keunggulan bertahan hidup relatif <code>s</code> per generasi, fraksinya pada generasi ke-<code>t</code> adalah</p>
+    <p><code>p(t) = p₀·e^(st) / (1 − p₀ + p₀·e^(st))</code></p>
+    <p>dengan <code>p₀</code> fraksi awal. Jumlah generasi dihitung dari waktu nyata dibagi waktu generasi organisme (bakteri seperti <i>E. coli</i>: ~20 menit dalam kondisi optimal laboratorium; HIV: ~1–2 hari per siklus replikasi lengkap).</p>
+    <p><b>Kalkulator B</b> memakai aturan peluang gabungan sederhana: jika peluang satu mutasi resisten terhadap satu obat tertentu muncul secara independen adalah <code>p</code> per siklus replikasi, peluang SATU virus yang sama memunculkan mutasi resisten ke <code>k</code> obat berbeda sekaligus (diasumsikan independen) adalah <code>p^k</code>. Ini prinsip matematis di balik rasional terapi kombinasi (HAART) sejak pertengahan 1990-an.</p>
+  </section>
+
+  <!-- BATASAN -->
+  <section id="batasan">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Batasan</h2></div>
+    <ul>
+      <li><b>Kalkulator A mengasumsikan populasi tercampur rata (well-mixed)</b> dan <code>s</code> konstan sepanjang waktu — MEGA-plate sungguhan justru punya struktur ruang (bakteri harus "menemukan jalan" melintasi gradien dosis secara spasial), sehingga waktu sapuan sungguhan dipengaruhi juga oleh difusi &amp; pergerakan, bukan cuma matematika seleksi murni.</li>
+      <li><b>Kalkulator B mengasumsikan independensi penuh antar-mutasi</b> — penyederhanaan standar yang dipakai untuk menjelaskan rasional HAART, tapi realitas biologis punya faktor tambahan (linkage, rekombinasi, mutasi kompensatorik) yang bisa menggeser angka sungguhan naik-turun dari perkiraan sederhana ini.</li>
+      <li><b>Penyebaran resistensi lewat plasmid (transfer gen horizontal)</b> — kasus keempat di atas — sengaja <b>tidak</b> diberi kalkulator kuantitatif di sini, karena mekanismenya berbeda total dari mutasi-seleksi bertahap (satu peristiwa konjugasi bisa langsung memindahkan gen resisten utuh ke sel tetangga dalam hitungan menit, melewati seluruh proses sapuan seleksi). Ini justru salah satu jalur resistensi tercepat &amp; paling mengkhawatirkan secara klinis, dan disebutkan di sini murni sebagai kontras kualitatif.</li>
+      <li><b>Influenza (pergeseran antigenik)</b> juga tidak diberi kalkulator numerik — mekanismenya (akumulasi mutasi protein permukaan lintas musim, dipengaruhi kekebalan populasi) tidak cocok dengan kerangka generasi-tunggal yang dipakai Kalkulator A.</li>
+      <li>Angka "10 miliar virion/hari" pada Kalkulator B adalah <b>skenario atas</b> dari kisaran literatur (10⁹–10¹⁰), dipakai untuk menunjukkan skala masalah paling menantang — infeksi dengan replikasi lebih rendah akan punya angka jauh lebih kecil.</li>
+    </ul>
+  </section>
+
+  <!-- REFERENSI -->
+  <section id="referensi">
+    <div class="sec-head"><span class="sec-num">05</span><h2>Referensi</h2></div>
+    <ul>
+      <li>M. Baym dkk., "Spatiotemporal Microbial Evolution on Antibiotic Landscapes", <i>Science</i> 353, 2016 — eksperimen MEGA-plate.</li>
+      <li>S. E. Luria &amp; M. Delbrück, "Mutations of Bacteria from Virus Sensitivity to Virus Resistance", <i>Genetics</i> 28, 1943 — uji fluktuasi (Hadiah Nobel Fisiologi/Kedokteran 1969).</li>
+      <li>L. Menéndez-Arias, tinjauan laju mutasi &amp; kebugaran mutasi resistensi HIV-1 reverse transcriptase, berbagai publikasi 2002–2018; estimasi laju mutasi ~3×10⁻⁵ per nukleotida per siklus replikasi.</li>
+      <li>Persamaan seleksi logistik populasi haploid-aseksual — materi standar genetika populasi (mis. Hartl &amp; Clark, <i>Principles of Population Genetics</i>).</li>
+      <li>Ringkasan umum pergeseran antigenik (antigenic drift) influenza dan proses seleksi galur vaksin tahunan oleh WHO.</li>
+    </ul>
+
+    <div class="whatsapp-box">
+      <p style="margin:0;color:var(--text-mid);font-size:13.5px;">Alat ini bagian dari pengembangan tahap awal JAZMI. Ada koreksi angka, usul kasus lain, atau mau diskusi lebih lanjut?</p>
+      <a id="waLink" href="#" target="_blank" rel="noopener">WhatsApp</a>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">Mikroevolusi Bakteri &amp; Virus — bagian dari Laboratorium Evolusi &amp; Adaptasi, JAZMI (Jalinan Zamrud Islamiah). Versi awal, dibangun mengikuti metode Belajar → Model → Uji → Tool.</div>
+</footer>
+
+<script>
+(function(){
+  const CASES = {
+    megaplate: {
+      name:"MEGA-plate", tag:"mutasi + seleksi",
+      detail:"Baym dkk. (2016) menumbuhkan E. coli di cawan raksasa dengan 9 pita konsentrasi trimetoprim, naik 10× tiap pita hingga 1000× dosis ambang. Bakteri harus bermutasi untuk menembus tiap pita.",
+      why:"Seluruh gradien 1000× dilintasi hanya dalam 11 hari — jauh lebih cepat dari intuisi awam soal \"evolusi butuh waktu lama\"."
+    },
+    luria: {
+      name:"Uji Fluktuasi Luria-Delbrück", tag:"mutasi acak, bukan terarah",
+      detail:"Tahun 1943, Salvador Luria &amp; Max Delbrück membiakkan banyak kultur kecil E. coli terpisah, lalu menghitung berapa banyak sel resisten fag (virus bakteri) di tiap kultur.",
+      why:"Variasi jumlah sel resisten antar-kultur jauh lebih besar dari yang diharapkan bila mutasi dipicu oleh paparan virus — membuktikan mutasi terjadi acak SEBELUM seleksi, bukan respons terarah setelahnya. Kerja ini meraih Hadiah Nobel 1969."
+    },
+    hiv: {
+      name:"Resistensi HIV &amp; HAART", tag:"dasar terapi kombinasi",
+      detail:"HIV reverse transcriptase tidak punya mekanisme koreksi salinan, dengan laju mutasi ~3×10⁻⁵ per nukleotida per siklus replikasi — jauh lebih tinggi dari kebanyakan organisme.",
+      why:"Resistensi terhadap SATU obat bisa muncul dalam hitungan minggu jika hanya satu obat dipakai. Coba Kalkulator B di bawah untuk melihat kenapa memakai 3 obat sekaligus mengubah peluangnya secara drastis."
+    },
+    plasmid: {
+      name:"Transfer Gen via Plasmid", tag:"bukan mutasi — transfer langsung",
+      detail:"Banyak gen resistensi antibiotik dibawa plasmid — cincin DNA kecil yang bisa berpindah langsung antar-sel bakteri lewat konjugasi (kontak fisik antar-sel), bahkan antar spesies berbeda.",
+      why:"Ini BUKAN proses mutasi-seleksi bertahap. Satu peristiwa konjugasi bisa memberi satu sel tetangga gen resistensi utuh dalam hitungan menit — salah satu alasan resistensi antibiotik menyebar begitu cepat di rumah sakit."
+    },
+    flu: {
+      name:"Pergeseran Antigenik Influenza", tag:"mengapa vaksin diperbarui tahunan",
+      detail:"Virus influenza terus mengumpulkan mutasi kecil pada protein permukaannya (hemaglutinin) dari musim ke musim — proses yang disebut antigenic drift.",
+      why:"Vaksin yang cocok tahun ini bisa jadi kurang cocok tahun depan karena galur virus yang beredar sudah bergeser secara genetik — sebabnya WHO merancang ulang komposisi vaksin flu tiap tahun berdasarkan pengawasan galur yang beredar."
+    }
+  };
+
+  let activeCase = 'megaplate';
+  const caseEls = { grid: document.getElementById('caseGrid'), detail: document.getElementById('caseDetail') };
+
+  function buildCaseGrid(){
+    caseEls.grid.innerHTML = '';
+    Object.keys(CASES).forEach(key=>{
+      const c = CASES[key];
+      const card = document.createElement('div');
+      card.className = 'case-card' + (key===activeCase?' active':'');
+      card.innerHTML = '<div class="nm">'+c.name+'</div><div class="tag">'+c.tag+'</div>';
+      card.addEventListener('click', ()=>{ activeCase=key; buildCaseGrid(); renderCaseDetail(); });
+      caseEls.grid.appendChild(card);
+    });
+  }
+  function renderCaseDetail(){
+    const c = CASES[activeCase];
+    caseEls.detail.innerHTML = '<p style="margin-bottom:0;">'+c.detail+'</p><div class="why">'+c.why+'</div>';
+  }
+
+  // ---------- Kalkulator A: laju sapuan seleksi ----------
+  const ORGS = {
+    bakteri: { name:"Bakteri (E. coli, kondisi optimal lab)", genMinutes: 20, tUnit:"jam", tToMinutes: h=>h*60, tMax:200, tDefault:6 },
+    hiv:     { name:"HIV (siklus replikasi in vivo)", genMinutes: 36*60, tUnit:"hari", tToMinutes: d=>d*24*60, tMax:200, tDefault:60 }
+  };
+  let activeOrg = 'bakteri';
+
+  const aEls = {
+    orgSelect: document.getElementById('orgSelect'),
+    p0Range: document.getElementById('p0Range'), p0Val: document.getElementById('p0Val'),
+    sRange: document.getElementById('sRange'), sVal: document.getElementById('sVal'),
+    tRange: document.getElementById('tRange'), tVal: document.getElementById('tVal'),
+    outGen: document.getElementById('outGen'), outFrac: document.getElementById('outFrac'),
+    curve: document.getElementById('sweepCurve'), halfLine: document.getElementById('halfLine'),
+    verdict: document.getElementById('sweepVerdict')
+  };
+
+  function buildOrgSelect(){
+    aEls.orgSelect.innerHTML = '';
+    Object.keys(ORGS).forEach(key=>{
+      const opt = document.createElement('option');
+      opt.value = key; opt.textContent = ORGS[key].name;
+      aEls.orgSelect.appendChild(opt);
+    });
+    aEls.orgSelect.value = activeOrg;
+  }
+
+  function pAt(p0, s, t){
+    const num = p0*Math.exp(s*t);
+    return num/(1-p0+num);
+  }
+
+  function renderSweep(){
+    activeOrg = aEls.orgSelect.value;
+    const org = ORGS[activeOrg];
+    aEls.tRange.max = org.tMax;
+    if(parseInt(aEls.tRange.value,10) > org.tMax) aEls.tRange.value = org.tDefault;
+
+    const p0 = Math.pow(10, parseFloat(aEls.p0Range.value));
+    const s = parseFloat(aEls.sRange.value);
+    const tReal = parseFloat(aEls.tRange.value);
+
+    aEls.p0Val.textContent = '1 dari ' + Math.round(1/p0).toLocaleString('id-ID');
+    aEls.sVal.textContent = 's = ' + s.toFixed(2);
+    aEls.tVal.textContent = tReal + ' ' + org.tUnit;
+
+    const genTime = org.genMinutes;
+    const totalMinutes = org.tToMinutes(tReal);
+    const generations = totalMinutes / genTime;
+
+    aEls.outGen.textContent = generations.toFixed(1) + ' generasi';
+    const frac = pAt(p0, s, generations);
+    aEls.outFrac.textContent = (frac*100).toFixed(4) + '%';
+
+    // grafik
+    const steps = 60;
+    const maxGen = generations || 1;
+    let pts = [];
+    for(let i=0;i<=steps;i++){
+      const g = maxGen*i/steps;
+      const y = pAt(p0,s,g);
+      const x = 35 + (445)*(i/steps);
+      const yy = 150 - y*140;
+      pts.push(x.toFixed(1)+','+yy.toFixed(1));
+    }
+    aEls.curve.setAttribute('points', pts.join(' '));
+    aEls.halfLine.setAttribute('y1', (150-0.5*140).toFixed(1));
+    aEls.halfLine.setAttribute('y2', (150-0.5*140).toFixed(1));
+
+    let msg, cls;
+    if(frac >= 0.99){
+      cls='danger';
+      msg = 'Galur resisten sudah <b>mendominasi</b> (&ge;99%) populasi pada titik waktu ini.';
+    } else if(frac >= 0.5){
+      cls='danger';
+      msg = 'Galur resisten sudah <b>menjadi mayoritas</b> (&ge;50%) populasi pada titik waktu ini.';
+    } else {
+      cls='safe';
+      msg = 'Galur resisten masih minoritas pada titik waktu ini — tapi perhatikan kelengkungan grafiknya: begitu mendekati ambang tertentu, kenaikannya menjadi sangat cepat (khas kurva logistik).';
+    }
+    aEls.verdict.className = 'verdict ' + cls;
+    aEls.verdict.innerHTML = msg;
+  }
+
+  // ---------- Kalkulator B: HAART ----------
+  const bEls = {
+    pSingleRange: document.getElementById('pSingleRange'), pSingleVal: document.getElementById('pSingleVal'),
+    kRange: document.getElementById('kRange'), kVal: document.getElementById('kVal'),
+    outPComb: document.getElementById('outPComb'), outVirion: document.getElementById('outVirion'),
+    verdict: document.getElementById('haartVerdict')
+  };
+  function renderHaart(){
+    const pSingle = Math.pow(10, parseFloat(bEls.pSingleRange.value));
+    const k = parseInt(bEls.kRange.value,10);
+    bEls.pSingleVal.textContent = pSingle.toExponential(2);
+    bEls.kVal.textContent = k + ' obat';
+
+    const pComb = Math.pow(pSingle, k);
+    const virionsPerDay = 1e10;
+    const expected = pComb*virionsPerDay;
+
+    bEls.outPComb.textContent = pComb.toExponential(2);
+    bEls.outVirion.textContent = expected < 1 ? expected.toExponential(2) : Math.round(expected).toLocaleString('id-ID');
+
+    let msg, cls;
+    if(expected >= 1){
+      cls='danger';
+      msg = 'Dengan '+k+' obat, diperkirakan <b>'+ (expected<1000? expected.toFixed(1): Math.round(expected).toLocaleString('id-ID')) +' virion baru per hari</b> sudah membawa mutasi resisten ke SEMUA obat sekaligus — resistensi kemungkinan besar akan muncul, apalagi dalam hitungan minggu.';
+    } else {
+      const daysNeeded = 1/expected;
+      cls='safe';
+      msg = 'Dengan '+k+' obat, dibutuhkan kira-kira <b>'+ Math.round(daysNeeded).toLocaleString('id-ID') +' hari</b> replikasi tak terhambat sebelum satu virion dengan resistensi ke SEMUA obat sekaligus diperkirakan muncul secara kebetulan — praktis tidak akan terjadi dalam masa pengobatan wajar.';
+    }
+    bEls.verdict.className = 'verdict ' + cls;
+    bEls.verdict.innerHTML = msg;
+
+    const waMsg = encodeURIComponent(
+      'Halo, saya baru mencoba alat Mikroevolusi Bakteri & Virus (JAZMI). Ingin diskusi/validasi lebih lanjut.'
+    );
+    document.getElementById('waLink').href = 'https://wa.me/6281356572588?text=' + waMsg;
+  }
+
+  [aEls.orgSelect, aEls.p0Range, aEls.sRange, aEls.tRange].forEach(el=>el.addEventListener('input', renderSweep));
+  [bEls.pSingleRange, bEls.kRange].forEach(el=>el.addEventListener('input', renderHaart));
+
+  buildCaseGrid();
+  renderCaseDetail();
+  buildOrgSelect();
+  renderSweep();
+  renderHaart();
+})();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pengecek Header Keamanan HTTP</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0F1115;--panel:#161A21;--panel2:#1D222B;--ink:#E7E9EE;--dim:#98A0AE;--dimmer:#5E6673;
+--line:rgba(231,233,238,.1);--red:#E5534B;--amber:#E0A730;--green:#3FB37F;--blue:#5B9BD5;
+--rsoft:rgba(229,83,75,.14);--asoft:rgba(224,167,48,.14);--gsoft:rgba(63,179,127,.14);}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Karla',sans-serif;line-height:1.6}
+.mono{font-family:'JetBrains Mono',monospace}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0}
+.wrap{max-width:720px;margin:0 auto;padding:32px 18px 70px}
+.kicker{font-size:.82rem;color:var(--blue);font-weight:700;margin-bottom:10px;letter-spacing:.02em}
+h1{font-size:1.5rem;margin-bottom:10px}
+header p{color:var(--dim);font-size:.92rem}
+.privacy{display:inline-block;margin-top:10px;background:var(--gsoft);border:1px solid rgba(63,179,127,.35);color:var(--green);font-size:.78rem;padding:6px 12px;border-radius:20px;}
+
+.lab{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:20px}
+.field label{display:block;font-size:.82rem;color:var(--dim);margin-bottom:7px;font-weight:600}
+textarea{width:100%;min-height:200px;background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:10px;color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:.82rem;padding:12px;resize:vertical}
+.sample-row{display:flex;gap:8px;margin:12px 0 0;flex-wrap:wrap}
+.btn-sample{padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--dim);cursor:pointer;font-size:.8rem;font-weight:600}
+.btn-sample.danger{color:var(--red);border-color:rgba(229,83,75,.35)}
+.btn-sample.safe{color:var(--green);border-color:rgba(63,179,127,.35)}
+
+.gauge-wrap{margin-top:18px}
+.gauge-track{height:14px;border-radius:8px;background:rgba(0,0,0,.3);overflow:hidden;border:1px solid var(--line)}
+.gauge-fill{height:100%;border-radius:8px;transition:width .25s ease, background .25s ease;width:0%}
+.gauge-label{display:flex;justify-content:space-between;margin-top:8px;font-size:.85rem}
+.gauge-cat{font-weight:700;font-family:'Fraunces',serif;font-size:1.1rem}
+
+.signal-list{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+.signal{display:flex;align-items:flex-start;gap:10px;background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:.85rem}
+.signal .dot{width:9px;height:9px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.signal .w{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--dimmer);white-space:nowrap}
+.empty-note{color:var(--dimmer);font-size:.85rem;font-style:italic;padding:8px 0}
+.section-lbl{font-size:.72rem;color:var(--dimmer);text-transform:uppercase;letter-spacing:.04em;margin:16px 0 8px;font-weight:700}
+
+.info{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:18px;font-size:.85rem;color:var(--dim)}
+.info h3{font-size:.95rem;color:var(--ink);margin-bottom:8px}
+.info ul{margin:6px 0;padding-left:18px}
+.info li{margin-bottom:6px}
+footer{margin-top:24px;font-size:.78rem;color:var(--dimmer)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <p class="kicker">Laboratorium JAZMI — Modul Keamanan Siber</p>
+  <h1>Pengecek Header Keamanan HTTP</h1>
+  <p>Tempel respons header dari situs mana pun (lihat lewat DevTools browser → tab Network → klik request → Headers). Skor 0–100 dan rekomendasi diberikan otomatis — pola yang sama seperti Analisis URL, cuma objeknya sekarang header, bukan URL.</p>
+  <span class="privacy">🔒 Semua analisis berjalan di browser Anda</span>
+</header>
+
+<div class="lab">
+  <div class="sample-row">
+    <button class="btn-sample safe" id="loadGoodSample">Muat contoh: header rapi</button>
+    <button class="btn-sample danger" id="loadBadSample">Muat contoh: header berantakan</button>
+    <button class="btn-sample" id="clearBtn">Bersihkan</button>
+  </div>
+  <div class="field">
+    <label>Tempel respons header di sini (satu header per baris, format "Nama: Nilai")</label>
+    <textarea id="headerInput" placeholder="Strict-Transport-Security: max-age=31536000
+Content-Security-Policy: default-src 'self'
+X-Frame-Options: DENY
+..."></textarea>
+  </div>
+
+  <div class="gauge-wrap">
+    <div class="gauge-track"><div class="gauge-fill" id="gaugeFill"></div></div>
+    <div class="gauge-label"><span class="gauge-cat" id="gaugeCat">–</span><span class="mono" id="gaugeScore">0/100</span></div>
+  </div>
+
+  <div class="section-lbl">Masalah &amp; rekomendasi</div>
+  <div class="signal-list" id="issueList"></div>
+
+  <div class="section-lbl">Sudah baik</div>
+  <div class="signal-list" id="goodList"></div>
+</div>
+
+<div class="info">
+  <h3>Yang diperiksa &amp; batasannya</h3>
+  <ul>
+    <li>Mengecek keberadaan &amp; konfigurasi header standar: <span class="mono">Strict-Transport-Security, Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy</span>, atribut <span class="mono">Set-Cookie</span> (Secure/HttpOnly/SameSite), kebocoran versi lewat <span class="mono">Server</span>/<span class="mono">X-Powered-By</span>, dan kesalahan konfigurasi CORS yang umum.</li>
+    <li><span class="mono">X-XSS-Protection</span> sengaja tidak dinilai sebagai "wajib ada" — header ini sudah usang, browser modern (Chrome/Edge) tidak lagi mendukungnya, dan Content-Security-Policy adalah penggantinya yang sesungguhnya.</li>
+    <li>Skor ini heuristik berdasarkan praktik umum yang dipublikasikan OWASP &amp; MDN — bukan pemindaian kerentanan penuh, dan tidak menggantikan audit keamanan sungguhan. Header yang lengkap juga tidak menjamin aplikasi di baliknya bebas bug.</li>
+  </ul>
+</div>
+
+<footer>Bagian dari Laboratorium JAZMI</footer>
+</div>
+
+<script>
+function parseHeaders(text){
+  const lines = text.split('\n');
+  const headers = {};
+  lines.forEach(line=>{
+    const trimmed = line.trim();
+    if(!trimmed || /^HTTP\/\d/i.test(trimmed)) return;
+    const idx = trimmed.indexOf(':');
+    if(idx===-1) return;
+    const key = trimmed.slice(0,idx).trim().toLowerCase();
+    const val = trimmed.slice(idx+1).trim();
+    if(!headers[key]) headers[key] = [];
+    headers[key].push(val);
+  });
+  return headers;
+}
+
+function analyzeHeaders(text){
+  const h = parseHeaders(text);
+  const issues = [];
+  const goods = [];
+  const has = k => Object.prototype.hasOwnProperty.call(h,k);
+  const val = k => has(k) ? h[k].join('; ') : '';
+
+  // HSTS
+  if(!has('strict-transport-security')){
+    issues.push({label:'Tidak ada Strict-Transport-Security (HSTS) — browser bisa dipaksa turun ke HTTP oleh penyerang di jaringan (SSL stripping)', weight:15});
+  } else {
+    const m = val('strict-transport-security').match(/max-age=(\d+)/i);
+    const maxAge = m ? parseInt(m[1]) : 0;
+    if(maxAge < 15552000){
+      issues.push({label:`HSTS ada tapi max-age cuma ${maxAge||0} detik — disarankan minimal 15552000 (180 hari)`, weight:6});
+    } else {
+      goods.push({label:'Strict-Transport-Security terpasang dengan durasi memadai', weight:0});
+    }
+  }
+
+  // CSP
+  if(!has('content-security-policy')){
+    issues.push({label:'Tidak ada Content-Security-Policy — pertahanan utama modern melawan XSS tidak aktif', weight:20});
+  } else {
+    const csp = val('content-security-policy');
+    if(/unsafe-inline|unsafe-eval/i.test(csp)){
+      issues.push({label:"Content-Security-Policy ada tapi mengizinkan 'unsafe-inline'/'unsafe-eval' — melemahkan perlindungan XSS secara signifikan", weight:8});
+    } else {
+      goods.push({label:'Content-Security-Policy terpasang tanpa unsafe-inline/unsafe-eval', weight:0});
+    }
+  }
+
+  // Clickjacking: dicek independen dari ada/tidaknya CSP, supaya kasus "tanpa CSP sama sekali" tetap dapat pesan eksplisit
+  const cspFrameAncestors = has('content-security-policy') && /frame-ancestors/i.test(val('content-security-policy'));
+  if(!has('x-frame-options') && !cspFrameAncestors){
+    issues.push({label:'Tidak ada X-Frame-Options maupun frame-ancestors di CSP — situs bisa disisipkan ke iframe pihak lain (clickjacking)', weight:10});
+  } else if(has('x-frame-options')){
+    goods.push({label:'X-Frame-Options terpasang (perlindungan clickjacking)', weight:0});
+  } else {
+    goods.push({label:"Clickjacking sudah ditangani lewat frame-ancestors di CSP (X-Frame-Options tidak wajib lagi)", weight:0});
+  }
+
+  // X-Content-Type-Options
+  if(!has('x-content-type-options') || !/nosniff/i.test(val('x-content-type-options'))){
+    issues.push({label:'Tidak ada X-Content-Type-Options: nosniff — browser bisa salah menebak tipe file dan mengeksekusi konten berbahaya', weight:8});
+  } else {
+    goods.push({label:'X-Content-Type-Options: nosniff terpasang', weight:0});
+  }
+
+  // Referrer-Policy
+  if(!has('referrer-policy')){
+    issues.push({label:'Tidak ada Referrer-Policy — URL lengkap (bisa berisi token/parameter sensitif) ikut bocor ke situs tujuan saat pengguna mengklik tautan keluar', weight:6});
+  } else {
+    goods.push({label:'Referrer-Policy terpasang', weight:0});
+  }
+
+  // Permissions-Policy
+  if(!has('permissions-policy')){
+    issues.push({label:'Tidak ada Permissions-Policy — akses kamera/mikrofon/lokasi dari kode pihak ketiga (mis. iklan) tidak dibatasi eksplisit', weight:5});
+  } else {
+    goods.push({label:'Permissions-Policy terpasang', weight:0});
+  }
+
+  // Set-Cookie
+  if(has('set-cookie')){
+    const cookies = h['set-cookie'];
+    const anyMissingSecure = cookies.some(c=>!/;\s*secure/i.test(c));
+    const anyMissingHttpOnly = cookies.some(c=>!/;\s*httponly/i.test(c));
+    const anyMissingSameSite = cookies.some(c=>!/samesite=/i.test(c));
+    if(anyMissingSecure) issues.push({label:'Ada cookie tanpa atribut Secure — bisa terkirim lewat koneksi HTTP biasa yang tidak terenkripsi', weight:10});
+    else goods.push({label:'Semua cookie punya atribut Secure', weight:0});
+    if(anyMissingHttpOnly) issues.push({label:'Ada cookie tanpa atribut HttpOnly — bisa dibaca lewat JavaScript, rawan dicuri lewat XSS', weight:8});
+    else goods.push({label:'Semua cookie punya atribut HttpOnly', weight:0});
+    if(anyMissingSameSite) issues.push({label:'Ada cookie tanpa atribut SameSite — rawan disalahgunakan lewat serangan CSRF', weight:6});
+    else goods.push({label:'Semua cookie punya atribut SameSite', weight:0});
+  }
+
+  // Server / X-Powered-By information disclosure
+  ['server','x-powered-by'].forEach(k=>{
+    if(has(k) && /\d/.test(val(k))){
+      issues.push({label:`Header "${k}" membocorkan versi perangkat lunak (${val(k)}) — memudahkan penyerang mencari eksploit yang cocok`, weight:6});
+    }
+  });
+
+  // CORS misconfiguration
+  if(has('access-control-allow-origin') && val('access-control-allow-origin').trim()==='*' &&
+     has('access-control-allow-credentials') && /true/i.test(val('access-control-allow-credentials'))){
+    issues.push({label:'Access-Control-Allow-Origin: * digabung dengan Access-Control-Allow-Credentials: true — kombinasi CORS yang keliru dan berisiko tinggi', weight:15});
+  }
+
+  const totalDeduction = issues.reduce((s,x)=>s+x.weight,0);
+  const score = Math.max(0, 100-totalDeduction);
+  return {score, issues, goods, headerCount:Object.keys(h).length};
+}
+
+function categoryOf(score){
+  if(score>=90) return {label:'SANGAT BAIK', color:'var(--green)'};
+  if(score>=70) return {label:'CUKUP BAIK', color:'var(--green)'};
+  if(score>=45) return {label:'PERLU PERBAIKAN', color:'var(--amber)'};
+  return {label:'BURUK', color:'var(--red)'};
+}
+
+function renderList(id, items, colorFn){
+  const el = document.getElementById(id);
+  if(!items.length){ el.innerHTML = '<div class="empty-note">Tidak ada.</div>'; return; }
+  el.innerHTML = items.map(it=>`
+    <div class="signal">
+      <span class="dot" style="background:${colorFn(it)}"></span>
+      <span style="flex:1;">${it.label}</span>
+      ${it.weight ? `<span class="w">-${it.weight}</span>` : ''}
+    </div>`).join('');
+}
+
+const input = document.getElementById('headerInput');
+function run(){
+  const text = input.value;
+  if(!text.trim()){
+    document.getElementById('gaugeFill').style.width='0%';
+    document.getElementById('gaugeCat').textContent='–';
+    document.getElementById('gaugeCat').style.color='var(--dimmer)';
+    document.getElementById('gaugeScore').textContent='0/100';
+    renderList('issueList', [], ()=>'');
+    renderList('goodList', [], ()=>'');
+    return;
+  }
+  const r = analyzeHeaders(text);
+  const cat = categoryOf(r.score);
+  document.getElementById('gaugeFill').style.width = r.score+'%';
+  document.getElementById('gaugeFill').style.background = cat.color;
+  document.getElementById('gaugeCat').textContent = cat.label;
+  document.getElementById('gaugeCat').style.color = cat.color;
+  document.getElementById('gaugeScore').textContent = r.score+'/100';
+  renderList('issueList', r.issues, it=> it.weight>=12 ? 'var(--red)' : 'var(--amber)');
+  renderList('goodList', r.goods, ()=> 'var(--green)');
+}
+input.addEventListener('input', run);
+
+document.getElementById('loadGoodSample').addEventListener('click', ()=>{
+  input.value = `HTTP/1.1 200 OK
+Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+Content-Security-Policy: default-src 'self'; script-src 'self'; frame-ancestors 'none'
+X-Content-Type-Options: nosniff
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: geolocation=(), microphone=(), camera=()
+Set-Cookie: session=abc123; Secure; HttpOnly; SameSite=Strict`;
+  run();
+});
+document.getElementById('loadBadSample').addEventListener('click', ()=>{
+  input.value = `HTTP/1.1 200 OK
+Server: Apache/2.4.41 (Ubuntu)
+X-Powered-By: PHP/7.4.3
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Credentials: true
+Set-Cookie: session=abc123
+Set-Cookie: tracking=xyz789; SameSite=None`;
+  run();
+});
+document.getElementById('clearBtn').addEventListener('click', ()=>{ input.value=''; run(); });
+
+run();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

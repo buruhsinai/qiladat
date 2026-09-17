@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator Protokol Ekstraksi — JAZMI Sains</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12262a; --ink-soft:#3c5a5a;
+    --paper:#f4f7f5; --panel:#e7efe9; --panel-deep:#d7e3dc;
+    --teal:#2f7d6b; --teal-deep:#1e5b4d;
+    --amber:#b9793a; --brick:#a34a3c;
+    --line:#c9d6cd; --radius:3px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--ink);color:var(--ink);font-family:'Karla',sans-serif;line-height:1.55;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:760px;margin:0 auto;}
+  header{background:var(--ink);color:#dce8e3;padding:40px 22px 36px;position:relative;overflow:hidden;}
+  header::before{content:"⇌";position:absolute;right:6px;top:-30px;font-size:9rem;color:rgba(220,232,227,0.06);}
+  header .eyebrow{color:#7fc2ac;font-family:'JetBrains Mono',monospace;font-size:0.82rem;letter-spacing:0.06em;margin-bottom:10px;text-transform:uppercase;}
+  header h1{font-family:'Fraunces',serif;font-weight:600;font-size:1.95rem;line-height:1.18;margin:0 0 12px;max-width:18ch;}
+  header p{color:#a9bfb8;max-width:46ch;margin:0;font-size:0.96rem;}
+  main{background:var(--paper);}
+  section{padding:30px 22px;border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  h2{font-family:'Fraunces',serif;font-weight:600;font-size:1.3rem;margin:0 0 6px;color:var(--ink);}
+  .lede{color:var(--ink-soft);font-size:0.92rem;margin:0 0 20px;max-width:54ch;}
+
+  .row-select{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+  .pill{font-family:'Karla',sans-serif;font-weight:600;font-size:0.83rem;padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--panel);color:var(--ink-soft);cursor:pointer;}
+  .pill.active{background:var(--teal-deep);color:#fff;border-color:var(--teal-deep);}
+
+  .scale-box{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:22px;}
+  .scale-box .lbl{display:flex;justify-content:space-between;font-size:0.85rem;color:var(--ink-soft);margin-bottom:6px;}
+  .scale-box .lbl b{font-family:'JetBrains Mono',monospace;color:var(--teal-deep);font-size:0.95rem;}
+  input[type=range]{width:100%;accent-color:var(--teal-deep);height:22px;}
+  .scale-note{font-size:0.78rem;color:var(--ink-soft);margin-top:6px;}
+
+  .base-note{font-size:0.8rem;color:var(--teal-deep);font-weight:600;margin-bottom:16px;}
+
+  .step{display:flex;gap:12px;padding:14px 0;border-top:1px solid var(--line);}
+  .step:first-of-type{border-top:none;}
+  .step-num{flex:0 0 26px;height:26px;border-radius:50%;background:var(--teal-deep);color:#fff;font-size:0.78rem;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;}
+  .step.done .step-num{background:#8ba69c;}
+  .step-body{flex:1;}
+  .step-body h4{margin:0 0 4px;font-family:'Fraunces',serif;font-size:1rem;font-weight:600;}
+  .step-body p{margin:0 0 8px;font-size:0.9rem;color:var(--ink-soft);}
+  .step-body .qty{color:var(--teal-deep);font-weight:700;font-family:'JetBrains Mono',monospace;}
+  .step-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .tag{font-size:0.72rem;padding:3px 9px;border-radius:20px;background:var(--panel-deep);color:var(--ink-soft);font-family:'JetBrains Mono',monospace;}
+  .timer-btn{font-size:0.75rem;padding:4px 10px;border-radius:20px;border:1px solid var(--amber);background:#fff;color:var(--amber);cursor:pointer;font-weight:700;}
+  .timer-btn.running{background:var(--amber);color:#fff;}
+  .mark-btn{font-size:0.75rem;padding:4px 10px;border-radius:20px;border:1px solid var(--teal-deep);background:#fff;color:var(--teal-deep);cursor:pointer;font-weight:700;margin-left:auto;}
+  .step.done .mark-btn{background:var(--teal-deep);color:#fff;}
+
+  .optim{margin-top:24px;background:var(--panel);border-radius:var(--radius);border:1px solid var(--line);}
+  .optim summary{padding:14px 16px;cursor:pointer;font-family:'Fraunces',serif;font-weight:600;font-size:1rem;}
+  .optim ul{margin:0;padding:0 16px 16px 34px;font-size:0.88rem;color:var(--ink-soft);}
+  .optim li{margin-bottom:6px;}
+
+  .qc-box{margin-top:18px;background:#fff;border:1px dashed var(--teal-deep);border-radius:var(--radius);padding:14px 16px;font-size:0.86rem;color:var(--ink-soft);}
+  .qc-box b{color:var(--teal-deep);}
+
+  .disclaimer{background:var(--panel-deep);border-left:3px solid var(--brick);padding:14px 16px;font-size:0.86rem;color:var(--ink-soft);border-radius:0 var(--radius) var(--radius) 0;}
+  .disclaimer + .disclaimer{margin-top:10px;}
+
+  footer{background:var(--ink);color:#5d7570;padding:22px 22px 36px;font-size:0.78rem;text-align:center;}
+
+  @media(min-width:600px){
+    header{padding:56px 40px 48px;} header h1{font-size:2.3rem;}
+    section{padding:40px;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="eyebrow">jazmi · sains · wet lab</div>
+    <h1>Kalkulator Protokol Ekstraksi</h1>
+    <p>Geser skala sampel, pilih metode — volume reagen di setiap langkah dihitung ulang otomatis. Dipetakan dari protokol DNA genom, RNA total, dan isolasi plasmid.</p>
+  </div>
+</header>
+
+<main>
+<div class="wrap">
+
+  <section>
+    <h2>1 · Pilih target &amp; metode</h2>
+    <p class="lede">Target menentukan kategori molekul; metode menentukan kimia pemisahannya.</p>
+
+    <div class="row-select" id="targetTabs"></div>
+    <div class="row-select" id="methodTabs"></div>
+
+    <div class="scale-box">
+      <div class="lbl"><span>Faktor skala sampel</span><b id="scaleVal">1.0×</b></div>
+      <input type="range" id="scaleRange" min="0.25" max="4" step="0.25" value="1">
+      <div class="scale-note" id="scaleNote"></div>
+    </div>
+
+    <div class="base-note" id="baseNote"></div>
+  </section>
+
+  <section>
+    <h2>2 · Langkah operasional</h2>
+    <p class="lede">Volume tercetak tebal sudah disesuaikan dengan faktor skala. Waktu, suhu, dan kecepatan sentrifugasi tidak ikut diskalakan — itu parameter proses, bukan jumlah reagen.</p>
+    <div id="stepsList"></div>
+
+    <details class="optim" id="optimBox">
+      <summary>Optimasi hasil tertentu</summary>
+      <ul id="optimList"></ul>
+    </details>
+
+    <div class="qc-box" id="qcBox" style="display:none;"></div>
+  </section>
+
+  <section>
+    <h2>Batasan &amp; keselamatan</h2>
+    <div class="disclaimer">Angka pada alat ini diambil dari satu rujukan protokol umum dan diskalakan secara linear terhadap jumlah sampel. Reagen tertentu (mis. proteinase K, enzim, buffer elusi) tidak selalu linear terhadap skala pada volume sangat kecil/besar — selalu validasi ulang dengan SOP laboratorium dan kit yang benar-benar dipakai.</div>
+    <div class="disclaimer">Fenol, kloroform, dan guanidine bersifat toksik/korosif — kerjakan di fume hood dengan APD lengkap. Alat ini bukan pengganti pelatihan keselamatan laboratorium maupun SOP institusi.</div>
+  </section>
+
+</div>
+</main>
+
+<footer>JAZMI — Laboratorium Pengetahuan Digital · Modul Sains · Level 4: Tool, dibangun di atas studi protokol wet lab</footer>
+
+<script>
+/* ================= DATA ================= */
+// {{v:N}} = angka dasar (satuan default µL kecuali disebut lain) yang ikut diskalakan dengan faktor skala.
+const PROTOCOLS = {
+  dna: { label:'DNA Genom', baseNote:'Basis default: 100 mg jaringan',
+    methods: {
+      fenol: { label:'Fenol-Kloroform', optim:[
+          'DNA berkualitas tinggi (NGS): gunakan fenol yang sudah disuling ulang, perpanjang inkubasi proteinase K.',
+          'Kuantitas tinggi: tambahkan langkah presipitasi kedua dengan isopropanol.',
+          'Sampel sulit (bakteri/jaringan keras): tambahkan pre-lisis dengan lysozyme (bakteri) atau collagenase (jaringan).'],
+        steps:[
+          {t:'Preparasi Sampel', b:'Homogenisasi jaringan dalam {{v:600}} µL buffer lisis (Tris-HCl 10mM pH8, EDTA 1mM, NaCl 100mM, SDS 0.5%).'},
+          {t:'Lisis Sel', b:'Tambahkan {{v:20}} µL proteinase K (20mg/mL).', time:7200, temp:'56°C', note:'inkubasi 1–3 jam, tergantung kekerasan sampel'},
+          {t:'Ekstraksi Fenol-Kloroform', b:'Tambahkan volume setara fenol:kloroform:isoamil alkohol (25:24:1). Vortex 10–15 detik.', speed:'12.000×g', time:600, temp:'4°C'},
+          {t:'Ekstraksi Kloroform Murni', b:'Tambahkan volume setara kloroform:isoamil alkohol (24:1). Vortex 10 detik, pindahkan fase akuatik.', speed:'12.000×g', time:300, temp:'4°C'},
+          {t:'Presipitasi DNA', b:'Tambahkan {{v:60}} µL sodium asetat 3M pH5.2, lalu {{v:1500}} µL etanol 100% dingin.', time:1800, temp:'-20°C', note:'optimal: semalaman'},
+          {t:'Sentrifugasi Presipitat', b:'Sentrifugasi untuk mengendapkan DNA.', speed:'15.000×g', time:1200, temp:'4°C'},
+          {t:'Pencucian Pellet', b:'Buang supernatan, tambahkan {{v:1000}} µL etanol 70% dingin, sentrifugasi lalu keringkan pellet 5–10 menit (jangan over-dry).', speed:'12.000×g', time:300, temp:'4°C'},
+          {t:'Resuspensi DNA', b:'Larutkan pellet dalam {{v:75}} µL TE buffer atau nuclease-free water.', time:600, temp:'55°C', note:'simpan -20°C (pendek) / -80°C (panjang)'},
+        ]},
+      silika: { label:'Kolom Silika', optim:[
+          'Yield tinggi: elusi dua kali dengan volume kecil (50µL masing-masing).',
+          'DNA berukuran besar: gunakan buffer elusi pH tinggi (8.5–9.0).',
+          'DNA sangat murni: tambahkan langkah wash tambahan dengan buffer wash 2.'],
+        steps:[
+          {t:'Lisis Sel', b:'Tambahkan {{v:200}} µL buffer lisis (guanidine thiocyanate, detergen), homogenisasi.', time:600, temp:'suhu ruangan'},
+          {t:'Pengikatan ke Kolom', b:'Tambahkan {{v:200}} µL etanol 96–100% (rasio 1:1 atau 2:1), pindahkan ke kolom silika, buat flow-through.', speed:'6.000–8.000×g', time:60},
+          {t:'Pencucian Kolom — Wash 1', b:'Etanol konsentrasi rendah.', speed:'6.000×g', time:60},
+          {t:'Pencucian Kolom — Wash 2', b:'Etanol konsentrasi tinggi, mengeringkan kolom.', speed:'12.000×g', time:60},
+          {t:'Elusi DNA', b:'Tambahkan {{v:100}} µL buffer elusi/nuclease-free water (pre-heated 70°C).', time:180, note:'sentrifugasi 6.000×g 1 menit'},
+        ]},
+      beads: { label:'Magnetic Beads', optim:[
+          'Otomasi penuh: gunakan liquid handling robot dengan protokol tervalidasi.',
+          'Throughput tinggi: gunakan 96-well plate dengan magnetic plate.',
+          'Ukuran DNA spesifik: sesuaikan rasio PEG/NaCl dalam binding buffer.'],
+        steps:[
+          {t:'Lisis Sel', b:'Buffer lisis mengandung chaotropic agent, homogenisasi dan inkubasi sesuai protokol.'},
+          {t:'Binding DNA', b:'Tambahkan magnetic beads dengan rasio volume {{v:150}}% terhadap sampel.', time:420, note:'mixing, lalu kumpulkan di magnetic rack'},
+          {t:'Pencucian Beads — Wash 1', b:'Etanol 70%, resuspensi beads, kumpulkan dengan magnet.', time:30},
+          {t:'Pencucian Beads — Wash 2', b:'Ulangi dengan etanol 80–90%.', time:30},
+          {t:'Pengeringan Beads', b:'Biarkan sisa etanol menguap.', time:450, temp:'suhu ruangan'},
+          {t:'Elusi DNA', b:'Tambahkan {{v:50}} µL buffer elusi/water, resuspensi beads.', time:180, note:'kumpulkan beads dengan magnet, ambil supernatan'},
+        ]},
+    }},
+  rna: { label:'RNA Total', baseNote:'Basis default: 100 mg jaringan / 5×10⁶ sel',
+    methods: {
+      trizol: { label:'TRIzol', optim:[
+          'RNA berkualitas tinggi (RIN>8): gunakan reagen segar, hindari memipet fase interphase.',
+          'Yield tinggi dari jaringan sulit: tambahkan pre-homogenisasi dengan liquid nitrogen.',
+          'RNA kecil (<200nt): tambahkan presipitasi dengan etanol 100% dan NaCl 0.3M.'],
+        steps:[
+          {t:'Homogenisasi Sampel', b:'Tambahkan {{v:1000}} µL TRIzol, homogenisasi hingga rata.', time:300, note:'inkubasi suhu ruangan untuk lisis lengkap'},
+          {t:'Fase Pemisahan', b:'Tambahkan {{v:200}} µL kloroform, vortex 15 detik, inkubasi 2–3 menit.', speed:'12.000×g', time:900, temp:'4°C'},
+          {t:'Presipitasi RNA', b:'Pindahkan fase akuatik, tambahkan {{v:500}} µL isopropanol.', time:600, note:'sentrifugasi 12.000×g 10 menit, 4°C'},
+          {t:'Pencucian RNA', b:'Tambahkan {{v:1000}} µL etanol 75%, vortex sebentar.', speed:'7.500×g', time:300, temp:'4°C'},
+          {t:'Resuspensi RNA', b:'Keringkan pellet 5–10 menit (jangan over-dry), larutkan dalam {{v:40}} µL RNase-free water/TE buffer.', time:600, temp:'55–60°C', note:'simpan -80°C (panjang) / -20°C (pendek)'},
+        ]},
+      silika: { label:'Kolom Silika (+DNase)', optim:[
+          'Yield tinggi: elusi dua kali @30µL.',
+          'RNA sangat murni: tambahkan wash tambahan dengan buffer RPE.',
+          'RNA kecil: gunakan kit dengan ukuran cut-off khusus.'],
+        steps:[
+          {t:'Lisis Sel', b:'Buffer lisis (guanidine thiocyanate), homogenisasi.', time:300, temp:'suhu ruangan'},
+          {t:'Pengikatan ke Kolom', b:'Tambahkan {{v:200}} µL etanol 70% (1:1), pindahkan ke kolom silika.'},
+          {t:'Pencucian Kolom', b:'Buang flow-through, wash 1 (RW1), lalu wash 2 (RPE) dua kali.', speed:'8.000×g', time:15},
+          {t:'Treatment DNase (opsional)', b:'Tambahkan {{v:50}} µL buffer DNase I langsung di kolom.', time:900, temp:'suhu ruangan'},
+          {t:'Elusi RNA', b:'Tambahkan {{v:40}} µL RNase-free water (pre-heated 70°C).', time:60, note:'sentrifugasi 8.000×g 1 menit'},
+        ]},
+    }},
+  plasmid: { label:'Plasmid', baseNote:'Basis default: mini-prep, 1–5 mL kultur',
+    methods: {
+      mini: { label:'Mini-prep', optim:[
+          'Yield tinggi: gunakan kultur overnight yang padat, elusi dua kali.',
+          'Plasmid sangat murni: tambahkan wash tambahan buffer W2.',
+          'Plasmid besar (>10kb): perpanjang inkubasi buffer elusi (5 menit).'],
+        steps:[
+          {t:'Inokulasi & Pertumbuhan', b:'Satu koloni E. coli ke {{v:5000}} µL LB + antibiotik.', time:61200, temp:'37°C, shaking 200–250rpm', note:'16–18 jam'},
+          {t:'Harvesting Sel', b:'Sentrifugasi kultur, buang supernatan.', speed:'10.000×g', time:60},
+          {t:'Resuspensi Sel', b:'Larutkan pellet dalam {{v:250}} µL buffer resuspensi (Tris-HCl 50mM pH8, EDTA 10mM).'},
+          {t:'Lisis Sel', b:'Tambahkan {{v:250}} µL buffer lisis (NaOH 0.2M, SDS 1%), gentle inversion 4–6×.', time:300, note:'jangan lebih dari 5 menit, jangan vortex'},
+          {t:'Neutralisasi', b:'Tambahkan {{v:350}} µL buffer neutralisasi (kalium asetat 3M pH5.5), gentle inversion 4–6×.', speed:'12.000×g', time:600, temp:'4°C'},
+          {t:'Pembersihan & Pengikatan Kolom', b:'Pindahkan supernatan ke kolom silika, cuci dengan wash 1 dan wash 2.', speed:'8.000–12.000×g', time:60},
+          {t:'Elusi Plasmid', b:'Tambahkan {{v:40}} µL buffer elusi (pre-heated 70°C).', time:60},
+        ]},
+      midimaxi: { label:'Midi/Maxi-prep', optim:[
+          'Yield tinggi: kultur sangat padat, elusi dua kali volume kecil.',
+          'Plasmid besar (>10kb): perpanjang inkubasi elusi (10 menit).',
+          'Untuk transfeksion: gunakan endotoxin-free kit.'],
+        steps:[
+          {t:'Inokulasi & Pertumbuhan', b:'Starter culture semalaman, lanjut ke {{v:75000}} µL LB + antibiotik.', time:50400, temp:'37°C, shaking 200–250rpm', note:'12–16 jam'},
+          {t:'Harvesting Sel', b:'Sentrifugasi kultur, buang supernatan.', speed:'6.000×g', time:600, temp:'4°C'},
+          {t:'Resuspensi Sel', b:'Larutkan pellet dalam {{v:3000}} µL buffer resuspensi.'},
+          {t:'Lisis & Neutralisasi', b:'Tambahkan {{v:3000}} µL buffer lisis, lalu {{v:3000}} µL buffer neutralisasi, gentle inversion.', speed:'12.000×g', time:900, temp:'4°C'},
+          {t:'Pengikatan ke Kolom', b:'Pindahkan supernatan ke kolom midi/maxi-prep, buang flow-through.', speed:'8.000×g', time:60},
+          {t:'Pencucian Kolom', b:'Wash 1 (RW1) dan wash 2 (W2), ulangi wash 2 untuk mengeringkan.', speed:'8.000–12.000×g', time:60},
+          {t:'Elusi Plasmid', b:'Tambahkan {{v:400}} µL buffer elusi (pre-heated 70°C).', time:300},
+        ]},
+      endofree: { label:'Endotoxin-free', optim:[
+          'Selalu gunakan strain E. coli endotoxin-reduced (mis. ClearColi).',
+          'Semua buffer harus grade endotoxin-free — jangan campur dengan kit standar.',
+          'Uji akhir dengan LAL assay sebelum dipakai in vivo.'],
+        steps:[
+          {t:'Inokulasi & Pertumbuhan', b:'Strain endotoxin-reduced, starter semalaman, lanjut {{v:75000}} µL endotoxin-free LB + antibiotik.', time:50400, temp:'37°C, shaking 200–250rpm'},
+          {t:'Harvesting Sel', b:'Sentrifugasi kultur, buang supernatan.', speed:'6.000×g', time:600, temp:'4°C'},
+          {t:'Resuspensi Sel', b:'Larutkan pellet dalam {{v:3000}} µL endotoxin-free buffer resuspensi.'},
+          {t:'Lisis & Neutralisasi', b:'Tambahkan {{v:3000}} µL endotoxin-free buffer lisis, lalu {{v:3000}} µL buffer neutralisasi.', speed:'12.000×g', time:900, temp:'4°C'},
+          {t:'Pengikatan ke Kolom', b:'Kolom endotoxin-free, buang flow-through.', speed:'8.000×g', time:60},
+          {t:'Pencucian Kolom (3 tahap)', b:'Wash 1, wash 2, dan wash 3 khusus endotoxin.', speed:'8.000–12.000×g', time:60},
+          {t:'Elusi Plasmid', b:'Tambahkan {{v:400}} µL endotoxin-free buffer elusi.', time:300},
+          {t:'Pengujian Endotoxin', b:'LAL assay. Target in vivo <0.1 EU/µg DNA; seluler <1 EU/µg DNA.'},
+        ]},
+    }},
+};
+
+/* ================= STATE ================= */
+let target = 'dna', method = 'fenol', scale = 1;
+const doneSteps = new Set();
+const runningTimers = {};
+
+function currentMethodData(){ return PROTOCOLS[target].methods[method]; }
+
+function fmt(n){
+  const v = n*scale;
+  if(v<1) return v.toFixed(2);
+  if(v<10) return (Math.round(v*10)/10).toString();
+  return Math.round(v).toLocaleString('id-ID');
+}
+function renderQty(text){
+  return text.replace(/\{\{v:([\d.]+)\}\}/g, (m,p)=>`<span class="qty">${fmt(parseFloat(p))}</span>`);
+}
+function fmtTime(sec){
+  if(sec>=3600) return (sec/3600).toFixed(sec%3600===0?0:1)+' jam';
+  if(sec>=60) return Math.round(sec/60)+' menit';
+  return sec+' detik';
+}
+
+/* ================= RENDER ================= */
+function renderTargetTabs(){
+  const el = document.getElementById('targetTabs');
+  el.innerHTML = Object.entries(PROTOCOLS).map(([k,v])=>
+    `<button class="pill ${k===target?'active':''}" data-k="${k}">${v.label}</button>`).join('');
+  el.querySelectorAll('.pill').forEach(b=>b.addEventListener('click',()=>{
+    target = b.dataset.k;
+    method = Object.keys(PROTOCOLS[target].methods)[0];
+    doneSteps.clear();
+    renderAll();
+  }));
+}
+function renderMethodTabs(){
+  const el = document.getElementById('methodTabs');
+  const methods = PROTOCOLS[target].methods;
+  el.innerHTML = Object.entries(methods).map(([k,v])=>
+    `<button class="pill ${k===method?'active':''}" data-k="${k}">${v.label}</button>`).join('');
+  el.querySelectorAll('.pill').forEach(b=>b.addEventListener('click',()=>{
+    method = b.dataset.k; doneSteps.clear(); renderAll();
+  }));
+}
+function clearAllTimers(){
+  Object.keys(runningTimers).forEach(k=>{ clearInterval(runningTimers[k]); delete runningTimers[k]; });
+}
+function renderSteps(){
+  clearAllTimers();
+  const data = currentMethodData();
+  document.getElementById('baseNote').textContent = PROTOCOLS[target].baseNote;
+  const list = document.getElementById('stepsList');
+  list.innerHTML = data.steps.map((s,i)=>{
+    const metaBits = [];
+    if(s.temp) metaBits.push(`<span class="tag">${s.temp}</span>`);
+    if(s.speed) metaBits.push(`<span class="tag">${s.speed}</span>`);
+    if(s.time) metaBits.push(`<span class="tag" id="tlabel-${i}">${fmtTime(s.time)}</span>`);
+    const timerBtn = s.time ? `<button class="timer-btn" data-i="${i}" data-sec="${s.time}">Mulai timer</button>` : '';
+    return `<div class="step ${doneSteps.has(i)?'done':''}" data-i="${i}">
+      <div class="step-num">${i+1}</div>
+      <div class="step-body">
+        <h4>${s.t}</h4>
+        <p>${renderQty(s.b)}${s.note?' <em>('+s.note+')</em>':''}</p>
+        <div class="step-meta">${metaBits.join('')}${timerBtn}<button class="mark-btn" data-i="${i}">${doneSteps.has(i)?'Selesai ✓':'Tandai selesai'}</button></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('.mark-btn').forEach(b=>b.addEventListener('click',()=>{
+    const i = +b.dataset.i;
+    if(doneSteps.has(i)) doneSteps.delete(i); else doneSteps.add(i);
+    renderSteps();
+  }));
+  list.querySelectorAll('.timer-btn').forEach(b=>b.addEventListener('click',()=>startTimer(+b.dataset.i, +b.dataset.sec)));
+
+  document.getElementById('optimList').innerHTML = data.optim.map(o=>`<li>${o}</li>`).join('');
+
+  const qc = document.getElementById('qcBox');
+  if(target==='rna'){
+    qc.style.display='block';
+    qc.innerHTML = '<b>Kontrol kualitas:</b> ukur konsentrasi dengan NanoDrop (rasio A260/A280 ideal 1.8–2.1), evaluasi integritas dengan Bioanalyzer atau gel elektroforesis.';
+  } else if(target==='plasmid' && method==='endofree'){
+    qc.style.display='block';
+    qc.innerHTML = '<b>Kontrol kualitas:</b> uji endotoxin dengan LAL assay — target in vivo &lt;0.1 EU/µg DNA, target aplikasi seluler &lt;1 EU/µg DNA.';
+  } else {
+    qc.style.display='none';
+  }
+}
+function startTimer(i, sec){
+  if(runningTimers[i]) return;
+  let remaining = sec;
+  const label = document.getElementById('tlabel-'+i);
+  const btn = document.querySelector(`.timer-btn[data-i="${i}"]`);
+  btn.classList.add('running');
+  runningTimers[i] = setInterval(()=>{
+    remaining--;
+    if(label) label.textContent = fmtTime(Math.max(remaining,0));
+    if(remaining<=0){
+      clearInterval(runningTimers[i]);
+      delete runningTimers[i];
+      if(btn){ btn.textContent='Selesai ⏰'; btn.classList.remove('running'); }
+    }
+  },1000);
+}
+
+function renderAll(){
+  renderTargetTabs();
+  renderMethodTabs();
+  renderSteps();
+}
+
+document.getElementById('scaleRange').addEventListener('input', e=>{
+  scale = parseFloat(e.target.value);
+  document.getElementById('scaleVal').textContent = scale.toFixed(2)+'×';
+  document.getElementById('scaleNote').textContent =
+    scale<1 ? 'Skala diperkecil — cocok untuk sampel terbatas.' :
+    scale>1 ? 'Skala diperbesar — pastikan wadah/kolom masih cukup kapasitas.' :
+    'Skala 1× mengikuti basis default protokol.';
+  renderSteps();
+});
+document.getElementById('scaleRange').dispatchEvent(new Event('input'));
+
+renderAll();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

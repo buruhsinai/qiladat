@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Waraqah Tabula Rasa — Nahwu Interaktif</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Karla:wght@400;500;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#efe7d3;
+    --paper-deep:#e6dcc3;
+    --ink:#251f19;
+    --ink-soft:#5c4f40;
+    --indigo:#2e4159;
+    --indigo-soft:#5b7290;
+    --oxide:#9c3b2e;
+    --oxide-soft:#c07061;
+    --gold:#a9812e;
+    --gold-soft:#c9aa64;
+    --sage:#5c6b4f;
+    --sage-soft:#8b9a7c;
+    --line:#c9bc9c;
+    --shadow: 0 1px 0 rgba(37,31,25,.08);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(169,129,46,.06), transparent 55%),
+      radial-gradient(ellipse at 90% 30%, rgba(46,65,89,.05), transparent 50%),
+      var(--paper);
+    color:var(--ink);
+    font-family:'Karla',sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .arabic{ font-family:'Amiri', serif; direction:rtl; unicode-bidi:isolate; }
+
+  /* ---- Perforated fold seam, physical-sheet motif ---- */
+  .seam{
+    position:relative;
+    height:22px;
+    background-image: repeating-linear-gradient(to right, var(--line) 0 8px, transparent 8px 16px);
+    background-position:center;
+    background-repeat:repeat-x;
+    background-size:16px 1px;
+    opacity:.8;
+  }
+  .seam::before, .seam::after{
+    content:"";
+    position:absolute; top:50%; transform:translateY(-50%);
+    width:14px; height:14px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #fff8, transparent 60%), var(--paper);
+    border:1px solid var(--line);
+  }
+  .seam::before{ left:6%; }
+  .seam::after{ right:6%; }
+
+  .wrap{ max-width:760px; margin:0 auto; padding:0 24px; }
+
+  /* ---- Header / hero ---- */
+  header.hero{ padding:56px 0 20px; }
+  .kicker{
+    color:var(--gold); font-weight:700; letter-spacing:.02em;
+    font-size:.95rem; margin:0 0 6px;
+  }
+  h1.title{
+    font-family:'Fraunces', serif; font-weight:600;
+    font-size:clamp(2rem, 6vw, 2.9rem); line-height:1.06; margin:0 0 10px;
+  }
+  .subtitle{ color:var(--ink-soft); font-size:1.05rem; max-width:56ch; margin:0 0 28px;}
+
+  .hero-demo{
+    border:1px solid var(--line); border-radius:2px;
+    background:var(--paper-deep); padding:26px 22px; position:relative;
+    box-shadow: var(--shadow);
+  }
+  .hero-demo .label{ font-size:.82rem; color:var(--ink-soft); margin-bottom:14px; }
+  .hero-toggle{
+    display:inline-flex; gap:2px; background:#00000012; padding:3px; border-radius:20px; margin-bottom:18px;
+  }
+  .hero-toggle button{
+    border:none; background:transparent; padding:7px 16px; border-radius:16px;
+    font-family:'Karla',sans-serif; font-weight:700; font-size:.85rem; cursor:pointer; color:var(--ink-soft);
+    transition:.2s;
+  }
+  .hero-toggle button.active{ background:var(--ink); color:var(--paper); }
+
+  .hero-sentence{ min-height:74px; display:flex; align-items:center; flex-wrap:wrap; gap:10px; font-size:1.4rem;}
+  .hero-sentence.ar{ font-family:'Amiri', serif; direction:rtl; font-size:2rem; justify-content:flex-end; }
+  .chip{
+    padding:4px 3px; border-bottom:3px solid transparent; transition:.3s; position:relative;
+  }
+  .chip.s{ border-color:var(--indigo); color:var(--indigo); }
+  .chip.v{ border-color:var(--oxide); color:var(--oxide); }
+  .chip.o{ border-color:var(--gold); color:var(--gold); }
+  .legend{ display:flex; gap:18px; margin-top:14px; flex-wrap:wrap; font-size:.8rem; color:var(--ink-soft);}
+  .legend span{ display:inline-flex; align-items:center; gap:6px;}
+  .dot{ width:10px; height:10px; border-radius:50%; display:inline-block;}
+  .dot.s{background:var(--indigo);} .dot.v{background:var(--oxide);} .dot.o{background:var(--gold);}
+
+  /* ---- Sections ---- */
+  section{ padding:44px 0; border-bottom:1px solid var(--line); }
+  section:last-of-type{ border-bottom:none; }
+  .eyebrow{ font-size:.8rem; color:var(--gold); font-weight:700; margin:0 0 6px; }
+  h2{
+    font-family:'Fraunces', serif; font-weight:600; font-size:1.7rem; margin:0 0 12px;
+  }
+  p.lead{ color:var(--ink-soft); max-width:60ch; margin:0 0 24px; }
+
+  /* ---- Analyzer widget ---- */
+  .analyzer{
+    border:1px solid var(--line); border-radius:2px; background:#fffdf7cc; padding:22px;
+  }
+  select#sentPicker{
+    width:100%; padding:10px 12px; font-family:'Karla',sans-serif; font-size:.95rem;
+    border:1px solid var(--line); border-radius:4px; background:var(--paper); color:var(--ink);
+    margin-bottom:18px; cursor:pointer;
+  }
+  .arabic-line{
+    font-family:'Amiri', serif; direction:rtl; font-size:2rem; text-align:right;
+    display:flex; justify-content:flex-end; flex-wrap:wrap; gap:14px; margin-bottom:8px; min-height:56px;
+  }
+  .arabic-line .w{ cursor:pointer; padding:2px 4px; border-radius:3px; transition:.2s; border-bottom:3px solid transparent; }
+  .arabic-line .w:hover{ background:#00000008; }
+  .arabic-line .w.sel{ background:#00000010; }
+  .role-S{ border-color:var(--indigo); }
+  .role-V{ border-color:var(--oxide); }
+  .role-O{ border-color:var(--gold); }
+  .role-J{ border-color:var(--sage); }
+  .translit{ color:var(--ink-soft); font-size:.85rem; text-align:right; direction:rtl; margin-bottom:16px;}
+  .idmeaning{ font-style:italic; color:var(--ink-soft); font-size:.92rem; margin-bottom:16px;}
+  .infobox{
+    background:var(--paper-deep); border-left:3px solid var(--gold); padding:12px 16px; border-radius:0 3px 3px 0;
+    font-size:.92rem; min-height:52px; transition:.2s;
+  }
+  .infobox b{ color:var(--ink); }
+  .infobox .tag{
+    display:inline-block; font-size:.72rem; font-weight:700; padding:2px 8px; border-radius:10px;
+    color:#fff; margin-right:8px; vertical-align:middle;
+  }
+  .tag.S{ background:var(--indigo);} .tag.V{ background:var(--oxide);} .tag.O{ background:var(--gold);} .tag.J{ background:var(--sage);}
+
+  /* ---- I'rab cards ---- */
+  .irab-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  @media(max-width:600px){ .irab-grid{ grid-template-columns:1fr; } }
+  .irab-card{
+    border:1px solid var(--line); border-radius:3px; padding:16px; cursor:pointer; background:#fffdf7cc;
+    transition:.2s;
+  }
+  .irab-card:hover{ transform:translateY(-2px); box-shadow:0 4px 12px rgba(37,31,25,.08); }
+  .irab-card .mark{ font-family:'Amiri',serif; font-size:2.4rem; display:block; text-align:center; margin-bottom:6px; }
+  .irab-card h3{ margin:0 0 6px; font-size:1rem; font-family:'Karla',sans-serif; font-weight:700; text-align:center;}
+  .irab-card p{ margin:0; font-size:.85rem; color:var(--ink-soft); text-align:center; }
+  .irab-card.raf .mark{ color:var(--indigo); }
+  .irab-card.nash .mark{ color:var(--gold); }
+  .irab-card.jar .mark{ color:var(--sage); }
+  .irab-detail{
+    margin-top:16px; padding:16px; background:var(--paper-deep); border-radius:3px; font-size:.92rem; display:none;
+  }
+  .irab-detail.show{ display:block; }
+  .irab-detail .ex{ font-family:'Amiri',serif; direction:rtl; font-size:1.4rem; margin-top:8px; }
+
+  /* ---- Jumlah tabs ---- */
+  .tabs{ display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap;}
+  .tabs button{
+    border:1px solid var(--line); background:transparent; padding:8px 14px; border-radius:20px;
+    font-family:'Karla',sans-serif; font-size:.85rem; font-weight:700; cursor:pointer; color:var(--ink-soft);
+  }
+  .tabs button.active{ background:var(--indigo); border-color:var(--indigo); color:#fff; }
+  table.decl{ width:100%; border-collapse:collapse; font-size:.95rem; }
+  table.decl th, table.decl td{ padding:10px 8px; border-bottom:1px solid var(--line); text-align:center; }
+  table.decl th{ color:var(--ink-soft); font-weight:700; font-size:.8rem; }
+  table.decl td.ar{ font-family:'Amiri',serif; font-size:1.5rem; direction:rtl; }
+  table.decl td.raf{ color:var(--indigo); } table.decl td.nas{ color:var(--gold); } table.decl td.jar{ color:var(--sage); }
+  .anomaly-note{
+    margin-top:14px; padding:12px 16px; border-left:3px solid var(--oxide); background:var(--paper-deep);
+    font-size:.88rem; border-radius:0 3px 3px 0; display:none;
+  }
+  .anomaly-note.show{ display:block; }
+
+  /* ---- Nawasikh shock demo ---- */
+  .nawasikh-box{ border:1px solid var(--line); border-radius:3px; padding:24px; background:#fffdf7cc; text-align:center;}
+  .naw-toggle{ display:flex; justify-content:center; gap:8px; margin-bottom:22px; flex-wrap:wrap;}
+  .naw-toggle button{
+    border:1px solid var(--line); background:transparent; padding:9px 16px; border-radius:20px;
+    font-weight:700; font-size:.85rem; cursor:pointer; color:var(--ink-soft);
+  }
+  .naw-toggle button.active{ background:var(--oxide); border-color:var(--oxide); color:#fff; }
+  .naw-sentence{ font-family:'Amiri',serif; direction:rtl; font-size:2.1rem; min-height:60px;
+    display:flex; justify-content:center; gap:14px; align-items:center; flex-wrap:wrap;}
+  .naw-sentence .part{ transition:.35s; border-bottom:3px solid transparent; padding:2px 6px; }
+  .naw-explain{ margin-top:18px; font-size:.92rem; color:var(--ink-soft); max-width:52ch; margin-left:auto; margin-right:auto;}
+
+  /* ---- Practice ayat ---- */
+  .ayat-grid{ display:grid; gap:12px; }
+  .ayat-card{
+    border:1px solid var(--line); border-radius:3px; background:#fffdf7cc; overflow:hidden;
+  }
+  .ayat-head{ padding:16px 18px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:12px;}
+  .ayat-head .ar{ font-family:'Amiri',serif; direction:rtl; font-size:1.5rem; text-align:right; flex:1; }
+  .ayat-head .name{ font-size:.78rem; color:var(--ink-soft); white-space:nowrap; }
+  .ayat-body{ display:none; padding:0 18px 18px; border-top:1px dashed var(--line); }
+  .ayat-body.show{ display:block; }
+  .ayat-word{ display:inline-flex; flex-direction:column; align-items:center; margin:10px 10px 0 0; }
+  .ayat-word .ar{ font-family:'Amiri',serif; font-size:1.4rem; }
+  .ayat-word .lbl{ font-size:.68rem; color:#fff; padding:1px 7px; border-radius:8px; margin-top:4px; font-weight:700;}
+  .ayat-words{ display:flex; flex-wrap:wrap; direction:rtl; }
+  .ayat-note{ margin-top:14px; font-size:.87rem; color:var(--ink-soft); }
+  .plus{ font-size:1.3rem; color:var(--ink-soft); transition:.2s; }
+  .ayat-head.open .plus{ transform:rotate(45deg); }
+
+  /* ---- Typology chart ---- */
+  .typo-row{ margin-bottom:16px; }
+  .typo-label{ display:flex; justify-content:space-between; font-size:.85rem; margin-bottom:5px; }
+  .typo-label b{ color:var(--ink); }
+  .typo-track{ position:relative; height:10px; background:#00000010; border-radius:6px; overflow:visible;}
+  .typo-zone{ position:absolute; top:-4px; bottom:-4px; background:rgba(169,129,46,.18); border-radius:6px; }
+  .typo-fill{ position:relative; height:10px; border-radius:6px; background:var(--indigo); }
+  .typo-mark{
+    position:absolute; top:50%; transform:translate(-50%,-50%); width:16px; height:16px; border-radius:50%;
+    background:var(--oxide); border:2px solid var(--paper);
+  }
+  .typo-ends{ display:flex; justify-content:space-between; font-size:.72rem; color:var(--ink-soft); margin-top:3px;}
+
+  /* ---- Two-sheet system footer ---- */
+  .system-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin:20px 0;}
+  .sys-card{ border:1px solid var(--line); border-radius:3px; padding:14px; background:var(--paper-deep); text-align:center;}
+  .sys-card .n{ font-family:'Fraunces',serif; font-size:1.5rem; color:var(--gold); }
+  .sys-card .t{ font-size:.82rem; font-weight:700; margin-top:2px;}
+  .sys-card .d{ font-size:.76rem; color:var(--ink-soft); margin-top:4px; }
+  .arrow-row{ text-align:center; color:var(--line); font-size:1.2rem; margin:-4px 0; }
+
+  footer{ padding:40px 0 60px; text-align:center; }
+  footer p{ color:var(--ink-soft); font-size:.85rem; max-width:52ch; margin:0 auto 6px; }
+  .signoff{ font-size:.78rem; color:var(--line); margin-top:20px; }
+</style>
+</head>
+<body>
+
+<div class="seam"></div>
+
+<div class="wrap">
+
+  <header class="hero">
+    <p class="kicker">Waraqah Tabula Rasa — edisi interaktif</p>
+    <h1 class="title">Satu lembar nahwu,<br>sekarang bisa digeser.</h1>
+    <p class="subtitle">Di kertas, lembar ini padat sebab harus muat dalam satu genggaman. Di layar, ia bisa melakukan sesuatu yang kertas tidak bisa: menjalankan aturan itu di depan mata Anda, kata per kata.</p>
+
+    <div class="hero-demo">
+      <p class="label">Kalimat yang sama, dua bahasa — perhatikan apa yang berubah, apa yang tidak.</p>
+      <div class="hero-toggle">
+        <button id="btnID" class="active" onclick="setHero('id')">Bahasa Ibu</button>
+        <button id="btnAR" onclick="setHero('ar')">Bahasa Arab</button>
+      </div>
+      <div class="hero-sentence" id="heroSentence"></div>
+      <div class="legend">
+        <span><i class="dot s"></i> Subjek (S) — didamah</span>
+        <span><i class="dot v"></i> Predikat (V)</span>
+        <span><i class="dot o"></i> Objek / Fadlah — difathah</span>
+      </div>
+    </div>
+  </header>
+
+  <section id="svo">
+    <p class="eyebrow">Halaman 1 — Struktur Kalimat</p>
+    <h2>Tiga jenis kata, satu urutan</h2>
+    <p class="lead">Arab hanya punya Isim, Fi'il, dan Harf — tapi urutan SVO-nya diatur lebih ketat dari bahasa kita. Pilih kalimat, lalu ketuk tiap kata untuk melihat perannya.</p>
+
+    <div class="analyzer">
+      <select id="sentPicker" onchange="renderSentence(this.value)"></select>
+      <div class="arabic-line" id="sentAr"></div>
+      <div class="translit" id="sentTranslit"></div>
+      <div class="idmeaning" id="sentMeaning"></div>
+      <div class="infobox" id="sentInfo">Ketuk salah satu kata Arab di atas untuk melihat penjelasannya.</div>
+    </div>
+  </section>
+
+  <section id="irab">
+    <p class="eyebrow">Halaman 2 — Sistem Kasus</p>
+    <h2>I'rab: akhir kata yang bicara</h2>
+    <p class="lead">SVO cuma menentukan arah. Yang benar-benar menandai peran kata adalah harakat di akhirnya. Ketuk tiap kartu untuk contoh dan aturannya.</p>
+
+    <div class="irab-grid">
+      <div class="irab-card raf" onclick="showIrab('raf')">
+        <span class="mark">ـُ</span>
+        <h3>Rafa' (Damah)</h3>
+        <p>Untuk Subjek &amp; Predikat</p>
+      </div>
+      <div class="irab-card nash" onclick="showIrab('nash')">
+        <span class="mark">ـَ</span>
+        <h3>Nashab (Fathah)</h3>
+        <p>Untuk Fadlah — hal yang kadang ada</p>
+      </div>
+      <div class="irab-card jar" onclick="showIrab('jar')">
+        <span class="mark">ـِ</span>
+        <h3>Jarr (Kasrah)</h3>
+        <p>Setelah Harf Jarr tertentu</p>
+      </div>
+    </div>
+    <div class="irab-detail" id="irabDetail"></div>
+  </section>
+
+  <section id="jumlah">
+    <p class="eyebrow">Halaman 3 — Kuantitas Menentukan Bentuk</p>
+    <h2>Satu, dua, banyak — tandanya beda total</h2>
+    <p class="lead">Beda dari Bahasa Indonesia, kata benda Arab langsung berubah bentuk mengikuti jumlahnya. Geser tab untuk lihat pola damah–fathah–kasrah bergeser jadi huruf.</p>
+
+    <div class="tabs" id="jumlahTabs"></div>
+    <table class="decl">
+      <thead><tr><th></th><th>Rafa'</th><th>Nashab</th><th>Jarr</th></tr></thead>
+      <tbody id="jumlahBody"></tbody>
+    </table>
+    <div class="anomaly-note" id="jumlahNote"></div>
+  </section>
+
+  <section id="nawasikh">
+    <p class="eyebrow">Halaman 4, catatan kaki — Pengecualian yang Ditunda</p>
+    <h2>Saat "hukum tetap" itu goyah</h2>
+    <p class="lead">S selalu damah — sampai masuk <em>Kana</em> atau <em>Inna</em>. Lembar ini sengaja menyimpan fenomena ini sampai akhir, supaya fondasi SVO sempat mengeras dulu. Coba geser sendiri:</p>
+
+    <div class="nawasikh-box">
+      <div class="naw-toggle">
+        <button class="active" onclick="setNaw('base', this)">Kalimat Biasa</button>
+        <button onclick="setNaw('inna', this)">+ Inna</button>
+        <button onclick="setNaw('kana', this)">+ Kana</button>
+      </div>
+      <div class="naw-sentence" id="nawSentence"></div>
+      <p class="naw-explain" id="nawExplain"></p>
+    </div>
+  </section>
+
+  <section id="praktik">
+    <p class="eyebrow">Halaman 4 — Praktik</p>
+    <h2>Diuji pada yang sudah dihafal</h2>
+    <p class="lead">Bukan kalimat asing buatan — enam potongan ayat yang sudah akrab di lisan. Ketuk untuk membongkar i'rabnya kata per kata.</p>
+    <div class="ayat-grid" id="ayatGrid"></div>
+  </section>
+
+  <section id="tabula">
+    <p class="eyebrow">Kenapa "Tabula Rasa"?</p>
+    <h2>Bahasa yang memilih secukupnya</h2>
+    <p class="lead">Nama lembar ini bukan cuma metafora "mulai dari nol". Latin dan Arab sama-sama punya sistem kasus yang membuat urutan kata jadi arah, bukan kunci makna — kemiripan struktural yang membuat siapa pun yang pernah bersinggungan dengan tata bahasa berkasus (declension) sebenarnya sudah punya modal untuk memahami logika i'rab. Namun yang lebih menarik: di hampir setiap lapisan, Arab tampak memilih titik tengah — cukup kompleks untuk ekspresif, tapi tak berlebihan.</p>
+
+    <div id="typoChart"></div>
+  </section>
+
+  <section id="sistem">
+    <p class="eyebrow">Bagian dari Sistem yang Lebih Besar</p>
+    <h2>Lembar ini tidak berdiri sendiri</h2>
+    <p class="lead">Waraqah Tabula Rasa adalah satu dari dua lembar (Nahwu &amp; Sharaf–Kosakata) yang dirancang untuk dikantongi, dilaminating, dibaca sambil bekerja. Fungsinya bukan menuntaskan ilmu, tapi jadi jangkar ingatan dalam alur berlapis:</p>
+
+    <div class="system-grid">
+      <div class="sys-card"><div class="n">40'</div><div class="t">Rekaman Ringkas</div><div class="d">Asal paham, berani praktik</div></div>
+      <div class="sys-card"><div class="n">4h</div><div class="t">Rekaman Dalam</div><div class="d">Sampai balaghah, imla'</div></div>
+      <div class="sys-card"><div class="n">TM</div><div class="t">Tatap Muka</div><div class="d">Koreksi bacaan langsung</div></div>
+      <div class="sys-card"><div class="n">✎</div><div class="t">Baca Kitab</div><div class="d">Merangkak, lalu lancar</div></div>
+    </div>
+    <p class="lead" style="margin-top:6px;">Prinsip seleksi isinya satu: bukan apa yang lengkap secara teori nahwu klasik, tapi apa yang benar-benar dipakai saat mata menyusur baris kitab gundul. Kalam dibuang karena tak pernah jadi pertanyaan mendesak. Nawasikh ditunda ke catatan kaki karena efeknya mengguncang fondasi yang baru ditanam. Ghairu munsharif diisyaratkan seperlunya lalu diserap lewat paparan kosakata — karena bahkan pelajar yang sudah lancar pun akhirnya kembali ke rasa bahasa, bukan menghitung 'illat satu per satu.</p>
+  </section>
+
+  <footer>
+    <p>Dibangun dari lembar cetak <em>Waraqah Tabula Rasa</em>, disesuaikan menjadi alat yang menjalankan aturannya sendiri — sesuatu yang tak bisa dilakukan kertas maupun media sosial.</p>
+    <p class="signoff">qidalat.com · disusun bersama Claude dari diskusi metodologi di percakapan ini</p>
+  </footer>
+
+</div>
+
+<div class="seam"></div>
+
+<script>
+/* ---------------- HERO ---------------- */
+const heroID = [
+  {t:'Zaid', c:'s'}, {t:'pergi', c:'v'}, {t:'/', c:''}, {t:'memakan', c:'v'}, {t:'roti', c:'o'}
+];
+const heroAR = [
+  {t:'ذَهَبَ', c:'v'}, {t:'زَيْدٌ', c:'s'}, {t:'/', c:''}, {t:'أَكَلَ', c:'v'}, {t:'الُخْبَزَ', c:'o'}
+];
+function setHero(mode){
+  const el = document.getElementById('heroSentence');
+  el.classList.toggle('ar', mode==='ar');
+  const data = mode==='ar' ? heroAR : heroID;
+  el.innerHTML = data.map(w=>`<span class="chip ${w.c}">${w.t}</span>`).join('');
+  document.getElementById('btnID').classList.toggle('active', mode==='id');
+  document.getElementById('btnAR').classList.toggle('active', mode==='ar');
+}
+setHero('id');
+
+/* ---------------- SVO ANALYZER ---------------- */
+const sentences = [
+  {
+    label:"Zaid pergi ke masjid (VSO, Fi'il Madhi)",
+    meaning:"\u201cZaid pergi ke masjid.\u201d",
+    words:[
+      {ar:'ذَهَبَ', tr:'dzahaba', role:'V', desc:"Fi'il Madhi (kata kerja lampau). Ia yang menentukan siapa pelakunya, bukan sebaliknya — tanya 'siapa yang pergi?' untuk menemukan S-nya."},
+      {ar:'زَيْدٌ', tr:'zaidun', role:'S', desc:"Fa'il (pelaku). Damah di akhir — inilah jawaban dari 'siapa yang pergi?'."},
+      {ar:'إِلَى', tr:'ilaa', role:'J', desc:"Harf Jarr. Kata benda sesudahnya wajib berkasus Jarr (kasrah)."},
+      {ar:'الَمْسِجِدِ', tr:'al-masjidi', role:'J', desc:"Majrur — dikasrah karena didahului harf jarr 'ilaa'."}
+    ]
+  },
+  {
+    label:"Ustadz itu sedang makan roti (Mubtada–Khabar Fi'liyah)",
+    meaning:"\u201cUstadz itu — dia sedang makan roti.\u201d",
+    words:[
+      {ar:'الُأْسَتاُذ', tr:'al-ustaadzu', role:'S', desc:"Mubtada. Pusat pembicaraan, damah, dan dianggap ma'rifat karena diawali AL."},
+      {ar:'يَأُكُل', tr:"ya'kulu", role:'V', desc:"Fi'il Mudhari' — bagian dari Khabar (jumlah fi'liyah), salah satu dari 5 bentuk khabar yang mungkin."},
+      {ar:'الُخْبَزَ', tr:'al-khubza', role:'O', desc:"Maf'ul bih — Fadlah, difathah, sebab ia 'hal yang kadang ada', bisa dibuang tanpa merusak makna inti."}
+    ]
+  },
+  {
+    label:"Zaid pergi pagi hari (Fadlah — keterangan waktu)",
+    meaning:"\u201cZaid pergi pada waktu pagi.\u201d",
+    words:[
+      {ar:'ذَهَبَ', tr:'dzahaba', role:'V', desc:"Fi'il Madhi."},
+      {ar:'زَيْدٌ', tr:'zaidun', role:'S', desc:"Fa'il, damah."},
+      {ar:'صَبَاًحا', tr:'shabaahan', role:'O', desc:"Zharaf zaman (keterangan waktu) — masuk kategori Fadlah, difathah, sama sekali bukan objek dalam arti 'yang dikerjakan'."}
+    ]
+  },
+  {
+    label:"Zaid datang dengan naik kendaraan (Fadlah — Haal)",
+    meaning:"\u201cZaid datang, dalam keadaan berkendara.\u201d",
+    words:[
+      {ar:'جَاَء', tr:"jaa'a", role:'V', desc:"Fi'il Madhi."},
+      {ar:'زَيْدٌ', tr:'zaidun', role:'S', desc:"Fa'il, damah."},
+      {ar:'رَاِكًبا', tr:'raakiban', role:'O', desc:"Haal (keterangan keadaan pelaku) — Fadlah, difathah."}
+    ]
+  }
+];
+function fillPicker(){
+  const sel = document.getElementById('sentPicker');
+  sel.innerHTML = sentences.map((s,i)=>`<option value="${i}">${s.label}</option>`).join('');
+}
+function renderSentence(idx){
+  const s = sentences[idx];
+  document.getElementById('sentAr').innerHTML = s.words.map((w,i)=>
+    `<span class="w role-${w.role}" onclick="showWord(${idx},${i})" id="w-${idx}-${i}">${w.ar}</span>`
+  ).join('');
+  document.getElementById('sentTranslit').textContent = s.words.map(w=>w.tr).join(' — ');
+  document.getElementById('sentMeaning').textContent = s.meaning;
+  document.getElementById('sentInfo').innerHTML = 'Ketuk salah satu kata Arab di atas untuk melihat penjelasannya.';
+}
+function showWord(si, wi){
+  const s = sentences[si];
+  const w = s.words[wi];
+  document.querySelectorAll(`#sentAr .w`).forEach(e=>e.classList.remove('sel'));
+  document.getElementById(`w-${si}-${wi}`).classList.add('sel');
+  const roleName = {S:'Subjek / Pelaku', V:'Predikat / Kata Kerja', O:'Fadlah (Objek/Keterangan)', J:'Harf Jarr / Majrur'}[w.role];
+  document.getElementById('sentInfo').innerHTML = `<span class="tag ${w.role}">${w.role}</span><b>${roleName}</b> — ${w.desc}`;
+}
+fillPicker();
+renderSentence(0);
+
+/* ---------------- I'RAB CARDS ---------------- */
+const irabData = {
+  raf: {title:"Rafa' — Damah", body:"Dipakai untuk Subjek (Mubtada/Fa'il) dan sebagian bentuk Khabar. Inilah dua peran yang menjadi 'pusat pembicaraan' di tiap kalimat.", ex:"زَيْدٌ قَاِئٌم <span style='color:#5c4f40; font-family:Karla; font-size:.85rem;'>— Zaid (itu) berdiri</span>"},
+  nash: {title:"Nashab — Fathah", body:"Dipakai untuk Fadlah: objek, keterangan waktu/tempat, mashdar penguat/alasan, keadaan (haal), penafsir (tamyiz), dan kata setelah Illaa. Jumlahnya paling banyak, ringan diucap — cukup buka mulut.", ex:"َأَكَل الُخْبَز <span style='color:#5c4f40; font-family:Karla; font-size:.85rem;'>— (dia) memakan roti</span>"},
+  jar: {title:"Jarr — Kasrah", body:"Berlaku pada kata benda yang didahului Harf Jarr tertentu (fii, ilaa, min, 'alaa, dsb). Inilah kasus yang paling kuat/pasti — begitu ada harf jarr, wajib kasrah.", ex:"ِفي الَمْسِجِد <span style='color:#5c4f40; font-family:Karla; font-size:.85rem;'>— di dalam masjid</span>"}
+};
+function showIrab(key){
+  const d = irabData[key];
+  const el = document.getElementById('irabDetail');
+  el.innerHTML = `<b>${d.title}</b><br>${d.body}<div class="ex">${d.ex}</div>`;
+  el.classList.add('show');
+}
+
+/* ---------------- JUMLAH TABS ---------------- */
+const jumlahData = {
+  mufrad: {
+    label:'Mufrad (Satu)',
+    rows:[['Zaid','زَيْدٌ','زَيْدًا','زَيْدٍ'],['Hind','هِنْدٌ','هِنْدًا','هِنْدٍ']],
+    note:"Di sinilah anomali seperti Ghairu Munsharif, Manqush, dan Maqshur muncul — hanya ketika tanda i'rab semestinya berupa harakat murni, tapi terhalang sifat kata."
+  },
+  mutsanna: {
+    label:'Mutsanna (Dua)',
+    rows:[['Zaid','زَيْدَاِن','زَيْدَيِن','زَيْدَيِن'],['Hind','هِنْدَاِن','هِنْدَيِن','هِنْدَيِن']],
+    note:""
+  },
+  jamaksalim: {
+    label:'Jamak Salim (Utuh)',
+    rows:[['Zaid (m)','زَيُدوَن','زَيِديَن','زَيِديَن'],['Hind (p)','هِنَداُت','هِنَداِت','هِنَداِت']],
+    note:"Alif–wau–ya di sini bukan anomali — ia justru tanda i'rab itu sendiri, berganti mengikuti posisi rafa'/nashab-jarr."
+  },
+  jamaktaksir: {
+    label:'Jamak Taksir (Pecah)',
+    rows:[['Zaid','زُيُوٌد','زُيُوًدا','زُيُوٍد'],['Hind','هُنُوٌد','هُنُوًدا','هُنُوٍد']],
+    note:"Sama seperti Mufrad, Jamak Taksir juga bisa kena anomali Ghairu Munsharif — misalnya pola yang tak menerima tanwin sama sekali."
+  }
+};
+function fillJumlahTabs(){
+  const el = document.getElementById('jumlahTabs');
+  el.innerHTML = Object.keys(jumlahData).map((k,i)=>`<button id="jt-${k}" onclick="setJumlah('${k}')">${jumlahData[k].label}</button>`).join('');
+}
+function setJumlah(key){
+  Object.keys(jumlahData).forEach(k=>document.getElementById(`jt-${k}`).classList.toggle('active', k===key));
+  const d = jumlahData[key];
+  document.getElementById('jumlahBody').innerHTML = d.rows.map(r=>
+    `<tr><td>${r[0]}</td><td class="ar raf">${r[1]}</td><td class="ar nas">${r[2]}</td><td class="ar jar">${r[3]}</td></tr>`
+  ).join('');
+  const note = document.getElementById('jumlahNote');
+  if(d.note){ note.textContent = d.note; note.classList.add('show'); }
+  else{ note.classList.remove('show'); }
+}
+fillJumlahTabs();
+setJumlah('mufrad');
+
+/* ---------------- NAWASIKH ---------------- */
+const nawData = {
+  base: {
+    parts:[{t:'الَطاِلُب', c:'s', cls:'role-S'},{t:'ُمْجَتِهٌد', c:'v', cls:'role-V'}],
+    explain:"Kalimat biasa: Mubtada (الطالب) dan Khabar (مجتهد) sama-sama damah. Inilah 'hukum tetap' yang ditanam sejak halaman pertama."
+  },
+  inna: {
+    parts:[{t:'ِإَن', c:'', cls:''},{t:'الَطاِلَب', c:'s2', cls:'role-O'},{t:'ُمْجَتِهٌد', c:'v', cls:'role-V'}],
+    explain:"Begitu masuk Inna, Isim Inna (yang tadinya Mubtada) berubah dari damah menjadi fathah — S yang tadi 'aman' kini ternashab. Khabar-nya tetap damah."
+  },
+  kana: {
+    parts:[{t:'َكاَن', c:'', cls:''},{t:'الَطاِلُب', c:'s', cls:'role-S'},{t:'ُمْجَتِهًدا', c:'v2', cls:'role-O'}],
+    explain:"Kebalikannya: masuk Kana, giliran Khabar yang berubah dari damah menjadi fathah, sementara Isim Kana (bekas Mubtada) tetap damah. Yang berubah bergantung siapa masuknya."
+  }
+};
+function setNaw(key, btn){
+  document.querySelectorAll('.naw-toggle button').forEach(b=>b.classList.remove('active'));
+  if(btn){ btn.classList.add('active'); }
+  const d = nawData[key];
+  document.getElementById('nawSentence').innerHTML = d.parts.map(p=>`<span class="part ${p.cls}">${p.t}</span>`).join('');
+  document.getElementById('nawExplain').textContent = d.explain;
+}
+setNaw('base');
+
+/* ---------------- PRAKTIK AYAT ---------------- */
+const ayat = [
+  {
+    name:'Al-Fatihah 1:1 — Basmalah',
+    ar:'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+    words:[
+      {ar:'بِ', role:'J', lbl:'Harf Jarr'},
+      {ar:'اسْمِ', role:'J', lbl:'Majrur, Mudhaf'},
+      {ar:'اللَّهِ', role:'J', lbl:'Mudhaf Ilaih'},
+      {ar:'الرَّحْمَٰنِ', role:'O', lbl:"Sifat (Na't)"},
+      {ar:'الرَّحِيمِ', role:'O', lbl:"Sifat (Na't)"}
+    ],
+    note:"SV dihapus karena sudah jelas dari konteks (taqdirnya: 'aku memulai dengan nama Allah') — fleksibilitas yang lazim di Basmalah."
+  },
+  {
+    name:"Al-Ikhlas 1 — Qul huwa Allah",
+    ar:'قُلْ هُوَ اللَّهُ أَحَدٌ',
+    words:[
+      {ar:'قُلْ', role:'V', lbl:"Fi'il Amr"},
+      {ar:'هُوَ', role:'S', lbl:'Mubtada (Dhamir)'},
+      {ar:'اللَّهُ', role:'S', lbl:'Badal dari Huwa'},
+      {ar:'أَحَدٌ', role:'V', lbl:'Khabar'}
+    ],
+    note:"Empat kata, dua kalimat: perintah (Fi'il Amr) lalu Mubtada–Khabar, dengan Badal menyisip menjelaskan 'Huwa' itu siapa."
+  },
+  {
+    name:"An-Nasr 1 — Idzaa jaa'a",
+    ar:'إِذَا جَاءَ نَصْرُ اللَّهِ وَالْفَتْحُ',
+    words:[
+      {ar:'إِذَا', role:'J', lbl:'Zharaf Syarat'},
+      {ar:'جَاءَ', role:'V', lbl:"Fi'il Madhi"},
+      {ar:'نَصْرُ', role:'S', lbl:'Fa\'il, Mudhaf'},
+      {ar:'اللَّهِ', role:'J', lbl:'Mudhaf Ilaih'},
+      {ar:'وَالْفَتْحُ', role:'S', lbl:"Ma'thuf, ikut Rafa'"}
+    ],
+    note:"VSO klasik, dengan Idzaa sebagai penanda syarat waktu dan penyandaran (idhafah) antara nashr dan Allah."
+  },
+  {
+    name:"Al-'Asr 2 — Innal insaana lafii khusr",
+    ar:'إِنَّ الْإِنسَانَ لَفِي خُسْرٍ إِلَّا الَّذِينَ آمَنُوا',
+    words:[
+      {ar:'إِنَّ', role:'J', lbl:'Nawasikh'},
+      {ar:'الْإِنسَانَ', role:'O', lbl:'Isim Inna, Nashab'},
+      {ar:'لَفِي خُسْرٍ', role:'V', lbl:'Khabar Inna, Jarr'},
+      {ar:'إِلَّا الَّذِينَ آمَنُوا', role:'O', lbl:'Mustatsna — masuk Fadlah'}
+    ],
+    note:"Dua fenomena sekaligus: Nawasikh (Inna membalik Mubtada jadi nashab) dan Mustatsna, yang dititipkan ke kategori Fadlah — tak perlu bab sendiri."
+  },
+  {
+    name:'Ad-Dhuha 1 — Wadh-dhuhaa',
+    ar:'وَالضُّحَىٰ',
+    words:[
+      {ar:'وَ', role:'J', lbl:'Harf Qasam (Sumpah)'},
+      {ar:'الضُّحَىٰ', role:'J', lbl:'Majrur — alif lazimah'}
+    ],
+    note:"Wau di sini harf sumpah sekaligus harf jarr. Alif di akhir Adh-Dhuhaa tak berubah — tanda kasrahnya hanya diketahui di hati, pola serupa Maqshur."
+  },
+  {
+    name:'Az-Zalzalah 7 — Faman ya\'mal',
+    ar:'فَمَن يَعْمَلْ مِثْقَالَ ذَرَّةٍ خَيْرًا يَرَهُ',
+    words:[
+      {ar:'مَن', role:'S', lbl:'Isim Syarat'},
+      {ar:'يَعْمَلْ', role:'V', lbl:"Fi'il, Dijazm (sukun)"},
+      {ar:'مِثْقَالَ', role:'O', lbl:"Maf'ul, Mudhaf"},
+      {ar:'ذَرَّةٍ', role:'J', lbl:'Mudhaf Ilaih'},
+      {ar:'خَيْرًا', role:'O', lbl:'Tamyiz — Fadlah'},
+      {ar:'يَرَهُ', role:'V', lbl:'Jawab Syarat, Dijazm'}
+    ],
+    note:"Dua fi'il mudhari' yang sama-sama disukunkan (dijazm) karena pola Syarat–Jawab: sesuatu yang belum disentuh sama sekali di halaman-halaman sebelumnya."
+  }
+];
+const roleColor = {S:'var(--indigo)', V:'var(--oxide)', O:'var(--gold)', J:'var(--sage)'};
+function fillAyat(){
+  const grid = document.getElementById('ayatGrid');
+  grid.innerHTML = ayat.map((a,i)=>`
+    <div class="ayat-card">
+      <div class="ayat-head" id="ah-${i}" onclick="toggleAyat(${i})">
+        <div class="ar">${a.ar}</div>
+        <div class="name">${a.name}</div>
+        <div class="plus">+</div>
+      </div>
+      <div class="ayat-body" id="ab-${i}">
+        <div class="ayat-words">
+          ${a.words.map(w=>`<div class="ayat-word"><span class="ar">${w.ar}</span><span class="lbl" style="background:${roleColor[w.role]}">${w.lbl}</span></div>`).join('')}
+        </div>
+        <p class="ayat-note">${a.note}</p>
+      </div>
+    </div>
+  `).join('');
+}
+function toggleAyat(i){
+  document.getElementById(`ab-${i}`).classList.toggle('show');
+  document.getElementById(`ah-${i}`).classList.toggle('open');
+}
+fillAyat();
+
+/* ---------------- TYPOLOGY CHART ---------------- */
+const typo = [
+  {label:'Jenis Kata Pokok', min:2, max:14, val:3, minLbl:'2 (ekstrem minim)', maxLbl:'13+ (Indonesia, dsb)'},
+  {label:'Sistem Kasus Isim', min:1, max:8, val:3.5, minLbl:'1 (tanpa kasus)', maxLbl:'6–8 (Slavia, Kaukasus)'},
+  {label:'Huruf per Akar Kata', min:2, max:7, val:3, minLbl:'2 huruf', maxLbl:'7+ huruf'},
+  {label:'Vokal Dasar', min:2, max:14, val:3, minLbl:'2 vokal', maxLbl:'14 vokal (sebagian bhs Eropa)'},
+  {label:'Jumlah Huruf Alfabet', min:13, max:60, val:28, minLbl:'~13 (Polinesia)', maxLbl:'60+ (Kaukasus)'}
+];
+function pct(v,min,max){ return ((v-min)/(max-min))*100; }
+function fillTypo(){
+  const el = document.getElementById('typoChart');
+  el.innerHTML = typo.map(t=>{
+    const p = pct(t.val, t.min, t.max);
+    return `
+    <div class="typo-row">
+      <div class="typo-label"><span>${t.label}</span><b>${t.val}</b></div>
+      <div class="typo-track">
+        <div class="typo-zone" style="left:30%; width:40%;"></div>
+        <div class="typo-mark" style="left:${p}%;"></div>
+      </div>
+      <div class="typo-ends"><span>${t.minLbl}</span><span>${t.maxLbl}</span></div>
+    </div>`;
+  }).join('') + `<p style="font-size:.82rem; color:var(--ink-soft); margin-top:6px;">Titik merah menandai posisi Arab pada tiap sumbu; area terang di tengah adalah <i>zona ideal</i> — cukup ekspresif tanpa berlebihan. Arab konsisten jatuh di dalamnya, di hampir semua lapisan sekaligus.</p>`;
+}
+fillTypo();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

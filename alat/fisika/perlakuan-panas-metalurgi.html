@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perlakuan Panas &amp; Metalurgi Baja</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14171B; --bg-panel:#1C2126; --bg-deep:#0D1013;
+    --text:#E4E7EB; --text-soft:#8A94A0;
+    --ember:#C6742E; --steel:#7C97AC; --gold:#B8934A;
+    --line:#2A3038;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.6;}
+  h1,h2{font-family:'Cinzel',serif;color:#fff;margin:0;}
+  .wrap{max-width:1080px;margin:0 auto;padding:36px 20px 80px;}
+  header{padding-bottom:20px;border-bottom:1px solid var(--line);margin-bottom:26px;}
+  header h1{font-size:1.8rem;font-weight:600;max-width:28ch;}
+  header p{margin:8px 0 0;color:var(--text-soft);max-width:72ch;font-size:0.93rem;}
+  section{margin-bottom:36px;}
+  section > h2{font-size:1.2rem;font-weight:600;margin-bottom:6px;display:flex;gap:9px;align-items:baseline;}
+  section > h2 .num{color:var(--ember);font-family:'Inter';font-size:0.9rem;font-weight:700;}
+  section > .lead{color:var(--text-soft);margin-bottom:14px;font-size:0.9rem;max-width:72ch;}
+  .panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  @media (max-width:720px){.grid-2{grid-template-columns:1fr;}}
+  .field{margin-bottom:14px;}
+  .field label{display:flex;justify-content:space-between;font-size:0.84rem;color:var(--text-soft);margin-bottom:5px;}
+  .field label .val{color:var(--ember);font-weight:700;font-variant-numeric:tabular-nums;}
+  .field input[type=range]{width:100%;accent-color:var(--ember);}
+  .result-box{margin-top:8px;padding:14px 16px;border-radius:8px;background:var(--bg-deep);border:1px solid var(--line);}
+  .result-box .big{font-family:'Cinzel',serif;font-size:1.15rem;color:#fff;}
+  .result-box .small{font-size:0.8rem;color:var(--text-soft);margin-top:4px;}
+  svg.chart{width:100%;height:auto;}
+  .chart-wrap{background:var(--bg-deep);border:1px solid var(--line);border-radius:8px;padding:12px;}
+  .card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;}
+  .card{background:var(--bg-panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;}
+  .card h3{font-size:0.96rem;margin:0 0 5px;color:#fff;font-family:'Cinzel',serif;}
+  .card p{margin:0;font-size:0.84rem;color:var(--text-soft);}
+  .callout{background:var(--bg-panel);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:6px;padding:14px 16px;font-size:0.86rem;color:var(--text-soft);margin-top:10px;}
+  .callout p{margin:0 0 6px;} .callout p:last-child{margin-bottom:0;}
+  ol.ref{padding-left:18px;font-size:0.84rem;color:var(--text-soft);}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Perlakuan Panas &amp; Metalurgi Baja</h1>
+  <p>Ilmu di balik kenapa besi bisa dibuat keras, lentur, atau rapuh hanya dengan mengubah suhu &amp; laju pendinginannya — prinsip umum metalurgi yang mendasari banyak tradisi tempa historis, termasuk yang disinggung risalah kedua al-Kindi yang naskahnya sudah hilang. Fokus di sini murni sains fase &amp; strukturnya, disajikan generik — bukan resep produksi benda tertentu.</p>
+</header>
+
+<section>
+  <h2><span class="num">01</span> Diagram Fase Besi-Karbon (Disederhanakan)</h2>
+  <p class="lead">Geser kadar karbon &amp; suhu — titik akan jatuh di salah satu daerah fase. Titik eutektoid (0,76% C, 727°C) jadi acuan utama diagram baja karbon.</p>
+  <div class="panel">
+    <div class="grid-2">
+      <div>
+        <div class="field"><label>Kadar karbon (%) <span class="val" id="v-c">0.5</span></label><input type="range" id="in-c" min="0" max="2" step="0.02" value="0.5"></div>
+        <div class="field"><label>Suhu (°C) <span class="val" id="v-t">750</span></label><input type="range" id="in-t" min="0" max="950" step="5" value="750"></div>
+        <div class="result-box"><div class="small">Fase pada titik ini</div><div class="big" id="phase-out">—</div><div class="small" id="phase-desc"></div></div>
+      </div>
+      <div class="chart-wrap"><svg class="chart" id="svg-phase" viewBox="0 0 300 260"></svg></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">02</span> Laju Pendinginan → Struktur Mikro</h2>
+  <p class="lead">Prinsip inti quenching: makin cepat baja panas didinginkan, makin "terkunci" strukturnya jadi keras (martensit) alih-alih relaks jadi lunak (perlit kasar).</p>
+  <div class="panel">
+    <div class="grid-2">
+      <div>
+        <div class="field"><label>Laju pendinginan <span class="val" id="v-rate">sedang</span></label><input type="range" id="in-rate" min="0" max="100" step="1" value="50"></div>
+        <div class="result-box"><div class="small">Struktur mikro terbentuk</div><div class="big" id="struct-out">—</div><div class="small" id="struct-desc"></div></div>
+      </div>
+      <div class="chart-wrap"><svg class="chart" id="svg-hardness" viewBox="0 0 300 160"></svg></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">03</span> Tempering: Menukar Sedikit Kekerasan demi Ketangguhan</h2>
+  <p class="lead">Martensit hasil quenching sangat keras tapi getas. Tempering (memanaskan ulang di suhu lebih rendah) mengurangi kekerasan sedikit demi menaikkan ketangguhan drastis — dua kurva ini selalu berlawanan arah.</p>
+  <div class="panel">
+    <div class="field" style="max-width:340px"><label>Suhu tempering (°C) <span class="val" id="v-temper">300</span></label><input type="range" id="in-temper" min="150" max="650" step="10" value="300"></div>
+    <div class="chart-wrap"><svg class="chart" id="svg-temper" viewBox="0 0 400 180"></svg></div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">04</span> Ragam Tradisi Historis (Catatan Budaya)</h2>
+  <div class="card-grid">
+    <div class="card"><h3>Baja Krusibel (Wootz)</h3><p>Tradisi India-Asia Selatan yang diperdagangkan luas ke dunia Islam — kandungan karbon tinggi &amp; pendinginan lambat terkontrol menghasilkan pola karakteristik.</p></div>
+    <div class="card"><h3>Tempa Lipat (Pattern Welding)</h3><p>Tradisi Eropa awal (termasuk yang disebut al-Kindi sebagai ciri khas Frank) — menggabungkan lapisan besi berbeda kadar karbon lewat pelipatan berulang.</p></div>
+    <div class="card"><h3>Pengerasan Diferensial</h3><p>Teknik melapisi sebagian permukaan dengan tanah liat sebelum quench sehingga laju pendinginan berbeda di tiap bagian — didokumentasikan luas dalam tradisi tempa Asia Timur.</p></div>
+  </div>
+  <div class="callout"><p>Catatan budaya di atas sengaja ringkas &amp; umum — bukan instruksi langkah demi langkah. Ketiganya adalah kategori luas yang didokumentasikan sejarah metalurgi, bukan resep produksi.</p></div>
+</section>
+
+<section>
+  <h2><span class="num">05</span> Batasan</h2>
+  <div class="callout">
+    <p>Tool ini mengajarkan <strong>prinsip fase &amp; struktur mikro secara generik</strong> — diagram fase disederhanakan untuk edukasi (bukan diagram Fe-C presisi penuh dengan seluruh garis solvus/solidus), dan simulator struktur-mikro bersifat kualitatif/ilustratif, bukan model CCT/TTT kuantitatif sungguhan. Sengaja tidak ada instruksi produksi benda spesifik apa pun — fokusnya murni sains material yang mendasari banyak kerajinan logam, dari pisau dapur hingga arsitektur bangunan baja.</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">06</span> Referensi</h2>
+  <ol class="ref">
+    <li>Prinsip umum diagram fase Fe-Fe₃C — kurikulum standar ilmu material/metalurgi</li>
+    <li>Konsep umum CCT (Continuous Cooling Transformation) dalam perlakuan panas baja</li>
+    <li>Hoyland &amp; Gilmour — <em>Medieval Islamic Swords and Swordmaking</em> (konteks historis risalah al-Kindi)</li>
+  </ol>
+</section>
+</div>
+
+<script>
+function el(t,a){const e=document.createElementNS("http://www.w3.org/2000/svg",t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+
+/* 01 phase diagram */
+function drawPhase(){
+  const c = parseFloat(document.getElementById('in-c').value);
+  const t = parseFloat(document.getElementById('in-t').value);
+  document.getElementById('v-c').textContent = c.toFixed(2);
+  document.getElementById('v-t').textContent = t;
+  const svg = document.getElementById('svg-phase');
+  svg.innerHTML='';
+  const padL=36,padR=10,padT=10,padB=30,W=300,H=260;
+  const xFor = cc => padL+(cc/2)*(W-padL-padR);
+  const yFor = tt => padT+(1-tt/950)*(H-padT-padB);
+  svg.appendChild(el('line',{x1:padL,y1:padT,x2:padL,y2:H-padB,stroke:'#2A3038'}));
+  svg.appendChild(el('line',{x1:padL,y1:H-padB,x2:W-padR,y2:H-padB,stroke:'#2A3038'}));
+  [0,0.5,1,1.5,2].forEach(v=>{const x=xFor(v);svg.appendChild(el('text',{x,y:H-padB+14,'font-size':8,fill:'#8A94A0','text-anchor':'middle'})).textContent=v;});
+  [0,300,600,900].forEach(v=>{const y=yFor(v);svg.appendChild(el('text',{x:padL-6,y:y+3,'font-size':8,fill:'#8A94A0','text-anchor':'end'})).textContent=v;});
+  // eutectoid boundary line (simplified illustrative)
+  const dEu = `M ${xFor(0)} ${yFor(727)} L ${xFor(0.76)} ${yFor(727)} L ${xFor(2)} ${yFor(727)}`;
+  svg.appendChild(el('path',{d:dEu, stroke:'#7C97AC','stroke-width':1.2, fill:'none','stroke-dasharray':'3,2'}));
+  const dAust = `M ${xFor(0)} ${yFor(900)} L ${xFor(0.76)} ${yFor(727)} L ${xFor(2)} ${yFor(780)}`;
+  svg.appendChild(el('path',{d:dAust, stroke:'#C6742E','stroke-width':1.2, fill:'none'}));
+  svg.appendChild(el('text',{x:xFor(1.3),y:yFor(850),'font-size':9,fill:'#C6742E'})).textContent='Austenit';
+  svg.appendChild(el('text',{x:xFor(1.3),y:yFor(650),'font-size':9,fill:'#7C97AC'})).textContent='Ferit+Sementit (Perlit)';
+  const px=xFor(c), py=yFor(t);
+  svg.appendChild(el('circle',{cx:px,cy:py,r:5,fill:'#B8934A',stroke:'#14171B','stroke-width':1.5}));
+
+  let phase, desc;
+  const austLine = 900 - (900-727)*(c/0.76>1?1:c/0.76) ; // rough
+  if(t>727 && (c<=0.76 ? t> (900-(900-727)*(c/0.76)) : t>(727+(780-727)*((c-0.76)/1.24)))){
+    phase='Austenit'; desc='Fase suhu tinggi, lunak &amp; mudah dibentuk — struktur kristal FCC yang jadi titik awal semua proses quench.';
+  } else if(t>727){
+    phase='Austenit + fase transisi'; desc='Mendekati batas eutektoid — daerah transisi antar fase.';
+  } else {
+    phase='Ferit + Sementit (Perlit)'; desc='Fase suhu rendah, struktur berlapis — lebih keras dari ferit murni tapi jauh lebih lunak dibanding martensit hasil quench cepat.';
+  }
+  document.getElementById('phase-out').textContent = phase;
+  document.getElementById('phase-desc').innerHTML = desc;
+}
+['in-c','in-t'].forEach(id=>document.getElementById(id).addEventListener('input',drawPhase));
+
+/* 02 cooling rate -> microstructure */
+function drawCooling(){
+  const rate = parseFloat(document.getElementById('in-rate').value);
+  const label = rate<25?'lambat':rate<60?'sedang':rate<85?'cepat':'sangat cepat';
+  document.getElementById('v-rate').textContent = label;
+  let struct, desc, hardness;
+  if(rate<25){ struct='Perlit kasar'; desc='Pendinginan perlahan (mis. dibiarkan di udara) memberi waktu atom tersusun rapi — lunak &amp; mudah dibentuk lagi.'; hardness=0.2; }
+  else if(rate<60){ struct='Perlit halus / Bainit'; desc='Pendinginan sedang menghasilkan struktur lebih rapat — kekerasan naik, keuletan mulai turun.'; hardness=0.5; }
+  else if(rate<85){ struct='Bainit / Martensit awal'; desc='Mendekati pendinginan cepat — mulai terbentuk struktur terkunci yang keras tapi rawan getas.'; hardness=0.75; }
+  else { struct='Martensit'; desc='Pendinginan sangat cepat (quench) mengunci struktur jadi sangat keras — tapi getas, karenanya selalu perlu tempering setelahnya.'; hardness=1.0; }
+  document.getElementById('struct-out').textContent = struct;
+  document.getElementById('struct-desc').innerHTML = desc;
+
+  const svg = document.getElementById('svg-hardness');
+  svg.innerHTML='';
+  const W=300,H=160,padL=40,padB=26,padT=14;
+  svg.appendChild(el('line',{x1:padL,y1:padT,x2:padL,y2:H-padB,stroke:'#2A3038'}));
+  svg.appendChild(el('line',{x1:padL,y1:H-padB,x2:W-10,y2:H-padB,stroke:'#2A3038'}));
+  const barW=(W-padL-20);
+  svg.appendChild(el('rect',{x:padL,y:H-padB-hardness*(H-padB-padT),width:barW,height:hardness*(H-padB-padT),fill:'#C6742E',opacity:0.85}));
+  svg.appendChild(el('text',{x:padL,y:H-padB+16,'font-size':9,fill:'#8A94A0'})).textContent='Kekerasan relatif';
+  svg.appendChild(el('text',{x:padL+4,y:H-padB-hardness*(H-padB-padT)-6,'font-size':9,fill:'#E4E7EB'})).textContent=(hardness*100).toFixed(0)+'%';
+}
+document.getElementById('in-rate').addEventListener('input',drawCooling);
+
+/* 03 tempering tradeoff */
+function drawTemper(){
+  const temper = parseFloat(document.getElementById('in-temper').value);
+  document.getElementById('v-temper').textContent = temper;
+  const svg = document.getElementById('svg-temper');
+  svg.innerHTML='';
+  const W=400,H=180,padL=40,padR=10,padT=14,padB=26;
+  const xFor = t => padL+((t-150)/(650-150))*(W-padL-padR);
+  const yFor = v => padT+(1-v)*(H-padT-padB);
+  svg.appendChild(el('line',{x1:padL,y1:padT,x2:padL,y2:H-padB,stroke:'#2A3038'}));
+  svg.appendChild(el('line',{x1:padL,y1:H-padB,x2:W-padR,y2:H-padB,stroke:'#2A3038'}));
+  let hardD='', toughD='';
+  for(let t=150;t<=650;t+=10){
+    const hv = Math.max(0.15, 1 - (t-150)/500*0.75);
+    const tv = Math.min(0.95, 0.1 + (t-150)/500*0.85);
+    hardD += (t===150?'M':'L')+` ${xFor(t).toFixed(1)} ${yFor(hv).toFixed(1)} `;
+    toughD += (t===150?'M':'L')+` ${xFor(t).toFixed(1)} ${yFor(tv).toFixed(1)} `;
+  }
+  svg.appendChild(el('path',{d:hardD, fill:'none', stroke:'#C6742E','stroke-width':2}));
+  svg.appendChild(el('path',{d:toughD, fill:'none', stroke:'#7C97AC','stroke-width':2}));
+  svg.appendChild(el('text',{x:W-90,y:30,'font-size':9,fill:'#C6742E'})).textContent='Kekerasan';
+  svg.appendChild(el('text',{x:W-90,y:44,'font-size':9,fill:'#7C97AC'})).textContent='Ketangguhan';
+  const x=xFor(temper);
+  svg.appendChild(el('line',{x1:x,y1:padT,x2:x,y2:H-padB,stroke:'#B8934A','stroke-width':1,'stroke-dasharray':'3,2'}));
+}
+document.getElementById('in-temper').addEventListener('input',drawTemper);
+
+drawPhase(); drawCooling(); drawTemper();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

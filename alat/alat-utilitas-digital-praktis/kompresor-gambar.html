@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kompresor Gambar (Client-Side) | Tools Qiladat JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#10151A;
+  --panel:#161D24;
+  --panel-2:#1C242C;
+  --line:rgba(220,232,238,0.12);
+  --line-strong:rgba(220,232,238,0.26);
+  --text:#DCE8EE;
+  --muted:#84A0AC;
+  --signal:#3FB897;
+  --signal-dim:rgba(63,184,151,0.16);
+  --amber:#D6A93B;
+  --amber-dim:rgba(214,169,59,0.16);
+  --danger:#C1554A;
+  --danger-dim:rgba(193,85,74,0.16);
+  --radius:2px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:var(--ink);color:var(--text);font-family:'Karla',sans-serif;font-size:16px;line-height:1.55;}
+@media (prefers-reduced-motion: reduce){*{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;}}
+.wrap{max-width:880px;margin:0 auto;padding:0 18px 80px;}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-0.01em;margin:0 0 6px;}
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--signal);display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.eyebrow::before{content:"";width:18px;height:1px;background:var(--signal);display:inline-block;}
+
+.hero{background:linear-gradient(160deg,#182028 0%, #141A20 60%, #10151A 100%);margin:0 -18px 22px;padding:34px 18px 26px;border-bottom:1px solid var(--line-strong);}
+.hero-inner{max-width:880px;margin:0 auto;}
+.hero h1{font-size:clamp(24px,5vw,34px);line-height:1.1;}
+.hero p.sub{color:var(--muted);font-size:15px;max-width:60ch;margin:10px 0 0;}
+
+.sheet{position:relative;background:var(--panel);border:1px solid var(--line-strong);border-radius:var(--radius);padding:20px;margin-bottom:18px;}
+.sheet::before,.sheet::after{content:"";position:absolute;width:9px;height:9px;top:-1px;left:-1px;border-top:1.5px solid var(--signal);border-left:1.5px solid var(--signal);}
+.sheet::after{top:auto;left:auto;bottom:-1px;right:-1px;border-top:none;border-left:none;border-bottom:1.5px solid var(--signal);border-right:1.5px solid var(--signal);}
+.sheet h2{font-size:19px;}
+.tag{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;display:block;}
+
+.warn{background:var(--amber-dim);border:1px solid rgba(214,169,59,0.5);border-left:4px solid var(--amber);padding:14px 16px;border-radius:var(--radius);margin-bottom:20px;}
+.warn .tag{color:#EBCB7C;}
+.warn p{margin:6px 0 0;font-size:14.5px;}
+.warn p strong{color:#fff;}
+.warn ul{margin:8px 0 0;padding-left:18px;font-size:14px;}
+.warn ul li{margin-bottom:4px;}
+
+.info{background:var(--signal-dim);border:1px solid rgba(63,184,151,0.5);border-left:4px solid var(--signal);padding:14px 16px;border-radius:var(--radius);margin-bottom:20px;}
+.info .tag{color:#8FE0C7;}
+.info p{margin:6px 0 0;font-size:14.5px;}
+.info p strong{color:#fff;}
+
+.dropzone{border:2px dashed var(--line-strong);border-radius:var(--radius);padding:34px 18px;text-align:center;cursor:pointer;transition:border-color 0.2s ease, background 0.2s ease;}
+.dropzone:hover, .dropzone.drag{border-color:var(--signal);background:var(--signal-dim);}
+.dropzone p{margin:6px 0 0;color:var(--muted);font-size:13.5px;}
+.dropzone .dzicon{font-size:34px;}
+#fileInput{display:none;}
+
+.filelist{margin-top:14px;display:flex;flex-direction:column;gap:8px;}
+.fileinfo{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;font-size:13.5px;}
+.fileinfo .name{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);word-break:break-all;}
+.fileinfo .size{color:var(--muted);font-size:11.5px;white-space:nowrap;}
+button.small-x{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;flex-shrink:0;}
+button.small-x:hover{color:var(--danger);}
+
+.filelist-summary{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+.filelist-summary button.linklike{background:none;border:none;color:var(--danger);font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;text-decoration:underline;padding:0;}
+
+.grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px;}
+@media(min-width:640px){.grid.cols-2{grid-template-columns:1fr 1fr;}}
+label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px;font-family:'JetBrains Mono',monospace;letter-spacing:0.02em;}
+select{width:100%;background:var(--ink);border:1px solid var(--line-strong);color:var(--text);padding:9px 10px;border-radius:var(--radius);font-family:'JetBrains Mono',monospace;font-size:14.5px;}
+select:focus{outline:2px solid var(--signal);outline-offset:1px;border-color:var(--signal);}
+.field-note{font-size:12px;color:var(--muted);margin-top:4px;}
+
+button.primary{font-family:'Karla',sans-serif;font-weight:700;font-size:14.5px;background:var(--signal);color:#0c1f18;border:1px solid var(--signal);padding:11px 20px;border-radius:var(--radius);cursor:pointer;width:100%;margin-top:16px;}
+button.primary:hover{opacity:0.9;}
+button.primary:disabled{opacity:0.4;cursor:not-allowed;}
+
+.progress-outer{background:var(--ink);border:1px solid var(--line-strong);border-radius:20px;height:10px;overflow:hidden;margin-top:14px;display:none;}
+.progress-outer.show{display:block;}
+.progress-inner{height:100%;background:var(--signal);width:0%;transition:width 0.2s ease;}
+.status-text{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--muted);margin-top:8px;min-height:16px;}
+
+.result{display:none;margin-top:18px;}
+.result.show{display:block;}
+.stat-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px;}
+.stat{background:var(--ink);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;}
+.stat .label{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);}
+.stat .value{font-family:'Fraunces',serif;font-size:19px;font-weight:600;color:var(--signal);margin-top:2px;}
+a.download-btn{display:block;text-align:center;font-family:'Karla',sans-serif;font-weight:700;text-decoration:none;background:var(--signal);color:#0c1f18;padding:11px 20px;border-radius:var(--radius);margin-top:14px;}
+a.download-btn:hover{opacity:0.9;}
+a.download-btn.secondary{background:transparent;color:var(--signal);border:1px solid var(--signal);}
+
+.resultlist{margin-top:14px;display:flex;flex-direction:column;gap:6px;}
+.resultrow{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);padding:9px 12px;font-size:13px;}
+.resultrow .rname{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--text);word-break:break-all;}
+.resultrow .rmeta{font-size:11px;color:var(--muted);white-space:nowrap;}
+.resultrow a{font-size:11.5px;color:var(--signal);text-decoration:none;font-weight:700;white-space:nowrap;}
+.resultrow a:hover{text-decoration:underline;}
+
+.badge{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:11.5px;padding:3px 9px;border-radius:20px;border:1px solid var(--line-strong);}
+.badge.safe{border-color:rgba(63,184,151,0.5);color:var(--signal);background:var(--signal-dim);}
+.badge.warnb{border-color:rgba(193,85,74,0.5);color:#E0A79A;background:var(--danger-dim);}
+
+.refs{font-size:13px;color:var(--muted);}
+.refs li{margin-bottom:6px;}
+.consult{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;background:linear-gradient(135deg,var(--panel-2),var(--panel));border:1px solid var(--signal);border-radius:var(--radius);padding:16px 18px;}
+.consult p{margin:0;font-size:14px;max-width:52ch;}
+.consult a.wa{font-family:'Karla',sans-serif;font-weight:700;text-decoration:none;background:var(--signal);color:#0c1f18;padding:10px 18px;border-radius:var(--radius);white-space:nowrap;font-size:14px;}
+.consult a.wa:hover{opacity:0.9;}
+footer.foot{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;text-align:center;}
+.small{font-size:12px;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Tools Qiladat · JAZMI · Utilitas Gambar</div>
+    <h1>Kompresor Gambar</h1>
+    <p class="sub">Perkecil ukuran banyak gambar sekaligus langsung di browser Anda — tidak ada file yang diunggah ke server mana pun. Pengaturan default meniru persis skrip <code>generate-manifest.py</code> yang dipakai di <code>arsip/gambar/</code>.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="info">
+    <span class="tag">✓ Cocok untuk alur kerja Arsip Gambar</span>
+    <p>Alat ini untuk langkah <strong>sebelum</strong> Anda menaruh gambar ke folder <code>arsip/gambar/</code> di situs. Kompres di sini dulu (opsional — <code>generate-manifest.py</code> sebenarnya juga mengompres otomatis saat dijalankan), lalu taruh hasilnya ke folder sumber yang sesuai. <strong>Nama file TIDAK diubah</strong> (kecuali PNG yang dikonversi ke JPEG, ekstensinya ikut berubah jadi <code>.jpg</code>) — penting supaya nama timestamp asli (mis. hasil ekspor Facebook) tetap terbaca sebagai tanggal oleh skrip manifest.</p>
+  </div>
+
+  <div class="warn">
+    <span class="tag">⚠ Baca dulu sebelum memakai</span>
+    <p><strong>Kompresi gambar sendiri TIDAK butuh internet</strong> — memakai fitur bawaan browser (Canvas), semua diproses lokal di perangkat Anda. Internet cuma dipakai sekali saat memuat halaman ini dan (opsional) saat memuat pustaka JSZip untuk tombol "Unduh Semua (ZIP)".</p>
+    <ul>
+      <li>Kalau JSZip gagal dimuat (mis. tanpa internet), tombol ZIP tersembunyi — Anda tetap bisa unduh tiap gambar satu per satu.</li>
+      <li>PNG dengan transparansi asli (alpha) tetap disimpan sebagai PNG (tidak dikonversi ke JPEG) — sama seperti logika <code>generate-manifest.py</code>.</li>
+      <li>Gambar yang sudah kecil (di bawah ambang) tetap ikut diproses ulang oleh alat ini (beda dengan skrip Python yang otomatis melewati file yang sudah kecil) — hasilnya tetap aman dipakai, hanya saja pengurangan ukurannya mungkin nyaris tidak terasa untuk file yang memang sudah kecil.</li>
+    </ul>
+  </div>
+
+  <section class="sheet">
+    <span class="tag">1 — Unggah Gambar</span>
+    <h2>Pilih Gambar (boleh banyak sekaligus)</h2>
+    <div class="dropzone" id="dropzone">
+      <div class="dzicon">🖼️</div>
+      <p><strong>Ketuk untuk pilih file</strong>, atau seret beberapa gambar ke sini</p>
+      <p class="small">.png, .jpg, .jpeg, .webp — boleh pilih banyak file sekaligus</p>
+    </div>
+    <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" multiple>
+
+    <div class="filelist" id="fileList"></div>
+    <div class="filelist-summary" id="fileSummary" style="display:none;">
+      <span id="fileSummaryText"></span>
+      <button class="linklike" id="clearAll">Hapus semua</button>
+    </div>
+  </section>
+
+  <section class="sheet">
+    <span class="tag">2 — Preset Kompresi</span>
+    <h2>Pengaturan</h2>
+    <div class="grid cols-2">
+      <div>
+        <label for="preset">Preset</label>
+        <select id="preset">
+          <option value="situs" selected>Situs JAZMI (disarankan) — sama seperti generate-manifest.py</option>
+          <option value="max">Maksimal — ukuran terkecil, kualitas turun jelas</option>
+          <option value="high">Kualitas Tinggi — ukuran berkurang lebih sedikit</option>
+        </select>
+        <p class="field-note" id="presetNote"></p>
+      </div>
+    </div>
+
+    <button class="primary" id="processBtn" disabled>Kompres Semua Gambar</button>
+    <div class="progress-outer" id="progressOuter"><div class="progress-inner" id="progressInner"></div></div>
+    <div class="status-text" id="statusText"></div>
+
+    <div class="result" id="result">
+      <div class="stat-row">
+        <div class="stat"><div class="label">Total sebelum</div><div class="value" id="sizeBefore" style="font-size:16px;">–</div></div>
+        <div class="stat"><div class="label">Total sesudah</div><div class="value" id="sizeAfter" style="font-size:16px;">–</div></div>
+        <div class="stat"><div class="label">Pengurangan</div><div class="value" id="sizeDelta" style="font-size:16px;">–</div></div>
+      </div>
+      <a class="download-btn" id="downloadZip" download style="display:none;">Unduh Semua (ZIP)</a>
+      <div class="resultlist" id="resultList"></div>
+    </div>
+  </section>
+
+  <section class="sheet">
+    <span class="tag">Cara Kerja</span>
+    <h2>Apa yang Sebenarnya Terjadi</h2>
+    <p style="font-size:14.5px;">Tiap gambar digambar ulang ke <code>&lt;canvas&gt;</code> pada ukuran sisi-terpanjang sesuai preset (default <strong>1600px</strong>, tidak diperbesar kalau aslinya lebih kecil), lalu disimpan sebagai JPEG pada kualitas sesuai preset (default <strong>82%</strong>). Kalau file asli PNG dan terdeteksi punya kanal transparansi (alpha) yang benar-benar terpakai, hasilnya tetap disimpan sebagai PNG (bukan dikonversi) — sama seperti aturan yang dipakai <code>generate-manifest.py</code> untuk PNG besar tanpa transparansi.</p>
+  </section>
+
+  <section class="sheet">
+    <span class="tag">Batasan</span>
+    <h2>Kapan Alat Ini Tidak Cocok</h2>
+    <ul style="font-size:14px;padding-left:20px;">
+      <li>Ini bukan pengganti <code>generate-manifest.py</code> — alat ini <strong>hanya mengompres file</strong>, tidak menulis/mengubah <code>data/gambar.json</code>. Setelah gambar (dari sini atau langsung dari HP) ditaruh ke folder <code>arsip/gambar/</code>, skrip manifest tetap perlu dijalankan supaya galeri & panel Home ikut memperbarui.</li>
+      <li>Deteksi transparansi dilakukan dengan sampling piksel (bukan memindai tiap piksel) demi kecepatan — untuk PNG dengan area transparan sangat kecil/tipis, ada kemungkinan kecil terlewat dan dikonversi ke JPEG. Kalau ragu, cek hasilnya sebelum menghapus file asli.
+      <li>Banyak file besar sekaligus bisa terasa berat/lambat di HP dengan RAM kecil, karena semua diproses di memori perangkat Anda.</li>
+      <li>Format selain PNG/JPEG/WEBP (mis. HEIC langsung dari kamera iPhone) mungkin tidak terbaca browser — ekspor/convert ke JPEG dulu di HP sebelum diunggah ke sini kalau begitu.</li>
+    </ul>
+  </section>
+
+  <section class="sheet">
+    <span class="tag">Referensi</span>
+    <ul class="refs">
+      <li>Canvas API &amp; <code>canvas.toBlob()</code> — fitur bawaan browser untuk menggambar ulang &amp; mengekspor gambar (tanpa pustaka eksternal).</li>
+      <li>JSZip — dipakai hanya untuk membungkus banyak hasil jadi satu file ZIP (lisensi MIT), dimuat dari CDN saat tombol "Unduh Semua" dipakai.</li>
+      <li>Pengaturan default (1600px, kualitas 82%, ambang PNG 500KB) disamakan persis dengan <code>generate-manifest.py</code> di <code>arsip/gambar/</code>.</li>
+    </ul>
+  </section>
+
+  <div class="consult">
+    <p><strong>Untuk gambar penting/asli, selalu simpan salinan asli.</strong> Ada pertanyaan atau file yang gagal diproses? Hubungi kami.</p>
+    <a class="wa" href="https://wa.me/6281356572588?text=Halo%2C%20saya%20ingin%20konsultasi%20soal%20Kompresor%20Gambar%20JAZMI." target="_blank" rel="noopener">Konsultasi via WhatsApp →</a>
+  </div>
+
+  <footer class="foot">Tools Qiladat / JAZMI — laboratorium alat &amp; keilmuan. Dibangun mengikuti metode Belajar → Model → Uji → Tool.</footer>
+</div>
+
+<!-- JSZip (UMD, global JSZip) — hanya dipakai untuk tombol "Unduh Semua (ZIP)" -->
+<script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
+
+<script>
+let zipLibReady = false;
+try{ zipLibReady = !!window.JSZip; }catch(e){ console.error(e); }
+
+/* ===================== STATE ===================== */
+let selectedFiles = []; // {file, id}
+let fileIdCounter = 0;
+let lastResults = [];
+
+const PRESETS = {
+  situs:{maxDim:1600, quality:0.82, note:'Sama persis dengan MAX_DIMENSI & JPEG_QUALITY di generate-manifest.py — pilihan paling aman untuk arsip gambar.'},
+  max:{maxDim:1200, quality:0.65, note:'Resolusi & kualitas diturunkan lebih jauh dari standar situs — pakai kalau memang butuh ukuran sekecil mungkin.'},
+  high:{maxDim:2000, quality:0.90, note:'Resolusi & kualitas lebih tinggi dari standar situs — file jadi lebih besar dari yang dipakai generate-manifest.py.'}
+};
+
+/* ===================== UI HELPERS ===================== */
+function bytesToSize(bytes){
+  if(bytes===0) return '0 B';
+  const units=['B','KB','MB','GB'];
+  const i = Math.floor(Math.log(bytes)/Math.log(1024));
+  return (bytes/Math.pow(1024,i)).toFixed(i===0?0:2)+' '+units[i];
+}
+function setStatus(msg){ document.getElementById('statusText').textContent = msg; }
+function setProgress(pct){
+  const outer = document.getElementById('progressOuter');
+  outer.classList.add('show');
+  document.getElementById('progressInner').style.width = pct+'%';
+}
+function updatePresetNote(){
+  const key = document.getElementById('preset').value;
+  document.getElementById('presetNote').textContent = PRESETS[key].note;
+}
+document.getElementById('preset').addEventListener('change', updatePresetNote);
+updatePresetNote();
+
+/* ===================== FILE SELECTION (multi) ===================== */
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+dropzone.addEventListener('click', ()=>fileInput.click());
+dropzone.addEventListener('dragover', e=>{ e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', ()=>dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', e=>{
+  e.preventDefault(); dropzone.classList.remove('drag');
+  if(e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', e=>{
+  if(e.target.files.length) addFiles(e.target.files);
+  fileInput.value='';
+});
+
+function addFiles(fileListObj){
+  const valid = ['image/png','image/jpeg','image/webp'];
+  for(const f of fileListObj){
+    const isValidType = valid.includes(f.type) || /\.(png|jpe?g|webp)$/i.test(f.name);
+    if(!isValidType) continue;
+    selectedFiles.push({file:f, id: fileIdCounter++});
+  }
+  renderFileList();
+  document.getElementById('result').classList.remove('show');
+}
+
+function removeFile(id){
+  selectedFiles = selectedFiles.filter(x=>x.id!==id);
+  renderFileList();
+}
+
+function renderFileList(){
+  const listEl = document.getElementById('fileList');
+  const summaryEl = document.getElementById('fileSummary');
+  const summaryText = document.getElementById('fileSummaryText');
+  listEl.innerHTML = selectedFiles.map(x=>`
+    <div class="fileinfo" data-id="${x.id}">
+      <div>
+        <div class="name">${escapeHTML(x.file.name)}</div>
+        <div class="size">${bytesToSize(x.file.size)}</div>
+      </div>
+      <button class="small-x" data-remove="${x.id}">✕</button>
+    </div>
+  `).join('');
+  listEl.querySelectorAll('[data-remove]').forEach(btn=>{
+    btn.addEventListener('click', ()=>removeFile(Number(btn.dataset.remove)));
+  });
+
+  if(selectedFiles.length){
+    const total = selectedFiles.reduce((s,x)=>s+x.file.size,0);
+    summaryText.textContent = `${selectedFiles.length} file dipilih · total ${bytesToSize(total)}`;
+    summaryEl.style.display = 'flex';
+  } else {
+    summaryEl.style.display = 'none';
+  }
+  document.getElementById('processBtn').disabled = selectedFiles.length===0;
+}
+
+document.getElementById('clearAll').addEventListener('click', ()=>{
+  selectedFiles = [];
+  renderFileList();
+  document.getElementById('result').classList.remove('show');
+});
+
+function escapeHTML(str){
+  const div = document.createElement('div');
+  div.textContent = String(str);
+  return div.innerHTML;
+}
+
+/* ===================== CORE: compress ===================== */
+function canvasToBlob(canvas, type, quality){
+  return new Promise(resolve=>{
+    canvas.toBlob(blob=>resolve(blob), type, quality);
+  });
+}
+
+async function loadImageSource(file){
+  if(window.createImageBitmap){
+    try{ return await createImageBitmap(file); }catch(e){ /* fall through */ }
+  }
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = ()=>{ resolve(img); };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+// Sampling alpha check — cukup untuk membedakan PNG grafis bertransparansi
+// vs PNG hasil foto/scan yang sebenarnya opaque penuh.
+function detectAlpha(ctx, w, h){
+  try{
+    const data = ctx.getImageData(0,0,w,h).data;
+    const totalPixels = w*h;
+    const targetSamples = 60000;
+    const strideePixels = Math.max(1, Math.floor(totalPixels/targetSamples));
+    const strideBytes = strideePixels*4;
+    for(let i=3; i<data.length; i+=strideBytes){
+      if(data[i] < 250) return true;
+    }
+    return false;
+  }catch(e){
+    return true; // gagal baca piksel -> aman: anggap ada alpha, simpan sebagai PNG
+  }
+}
+
+async function processImage(file, preset){
+  const isPng = file.type === 'image/png' || /\.png$/i.test(file.name);
+  const src = await loadImageSource(file);
+  const srcW = src.width || src.naturalWidth;
+  const srcH = src.height || src.naturalHeight;
+  const scale = Math.min(1, preset.maxDim / Math.max(srcW, srcH));
+  const outW = Math.max(1, Math.round(srcW*scale));
+  const outH = Math.max(1, Math.round(srcH*scale));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = outW; canvas.height = outH;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(src, 0, 0, outW, outH);
+
+  let hasAlpha = false;
+  if(isPng) hasAlpha = detectAlpha(ctx, outW, outH);
+
+  let outBlob, outExt;
+  if(isPng && hasAlpha){
+    outBlob = await canvasToBlob(canvas, 'image/png');
+    outExt = '.png';
+  } else {
+    outBlob = await canvasToBlob(canvas, 'image/jpeg', preset.quality);
+    outExt = '.jpg';
+  }
+
+  if(src.close) src.close(); // bantu pembersihan memori untuk ImageBitmap
+  canvas.width = 0; canvas.height = 0;
+
+  const baseName = file.name.replace(/\.[^./\\]+$/, '');
+  const outName = baseName + outExt;
+
+  return { origName:file.name, outName, before:file.size, after: outBlob ? outBlob.size : file.size, blob: outBlob };
+}
+
+/* ===================== RESULT RENDERING ===================== */
+function renderResults(results){
+  const before = results.reduce((s,r)=>s+r.before,0);
+  const after = results.reduce((s,r)=>s+r.after,0);
+  document.getElementById('sizeBefore').textContent = bytesToSize(before);
+  document.getElementById('sizeAfter').textContent = bytesToSize(after);
+  const deltaPct = before>0 ? ((1-after/before)*100) : 0;
+  const deltaEl = document.getElementById('sizeDelta');
+  if(after < before){
+    deltaEl.innerHTML = `<span class="badge safe">−${deltaPct.toFixed(0)}%</span>`;
+  } else {
+    deltaEl.innerHTML = `<span class="badge warnb">Tidak mengecil</span>`;
+  }
+
+  const listEl = document.getElementById('resultList');
+  listEl.innerHTML = results.map((r,i)=>`
+    <div class="resultrow">
+      <div>
+        <div class="rname">${escapeHTML(r.outName)}${r.outName!==r.origName ? ` <span style="color:var(--muted);">(dari ${escapeHTML(r.origName)})</span>`:''}</div>
+        <div class="rmeta">${bytesToSize(r.before)} → ${bytesToSize(r.after)}</div>
+      </div>
+      <a href="#" data-idx="${i}" class="rdownload">Unduh</a>
+    </div>
+  `).join('');
+  listEl.querySelectorAll('.rdownload').forEach(a=>{
+    a.addEventListener('click', e=>{
+      e.preventDefault();
+      const idx = Number(a.dataset.idx);
+      const r = results[idx];
+      const url = URL.createObjectURL(r.blob);
+      const tmp = document.createElement('a');
+      tmp.href = url; tmp.download = r.outName;
+      document.body.appendChild(tmp); tmp.click(); document.body.removeChild(tmp);
+      setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    });
+  });
+
+  document.getElementById('result').classList.add('show');
+}
+
+async function offerZipDownload(results){
+  const zipBtn = document.getElementById('downloadZip');
+  if(!zipLibReady || !window.JSZip){
+    zipBtn.style.display = 'none';
+    return;
+  }
+  try{
+    setStatus('Menyusun arsip ZIP...');
+    const zip = new JSZip();
+    const namaTerpakai = {};
+    results.forEach(r=>{
+      let name = r.outName;
+      if(namaTerpakai[name]){
+        namaTerpakai[name]++;
+        const dot = name.lastIndexOf('.');
+        name = name.slice(0,dot) + '-' + namaTerpakai[name] + name.slice(dot);
+      } else {
+        namaTerpakai[name] = 1;
+      }
+      zip.file(name, r.blob);
+    });
+    const blob = await zip.generateAsync({type:'blob'});
+    const url = URL.createObjectURL(blob);
+    zipBtn.href = url;
+    zipBtn.download = 'gambar-terkompresi.zip';
+    zipBtn.style.display = 'block';
+    setStatus('Selesai.');
+  }catch(e){
+    console.error(e);
+    zipBtn.style.display = 'none';
+    setStatus('Selesai (ZIP gagal disusun, unduh satu per satu di bawah).');
+  }
+}
+
+/* ===================== PROCESS BUTTON ===================== */
+document.getElementById('processBtn').addEventListener('click', async ()=>{
+  if(!selectedFiles.length) return;
+  const btn = document.getElementById('processBtn');
+  btn.disabled = true;
+  document.getElementById('result').classList.remove('show');
+  document.getElementById('downloadZip').style.display = 'none';
+  setProgress(0);
+
+  const presetKey = document.getElementById('preset').value;
+  const preset = PRESETS[presetKey];
+  const total = selectedFiles.length;
+  const results = [];
+
+  for(let i=0; i<total; i++){
+    const { file } = selectedFiles[i];
+    setStatus(`Memproses ${i+1} dari ${total}: ${file.name}`);
+    try{
+      const r = await processImage(file, preset);
+      results.push(r);
+    }catch(err){
+      console.error('Gagal memproses', file.name, err);
+      setStatus(`⚠ Gagal memproses ${file.name}, lanjut ke file berikutnya...`);
+    }
+    setProgress(Math.round(((i+1)/total)*100));
+  }
+
+  lastResults = results;
+  renderResults(results);
+  await offerZipDownload(results);
+  btn.disabled = false;
+});
+
+if(!zipLibReady){
+  console.warn('JSZip belum termuat — tombol Unduh Semua (ZIP) akan disembunyikan, unduh satu per satu tetap berfungsi.');
+}
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

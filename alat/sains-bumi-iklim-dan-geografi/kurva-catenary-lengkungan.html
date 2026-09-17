@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rantai yang Tergantung, Lengkungan yang Berdiri — Laboratorium JAZMI</title>
+<style>
+  :root{
+    --bg:#0a1512; --bg2:#0f1e19; --card:#122420; --card2:#16302a; --line:#1f3d34;
+    --emerald:#22c98a; --emerald-dim:#0e6b4f; --gold:#e0b354; --text:#e9f3ee;
+    --muted:#8fada0; --danger:#e07a5f; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:'Georgia','Iowan Old Style',serif; line-height:1.65;}
+  .sans{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;}
+  header{padding:34px 20px 24px; text-align:center; background:radial-gradient(ellipse at top, #113b2e 0%, var(--bg) 70%); border-bottom:1px solid var(--line);}
+  header .kicker{font-family:-apple-system,sans-serif; letter-spacing:.14em; text-transform:uppercase; font-size:12px; color:var(--gold); margin-bottom:10px;}
+  header h1{font-size:1.5rem; margin:0 0 10px; font-weight:600; line-height:1.35;}
+  header p{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px; max-width:640px; margin:0 auto;}
+  nav.tabs{position:sticky; top:0; z-index:10; display:flex; overflow-x:auto; gap:6px; padding:10px 14px; background:rgba(10,21,18,.96); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); font-family:-apple-system,sans-serif; -webkit-overflow-scrolling:touch;}
+  nav.tabs a{flex:0 0 auto; padding:7px 13px; border-radius:999px; font-size:12.5px; color:var(--muted); text-decoration:none; border:1px solid var(--line); white-space:nowrap;}
+  nav.tabs a:hover{color:var(--emerald); border-color:var(--emerald-dim);}
+  main{max-width:760px; margin:0 auto; padding:8px 18px 60px;}
+  section{padding:34px 0; border-bottom:1px solid var(--line);}
+  section:last-child{border-bottom:none;}
+  h2{font-size:1.15rem; color:var(--emerald); margin:0 0 6px; display:flex; align-items:center; gap:8px;}
+  h2 .num{font-family:-apple-system,sans-serif; font-size:11px; background:var(--emerald-dim); color:#dff7ec; padding:2px 8px; border-radius:6px; letter-spacing:.05em;}
+  h3{color:var(--gold); font-size:1rem; margin:22px 0 8px;}
+  p{margin:0 0 14px; font-size:15.5px;}
+  .lead{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px; margin:14px 0;}
+  .qbox{background:var(--card2); border-left:3px solid var(--gold); border-radius:8px; padding:14px 16px; margin:16px 0; font-style:italic; color:#f0e6cc; font-size:14.5px;}
+  ul{padding-left:20px; margin:10px 0;}
+  li{margin-bottom:7px; font-size:15px;}
+  .sourceline{font-family:-apple-system,sans-serif; font-size:11.5px; color:var(--muted); margin-top:6px; padding-top:6px; border-top:1px dashed var(--line);}
+  .eq{font-family:'Cambria Math',Georgia,serif; text-align:center; font-size:1.35rem; background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:18px; margin:16px 0; color:var(--emerald);}
+  .eq small{display:block; font-family:-apple-system,sans-serif; font-size:11px; color:var(--muted); margin-top:8px;}
+  table{width:100%; border-collapse:collapse; font-family:-apple-system,sans-serif; font-size:13px; margin:14px 0;}
+  th,td{padding:8px 10px; border-bottom:1px solid var(--line); text-align:left;}
+  th{color:var(--gold); font-weight:600; font-size:12px;}
+  td{color:var(--text);} td.mut{color:var(--muted);}
+  .warn{background:#241407; border:1px solid #5c3a12; border-radius:10px; padding:14px 16px; margin:14px 0; font-family:-apple-system,sans-serif; font-size:13.5px; color:#f0d3a8;}
+  .warn b{color:var(--gold);}
+  .correction{background:#1a0f0f; border-left:3px solid var(--danger); border-radius:8px; padding:14px 16px; margin:14px 0; font-family:-apple-system,sans-serif; font-size:14px;}
+  .correction .lbl{color:var(--danger); font-size:11px; text-transform:uppercase; letter-spacing:.08em; display:block; margin-bottom:6px;}
+
+  .calc{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px;}
+  .calc label{font-family:-apple-system,sans-serif; font-size:13px; color:var(--muted); display:block; margin-bottom:6px;}
+  .calc input[type=range]{width:100%; accent-color:var(--emerald);}
+  .calc .val{font-family:-apple-system,sans-serif; color:var(--gold); font-weight:700;}
+  .calc-row{margin-bottom:14px;}
+  canvas{width:100%; height:220px; background:var(--bg2); border-radius:10px; border:1px solid var(--line);}
+  button.tool-btn{font-family:-apple-system,sans-serif; background:var(--emerald-dim); color:#e9fff5; border:none; padding:9px 16px; border-radius:8px; font-size:13px; cursor:pointer; margin-top:10px;}
+  button.tool-btn:active{opacity:.8;}
+  .result-strip{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; font-family:-apple-system,sans-serif;}
+  .result-chip{background:var(--bg2); border:1px solid var(--line); border-radius:8px; padding:8px 12px; font-size:12.5px; color:var(--emerald);}
+  .result-chip b{display:block; color:var(--text); font-size:14px;}
+
+  .shape-grid{display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin:14px 0;}
+  .shape-card{flex:1 1 220px; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:12px; text-align:center;}
+  .shape-card h4{margin:0 0 6px; font-family:-apple-system,sans-serif; font-size:13px; color:var(--gold);}
+  .shape-card p.cap{font-family:-apple-system,sans-serif; font-size:12px; color:var(--muted); margin:8px 0 0;}
+  .shape-card svg{background:var(--bg2); border-radius:8px;}
+
+  .biocard{display:flex; gap:14px; align-items:flex-start; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px;}
+  .refs{font-family:-apple-system,sans-serif; font-size:12.5px; color:var(--muted);}
+  .refs li{margin-bottom:8px;}
+  footer{text-align:center; padding:30px 20px; color:var(--muted); font-family:-apple-system,sans-serif; font-size:12px;}
+  @media(max-width:420px){ .shape-card{flex:1 1 100%;} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kicker">Laboratorium JAZMI · Sains &amp; Konstruksi</div>
+  <h1>Rantai yang Tergantung, Lengkungan yang Berdiri<br>Kurva Catenary dan Rahasia Kenapa Kubah Tidak Runtuh</h1>
+  <p>Level 1–5: Belajar → Model → Verifikasi → Eksplorasi. Satu prinsip abad ke-17 yang masih dipakai dari kubah masjid, katedral, jembatan, hingga Gateway Arch — dan sangat pas dijelaskan lewat tool interaktif karena bentuknya sendiri adalah geometri yang bisa disimulasikan.</p>
+</header>
+
+<nav class="tabs">
+  <a href="#belajar">Belajar</a>
+  <a href="#pertanyaan">Pertanyaan Ilmiah</a>
+  <a href="#model">Model Matematis</a>
+  <a href="#simulator">Simulator Rantai</a>
+  <a href="#inversi">Inversi Hooke</a>
+  <a href="#bentuk">Bandingkan Bentuk</a>
+  <a href="#nyata">Penerapan Nyata</a>
+  <a href="#batasan">Batasan</a>
+  <a href="#referensi">Referensi</a>
+</nav>
+
+<main>
+
+  <section id="belajar">
+    <h2><span class="num">01</span>Belajar</h2>
+    <p>Gantung seutas rantai longgar di antara dua titik. Ia akan otomatis mengendur ke satu bentuk tertentu — bukan sembarang lengkung, bukan pula busur lingkaran atau parabola persis, melainkan kurva khusus yang disebut <strong>catenary</strong> (dari bahasa Latin <em>catena</em>, "rantai"). Bentuk itu muncul karena setiap titik di sepanjang rantai sedang dalam keseimbangan sempurna antara berat yang ditariknya ke bawah dan tegangan yang menariknya ke samping.</p>
+    <p>Yang jauh lebih menarik: pada 1675, ilmuwan Inggris Robert Hooke menyadari bahwa <strong>kurva yang sama, kalau dibalik, adalah bentuk paling ideal untuk sebuah lengkungan berdiri</strong> — kubah, jembatan batu, gapura. Ia menuliskannya sebagai anagram Latin (kebiasaan ilmuwan masa itu untuk mengklaim penemuan tanpa membocorkan caranya): <em>Ut pendet continuum flexile, sic stabit contiguum rigidum inversum</em> — "seperti tergantungnya seutas tali lentur, begitu pula terbalik akan berdirinya lengkungan kaku."</p>
+    <div class="qbox">Satu prinsip, dua arah gaya: tarikan pada rantai yang menggantung, tekanan pada lengkungan yang berdiri. Alam tidak peduli arah gravitasinya — yang penting keseimbangannya.</div>
+  </section>
+
+  <section id="pertanyaan">
+    <h2><span class="num">02</span>Pertanyaan Ilmiah (sebelum spesifikasi)</h2>
+    <ul>
+      <li>Kenapa rantai yang digantung membentuk kurva yang itu-itu saja, bukan sembarang bentuk?</li>
+      <li>Apa yang dimaksud "garis gaya" (<em>line of thrust</em>) pada sebuah lengkungan, dan kenapa itu yang sebenarnya menentukan apakah lengkungan itu aman berdiri?</li>
+      <li>Kenapa membalik kurva tarikan bisa mengubahnya jadi kurva tekanan yang stabil?</li>
+      <li>Kenapa ini penting khususnya untuk batu dan bata — bahan yang kuat menahan tekan tapi lemah menahan tarik?</li>
+      <li>Apakah semua lengkungan bersejarah (setengah lingkaran Romawi, lancip Gothic, tapal kuda pada arsitektur Islam) sebenarnya catenary? Kalau bukan, kenapa mereka tetap bisa berdiri selama ratusan tahun?</li>
+    </ul>
+  </section>
+
+  <section id="model">
+    <h2><span class="num">03</span>Model Matematis</h2>
+    <p>Di setiap titik sepanjang rantai, ada dua gaya yang harus seimbang: tegangan horizontal <strong>H</strong> (nilainya sama di seluruh rantai, karena tidak ada gaya mendatar lain yang bekerja) dan berat rantai yang sudah "digantung" hingga titik itu, ditarik gravitasi ke bawah. Semakin jauh dari titik terendah, semakin banyak berat yang harus ditahan, sehingga kemiringan kurvanya semakin curam. Keseimbangan inilah yang, setelah diturunkan secara matematis, menghasilkan fungsi kosinus hiperbolik:</p>
+    <div class="eq">
+      y = a · cosh(x⁄a)
+      <small>a = H⁄w, yaitu rasio tegangan horizontal terhadap berat rantai per satuan panjang — semakin besar a, semakin landai kurvanya</small>
+    </div>
+    <p>Sampai pertengahan abad ke-18, banyak yang mengira bentuk ini adalah parabola (mirip sekilas, tapi secara matematis berbeda) — baru diselesaikan dengan tepat oleh Johann Bernoulli, Leibniz, dan Huygens pada 1691, menjawab tantangan yang diajukan Jacob Bernoulli.</p>
+  </section>
+
+  <section id="simulator">
+    <h2><span class="num">04</span>Eksplorasi: Simulator Rantai Tergantung</h2>
+    <p>Atur lebar bentang dan kedalaman turunnya rantai (sag) — simulator ini mencari nilai parameter <em>a</em> secara numerik (metode bagi-dua/bisection dari persamaan transendental sag = a·(cosh(L⁄2a) − 1)) lalu menggambar kurva catenary sesungguhnya, bukan perkiraan visual.</p>
+
+    <div class="calc">
+      <div class="calc-row">
+        <label>Lebar bentang (L): <span class="val" id="spanLabel">10</span> meter</label>
+        <input type="range" id="spanRange" min="4" max="30" step="0.5" value="10">
+      </div>
+      <div class="calc-row">
+        <label>Kedalaman turun (sag): <span class="val" id="sagLabel">3</span> meter</label>
+        <input type="range" id="sagRange" min="0.5" max="12" step="0.1" value="3">
+      </div>
+      <canvas id="chainCanvas" width="640" height="220"></canvas>
+      <div class="result-strip">
+        <div class="result-chip">Parameter a<b id="aVal">–</b></div>
+        <div class="result-chip">Panjang rantai (perkiraan)<b id="lenVal">–</b></div>
+      </div>
+      <button class="tool-btn" id="flipBtn">Balikkan jadi lengkungan (inversi Hooke)</button>
+    </div>
+    <p class="sourceline">Perhitungan a memakai bisection numerik langsung di browser (bukan tabel/perkiraan tetap), diverifikasi terhadap identitas cosh(0)=1 dan sifat monoton fungsi sag(a) untuk L tetap.</p>
+  </section>
+
+  <section id="inversi">
+    <h2><span class="num">05</span>Kenapa Membalik Bisa Mengubah Tarikan Jadi Tekanan?</h2>
+    <p>Pada rantai yang menggantung, setiap segmen ditarik oleh segmen tetangganya — semua gaya di dalam rantai adalah <strong>tarikan (tensi)</strong>, mengarah keluar sepanjang kurva. Begitu bentuk itu dibalik dan dibekukan jadi benda kaku (batu, bata, beton), gravitasi sekarang bekerja ke arah yang berlawanan dengan bentuk kurvanya — dan gaya internal yang sebelumnya tarikan kini berubah jadi <strong>tekanan (kompresi)</strong>, tetap mengalir persis sepanjang garis kurva yang sama.</p>
+    <p>Karena gaya-gaya itu selalu sejajar dengan bentuk kurvanya sendiri, tidak ada gaya yang "menyamping" mencoba melengkungkan atau mematahkan strukturnya — inilah kenapa lengkungan berbentuk catenary (atau lebih umum, mengikuti "garis gaya" bebannya) adalah bentuk paling efisien: seluruh materialnya bekerja murni menekan, tanpa ada bagian yang harus menahan lenturan.</p>
+  </section>
+
+  <section id="bentuk">
+    <h2><span class="num">06</span>Membandingkan Bentuk Lengkungan</h2>
+    <p>Tidak semua lengkungan bersejarah adalah catenary murni — dan itu tidak masalah, selama <strong>garis gaya tetap berada di dalam ketebalan strukturnya</strong>. Begitu garis gaya keluar dari ketebalan material, di situlah retak atau keruntuhan mulai mengancam.</p>
+    <div class="shape-grid">
+      <div class="shape-card">
+        <h4>Catenary / Funicular</h4>
+        <svg width="100%" height="90" viewBox="0 0 200 90">
+          <path d="M20,80 Q100,10 180,80" stroke="#8fada0" stroke-width="10" fill="none" stroke-linecap="round" opacity="0.35"/>
+          <path d="M20,80 Q100,10 180,80" stroke="#22c98a" stroke-width="2" fill="none" stroke-dasharray="4 3"/>
+        </svg>
+        <p class="cap">Garis gaya (putus-putus) berimpit persis dengan sumbu lengkungan — murni tekan di sepanjang bentuknya.</p>
+      </div>
+      <div class="shape-card">
+        <h4>Setengah Lingkaran (Romawi)</h4>
+        <svg width="100%" height="90" viewBox="0 0 200 90">
+          <path d="M20,80 A80,80 0 0 1 180,80" stroke="#8fada0" stroke-width="10" fill="none" stroke-linecap="round" opacity="0.35"/>
+          <path d="M20,80 Q100,20 180,80" stroke="#e0b354" stroke-width="2" fill="none" stroke-dasharray="4 3"/>
+        </svg>
+        <p class="cap">Garis gaya sedikit menyimpang di bagian tumpuan (haunch) — tetap aman kalau dindingnya cukup tebal.</p>
+      </div>
+      <div class="shape-card">
+        <h4>Lancip / Tapal Kuda (Gothic &amp; Islam)</h4>
+        <svg width="100%" height="90" viewBox="0 0 200 90">
+          <path d="M20,80 Q60,5 100,15 Q140,5 180,80" stroke="#8fada0" stroke-width="10" fill="none" stroke-linecap="round" opacity="0.35"/>
+          <path d="M20,80 Q60,15 100,25 Q140,15 180,80" stroke="#e0b354" stroke-width="2" fill="none" stroke-dasharray="4 3"/>
+        </svg>
+        <p class="cap">Sisi yang lebih curam mendekatkan garis gaya ke sumbu — sering dikembangkan secara empiris turun-temurun, bukan diturunkan dari kalkulus catenary.</p>
+      </div>
+    </div>
+    <p class="sourceline">Ketiga diagram di atas bersifat skematik untuk intuisi — bukan hasil analisis garis-gaya numerik dari struktur nyata tertentu.</p>
+  </section>
+
+  <section id="nyata">
+    <h2><span class="num">07</span>Penerapan Nyata (Terverifikasi)</h2>
+
+    <div class="card">
+      <h3 style="margin-top:0;">Kubah Basilika St. Peter, Roma — 1743</h3>
+      <p>Setelah retak-retak muncul di kubah besar Michelangelo, insinyur Giovanni Poleni menguji keamanannya dengan menggantung rantai berisi bola-bola beban meniru berat tiap bagian kubah, lalu membandingkan bentuk rantai itu dengan penampang kubah sesungguhnya. Selama garis rantai (garis gaya) itu tetap berada di dalam ketebalan kubah, strukturnya dinyatakan aman — salah satu penerapan paling awal dan paling terkenal dari prinsip Hooke pada bangunan nyata.</p>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0;">Gateway Arch, St. Louis (1965)</h3>
+      <p>Setinggi dan selebar 192 meter (630 kaki), dirancang Eero Saarinen dengan persamaan <em>y = 211,49 − 20,96 · cosh(0,03291765x)</em> (dalam meter). Ini bukan catenary murni — disebut <strong>"weighted catenary"</strong> karena penampang lengkungannya menyempit dari dasar ke puncak (seperti rantai dengan bobot tak seragam di tiap segmen), supaya garis gaya tetap terkandung dalam material meski ketebalannya berubah-ubah di sepanjang tinggi.</p>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0;">Sagrada Família, Barcelona</h3>
+      <p>Antoni Gaudí membangun model rantai gantung berbobot (bahkan model terbalik dengan cermin) untuk merancang lengkungan dan kolom miringnya — memakai kombinasi catenary maupun paraboloid, jauh sebelum komputer bisa menghitung garis gaya secara numerik.</p>
+    </div>
+
+    <div class="warn"><b>Catatan jujur soal arsitektur Islam:</b> lengkungan tapal kuda dan kubah bersudut pada arsitektur Islam klasik (mis. Masjid Córdoba, kubah Persia/Utsmaniyah) umumnya dikembangkan lewat proporsi geometris dan pengalaman empiris tukang bangunan, <strong>bukan diturunkan dari persamaan catenary</strong> — prinsip Hooke baru dirumuskan matematis pada 1675, jauh setelah banyak struktur itu berdiri. Yang membuatnya tetap kokoh selama berabad-abad adalah ketebalan dan proporsi dinding yang memberi "ruang toleransi" cukup lebar bagi garis gaya, bukan karena bentuknya persis catenary.</div>
+  </section>
+
+  <section id="batasan">
+    <h2><span class="num">08</span>Batasan</h2>
+    <ul>
+      <li>Simulator rantai mengasumsikan rantai/tali ideal: fleksibel sempurna (tanpa kekakuan lentur) dan densitas per satuan panjang seragam — berbeda dari "weighted catenary" seperti Gateway Arch yang densitas efektifnya berubah di sepanjang kurva.</li>
+      <li>Panjang rantai yang ditampilkan adalah perkiraan numerik dari integrasi diskret, bukan solusi bentuk tertutup presisi tinggi.</li>
+      <li>Diagram perbandingan bentuk lengkungan di Bagian 6 bersifat skematik untuk membangun intuisi — bukan hasil analisis garis-gaya (thrust line analysis) numerik dari studi kasus struktur nyata tertentu.</li>
+      <li>Prinsip garis-gaya di sini disederhanakan untuk beban berat sendiri; lengkungan nyata juga menghadapi beban angin, gempa, beban hidup, dan interaksi dengan struktur pendukung yang tidak dimodelkan di sini.</li>
+      <li>Catatan soal arsitektur Islam dan Gothic bersifat umum berdasarkan sejarah teknik struktur — bukan analisis spesifik satu bangunan tertentu.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <h2><span class="num">09</span>Referensi</h2>
+    <ul class="refs">
+      <li>Plus Maths (University of Cambridge) — "Maths in a minute: The catenary" &amp; "Maths in a minute: St Paul's dome".</li>
+      <li>Block, P., DeJong, M., Ochsendorf, J. — "As Hangs the Flexible Line: Equilibrium of Masonry Arches", Nexus Network Journal.</li>
+      <li>Osserman, R. — "Mathematics of the Gateway Arch", Notices of the AMS, 2010.</li>
+      <li>Wikipedia — "Gateway Arch" (dimensi &amp; status weighted catenary).</li>
+      <li>Sejarah verifikasi kubah St. Peter oleh Giovanni Poleni (1743) — dirujuk dalam literatur equilibrium analysis struktur pasangan batu (masonry).</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  Laboratorium JAZMI — Jalinan Zamrud Islamiah · Belajar → Model → Uji → Tool<br>
+  Versi pengembangan awal. Silakan diperiksa ulang, dikoreksi, dan didiskusikan lebih lanjut.
+</footer>
+
+<script>
+const spanRange = document.getElementById('spanRange');
+const sagRange = document.getElementById('sagRange');
+const spanLabel = document.getElementById('spanLabel');
+const sagLabel = document.getElementById('sagLabel');
+const aVal = document.getElementById('aVal');
+const lenVal = document.getElementById('lenVal');
+const flipBtn = document.getElementById('flipBtn');
+const canvas = document.getElementById('chainCanvas');
+const ctx = canvas.getContext('2d');
+let flipped = false;
+
+function solveA(L, sag){
+  // solve sag = a*(cosh(L/(2a)) - 1) for a, via bisection
+  function f(a){ return a*(Math.cosh(L/(2*a)) - 1) - sag; }
+  let lo = 0.001, hi = 10000;
+  // ensure bracket: f(lo) large positive-ish (a small -> huge cosh) ... f decreases as a grows
+  for(let i=0;i<200;i++){
+    const mid = (lo+hi)/2;
+    if(f(mid) > 0) lo = mid; else hi = mid;
+  }
+  return (lo+hi)/2;
+}
+
+function chainLength(a, L, steps){
+  steps = steps || 400;
+  let len = 0;
+  let prevX = -L/2, prevY = a*Math.cosh(prevX/a);
+  for(let i=1;i<=steps;i++){
+    const x = -L/2 + (L*i/steps);
+    const y = a*Math.cosh(x/a);
+    len += Math.hypot(x-prevX, y-prevY);
+    prevX = x; prevY = y;
+  }
+  return len;
+}
+
+function draw(){
+  const L = parseFloat(spanRange.value);
+  const sag = parseFloat(sagRange.value);
+  spanLabel.textContent = L;
+  sagLabel.textContent = sag.toFixed(1);
+
+  const a = solveA(L, sag);
+  aVal.textContent = a.toFixed(2) + ' m';
+  const len = chainLength(a, L);
+  lenVal.textContent = len.toFixed(2) + ' m';
+
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0,0,w,h);
+
+  const marginX = 50, marginY = 30;
+  const drawW = w - 2*marginX, drawH = h - 2*marginY;
+  const scaleX = drawW / L;
+  const yTop = a*Math.cosh((L/2)/a) - a; // sag value at edges relative to bottom
+  const scaleY = drawH / Math.max(sag, 0.01);
+
+  ctx.strokeStyle = '#22c98a';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  const steps = 200;
+  for(let i=0;i<=steps;i++){
+    const x = -L/2 + (L*i/steps);
+    let y = a*Math.cosh(x/a) - a; // 0 at bottom
+    if(flipped) y = sag - y; // invert vertically within sag range
+    const px = marginX + (x + L/2)*scaleX;
+    const py = flipped ? (marginY + y*scaleY) : (marginY + (sag - y)*scaleY);
+    if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+  }
+  ctx.stroke();
+
+  // supports
+  ctx.fillStyle = '#e0b354';
+  const topY = flipped ? marginY + sag*scaleY : marginY;
+  ctx.beginPath(); ctx.arc(marginX, topY, 5, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(marginX+drawW, topY, 5, 0, Math.PI*2); ctx.fill();
+
+  ctx.fillStyle = '#8fada0';
+  ctx.font = '11px -apple-system, sans-serif';
+  ctx.fillText(flipped ? 'Lengkungan (tekan)' : 'Rantai tergantung (tarik)', marginX, h-8);
+}
+
+spanRange.addEventListener('input', draw);
+sagRange.addEventListener('input', draw);
+flipBtn.addEventListener('click', ()=>{ flipped = !flipped; flipBtn.textContent = flipped ? 'Kembalikan jadi rantai tergantung' : 'Balikkan jadi lengkungan (inversi Hooke)'; draw(); });
+
+draw();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panjang Debye &amp; Osilasi Plasma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0F1E; --panel:#141A30; --panel2:#1B2340; --ink:#E8E6F5; --ink-soft:#9C9DC4;
+    --plasma:#B26BFF; --plasma-bright:#D9A6FF; --electron:#4FD8E0; --line:#2A3158;
+    --good:#3FA66B; --warn:#D9A441; --bad:#D9564A;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.65;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:880px;margin:0 auto;padding:0 24px 96px;}
+  header.hero{background:radial-gradient(ellipse at top, #1B2360 0%, #0B0F1E 65%);padding:56px 24px 40px;border-bottom:1px solid var(--line);}
+  header.hero .wrap{padding-bottom:0;}
+  .eyebrow{color:var(--plasma-bright);font-size:0.9rem;margin:0 0 6px;font-weight:600;letter-spacing:0.02em;}
+  h1{font-size:clamp(1.7rem,4vw,2.4rem);margin:0 0 14px;font-weight:700;background:linear-gradient(90deg,var(--electron),var(--plasma-bright));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .lede{max-width:620px;color:#C3C4E0;font-size:1.03rem;margin:0;}
+  section{padding:42px 0;border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  h2{font-size:1.4rem;font-weight:700;margin:0 0 8px;color:var(--plasma-bright);}
+  .sub{color:var(--ink-soft);font-size:0.9rem;margin:0 0 18px;}
+  p{margin:0 0 14px;}
+  ul,ol{padding-left:22px;} li{margin-bottom:8px;}
+  .qbox{background:var(--panel);border-left:3px solid var(--plasma);padding:14px 16px;margin:14px 0;font-size:0.95rem;}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:22px;margin-top:16px;}
+  svg{display:block;width:100%;height:auto;}
+  .field{margin-bottom:18px;}
+  .field label{display:block;font-size:0.82rem;color:var(--ink-soft);margin-bottom:6px;font-weight:500;}
+  .field input[type=range]{width:100%;accent-color:var(--electron);}
+  .field .value{font-family:'JetBrains Mono',monospace;color:var(--electron);font-weight:600;}
+
+  .result-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:16px;}
+  .result-card{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:16px;text-align:center;}
+  .result-card .n{font-family:'JetBrains Mono',monospace;font-size:1.3rem;font-weight:700;color:var(--electron);}
+  .result-card .label{font-size:0.7rem;color:var(--ink-soft);margin-top:4px;}
+  .flag{margin-top:16px;padding:12px 16px;border-radius:8px;font-size:0.88rem;}
+  .flag.good{background:rgba(63,166,107,0.12);border:1px solid var(--good);color:#A8DABB;}
+  .flag.bad{background:rgba(217,86,74,0.12);border:1px solid var(--bad);color:#F2B8B2;}
+
+  .formula{background:#080B16;color:#C3C4E0;padding:14px 18px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:0.92rem;display:inline-block;margin:8px 0;}
+  .limits{background:#241B0F;border:1px solid #5A4A1E;border-radius:8px;padding:20px;}
+  .limits h3{margin-top:0;font-size:1rem;color:var(--warn);}
+  footer{padding:28px 24px;text-align:center;color:var(--ink-soft);font-size:0.82rem;border-top:1px solid var(--line);}
+  a{color:var(--electron);}
+  @media (max-width:640px){header.hero{padding:40px 18px 32px;}section{padding:30px 0;}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">JAZMI — Modul Sains · Tier 4 No. 19 · Plasma Physics</p>
+    <h1>Panjang Debye &amp; Osilasi Plasma</h1>
+    <p class="lede">Skala jarak dan waktu paling dasar dalam fisika plasma — jarak sejauh mana medan listrik "diredam" oleh awan elektron, dan seberapa cepat plasma "bergetar" ketika keseimbangan muatannya terganggu.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <h2>Belajar</h2>
+    <p>Plasma adalah gas yang terionisasi — sebagian besar elektronnya lepas dari atom, membentuk lautan partikel bermuatan yang bergerak bebas. Karena elektron jauh lebih ringan dan lincah dibanding ion, mereka bisa dengan cepat "mengepung" setiap muatan asing yang masuk ke dalam plasma, menetralkan pengaruh listriknya dari jarak tertentu dan seterusnya. Jarak inilah yang disebut <strong>panjang Debye</strong> (λ<sub>D</sub>) — dinamai dari fisikawan-kimiawan Belanda-Amerika Peter Debye.</p>
+    <p>Di luar radius ini, plasma terlihat netral secara listrik meski di dalamnya penuh muatan bebas — sifat yang disebut <em>kuasi-netralitas</em>. Inilah yang membedakan plasma dari sekadar "gas bermuatan": plasma butuh cukup banyak partikel di dalam satu bola Debye (disebut N<sub>D</sub>) agar sifat kolektif ini benar-benar berlaku.</p>
+    <div class="qbox"><strong>Osilasi plasma:</strong> Jika sekelompok elektron tergeser sedikit dari posisi setimbangnya, gaya Coulomb dari ion yang tertinggal akan menariknya kembali — tapi karena elektron punya inersia (massa), ia akan melewati titik setimbang dan berosilasi bolak-balik. Frekuensi getaran alami ini disebut <strong>frekuensi plasma</strong> (f<sub>pe</sub>), dan tidak bergantung pada suhu — murni fungsi dari densitas elektron.</p>
+  </section>
+
+  <section id="eksplorasi">
+    <h2>Eksplorasi</h2>
+    <p class="sub">Geser densitas dan suhu elektron, lihat bagaimana keduanya menempatkan plasma Anda di peta parameter — dan bandingkan dengan plasma nyata di alam maupun laboratorium.</p>
+
+    <div class="panel">
+      <div class="field">
+        <label>Densitas elektron (n<sub>e</sub>) — <span class="value" id="ne-val">10¹⁸</span> m⁻³</label>
+        <input type="range" id="ne-slider" min="6" max="25" step="0.1" value="18">
+      </div>
+      <div class="field">
+        <label>Suhu elektron (T<sub>e</sub>) — <span class="value" id="te-val">10</span> eV</label>
+        <input type="range" id="te-slider" min="-2" max="4" step="0.05" value="1">
+      </div>
+      <div class="field">
+        <label>Muatan ion (Z) — <span class="value" id="z-val">1</span> (H⁺ = 1)</label>
+        <input type="range" id="z-slider" min="1" max="8" step="1" value="1">
+      </div>
+
+      <div class="result-grid" id="result-grid"></div>
+      <div class="flag" id="nd-flag"></div>
+    </div>
+
+    <div class="panel">
+      <h3 style="margin-top:0;color:var(--plasma-bright);font-size:1rem;">Peta Parameter Plasma</h3>
+      <svg id="param-map" viewBox="0 0 700 420"></svg>
+    </div>
+
+    <div class="panel">
+      <h3 style="margin-top:0;color:var(--plasma-bright);font-size:1rem;">Penampang Shielding Debye</h3>
+      <svg id="shield-vis" viewBox="0 0 400 240"></svg>
+      <p style="text-align:center;color:var(--ink-soft);font-size:0.82rem;margin-top:4px;">Lingkaran memudar pada radius ≈λ<sub>D</sub> dari muatan uji di tengah — di luar radius ini pengaruh listriknya sudah diredam plasma.</p>
+    </div>
+  </section>
+
+  <section id="perhitungan">
+    <h2>Perhitungan</h2>
+    <p><strong>Panjang Debye elektron:</strong></p>
+    <div class="formula">λ<sub>De</sub> = √( ε₀ k<sub>B</sub> T<sub>e</sub> / (n<sub>e</sub> e²) )</div>
+    <p><strong>Frekuensi plasma elektron:</strong></p>
+    <div class="formula">f<sub>pe</sub> = (1/2π) √( n<sub>e</sub> e² / (ε₀ m<sub>e</sub>) )</div>
+    <p><strong>Jumlah partikel dalam bola Debye:</strong></p>
+    <div class="formula">N<sub>D</sub> = (4π/3) n<sub>e</sub> λ<sub>D</sub>³</div>
+    <p>Ketika ion bermuatan Z ikut disertakan (dengan asumsi T<sub>i</sub>=T<sub>e</sub> dan kuasi-netralitas n<sub>i</sub>Z=n<sub>e</sub>), kontribusi ion mempersempit panjang Debye gabungan menjadi:</p>
+    <div class="formula">λ<sub>D</sub> = λ<sub>De</sub> / √(1+Z)</div>
+    <p>Konstanta yang dipakai: ε₀=8,854×10⁻¹² F/m, e=1,602×10⁻¹⁹ C, m<sub>e</sub>=9,109×10⁻³¹ kg, k<sub>B</sub>=1,381×10⁻²³ J/K (1 eV = 1,602×10⁻¹⁹ J).</p>
+  </section>
+
+  <section id="metode">
+    <h2>Metode Verifikasi</h2>
+    <p>Formula dan konstanta pada alat ini diperiksa terhadap dua sumber independen: buku ajar pengantar fisika plasma standar (mis. catatan kuliah "Introduction to Plasma Physics") dan artikel referensi (ScienceDirect Topics, "Debye Length"). Nilai contoh (mis. panjang Debye plasma fusi ≈puluhan mikrometer pada n<sub>e</sub>≈10¹⁹ m⁻³, T<sub>e</sub>≈1 keV) diuji secara numerik dan berada pada orde besaran yang konsisten dengan literatur.</p>
+  </section>
+
+  <section id="batasan">
+    <div class="limits">
+      <h3>Batasan</h3>
+      <ul>
+        <li>Formula ion (λ<sub>D</sub>=λ<sub>De</sub>/√(1+Z)) mengasumsikan suhu ion sama dengan suhu elektron (T<sub>i</sub>=T<sub>e</sub>) dan plasma satu spesies ion — plasma nyata sering punya T<sub>i</sub>≠T<sub>e</sub> dan campuran beberapa spesies ion.</li>
+        <li>Alat ini memakai fisika non-relativistik — untuk plasma dengan elektron mendekati kecepatan cahaya (mis. di sekitar objek astrofisika ekstrem), koreksi relativistik diperlukan dan tidak dihitung di sini.</li>
+        <li>Konsep "plasma ideal" (kuasi-netralitas, screening Debye) hanya berlaku bermakna kalau N<sub>D</sub>≫1 — pada parameter dengan N<sub>D</sub> mendekati atau di bawah 1, sistem sebenarnya berperilaku lebih mirip gas terionisasi biasa daripada plasma kolektif, dan alat ini menandainya secara eksplisit.</li>
+        <li>Peta parameter plasma memakai posisi perkiraan/ilustratif untuk tiap wilayah (ionosfer, korona matahari, dsb) berdasarkan orde besaran yang umum dilaporkan — kondisi plasma nyata bervariasi cukup lebar di setiap kategori.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="referensi">
+    <h2>Referensi</h2>
+    <ul>
+      <li>ScienceDirect Topics, "Debye Length — an overview".</li>
+      <li>Dominguez, A., "Heuristic derivations of basic plasma parameters", PPPL Summer Undergraduate Laboratory Internship notes, 2016.</li>
+      <li>Fitzpatrick, R., "Plasma Frequency", Introduction to Plasma Physics (catatan kuliah, University of Texas).</li>
+      <li>Wikipedia, entri "Debye length", "Plasma parameter".</li>
+    </ul>
+  </section>
+
+  <section id="artikel-terkait">
+    <h2>Konteks Proyek</h2>
+    <p>Alat ini adalah nomor 19 dari peta prioritas Modul Sains JAZMI (Tier 4) — disusun setelah 18 tool Tier 1–3 (mekanika, termodinamika, optik, fisika atom, hingga radiasi benda hitam) selesai sebagai fondasi. Tier 4 berikutnya: Kurva Energi Ikat Inti (Formula Massa Semi-Empiris).</p>
+  </section>
+
+</div>
+
+<footer>JAZMI — Laboratorium Pengetahuan Digital · Modul Sains · Belajar → Memodelkan → Menguji → Membuat</footer>
+
+<script>
+(function(){
+  const EPS0=8.8542e-12, E=1.6022e-19, ME=9.1094e-31, KB=1.3807e-23;
+
+  const neSlider=document.getElementById('ne-slider');
+  const teSlider=document.getElementById('te-slider');
+  const zSlider=document.getElementById('z-slider');
+  const neVal=document.getElementById('ne-val');
+  const teVal=document.getElementById('te-val');
+  const zVal=document.getElementById('z-val');
+  const resultGrid=document.getElementById('result-grid');
+  const ndFlag=document.getElementById('nd-flag');
+  const paramMap=document.getElementById('param-map');
+  const shieldVis=document.getElementById('shield-vis');
+
+  function fmtSci(x, unit){
+    if(x===0) return '0 '+unit;
+    const exp=Math.floor(Math.log10(Math.abs(x)));
+    const mant=x/Math.pow(10,exp);
+    return mant.toFixed(2)+'×10'+toSup(exp)+' '+unit;
+  }
+  function toSup(n){
+    const map={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+    return String(n).split('').map(c=>map[c]||c).join('');
+  }
+  function autoUnit(valMeters){
+    if(valMeters>=1) return [valMeters,'m'];
+    if(valMeters>=1e-3) return [valMeters*1e3,'mm'];
+    if(valMeters>=1e-6) return [valMeters*1e6,'µm'];
+    if(valMeters>=1e-9) return [valMeters*1e9,'nm'];
+    return [valMeters*1e12,'pm'];
+  }
+  function autoUnitFreq(hz){
+    if(hz>=1e12) return [hz/1e12,'THz'];
+    if(hz>=1e9) return [hz/1e9,'GHz'];
+    if(hz>=1e6) return [hz/1e6,'MHz'];
+    if(hz>=1e3) return [hz/1e3,'kHz'];
+    return [hz,'Hz'];
+  }
+
+  function render(){
+    const neExp=parseFloat(neSlider.value);
+    const teExp=parseFloat(teSlider.value);
+    const Z=parseInt(zSlider.value,10);
+    const ne=Math.pow(10,neExp);
+    const teEV=Math.pow(10,teExp);
+    const teJ=teEV*E;
+
+    neVal.innerHTML='10'+toSup(neExp.toFixed(1));
+    teVal.textContent=teEV<1?teEV.toFixed(3):teEV.toFixed(teEV<100?1:0);
+    zVal.textContent=Z;
+
+    const lambdaDe=Math.sqrt(EPS0*teJ/(ne*E*E));
+    const lambdaD=lambdaDe/Math.sqrt(1+Z);
+    const omega=Math.sqrt(ne*E*E/(EPS0*ME));
+    const fpe=omega/(2*Math.PI);
+    const ND=(4*Math.PI/3)*ne*Math.pow(lambdaD,3);
+
+    const [ldVal,ldUnit]=autoUnit(lambdaD);
+    const [fVal,fUnit]=autoUnitFreq(fpe);
+
+    resultGrid.innerHTML=
+      '<div class="result-card"><div class="n">'+ldVal.toFixed(2)+' '+ldUnit+'</div><div class="label">PANJANG DEBYE (λD)</div></div>'+
+      '<div class="result-card"><div class="n">'+fVal.toFixed(2)+' '+fUnit+'</div><div class="label">FREKUENSI PLASMA (fpe)</div></div>'+
+      '<div class="result-card"><div class="n">'+fmtSci(ND,'')+'</div><div class="label">PARTIKEL DALAM BOLA DEBYE (ND)</div></div>';
+
+    if(ND<1){
+      ndFlag.className='flag bad';
+      ndFlag.textContent='⚠ N_D < 1 — pada parameter ini, sistem tidak lagi berperilaku sebagai plasma kolektif ideal. Perilakunya lebih mirip gas terionisasi encer biasa.';
+    } else if(ND<100){
+      ndFlag.className='flag bad';
+      ndFlag.textContent='⚠ N_D cukup rendah ('+ND.toFixed(0)+') — pendekatan plasma ideal mulai kurang akurat; fluktuasi partikel-per-partikel jadi cukup signifikan.';
+    } else {
+      ndFlag.className='flag good';
+      ndFlag.textContent='✓ N_D≫1 — pendekatan plasma kolektif (kuasi-netralitas, screening Debye) berlaku baik di sini.';
+    }
+
+    drawMap(neExp, teExp);
+    drawShield(ND);
+  }
+
+  function drawMap(neExp, teExp){
+    const W=700,H=420, padL=50,padR=20,padT=20,padB=44;
+    const plotW=W-padL-padR, plotH=H-padT-padB;
+    const xOf = e => padL + ((e-6)/(25-6))*plotW;
+    const yOf = e => padT + (1-((e+2)/(4+2)))*plotH;
+
+    let svg='';
+    svg += '<line x1="'+padL+'" y1="'+(padT+plotH)+'" x2="'+(padL+plotW)+'" y2="'+(padT+plotH)+'" stroke="#3A4270"/>';
+    svg += '<line x1="'+padL+'" y1="'+padT+'" x2="'+padL+'" y2="'+(padT+plotH)+'" stroke="#3A4270"/>';
+    for(let e=6;e<=25;e+=3){
+      svg += '<text x="'+xOf(e)+'" y="'+(padT+plotH+16)+'" text-anchor="middle" fill="#9C9DC4" font-size="9" font-family=\'JetBrains Mono\'>10'+toSup(e)+'</text>';
+    }
+    for(let e=-2;e<=4;e+=2){
+      svg += '<text x="'+(padL-8)+'" y="'+(yOf(e)+3)+'" text-anchor="end" fill="#9C9DC4" font-size="9" font-family=\'JetBrains Mono\'>10'+toSup(e)+'</text>';
+    }
+    svg += '<text x="'+(padL+plotW/2)+'" y="'+(H-6)+'" text-anchor="middle" fill="#9C9DC4" font-size="10">n_e (m⁻³)</text>';
+    svg += '<text x="14" y="'+(padT+plotH/2)+'" text-anchor="middle" fill="#9C9DC4" font-size="10" transform="rotate(-90,14,'+(padT+plotH/2)+')">T_e (eV)</text>';
+
+    const regions=[
+      {label:'Medium antarbintang', x0:5.5,x1:7.5,y0:-0.5,y1:0.8},
+      {label:'Ionosfer', x0:10.5,x1:12.5,y0:-1.2,y1:-0.2},
+      {label:'Korona Matahari', x0:12.5,x1:15.5,y0:1.5,y1:2.5},
+      {label:'Discharge lab', x0:14,x1:18,y0:0,y1:1.3},
+      {label:'Plasma Fusi (Tokamak)', x0:19,x1:21.5,y0:3,y1:4.2},
+    ];
+    regions.forEach(r=>{
+      const x=xOf(r.x0), w=xOf(r.x1)-xOf(r.x0);
+      const y=yOf(r.y1), h=yOf(r.y0)-yOf(r.y1);
+      svg += '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="var(--plasma)" opacity="0.12" stroke="var(--plasma)" stroke-width="1" stroke-opacity="0.4"/>';
+      svg += '<text x="'+(x+w/2)+'" y="'+(y+h/2)+'" text-anchor="middle" fill="#C3C4E0" font-size="9">'+r.label+'</text>';
+    });
+
+    svg += '<circle cx="'+xOf(neExp)+'" cy="'+yOf(teExp)+'" r="7" fill="var(--electron)" stroke="#fff" stroke-width="2"/>';
+
+    paramMap.innerHTML=svg;
+  }
+
+  function drawShield(ND){
+    const cx=200,cy=120;
+    const R = 70;
+    let svg='<defs><radialGradient id="glow" cx="50%" cy="50%" r="50%">'+
+      '<stop offset="0%" stop-color="var(--electron)" stop-opacity="0.9"/>'+
+      '<stop offset="60%" stop-color="var(--plasma)" stop-opacity="0.35"/>'+
+      '<stop offset="100%" stop-color="var(--plasma)" stop-opacity="0"/>'+
+      '</radialGradient></defs>';
+    svg += '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="url(#glow)"/>';
+    svg += '<circle cx="'+cx+'" cy="'+cy+'" r="4" fill="#fff"/>';
+    svg += '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="none" stroke="var(--electron)" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.8"/>';
+    svg += '<text x="'+cx+'" y="'+(cy+R+18)+'" text-anchor="middle" fill="#9C9DC4" font-size="10" font-family=\'JetBrains Mono\'>radius ≈ λD</text>';
+    shieldVis.innerHTML=svg;
+  }
+
+  [neSlider,teSlider,zSlider].forEach(el=> el.addEventListener('input', render));
+  render();
+})();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

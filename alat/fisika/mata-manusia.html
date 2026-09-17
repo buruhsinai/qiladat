@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mata Manusia & Cacat Penglihatan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F1E6; --bg-deep:#EAE2CC;
+    --ink:#20293A; --ink-soft:#5A6270;
+    --dawn:#2E3A59; --amber:#E08E45; --teal:#1D9E75; --leaf:#4F7942; --rose:#B5432F;
+    --line:#d9d0b4;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.6;}
+  h1,h2,h3,.display{font-family:'Crimson Pro',serif;color:var(--ink);margin:0;}
+  .wrap{max-width:1100px;margin:0 auto;padding:40px 22px 90px;}
+
+  header.hero{padding-bottom:24px;border-bottom:1.5px solid var(--line);margin-bottom:30px;}
+  header.hero h1{font-size:2.1rem;font-weight:700;max-width:30ch;}
+  header.hero p{margin:10px 0 0;color:var(--ink-soft);max-width:72ch;font-size:1rem;}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+  .badge{font-size:0.78rem;padding:4px 10px;border-radius:20px;border:1px solid var(--line);color:var(--ink-soft);background:#fff;}
+
+  .toc{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:34px;}
+  .toc a{font-size:0.78rem;padding:5px 11px;border-radius:20px;border:1px solid var(--line);color:var(--ink-soft);text-decoration:none;background:#fff;}
+
+  section{margin-bottom:42px;scroll-margin-top:16px;}
+  section > h2{font-size:1.35rem;font-weight:700;margin-bottom:6px;display:flex;align-items:baseline;gap:10px;}
+  section > h2 .num{color:var(--dawn);font-size:1rem;font-family:'Inter',sans-serif;font-weight:700;}
+  section > .lead{color:var(--ink-soft);margin-bottom:16px;max-width:74ch;font-size:0.95rem;}
+
+  .card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:16px 18px;}
+  .card h3{font-size:1.02rem;margin-bottom:6px;}
+  .card p{margin:0;font-size:0.88rem;color:var(--ink-soft);}
+  .card .tag{display:inline-block;font-size:0.7rem;color:var(--dawn);border:1px solid var(--dawn);border-radius:20px;padding:1px 8px;margin-bottom:8px;}
+
+  .panel{background:#fff;border:1px solid var(--line);border-radius:10px;padding:20px 22px;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  @media (max-width:760px){.grid-2{grid-template-columns:1fr;}}
+
+  .field{margin-bottom:15px;}
+  .field label{display:flex;justify-content:space-between;font-size:0.85rem;color:var(--ink-soft);margin-bottom:6px;}
+  .field label .val{font-weight:700;font-variant-numeric:tabular-nums;color:var(--amber);}
+  .field input[type=range]{width:100%;accent-color:var(--dawn);}
+  .field input[type=range]:disabled{opacity:0.4;}
+  .toggle-row{display:flex;gap:14px;margin-bottom:14px;flex-wrap:wrap;}
+  .toggle-row label{display:flex;gap:6px;align-items:center;font-size:0.86rem;}
+  .inf-row{display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--ink-soft);margin-top:-8px;margin-bottom:14px;}
+
+  .result-box{margin-top:8px;padding:16px 18px;border-radius:8px;color:#fff;}
+  .result-box.ok{background:var(--teal);}
+  .result-box.blur{background:var(--rose);}
+  .result-box .big{font-family:'Crimson Pro',serif;font-size:1.25rem;font-weight:700;}
+  .result-box .small{font-size:0.8rem;opacity:0.85;margin-top:2px;}
+  .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+  .result-grid .rg-item{background:rgba(255,255,255,0.12);border-radius:6px;padding:8px 10px;}
+  .result-grid .rg-label{font-size:0.72rem;opacity:0.85;}
+  .result-grid .rg-val{font-weight:700;font-variant-numeric:tabular-nums;}
+
+  .chart-wrap{background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px;margin-top:14px;}
+  svg.chart{width:100%;height:auto;}
+  .ray-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:0.74rem;color:var(--ink-soft);margin-top:8px;}
+  .ray-legend span{display:inline-flex;align-items:center;gap:5px;}
+  .ray-legend i{width:14px;height:2.5px;display:inline-block;}
+
+  .preset-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;}
+  .preset-card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px 16px;cursor:pointer;text-align:left;font-family:'Inter',sans-serif;}
+  .preset-card:hover{border-color:var(--dawn);}
+  .preset-card h3{font-size:0.98rem;margin-bottom:4px;color:var(--ink);font-family:'Crimson Pro',serif;font-weight:700;}
+  .preset-card p{margin:0;font-size:0.82rem;color:var(--ink-soft);}
+  .preset-card .region{display:inline-block;font-size:0.68rem;color:var(--amber);border:1px solid var(--amber);border-radius:20px;padding:1px 8px;margin-bottom:6px;}
+
+  .callout{background:#fff;border:1px solid var(--line);border-left:4px solid var(--ink-soft);border-radius:6px;padding:15px 18px;font-size:0.88rem;color:var(--ink-soft);margin-top:12px;}
+  .callout p{margin:0 0 6px;} .callout p:last-child{margin-bottom:0;}
+  .callout.method{border-left-color:var(--dawn);}
+  ol.ref-list{padding-left:20px;font-size:0.86rem;color:var(--ink-soft);}
+  ol.ref-list li{margin-bottom:6px;}
+  .related-links{display:flex;flex-direction:column;gap:6px;font-size:0.9rem;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <h1>Mata Manusia &amp; Cacat Penglihatan</h1>
+    <p>Lanjutan langsung dari Lensa Tipis — mata Anda sendiri adalah sistem lensa hidup. Lihat langsung kenapa bayangan bisa jatuh di depan atau di belakang retina (itulah rabun jauh &amp; rabun dekat), lalu hitung kekuatan lensa koreksi seperti resep kacamata sungguhan.</p>
+    <div class="badge-row">
+      <span class="badge">Optika Mata</span>
+      <span class="badge">Miopi &amp; Hipermetropi</span>
+      <span class="badge">Kekuatan Lensa (Dioptri)</span>
+      <span class="badge">Simulator Interaktif</span>
+    </div>
+  </header>
+
+  <div class="toc">
+    <a href="#s01">01 Belajar</a>
+    <a href="#s02">02 Kenapa Buram?</a>
+    <a href="#s03">03 Kasus Miopi/Hipermetropi</a>
+    <a href="#s04">04 Kalkulator Lensa Koreksi</a>
+    <a href="#s05">05 Metode</a>
+    <a href="#s06">06 Batasan</a>
+    <a href="#s07">07 Referensi</a>
+  </div>
+
+  <!-- 01 -->
+  <section id="s01">
+    <h2><span class="num">01</span> Belajar: Mata sebagai Lensa Hidup</h2>
+    <p class="lead">Kornea dan lensa mata bekerja sama sebagai satu lensa cembung efektif yang memfokuskan cahaya ke retina — layar sensor di bagian belakang mata, pada jarak tetap dari lensa. Bedanya dengan lensa kaca: mata bisa mengubah-ubah kekuatannya sendiri (akomodasi) supaya benda dekat maupun jauh sama-sama bisa fokus tepat di retina. Titik terdekat yang masih bisa difokuskan disebut <strong>titik dekat</strong> (normal ≈25 cm), titik terjauh disebut <strong>titik jauh</strong> (normal = tak hingga).</p>
+    <div class="card-grid">
+      <div class="card"><span class="tag">Normal</span><h3>Emetropia</h3><p>Rentang akomodasi pas: bisa fokus tajam dari titik dekat 25 cm sampai objek di tak hingga, tanpa bantuan lensa apa pun.</p></div>
+      <div class="card"><span class="tag">Rabun Jauh</span><h3>Miopi</h3><p>Mata "terlalu kuat" (atau bola mata terlalu panjang) — bayangan objek jauh jatuh di <em>depan</em> retina. Objek dekat tetap jelas, objek jauh buram. Dikoreksi lensa cekung.</p></div>
+      <div class="card"><span class="tag">Rabun Dekat</span><h3>Hipermetropi</h3><p>Mata "terlalu lemah" (atau bola mata terlalu pendek) — bayangan objek dekat jatuh di <em>belakang</em> retina. Objek jauh tetap jelas, objek dekat buram. Dikoreksi lensa cembung.</p></div>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section id="s02">
+    <h2><span class="num">02</span> Diagram Interaktif: Kenapa Bisa Buram?</h2>
+    <p class="lead">Geser jarak benda dan kekuatan akomodasi lensa mata Anda sendiri — lihat langsung apakah bayangan jatuh tepat di retina (tajam), di depannya (buram, gejala miopi), atau di belakangnya (buram, gejala hipermetropi). Diagram ini skematis: sisi mata (kanan) diperbesar jauh melebihi skala sisi benda (kiri) supaya perbedaan milimeter di dalam mata tetap terlihat jelas.</p>
+    <div class="panel">
+      <div class="grid-2">
+        <div>
+          <div class="toggle-row">
+            <label><input type="checkbox" id="in-inf"> Objek di tak hingga (∞)</label>
+          </div>
+          <div class="field">
+            <label>Jarak benda do (cm) <span class="val" id="v-do">100</span></label>
+            <input type="range" id="in-do" min="10" max="500" step="5" value="100">
+          </div>
+          <div class="field">
+            <label>Kekuatan akomodasi mata (Dioptri) <span class="val" id="v-p">41.7</span></label>
+            <input type="range" id="in-p" min="38" max="54" step="0.1" value="41.7">
+          </div>
+          <div class="result-box ok" id="result-box">
+            <div class="small">Status fokus</div>
+            <div class="big" id="out-status">—</div>
+            <div class="result-grid">
+              <div class="rg-item"><div class="rg-label">Jarak fokus mata (f)</div><div class="rg-val" id="out-f">—</div></div>
+              <div class="rg-item"><div class="rg-label">Bayangan jatuh di</div><div class="rg-val" id="out-di">—</div></div>
+              <div class="rg-item"><div class="rg-label">Jarak retina (tetap)</div><div class="rg-val">2.4 cm</div></div>
+              <div class="rg-item"><div class="rg-label">Selisih dari retina</div><div class="rg-val" id="out-selisih">—</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <svg class="chart" id="svg-eye" viewBox="0 0 560 320"></svg>
+          <div class="ray-legend">
+            <span><i style="background:#E08E45"></i> Sinar 1</span>
+            <span><i style="background:#2E3A59"></i> Sinar 2</span>
+            <span><i style="background:#1D9E75"></i> Sinar 3</span>
+            <span><i style="background:#B5432F"></i> Retina (layar tetap)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section id="s03">
+    <h2><span class="num">03</span> Kasus Miopi vs Hipermetropi</h2>
+    <p class="lead">Klik untuk memuat tiap kasus ke diagram di atas dan lihat langsung pola buramnya.</p>
+    <div class="preset-grid" id="preset-grid-kasus"></div>
+  </section>
+
+  <!-- 04 -->
+  <section id="s04">
+    <h2><span class="num">04</span> Kalkulator Kekuatan Lensa Koreksi</h2>
+    <p class="lead">Ini versi "resep kacamata": masukkan titik jauh (untuk miopi) atau titik dekat (untuk hipermetropi), dapatkan kekuatan lensa koreksi dalam Dioptri — satuan yang sama persis dipakai optometris.</p>
+    <div class="panel">
+      <div class="toggle-row">
+        <label><input type="radio" name="gangguan" value="miopi" checked> Miopi (rabun jauh)</label>
+        <label><input type="radio" name="gangguan" value="hipermetropi"> Hipermetropi (rabun dekat)</label>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="field" id="field-jauh">
+            <label>Titik jauh mata (cm) <span class="val" id="v-jauh">50</span></label>
+            <input type="range" id="in-jauh" min="15" max="300" step="5" value="50">
+          </div>
+          <div class="field" id="field-dekat" style="display:none">
+            <label>Titik dekat mata (cm) <span class="val" id="v-dekat">100</span></label>
+            <input type="range" id="in-dekat" min="25" max="200" step="5" value="100">
+          </div>
+        </div>
+        <div class="result-box ok">
+          <div class="small">Resep lensa koreksi</div>
+          <div class="big" id="out-power">—</div>
+          <div class="result-grid">
+            <div class="rg-item"><div class="rg-label">Jenis lensa</div><div class="rg-val" id="out-jenislensa">—</div></div>
+            <div class="rg-item"><div class="rg-label">Jarak fokus setara</div><div class="rg-val" id="out-flensa">—</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section id="s05">
+    <h2><span class="num">05</span> Metode &amp; Rumus</h2>
+    <div class="callout method">
+      <p><strong>Model mata (bagian 02):</strong> mata disederhanakan jadi satu lensa efektif berjarak tetap 2,4 cm dari retina (mendekati panjang aksial mata sungguhan). Kekuatan lensa P (Dioptri) diubah jadi jarak fokus lewat f(cm) = 100/P, lalu dipakai rumus lensa tipis yang sama seperti tool sebelumnya: 1/f = 1/do + 1/di. Tiga sinar istimewa digambar dengan matriks transfer sinar yang sama (m₂ = m₁ − y/f); "buram" divisualisasikan sebagai seberapa jauh ketiga sinar itu masih terpisah tepat di garis retina — makin lebar sebarannya, makin buram.</p>
+      <p><strong>Kekuatan lensa koreksi miopi (bagian 04):</strong> lensa koreksi harus mengubah objek di tak hingga jadi bayangan maya tepat di titik jauh mata. Dari 1/f = 1/∞ + 1/di dengan di = −titik-jauh: P = 1/f(m) = −100/titik-jauh(cm).</p>
+      <p><strong>Kekuatan lensa koreksi hipermetropi:</strong> lensa koreksi harus mengubah objek di jarak baca normal (25 cm) jadi bayangan maya tepat di titik dekat mata. Dari 1/f = 1/0,25 − 1/titik-dekat(m): P = 4 − 100/titik-dekat(cm).</p>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section id="s06">
+    <h2><span class="num">06</span> Batasan</h2>
+    <div class="callout">
+      <p>Model mata di sini satu-lensa-efektif di udara — mata sungguhan berisi cairan &amp; lensa dengan indeks bias ~1,336, bukan udara, sehingga jarak fokus riil sedikit berbeda dari perhitungan sederhana ini. Diagram bagian 02 sengaja <strong>tidak</strong> satu skala konsisten (sisi mata diperbesar drastis dibanding sisi benda) supaya perbedaan milimeter di dalam mata tetap terlihat — jangan baca jarak pikselnya sebagai proporsi jarak sungguhan. Kalkulator resep di bagian 04 mengabaikan <strong>jarak vertex</strong> (jarak fisik lensa kacamata ke mata, biasanya ~12 mm) yang di dunia nyata sedikit menggeser kekuatan lensa yang dibutuhkan, terutama untuk resep berkekuatan tinggi. Astigmatisme, presbiopia (mata tua kehilangan elastisitas), dan katarak sama sekali tidak dimodelkan di sini.</p>
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section id="s07">
+    <h2><span class="num">07</span> Referensi &amp; Alat Terkait</h2>
+    <ol class="ref-list">
+      <li>Hecht, <em>Optics</em> — bab optika mata &amp; instrumen optik</li>
+      <li>Halliday, Resnick &amp; Walker, <em>Fundamentals of Physics</em> — model mata tereduksi &amp; kekuatan lensa koreksi</li>
+      <li>Konsep vertex distance sebagaimana dipakai dalam praktik optometri standar untuk resep kacamata</li>
+    </ol>
+    <div class="callout" style="margin-top:14px">
+      <div class="related-links">
+        <span>→ Lensa Tipis — Diagram Sinar Istimewa (dasar dari tool ini)</span>
+        <span>→ Gerak Peluru, Osilator Harmonik, Gas Ideal, Peluruhan Radioaktif, Hukum Coulomb — Tier 1 #1–5</span>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+function el(tag,attrs){
+  const e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+function fmt(n){ return (Math.round(n*100)/100).toString(); }
+const dR = 2.4;   // jarak retina tetap (cm)
+const ho = 15;    // tinggi benda skematis (tak diekspos sebagai slider)
+
+/* ================= 02: diagram interaktif ================= */
+function computeAndDrawEye(){
+  const infMode = document.getElementById('in-inf').checked;
+  document.getElementById('in-do').disabled = infMode;
+  let doo = parseFloat(document.getElementById('in-do').value);
+  const P = parseFloat(document.getElementById('in-p').value);
+  document.getElementById('v-do').textContent = infMode ? '∞' : doo;
+  document.getElementById('v-p').textContent = P.toFixed(1);
+
+  const f = 100 / P;
+  let doEff = infMode ? 1e7 : doo;
+  if(Math.abs(doEff - f) < 0.05) doEff = f + (doEff >= f ? 0.05 : -0.05);
+  const di = (doEff * f) / (doEff - f);
+
+  const yh = [ho, 0, ho*f/(f-doEff)];
+  const mOut = [-ho/f, -ho/doEff, 0];
+  const yAtRetina = yh.map((y,i) => y + mOut[i]*dR);
+  const blur = Math.max(...yAtRetina) - Math.min(...yAtRetina);
+
+  const box = document.getElementById('result-box');
+  let statusTxt, selisihTxt;
+  const selisih = di - dR;
+  if(Math.abs(blur) < 0.15){
+    statusTxt = 'Tajam — fokus tepat di retina';
+    selisihTxt = `${fmt(Math.abs(selisih))} cm (nyaris nol)`;
+    box.className = 'result-box ok';
+  } else if(selisih < 0){
+    statusTxt = 'Buram — fokus jatuh DI DEPAN retina (gejala miopi)';
+    selisihTxt = `${fmt(Math.abs(selisih))} cm terlalu dekat`;
+    box.className = 'result-box blur';
+  } else {
+    statusTxt = 'Buram — fokus jatuh DI BELAKANG retina (gejala hipermetropi)';
+    selisihTxt = `${fmt(Math.abs(selisih))} cm terlalu jauh`;
+    box.className = 'result-box blur';
+  }
+  document.getElementById('out-status').textContent = statusTxt;
+  document.getElementById('out-f').textContent = `${fmt(f)} cm`;
+  document.getElementById('out-di').textContent = `${fmt(di)} cm dari lensa`;
+  document.getElementById('out-selisih').textContent = selisihTxt;
+
+  drawEyeDiagram(doo, infMode, f, di, yh, mOut, blur);
+}
+
+function drawEyeDiagram(doo, infMode, f, di, yh, mOut, blur){
+  const svg = document.getElementById('svg-eye');
+  svg.innerHTML = '';
+  const W=560,H=320,cx=280,cy=160;
+  const leftExtent = infMode ? 500 : Math.max(doo,20)*1.15;
+  const rightExtent = Math.max(dR, di, f, 3)*1.3;
+  const yScale = 90/(ho*1.3);
+  const sx = x => x<=0 ? cx + (x/leftExtent)*230 : cx + (x/rightExtent)*230;
+  const sy = y => cy - y*yScale;
+
+  // axis
+  svg.appendChild(el('line',{x1:sx(-leftExtent),y1:sy(0),x2:sx(rightExtent),y2:sy(0),stroke:'#d9d0b4','stroke-width':1.2}));
+
+  // eye lens symbol
+  const lensHalf = 100;
+  svg.appendChild(el('line',{x1:cx,y1:cy-lensHalf,x2:cx,y2:cy+lensHalf,stroke:'#2E3A59','stroke-width':2}));
+  svg.appendChild(el('polygon',{points:`${cx-9},${cy-lensHalf} ${cx+9},${cy-lensHalf} ${cx},${cy-lensHalf-14}`, fill:'#2E3A59'}));
+  svg.appendChild(el('polygon',{points:`${cx-9},${cy+lensHalf} ${cx+9},${cy+lensHalf} ${cx},${cy+lensHalf+14}`, fill:'#2E3A59'}));
+
+  // retina line (fixed)
+  const rx = sx(dR);
+  svg.appendChild(el('line',{x1:rx,y1:cy-105,x2:rx,y2:cy+105,stroke:'#B5432F','stroke-width':2.5}));
+  const rt = el('text',{x:rx,y:cy-112,'text-anchor':'middle','font-size':10,fill:'#B5432F'});
+  rt.textContent='retina'; svg.appendChild(rt);
+
+  // rays
+  const objX = infMode ? -leftExtent : -doo;
+  const colors = ['#E08E45','#2E3A59','#1D9E75'];
+  for(let i=0;i<3;i++){
+    svg.appendChild(el('line',{x1:sx(objX),y1:sy(ho),x2:sx(0),y2:sy(yh[i]),stroke:colors[i],'stroke-width':1.6}));
+    const yEnd = yh[i] + mOut[i]*rightExtent;
+    svg.appendChild(el('line',{x1:sx(0),y1:sy(yh[i]),x2:sx(rightExtent),y2:sy(yEnd),stroke:colors[i],'stroke-width':1.6}));
+  }
+
+  // blur indicator at retina
+  const blurPx = Math.max(Math.abs(blur)*yScale/2, 2);
+  svg.appendChild(el('ellipse',{cx:rx,cy:sy(0),rx:4,ry:blurPx,fill:'#B5432F',opacity:'0.35'}));
+
+  // object arrow
+  const ox = infMode ? sx(-leftExtent)+6 : sx(-doo);
+  svg.appendChild(el('line',{x1:ox,y1:sy(0),x2:ox,y2:sy(ho),stroke:'#20293A','stroke-width':2.2}));
+  svg.appendChild(el('polygon',{points:`${ox-6},${sy(ho)+9} ${ox+6},${sy(ho)+9} ${ox},${sy(ho)-4}`, fill:'#20293A'}));
+  if(infMode){
+    const it = el('text',{x:ox,y:sy(ho)-10,'text-anchor':'middle','font-size':12,fill:'#20293A'});
+    it.textContent='∞'; svg.appendChild(it);
+  }
+}
+
+['in-do','in-p'].forEach(id => document.getElementById(id).addEventListener('input', computeAndDrawEye));
+document.getElementById('in-inf').addEventListener('change', computeAndDrawEye);
+
+/* ================= 03: kasus presets ================= */
+const KASUS_PRESETS = [
+  {label:"Mata Normal — lihat jauh", note:"Akomodasi relaks (~41.7 D), objek di tak hingga — fokus tepat di retina.", inf:true, doo:100, p:41.7},
+  {label:"Mata Normal — baca dekat", note:"Akomodasi maksimal (~45.7 D) di titik dekat 25 cm — tetap tajam berkat akomodasi.", inf:false, doo:25, p:45.7},
+  {label:"Miopi Tanpa Koreksi", note:"Mata terlalu kuat (48 D) walau sudah relaks — objek jauh jatuh DI DEPAN retina, buram.", inf:true, doo:100, p:48},
+  {label:"Hipermetropi Tanpa Koreksi", note:"Mata terlalu lemah (40 D) walau sudah akomodasi maksimal di titik dekat — buram di BELAKANG retina.", inf:false, doo:25, p:40}
+];
+const presetGrid = document.getElementById('preset-grid-kasus');
+KASUS_PRESETS.forEach(p => {
+  const card = document.createElement('div');
+  card.className = 'preset-card';
+  card.innerHTML = `<h3>${p.label}</h3><p>${p.note}</p>`;
+  card.addEventListener('click', () => {
+    document.getElementById('in-inf').checked = p.inf;
+    document.getElementById('in-do').value = p.doo;
+    document.getElementById('in-do').disabled = p.inf;
+    document.getElementById('in-p').value = p.p;
+    computeAndDrawEye();
+    document.getElementById('s02').scrollIntoView({behavior:'smooth'});
+  });
+  presetGrid.appendChild(card);
+});
+
+/* ================= 04: kalkulator resep ================= */
+function computePrescription(){
+  const gangguan = document.querySelector('input[name=gangguan]:checked').value;
+  document.getElementById('field-jauh').style.display = gangguan==='miopi' ? 'block':'none';
+  document.getElementById('field-dekat').style.display = gangguan==='hipermetropi' ? 'block':'none';
+
+  let P, fLensCm, jenis;
+  if(gangguan === 'miopi'){
+    const titikJauh = parseFloat(document.getElementById('in-jauh').value);
+    document.getElementById('v-jauh').textContent = titikJauh;
+    P = -100/titikJauh;
+    fLensCm = -titikJauh;
+    jenis = 'Cekung (divergen)';
+  } else {
+    const titikDekat = parseFloat(document.getElementById('in-dekat').value);
+    document.getElementById('v-dekat').textContent = titikDekat;
+    P = 4 - 100/titikDekat;
+    fLensCm = P !== 0 ? 100/P : Infinity;
+    jenis = P > 0 ? 'Cembung (konvergen)' : (P < 0 ? 'Cekung (divergen)' : 'Tanpa koreksi (0 D)');
+  }
+  document.getElementById('out-power').textContent = `${P>=0?'+':''}${fmt(P)} D`;
+  document.getElementById('out-jenislensa').textContent = jenis;
+  document.getElementById('out-flensa').textContent = isFinite(fLensCm) ? `${fmt(Math.abs(fLensCm))} cm` : '—';
+}
+['in-jauh','in-dekat'].forEach(id => document.getElementById(id).addEventListener('input', computePrescription));
+document.querySelectorAll('input[name=gangguan]').forEach(r => r.addEventListener('change', computePrescription));
+
+/* init */
+computeAndDrawEye();
+computePrescription();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proyeksi Globular al-Biruni / Nicolosi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+<style>
+  :root{
+    --bg:#0B1E33; --bg-panel:#12283F; --bg-deep:#081729;
+    --text:#E9EEF5; --text-soft:#8FA3BC;
+    --gold:#C9A24B; --sepia:#D8C9A3; --coral:#D9694F; --teal:#4FA695;
+    --line:#1F3A56;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.6;}
+  h1,h2,h3{font-family:'Spectral',serif;color:#fff;margin:0;}
+  .wrap{max-width:1120px;margin:0 auto;padding:38px 20px 90px;}
+
+  header.hero{padding-bottom:22px;border-bottom:1px solid var(--line);margin-bottom:28px;}
+  header.hero h1{font-size:2rem;font-weight:700;max-width:28ch;}
+  header.hero p{margin:8px 0 0;color:var(--text-soft);max-width:74ch;font-size:0.96rem;}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+  .badge{font-size:0.76rem;padding:4px 10px;border-radius:20px;border:1px solid var(--line);color:var(--text-soft);}
+
+  .toc{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:30px;}
+  .toc a{font-size:0.76rem;padding:5px 11px;border-radius:20px;border:1px solid var(--line);color:var(--text-soft);text-decoration:none;}
+
+  section{margin-bottom:38px;scroll-margin-top:14px;}
+  section > h2{font-size:1.3rem;font-weight:700;margin-bottom:6px;display:flex;align-items:baseline;gap:10px;}
+  section > h2 .num{color:var(--gold);font-size:0.95rem;font-family:'Inter',sans-serif;font-weight:700;}
+  section > .lead{color:var(--text-soft);margin-bottom:14px;max-width:74ch;font-size:0.94rem;}
+
+  .card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;}
+  .card{background:var(--bg-panel);border:1px solid var(--line);border-radius:8px;padding:15px 17px;}
+  .card h3{font-size:1rem;margin-bottom:5px;}
+  .card p{margin:0;font-size:0.86rem;color:var(--text-soft);}
+  .card .tag{display:inline-block;font-size:0.68rem;color:var(--gold);border:1px solid var(--gold);border-radius:20px;padding:1px 8px;margin-bottom:7px;}
+
+  .panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  @media (max-width:760px){.grid-2{grid-template-columns:1fr;}}
+
+  .field{margin-bottom:14px;}
+  .field label{display:flex;justify-content:space-between;font-size:0.84rem;color:var(--text-soft);margin-bottom:6px;}
+  .field label .val{font-weight:700;font-variant-numeric:tabular-nums;color:var(--gold);}
+  .field input[type=range]{width:100%;accent-color:var(--gold);}
+  .toggle-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;font-size:0.85rem;}
+  .toggle-row label{display:flex;gap:6px;align-items:center;}
+
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+  button.act{padding:8px 14px;border-radius:6px;border:1px solid var(--line);background:#0F2438;color:var(--text);font-family:'Inter',sans-serif;font-weight:600;font-size:0.82rem;cursor:pointer;}
+  button.act.primary{background:var(--gold);color:#0B1E33;border-color:var(--gold);}
+
+  .map-wrap{background:var(--bg-deep);border:1px solid var(--line);border-radius:8px;padding:14px;text-align:center;}
+  svg.mapsvg{width:100%;max-width:420px;height:auto;cursor:crosshair;}
+  .map-status{font-size:0.78rem;color:var(--text-soft);margin-top:8px;}
+
+  .double-wrap{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;}
+  .double-wrap .map-wrap{flex:1;min-width:220px;}
+
+  .result-box{margin-top:8px;padding:14px 16px;border-radius:8px;background:var(--bg-deep);border:1px solid var(--line);}
+  .result-box .big{font-family:'Spectral',serif;font-size:1.25rem;font-weight:700;color:#fff;}
+  .result-box .small{font-size:0.78rem;color:var(--text-soft);margin-top:2px;}
+
+  .callout{background:var(--bg-panel);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:6px;padding:14px 16px;font-size:0.86rem;color:var(--text-soft);margin-top:12px;}
+  .callout p{margin:0 0 6px;} .callout p:last-child{margin-bottom:0;}
+  ol.ref-list{padding-left:20px;font-size:0.85rem;color:var(--text-soft);}
+  ol.ref-list li{margin-bottom:6px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <h1>Proyeksi Globular al-Biruni / Nicolosi</h1>
+    <p>Proyeksi peta pertama yang tercatat ditemukan Abū Rayḥān al-Bīrūnī sekitar tahun 1000 M untuk peta langit — "ditemukan ulang" oleh Giovanni Battista Nicolosi 560 tahun kemudian, dan namanya yang akhirnya melekat. Peta dunia di bawah memakai garis pantai nyata, bukan sekadar graticule.</p>
+    <div class="badge-row">
+      <span class="badge">al-Biruni, ~1000 M</span>
+      <span class="badge">Konstruksi Geometris</span>
+      <span class="badge">Peta Dunia Nyata</span>
+      <span class="badge">Simulator Interaktif</span>
+    </div>
+  </header>
+
+  <div class="toc">
+    <a href="#s01">01 Sejarah</a>
+    <a href="#s02">02 Konstruksi</a>
+    <a href="#s03">03 Peta Interaktif</a>
+    <a href="#s04">04 Dua Belahan</a>
+    <a href="#s05">05 Bandingkan</a>
+    <a href="#s06">06 Metode</a>
+    <a href="#s07">07 Batasan</a>
+    <a href="#s08">08 Referensi</a>
+  </div>
+
+  <!-- 01 -->
+  <section id="s01">
+    <h2><span class="num">01</span> Sejarah</h2>
+    <div class="card-grid">
+      <div class="card"><span class="tag">~1000 M</span><h3>al-Biruni</h3><p>Sarjana Persia era Keemasan Islam ini mencatatkan proyeksi globular pertama yang diketahui, untuk peta langit (bukan peta bumi).</p></div>
+      <div class="card"><span class="tag">Abad 13–16</span><h3>Bacon, Apianus, Fournier</h3><p>Roger Bacon (abad 13), Petrus Apianus (abad 16), lalu Georges Fournier — masing-masing bereksperimen dengan proyeksi globular tanpa saling mengetahui karya al-Biruni.</p></div>
+      <div class="card"><span class="tag">1660</span><h3>Giovanni Battista Nicolosi</h3><p>Pastor Sisilia di Roma ini menemukan ulang proyeksi al-Biruni sebagai modifikasi proyeksi Fournier — kecil kemungkinan ia tahu karya al-Biruni, namun namanya yang akhirnya melekat pada proyeksi ini.</p></div>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section id="s02">
+    <h2><span class="num">02</span> Konstruksi Geometris (Kompas &amp; Penggaris)</h2>
+    <p class="lead">Nicolosi membangunnya sebagai teknik menggambar manual — bukan rumus dulu. Klik "Langkah Berikutnya" untuk melihat urutannya.</p>
+    <div class="panel">
+      <div class="map-wrap">
+        <svg class="mapsvg" id="svg-construct" viewBox="0 0 300 300"></svg>
+      </div>
+      <div class="btn-row" style="justify-content:center;margin-top:12px">
+        <button class="act" id="btn-prev-step">← Sebelumnya</button>
+        <span class="result-box" style="padding:6px 14px" id="step-label">Langkah 1/5</span>
+        <button class="act primary" id="btn-next-step">Berikutnya →</button>
+      </div>
+      <p class="map-status" id="step-desc" style="text-align:center"></p>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section id="s03">
+    <h2><span class="num">03</span> Peta Interaktif</h2>
+    <p class="lead">Geser bujur pusat (λ₀) untuk memutar belahan bumi mana yang ditampilkan. Klik di peta untuk mencari lintang/bujur titik itu (dicari lewat pencarian numerik terhadap rumus proyeksi).</p>
+    <div class="panel">
+      <div class="grid-2">
+        <div>
+          <div class="field">
+            <label>Bujur pusat / λ₀ <span class="val" id="v-lon0">106.8°</span></label>
+            <input type="range" id="in-lon0" min="-180" max="180" step="1" value="107">
+          </div>
+          <div class="toggle-row">
+            <label><input type="checkbox" id="chk-graticule" checked> Tampilkan graticule</label>
+          </div>
+          <div class="result-box">
+            <div class="small">Titik yang diklik</div>
+            <div class="big" id="click-result">— klik peta →</div>
+          </div>
+        </div>
+        <div class="map-wrap">
+          <svg class="mapsvg" id="svg-main" viewBox="0 0 400 400"></svg>
+          <div class="map-status" id="map-status">Memuat data peta dunia...</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section id="s04">
+    <h2><span class="num">04</span> Dua Belahan Dunia</h2>
+    <p class="lead">Karena proyeksi ini cuma bisa menampilkan satu belahan sekaligus, presentasi klasiknya adalah dua lingkaran berdampingan — persis seperti peta dunia Nicolosi asli 1660.</p>
+    <div class="panel">
+      <div class="double-wrap">
+        <div class="map-wrap"><svg class="mapsvg" id="svg-hemi-west" viewBox="0 0 320 320"></svg><div class="map-status">λ₀ = −20°</div></div>
+        <div class="map-wrap"><svg class="mapsvg" id="svg-hemi-east" viewBox="0 0 320 320"></svg><div class="map-status">λ₀ = 160°</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section id="s05">
+    <h2><span class="num">05</span> Bandingkan dengan Azimuthal Equidistant</h2>
+    <p class="lead">Sumber sejarahnya sendiri menyebut proyeksi ini "sangat mirip" azimuthal equidistant pada belahan yang sama. Bandingkan langsung di sini.</p>
+    <div class="panel">
+      <div class="toggle-row">
+        <label><input type="radio" name="proj-compare" value="nicolosi" checked> Nicolosi Globular</label>
+        <label><input type="radio" name="proj-compare" value="azeq"> Azimuthal Equidistant</label>
+      </div>
+      <div class="map-wrap">
+        <svg class="mapsvg" id="svg-compare" viewBox="0 0 380 380"></svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section id="s06">
+    <h2><span class="num">06</span> Metode &amp; Rumus</h2>
+    <div class="callout">
+      <p><strong>Rumus resmi (Snyder 1989, <em>An Album of Map Projections</em>, USGS PP 1453, hlm. 234):</strong> dengan φ=lintang, λ−λ₀=selisih bujur dari pusat, R=jejari bola (radian):</p>
+      <p class="mono" style="font-family:monospace;font-size:0.82rem;line-height:1.9">
+      b = π/(2(λ−λ₀)) − 2(λ−λ₀)/π<br>
+      c = 2φ/π<br>
+      d = (1−c²)/(sinφ−c)<br>
+      M = (b·sinφ/d − b/2) / (1+b²/d²)<br>
+      N = (d²·sinφ/b² + d/2) / (1+d²/b²)<br>
+      x = (π/2)R·(M ± √(M²+cos²φ/(1+b²/d²)))<br>
+      y = (π/2)R·(N ± √(N²−(d²/b²·sin²φ+d·sinφ−1)/(1+d²/b²)))
+      </p>
+      <p>Tanda ± pada x mengikuti tanda (λ−λ₀); tanda ± pada y mengikuti tanda <em>lawan</em> dari φ. Rumus ini gagal pada empat kondisi batas (λ=λ₀, φ=0, |λ−λ₀|=90°, |φ|=90°) — masing-masing punya rumus pengganti sendiri yang saya terapkan sesuai sumber.</p>
+      <p><strong>Pencarian titik (inverse):</strong> karena rumus inverse tertutup untuk proyeksi ini jauh lebih rumit (lihat Bayer &amp; Kočandrlová 2018), klik-untuk-cari-koordinat di atas memakai pencarian numerik dua tahap (kasar lalu halus) yang mencocokkan titik (lat,lon) mana yang hasil proyeksinya paling dekat dengan piksel yang Anda klik.</p>
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section id="s07">
+    <h2><span class="num">07</span> Batasan</h2>
+    <div class="callout">
+      <p>Proyeksi ini hanya menampilkan satu belahan bumi sekaligus (karenanya presentasi "dua belahan" jadi standar). Ia proyeksi "kompromi" — tidak mempertahankan luas, sudut, maupun jarak secara sempurna. Landmassa yang memotong tepat di batas belahan (90° dari λ₀) digambar sebagai garis kontur saja tanpa isian penuh — penyederhanaan karena pemotongan poligon yang presisi di batas lingkaran cukup rumit. Peta dunia memakai data Natural Earth resolusi 1:110m (garis pantai sudah disederhanakan, bukan resolusi penuh) via CDN publik — jika CDN tak dapat diakses, peta akan gagal dimuat dan hanya graticule yang tampil.</p>
+    </div>
+  </section>
+
+  <!-- 08 -->
+  <section id="s08">
+    <h2><span class="num">08</span> Referensi</h2>
+    <ol class="ref-list">
+      <li>Wikipedia — "Nicolosi globular projection"</li>
+      <li>Snyder, J.P. (1993) — <em>Flattening the Earth: Two Thousand Years of Map Projections</em>, hlm. 41</li>
+      <li>Snyder, J.P. &amp; Voxland, P.M. (1989) — <em>An Album of Map Projections</em>, USGS Professional Paper 1453, hlm. 234</li>
+      <li>Keuning, J. (1955) — "The history of geographical map projections until 1600", <em>Imago Mundi</em> 12:20</li>
+      <li>Bayer, T. &amp; Kočandrlová, M. (2018) — "Reconstruction of Map Projection, its Inverse and Re-Projection", <em>Applications of Mathematics</em> 63:1-27</li>
+      <li>Natural Earth (1:110m) via paket npm world-atlas — data garis pantai domain publik</li>
+    </ol>
+  </section>
+
+</div>
+
+<script>
+const D2R = Math.PI/180, R2D = 180/Math.PI;
+const toRad = d => d*D2R, toDeg = r => r*R2D;
+function el(tag,attrs){ const e=document.createElementNS("http://www.w3.org/2000/svg",tag); for(const k in attrs) e.setAttribute(k,attrs[k]); return e; }
+
+/* ===================== NICOLOSI FORWARD ===================== */
+function nicolosiForward(latDeg, lonDeg, lon0Deg, R){
+  const phi = toRad(latDeg);
+  let dlam = toRad(lonDeg - lon0Deg);
+  while(dlam > Math.PI) dlam -= 2*Math.PI;
+  while(dlam < -Math.PI) dlam += 2*Math.PI;
+
+  if(Math.abs(dlam) > Math.PI/2 + 1e-9) return {visible:false};
+  if(Math.abs(phi) - Math.PI/2 > 1e-9) return {visible:false};
+
+  if(Math.abs(Math.abs(phi)-Math.PI/2) < 1e-6) return {x:0, y: (phi>0? R*Math.PI/2 : -R*Math.PI/2), visible:true};
+  if(Math.abs(dlam) < 1e-6) return {x:0, y:R*phi, visible:true};
+  if(Math.abs(phi) < 1e-6) return {x:R*dlam, y:0, visible:true};
+  if(Math.abs(Math.abs(dlam)-Math.PI/2) < 1e-6) return {x:R*dlam*Math.cos(phi), y:(Math.PI/2)*R*Math.sin(phi), visible:true};
+
+  const b = Math.PI/(2*dlam) - (2*dlam)/Math.PI;
+  const c = 2*phi/Math.PI;
+  const d = (1-c*c)/(Math.sin(phi)-c);
+  const b2d2 = (b*b)/(d*d);
+  const M = (b*Math.sin(phi)/d - b/2) / (1 + b2d2);
+  const N = (d*d*Math.sin(phi)/(b*b) + d/2) / (1 + (d*d)/(b*b));
+
+  const signX = dlam>=0 ? 1 : -1;
+  const signY = phi>=0 ? -1 : 1;
+
+  const xInner = Math.max(0, M*M + (Math.cos(phi)*Math.cos(phi))/(1+b2d2));
+  const x = (Math.PI/2)*R*(M + signX*Math.sqrt(xInner));
+
+  const d2b2 = (d*d)/(b*b);
+  const yInner = Math.max(0, N*N - (d2b2*Math.sin(phi)*Math.sin(phi) + d*Math.sin(phi) - 1)/(1+d2b2));
+  const y = (Math.PI/2)*R*(N + signY*Math.sqrt(yInner));
+
+  return {x, y, visible:true};
+}
+
+/* ===================== AZIMUTHAL EQUIDISTANT FORWARD ===================== */
+function azEqForward(latDeg, lonDeg, lon0Deg, R){
+  const phi = toRad(latDeg);
+  let dlam = toRad(lonDeg - lon0Deg);
+  while(dlam > Math.PI) dlam -= 2*Math.PI;
+  while(dlam < -Math.PI) dlam += 2*Math.PI;
+  const cosC = Math.cos(phi)*Math.cos(dlam);
+  const c = Math.acos(Math.max(-1,Math.min(1,cosC)));
+  if(c > Math.PI/2 + 1e-9) return {visible:false};
+  if(c < 1e-9) return {x:0, y:0, visible:true};
+  const k = c/Math.sin(c);
+  return {x: R*k*Math.cos(phi)*Math.sin(dlam), y: R*k*Math.sin(phi), visible:true};
+}
+
+function projectPoint(mode, latDeg, lonDeg, lon0Deg, R){
+  return mode==='azeq' ? azEqForward(latDeg,lonDeg,lon0Deg,R) : nicolosiForward(latDeg,lonDeg,lon0Deg,R);
+}
+
+/* ===================== RENDERING ===================== */
+let landData = null; // GeoJSON FeatureCollection
+
+function drawGraticule(svg, cx, cy, Rpx, lon0, mode){
+  const Rproj = (2/Math.PI)*Rpx;
+  for(let lon=-180; lon<180; lon+=15){
+    let pts=[];
+    for(let lat=-90; lat<=90; lat+=2){
+      const p = projectPoint(mode, lat, lon, lon0, Rproj);
+      if(p.visible) pts.push([cx+p.x, cy-p.y]); else { flushLine(svg,pts,'#1F3A56',0.6); pts=[]; }
+    }
+    flushLine(svg,pts,'#1F3A56',0.6);
+  }
+  for(let lat=-75; lat<=75; lat+=15){
+    let pts=[];
+    for(let lon=-180; lon<=180; lon+=2){
+      const p = projectPoint(mode, lat, lon, lon0, Rproj);
+      if(p.visible) pts.push([cx+p.x, cy-p.y]); else { flushLine(svg,pts,'#1F3A56',0.6); pts=[]; }
+    }
+    flushLine(svg,pts,'#1F3A56',0.6);
+  }
+}
+function flushLine(svg, pts, color, width){
+  if(pts.length<2) return;
+  const d = pts.map((p,i)=>`${i===0?'M':'L'} ${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' ');
+  svg.appendChild(el('path',{d, fill:'none', stroke:color, 'stroke-width':width}));
+}
+
+function drawLand(svg, cx, cy, Rpx, lon0, mode){
+  if(!landData) return;
+  const Rproj = (2/Math.PI)*Rpx;
+  landData.features.forEach(feature => {
+    const polys = feature.geometry.type==='MultiPolygon' ? feature.geometry.coordinates : [feature.geometry.coordinates];
+    polys.forEach(poly => {
+      poly.forEach(ring => {
+        const projected = ring.map(([lon,lat]) => projectPoint(mode, lat, lon, lon0, Rproj));
+        const allVisible = projected.every(p=>p.visible);
+        if(allVisible){
+          const d = projected.map((p,i)=>`${i===0?'M':'L'} ${(cx+p.x).toFixed(1)} ${(cy-p.y).toFixed(1)}`).join(' ')+' Z';
+          svg.appendChild(el('path',{d, fill:'#D8C9A3', 'fill-opacity':0.85, stroke:'#0B1E33','stroke-width':0.4}));
+        } else {
+          let pts=[];
+          projected.forEach(p => {
+            if(p.visible) pts.push([cx+p.x, cy-p.y]);
+            else { flushLine(svg,pts,'#D8C9A3',1); pts=[]; }
+          });
+          flushLine(svg,pts,'#D8C9A3',1);
+        }
+      });
+    });
+  });
+}
+
+function renderMap(svgId, lon0, mode, showGrat){
+  const svg = document.getElementById(svgId);
+  svg.innerHTML='';
+  const vb = svg.viewBox.baseVal;
+  const cx = vb.width/2, cy = vb.height/2, Rpx = Math.min(vb.width,vb.height)/2 - 6;
+  svg.appendChild(el('circle',{cx,cy,r:Rpx, fill:'#0B1E33', stroke:'#C9A24B','stroke-width':1.5}));
+  if(showGrat!==false) drawGraticule(svg, cx, cy, Rpx, lon0, mode);
+  drawLand(svg, cx, cy, Rpx, lon0, mode);
+  svg.appendChild(el('circle',{cx,cy,r:Rpx, fill:'none', stroke:'#C9A24B','stroke-width':1.5}));
+}
+
+/* ===================== MAIN MAP + INTERACTIONS ===================== */
+function renderMainAndFriends(){
+  const lon0 = parseFloat(document.getElementById('in-lon0').value);
+  document.getElementById('v-lon0').textContent = lon0.toFixed(0)+'°';
+  const grat = document.getElementById('chk-graticule').checked;
+  renderMap('svg-main', lon0, 'nicolosi', grat);
+  renderMap('svg-hemi-west', -20, 'nicolosi', true);
+  renderMap('svg-hemi-east', 160, 'nicolosi', true);
+  const cmpMode = document.querySelector('input[name=proj-compare]:checked').value;
+  renderMap('svg-compare', lon0, cmpMode, true);
+}
+document.getElementById('in-lon0').addEventListener('input', renderMainAndFriends);
+document.getElementById('chk-graticule').addEventListener('change', renderMainAndFriends);
+document.querySelectorAll('input[name=proj-compare]').forEach(r=>r.addEventListener('change', renderMainAndFriends));
+
+document.getElementById('svg-main').addEventListener('click', function(e){
+  const rect = this.getBoundingClientRect();
+  const vb = this.viewBox.baseVal;
+  const px = (e.clientX-rect.left)/rect.width*vb.width;
+  const py = (e.clientY-rect.top)/rect.height*vb.height;
+  const cx = vb.width/2, cy = vb.height/2, Rpx = Math.min(vb.width,vb.height)/2 - 6;
+  const Rproj = (2/Math.PI)*Rpx;
+  const lon0 = parseFloat(document.getElementById('in-lon0').value);
+  const targetX = px-cx, targetY = cy-py;
+
+  let best=null, bestDist=Infinity;
+  for(let lat=-88; lat<=88; lat+=3){
+    for(let dl=-88; dl<=88; dl+=3){
+      const lon = lon0+dl;
+      const p = nicolosiForward(lat, lon, lon0, Rproj);
+      if(!p.visible) continue;
+      const dist = Math.hypot(p.x-targetX, p.y-targetY);
+      if(dist<bestDist){ bestDist=dist; best={lat,lon}; }
+    }
+  }
+  if(best){
+    for(let lat=best.lat-3; lat<=best.lat+3; lat+=0.3){
+      for(let lon=best.lon-3; lon<=best.lon+3; lon+=0.3){
+        const p = nicolosiForward(lat, lon, lon0, Rproj);
+        if(!p.visible) continue;
+        const dist = Math.hypot(p.x-targetX, p.y-targetY);
+        if(dist<bestDist){ bestDist=dist; best={lat,lon}; }
+      }
+    }
+  }
+  if(best && bestDist < Rpx*0.06){
+    document.getElementById('click-result').textContent = `${best.lat.toFixed(1)}°, ${((best.lon+540)%360-180).toFixed(1)}°`;
+  } else {
+    document.getElementById('click-result').textContent = 'di luar belahan ini';
+  }
+});
+
+/* ===================== CONSTRUCTION ANIMATION ===================== */
+const STEPS = [
+  "Lingkaran pembatas digambar — inilah bidang tempat seluruh belahan bumi akan dimuat.",
+  "Kutub Utara &amp; Selatan ditempatkan di atas &amp; bawah lingkaran, dihubungkan garis lurus sebagai meridian pusat.",
+  "Ekuator digambar sebagai garis lurus horizontal, tegak lurus meridian pusat.",
+  "Meridian lain digambar sebagai busur lingkaran melalui kedua kutub, berjarak sama di sepanjang ekuator.",
+  "Paralel lain digambar sebagai busur dari tepi kiri ke tepi kanan lewat meridian pusat, berjarak sama di sepanjang meridian pusat maupun tepi lingkaran."
+];
+let step = 1;
+function drawConstruction(){
+  const svg = document.getElementById('svg-construct');
+  svg.innerHTML='';
+  const cx=150, cy=150, R=120;
+  svg.appendChild(el('circle',{cx,cy,r:R, fill:'#0B1E33', stroke:'#C9A24B','stroke-width':1.5}));
+  if(step>=2){
+    svg.appendChild(el('line',{x1:cx,y1:cy-R,x2:cx,y2:cy+R,stroke:'#D9694F','stroke-width':1.5}));
+    svg.appendChild(el('circle',{cx,cy:cy-R,r:3,fill:'#D9694F'}));
+    svg.appendChild(el('circle',{cx,cy:cy+R,r:3,fill:'#D9694F'}));
+  }
+  if(step>=3){
+    svg.appendChild(el('line',{x1:cx-R,y1:cy,x2:cx+R,y2:cy,stroke:'#4FA695','stroke-width':1.5}));
+  }
+  if(step>=4){
+    [-60,-30,30,60].forEach(lon=>{
+      let pts=[];
+      for(let lat=-90;lat<=90;lat+=3){
+        const p = nicolosiForward(lat, lon, 0, (2/Math.PI)*R);
+        if(p.visible) pts.push([cx+p.x, cy-p.y]);
+      }
+      flushLine(svg, pts, '#8FA3BC', 1);
+    });
+  }
+  if(step>=5){
+    [-60,-30,30,60].forEach(lat=>{
+      let pts=[];
+      for(let lon=-90;lon<=90;lon+=3){
+        const p = nicolosiForward(lat, lon, 0, (2/Math.PI)*R);
+        if(p.visible) pts.push([cx+p.x, cy-p.y]);
+      }
+      flushLine(svg, pts, '#8FA3BC', 1);
+    });
+  }
+  document.getElementById('step-label').textContent = `Langkah ${step}/5`;
+  document.getElementById('step-desc').innerHTML = STEPS[step-1];
+}
+document.getElementById('btn-next-step').addEventListener('click', ()=>{ if(step<5) step++; drawConstruction(); });
+document.getElementById('btn-prev-step').addEventListener('click', ()=>{ if(step>1) step--; drawConstruction(); });
+
+/* ===================== LOAD WORLD DATA ===================== */
+fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/land-110m.json')
+  .then(r=>r.json())
+  .then(topology => {
+    landData = topojson.feature(topology, topology.objects.land);
+    document.getElementById('map-status').textContent = 'Peta dunia dimuat (Natural Earth 1:110m).';
+    renderMainAndFriends();
+  })
+  .catch(err => {
+    document.getElementById('map-status').textContent = 'Gagal memuat peta dunia (cek koneksi) — menampilkan graticule saja.';
+    renderMainAndFriends();
+  });
+
+drawConstruction();
+renderMainAndFriends();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

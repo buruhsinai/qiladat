@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Efek Longsoran Hash — Kenapa 1 Karakter Bisa Mengubah Segalanya</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0F1115;--panel:#161A21;--panel2:#1D222B;--ink:#E7E9EE;--dim:#98A0AE;--dimmer:#5E6673;
+--line:rgba(231,233,238,.1);--red:#E5534B;--amber:#E0A730;--green:#3FB37F;--blue:#5B9BD5;
+--rsoft:rgba(229,83,75,.14);--asoft:rgba(224,167,48,.14);--gsoft:rgba(63,179,127,.14);--bsoft:rgba(91,155,213,.14);}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Karla',sans-serif;line-height:1.6}
+.mono{font-family:'JetBrains Mono',monospace}
+h1,h2{font-family:'Fraunces',serif;font-weight:600;margin:0}
+.wrap{max-width:760px;margin:0 auto;padding:32px 18px 70px}
+.kicker{font-size:.82rem;color:var(--blue);font-weight:700;margin-bottom:10px;letter-spacing:.02em}
+h1{font-size:1.5rem;margin-bottom:10px}
+header p{color:var(--dim);font-size:.92rem}
+.privacy{display:inline-block;margin-top:10px;background:var(--gsoft);border:1px solid rgba(63,179,127,.35);color:var(--green);font-size:.78rem;padding:6px 12px;border-radius:20px;}
+
+.lab{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:22px;}
+label{display:block;font-size:.82rem;color:var(--dimmer);margin-bottom:6px;font-weight:600}
+input[type=text]{width:100%;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:8px;color:var(--ink);padding:10px 12px;font-family:'JetBrains Mono',monospace;font-size:.86rem;}
+.field{margin-bottom:14px}
+select{background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:8px;color:var(--ink);padding:8px 10px;font-family:'Karla',sans-serif;font-size:.84rem;}
+
+.diff-preview{font-family:'JetBrains Mono',monospace;font-size:.86rem;padding:8px 10px;background:rgba(0,0,0,.2);border-radius:6px;margin-top:4px;word-break:break-all;}
+.diff-preview .same{color:var(--dimmer);}
+.diff-preview .change{color:var(--bg);background:var(--amber);border-radius:3px;padding:0 1px;}
+
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px;}
+.btn{padding:9px 16px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--dim);cursor:pointer;font-size:.84rem;font-weight:600;}
+.btn:hover{border-color:var(--blue);color:var(--blue);}
+.btn.primary{border-color:rgba(91,155,213,.4);color:var(--blue);background:var(--bsoft);}
+
+.hash-card{margin-top:16px;padding:14px 16px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.16);}
+.hash-card .who{font-size:.76rem;color:var(--dimmer);font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px;}
+.hash-val{font-family:'JetBrains Mono',monospace;font-size:.82rem;word-break:break-all;line-height:1.7;}
+.hash-val span{padding:0 0.5px;}
+.hash-val span.diff{background:rgba(229,83,75,.35);border-radius:2px;}
+
+.stat-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:18px;}
+.stat{flex:1;min-width:130px;background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;}
+.stat .n{font-family:'Fraunces',serif;font-size:1.5rem;color:var(--blue);}
+.stat .l{font-size:.76rem;color:var(--dimmer);margin-top:2px;}
+
+.bitgrid{display:grid;gap:2px;margin-top:16px;}
+.bit{aspect-ratio:1/1;border-radius:1.5px;background:rgba(255,255,255,.08);}
+.bit.diff{background:var(--red);}
+.bit.same{background:rgba(63,179,127,.55);}
+
+.ideal-bar{height:10px;border-radius:6px;background:rgba(0,0,0,.3);overflow:hidden;margin-top:8px;position:relative;border:1px solid var(--line);}
+.ideal-bar .fill{height:100%;background:var(--blue);transition:width .2s ease;}
+.ideal-bar .marker{position:absolute;top:-3px;width:2px;height:16px;background:var(--green);left:50%;}
+
+.explain{margin-top:26px;color:var(--dim);font-size:.88rem;}
+.explain h2{font-size:1.1rem;color:var(--ink);margin-bottom:8px;}
+.explain p{margin:0 0 12px;}
+.explain b{color:var(--ink);}
+.explain code{font-family:'JetBrains Mono',monospace;background:var(--panel2);color:var(--blue);padding:1px 6px;border-radius:4px;font-size:.85em;}
+
+footer{margin-top:28px;font-size:.78rem;color:var(--dimmer)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <p class="kicker">Laboratorium JAZMI — Modul Keamanan Siber</p>
+  <h1>Efek Longsoran (Avalanche Effect)</h1>
+  <p>Ubah satu karakter saja pada teks A atau B, dan lihat sendiri: hash yang keluar berubah total, bukan cuma sedikit — inilah properti yang membuat hash bisa dipercaya untuk memverifikasi integritas data.</p>
+  <span class="privacy">🔒 Semua hashing berjalan di browser Anda lewat Web Crypto API — tidak ada teks yang dikirim ke server manapun</span>
+</header>
+
+<div class="lab">
+  <div class="field">
+    <label>Algoritma hash</label>
+    <select id="algoSelect">
+      <option value="SHA-1">SHA-1 (160 bit — usang, jangan dipakai untuk keamanan)</option>
+      <option value="SHA-256" selected>SHA-256 (256 bit — standar saat ini)</option>
+      <option value="SHA-384">SHA-384 (384 bit)</option>
+      <option value="SHA-512">SHA-512 (512 bit)</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>Teks A</label>
+    <input type="text" id="inputA" class="mono" value="Bayar 100000">
+    <div class="diff-preview" id="previewA"></div>
+  </div>
+  <div class="field">
+    <label>Teks B</label>
+    <input type="text" id="inputB" class="mono" value="Bayar 100001">
+    <div class="diff-preview" id="previewB"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn primary" id="btnFlip">🎲 Acak 1 karakter di Teks B</button>
+    <button class="btn" id="btnSync">Samakan B dengan A</button>
+  </div>
+
+  <div class="hash-card">
+    <div class="who">Hash A</div>
+    <div class="hash-val mono" id="hashA">–</div>
+  </div>
+  <div class="hash-card">
+    <div class="who">Hash B</div>
+    <div class="hash-val mono" id="hashB">–</div>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat"><div class="n" id="statCharDiff">0</div><div class="l">karakter beda antara Teks A &amp; B</div></div>
+    <div class="stat"><div class="n" id="statBitDiff">0</div><div class="l">dari <span id="statBitTotal">256</span> bit hash yang beda</div></div>
+    <div class="stat"><div class="n" id="statPct">0%</div><div class="l">persentase bit berbeda</div></div>
+  </div>
+  <label style="margin-top:16px;">Seberapa dekat ke ideal (50% — garis hijau)</label>
+  <div class="ideal-bar"><div class="fill" id="idealFill"></div><div class="marker"></div></div>
+
+  <label style="margin-top:18px;">Peta bit hash — hijau berarti sama, merah berarti beda</label>
+  <div class="bitgrid" id="bitGrid"></div>
+</div>
+
+<div class="explain">
+  <h2>Kenapa ini penting</h2>
+  <p>Hash kriptografis yang sehat wajib punya <b>efek longsoran</b>: mengubah walau satu bit saja pada input harus mengubah kira-kira <b>separuh</b> bit pada output, secara tidak terduga arahnya. Bukan sedikit berubah, bukan pula berubah dengan pola yang bisa ditebak — separuh, acak.</p>
+  <p>Inilah yang membuat hash berguna untuk <b>verifikasi integritas</b>: kalau Anda mengunduh sebuah file dan penyedianya mencantumkan hash SHA-256-nya, Anda tinggal menghitung ulang hash file yang Anda unduh lalu membandingkan. Kalau satu byte saja berubah di tengah jalan — rusak saat transfer, atau sengaja disisipi sesuatu — hasilnya akan langsung terlihat sebagai hash yang <i>sama sekali berbeda</i>, bukan "hampir mirip". Tidak ada zona abu-abu.</p>
+  <p>Coba geser ke SHA-1 di atas: hash-nya tetap menunjukkan efek longsoran yang sama (~50% bit berubah) — SHA-1 dianggap usang bukan karena longsorannya lemah, tapi karena sudah ditemukan cara memaksa dua input berbeda menghasilkan hash yang <i>sama persis</i> (tabrakan/collision) lebih cepat dari yang seharusnya mungkin secara matematis.</p>
+</div>
+</div>
+
+<footer>Bagian dari Laboratorium JAZMI — dibangun mengikuti metode "Belajar → Memodelkan → Menguji → Membuat Tool".<br>Alat edukasi untuk memahami properti hash — bukan pengganti alat verifikasi integritas produksi.</footer>
+
+<script>
+const ALGO_BITS = {'SHA-1':160,'SHA-256':256,'SHA-384':384,'SHA-512':512};
+
+async function hashHex(text, algo){
+  const enc = new TextEncoder().encode(text);
+  const buf = await crypto.subtle.digest(algo, enc);
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function hexToBinArray(hex){
+  const bits = [];
+  for(const ch of hex){
+    const v = parseInt(ch,16);
+    for(let i=3;i>=0;i--) bits.push((v>>i)&1);
+  }
+  return bits;
+}
+function renderCharDiff(a,b){
+  const len = Math.max(a.length,b.length);
+  let htmlA='', htmlB='';
+  for(let i=0;i<len;i++){
+    const ca=a[i], cb=b[i];
+    const same = ca===cb;
+    htmlA += ca===undefined ? '' : `<span class="${same?'same':'change'}">${escapeHtml(ca)}</span>`;
+    htmlB += cb===undefined ? '' : `<span class="${same?'same':'change'}">${escapeHtml(cb)}</span>`;
+  }
+  return [htmlA,htmlB];
+}
+function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function countCharDiff(a,b){
+  const len=Math.max(a.length,b.length);
+  let d=0;
+  for(let i=0;i<len;i++) if(a[i]!==b[i]) d++;
+  return d;
+}
+function renderHashDiff(hexA, hexB){
+  let a='',b='';
+  const len=Math.max(hexA.length,hexB.length);
+  for(let i=0;i<len;i++){
+    const same = hexA[i]===hexB[i];
+    a += `<span class="${same?'':'diff'}">${hexA[i]??''}</span>`;
+    b += `<span class="${same?'':'diff'}">${hexB[i]??''}</span>`;
+  }
+  return [a,b];
+}
+function renderBitGrid(bitsA, bitsB){
+  const grid = document.getElementById('bitGrid');
+  const n = bitsA.length;
+  const cols = Math.ceil(Math.sqrt(n * 1.6));
+  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  grid.innerHTML='';
+  const frag = document.createDocumentFragment();
+  for(let i=0;i<n;i++){
+    const d = document.createElement('div');
+    d.className = 'bit ' + (bitsA[i]===bitsB[i] ? 'same' : 'diff');
+    frag.appendChild(d);
+  }
+  grid.appendChild(frag);
+}
+
+const inputA = document.getElementById('inputA');
+const inputB = document.getElementById('inputB');
+const algoSelect = document.getElementById('algoSelect');
+
+async function update(){
+  const a = inputA.value, b = inputB.value;
+  const algo = algoSelect.value;
+  const bits = ALGO_BITS[algo];
+
+  const [pa,pb] = renderCharDiff(a,b);
+  document.getElementById('previewA').innerHTML = pa || '<span class="same">(kosong)</span>';
+  document.getElementById('previewB').innerHTML = pb || '<span class="same">(kosong)</span>';
+
+  const hexA = await hashHex(a, algo);
+  const hexB = await hashHex(b, algo);
+  const [ha,hb] = renderHashDiff(hexA,hexB);
+  document.getElementById('hashA').innerHTML = ha;
+  document.getElementById('hashB').innerHTML = hb;
+
+  const bitsA = hexToBinArray(hexA);
+  const bitsB = hexToBinArray(hexB);
+  let bitDiff = 0;
+  for(let i=0;i<bitsA.length;i++) if(bitsA[i]!==bitsB[i]) bitDiff++;
+  const pct = bits ? (100*bitDiff/bits) : 0;
+
+  document.getElementById('statCharDiff').textContent = countCharDiff(a,b);
+  document.getElementById('statBitDiff').textContent = bitDiff;
+  document.getElementById('statBitTotal').textContent = bits;
+  document.getElementById('statPct').textContent = pct.toFixed(1)+'%';
+  document.getElementById('idealFill').style.width = Math.min(100,pct)+'%';
+  document.getElementById('idealFill').style.background = (pct>40 && pct<60) ? 'var(--green)' : 'var(--blue)';
+
+  renderBitGrid(bitsA, bitsB);
+}
+
+inputA.addEventListener('input', update);
+inputB.addEventListener('input', update);
+algoSelect.addEventListener('change', update);
+
+document.getElementById('btnFlip').addEventListener('click', ()=>{
+  const a = inputA.value;
+  if(!a){ inputB.value=''; update(); return; }
+  const idx = Math.floor(Math.random()*a.length);
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let newChar;
+  do { newChar = chars[Math.floor(Math.random()*chars.length)]; } while(newChar===a[idx]);
+  inputB.value = a.slice(0,idx) + newChar + a.slice(idx+1);
+  update();
+});
+document.getElementById('btnSync').addEventListener('click', ()=>{
+  inputB.value = inputA.value;
+  update();
+});
+
+update();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

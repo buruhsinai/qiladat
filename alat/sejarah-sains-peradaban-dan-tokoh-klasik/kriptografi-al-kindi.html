@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kriptografi Klasik & Analisis Frekuensi ala Al-Kindi — JAZMI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&family=JetBrains+Mono:wght@400;600&family=Amiri&display=swap');
+:root{
+  --bg:#12141c; --bg-panel:#1b1f2b; --bg-panel-2:#20263a;
+  --line:#333a4f; --text:#eee7d6; --text-dim:#a9a6ac;
+  --gold:#c9a15a; --gold-soft:#8a713c; --teal:#5a9c92; --radius:10px;
+}
+*{box-sizing:border-box;}
+body{ margin:0; background:var(--bg); color:var(--text); font-family:'Karla',sans-serif; line-height:1.6; }
+h1,h2,h3{ font-family:'Fraunces',serif; font-weight:600; margin:0 0 0.5em; }
+.mono{ font-family:'JetBrains Mono', monospace; }
+.arabic{ font-family:'Amiri', serif; }
+.wrap{ max-width:840px; margin:0 auto; padding:0 20px; }
+.hero{ padding:48px 0 30px; border-bottom:1px solid var(--line); text-align:center; }
+.hero .eyebrow{ text-transform:uppercase; font-size:0.7rem; letter-spacing:2.5px; color:var(--gold); margin-bottom:12px; }
+.hero h1{ font-size:clamp(1.5rem,4.6vw,2.2rem); color:#fff; }
+.hero p.tag{ color:var(--text-dim); max-width:580px; margin:10px auto 0; font-size:0.94rem; }
+section{ padding:36px 0; border-bottom:1px solid var(--line); }
+section:last-of-type{ border-bottom:none; }
+.kicker{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+.kicker .num{ font-family:'Fraunces',serif; color:var(--gold); font-size:0.85rem; border:1px solid var(--gold-soft); border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.kicker h2{ font-size:1.2rem; margin:0; color:#fff; }
+p{ color:var(--text); } p.dim{ color:var(--text-dim); font-size:0.9rem; }
+.panel{ background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-top:16px; }
+blockquote{ border-left:3px solid var(--gold); margin:16px 0; padding:4px 0 4px 16px; color:var(--text-dim); font-style:italic; }
+
+.tab-row{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+.tab-btn{ background:var(--bg-panel-2); border:1px solid var(--line); color:var(--text-dim); padding:9px 14px; border-radius:8px; font-weight:700; font-size:0.85rem; cursor:pointer; }
+.tab-btn.active{ background:var(--gold); color:#12141c; border-color:var(--gold); }
+.tab-panel{ display:none; } .tab-panel.active{ display:block; }
+
+label{ display:block; font-size:0.82rem; color:var(--text-dim); margin:14px 0 6px; }
+label:first-of-type{ margin-top:0; }
+textarea, input[type=text], input[type=number]{
+  width:100%; background:#0e1017; border:1px solid var(--line); color:var(--text);
+  padding:11px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:0.95rem;
+}
+textarea{ min-height:90px; resize:vertical; }
+input:focus, textarea:focus{ outline:none; border-color:var(--gold); }
+
+.btn{ margin-top:14px; width:100%; background:var(--gold); color:#12141c; border:none; padding:12px; border-radius:8px; font-weight:700; font-size:0.92rem; cursor:pointer; }
+.btn.secondary{ background:var(--teal); }
+.btn.outline{ background:transparent; border:1px solid var(--line); color:var(--text-dim); }
+
+.result-box{ margin-top:16px; padding:16px; background:var(--bg-panel-2); border:1px solid var(--gold-soft); border-radius:var(--radius); }
+.result-box .lbl{ font-size:0.78rem; color:var(--text-dim); margin-bottom:4px; }
+.result-box .out{ font-family:'JetBrains Mono',monospace; font-size:0.95rem; word-break:break-word; color:var(--gold); white-space:pre-wrap; }
+
+.hist{ margin-top:18px; }
+.hist-row{ display:flex; align-items:center; gap:8px; margin-bottom:3px; font-family:'JetBrains Mono',monospace; font-size:0.72rem; }
+.hist-row .huruf{ width:16px; color:var(--text-dim); }
+.hist-row .bar-wrap{ flex:1; background:#0e1017; border-radius:3px; overflow:hidden; height:12px; position:relative; }
+.hist-row .bar{ height:100%; background:var(--teal); }
+.hist-row .bar.ref{ background:var(--gold-soft); opacity:0.6; position:absolute; top:0; left:0; height:100%; }
+.hist-row .pct{ width:42px; text-align:right; color:var(--text-dim); }
+.hist-legend{ display:flex; gap:16px; font-size:0.75rem; color:var(--text-dim); margin-top:8px; }
+.hist-legend span.sw{ display:inline-block; width:10px; height:10px; margin-right:4px; border-radius:2px; }
+
+/* TIMELINE */
+.timeline{ margin-top:16px; }
+.tl-item{ display:flex; gap:14px; margin-bottom:4px; cursor:pointer; padding:8px; border-radius:8px; }
+.tl-item:hover{ background:var(--bg-panel-2); }
+.tl-year{ min-width:90px; font-family:'JetBrains Mono',monospace; color:var(--gold); font-size:0.85rem; flex-shrink:0; }
+.tl-nama{ font-weight:700; font-size:0.92rem; }
+.tl-detail{ display:none; margin-top:8px; padding:14px; background:var(--bg-panel-2); border-left:2px solid var(--gold); font-size:0.88rem; color:var(--text-dim); }
+.tl-detail.show{ display:block; }
+
+.formula{ font-family:'Fraunces',serif; font-style:italic; background:var(--bg-panel-2); border-radius:8px; padding:14px 18px; margin:14px 0; overflow-x:auto; color:#f4eede; }
+ul{ padding-left:20px; } ul.batas li{ margin-bottom:10px; }
+.refs li{ margin-bottom:10px; font-size:0.9rem; color:var(--text-dim); }
+.consult{ background:linear-gradient(135deg,var(--bg-panel-2),var(--bg-panel)); border:1px solid var(--gold-soft); border-radius:var(--radius); padding:22px; text-align:center; }
+.consult a.wa{ display:inline-block; margin-top:14px; background:var(--teal); color:#0e1017; text-decoration:none; font-weight:700; padding:12px 26px; border-radius:30px; }
+footer{ text-align:center; padding:26px 0; color:var(--text-dim); font-size:0.8rem; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">JAZMI · Sains &amp; Sejarah Kriptografi</div>
+    <h1>Kriptografi Klasik &amp; Analisis Frekuensi ala Al-Kindi</h1>
+    <p class="tag">Seribu seratus tahun lalu, seorang polimatik Baghdad menemukan cara membongkar sandi rahasia hanya dengan menghitung huruf. Coba sendiri metodenya di sini.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <div class="kicker"><div class="num">1</div><h2>Belajar</h2></div>
+    <p>Sandi substitusi — mengganti tiap huruf dengan huruf lain secara konsisten — sudah dipakai sejak zaman Julius Caesar (sekitar 50 SM), yang menggeser setiap huruf pesannya sejauh 3 posisi. Selama berabad-abad sandi seperti ini dianggap aman, karena tanpa mengetahui kuncinya, kombinasi yang mungkin sangatlah banyak.</p>
+    <p>Lalu sekitar tahun 850 M di Baghdad, <strong>Abu Yusuf Ya'qub ibn Ishaq al-Kindi</strong> menyadari celah yang selama ini tidak disadari siapa pun: setiap bahasa punya "sidik jari" statistik — sebagian huruf jauh lebih sering muncul daripada huruf lain, dan pola ini tidak berubah walau tiap huruf diganti dengan huruf lain secara konsisten.</p>
+    <blockquote>Dalam risalahnya <span class="arabic">"استخراج المُعمّى"</span> (Mengungkap Pesan Tersandi), al-Kindi menjelaskan: hitung huruf yang paling sering muncul di teks tersandi, lalu cocokkan dengan huruf yang paling sering muncul dalam bahasa aslinya — dan lanjutkan pencocokan itu untuk huruf-huruf berikutnya.</blockquote>
+    <p class="dim">Naskah asli risalah ini sempat hilang selama lebih dari seribu tahun, dan baru ditemukan kembali tahun 1987 di Arsip Ottoman Sulaimaniyyah, Istanbul, oleh sejarawan Ibrahim al-Kadi.</p>
+    <p>Metode inilah yang membuka jalan bagi seluruh sejarah pembongkaran sandi setelahnya — termasuk pembongkaran mesin Enigma Nazi oleh Alan Turing 1.100 tahun kemudian. Prinsipnya sama persis: bandingkan pola statistik pesan tersandi dengan pola statistik bahasa yang sudah diketahui.</p>
+  </section>
+
+  <section id="alat">
+    <div class="kicker"><div class="num">2</div><h2>Alat: Sandi &amp; Pembongkar Sandi</h2></div>
+    <div class="panel">
+      <div class="tab-row">
+        <button class="tab-btn active" onclick="gantiTab('enkripsi')">Buat Sandi Geser</button>
+        <button class="tab-btn" onclick="gantiTab('bongkar')">Bongkar Sandi (ala Al-Kindi)</button>
+      </div>
+
+      <!-- TAB ENKRIPSI -->
+      <div class="tab-panel active" id="tab-enkripsi">
+        <label>Teks asli (bahasa Indonesia)</label>
+        <textarea id="teks-asli" placeholder="Tulis pesan Anda di sini...">Ilmu adalah cahaya yang menerangi jalan menuju kebenaran</textarea>
+        <label>Jumlah geseran (1–25)</label>
+        <input type="number" id="geseran" min="1" max="25" value="7">
+        <button class="btn" onclick="prosesEnkripsi()">Sandikan (geser)</button>
+        <div class="result-box">
+          <div class="lbl">Hasil tersandi:</div>
+          <div class="out" id="hasil-sandi">—</div>
+        </div>
+      </div>
+
+      <!-- TAB BONGKAR -->
+      <div class="tab-panel" id="tab-bongkar">
+        <label>Tempel teks tersandi di sini</label>
+        <textarea id="teks-cipher" placeholder="Tempel teks tersandi (hasil sandi geser)..."></textarea>
+        <button class="btn secondary" onclick="bongkarSandi()">🔍 Bongkar otomatis (uji 26 kemungkinan geseran)</button>
+
+        <div class="result-box" id="hasil-bongkar" style="display:none;">
+          <div class="lbl">Geseran terdeteksi &amp; hasil dekripsi:</div>
+          <div class="out" id="teks-terbongkar">—</div>
+        </div>
+
+        <div class="hist" id="histogram-area"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="garis-waktu">
+    <div class="kicker"><div class="num">3</div><h2>Garis Waktu Kriptografi</h2></div>
+    <p class="dim">Sentuh setiap peristiwa untuk membaca kisahnya.</p>
+    <div class="timeline" id="timeline-area"></div>
+  </section>
+
+  <section id="metode">
+    <div class="kicker"><div class="num">4</div><h2>Metode</h2></div>
+    <p>Pembongkar sandi otomatis di atas memakai uji statistik <strong>chi-squared (χ²)</strong>: untuk tiap 26 kemungkinan geseran, hitung seberapa jauh pola frekuensi huruf hasil dekripsi menyimpang dari pola frekuensi baku bahasa Indonesia — geseran dengan penyimpangan paling kecil dianggap paling mungkin benar.</p>
+    <div class="formula">χ² = Σ (frekuensi teramati − frekuensi baku)² / frekuensi baku</div>
+    <p class="dim">Tabel frekuensi baku bahasa Indonesia yang dipakai bersumber dari korpus 1,67 juta karakter (sttmedia.com/WordCreator) — huruf "a" adalah yang paling dominan (≈22,7%), jauh di atas "n" dan "e" (≈8-9%), pola yang khas berbeda dari bahasa Inggris di mana "e" paling dominan.</p>
+  </section>
+
+  <section id="batasan">
+    <div class="kicker"><div class="num">5</div><h2>Batasan</h2></div>
+    <ul class="batas">
+      <li>Pembongkar otomatis hanya berlaku untuk <strong>sandi geser (Caesar)</strong> — sandi substitusi acak (setiap huruf diganti huruf lain yang tidak berpola geseran tetap) butuh metode lebih kompleks yang tidak dibuat otomatis di sini, meski histogram tetap bisa dipakai menganalisis manual.</li>
+      <li>Akurasi deteksi menurun untuk teks yang sangat pendek (kurang dari ~50 huruf) — semakin panjang teks, semakin dekat pola frekuensinya dengan pola baku bahasa.</li>
+      <li>Tabel frekuensi baku dihitung dari korpus sastra umum — teks dengan gaya sangat khusus (istilah teknis, bahasa gaul) bisa punya pola berbeda dan menurunkan akurasi.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <div class="kicker"><div class="num">6</div><h2>Referensi</h2></div>
+    <ul class="refs">
+      <li>Al-Kindi, <em>Risalah fi Istikhraj al-Mu'amma</em> (~850 M) — naskah asli metode analisis frekuensi, ditemukan kembali 1987 oleh Ibrahim al-Kadi.</li>
+      <li>Simon Singh, <em>The Code Book</em> — riwayat sejarah kriptografi dari al-Kindi hingga era modern.</li>
+      <li>sttmedia.com/WordCreator — tabel frekuensi huruf bahasa Indonesia berbasis korpus 1,67 juta karakter, dipakai sebagai rujukan baku alat ini.</li>
+      <li>1001inventions.com, "Code Breaking a Thousand Years Ago" — konteks sejarah al-Kindi hingga Bletchley Park.</li>
+    </ul>
+  </section>
+
+  <section id="konsultasi">
+    <div class="consult">
+      <h3 style="color:#fff;">Ingin dikembangkan lebih jauh?</h3>
+      <p class="dim">Alat ini masih pengembangan versi awal. Silakan hubungi kami untuk usulan (mis. sandi Vigenère, atau simulasi Enigma).</p>
+      <a class="wa" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20bertanya%20seputar%20Kriptografi%20Al-Kindi%20JAZMI." target="_blank">Hubungi via WhatsApp</a>
+    </div>
+  </section>
+
+</div>
+<footer>JAZMI — Laboratorium Pengetahuan Digital · Prototipe, belum masuk struktur menu utama.</footer>
+
+<script>
+const FREK_ID = {a:22.72,b:3.10,c:0.32,d:4.54,e:8.68,f:0.13,g:0.98,h:2.70,i:6.00,j:0.68,k:5.52,l:2.53,m:4.14,n:8.79,o:1.20,p:3.16,q:0.01,r:5.27,s:4.70,t:4.85,u:4.94,v:0.02,w:0.39,x:0.01,y:1.63,z:0.01};
+
+function gantiTab(nama){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+nama).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function geser(teks, k){
+  return teks.split('').map(ch=>{
+    const lower = ch.toLowerCase();
+    if(lower>='a' && lower<='z'){
+      const kode = lower.charCodeAt(0)-97;
+      const baru = String.fromCharCode(((kode+k)%26+26)%26+97);
+      return ch===lower ? baru : baru.toUpperCase();
+    }
+    return ch;
+  }).join('');
+}
+
+function hitungFrekuensi(teks){
+  const hasil = {};
+  let total = 0;
+  for(const ch of teks.toLowerCase()){
+    if(ch>='a' && ch<='z'){ hasil[ch]=(hasil[ch]||0)+1; total++; }
+  }
+  return {hasil, total};
+}
+
+function chiSquared(teks){
+  const {hasil, total} = hitungFrekuensi(teks);
+  if(total===0) return Infinity;
+  let chi = 0;
+  for(const huruf in FREK_ID){
+    const observed = (hasil[huruf]||0)/total*100;
+    const expected = FREK_ID[huruf];
+    chi += Math.pow(observed-expected,2)/expected;
+  }
+  return chi;
+}
+
+function prosesEnkripsi(){
+  const teks = document.getElementById('teks-asli').value;
+  const k = parseInt(document.getElementById('geseran').value) || 0;
+  document.getElementById('hasil-sandi').textContent = geser(teks, k);
+}
+
+function bongkarSandi(){
+  const cipherteks = document.getElementById('teks-cipher').value;
+  if(!cipherteks.trim()){ return; }
+
+  let terbaik = 0, chiTerbaik = Infinity;
+  for(let k=0;k<26;k++){
+    const kandidat = geser(cipherteks, -k);
+    const chi = chiSquared(kandidat);
+    if(chi < chiTerbaik){ chiTerbaik = chi; terbaik = k; }
+  }
+  const hasilTeks = geser(cipherteks, -terbaik);
+
+  document.getElementById('hasil-bongkar').style.display = 'block';
+  document.getElementById('teks-terbongkar').textContent =
+    'Geseran terdeteksi: ' + terbaik + ' (χ² = ' + chiTerbaik.toFixed(2) + ')\n\n' + hasilTeks;
+
+  gambarHistogram(cipherteks, hasilTeks);
+}
+
+function gambarHistogram(cipherteks, hasilTeks){
+  const {hasil: hasilDekripsi, total} = hitungFrekuensi(hasilTeks);
+  const area = document.getElementById('histogram-area');
+  const maxVal = Math.max(...Object.values(FREK_ID));
+
+  let html = '<div class="lbl" style="font-size:0.78rem; color:var(--text-dim); margin-bottom:8px;">Frekuensi huruf hasil dekripsi (teal) dibanding pola baku bahasa Indonesia (emas):</div>';
+  const urutan = Object.keys(FREK_ID).sort((a,b)=> FREK_ID[b]-FREK_ID[a]);
+  urutan.forEach(huruf=>{
+    const observed = total ? ((hasilDekripsi[huruf]||0)/total*100) : 0;
+    const expected = FREK_ID[huruf];
+    const wObs = (observed/maxVal*100).toFixed(1);
+    const wExp = (expected/maxVal*100).toFixed(1);
+    html += '<div class="hist-row">'
+      + '<div class="huruf">'+huruf+'</div>'
+      + '<div class="bar-wrap"><div class="bar" style="width:'+wObs+'%"></div><div class="bar ref" style="width:'+wExp+'%"></div></div>'
+      + '<div class="pct">'+observed.toFixed(1)+'%</div>'
+      + '</div>';
+  });
+  html += '<div class="hist-legend"><div><span class="sw" style="background:var(--teal)"></span>Teks Anda</div><div><span class="sw" style="background:var(--gold-soft)"></span>Baku Indonesia</div></div>';
+  area.innerHTML = html;
+}
+
+const TIMELINE = [
+  {tahun:'~500 SM', nama:'Scytale, Sparta', isi:'Tongkat kayu berdiameter tertentu dipakai membalut pita kulit — pesan ditulis melintang, hanya bisa dibaca jika dililitkan ke tongkat berdiameter sama. Ini sandi transposisi (susunan huruf diacak), bukan substitusi.'},
+  {tahun:'~50 SM', nama:'Sandi Caesar', isi:'Julius Caesar menggeser setiap huruf pesan militernya sejauh 3 posisi. Sandi substitusi sederhana ini dipakai berabad-abad sebelum ada yang menemukan cara sistematis membongkarnya.'},
+  {tahun:'~850 M', nama:'Al-Kindi menemukan analisis frekuensi', isi:'Risalah "Mengungkap Pesan Tersandi" karya al-Kindi di Baghdad menjadi naskah pertama yang mendokumentasikan cara membongkar sandi substitusi lewat statistik huruf — inilah yang disimulasikan di alat pada bagian atas halaman ini.'},
+  {tahun:'1467–1553', nama:'Sandi Polialfabetik (Alberti → Vigenère)', isi:'Leon Battista Alberti (1467) mengusulkan memakai lebih dari satu alfabet substitusi bergantian, disempurnakan Blaise de Vigenère (1553). Karena tiap huruf bisa disandikan berbeda tiap posisi, analisis frekuensi sederhana ala al-Kindi tidak langsung mempan — sandi ini dijuluki "le chiffre indéchiffrable" (sandi yang tak terpecahkan) selama 300 tahun.'},
+  {tahun:'1863', nama:'Kasiski memecahkan Vigenère', isi:'Friedrich Kasiski menemukan cara mencari panjang kunci Vigenère lewat pola pengulangan teks, membuka jalan menerapkan analisis frekuensi ala al-Kindi lagi — tapi kali ini per-kolom, bukan ke seluruh teks sekaligus.'},
+  {tahun:'1918–1945', nama:'Mesin Enigma', isi:'Arthur Scherbius mematenkan mesin rotor elektromekanik Enigma, dipakai militer Jerman era Perang Dunia II. Kompleksitasnya jauh melampaui sandi substitusi/geser biasa.'},
+  {tahun:'1932–1945', nama:'Enigma dibongkar', isi:'Matematikawan Polandia (Marian Rejewski dkk.) pertama kali membongkar prinsip kerja Enigma tahun 1932, lalu tim Bletchley Park Inggris — termasuk Alan Turing — mengembangkan mesin "Bombe" untuk mempercepat pencarian kunci hariannya sepanjang Perang Dunia II.'},
+  {tahun:'1976–1977', nama:'Kriptografi kunci publik lahir', isi:'Whitfield Diffie &amp; Martin Hellman (1976) mengusulkan konsep pertukaran kunci tanpa perlu bertemu langsung. Setahun kemudian, Rivest, Shamir, &amp; Adleman merumuskan RSA — algoritma praktis pertama yang mewujudkan gagasan itu, memakai kesulitan memfaktorkan bilangan sangat besar.'},
+  {tahun:'2001', nama:'AES menjadi standar dunia', isi:'Algoritma Rijndael karya Joan Daemen &amp; Vincent Rijmen dipilih NIST (AS) sebagai Advanced Encryption Standard, menggantikan DES — dipakai hampir di semua koneksi internet aman hari ini.'},
+  {tahun:'2020-an', nama:'Kriptografi pasca-kuantum', isi:'Komputer kuantum berpotensi meretas RSA dengan sangat cepat di masa depan. NIST kini menstandarkan algoritma baru yang dirancang tahan terhadap komputer kuantum — babak terbaru dari perlombaan sandi vs pembongkar sandi yang dimulai al-Kindi 1.100 tahun lalu.'},
+];
+
+function renderTimeline(){
+  const area = document.getElementById('timeline-area');
+  area.innerHTML = '';
+  TIMELINE.forEach((item, idx)=>{
+    const wrap = document.createElement('div');
+    const row = document.createElement('div');
+    row.className = 'tl-item';
+    row.innerHTML = '<div class="tl-year">'+item.tahun+'</div><div class="tl-nama">'+item.nama+'</div>';
+    const detail = document.createElement('div');
+    detail.className = 'tl-detail';
+    detail.textContent = item.isi;
+    row.onclick = ()=> detail.classList.toggle('show');
+    wrap.appendChild(row);
+    wrap.appendChild(detail);
+    area.appendChild(wrap);
+  });
+}
+
+prosesEnkripsi();
+renderTimeline();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

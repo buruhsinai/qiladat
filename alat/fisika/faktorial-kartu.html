@@ -1,0 +1,54 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Faktorial & Kartu Kocok — JAZMI</title>
+<style>
+:root{--bg:#0a0e1a;--panel:#11162a;--cyan:#5fd3d8;--text:#e4e8f2;--dim:#8b93ac;--line:#232a45;--gold:#e0c26a;}
+*{box-sizing:border-box;} body{margin:0;background:var(--bg);color:var(--text);font-family:Georgia,serif;line-height:1.6;}
+.wrap{max-width:520px;margin:0 auto;padding:22px 16px 40px;}
+.tag{color:var(--cyan);font-size:0.73rem;text-transform:uppercase;letter-spacing:1px;}
+h1{font-size:1.15rem;margin:4px 0;} p.sub{color:var(--dim);font-size:0.85rem;margin:0 0 14px;}
+section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;}
+.row{display:flex;justify-content:space-between;gap:10px;padding:6px 0;align-items:center;}
+.row label{font-size:0.85rem;color:var(--dim);}
+input[type=range]{-webkit-appearance:none;flex:1;height:4px;border-radius:2px;background:var(--line);margin:0 10px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--cyan);cursor:pointer;border:2px solid var(--bg);}
+.readout{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+.stat{background:#161c35;border:1px solid var(--line);border-radius:8px;padding:9px 12px;}
+.stat .l{font-size:0.68rem;color:var(--dim);text-transform:uppercase;} .stat .v{color:var(--cyan);font-size:1rem;}
+.dim{color:var(--dim);font-size:0.82rem;}
+footer{text-align:center;color:var(--dim);font-size:0.7rem;margin-top:14px;}
+</style></head><body><div class="wrap">
+<p class="tag">JAZMI · Modul Sains · Selingan singkat, terkait Entropi & Mikrostate</p>
+<h1>Berapa Peluang Kartu Kembali ke Urutan Semula?</h1>
+<p class="sub">Sambungan dari simulator entropi sebelumnya — ini versi "mikrostate" untuk kartu:
+tiap urutan kocokan sama mungkinnya, tapi jumlah urutan totalnya (N!) meledak sangat cepat.</p>
+<section>
+<div class="row"><label>Jumlah kartu N</label><span id="v_N" style="color:var(--cyan);font-weight:bold;">10</span></div>
+<input type="range" id="N" min="3" max="52" value="10">
+<div class="readout">
+  <div class="stat"><div class="l">Jumlah kemungkinan urutan (N!)</div><div class="v" id="out_fact">—</div></div>
+  <div class="stat"><div class="l">Peluang balik ke urutan asli sekali kocok</div><div class="v" id="out_prob">—</div></div>
+  <div class="stat"><div class="l">Kalau kocok 1×/detik sejak Big Bang...</div><div class="v" id="out_time">—</div></div>
+</div>
+<p class="dim">Umur alam semesta ≈4,3×10¹⁷ detik. Begitu N melewati sekitar 20, N! sudah jauh melampaui
+itu — inilah kenapa kartu yang dikocok acak nyaris pasti "berantakan" (entropi tinggi), bukan kebetulan.</p>
+</section>
+<footer>Bagian dari Laboratorium Sains JAZMI — pelengkap Entropi &amp; Mikrostate</footer>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const AGE_UNIVERSE_SEC=4.3e17;
+function fmt(n){ return n>1e6 ? n.toExponential(3) : n.toLocaleString('id-ID'); }
+function render(){
+  const N=+$('N').value; $('v_N').textContent=N;
+  let logf=0; for(let i=2;i<=N;i++) logf+=Math.log10(i);
+  const fact = Math.pow(10, logf);
+  $('out_fact').textContent = logf>15 ? '10^'+logf.toFixed(1) : fmt(fact);
+  $('out_prob').textContent = logf>15 ? '10^-'+logf.toFixed(1) : (1/fact).toExponential(3);
+  const years = fact/AGE_UNIVERSE_SEC/3.15e7;
+  $('out_time').textContent = logf>15 ? '10^'+(logf-17.6).toFixed(1)+' kali umur alam semesta' : (fact/AGE_UNIVERSE_SEC).toExponential(2)+' detik';
+}
+$('N').addEventListener('input',render);
+render();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body></html>

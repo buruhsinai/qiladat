@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Model Pertumbuhan Malthus vs Logistik</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12151a; --bg-panel:#1a1e25; --bg-panel-2:#20242c; --line:#2c313b;
+    --text:#e9e6df; --text-dim:#9aa1ad;
+    --gold:#c9a24b; --gold-soft:#e3c988;
+    --ok:#4f9c94; --warn:#e3766a; --blue:#5b8fc9; --purple:#9b7fc9;
+    --font-display:"Fraunces",serif; --font-body:"Karla",sans-serif; --font-mono:"JetBrains Mono",monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px 80px;}
+  header.hero{padding:56px 20px 40px;text-align:center;border-bottom:1px solid var(--line);
+    background:radial-gradient(ellipse at 50% 0%, rgba(79,156,148,0.10), transparent 60%);}
+  .eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ok);margin-bottom:14px;}
+  h1{font-family:var(--font-display);font-weight:600;font-size:clamp(26px,5vw,40px);margin:0 0 12px;}
+  .subtitle{color:var(--text-dim);font-size:15px;max-width:660px;margin:0 auto;}
+  section{padding:36px 0;border-bottom:1px solid var(--line);} section:last-of-type{border-bottom:none;}
+  h2{font-family:var(--font-display);font-weight:600;font-size:22px;color:var(--gold-soft);margin:0 0 6px;display:flex;align-items:baseline;gap:10px;}
+  h2 .num{font-family:var(--font-mono);font-size:13px;color:var(--text-dim);font-weight:400;}
+  h3{font-family:var(--font-display);font-weight:600;font-size:16.5px;color:var(--text);margin:22px 0 10px;}
+  p{font-size:15.5px;} p.dim{color:var(--text-dim);font-size:14px;}
+  ul{padding-left:20px;} li{margin-bottom:6px;font-size:14.5px;}
+
+  .panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:24px;margin-bottom:20px;}
+  .panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px;}
+  .panel-tag{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;padding:3px 9px;border-radius:20px;border:1px solid var(--line);}
+  .tag-blue{color:var(--blue);border-color:var(--blue);}
+  .tag-purple{color:var(--purple);border-color:var(--purple);}
+  .tag-gold{color:var(--gold-soft);border-color:var(--gold);}
+  .tag-warn{color:var(--warn);border-color:var(--warn);}
+  .tag-ok{color:var(--ok);border-color:var(--ok);}
+
+  .controls-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:18px;}
+  .field label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--text-dim);margin-bottom:6px;font-family:var(--font-mono);text-transform:uppercase;}
+  .field label .val{color:var(--gold-soft);}
+  .field input[type=range]{width:100%;accent-color:var(--ok);}
+
+  svg.chart{width:100%;height:auto;display:block;background:var(--bg-panel-2);border-radius:8px;border:1px solid var(--line);margin-top:6px;overflow:hidden;}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:12.5px;color:var(--text-dim);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .swatch{width:14px;height:14px;border-radius:3px;display:inline-block;}
+
+  .results{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px;}
+  .result-card{background:var(--bg-panel-2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;}
+  .result-card .l{font-family:var(--font-mono);font-size:10.5px;color:var(--text-dim);text-transform:uppercase;}
+  .result-card .v{font-family:var(--font-display);font-size:19px;color:var(--gold-soft);}
+  .result-card.malt .v{color:var(--warn);} .result-card.log .v{color:var(--ok);}
+
+  .insight-box{margin-top:16px;background:var(--bg-panel-2);border:1px dashed var(--gold);border-radius:8px;padding:14px 18px;font-size:14px;color:var(--text);}
+  .insight-box b{color:var(--gold-soft);}
+
+  .benefit-list{display:grid;gap:10px;}
+  .benefit-item{background:var(--bg-panel);border:1px solid var(--line);border-radius:8px;padding:14px 18px;}
+  .benefit-item .btitle{font-weight:700;color:var(--gold-soft);font-size:15px;margin-bottom:4px;}
+  .limit-item{background:var(--bg-panel);border:1px solid var(--line);border-left:3px solid var(--warn);
+    padding:12px 16px;border-radius:6px;margin-bottom:8px;font-size:14.5px;color:var(--text-dim);}
+  table.refs{width:100%;border-collapse:collapse;font-size:14px;}
+  table.refs td{padding:8px 4px;border-bottom:1px solid var(--line);color:var(--text-dim);vertical-align:top;}
+  table.refs td:first-child{color:var(--text);width:32%;font-weight:600;}
+  footer{text-align:center;padding:36px 20px 10px;color:var(--text-dim);font-size:12.5px;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="eyebrow">Ekonomi Sumber Daya · Dinamika Populasi</div>
+  <h1>Model Pertumbuhan Malthus vs Logistik</h1>
+  <p class="subtitle">Thomas Malthus (1798) memperingatkan bahwa populasi tumbuh tanpa batas mengikuti deret ukur, sementara sumber daya hanya tumbuh mengikuti deret hitung — sebuah jalan menuju bencana. Pierre Verhulst (1838) menjawabnya dengan satu suku koreksi: daya tampung lingkungan. Atur parameter dan lihat sendiri kapan tepatnya pertumbuhan tanpa batas berubah menjadi kurva-S yang membatasi dirinya sendiri — dan kapan skenario asli Malthus benar-benar menjadi perangkap.</p>
+</header>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <h2><span class="num">01</span> Belajar</h2>
+    <p><strong>Model Malthus (pertumbuhan eksponensial)</strong> — mengasumsikan laju pertumbuhan populasi sebanding dengan populasi itu sendiri, tanpa batasan apa pun: dP/dt = r·P. Solusinya adalah kurva eksponensial murni: <strong>P(t) = P₀·e^(rt)</strong>. Sumber daya (pangan) dalam argumen asli Malthus diasumsikan hanya tumbuh secara aritmetik (linear, ditambah jumlah tetap tiap periode) — sehingga cepat atau lambat populasi pasti melampaui daya dukung pangan.</p>
+    <p><strong>Model Logistik (Verhulst, 1838)</strong> — menambahkan satu suku koreksi realistis: laju pertumbuhan melambat seiring populasi mendekati <strong>daya tampung K</strong> (carrying capacity, batas maksimum yang bisa ditopang sumber daya yang tersedia): dP/dt = r·P·(1−P/K). Solusinya adalah kurva-S (sigmoid): <strong>P(t) = K / (1 + ((K−P₀)/P₀)·e^(−rt))</strong> — tumbuh cepat di awal (mendekati eksponensial saat P≪K), lalu melambat dan mendatar mendekati K.</p>
+    <ul>
+      <li>Saat P≪K, suku (1−P/K)≈1, sehingga logistik hampir identik dengan Malthus — perbedaan baru terlihat jelas setelah populasi menjadi signifikan dibanding K.</li>
+      <li>Titik <strong>infleksi</strong> (laju pertumbuhan tercepat) selalu terjadi tepat di P=K/2, dengan laju maksimum r·K/4 — setelah titik ini kurva mulai melengkung mendatar.</li>
+    </ul>
+  </section>
+
+  <section id="pertanyaan">
+    <h2><span class="num">02</span> Pertanyaan Ilmiah</h2>
+    <p class="dim" style="font-style:italic;">Seberapa jauh dua model ini benar-benar berbeda hasilnya dalam rentang waktu yang relevan secara praktis — apakah perbedaannya baru terasa setelah puluhan tahun, atau sudah signifikan sejak awal? Bagaimana bentuk kurva laju-pertumbuhan-vs-populasi menjelaskan secara visual mengapa logistik "mengerem dirinya sendiri" sementara Malthus tidak pernah mengerem? Dan jika argumen asli Malthus diambil secara harfiah — populasi tumbuh geometris, pangan tumbuh aritmetik — pada tahun keberapa persisnya pangan per kapita jatuh di bawah ambang batas subsisten, dan seberapa sensitif titik krisis itu terhadap sedikit perubahan laju pertumbuhan populasi?</p>
+  </section>
+
+  <section id="eksplorasi">
+    <h2><span class="num">03</span> Eksplorasi &amp; Perhitungan</h2>
+
+    <div class="panel">
+      <div class="panel-head"><h3 style="margin:0;">A. Kurva Pertumbuhan: Malthus vs Logistik</h3><span class="panel-tag tag-gold">Parameter dipakai di semua panel</span></div>
+      <p class="dim">P₀ = populasi awal, r = laju pertumbuhan intrinsik per tahun, K = daya tampung (hanya berlaku untuk logistik), T = rentang waktu simulasi.</p>
+      <div class="controls-row">
+        <div class="field"><label>P₀ — Populasi Awal (juta jiwa) <span class="val" id="vP0">10</span></label><input type="range" id="inP0" min="1" max="50" step="1" value="10"></div>
+        <div class="field"><label>r — Laju Pertumbuhan (%/tahun) <span class="val" id="vR">3.0</span></label><input type="range" id="inR" min="0.5" max="8" step="0.1" value="3.0"></div>
+        <div class="field"><label>K — Daya Tampung (juta jiwa) <span class="val" id="vK">200</span></label><input type="range" id="inK" min="50" max="600" step="10" value="200"></div>
+        <div class="field"><label>T — Rentang Waktu (tahun) <span class="val" id="vT">150</span></label><input type="range" id="inT" min="20" max="300" step="10" value="150"></div>
+      </div>
+      <svg class="chart" id="svgGrowth" viewBox="0 0 620 320"></svg>
+      <div class="legend">
+        <span><span class="swatch" style="background:#e3766a"></span> Malthus (eksponensial, tanpa batas)</span>
+        <span><span class="swatch" style="background:#4f9c94"></span> Logistik (kurva-S, dibatasi K)</span>
+        <span><span class="swatch" style="background:#e3c988"></span> Daya Tampung K</span>
+      </div>
+      <div class="results" id="resultsA"></div>
+      <div class="insight-box" id="insightA"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3 style="margin:0;">B. Potret Fase — Laju Pertumbuhan vs Populasi</h3><span class="panel-tag tag-ok">dP/dt sebagai fungsi P, bukan fungsi waktu</span></div>
+      <p class="dim">Grafik ini menunjukkan seberapa cepat populasi bertambah <em>pada level populasi tertentu</em> — bukan seiring waktu. Geser P sekarang untuk melihat laju pertumbuhan sesaat pada kedua model.</p>
+      <div class="controls-row" style="max-width:320px;">
+        <div class="field"><label>Populasi Saat Ini <span class="val" id="vPnow">100</span></label><input type="range" id="inPnow" min="0" max="240" step="1" value="100"></div>
+      </div>
+      <svg class="chart" id="svgPhase" viewBox="0 0 620 280"></svg>
+      <div class="legend">
+        <span><span class="swatch" style="background:#e3766a"></span> Laju Malthus: r·P</span>
+        <span><span class="swatch" style="background:#4f9c94"></span> Laju Logistik: r·P·(1−P/K)</span>
+      </div>
+      <div class="results" id="resultsB"></div>
+      <div class="insight-box" id="insightB"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3 style="margin:0;">C. Perangkap Malthus — Populasi Geometris vs Pangan Aritmetik</h3><span class="panel-tag tag-warn">Argumen asli Malthus, 1798</span></div>
+      <p class="dim">Populasi tumbuh geometris P(t)=P₀·e^(rt) (memakai P₀, r dari Panel A), sedangkan pangan/sumber daya hanya bertambah tetap tiap tahun: F(t) = F₀ + g·t. Simulator mencari tahun ketika pangan per kapita jatuh ke bawah ambang subsisten S.</p>
+      <div class="controls-row">
+        <div class="field"><label>F₀ — Pangan Awal (unit/tahun) <span class="val" id="vF0">20</span></label><input type="range" id="inF0" min="5" max="100" step="1" value="20"></div>
+        <div class="field"><label>g — Pertambahan Pangan/Tahun (unit) <span class="val" id="vG">0.5</span></label><input type="range" id="inG" min="0" max="5" step="0.1" value="0.5"></div>
+        <div class="field"><label>S — Ambang Subsisten (unit/kapita) <span class="val" id="vS">0.5</span></label><input type="range" id="inS" min="0.1" max="3" step="0.1" value="0.5"></div>
+      </div>
+      <svg class="chart" id="svgTrap" viewBox="0 0 620 280"></svg>
+      <div class="legend">
+        <span><span class="swatch" style="background:#c9a24b"></span> Pangan per Kapita F(t)/P(t)</span>
+        <span><span class="swatch" style="background:#e3766a"></span> Ambang Subsisten S</span>
+        <span><span class="swatch" style="background:#9aa1ad"></span> Titik Krisis (jika tercapai)</span>
+      </div>
+      <div class="results" id="resultsC"></div>
+      <div class="insight-box" id="insightC"></div>
+    </div>
+  </section>
+
+  <section id="manfaat">
+    <h2><span class="num">04</span> Manfaat &amp; Kegunaan</h2>
+    <div class="benefit-list">
+      <div class="benefit-item"><div class="btitle">Penutup seri ekonomi JAZMI dengan fondasi lintas-disiplin</div>Model logistik yang sama persis dipakai di epidemiologi (kurva wabah), ekologi (populasi predator-mangsa), dan adopsi teknologi (kurva-S produk baru) — tool ini menghubungkan ekonomi sumber daya ke matematika pertumbuhan yang jauh lebih luas cakupannya.</div>
+      <div class="benefit-item"><div class="btitle">Dasar kuantitatif diskusi kebijakan kependudukan &amp; lingkungan</div>Memberi angka konkret (bukan cuma narasi) untuk diskusi soal daya tampung lingkungan, ketahanan pangan, dan batas pertumbuhan ekonomi — topik yang sering dibahas Klub Roma (Limits to Growth) dan literatur pembangunan berkelanjutan.</div>
+      <div class="benefit-item"><div class="btitle">Menunjukkan kekuatan &amp; keterbatasan model matematis sederhana</div>Perbandingan dua model dengan satu suku koreksi berbeda mengajarkan bagaimana asumsi kecil (ada/tidaknya batas daya tampung) bisa mengubah total nasib jangka panjang sebuah sistem — pelajaran metodologis yang berharga di luar konteks populasi.</div>
+      <div class="benefit-item"><div class="btitle">Latihan persamaan diferensial &amp; metode numerik</div>Panel C sengaja tidak punya solusi bentuk tertutup (persamaan transenden), sehingga diselesaikan dengan pemindaian numerik — latihan konkret kapan metode analitik cukup dan kapan metode numerik diperlukan.</div>
+    </div>
+  </section>
+
+  <section id="batasan">
+    <h2><span class="num">05</span> Batasan</h2>
+    <div class="limit-item">Kedua model mengasumsikan laju pertumbuhan intrinsik r konstan sepanjang waktu — dunia nyata punya r yang berubah akibat kebijakan, teknologi (revolusi hijau menaikkan daya tampung K itu sendiri), atau guncangan eksternal (wabah, perang, migrasi).</div>
+    <div class="limit-item">Model logistik mengasumsikan daya tampung K tetap/statis — realitanya K bisa naik (inovasi pertanian, energi baru) atau turun (degradasi lingkungan, perubahan iklim) seiring waktu, membuat kurva-S sesungguhnya jauh lebih berliku dari kurva mulus di sini.</div>
+    <div class="limit-item">Panel C memakai asumsi harfiah dari esai asli Malthus (1798) — populasi geometris, pangan aritmetik — yang secara historis <em>tidak</em> terbukti akurat untuk banyak negara industri karena revolusi teknologi pertanian jauh melampaui asumsi pertumbuhan aritmetik sederhana ini (kritik utama terhadap Malthus).</div>
+    <div class="limit-item">Model ini tidak memodelkan distribusi pangan/kekayaan antarwilayah atau antarkelompok — krisis subsisten dalam praktik sering terjadi akibat masalah distribusi, bukan semata jumlah total yang kurang (Amartya Sen menunjukkan banyak kelaparan historis terjadi meski pasokan pangan total sebenarnya cukup).</div>
+    <div class="limit-item">Ambang subsisten S diasumsikan konstan — kebutuhan per kapita riil berubah seiring perubahan pola konsumsi, teknologi pengolahan pangan, dan definisi standar hidup layak dari waktu ke waktu.</div>
+  </section>
+
+  <section id="referensi">
+    <h2><span class="num">06</span> Referensi</h2>
+    <table class="refs">
+      <tr><td>Thomas Robert Malthus — <em>An Essay on the Principle of Population</em> (1798)</td><td>Sumber asli argumen populasi geometris vs pangan aritmetik</td></tr>
+      <tr><td>Pierre-François Verhulst — "Notice sur la loi que la population poursuit dans son accroissement" (1838)</td><td>Sumber asli persamaan logistik &amp; konsep daya tampung</td></tr>
+      <tr><td>Donella Meadows dkk. — <em>The Limits to Growth</em> (1972, Club of Rome)</td><td>Penerapan modern model pertumbuhan-batas pada sumber daya global</td></tr>
+      <tr><td>Amartya Sen — <em>Poverty and Famines</em> (1981)</td><td>Kritik &amp; pelengkap penting: kelaparan sebagai masalah distribusi/akses (entitlement), bukan semata jumlah pasokan</td></tr>
+    </table>
+  </section>
+
+</div>
+
+<footer>Simulator edukasi dinamika populasi &amp; ekonomi sumber daya — bagian dari seri Alat JAZMI.</footer>
+
+<script>
+(function(){
+  const el = id => document.getElementById(id);
+  const state = { P0:10, r:3.0, K:200, T:150, Pnow:100, F0:20, g:0.5, S:0.5 };
+  const fmt = v => (+v).toLocaleString('id-ID', {maximumFractionDigits:2});
+
+  function bindSlider(inputId, valId, key, decimals){
+    el(inputId).addEventListener('input', ()=>{
+      const raw = +el(inputId).value;
+      state[key] = raw;
+      el(valId).textContent = decimals!==undefined ? raw.toFixed(decimals) : raw;
+      computeAll();
+    });
+  }
+  bindSlider('inP0','vP0','P0',0);
+  bindSlider('inR','vR','r',1);
+  bindSlider('inK','vK','K',0);
+  bindSlider('inT','vT','T',0);
+  bindSlider('inPnow','vPnow','Pnow',0);
+  bindSlider('inF0','vF0','F0',0);
+  bindSlider('inG','vG','g',1);
+  bindSlider('inS','vS','S',1);
+
+  function malthusP(P0,rFrac,t){ return P0*Math.exp(rFrac*t); }
+  function logisticP(P0,rFrac,K,t){ return K/(1+((K-P0)/P0)*Math.exp(-rFrac*t)); }
+  function timeToHalfK(P0,rFrac,K){
+    // BUGFIX: kasus batas P0>=K (bisa dicapai lewat slider: P0 maks=50, K min=50)
+    // sebelumnya mengembalikan 0, yang salah ditampilkan sebagai "infleksi persis
+    // di tahun ke-0". Sebenarnya begitu P0>=K, sistem sudah mulai DI titik jenuh
+    // (atau di atasnya) sejak awal -- tidak ada infleksi yang relevan untuk
+    // ditampilkan dalam rentang simulasi. Kembalikan -1 sebagai penanda eksplisit,
+    // konsisten dengan pengecekan "tHalf>=0" yang sudah dipakai di dua tempat lain
+    // (baris penggambaran infleksi & kartu hasil) sehingga otomatis masuk ke jalur
+    // "sudah lewat" tanpa perlu mengubah logika di tempat lain.
+    const A=(K-P0)/P0;
+    if(A<=0) return -1;
+    const t = Math.log(A)/rFrac;
+    return t;
+  }
+
+  // ---------- Panel A: growth curves ----------
+  function computePanelA(){
+    const {P0,r,K,T} = state;
+    const rFrac = r/100;
+    const W=620,H=320, padL=58,padR=20,padT=18,padB=38;
+    const plotW=W-padL-padR, plotH=H-padT-padB;
+    const yMaxDomain = Math.max(K, malthusP(P0,rFrac,T)) * 1.08;
+    const sx = plotW/T, sy = plotH/yMaxDomain;
+    function px(t){ return padL+t*sx; }
+    function py(P){ return H-padB-Math.min(P,yMaxDomain)*sy; }
+
+    const steps=150;
+    let ptsMalthus=[], ptsLogistic=[];
+    for(let i=0;i<=steps;i++){
+      const t = T*i/steps;
+      ptsMalthus.push(`${px(t)},${py(malthusP(P0,rFrac,t))}`);
+      ptsLogistic.push(`${px(t)},${py(logisticP(P0,rFrac,K,t))}`);
+    }
+    let svg='';
+    svg += `<line x1="${px(0)}" y1="${py(0)}" x2="${px(T)}" y2="${py(0)}" stroke="#3a4150" stroke-width="1"/>`;
+    svg += `<line x1="${px(0)}" y1="${py(0)}" x2="${px(0)}" y2="${py(yMaxDomain)}" stroke="#3a4150" stroke-width="1"/>`;
+    svg += `<line x1="${px(0)}" y1="${py(K)}" x2="${px(T)}" y2="${py(K)}" stroke="#e3c988" stroke-width="1.5" stroke-dasharray="5,4"/>`;
+    svg += `<polyline points="${ptsMalthus.join(' ')}" fill="none" stroke="#e3766a" stroke-width="2.5"/>`;
+    svg += `<polyline points="${ptsLogistic.join(' ')}" fill="none" stroke="#4f9c94" stroke-width="2.5"/>`;
+    const tHalf = timeToHalfK(P0,rFrac,K);
+    if(tHalf>=0 && tHalf<=T){
+      svg += `<circle cx="${px(tHalf)}" cy="${py(K/2)}" r="4.5" fill="#4f9c94" stroke="#12151a" stroke-width="1.5"/>`;
+      svg += `<text x="${px(tHalf)+8}" y="${py(K/2)-8}" fill="#4f9c94" font-size="10" font-family="JetBrains Mono, monospace">infleksi t=${fmt(tHalf)}</text>`;
+    }
+    svg += `<text x="${px(T)}" y="${H-padB+18}" fill="#9aa1ad" font-size="11" text-anchor="end" font-family="JetBrains Mono, monospace">tahun →</text>`;
+    svg += `<text x="${padL-8}" y="${padT+4}" fill="#9aa1ad" font-size="11" text-anchor="end" font-family="JetBrains Mono, monospace">populasi</text>`;
+    el('svgGrowth').innerHTML = svg;
+
+    const finalMalthus = malthusP(P0,rFrac,T);
+    const finalLogistic = logisticP(P0,rFrac,K,T);
+    const results = [
+      {l:`Malthus di t=${T}`, v:fmt(finalMalthus), cls:'malt'},
+      {l:`Logistik di t=${T}`, v:fmt(finalLogistic), cls:'log'},
+      {l:'Selisih (Malthus/Logistik)', v:fmt(finalMalthus/finalLogistic)+'×', cls:''},
+      {l:'Tahun ke Titik Infleksi (K/2)', v: (tHalf>=0? fmt(tHalf): 'sudah lewat'), cls:''},
+    ];
+    el('resultsA').innerHTML = results.map(r=>`<div class="result-card ${r.cls}"><div class="l">${r.l}</div><div class="v">${r.v}</div></div>`).join('');
+
+    let msg = `Setelah ${T} tahun, model Malthus meramalkan populasi <b>${fmt(finalMalthus)}</b> juta jiwa — <b>${fmt(finalMalthus/finalLogistic)} kali lebih besar</b> dari model logistik (<b>${fmt(finalLogistic)}</b> juta) yang dibatasi daya tampung K=${fmt(K)}. `;
+    if(finalMalthus/finalLogistic < 1.1){
+      msg += `Pada rentang waktu &amp; parameter ini, populasi belum cukup besar dibanding K sehingga kedua model masih hampir berimpit — coba naikkan T atau r untuk melihat titik di mana keduanya mulai berpisah drastis.`;
+    } else {
+      msg += `Perhatikan bahwa sebelum titik infleksi (t=${tHalf>=0?fmt(tHalf):'—'}), kedua kurva nyaris identik — logistik baru "mengerem" setelah populasi mendekati separuh daya tampung.`;
+    }
+    el('insightA').innerHTML = msg;
+  }
+
+  // ---------- Panel B: phase portrait ----------
+  function computePanelB(){
+    const {r,K,Pnow} = state;
+    const rFrac = r/100;
+    el('inPnow').max = Math.round(K*1.2);
+    if(state.Pnow > K*1.2){ state.Pnow = Math.round(K*1.2); el('inPnow').value = state.Pnow; el('vPnow').textContent = state.Pnow; }
+    const Pdomain = K*1.2;
+    const W=620,H=280, padL=58,padR=20,padT=18,padB=38;
+    const plotW=W-padL-padR, plotH=H-padT-padB;
+    const rateMalthusAtDomainEnd = rFrac*Pdomain;
+    const yMaxDomain = rateMalthusAtDomainEnd*1.05;
+    const yMinDomain = Math.min(0, rFrac*Pdomain*(1-Pdomain/K))*1.1;
+    const sx = plotW/Pdomain, sy = plotH/(yMaxDomain-yMinDomain);
+    function px(P){ return padL+P*sx; }
+    function py(rate){ return H-padB-(rate-yMinDomain)*sy; }
+
+    const steps=150;
+    let ptsMalthus=[], ptsLogistic=[];
+    for(let i=0;i<=steps;i++){
+      const P = Pdomain*i/steps;
+      ptsMalthus.push(`${px(P)},${py(rFrac*P)}`);
+      ptsLogistic.push(`${px(P)},${py(rFrac*P*(1-P/K))}`);
+    }
+    let svg='';
+    svg += `<line x1="${px(0)}" y1="${py(0)}" x2="${px(Pdomain)}" y2="${py(0)}" stroke="#3a4150" stroke-width="1"/>`;
+    svg += `<line x1="${px(0)}" y1="${py(yMinDomain)}" x2="${px(0)}" y2="${py(yMaxDomain)}" stroke="#3a4150" stroke-width="1"/>`;
+    svg += `<line x1="${px(K)}" y1="${py(yMinDomain)}" x2="${px(K)}" y2="${py(yMaxDomain)}" stroke="#e3c988" stroke-width="1" stroke-dasharray="4,3"/>`;
+    svg += `<polyline points="${ptsMalthus.join(' ')}" fill="none" stroke="#e3766a" stroke-width="2.5"/>`;
+    svg += `<polyline points="${ptsLogistic.join(' ')}" fill="none" stroke="#4f9c94" stroke-width="2.5"/>`;
+    const rateMaltNow = rFrac*state.Pnow, rateLogNow = rFrac*state.Pnow*(1-state.Pnow/K);
+    svg += `<circle cx="${px(state.Pnow)}" cy="${py(rateMaltNow)}" r="5" fill="#e3766a" stroke="#12151a" stroke-width="1.5"/>`;
+    svg += `<circle cx="${px(state.Pnow)}" cy="${py(rateLogNow)}" r="5" fill="#4f9c94" stroke="#12151a" stroke-width="1.5"/>`;
+    svg += `<text x="${px(K)+6}" y="${py(yMaxDomain)+14}" fill="#e3c988" font-size="10" font-family="JetBrains Mono, monospace">P=K</text>`;
+    svg += `<text x="${px(Pdomain)}" y="${H-padB+18}" fill="#9aa1ad" font-size="11" text-anchor="end" font-family="JetBrains Mono, monospace">populasi (P) →</text>`;
+    svg += `<text x="${padL-8}" y="${padT+4}" fill="#9aa1ad" font-size="11" text-anchor="end" font-family="JetBrains Mono, monospace">dP/dt</text>`;
+    el('svgPhase').innerHTML = svg;
+
+    const results = [
+      {l:'Laju Malthus di P sekarang', v:fmt(rateMaltNow), cls:'malt'},
+      {l:'Laju Logistik di P sekarang', v:fmt(rateLogNow), cls:'log'},
+      {l:'Laju Maksimum Logistik (di P=K/2)', v:fmt(rFrac*K/4), cls:'log'},
+      {l:'Posisi Relatif terhadap K', v:fmt(state.Pnow/K*100)+'%', cls:''},
+    ];
+    el('resultsB').innerHTML = results.map(r=>`<div class="result-card ${r.cls}"><div class="l">${r.l}</div><div class="v">${r.v}</div></div>`).join('');
+
+    let msg = `Pada populasi P=${fmt(state.Pnow)}, Malthus mengasumsikan laju pertambahan terus <b>${fmt(rateMaltNow)}</b> juta/tahun dan akan terus <em>naik</em> tanpa batas seiring P membesar (garis lurus miring ke atas selamanya). `;
+    msg += `Logistik pada P yang sama hanya menambah <b>${fmt(rateLogNow)}</b> juta/tahun — laju ini mencapai puncak <b>${fmt(rFrac*K/4)}</b> tepat di P=K/2=${fmt(K/2)}, lalu <em>menurun</em> kembali ke nol persis saat P=K. Bentuk parabola inilah "rem otomatis" yang membuat populasi logistik tidak pernah melampaui daya tampung, sesuatu yang sama sekali tidak dimiliki model Malthus.`;
+    el('insightB').innerHTML = msg;
+  }
+
+  // ---------- Panel C: Malthusian trap ----------
+  function perCapita(P0,rFrac,F0,g,t){ return (F0+g*t)/malthusP(P0,rFrac,t); }
+
+  function computePanelC(){
+    const {P0,r,T,F0,g,S} = state;
+    const rFrac = r/100;
+    const W=620,H=280, padL=58,padR=20,padT=18,padB=38;
+    const plotW=W-padL-padR, plotH=H-padT-padB;
+
+    const steps=2000;
+    let ratios=[];
+    let crossT=null;
+    for(let i=0;i<=steps;i++){
+      const t = T*i/steps;
+      const ratio = perCapita(P0,rFrac,F0,g,t);
+      ratios.push({t,ratio});
+      if(crossT===null && ratio<=S){ crossT=t; }
+    }
+    const yMaxDomain = Math.max(...ratios.map(r=>r.ratio), S) * 1.08;
+    const sx = plotW/T, sy = plotH/yMaxDomain;
+    function px(t){ return padL+t*sx; }
+    function py(v){ return H-padB-Math.min(v,yMaxDomain)*sy; }
+
+    let pts = ratios.map(r=>`${px(r.t)},${py(r.ratio)}`).join(' ');
+    let svg='';
+    svg += `<line x1="${px(0)}" y1="${py(0)}" x2="${px(T)}" y2="${py(0)}" stroke="#3a4150" stroke-width="1"/>`;
+    svg += `<line x1="${px(0)}" y1="${py(0)}" x2="${px(0)}" y2="${py(yMaxDomain)}" stroke="#3a4150" stroke-width="1"/>`;
+    svg += `<line x1="${px(0)}" y1="${py(S)}" x2="${px(T)}" y2="${py(S)}" stroke="#e3766a" stroke-width="1.5" stroke-dasharray="5,4"/>`;
+    svg += `<polyline points="${pts}" fill="none" stroke="#c9a24b" stroke-width="2.5"/>`;
+    if(crossT!==null){
+      svg += `<line x1="${px(crossT)}" y1="${py(0)}" x2="${px(crossT)}" y2="${py(yMaxDomain)}" stroke="#9aa1ad" stroke-width="1.5" stroke-dasharray="3,3"/>`;
+      svg += `<circle cx="${px(crossT)}" cy="${py(S)}" r="5" fill="#e3766a" stroke="#12151a" stroke-width="1.5"/>`;
+      svg += `<text x="${px(crossT)+8}" y="${py(yMaxDomain)+14}" fill="#9aa1ad" font-size="10" font-family="JetBrains Mono, monospace">krisis t=${fmt(crossT)}</text>`;
+    }
+    svg += `<text x="${px(T)}" y="${H-padB+18}" fill="#9aa1ad" font-size="11" text-anchor="end" font-family="JetBrains Mono, monospace">tahun →</text>`;
+    svg += `<text x="${padL-8}" y="${padT+4}" fill="#9aa1ad" font-size="11" text-anchor="end" font-family="JetBrains Mono, monospace">pangan/kapita</text>`;
+    el('svgTrap').innerHTML = svg;
+
+    const results = [
+      {l:'Pangan/Kapita di t=0', v:fmt(perCapita(P0,rFrac,F0,g,0)), cls:''},
+      {l:`Pangan/Kapita di t=${T}`, v:fmt(perCapita(P0,rFrac,F0,g,T)), cls:''},
+      {l:'Tahun Krisis Subsisten', v: crossT!==null?fmt(crossT):'belum tercapai', cls:'malt'},
+      {l:'Populasi Saat Krisis', v: crossT!==null?fmt(malthusP(P0,rFrac,crossT))+' jt':'—', cls:''},
+    ];
+    el('resultsC').innerHTML = results.map(r=>`<div class="result-card ${r.cls}"><div class="l">${r.l}</div><div class="v">${r.v}</div></div>`).join('');
+
+    let msg;
+    if(crossT!==null){
+      msg = `Dengan populasi tumbuh geometris (r=${fmt(r)}%/tahun) dan pangan hanya bertambah ${fmt(g)} unit/tahun, pangan per kapita jatuh di bawah ambang subsisten ${fmt(S)} pada <b>tahun ke-${fmt(crossT)}</b> — saat populasi mencapai ~<b>${fmt(malthusP(P0,rFrac,crossT))}</b> juta jiwa. Inilah persis skenario yang dicemaskan Malthus: karena pembagi (populasi) tumbuh eksponensial sementara pembilang (pangan) hanya tumbuh linear, rasio keduanya pasti runtuh — hanya soal kapan, bukan apakah.`;
+    } else {
+      msg = `Dalam rentang ${T} tahun ini, pangan per kapita <b>tidak pernah</b> jatuh di bawah ambang subsisten ${fmt(S)} — pertambahan pangan (g=${fmt(g)}/tahun) masih cukup menutupi laju pertumbuhan populasi pada horizon waktu ini. Coba naikkan r (laju pertumbuhan populasi) atau turunkan g (pertambahan pangan) untuk melihat skenario Malthus benar-benar terjadi — karena secara matematis, eksponensial <em>selalu</em> pada akhirnya melampaui linear berapa pun g nya, hanya butuh waktu lebih panjang.`;
+    }
+    el('insightC').innerHTML = msg;
+  }
+
+  function computeAll(){
+    computePanelA();
+    computePanelB();
+    computePanelC();
+  }
+
+  computeAll();
+})();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

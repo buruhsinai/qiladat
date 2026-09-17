@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Volvel Fase Bulan — Instrumen Falak &amp; Kronobiologi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#10141A; --panel:#171D25; --panel-2:#1D2530;
+    --border:rgba(232,236,244,0.09); --border-strong:rgba(232,236,244,0.17);
+    --text:#ECEFF3; --muted:#8C97A6;
+    --gold:#E0A94D; --gold-dim:224,169,77;
+    --cyan:#4FC7D9; --cyan-dim:79,199,217;
+    --true:#4FBF8A; --true-dim:79,191,138;
+    --warn:#D9677A; --warn-dim:217,103,122;
+    --violet:#9C82E0; --violet-dim:156,130,224;
+    --moonlit:#E8DFC0; --moondark:#232B36;
+    --radius:4px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:radial-gradient(ellipse 900px 500px at 15% -10%, rgba(224,169,77,0.06), transparent 60%),var(--bg);
+    color:var(--text);font-family:'Karla',sans-serif;font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:'Fraunces',serif;font-weight:500;letter-spacing:-0.01em;margin:0;}
+  .wrap{max-width:960px;margin:0 auto;padding:0 26px 80px;}
+  .rule{height:1px;background:var(--border);margin:44px 0;}
+  .eyebrow-num{font-family:'Fraunces',serif;font-style:italic;color:var(--gold);font-size:15px;margin:0 0 10px;}
+  section h2{font-size:clamp(22px,3.4vw,28px);margin-bottom:10px;}
+  section > p.desc{color:var(--muted);max-width:70ch;margin:0 0 20px;font-size:15px;}
+
+  header.top{padding:44px 0 6px;}
+  header.top .kicker{font-size:13px;color:var(--muted);margin:0 0 14px;}
+  header.top h1{font-size:clamp(27px,4.6vw,38px);margin-bottom:12px;max-width:26ch;}
+  header.top p.lede{color:var(--muted);max-width:68ch;font-size:16px;margin:0;}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
+  .badge{font-size:12px;padding:4px 11px;border-radius:100px;border:1px solid var(--border-strong);color:var(--muted);}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  @media (max-width:760px){.grid-2{grid-template-columns:1fr;}}
+
+  /* instrument */
+  .instrument-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;}
+  #volvelSvg{width:100%;max-width:420px;height:auto;}
+  .disk-inner{transition:transform 0.25s ease-out;}
+  .disk-inner.animating{transition:none;}
+  .pointer{fill:var(--gold);}
+  .date-label{fill:var(--muted);font-size:12px;font-family:'JetBrains Mono',monospace;}
+  .date-label.selected{fill:var(--gold);font-weight:700;}
+  .ring-outline{fill:none;stroke:var(--border-strong);stroke-width:1;}
+
+  .control-panel{width:100%;max-width:460px;}
+  .slider-row{margin:14px 0;}
+  .slider-row label{display:flex;justify-content:space-between;font-size:13.5px;font-weight:600;margin-bottom:7px;}
+  .slider-row label span.val{font-family:'JetBrains Mono',monospace;color:var(--gold);}
+  input[type=range]{width:100%;accent-color:var(--gold);}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
+  .btn{font-family:'Karla',sans-serif;font-size:13.5px;font-weight:700;color:var(--text);background:var(--panel-2);border:1px solid var(--border-strong);border-radius:3px;padding:9px 16px;cursor:pointer;}
+  .btn:hover{border-color:var(--gold);}
+  .btn.primary{background:var(--gold);color:#10141A;border:none;}
+  .btn.primary:hover{filter:brightness(1.08);}
+  .btn.active{border-color:var(--gold);color:var(--gold);}
+
+  .result-box{margin-top:16px;background:var(--panel-2);border:1px solid var(--border);border-radius:3px;padding:16px 18px;display:flex;flex-wrap:wrap;gap:22px;}
+  .result-item .lbl{font-size:12px;color:var(--muted);margin-bottom:3px;}
+  .result-item .num{font-family:'JetBrains Mono',monospace;font-size:20px;color:var(--gold);}
+  .result-item .num.big{font-size:24px;}
+  .formula-note{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);margin-top:12px;line-height:1.7;}
+
+  /* cultural practice list */
+  .practice-item{padding:16px 0;border-top:1px solid var(--border);}
+  .practice-item:first-child{border-top:none;}
+  .practice-item h4{font-size:15.5px;margin-bottom:6px;}
+  .practice-item .tradisi{font-size:14px;color:var(--text);margin:0 0 8px;}
+  .practice-item .modern-note{font-size:13.5px;color:var(--muted);background:var(--panel-2);border-left:2px solid var(--cyan);padding:9px 13px;border-radius:2px;margin:0;}
+  .practice-item .modern-note b{color:var(--cyan);}
+
+  .valid-list{margin-top:10px;}
+  .valid-item{position:relative;padding:14px 0;border-top:1px solid var(--border);}
+  .valid-item:first-child{border-top:none;}
+  .valid-head{display:flex;align-items:center;gap:10px;margin-bottom:5px;flex-wrap:wrap;}
+  .valid-head h4{font-size:14.5px;}
+  .vtag{font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px;white-space:nowrap;}
+  .vtag.valid{background:rgba(var(--true-dim),0.16);color:var(--true);}
+  .vtag.partial{background:rgba(var(--gold-dim),0.16);color:var(--gold);}
+  .vtag.invalid{background:rgba(var(--warn-dim),0.16);color:var(--warn);}
+  .valid-item p{font-size:13.5px;color:var(--muted);margin:0;}
+
+  /* print controls */
+  .theme-row{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 18px;}
+  .theme-swatch{width:76px;height:56px;border-radius:4px;border:2px solid var(--border-strong);cursor:pointer;position:relative;overflow:hidden;}
+  .theme-swatch.active{border-color:var(--gold);}
+  .theme-swatch span{position:absolute;bottom:3px;left:0;right:0;text-align:center;font-size:9.5px;font-weight:700;}
+  .theme-swatch.t-emas{background:#F2E9D2;} .theme-swatch.t-emas span{color:#7A5A21;}
+  .theme-swatch.t-falak{background:#0E1E3D;} .theme-swatch.t-falak span{color:#BFD4FF;}
+  .theme-swatch.t-mono{background:#FFFFFF;} .theme-swatch.t-mono span{color:#111;}
+  .theme-swatch.t-islami{background:#F7EFE0;} .theme-swatch.t-islami span{color:#8A5A2B;}
+
+  .back-option{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--border);border-radius:3px;margin-bottom:8px;cursor:pointer;}
+  .back-option.active{border-color:var(--gold);background:rgba(var(--gold-dim),0.06);}
+  .back-option input{margin-top:3px;accent-color:var(--gold);}
+  .back-option .t{font-weight:700;font-size:14px;}
+  .back-option .d{font-size:13px;color:var(--muted);margin-top:2px;}
+
+  .print-note{font-size:13px;color:var(--muted);background:var(--panel-2);border-radius:3px;padding:12px 14px;margin-top:14px;}
+
+  .callout{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--cyan);border-radius:3px;padding:15px 18px;font-size:14px;color:var(--muted);margin-top:12px;}
+  .callout.warn-border{border-left-color:var(--warn);}
+  .callout p{margin:0 0 8px;} .callout p:last-child{margin-bottom:0;}
+  .callout b{color:var(--text);}
+
+  .ref-list{list-style:none;padding:0;margin:16px 0;}
+  .ref-list li{padding:12px 0;border-top:1px solid var(--border);font-size:14px;color:var(--muted);}
+  .ref-list li:last-child{border-bottom:1px solid var(--border);}
+  .ref-list .who{color:var(--text);}
+  .related-links{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted);margin-top:10px;}
+  .related-links a{color:var(--cyan);text-decoration:none;}
+  .related-links a:hover{text-decoration:underline;}
+  footer{padding-top:40px;font-size:13px;color:var(--muted);}
+
+  /* ============ PRINT ============ */
+  .print-only{display:none;}
+  @media print{
+    body *{visibility:hidden;}
+    .print-only, .print-only *{visibility:visible;}
+    .print-only{display:block;position:absolute;top:0;left:0;width:100%;}
+    body{background:#fff !important;}
+    .print-page{width:100%;min-height:100vh;page-break-after:always;padding:14mm;}
+    .print-page:last-child{page-break-after:auto;}
+    .print-title{font-family:'Fraunces',serif;font-size:20px;margin-bottom:4px;}
+    .print-sub{font-size:11px;margin-bottom:14px;}
+    .print-disks{display:flex;justify-content:center;align-items:center;gap:24px;flex-wrap:wrap;}
+    .print-disks svg{width:280px;height:280px;}
+    .print-instructions{font-size:11px;line-height:1.7;margin-top:16px;max-width:640px;}
+    .print-instructions ol{padding-left:18px;}
+    .back-content h3{font-family:'Fraunces',serif;font-size:17px;margin:16px 0 8px;}
+    .back-content p, .back-content li{font-size:12px;line-height:1.65;}
+    .back-content .tag{font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:100px;display:inline-block;margin-left:6px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <p class="kicker">Laboratorium Qiladat / JAZMI — Ilmu Falak × Kronobiologi</p>
+    <h1>Volvel Fase Bulan</h1>
+    <p class="lede">Instrumen putar klasik dari tradisi astronomi &amp; falak — dibangun ulang jadi versi digital yang bisa diputar langsung di layar, sekaligus dicetak jadi cakram kertas sungguhan lengkap dengan panduan di sisi baliknya. Bukan ramalan, bukan klaim mistis — murni geometri cahaya Matahari-Bumi-Bulan, dipadukan jujur dengan warisan tradisi yang menyertainya.</p>
+    <div class="badge-row">
+      <span class="badge">Volvel / Volvelle</span>
+      <span class="badge">Instrumen Falak</span>
+      <span class="badge">Kronobiologi Bulan</span>
+      <span class="badge">Bisa Dicetak Dua Sisi</span>
+    </div>
+  </header>
+
+  <div class="rule"></div>
+
+  <!-- 1 -->
+  <section id="konsep">
+    <p class="eyebrow-num">1 — Konsep</p>
+    <h2>Apa Itu Volvel?</h2>
+    <p class="desc">Volvel (<i>volvelle</i>, dari bahasa Latin <i>volvere</i>, "memutar") adalah instrumen kertas beroda putar — dua atau lebih cakram bertumpuk yang disematkan di titik pusat, dipakai untuk menghitung atau membaca hubungan dua besaran yang sama-sama berubah terhadap waktu. Bukan alat baru: astrolabe (dengan bagian bergerak bernama <i>rete</i>) sudah memakai prinsip ini sejak era Yunani-Islam pertengahan, dan para astronom Muslim mengembangkannya lebih jauh lewat zij (tabel astronomi) serta rubu' mujayyab (kuadran sinus) untuk hisab &amp; penentuan waktu ibadah.</p>
+    <p>Contoh paling terkenal dalam sejarah cetak adalah <i>Astronomicum Caesareum</i> karya Petrus Apianus (1540) — atlas volvel mewah bersampul kulit untuk kaisar Charles V, berisi puluhan cakram berlapis emas untuk menghitung posisi planet, gerhana, dan kalender. Volvel fase Bulan di halaman ini memakai prinsip yang persis sama, disederhanakan untuk satu tujuan: dari satu titik acuan (usia Bulan pada tanggal 1), membaca fase Bulan di tanggal mana pun bulan itu — tepat seperti cara volvel kalender klasik dipakai penggunanya berabad-abad lalu.</p>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 2 -->
+  <section id="instrumen">
+    <p class="eyebrow-num">2 — Instrumen Interaktif</p>
+    <h2>Putar, Selaraskan, Baca</h2>
+    <p class="desc">Cakram luar (tetap) menampilkan tanggal 1–31. Cakram dalam (bisa diputar) menampilkan urutan fase Bulan. Selaraskan cakram dalam sesuai usia Bulan pada tanggal 1 bulan yang ingin dibaca, lalu pilih tanggal mana pun untuk melihat fasenya.</p>
+
+    <div class="card">
+      <div class="grid-2">
+        <div class="instrument-wrap">
+          <svg id="volvelSvg" viewBox="0 0 400 400"></svg>
+        </div>
+        <div class="control-panel">
+          <div class="slider-row">
+            <label>Usia Bulan pada tanggal 1 <span class="val" id="v-age1">0 hari</span></label>
+            <input type="range" id="in-age1" min="0" max="29.53059" step="0.1" value="0">
+          </div>
+          <div class="slider-row">
+            <label>Baca fase untuk tanggal <span class="val" id="v-readdate">1</span></label>
+            <input type="range" id="in-readdate" min="1" max="31" step="1" value="1">
+          </div>
+          <div class="btn-row">
+            <button class="btn primary" id="btnAlignToday">Selaraskan ke hari ini</button>
+            <button class="btn" id="btnAnimate">Animasikan ▸</button>
+          </div>
+          <div class="result-box">
+            <div class="result-item"><div class="lbl">Fase pada tanggal terpilih</div><div class="num big" id="out-phase">—</div></div>
+            <div class="result-item"><div class="lbl">Persen tersinari</div><div class="num" id="out-illum">—</div></div>
+          </div>
+          <p class="formula-note" id="alignInfo"></p>
+        </div>
+      </div>
+      <p class="formula-note">Usia tanggal-D = (usia tanggal-1 + (D−1)) mod 29,53 hari. Iluminasi = (1−cos(2π×usia/29,53))/2×100%. "Selaraskan ke hari ini" menghitung usia Bulan nyata memakai epoch acuan bulan baru 6 Januari 2000, 18:14 UTC — bukan tebakan, bisa dicek ulang lewat almanak mana pun.</p>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 3 -->
+  <section id="warisan">
+    <p class="eyebrow-num">3 — Warisan Lintas Budaya</p>
+    <h2>Praktik Tradisional yang Mengikuti Kalender Bulan</h2>
+    <p class="desc">Bukan untuk menilai benar-salah suatu tradisi atau keyakinan — bagian ini murni mencatat bahwa praktik semacam ini nyata &amp; tersebar luas lintas budaya, lalu menambahkan apa yang bisa dan tidak bisa dikonfirmasi mekanismenya oleh sains modern secara terpisah.</p>
+    <div>
+      <div class="practice-item">
+        <h4>🕌 Bekam (ḥijāmah) pada hari ke-17, 19, atau 21 Hijriah</h4>
+        <p class="tradisi"><b>Tradisi:</b> Sebagian riwayat hadis menyebutkan anjuran berbekam pada hari-hari tersebut dalam bulan Hijriah — praktik ini diwariskan sebagai bagian pengobatan Nabi (ṭibb an-nabawi) dan masih dijalankan luas di banyak komunitas Muslim hari ini.</p>
+        <p class="modern-note"><b>Catatan modern:</b> Bekam (cupping) sendiri punya sejumlah penelitian klinis dengan hasil beragam untuk keluhan tertentu (nyeri, dll). Namun klaim bahwa waktu spesifik dalam bulan Hijriah meningkatkan efektivitasnya secara mekanistik belum punya uji klinis terkontrol yang kuat sejauh yang bisa dikonfirmasi — ini wilayah keyakinan &amp; praktik keagamaan, bukan klaim yang sedang diuji sains di sini.</p>
+      </div>
+      <div class="practice-item">
+        <h4>🌿 Waktu tanam &amp; panen mengikuti fase Bulan (pertanian biodinamik)</h4>
+        <p class="tradisi"><b>Tradisi:</b> Dipraktikkan di banyak budaya petani, dari Eropa hingga Nusantara — menanam saat Bulan membesar, memanen saat mengecil, dengan alasan pengaruh terhadap kadar air tanah/tanaman.</p>
+        <p class="modern-note"><b>Catatan modern:</b> Uji terkontrol berulang kali tidak menemukan hasil panen berbeda signifikan berdasarkan fase Bulan penanaman. Praktik biodinamik yang dipopulerkan Rudolf Steiner (1924) secara khusus sudah diuji beberapa kali dan tidak menunjukkan keunggulan di luar efek plasebo-petani (mis. jadi lebih telaten mengamati tanaman).</p>
+      </div>
+      <div class="practice-item">
+        <h4>🗓️ Pranata Mangsa &amp; Primbon (Jawa)</h4>
+        <p class="tradisi"><b>Tradisi:</b> Sistem kalender Jawa memadukan siklus Bulan (penanggalan Jawa/Islam) dengan penanda musim matahari (pranata mangsa) untuk menentukan waktu tanam, upacara, hingga hari baik — salah satu contoh integrasi kalender lunisolar paling detail di Nusantara.</p>
+        <p class="modern-note"><b>Catatan modern:</b> Bagian pranata mangsa yang menandai musim (kemarau/hujan) berkorelasi baik dengan pola iklim aktual Jawa (fungsinya mirip fotoperiode/musim di Bagian 2 halaman kronobiologi kami). Bagian yang menghitung "hari baik/buruk" dari kombinasi hari pasaran &amp; fase Bulan berada di luar ranah yang bisa diuji-benar/salah secara empiris — itu sistem makna budaya, bukan hipotesis fisik.</p>
+      </div>
+      <div class="practice-item">
+        <h4>☯️ Kalender lunar dalam Pengobatan Tradisional Tiongkok &amp; Tithi Ayurveda</h4>
+        <p class="tradisi"><b>Tradisi:</b> TCM menyarankan waktu akupunktur/ramuan tertentu mengikuti hari bulan; Ayurveda memakai <i>tithi</i> (hari lunar) untuk menentukan waktu puasa &amp; ritual kesehatan (mis. Ekadashi).</p>
+        <p class="modern-note"><b>Catatan modern:</b> Sama seperti bekam, komponen "puasa berkala"-nya sendiri (mis. Ekadashi ≈ puasa intermiten) punya dukungan riset independen dari alasan lunarnya. Klaim bahwa hari lunar spesifik mengubah efektivitas secara fisiologis belum terverifikasi ketat.</p>
+      </div>
+    </div>
+    <div class="callout">
+      <p style="margin-bottom:0;"><b>Kenapa keempatnya ditulis begini, bukan diberi label ✅/❌ seperti Bagian 4:</b> tradisi budaya &amp; keagamaan bukan hipotesis ilmiah yang menunggu dibuktikan benar-salah — menilainya dengan alat ukur sains adalah kekeliruan kategori. Yang bisa &amp; layak diuji sains hanyalah klaim mekanisme fisik yang menyertainya (mis. "fase Bulan mengubah kadar air tanah secara terukur"), dan itulah satu-satunya bagian yang dikomentari di kotak biru.</p>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 4 -->
+  <section id="panduan">
+    <p class="eyebrow-num">4 — Panduan Kronobiologi Bulan</p>
+    <h2>Ringkas &amp; Presisi: Apa yang Sains Konfirmasi</h2>
+    <p class="desc">Versi padat dari peta validasi lengkap di halaman Kronobiologi kami — fokus khusus pada Bulan, disusun untuk dicetak (Bagian 5).</p>
+    <div class="valid-list">
+      <div class="valid-item">
+        <div class="valid-head"><h4>Organisme laut (karang, cacing Platynereis) punya jam sirkalunar bergen</h4><span class="vtag valid">✅ Berlaku penuh</span></div>
+        <p>Mekanismenya sudah dipetakan sampai level gen (Zantke dkk. 2013) — bukti paling kuat bahwa jam sirkalunar biologis nyata ada, meski bukan pada manusia.</p>
+      </div>
+      <div class="valid-item">
+        <div class="valid-head"><h4>Tidur manusia dipengaruhi purnama</h4><span class="vtag partial">🟡 Kontroversial</span></div>
+        <p>Cajochen dkk. (2013) menemukan efek kecil; Cordi dkk. (2014) dengan sampel 470 rekaman EEG tidak menemukan apa-apa. Casiraghi dkk. (2021) menemukan efek lewat cahaya bulan alami, bukan tarikan misterius.</p>
+      </div>
+      <div class="valid-item">
+        <div class="valid-head"><h4>Siklus menstruasi tersinkron fase Bulan</h4><span class="vtag invalid">❌ Tidak didukung data ketat</span></div>
+        <p>Kedekatan panjang rata-rata siklus (~28 hari) dengan bulan sinodik (29,53 hari) adalah kebetulan angka, bukan sinkronisasi terhadap fase aktual.</p>
+      </div>
+      <div class="valid-item">
+        <div class="valid-head"><h4>"Efek purnama" pada kejahatan/kelahiran/UGD</h4><span class="vtag invalid">❌ Dibantah meta-analisis</span></div>
+        <p>Rotton &amp; Kelly (1985): 37 studi digabung, fase Bulan menyumbang &lt;1% variasi — dapat diabaikan secara statistik.</p>
+      </div>
+    </div>
+    <div class="related-links" style="margin-top:14px;">
+      <a href="kronobiologi-tubuh-langit.html">→ Lihat peta validasi lengkap (10 klaim) + simulator panjang siang &amp; jarak Matahari</a>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 5 -->
+  <section id="cetak">
+    <p class="eyebrow-num">5 — Cetak Instrumen</p>
+    <h2>Jadikan Kertas Sungguhan</h2>
+    <p class="desc">Halaman depan berisi dua cakram siap gunting (sesuai penyelarasan yang sedang Anda atur di Bagian 2) — susun jadi volvel fisik dengan paper fastener di tengahnya. Halaman belakang berisi panduan pilihan Anda, supaya sisi yang tidak dipakai roda tetap bermanfaat.</p>
+
+    <div class="card">
+      <h4 style="font-family:'Karla',sans-serif;font-size:13px;font-weight:700;color:var(--gold);margin:0 0 10px;">CORAK HALAMAN DEPAN</h4>
+      <div class="theme-row" id="themeRow">
+        <div class="theme-swatch t-emas active" data-theme="emas"><span>Klasik Emas</span></div>
+        <div class="theme-swatch t-falak" data-theme="falak"><span>Falak Biru</span></div>
+        <div class="theme-swatch t-mono" data-theme="mono"><span>Monokrom</span></div>
+        <div class="theme-swatch t-islami" data-theme="islami"><span>Geometris</span></div>
+      </div>
+
+      <h4 style="font-family:'Karla',sans-serif;font-size:13px;font-weight:700;color:var(--gold);margin:18px 0 10px;">ISI HALAMAN BELAKANG</h4>
+      <label class="back-option active" data-back="panduan">
+        <input type="radio" name="backopt" value="panduan" checked>
+        <div><div class="t">Panduan Kronobiologi Bulan</div><div class="d">Ringkasan 4 klaim tervalidasi dari Bagian 4 — cocok untuk pembaca yang ingin sisi ilmiahnya.</div></div>
+      </label>
+      <label class="back-option" data-back="warisan">
+        <input type="radio" name="backopt" value="warisan">
+        <div><div class="t">Warisan Etnomedis Lintas Budaya</div><div class="d">Ringkasan 4 praktik tradisional dari Bagian 3, lengkap dengan catatan modernnya.</div></div>
+      </label>
+      <label class="back-option" data-back="cara">
+        <input type="radio" name="backopt" value="cara">
+        <div><div class="t">Cara Merakit &amp; Memakai</div><div class="d">Instruksi gunting-tumpuk-sematkan, plus tabel referensi cepat (epoch, panjang siklus).</div></div>
+      </label>
+
+      <div class="print-note">📌 Setelah menekan cetak: pada dialog cetak browser, pilih <b>cetak dua sisi (duplex)</b> jika printer Anda mendukung — jika tidak, cetak halaman 1 dulu, balik kertasnya secara manual, lalu cetak ulang khusus halaman 2 di sisi baliknya.</div>
+      <button class="btn primary" id="btnPrint" style="margin-top:14px;">🖨️ Cetak Instrumen</button>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 6 -->
+  <section id="batasan">
+    <p class="eyebrow-num">6 — Batasan</p>
+    <div class="callout warn-border">
+      <p><b>Instrumen ini bukan alat hisab presisi tinggi.</b> Usia Bulan dihitung dari epoch tunggal &amp; periode sinodik rata-rata (29,53059 hari) — akurat untuk keperluan edukasi &amp; instrumen fisik (skala menit-jam), tapi periode sinodik sesungguhnya berosilasi ±0,3 hari akibat orbit Bulan yang elips, sehingga untuk penentuan awal bulan Hijriah yang presisi (rukyat/hisab resmi), tetap rujuk lembaga falak resmi — bukan instrumen kertas ini.</p>
+      <p style="margin-bottom:0;">Praktik tradisional di Bagian 3 disajikan sebagai catatan budaya-antropologis, bukan anjuran medis. Untuk keputusan kesehatan apa pun, konsultasikan tenaga medis — bukan volvel kertas.</p>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 7 -->
+  <section id="referensi">
+    <p class="eyebrow-num">7 — Referensi</p>
+    <ul class="ref-list">
+      <li><span class="who">Apianus, P. (1540).</span> <i>Astronomicum Caesareum.</i> — atlas volvel klasik yang jadi puncak seni instrumen kertas Eropa.</li>
+      <li><span class="who">King, D. A.</span> Karya-karya tentang instrumentasi astronomi Islam — zij, rubu' mujayyab, &amp; astrolabe dalam tradisi Ilmu Falak.</li>
+      <li><span class="who">Zantke, J. dkk. (2013); Rotton &amp; Kelly (1985); Cajochen dkk. (2013); Cordi dkk. (2014).</span> — rujukan sains kronobiologi, sama seperti dipakai di halaman Kronobiologi kami (lihat halaman tsb. untuk detail lengkap).</li>
+      <li><span class="who">Steiner, R. (1924).</span> Kursus pertanian biodinamik — sumber asal praktik tanam-mengikuti-Bulan modern yang diuji ulang berkali-kali oleh peneliti pertanian independen.</li>
+    </ul>
+    <div class="related-links">
+      <a href="kronobiologi-tubuh-langit.html">→ Kronobiologi: Tubuh Manusia &amp; Siklus Langit — peta validasi lengkap &amp; simulator Matahari</a>
+      <a href="urjuzah-ibnu-sina-meteorologi.html">→ Urjuzah Ibnu Sina — kerangka mizaj &amp; anwā' (kalender bintang), pendahulu konseptual instrumen ini</a>
+    </div>
+  </section>
+
+  <footer>Disusun sebagai bagian dari laboratorium Qiladat/JAZMI — memadukan instrumen warisan falak, praktik lintas budaya, dan kronobiologi modern dalam satu benda yang bisa dipegang, bukan cuma dibaca.</footer>
+
+</div>
+
+<!-- ============ PRINT TEMPLATES ============ -->
+<div class="print-only" id="printArea">
+  <div class="print-page" id="printFront">
+    <div class="print-title">Volvel Fase Bulan</div>
+    <div class="print-sub">Laboratorium Qiladat / JAZMI — potong kedua lingkaran di bawah</div>
+    <div class="print-disks">
+      <svg id="printOuterSvg" viewBox="0 0 400 400"></svg>
+      <svg id="printInnerSvg" viewBox="0 0 400 400"></svg>
+    </div>
+    <div class="print-instructions">
+      <b>Cara merakit:</b>
+      <ol>
+        <li>Gunting kedua lingkaran mengikuti garis putus-putus terluar.</li>
+        <li>Tumpuk cakram kecil (fase Bulan) di atas cakram besar (tanggal), titik pusat sejajar.</li>
+        <li>Lubangi kedua titik pusat sekaligus, sematkan dengan paper fastener / kancing jepret supaya cakram kecil bisa berputar bebas.</li>
+        <li>Putar cakram kecil sesuai penyelarasan yang Anda atur di instrumen digital sebelum mencetak — usia Bulan tanggal 1 saat ini: <b id="printAlignHint">–</b>. Sejajarkan ikon usia itu dengan tanda panah pada cakram fase.</li>
+      </ol>
+    </div>
+  </div>
+  <div class="print-page" id="printBack"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var SYNODIC = 29.53059;
+  var REF_NEW_MOON_UTC = Date.UTC(2000,0,6,18,14,0);
+
+  function fmt(n,d){ if(d===undefined) d=1; if(!isFinite(n)) return '—'; return (Math.round(n*Math.pow(10,d))/Math.pow(10,d)).toLocaleString('id-ID'); }
+  function mod(a,n){ return ((a%n)+n)%n; }
+
+  var PHASE_NAMES = ['Bulan Baru','Sabit Awal','Kuartir Pertama','Cembung Awal','Purnama','Cembung Akhir','Kuartir Akhir','Sabit Akhir'];
+  function illumOf(age){ return (1-Math.cos(2*Math.PI*age/SYNODIC))/2; }
+  function phaseIndexOf(age){ return Math.round(age/(SYNODIC/8)) % 8; }
+
+  function moonIconPath(cx, cy, r, k, waxing){
+    var rx = r * Math.abs(1 - 2*k);
+    var topY = cy - r, botY = cy + r;
+    var sweepOuter = waxing ? 1 : 0;
+    var sweepTerm = (k < 0.5) ? (waxing ? 0 : 1) : (waxing ? 1 : 0);
+    return 'M '+cx+' '+topY+' A '+r+' '+r+' 0 0 '+sweepOuter+' '+cx+' '+botY+
+           ' A '+rx+' '+r+' 0 0 '+sweepTerm+' '+cx+' '+topY+' Z';
+  }
+  function drawMoonIcon(parent, cx, cy, r, age){
+    var k = illumOf(age);
+    var phase01 = mod(age, SYNODIC)/SYNODIC; // 0..1
+    var waxing = phase01 <= 0.5;
+    var g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    var base = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    base.setAttribute('cx',cx); base.setAttribute('cy',cy); base.setAttribute('r',r);
+    base.setAttribute('fill','var(--moondark)'); base.setAttribute('stroke','var(--border-strong)'); base.setAttribute('stroke-width','0.75');
+    g.appendChild(base);
+    var lit = document.createElementNS('http://www.w3.org/2000/svg','path');
+    lit.setAttribute('d', moonIconPath(cx,cy,r,k,waxing));
+    lit.setAttribute('fill','var(--moonlit)');
+    g.appendChild(lit);
+    parent.appendChild(g);
+    return g;
+  }
+
+  // ---------- build interactive volvel ----------
+  var svg = document.getElementById('volvelSvg');
+  var CX=200, CY=200, R_OUTER=185, R_DATES=160, R_INNER_RING=125, R_ICONS=95, ICON_R=17;
+
+  function buildOuterRing(svgEl){
+    var g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    var outline = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    outline.setAttribute('cx',CX); outline.setAttribute('cy',CY); outline.setAttribute('r',R_OUTER);
+    outline.setAttribute('class','ring-outline');
+    g.appendChild(outline);
+    for(var d=1; d<=31; d++){
+      var angle = (d-1)/31*2*Math.PI - Math.PI/2;
+      var x = CX + R_DATES*Math.cos(angle), y = CY + R_DATES*Math.sin(angle);
+      var t = document.createElementNS('http://www.w3.org/2000/svg','text');
+      t.setAttribute('x',x); t.setAttribute('y',y+4); t.setAttribute('text-anchor','middle');
+      t.setAttribute('class', 'date-label');
+      t.setAttribute('data-date', d);
+      t.textContent = d;
+      g.appendChild(t);
+    }
+    var ptr = document.createElementNS('http://www.w3.org/2000/svg','path');
+    ptr.setAttribute('d', 'M '+CX+' '+(CY-R_OUTER-4)+' L '+(CX-8)+' '+(CY-R_OUTER-20)+' L '+(CX+8)+' '+(CY-R_OUTER-20)+' Z');
+    ptr.setAttribute('class','pointer');
+    g.appendChild(ptr);
+    svgEl.appendChild(g);
+    return g;
+  }
+
+  function buildInnerDisk(svgEl){
+    var g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.setAttribute('id','innerDiskGroup');
+    g.setAttribute('class','disk-inner animating');
+    var bg = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    bg.setAttribute('cx',CX); bg.setAttribute('cy',CY); bg.setAttribute('r',R_INNER_RING+ICON_R+4);
+    bg.setAttribute('fill','var(--panel-2)'); bg.setAttribute('stroke','var(--border-strong)'); bg.setAttribute('stroke-width','1');
+    g.appendChild(bg);
+    var N = 30;
+    for(var i=0;i<N;i++){
+      // Skala TETAP 31 hari per lingkaran penuh — sama persis dengan skala cakram tanggal
+      // di luar (31 tanggal/360°). Ini kunci supaya memutar cakram benar-benar merepresentasikan
+      // rumus "usia tanggal-1 + (D-1)" yang dipakai di teks hasil, bukan cuma mirip-mirip.
+      // Isi cakram ini TETAP (tidak bergantung usia tanggal-1) — persis seperti volvel kertas
+      // sungguhan: gambarnya dicetak sekali, lalu Anda MEMUTAR cakramnya untuk menyelaraskan.
+      var age = mod(i/N*31, SYNODIC);
+      var angle = i/N*2*Math.PI - Math.PI/2;
+      var x = CX + R_ICONS*Math.cos(angle), y = CY + R_ICONS*Math.sin(angle);
+      drawMoonIcon(g, x, y, ICON_R, age);
+    }
+    svgEl.appendChild(g);
+    return g;
+  }
+
+  var inAge1 = document.getElementById('in-age1'), vAge1 = document.getElementById('v-age1');
+  var inReadDate = document.getElementById('in-readdate'), vReadDate = document.getElementById('v-readdate');
+  var outPhase = document.getElementById('out-phase'), outIllum = document.getElementById('out-illum');
+  var alignInfo = document.getElementById('alignInfo');
+
+  // Cakram dibangun SEKALI: isi ikon fase tetap (tidak berubah), sesudah itu hanya
+  // atribut transform (rotasi) & class 'selected' pada label tanggal yang diubah tiap update.
+  buildOuterRing(svg);
+  var innerDisk = buildInnerDisk(svg);
+
+  function applyRotation(instant){
+    var age1 = parseFloat(inAge1.value);
+    // FIX: skala rotasi memakai /31 (menyamai skala cakram tanggal), BUKAN /SYNODIC seperti
+    // versi sebelumnya — versi lama membuat ikon yang sejajar di tanggal jauh (mis. tanggal 31)
+    // meleset sampai ±1,4 hari dari usia Bulan yang sebenarnya dihitung rumus di teks hasil.
+    var rotationDeg = (age1/31)*360;
+    innerDisk.classList.toggle('animating', !!instant);
+    innerDisk.setAttribute('transform', 'rotate('+(-rotationDeg)+' '+CX+' '+CY+')');
+  }
+
+  function updateSelectedLabel(){
+    var readDate = parseInt(inReadDate.value,10);
+    svg.querySelectorAll('.date-label').forEach(function(el){
+      el.classList.toggle('selected', parseInt(el.getAttribute('data-date'),10)===readDate);
+    });
+  }
+
+  function updateReadout(){
+    var age1 = parseFloat(inAge1.value);
+    var readDate = parseInt(inReadDate.value,10);
+    vAge1.textContent = fmt(age1,1)+' hari';
+    vReadDate.textContent = readDate;
+    var ageAtDate = mod(age1 + (readDate-1), SYNODIC);
+    var idx = phaseIndexOf(ageAtDate);
+    outPhase.textContent = PHASE_NAMES[idx];
+    outIllum.textContent = fmt(illumOf(ageAtDate)*100,0)+'%';
+  }
+
+  function fullUpdate(instant){ applyRotation(instant); updateSelectedLabel(); updateReadout(); }
+
+  inAge1.addEventListener('input', function(){ fullUpdate(true); });
+  inReadDate.addEventListener('input', function(){ fullUpdate(true); });
+
+  document.getElementById('btnAlignToday').addEventListener('click', function(){
+    var now = new Date();
+    var daysSinceRef = (now.getTime() - REF_NEW_MOON_UTC)/86400000;
+    var ageToday = mod(daysSinceRef, SYNODIC);
+    var dateToday = now.getDate();
+    var age1 = mod(ageToday - (dateToday-1), SYNODIC);
+    inAge1.value = age1;
+    inReadDate.value = dateToday;
+    fullUpdate(false);
+    var dtStr = now.toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
+    alignInfo.textContent = 'Diselaraskan untuk hari ini, ' + dtStr + ' — usia Bulan sekarang: ' + fmt(ageToday,1) + ' hari (' + PHASE_NAMES[phaseIndexOf(ageToday)] + ').';
+  });
+
+  var animTimer = null;
+  document.getElementById('btnAnimate').addEventListener('click', function(){
+    var btn = this;
+    if(animTimer){
+      clearInterval(animTimer); animTimer = null;
+      btn.textContent = 'Animasikan ▸'; btn.classList.remove('active');
+      return;
+    }
+    btn.textContent = 'Jeda ⏸'; btn.classList.add('active');
+    animTimer = setInterval(function(){
+      var v = parseFloat(inAge1.value) + 0.2;
+      if(v > SYNODIC) v -= SYNODIC;
+      inAge1.value = v;
+      fullUpdate(true);
+    }, 60);
+  });
+
+  // ---------- print ----------
+  var currentTheme = 'emas';
+  var THEME_VARS = {
+    emas:  { bg:'#F2E9D2', ink:'#5A431A', accent:'#B4863A' },
+    falak: { bg:'#0E1E3D', ink:'#DCE8FF', accent:'#7FA6FF' },
+    mono:  { bg:'#FFFFFF', ink:'#111111', accent:'#444444' },
+    islami:{ bg:'#F7EFE0', ink:'#5C3B18', accent:'#A8672E' }
+  };
+  var currentBack = 'panduan';
+
+  document.querySelectorAll('.theme-swatch').forEach(function(sw){
+    sw.addEventListener('click', function(){
+      document.querySelectorAll('.theme-swatch').forEach(function(s){ s.classList.remove('active'); });
+      sw.classList.add('active');
+      currentTheme = sw.getAttribute('data-theme');
+    });
+  });
+  document.querySelectorAll('.back-option').forEach(function(opt){
+    opt.addEventListener('click', function(){
+      document.querySelectorAll('.back-option').forEach(function(o){ o.classList.remove('active'); });
+      opt.classList.add('active');
+      opt.querySelector('input').checked = true;
+      currentBack = opt.getAttribute('data-back');
+    });
+  });
+
+  function buildPrintDisks(){
+    var t = THEME_VARS[currentTheme];
+    var outerSvg = document.getElementById('printOuterSvg');
+    var innerSvg = document.getElementById('printInnerSvg');
+    outerSvg.innerHTML = ''; innerSvg.innerHTML = '';
+    outerSvg.style.background = t.bg; innerSvg.style.background = t.bg;
+
+    // outer disk
+    var og = document.createElementNS('http://www.w3.org/2000/svg','g');
+    var ocirc = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    ocirc.setAttribute('cx',CX); ocirc.setAttribute('cy',CY); ocirc.setAttribute('r',R_OUTER);
+    ocirc.setAttribute('fill','none'); ocirc.setAttribute('stroke',t.ink); ocirc.setAttribute('stroke-width','2'); ocirc.setAttribute('stroke-dasharray','4,3');
+    og.appendChild(ocirc);
+    var otitle = document.createElementNS('http://www.w3.org/2000/svg','text');
+    otitle.setAttribute('x',CX); otitle.setAttribute('y',CY); otitle.setAttribute('text-anchor','middle');
+    otitle.setAttribute('fill',t.accent); otitle.setAttribute('font-size','14'); otitle.setAttribute('font-weight','700');
+    otitle.textContent = 'CAKRAM TANGGAL';
+    og.appendChild(otitle);
+    for(var d=1; d<=31; d++){
+      var angle = (d-1)/31*2*Math.PI - Math.PI/2;
+      var x = CX + R_DATES*Math.cos(angle), y = CY + R_DATES*Math.sin(angle);
+      var tt = document.createElementNS('http://www.w3.org/2000/svg','text');
+      tt.setAttribute('x',x); tt.setAttribute('y',y+4); tt.setAttribute('text-anchor','middle');
+      tt.setAttribute('fill',t.ink); tt.setAttribute('font-size','12');
+      tt.textContent = d;
+      og.appendChild(tt);
+    }
+    var centerDot1 = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    centerDot1.setAttribute('cx',CX); centerDot1.setAttribute('cy',CY); centerDot1.setAttribute('r','2.5'); centerDot1.setAttribute('fill',t.ink);
+    og.appendChild(centerDot1);
+    outerSvg.appendChild(og);
+
+    // inner disk — isi TETAP (tidak bergantung age1), persis seperti cakram interaktif setelah
+    // diperbaiki: cakram kertas ini harus bisa dipakai ulang untuk BULAN MANA PUN dengan cara
+    // diputar manual oleh pengguna (sesuai instruksi cetak sendiri: "putar sampai fase Bulan Baru
+    // sejajar tanda panah di atas tanggal 1 bulan yang ingin dibaca"). Versi sebelumnya menanam
+    // age1 langsung ke tiap ikon saat dicetak — itu membuat cakram HANYA benar untuk satu bulan
+    // (bulan saat dicetak) dan kontradiksi dengan instruksinya sendiri yang menjanjikan bisa diputar.
+    var ig = document.createElementNS('http://www.w3.org/2000/svg','g');
+    var icirc = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    icirc.setAttribute('cx',CX); icirc.setAttribute('cy',CY); icirc.setAttribute('r',R_INNER_RING+ICON_R+4);
+    icirc.setAttribute('fill','none'); icirc.setAttribute('stroke',t.ink); icirc.setAttribute('stroke-width','2'); icirc.setAttribute('stroke-dasharray','4,3');
+    ig.appendChild(icirc);
+    var N=30;
+    for(var i=0;i<N;i++){
+      var age = mod(i/N*31, SYNODIC);
+      var ang2 = i/N*2*Math.PI - Math.PI/2;
+      var xx = CX + R_ICONS*Math.cos(ang2), yy = CY + R_ICONS*Math.sin(ang2);
+      var k = illumOf(age);
+      var waxing = mod(age,SYNODIC)/SYNODIC <= 0.5;
+      var base = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      base.setAttribute('cx',xx); base.setAttribute('cy',yy); base.setAttribute('r',ICON_R);
+      base.setAttribute('fill', currentTheme==='mono' ? '#fff' : t.bg); base.setAttribute('stroke',t.ink); base.setAttribute('stroke-width','1');
+      ig.appendChild(base);
+      var lit = document.createElementNS('http://www.w3.org/2000/svg','path');
+      lit.setAttribute('d', moonIconPath(xx,yy,ICON_R,k,waxing));
+      lit.setAttribute('fill', t.accent);
+      ig.appendChild(lit);
+    }
+    var arrow = document.createElementNS('http://www.w3.org/2000/svg','path');
+    arrow.setAttribute('d', 'M '+CX+' '+(CY-R_INNER_RING-ICON_R-14)+' L '+(CX-7)+' '+(CY-R_INNER_RING-ICON_R-2)+' L '+(CX+7)+' '+(CY-R_INNER_RING-ICON_R-2)+' Z');
+    arrow.setAttribute('fill',t.accent);
+    ig.appendChild(arrow);
+    var centerDot2 = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    centerDot2.setAttribute('cx',CX); centerDot2.setAttribute('cy',CY); centerDot2.setAttribute('r','2.5'); centerDot2.setAttribute('fill',t.ink);
+    ig.appendChild(centerDot2);
+    innerSvg.appendChild(ig);
+  }
+
+  var BACK_CONTENT = {
+    panduan: function(t){
+      return '<h3 style="color:'+t.accent+';">Panduan Kronobiologi Bulan</h3>'+
+        '<p>Organisme laut (karang, cacing Platynereis) punya jam sirkalunar bergen — <b>terbukti kuat.</b> Tidur manusia vs purnama — <b>kontroversial</b> (Cajochen 2013 vs Cordi 2014). Siklus menstruasi vs fase Bulan — <b>tidak didukung data ketat.</b> "Efek purnama" pada perilaku — <b>dibantah meta-analisis 37 studi</b> (Rotton &amp; Kelly 1985).</p>'+
+        '<p style="margin-top:10px;">Detail lengkap &amp; rujukan: lihat halaman "Kronobiologi: Tubuh Manusia &amp; Siklus Langit" pada laboratorium Qiladat/JAZMI.</p>';
+    },
+    warisan: function(t){
+      return '<h3 style="color:'+t.accent+';">Warisan Etnomedis Lintas Budaya</h3>'+
+        '<p><b>Bekam hari ke-17/19/21 Hijriah</b> — warisan ṭibb an-nabawi; efektivitas waktunya secara mekanistik belum teruji ketat.</p>'+
+        '<p><b>Tanam-panen ikut fase Bulan (biodinamik)</b> — praktik luas lintas budaya; uji terkontrol tidak menemukan perbedaan hasil signifikan.</p>'+
+        '<p><b>Pranata Mangsa &amp; Primbon (Jawa)</b> — penanda musim berkorelasi baik dengan iklim aktual; bagian "hari baik" adalah makna budaya, bukan hipotesis fisik.</p>'+
+        '<p><b>Tithi Ayurveda &amp; kalender TCM</b> — komponen puasa berkala punya dukungan riset independen dari alasan lunarnya.</p>';
+    },
+    cara: function(t){
+      return '<h3 style="color:'+t.accent+';">Cara Merakit &amp; Memakai</h3>'+
+        '<p>1. Gunting kedua cakram di halaman depan mengikuti garis putus-putus.<br>2. Tumpuk cakram fase (kecil) di atas cakram tanggal (besar).<br>3. Lubangi kedua titik pusat, sematkan paper fastener.<br>4. Putar sampai fase "Bulan Baru" sejajar tanda panah di atas tanggal 1 bulan yang ingin dibaca.</p>'+
+        '<p style="margin-top:10px;"><b>Referensi cepat:</b> periode sinodik rata-rata = 29,53059 hari. Epoch bulan baru acuan = 6 Januari 2000, 18:14 UTC. Untuk penentuan awal bulan Hijriah resmi, selalu rujuk lembaga falak — instrumen ini untuk edukasi.</p>';
+    }
+  };
+
+  function buildPrintBack(){
+    var t = THEME_VARS[currentTheme];
+    var backDiv = document.getElementById('printBack');
+    backDiv.style.background = t.bg; backDiv.style.color = t.ink;
+    backDiv.innerHTML = '<div class="back-content">'+BACK_CONTENT[currentBack](t)+'</div>';
+  }
+
+  document.getElementById('btnPrint').addEventListener('click', function(){
+    var age1 = parseFloat(inAge1.value);
+    document.getElementById('printAlignHint').textContent = fmt(age1,1)+' hari ('+PHASE_NAMES[phaseIndexOf(age1)]+')';
+    buildPrintDisks();
+    buildPrintBack();
+    window.print();
+  });
+
+  fullUpdate(true);
+})();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

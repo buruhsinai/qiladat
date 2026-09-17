@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peta Besaran Turunan — JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Karla:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--emerald:#0F3D2E;--mid:#1D5C43;--ivory:#FAF6ED;--soft:#F1EADA;--gold:#B8934A;--goldsoft:#E7D2A0;--line:rgba(15,61,46,.14);}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--ivory);color:var(--emerald);font-family:'Karla',sans-serif;line-height:1.6;}
+  .wrap{max-width:840px;margin:0 auto;padding:24px;}
+  h1{font-family:'Fraunces',serif;font-size:28px;margin:0 0 8px;}
+  h2{font-family:'Fraunces',serif;font-size:19px;margin:24px 0 10px;}
+  p.lede{opacity:.85;margin:0 0 20px;font-size:15.5px;}
+  .badge-tier{display:inline-block;background:var(--emerald);color:var(--ivory);font-size:11px;padding:4px 10px;border-radius:3px;font-weight:700;margin-bottom:14px;}
+
+  .pokok-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;}
+  @media (max-width:600px){.pokok-grid{grid-template-columns:repeat(2,1fr);}}
+  .pokok-chip{
+    display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:6px;
+    border:1.5px solid var(--line);background:#fff;cursor:pointer;font-size:13px;font-weight:600;
+  }
+  .pokok-chip.aktif{background:var(--emerald);color:var(--ivory);border-color:var(--emerald);}
+  .pokok-chip .simbol{font-family:'Fraunces',serif;font-size:16px;}
+
+  .daftar-turunan{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0;}
+  .turunan-btn{
+    padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:#fff;
+    font-size:12.5px;cursor:pointer;color:var(--mid);
+  }
+  .turunan-btn.aktif{background:var(--gold);color:var(--emerald);font-weight:700;border-color:var(--gold);}
+  .kosong-info{font-size:13.5px;opacity:.65;font-style:italic;padding:10px 0;}
+
+  .kalkulator{background:var(--emerald);color:var(--ivory);border-radius:8px;padding:22px;margin-top:18px;}
+  .kalkulator h3{font-family:'Fraunces',serif;margin:0 0 4px;font-size:18px;color:var(--ivory);}
+  .rumus-tag{font-family:monospace;font-size:14px;color:var(--goldsoft);margin-bottom:4px;}
+  .pokok-tag-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+  .pokok-tag{background:rgba(255,255,255,.1);padding:3px 9px;border-radius:3px;font-size:11px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+  @media (max-width:500px){.field-row{grid-template-columns:1fr;}}
+  .field label{display:block;font-size:12px;color:var(--goldsoft);margin-bottom:4px;}
+  .field input{width:100%;padding:9px 10px;border-radius:4px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.07);color:#fff;font-size:14px;}
+  .hasil-box{background:rgba(255,255,255,.08);border-radius:5px;padding:14px 16px;margin-top:8px;text-align:center;}
+  .hasil-box .angka{font-family:'Fraunces',serif;font-size:24px;color:var(--goldsoft);}
+  .insight{font-size:12.5px;color:rgba(255,255,255,.75);margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.15);}
+
+  .catatan{background:var(--soft);border-left:3px solid var(--gold);padding:12px 14px;border-radius:0 4px 4px 0;font-size:13.5px;margin-top:20px;}
+  code{font-family:monospace;background:var(--soft);padding:1px 5px;border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="badge-tier">Modul Sains — Besaran &amp; Satuan</div>
+  <h1>Peta Besaran Turunan</h1>
+  <p class="lede">Centang besaran pokok yang Anda punya, lihat besaran turunan apa saja yang bisa dibentuk darinya — lengkap dengan rumus dan kalkulatornya. Semua besaran turunan, betapapun rumitnya, tersusun murni dari 7 besaran pokok ini.</p>
+
+  <h2>1. Besaran Pokok</h2>
+  <div class="pokok-grid" id="pokokGrid"></div>
+
+  <h2>2. Besaran Turunan yang Bisa Dibentuk</h2>
+  <div class="daftar-turunan" id="daftarTurunan"></div>
+  <div id="kosongInfo" class="kosong-info" style="display:none;">Belum ada besaran turunan yang bisa dibentuk hanya dari besaran pokok yang dicentang — coba centang lebih banyak.</div>
+
+  <div class="kalkulator" id="kalkulatorBox" style="display:none;"></div>
+
+  <div class="catatan">
+    <b>Catatan:</b> daftar ini adalah besaran turunan yang paling umum dan punya nama baku dalam sains — bukan seluruh kemungkinan kombinasi matematis besaran pokok (yang jumlahnya tak terbatas). Beberapa besaran turunan yang tampak beda (mis. Usaha dan Momen Gaya, atau Tekanan dan Beban Sayap) ternyata <b>sama persis secara dimensi</b> — itu bukan kebetulan, itu sebabnya satuannya bisa disetarakan meski konteks fisisnya berbeda.
+  </div>
+</div>
+
+<script>
+const POKOK = [
+  {sym:'L', nama:'Panjang', satuan:'m'},
+  {sym:'M', nama:'Massa', satuan:'kg'},
+  {sym:'T', nama:'Waktu', satuan:'s'},
+  {sym:'I', nama:'Arus Listrik', satuan:'A'},
+  {sym:'Θ', nama:'Suhu', satuan:'K'},
+  {sym:'N', nama:'Jumlah Zat', satuan:'mol'},
+  {sym:'J', nama:'Intensitas Cahaya', satuan:'cd'},
+];
+
+const TURUNAN = [
+  { nama:'Luas', rumus:'p × l', pokok:['L'], satuan:'m²',
+    var:[{k:'p',label:'Panjang (m)'},{k:'l',label:'Lebar (m)'}], hitung:v=>v.p*v.l },
+  { nama:'Volume', rumus:'p × l × t', pokok:['L'], satuan:'m³',
+    var:[{k:'p',label:'Panjang (m)'},{k:'l',label:'Lebar (m)'},{k:'t',label:'Tinggi (m)'}], hitung:v=>v.p*v.l*v.t },
+  { nama:'Kecepatan', rumus:'jarak / waktu', pokok:['L','T'], satuan:'m/s',
+    var:[{k:'s',label:'Jarak (m)'},{k:'t',label:'Waktu (s)'}], hitung:v=>v.s/v.t },
+  { nama:'Percepatan', rumus:'Δkecepatan / waktu', pokok:['L','T'], satuan:'m/s²',
+    var:[{k:'dv',label:'Perubahan kecepatan (m/s)'},{k:'t',label:'Waktu (s)'}], hitung:v=>v.dv/v.t },
+  { nama:'Frekuensi', rumus:'1 / periode', pokok:['T'], satuan:'Hz',
+    var:[{k:'per',label:'Periode (s)'}], hitung:v=>1/v.per },
+  { nama:'Debit Aliran', rumus:'volume / waktu', pokok:['L','T'], satuan:'m³/s',
+    var:[{k:'vol',label:'Volume (m³)'},{k:'t',label:'Waktu (s)'}], hitung:v=>v.vol/v.t },
+  { nama:'Massa Jenis', rumus:'massa / volume', pokok:['M','L'], satuan:'kg/m³',
+    var:[{k:'m',label:'Massa (kg)'},{k:'vol',label:'Volume (m³)'}], hitung:v=>v.m/v.vol },
+  { nama:'Momentum', rumus:'massa × kecepatan', pokok:['M','L','T'], satuan:'kg·m/s',
+    var:[{k:'m',label:'Massa (kg)'},{k:'kec',label:'Kecepatan (m/s)'}], hitung:v=>v.m*v.kec,
+    insight:'Dimensinya sama persis dengan Impuls — makanya Impuls = perubahan Momentum.' },
+  { nama:'Gaya', rumus:'massa × percepatan', pokok:['M','L','T'], satuan:'N (Newton)',
+    var:[{k:'m',label:'Massa (kg)'},{k:'a',label:'Percepatan (m/s²)'}], hitung:v=>v.m*v.a },
+  { nama:'Berat', rumus:'massa × gravitasi (9,8 m/s²)', pokok:['M','L','T'], satuan:'N',
+    var:[{k:'m',label:'Massa (kg)'}], hitung:v=>v.m*9.8,
+    insight:'Berat itu sendiri sebenarnya Gaya — cuma percepatannya dikhususkan jadi gravitasi.' },
+  { nama:'Tekanan', rumus:'gaya / luas', pokok:['M','L','T'], satuan:'Pa',
+    var:[{k:'f',label:'Gaya (N)'},{k:'a',label:'Luas (m²)'}], hitung:v=>v.f/v.a },
+  { nama:'Beban Sayap (Wing Loading)', rumus:'berat pesawat / luas sayap', pokok:['M','L','T'], satuan:'N/m² (= Pa)',
+    var:[{k:'w',label:'Berat pesawat (N)'},{k:'a',label:'Luas sayap (m²)'}], hitung:v=>v.w/v.a,
+    insight:'Dimensinya SAMA PERSIS dengan Tekanan (M/(L·T²)) — istilah "beban sayap" di dunia penerbangan sebetulnya cuma tekanan yang diberi nama khusus untuk konteks itu.' },
+  { nama:'Usaha / Energi', rumus:'gaya × jarak', pokok:['M','L','T'], satuan:'J (Joule)',
+    var:[{k:'f',label:'Gaya (N)'},{k:'s',label:'Jarak (m)'}], hitung:v=>v.f*v.s,
+    insight:'Dimensinya sama dengan Momen Gaya (Torsi) — bedanya arah vektor gaya terhadap gerak/lengan.' },
+  { nama:'Momen Gaya (Torsi)', rumus:'gaya × lengan momen', pokok:['M','L','T'], satuan:'N·m',
+    var:[{k:'f',label:'Gaya (N)'},{k:'r',label:'Lengan momen (m)'}], hitung:v=>v.f*v.r },
+  { nama:'Daya', rumus:'usaha / waktu', pokok:['M','L','T'], satuan:'W (Watt)',
+    var:[{k:'w',label:'Usaha (J)'},{k:'t',label:'Waktu (s)'}], hitung:v=>v.w/v.t },
+  { nama:'Muatan Listrik', rumus:'arus × waktu', pokok:['T','I'], satuan:'C (Coulomb)',
+    var:[{k:'i',label:'Arus (A)'},{k:'t',label:'Waktu (s)'}], hitung:v=>v.i*v.t },
+  { nama:'Tegangan Listrik', rumus:'daya / arus', pokok:['M','L','T','I'], satuan:'V (Volt)',
+    var:[{k:'p',label:'Daya (W)'},{k:'i',label:'Arus (A)'}], hitung:v=>v.p/v.i },
+  { nama:'Resistansi', rumus:'tegangan / arus', pokok:['M','L','T','I'], satuan:'Ω (Ohm)',
+    var:[{k:'v',label:'Tegangan (V)'},{k:'i',label:'Arus (A)'}], hitung:v=>v.v/v.i },
+  { nama:'Kalor Jenis', rumus:'energi / (massa × Δsuhu)', pokok:['M','L','T','Θ'], satuan:'J/(kg·K)',
+    var:[{k:'q',label:'Energi kalor (J)'},{k:'m',label:'Massa (kg)'},{k:'dt',label:'Perubahan suhu (K)'}], hitung:v=>v.q/(v.m*v.dt) },
+  { nama:'Konsentrasi Molar', rumus:'jumlah zat / volume', pokok:['N','L'], satuan:'mol/m³',
+    var:[{k:'n',label:'Jumlah zat (mol)'},{k:'vol',label:'Volume (m³)'}], hitung:v=>v.n/v.vol },
+  { nama:'Massa Molar', rumus:'massa / jumlah zat', pokok:['M','N'], satuan:'kg/mol',
+    var:[{k:'m',label:'Massa (kg)'},{k:'n',label:'Jumlah zat (mol)'}], hitung:v=>v.m/v.n },
+  { nama:'Iluminansi', rumus:'intensitas cahaya / luas', pokok:['J','L'], satuan:'lx (Lux)',
+    var:[{k:'iv',label:'Intensitas cahaya (cd)'},{k:'a',label:'Luas (m²)'}], hitung:v=>v.iv/v.a },
+];
+
+let pokokDicentang = new Set(['L','M','T']);
+let turunanAktif = null;
+
+function renderPokok(){
+  document.getElementById('pokokGrid').innerHTML = POKOK.map(p => `
+    <div class="pokok-chip ${pokokDicentang.has(p.sym)?'aktif':''}" onclick="toggle('${p.sym}')">
+      <span class="simbol">${p.sym}</span> ${p.nama}
+    </div>
+  `).join('');
+}
+function toggle(sym){
+  if (pokokDicentang.has(sym)) pokokDicentang.delete(sym); else pokokDicentang.add(sym);
+  renderPokok();
+  renderDaftar();
+}
+
+function bisaDibentuk(t){
+  return t.pokok.every(p => pokokDicentang.has(p));
+}
+
+function renderDaftar(){
+  const cocok = TURUNAN.filter(bisaDibentuk);
+  const box = document.getElementById('daftarTurunan');
+  const kosong = document.getElementById('kosongInfo');
+  if (cocok.length === 0){
+    box.innerHTML = ''; kosong.style.display = 'block';
+    document.getElementById('kalkulatorBox').style.display = 'none';
+    return;
+  }
+  kosong.style.display = 'none';
+  box.innerHTML = cocok.map(t => `<button class="turunan-btn ${t===turunanAktif?'aktif':''}" onclick="pilihTurunan('${t.nama}')">${t.nama}</button>`).join('');
+  if (turunanAktif && !cocok.includes(turunanAktif)) { turunanAktif = null; document.getElementById('kalkulatorBox').style.display='none'; }
+}
+
+function pilihTurunan(nama){
+  turunanAktif = TURUNAN.find(t => t.nama === nama);
+  renderDaftar();
+  renderKalkulator();
+}
+
+function renderKalkulator(){
+  const t = turunanAktif;
+  const box = document.getElementById('kalkulatorBox');
+  box.style.display = 'block';
+  box.innerHTML = `
+    <h3>${t.nama}</h3>
+    <div class="rumus-tag">${t.rumus}  →  ${t.satuan}</div>
+    <div class="pokok-tag-row">${t.pokok.map(p=>`<span class="pokok-tag">${p} — ${POKOK.find(x=>x.sym===p).nama}</span>`).join('')}</div>
+    <div class="field-row">
+      ${t.var.map(vr => `<div class="field"><label>${vr.label}</label><input type="number" id="in_${vr.k}" value="1" oninput="hitungTurunan()"></div>`).join('')}
+    </div>
+    <div class="hasil-box" id="hasilTurunan"></div>
+    ${t.insight ? `<div class="insight">💡 ${t.insight}</div>` : ''}
+  `;
+  hitungTurunan();
+}
+
+function hitungTurunan(){
+  const t = turunanAktif;
+  const v = {};
+  t.var.forEach(vr => { v[vr.k] = parseFloat(document.getElementById('in_'+vr.k).value) || 0; });
+  const hasil = t.hitung(v);
+  document.getElementById('hasilTurunan').innerHTML = `<div class="angka">${isFinite(hasil) ? hasil.toLocaleString('id-ID',{maximumFractionDigits:4}) : '—'} ${t.satuan}</div>`;
+}
+
+renderPokok();
+renderDaftar();
+pilihTurunan('Gaya');
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

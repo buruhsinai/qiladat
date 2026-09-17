@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulator Maillard & Karamelisasi | Tools Qiladat JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#171310;
+  --panel:#1E1712;
+  --panel-2:#251C15;
+  --line:rgba(240,225,200,0.13);
+  --line-strong:rgba(240,225,200,0.28);
+  --text:#EDE1CC;
+  --muted:#A99678;
+  --ember:#D4922C;
+  --ember-dim:rgba(212,146,44,0.16);
+  --steam:#6B8CA6;
+  --steam-dim:rgba(107,140,166,0.16);
+  --char:#A6503E;
+  --char-dim:rgba(166,80,62,0.16);
+  --radius:2px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:var(--ink);color:var(--text);font-family:'Karla',sans-serif;font-size:16px;line-height:1.55;}
+@media (prefers-reduced-motion: reduce){*{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;}}
+.wrap{max-width:920px;margin:0 auto;padding:0 18px 80px;}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-0.01em;margin:0 0 6px;}
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ember);display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.eyebrow::before{content:"";width:18px;height:1px;background:var(--ember);display:inline-block;}
+
+.hero{background:linear-gradient(160deg, #241811 0%, #1E1712 55%, #171310 100%);margin:0 -18px 22px;padding:34px 18px 26px;border-bottom:1px solid var(--line-strong);position:relative;overflow:hidden;}
+.hero-inner{max-width:920px;margin:0 auto;position:relative;z-index:2;}
+.hero h1{font-size:clamp(26px,5vw,38px);line-height:1.08;}
+.hero p.sub{color:var(--muted);font-size:15px;max-width:60ch;margin:10px 0 0;}
+.swatchstrip{display:flex;height:14px;border-radius:3px;overflow:hidden;margin-top:18px;border:1px solid var(--line-strong);}
+.swatchstrip div{flex:1;}
+
+.sheet{position:relative;background:var(--panel);border:1px solid var(--line-strong);border-radius:var(--radius);padding:20px;margin-bottom:18px;}
+.sheet::before,.sheet::after{content:"";position:absolute;width:9px;height:9px;top:-1px;left:-1px;border-top:1.5px solid var(--ember);border-left:1.5px solid var(--ember);}
+.sheet::after{top:auto;left:auto;bottom:-1px;right:-1px;border-top:none;border-left:none;border-bottom:1.5px solid var(--ember);border-right:1.5px solid var(--ember);}
+.sheet h2{font-size:19px;}
+.tag{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;display:block;}
+
+.warn{background:var(--char-dim);border:1px solid rgba(166,80,62,0.5);border-left:4px solid var(--char);padding:14px 16px;border-radius:var(--radius);margin-bottom:20px;}
+.warn .tag{color:#E0A79A;}
+.warn p{margin:6px 0 0;font-size:14.5px;}
+.warn p strong{color:#fff;}
+.warn ul{margin:8px 0 0;padding-left:18px;font-size:14px;}
+.warn ul li{margin-bottom:4px;}
+
+.grid{display:grid;grid-template-columns:1fr;gap:14px;}
+@media(min-width:640px){.grid.cols-2{grid-template-columns:1fr 1fr;}}
+@media(min-width:720px){.grid.cols-3{grid-template-columns:1fr 1fr 1fr;}}
+label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px;font-family:'JetBrains Mono',monospace;letter-spacing:0.02em;}
+input[type=number],input[type=range],select{width:100%;background:var(--ink);border:1px solid var(--line-strong);color:var(--text);padding:9px 10px;border-radius:var(--radius);font-family:'JetBrains Mono',monospace;font-size:14.5px;}
+input:focus,select:focus{outline:2px solid var(--ember);outline-offset:1px;border-color:var(--ember);}
+input[type=range]{accent-color:var(--ember);padding:0;}
+.field-note{font-size:12px;color:var(--muted);margin-top:4px;}
+
+.stat-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+@media(min-width:560px){.stat-row.cols-3{grid-template-columns:1fr 1fr 1fr;}}
+.stat{background:var(--ink);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;}
+.stat .label{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);}
+.stat .value{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--ember);margin-top:2px;}
+.stat .value .unit{font-size:12px;color:var(--muted);font-weight:400;font-family:'Karla',sans-serif;}
+
+.chart-box{background:var(--ink);border:1px solid var(--line);border-radius:var(--radius);padding:10px;margin-top:14px;}
+.chart-box svg{width:100%;height:auto;display:block;}
+.chart-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px;font-size:12px;color:var(--muted);}
+.chart-legend span.dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px;}
+
+.swatch-live{width:100%;height:56px;border-radius:var(--radius);border:1px solid var(--line-strong);margin-top:10px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:13px;color:#1a1206;font-weight:600;transition:background 0.3s ease;}
+
+table{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:13px;margin-top:8px;}
+th,td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--line);}
+th:first-child,td:first-child{text-align:left;}
+th{color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.04em;}
+.tblwrap{overflow-x:auto;}
+.badge{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:11.5px;padding:3px 9px;border-radius:20px;border:1px solid var(--line-strong);}
+.badge.safe{border-color:rgba(107,140,166,0.5);color:var(--steam);background:var(--steam-dim);}
+.badge.warnb{border-color:rgba(166,80,62,0.5);color:#E0A79A;background:var(--char-dim);}
+.badge.info{border-color:rgba(212,146,44,0.5);color:var(--ember);background:var(--ember-dim);}
+
+.refs{font-size:13px;color:var(--muted);}
+.refs li{margin-bottom:6px;}
+.consult{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;background:linear-gradient(135deg,var(--panel-2),var(--panel));border:1px solid var(--ember);border-radius:var(--radius);padding:16px 18px;}
+.consult p{margin:0;font-size:14px;max-width:52ch;}
+.consult a.wa{font-family:'Karla',sans-serif;font-weight:700;text-decoration:none;background:var(--ember);color:#1a1206;padding:10px 18px;border-radius:var(--radius);white-space:nowrap;font-size:14px;}
+.consult a.wa:hover{opacity:0.9;}
+footer.foot{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;text-align:center;}
+.small{font-size:12px;color:var(--muted);}
+hr.rule{border:none;border-top:1px dashed var(--line-strong);margin:18px 0;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Tools Qiladat · JAZMI · Laboratorium Sains Dapur</div>
+    <h1>Simulator Maillard & Karamelisasi</h1>
+    <p class="sub">Kenapa permukaan basah tidak pernah bisa kecokelatan walau digoreng lama? Simulasikan suhu permukaan dari basah → kering → cokelat, dan lihat sendiri mengapa air adalah batas keras 100°C yang harus dilewati dulu sebelum reaksi pencokelatan mulai.</p>
+    <div class="swatchstrip">
+      <div style="background:#EDE1CC;"></div><div style="background:#E8C468;"></div><div style="background:#C9822C;"></div><div style="background:#8B4A24;"></div><div style="background:#5C2E16;"></div><div style="background:#241108;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="warn">
+    <span class="tag">⚠ Baca dulu sebelum memakai</span>
+    <p><strong>Ini simulasi ilustratif untuk memahami pola, bukan model fisika presisi.</strong> Reaksi Maillard sesungguhnya adalah ratusan jalur reaksi paralel, bukan satu ambang tunggal — dan waktu memasak nyata dipengaruhi ketebalan bahan, jenis panci, kadar lemak, dan banyak faktor lain yang tidak dimodelkan di sini.</p>
+    <ul>
+      <li>Memanaskan minyak melewati titik asapnya (smoke point) merusak minyak &amp; bisa menghasilkan senyawa tidak sehat — perhatikan peringatan smoke point di simulator.</li>
+      <li>Pencokelatan berlebihan/gosong (terutama pada makanan bertepung/berpati) berkaitan dengan pembentukan akrilamida — badge "gosong" di alat ini adalah pengingat, bukan pengukuran kimia sungguhan.</li>
+    </ul>
+  </div>
+
+  <section class="sheet">
+    <span class="tag">Belajar — Pertanyaan Ilmiah</span>
+    <h2>Dua Reaksi yang Sering Tertukar</h2>
+    <p style="font-size:14.5px;"><strong>Reaksi Maillard</strong> terjadi antara asam amino (dari protein) dan gula pereduksi — menghasilkan ratusan senyawa aroma/rasa baru plus warna cokelat (melanoidin). <strong>Karamelisasi</strong> hanya melibatkan gula sendirian (tanpa protein) yang terurai oleh panas — setiap jenis gula punya ambang suhunya sendiri. Keduanya reaksi berbeda, tapi punya satu musuh yang sama:</p>
+    <p style="font-size:14.5px;"><strong>air punya titik didih ±100°C yang jadi "plafon keras".</strong> Selama masih ada air di permukaan makanan, hampir semua energi panas yang masuk dipakai untuk menguapkan air itu (panas laten), bukan menaikkan suhu. Permukaan basah secara fisik tidak bisa naik jauh di atas 100°C sampai airnya benar-benar habis — padahal Maillard baru mulai bermakna di kisaran 140°C ke atas. Itulah kenapa mengukus/merebus/braising basah tidak pernah menghasilkan kerak cokelat: uap air menjaga suhu tetap di bawah ambang, seberapa pun lama dimasak.</p>
+  </section>
+
+  <section class="sheet">
+    <span class="tag">Simulator</span>
+    <h2>Basah → Kering → Cokelat</h2>
+    <div class="grid cols-3">
+      <div>
+        <label for="tpan">Suhu wajan/oven (°C)</label>
+        <input type="number" id="tpan" value="200" step="5" min="60" max="300">
+      </div>
+      <div>
+        <label for="moisture">Kadar lembap permukaan</label>
+        <select id="moisture">
+          <option value="5">Sudah dikeringkan (ditepuk tisu)</option>
+          <option value="15" selected>Sedang (baru dicuci/dilap kasar)</option>
+          <option value="30">Basah (langsung dari kemasan/marinasi)</option>
+        </select>
+      </div>
+      <div>
+        <label for="elevation">Ketinggian tempat (m dpl)</label>
+        <input type="number" id="elevation" value="0" step="100" min="0" max="4000">
+        <p class="field-note">Makin tinggi, titik didih air makin rendah (≈ &minus;1°C/300m).</p>
+      </div>
+    </div>
+    <div class="grid cols-2" style="margin-top:12px;">
+      <div>
+        <label for="cookTime">Durasi masak yang dievaluasi (detik)</label>
+        <input type="number" id="cookTime" value="180" step="10" min="10" max="600">
+      </div>
+      <div>
+        <label for="fatType">Jenis lemak masak (cek smoke point)</label>
+        <select id="fatType"></select>
+      </div>
+    </div>
+
+    <div class="chart-box"><svg id="tempChart" viewBox="0 0 400 160"></svg></div>
+    <div class="chart-legend">
+      <span><span class="dot" style="background:var(--steam);"></span>Fase penguapan (suhu terkunci ≈ titik didih)</span>
+      <span><span class="dot" style="background:var(--ember);"></span>Fase kering — suhu naik menuju suhu wajan</span>
+    </div>
+
+    <div class="stat-row cols-3">
+      <div class="stat"><div class="label">Waktu sampai kering</div><div class="value" id="outDry" style="font-size:17px;">–<span class="unit">detik</span></div></div>
+      <div class="stat"><div class="label">Waktu mulai Maillard (&gt;140°C)</div><div class="value" id="outBrownStart" style="font-size:17px;">–<span class="unit">detik</span></div></div>
+      <div class="stat"><div class="label">Status smoke point</div><div class="value" id="outSmoke" style="font-size:15px;">–</div></div>
+    </div>
+
+    <p class="field-note" style="margin-top:10px;">Warna permukaan pada detik ke-<span id="cookTimeLabel">180</span>:</p>
+    <div class="swatch-live" id="liveSwatch">–</div>
+  </section>
+
+  <section class="sheet">
+    <span class="tag">Kalkulator</span>
+    <h2>Ambang Karamelisasi per Jenis Gula</h2>
+    <p class="small">Berbeda dari Maillard, karamelisasi murni soal jenis gula — tidak butuh protein sama sekali.</p>
+    <div class="grid cols-2">
+      <div>
+        <label for="sugarType">Jenis gula</label>
+        <select id="sugarType">
+          <option value="110">Fruktosa (gula buah) — ≈110°C</option>
+          <option value="160" selected>Glukosa/Dekstrosa — ≈160°C</option>
+          <option value="165">Sukrosa (gula pasir) — ≈165°C</option>
+          <option value="180">Maltosa — ≈180°C</option>
+        </select>
+      </div>
+      <div>
+        <label for="sugarTemp">Suhu permukaan saat ini (°C)</label>
+        <input type="number" id="sugarTemp" value="170" step="5">
+      </div>
+    </div>
+    <div id="sugarResult" style="margin-top:12px;"></div>
+    <div class="tblwrap" style="margin-top:12px;">
+      <table><thead><tr><th>Gula</th><th>Ambang karamelisasi</th></tr></thead>
+      <tbody>
+        <tr><td>Fruktosa</td><td>≈110°C</td></tr>
+        <tr><td>Galaktosa</td><td>≈160°C</td></tr>
+        <tr><td>Glukosa/Dekstrosa</td><td>≈160°C</td></tr>
+        <tr><td>Sukrosa (gula pasir)</td><td>≈160–170°C</td></tr>
+        <tr><td>Maltosa</td><td>≈180°C</td></tr>
+      </tbody></table>
+    </div>
+  </section>
+
+  <section class="sheet">
+    <span class="tag">Batasan</span>
+    <h2>Kapan Simulator Ini Tidak Boleh Dipercaya</h2>
+    <ul style="font-size:14px;padding-left:20px;">
+      <li><strong>Model dua-fase (basah→kering) adalah penyederhanaan.</strong> Perpindahan panas nyata jauh lebih kompleks (konduksi ke bagian dalam bahan, ketebalan, konduktivitas panci) — alat ini hanya memodelkan suhu permukaan secara kualitatif.</li>
+      <li><strong>140°C sebagai "ambang Maillard" adalah penyederhanaan pedagogis.</strong> Maillard bisa terjadi perlahan bahkan di bawah 100°C jika waktunya sangat lama (mis. proses fermentasi/pemeraman berjam-jam) — yang berubah bukan "terjadi atau tidak", tapi kecepatannya.</li>
+      <li><strong>Angka smoke point &amp; ambang karamelisasi bervariasi</strong> tergantung merek, tingkat pemurnian, usia minyak, dan kemurnian gula — anggap sebagai rentang referensi umum.</li>
+      <li>Badge "gosong/akrilamida" adalah pengingat kualitatif, <strong>bukan pengukuran kimia nyata</strong> — risiko sesungguhnya tergantung jenis bahan (terutama pati/karbohidrat) dan suhu+durasi aktual.</li>
+    </ul>
+  </section>
+
+  <section class="sheet">
+    <span class="tag">Referensi</span>
+    <ul class="refs">
+      <li>Louis-Camille Maillard (1912) — penemu awal reaksi antara asam amino &amp; gula pereduksi yang menghasilkan pencokelatan non-enzimatik.</li>
+      <li>Harold McGee, <em>On Food and Cooking: The Science and Lore of the Kitchen</em> — rujukan umum ambang suhu karamelisasi per jenis gula &amp; prinsip perpindahan panas dalam memasak.</li>
+      <li>Prinsip umum smoke point minyak masak — dirangkum dari berbagai sumber food science, bervariasi per merek/pemurnian.</li>
+    </ul>
+  </section>
+
+  <div class="consult">
+    <p><strong>Simulasi ini titik awal pemahaman — jam terbang di depan kompor tetap guru terbaik.</strong> Untuk konsultasi lebih lanjut, hubungi kami.</p>
+    <a class="wa" href="https://wa.me/6281356572588?text=Halo%2C%20saya%20ingin%20konsultasi%20soal%20Simulator%20Maillard%20%26%20Karamelisasi%20JAZMI." target="_blank" rel="noopener">Konsultasi via WhatsApp →</a>
+  </div>
+
+  <footer class="foot">Tools Qiladat / JAZMI — laboratorium alat &amp; keilmuan. Dibangun mengikuti metode Belajar → Model → Uji → Tool.</footer>
+</div>
+
+<script>
+/* ===================== FAT SMOKE POINTS (referensi umum, bervariasi per merek) ===================== */
+const FATS = [
+  {id:'mentega', label:'Mentega (butter)', smoke:150},
+  {id:'evoo', label:'Minyak zaitun extra virgin', smoke:190},
+  {id:'kelapa', label:'Minyak kelapa (virgin)', smoke:175},
+  {id:'sayur', label:'Minyak sayur/kanola', smoke:205},
+  {id:'ghee', label:'Ghee / minyak samin', smoke:250},
+  {id:'alpukat', label:'Minyak alpukat (refined)', smoke:270}
+];
+const fatSel = document.getElementById('fatType');
+fatSel.innerHTML = FATS.map(f=>`<option value="${f.id}">${f.label} (≈${f.smoke}°C)</option>`).join('');
+fatSel.value = 'sayur';
+
+/* ===================== COLOR INTERPOLATION FOR BROWNING SWATCH ===================== */
+const STOPS = [
+  {bu:0, hex:'#EDE1CC'},
+  {bu:3, hex:'#E8C468'},
+  {bu:15, hex:'#C9822C'},
+  {bu:40, hex:'#8B4A24'},
+  {bu:80, hex:'#5C2E16'},
+  {bu:140, hex:'#241108'}
+];
+function hexToRgb(h){ h=h.replace('#',''); return [parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)]; }
+function rgbToHex(r,g,b){ return '#'+[r,g,b].map(v=>Math.round(Math.max(0,Math.min(255,v))).toString(16).padStart(2,'0')).join(''); }
+function buToColor(bu){
+  if(bu<=STOPS[0].bu) return STOPS[0].hex;
+  for(let i=0;i<STOPS.length-1;i++){
+    if(bu>=STOPS[i].bu && bu<=STOPS[i+1].bu){
+      const t=(bu-STOPS[i].bu)/(STOPS[i+1].bu-STOPS[i].bu);
+      const c1=hexToRgb(STOPS[i].hex), c2=hexToRgb(STOPS[i+1].hex);
+      return rgbToHex(c1[0]+(c2[0]-c1[0])*t, c1[1]+(c2[1]-c1[1])*t, c1[2]+(c2[2]-c1[2])*t);
+    }
+  }
+  return STOPS[STOPS.length-1].hex;
+}
+function buLabel(bu){
+  if(bu<3) return 'Belum bereaksi (pucat)';
+  if(bu<15) return 'Mulai keemasan';
+  if(bu<40) return 'Cokelat keemasan — Maillard aktif';
+  if(bu<80) return 'Cokelat tua, mendekati karamel dalam';
+  return 'Gosong — waspada akrilamida';
+}
+
+/* ===================== SIMULATION ===================== */
+const RATE_HEAT = 0.03, EVAP_RATE = 0.02, BROWN_K = 0.002, MAILLARD_THRESH = 140;
+
+function simulate(Tpan, moistureUnits, elevation, maxT){
+  const boiling = 100 - elevation/300;
+  let Tsurf = 20, moisture = moistureUnits, BU = 0;
+  let dryAt=null, brownStartAt=null;
+  const series = [];
+  for(let t=0;t<=maxT;t++){
+    if(moisture>0){
+      if(Tsurf < boiling){ Tsurf += (Tpan-Tsurf)*RATE_HEAT; if(Tsurf>boiling) Tsurf=boiling; }
+      else { Tsurf = boiling; moisture -= EVAP_RATE*(Tpan-boiling); if(moisture<0) moisture=0; }
+    } else {
+      if(dryAt===null) dryAt=t;
+      Tsurf += (Tpan-Tsurf)*RATE_HEAT;
+    }
+    if(Tsurf>MAILLARD_THRESH){
+      BU += (Tsurf-MAILLARD_THRESH)*BROWN_K;
+      if(brownStartAt===null) brownStartAt=t;
+    }
+    series.push({t, Tsurf, moisture, BU, phase: moisture>0 ? 'steam' : 'dry'});
+  }
+  return {series, dryAt, brownStartAt, boiling};
+}
+
+function fmt(n,d=0){ if(!isFinite(n)) return '–'; return Number(n).toLocaleString('id-ID',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+
+function renderChart(series, Tpan){
+  const svg = document.getElementById('tempChart');
+  const W=400,H=160, padL=32, padB=20, padT=10, padR=10;
+  const maxT = series[series.length-1].t;
+  const maxTemp = Math.max(Tpan, 100)+10;
+  const x = t => padL + (t/maxT)*(W-padL-padR);
+  const y = temp => (H-padB) - (temp/maxTemp)*(H-padB-padT);
+
+  let path='', color='';
+  let segments = [];
+  let curSeg = {phase:series[0].phase, points:[series[0]]};
+  for(let i=1;i<series.length;i++){
+    if(series[i].phase!==curSeg.phase){
+      curSeg.points.push(series[i]);
+      segments.push(curSeg);
+      curSeg = {phase:series[i].phase, points:[series[i]]};
+    } else {
+      curSeg.points.push(series[i]);
+    }
+  }
+  segments.push(curSeg);
+
+  let svgContent = `<line x1="${padL}" y1="${y(100)}" x2="${W-padR}" y2="${y(100)}" stroke="var(--line-strong)" stroke-width="1" stroke-dasharray="3,3"/>`;
+  svgContent += `<text x="${W-padR}" y="${y(100)-4}" text-anchor="end" font-size="9" fill="var(--muted)" font-family="JetBrains Mono, monospace">100°C</text>`;
+  svgContent += `<line x1="${padL}" y1="${y(MAILLARD_THRESH)}" x2="${W-padR}" y2="${y(MAILLARD_THRESH)}" stroke="var(--ember)" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/>`;
+  svgContent += `<text x="${W-padR}" y="${y(MAILLARD_THRESH)-4}" text-anchor="end" font-size="9" fill="var(--ember)" font-family="JetBrains Mono, monospace">140°C Maillard</text>`;
+
+  segments.forEach(seg=>{
+    const col = seg.phase==='steam' ? 'var(--steam)' : 'var(--ember)';
+    const d = seg.points.map((p,i)=>`${i===0?'M':'L'}${x(p.t).toFixed(1)},${y(p.Tsurf).toFixed(1)}`).join(' ');
+    svgContent += `<path d="${d}" fill="none" stroke="${col}" stroke-width="2.5"/>`;
+  });
+
+  svgContent += `<text x="${padL}" y="${H-4}" font-size="9" fill="var(--muted)" font-family="JetBrains Mono, monospace">0s</text>`;
+  svgContent += `<text x="${W-padR}" y="${H-4}" text-anchor="end" font-size="9" fill="var(--muted)" font-family="JetBrains Mono, monospace">${maxT}s</text>`;
+
+  svg.innerHTML = svgContent;
+}
+
+function computeAll(){
+  const Tpan = parseFloat(document.getElementById('tpan').value)||100;
+  const moistureUnits = parseFloat(document.getElementById('moisture').value)||0;
+  const elevation = parseFloat(document.getElementById('elevation').value)||0;
+  const cookTime = parseFloat(document.getElementById('cookTime').value)||0;
+  const fat = FATS.find(f=>f.id===fatSel.value);
+
+  const maxT = Math.max(cookTime+30, 240);
+  const {series, dryAt, brownStartAt} = simulate(Tpan, moistureUnits, elevation, maxT);
+
+  document.getElementById('outDry').innerHTML = (dryAt===null?'&gt;'+maxT:fmt(dryAt))+'<span class="unit">detik</span>';
+  document.getElementById('outBrownStart').innerHTML = (brownStartAt===null?'tidak tercapai':fmt(brownStartAt))+(brownStartAt===null?'':'<span class="unit">detik</span>');
+
+  const smokeEl = document.getElementById('outSmoke');
+  if(Tpan > fat.smoke){
+    smokeEl.innerHTML = `<span class="badge warnb">Lewat smoke point ${fat.label} (${fat.smoke}°C)</span>`;
+  } else {
+    smokeEl.innerHTML = `<span class="badge safe">Aman — di bawah smoke point (${fat.smoke}°C)</span>`;
+  }
+
+  renderChart(series, Tpan);
+
+  const idx = Math.min(Math.round(cookTime), series.length-1);
+  const pointAtCook = series[idx];
+  const col = buToColor(pointAtCook.BU);
+  const swatch = document.getElementById('liveSwatch');
+  swatch.style.background = col;
+  swatch.textContent = buLabel(pointAtCook.BU);
+  // pick readable text color
+  const rgb = hexToRgb(col);
+  const luminance = (0.299*rgb[0]+0.587*rgb[1]+0.114*rgb[2])/255;
+  swatch.style.color = luminance>0.55 ? '#1a1206' : '#F0E7D2';
+
+  document.getElementById('cookTimeLabel').textContent = fmt(cookTime);
+}
+
+['tpan','moisture','elevation','cookTime'].forEach(id=>document.getElementById(id).addEventListener('input', computeAll));
+fatSel.addEventListener('change', computeAll);
+
+/* ===================== SUGAR CARAMELIZATION COMPARATOR ===================== */
+function computeSugar(){
+  const thresh = parseFloat(document.getElementById('sugarType').value);
+  const temp = parseFloat(document.getElementById('sugarTemp').value)||0;
+  const el = document.getElementById('sugarResult');
+  if(temp>=thresh){
+    el.innerHTML = `<span class="badge info">Karamelisasi terjadi — suhu ${fmt(temp)}°C ≥ ambang ${fmt(thresh)}°C</span>`;
+  } else {
+    el.innerHTML = `<span class="badge safe">Belum karamelisasi — butuh ${fmt(thresh-temp)}°C lagi untuk mencapai ambang ${fmt(thresh)}°C</span>`;
+  }
+}
+document.getElementById('sugarType').addEventListener('change', computeSugar);
+document.getElementById('sugarTemp').addEventListener('input', computeSugar);
+
+/* ===================== INIT ===================== */
+computeAll();
+computeSugar();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

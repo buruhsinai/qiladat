@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulator Dispersi Cahaya</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0B14; --surface:#151420; --surface-2:#1D1B2B; --line:#2E2C40;
+    --ink:#EFEDF7; --muted:#948FB0; --violet:#8C7CF0; --amber:#E5A439; --red:#E1614E;
+    --font-display:'Space Grotesk',sans-serif; --font-body:'IBM Plex Sans',sans-serif; --font-mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--font-body); line-height:1.55; padding-bottom:80px;}
+  .wrap{max-width:980px; margin:0 auto; padding:0 20px;}
+  h1,h2,h3{font-family:var(--font-display); font-weight:600; margin:0 0 12px;}
+  p{margin:0 0 14px; max-width:70ch;}
+  .muted{color:var(--muted);}
+  .mono{font-family:var(--font-mono);}
+  section{padding:48px 0; border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+
+  .hero{padding-top:44px;}
+  .hero-tag{font-family:var(--font-mono); font-size:13px; color:var(--violet); margin-bottom:10px;}
+  .hero h1{font-size:clamp(24px,4vw,36px); max-width:24ch; line-height:1.2;}
+  .hero p.lead{font-size:17px; color:var(--muted); max-width:60ch;}
+
+  .sec-head{display:flex; align-items:baseline; gap:10px; margin-bottom:22px;}
+  .sec-num{font-family:var(--font-mono); font-size:13px; color:var(--violet);}
+
+  .panel{background:var(--surface); border:1px solid var(--line); padding:24px;}
+  .grid-ctl{display:grid; grid-template-columns:1fr; gap:20px;}
+  @media(min-width:640px){ .grid-ctl{grid-template-columns:repeat(3,1fr);} }
+  .field{display:flex; flex-direction:column; gap:6px;}
+  .field label{font-size:13px; color:var(--muted);}
+  .field .hint{font-size:11px; color:var(--muted); font-family:var(--font-mono);}
+  input[type=range]{width:100%; accent-color:var(--violet);}
+  select{background:var(--bg); border:1px solid var(--line); color:var(--ink); padding:9px 10px; font-family:var(--font-mono); font-size:14px; width:100%;}
+  select:focus{outline:2px solid var(--violet); outline-offset:1px;}
+  .range-val{font-family:var(--font-mono); color:var(--violet); font-size:14px; font-weight:600;}
+
+  .kpis{display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--line); margin-top:20px; border:1px solid var(--line);}
+  @media(min-width:640px){ .kpis{grid-template-columns:repeat(4,1fr);} }
+  .kpi{background:var(--surface); padding:14px;}
+  .kpi .val{font-family:var(--font-mono); font-size:17px;}
+  .kpi .lbl{font-size:11.5px; color:var(--muted); margin-top:2px;}
+
+  .chart-wrap{background:var(--surface); border:1px solid var(--line); padding:20px; margin-top:20px;}
+  svg text{font-family:var(--font-mono); fill:var(--muted);}
+  .legend{display:flex; gap:12px; flex-wrap:wrap; margin-top:12px; font-size:11px; color:var(--muted);}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .dot{width:9px; height:9px; display:inline-block; border-radius:50%;}
+
+  .explain-grid{display:grid; grid-template-columns:1fr; gap:16px;}
+  @media(min-width:780px){ .explain-grid{grid-template-columns:1fr 1fr;} }
+  .explain-card{background:var(--surface); border:1px solid var(--line); padding:20px;}
+  .explain-card h4{font-size:15px; margin:0 0 8px; color:var(--violet);}
+  .explain-card p{font-size:13.5px;}
+
+  .formula{background:var(--surface); border:1px solid var(--line); padding:16px 18px; font-family:var(--font-mono); font-size:12.5px; color:var(--violet); margin:14px 0; overflow-x:auto;}
+  ul.limits{padding-left:20px;}
+  ul.limits li{margin-bottom:10px; font-size:14px;}
+  .ref-list{list-style:none; padding:0; margin:0;}
+  .ref-list li{padding:12px 0; border-bottom:1px solid var(--line);}
+  .ref-list li:last-child{border-bottom:none;}
+  .ref-list .src{font-family:var(--font-mono); font-size:12px; color:var(--muted);}
+
+  footer{padding:40px 0 20px; text-align:center;}
+  footer p{margin:0; font-size:12px; color:var(--muted); max-width:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <section class="hero">
+    <div class="hero-tag">OPTIK — DISPERSI CAHAYA</div>
+    <h1>Cahaya putih bukan satu warna — prisma cuma menunjukkan apa yang selama ini bersembunyi di dalamnya</h1>
+    <p class="lead">Cahaya matahari adalah campuran semua warna sekaligus. Prisma tidak "menciptakan" warna — ia cuma membelokkan tiap warna dengan sudut yang sedikit berbeda, karena kaca (atau bahan apa pun) membelokkan cahaya merah dan cahaya ungu dengan kekuatan yang tidak persis sama.</p>
+  </section>
+
+  <section id="eksplorasi">
+    <div class="sec-head"><span class="sec-num">01</span><h2>Eksplorasi</h2></div>
+    <div class="panel">
+      <div class="grid-ctl">
+        <div class="field">
+          <label for="material">Material prisma</label>
+          <select id="material"></select>
+        </div>
+        <div class="field">
+          <label>Indeks bias dasar (pada λ=550nm): <span class="range-val" id="valN0"></span></label>
+          <input type="range" id="n0" min="1.0" max="2.6" step="0.01" value="1.52">
+          <span class="hint">geser ini untuk mensimulasikan "bahan hipotetis" dengan indeks lain</span>
+        </div>
+        <div class="field">
+          <label>Panjang gelombang disorot: <span class="range-val" id="valLambda"></span></label>
+          <input type="range" id="lambda" min="380" max="750" step="5" value="500">
+        </div>
+      </div>
+    </div>
+
+    <div class="kpis" id="kpis"></div>
+  </section>
+
+  <section id="visualisasi">
+    <div class="sec-head"><span class="sec-num">02</span><h2>Cahaya putih → spektrum</h2></div>
+    <div class="chart-wrap">
+      <svg id="prisma" viewBox="0 0 900 360" style="width:100%; height:auto;"></svg>
+    </div>
+  </section>
+
+  <section id="grafikN">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Kenapa indeks bias bergantung pada λ</h2></div>
+    <p>Ini kurva yang menjawabnya langsung: indeks bias material ini di setiap panjang gelombang cahaya tampak.</p>
+    <div class="chart-wrap">
+      <svg id="chartN" viewBox="0 0 900 260" style="width:100%; height:auto;"></svg>
+    </div>
+  </section>
+
+  <section id="penjelasan">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Dua pertanyaan intinya</h2></div>
+    <div class="explain-grid">
+      <div class="explain-card">
+        <h4>Mengapa prisma memisahkan warna?</h4>
+        <p>Setiap warna (panjang gelombang) dibelokkan sesuai indeks bias material pada panjang gelombang itu. Karena indeks bias violet sedikit lebih besar dari indeks bias merah, violet dibelokkan sedikit lebih tajam. Cahaya putih masuk sebagai satu berkas — begitu melewati dua permukaan miring prisma, perbedaan kecil dalam sudut belok itu terakumulasi jadi pemisahan yang terlihat jelas oleh mata.</p>
+      </div>
+      <div class="explain-card">
+        <h4>Mengapa indeks bias bergantung pada λ?</h4>
+        <p>Indeks bias muncul dari bagaimana elektron dalam material "bergoyang" merespons medan listrik cahaya yang lewat. Getaran alami elektron itu (resonansi) biasanya berada di ultraviolet — di luar cahaya tampak. Semakin dekat panjang gelombang cahaya ke resonansi itu (yaitu semakin pendek λ, ke arah ungu), semakin kuat responsnya, dan semakin besar indeks biasnya. Ini disebut dispersi normal, dan persamaan Cauchy adalah pendekatan matematis sederhana untuk pola ini.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="metode">
+    <div class="sec-head"><span class="sec-num">05</span><h2>Metode</h2></div>
+    <p>Indeks bias tiap panjang gelombang didekati dengan persamaan Cauchy (λ dalam mikrometer):</p>
+    <div class="formula">n(λ) = A + B / λ²</div>
+    <p>Pembelokan di tiap permukaan prisma mengikuti hukum Snellius, dan total penyimpangan sudut δ dari sinar asalnya (sudut puncak prisma A_prisma, sudut datang θᵢ):</p>
+    <div class="formula">sin(θ_r1) = sin(θᵢ)/n
+θ_masuk2 = A_prisma − θ_r1
+sin(θ_keluar) = n · sin(θ_masuk2)
+δ = θᵢ + θ_keluar − A_prisma</div>
+    <p>Kalau <span class="mono">n·sin(θ_masuk2)</span> melebihi 1, cahaya tidak bisa keluar dari permukaan kedua sama sekali — ia memantul sempurna ke dalam (pemantulan internal total). Ini justru alasan berlian tampak sangat berkilau: indeksnya sangat tinggi sehingga cahaya sering terpantul berkali-kali di dalam sebelum akhirnya keluar.</p>
+  </section>
+
+  <section id="batasan">
+    <div class="sec-head"><span class="sec-num">06</span><h2>Batasan</h2></div>
+    <ul class="limits">
+      <li><strong>Sudut penyimpangan pada diagram sengaja diperbesar</strong> agar warna terlihat terpisah jelas — pemisahan sudut sungguhan pada prisma kaca biasa untuk seluruh cahaya tampak sebenarnya hanya beberapa derajat.</li>
+      <li><strong>Sudut puncak dan sudut datang prisma dibuat tetap (30°)</strong> untuk semua material supaya perbandingan antar-material adil — prisma sungguhan bisa punya geometri apa pun.</li>
+      <li><strong>Persamaan Cauchy adalah pendekatan dua-suku</strong>, akurat untuk sebagian besar cahaya tampak tapi menyimpang dekat pita serapan material (terutama mendekati ultraviolet).</li>
+      <li><strong>Nilai B tiap material adalah nilai pendekatan umum dari referensi optik</strong>, bukan spesifikasi satu produk kaca tertentu.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <div class="sec-head"><span class="sec-num">07</span><h2>Referensi</h2></div>
+    <ul class="ref-list">
+      <li>Persamaan Cauchy sebagai model empiris standar dispersi indeks bias material transparan.
+        <div class="src">Rujukan umum optik</div>
+      </li>
+      <li>Hukum Snellius dan formula penyimpangan sudut prisma segitiga standar.
+        <div class="src">Rujukan umum fisika optik geometris</div>
+      </li>
+      <li>Koefisien Cauchy pendekatan untuk kaca BK7, kaca flint, air, dan berlian.
+        <div class="src">Rujukan umum data material optik</div>
+      </li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Simulator edukasi optik geometris — bukan alat desain lensa/prisma presisi.</p>
+  </footer>
+
+</div>
+
+<script>
+const MATERIAL = [
+  {id:'air', nama:'Udara', B:0.0002, n0default:1.0003},
+  {id:'air2', nama:'Air', B:0.00311, n0default:1.33},
+  {id:'kron', nama:'Kaca Kron (BK7)', B:0.00420, n0default:1.517},
+  {id:'flint', nama:'Kaca Flint', B:0.01380, n0default:1.65},
+  {id:'berlian', nama:'Berlian', B:0.01497, n0default:2.417}
+];
+
+const APEX = 30*Math.PI/180;
+const INCIDENT = 30*Math.PI/180;
+
+const SPEKTRUM = [
+  {lam:410, warna:'#8B5CF6'}, {lam:450, warna:'#5B7CF0'}, {lam:490, warna:'#5BB8D9'},
+  {lam:530, warna:'#5BD98F'}, {lam:570, warna:'#D9D95B'}, {lam:610, warna:'#E8A439'},
+  {lam:660, warna:'#E1614E'}
+];
+
+function populateMaterial(){
+  const sel = document.getElementById('material');
+  sel.innerHTML = MATERIAL.map(m=>`<option value="${m.id}">${m.nama}</option>`).join('');
+  sel.value='kron';
+}
+
+function hitungA(n0, B){
+  return n0 - B/(0.55*0.55);
+}
+
+function nAt(lamNm, A, B){
+  const lamUm = lamNm/1000;
+  return A + B/(lamUm*lamUm);
+}
+
+function prismaCalc(n, incident, apex){
+  const thetaR1 = Math.asin(Math.sin(incident)/n);
+  const angleAtSecond = apex - thetaR1;
+  const sinOut = n*Math.sin(angleAtSecond);
+  if(Math.abs(sinOut)>1) return null;
+  const thetaOut = Math.asin(sinOut);
+  const deviation = (incident+thetaOut-apex);
+  return {thetaOut, deviation};
+}
+
+function wavelengthToColor(lam){
+  // pendekatan sederhana lam(nm) -> RGB kasar untuk highlight
+  let r,g,b;
+  if(lam<440){ r=-(lam-440)/(440-380); g=0; b=1; }
+  else if(lam<490){ r=0; g=(lam-440)/(490-440); b=1; }
+  else if(lam<510){ r=0; g=1; b=-(lam-510)/(510-490); }
+  else if(lam<580){ r=(lam-510)/(580-510); g=1; b=0; }
+  else if(lam<645){ r=1; g=-(lam-645)/(645-580); b=0; }
+  else{ r=1; g=0; b=0; }
+  const toHex=v=>Math.round(Math.max(0,Math.min(1,v))*255).toString(16).padStart(2,'0');
+  return '#'+toHex(r)+toHex(g)+toHex(b);
+}
+
+function hitung(){
+  const matId = document.getElementById('material').value;
+  const mat = MATERIAL.find(m=>m.id===matId);
+  const n0 = parseFloat(document.getElementById('n0').value);
+  const lambda = parseFloat(document.getElementById('lambda').value);
+
+  document.getElementById('valN0').textContent = n0.toFixed(3);
+  document.getElementById('valLambda').textContent = lambda+' nm';
+
+  const A = hitungA(n0, mat.B);
+  const nSelected = nAt(lambda, A, mat.B);
+  const nViolet = nAt(410, A, mat.B);
+  const nRed = nAt(660, A, mat.B);
+
+  const calcSel = prismaCalc(nSelected, INCIDENT, APEX);
+
+  const kpis = document.getElementById('kpis');
+  kpis.innerHTML = `
+    <div class="kpi"><div class="val">${nSelected.toFixed(4)}</div><div class="lbl">n pada λ=${lambda}nm</div></div>
+    <div class="kpi"><div class="val">${(nViolet-nRed).toFixed(4)}</div><div class="lbl">selisih n (violet 410nm − merah 660nm)</div></div>
+    <div class="kpi"><div class="val">${calcSel? (calcSel.deviation*180/Math.PI).toFixed(2)+'°' : 'TIR'}</div><div class="lbl">penyimpangan sudut λ terpilih</div></div>
+    <div class="kpi"><div class="val">${mat.nama}</div><div class="lbl">material</div></div>
+  `;
+
+  renderPrisma(A, mat.B, lambda);
+  renderChartN(A, mat.B, lambda);
+}
+
+function renderPrisma(A,B,lambdaHighlight){
+  const svg = document.getElementById('prisma');
+  const W=900,H=360;
+  const apexPt=[450,60], leftPt=[450-155,300], rightPt=[450+155,300];
+
+  let parts=[];
+  parts.push(`<polygon points="${apexPt.join(',')} ${leftPt.join(',')} ${rightPt.join(',')}" fill="#1D1B2B" stroke="#2E2C40" stroke-width="1.5"/>`);
+
+  // sinar masuk (putih) menuju titik tengah sisi kiri
+  const entry=[leftPt[0]+ (apexPt[0]-leftPt[0])*0.5, leftPt[1]+(apexPt[1]-leftPt[1])*0.5];
+  parts.push(`<line x1="80" y1="${entry[1]-90}" x2="${entry[0]}" y2="${entry[1]}" stroke="#EFEDF7" stroke-width="3"/>`);
+  parts.push(`<text x="90" y="${entry[1]-98}" font-size="11" fill="#EFEDF7">cahaya putih</text>`);
+
+  // fan keluar dari sisi kanan, titik keluar kira2 tengah sisi kanan
+  const exitPt=[rightPt[0]-(rightPt[0]-apexPt[0])*0.5, rightPt[1]-(rightPt[1]-apexPt[1])*0.5];
+  const EXAG = 9; // pembesaran visual sudut
+
+  SPEKTRUM.forEach(s=>{
+    const n = nAt(s.lam, A, B);
+    const calc = prismaCalc(n, INCIDENT, APEX);
+    if(!calc) return;
+    const ang = calc.deviation*EXAG;
+    const len=380;
+    const dx = Math.cos(ang)*len, dy = Math.sin(ang)*len;
+    parts.push(`<line x1="${exitPt[0]}" y1="${exitPt[1]}" x2="${exitPt[0]+dx}" y2="${exitPt[1]+dy}" stroke="${s.warna}" stroke-width="3" opacity="0.85"/>`);
+  });
+
+  // sinar highlight (lambda terpilih)
+  const nH = nAt(lambdaHighlight, A, B);
+  const calcH = prismaCalc(nH, INCIDENT, APEX);
+  if(calcH){
+    const ang = calcH.deviation*EXAG;
+    const len=400;
+    const dx=Math.cos(ang)*len, dy=Math.sin(ang)*len;
+    const warnaH = wavelengthToColor(lambdaHighlight);
+    parts.push(`<line x1="${exitPt[0]}" y1="${exitPt[1]}" x2="${exitPt[0]+dx}" y2="${exitPt[1]+dy}" stroke="${warnaH}" stroke-width="5"/>`);
+    parts.push(`<circle cx="${exitPt[0]+dx}" cy="${exitPt[1]+dy}" r="6" fill="${warnaH}" stroke="#0B0B14" stroke-width="1.5"/>`);
+  } else {
+    parts.push(`<text x="${exitPt[0]+20}" y="${exitPt[1]-10}" font-size="12" fill="#E1614E">pemantulan internal total — λ ini tidak keluar</text>`);
+  }
+
+  svg.innerHTML = parts.join('');
+}
+
+function renderChartN(A,B,lambdaHighlight){
+  const svg = document.getElementById('chartN');
+  const W=900,H=260,padL=55,padR=20,padT=16,padB=30;
+  const innerW=W-padL-padR, innerH=H-padT-padB;
+
+  const pts=[];
+  for(let lam=380; lam<=750; lam+=5){ pts.push({lam, n:nAt(lam,A,B)}); }
+  const nMin=Math.min(...pts.map(p=>p.n)), nMax=Math.max(...pts.map(p=>p.n));
+  const pad=(nMax-nMin)*0.15 || 0.01;
+
+  const x = lam => padL + innerW*((lam-380)/(750-380));
+  const y = n => padT + innerH - ((n-(nMin-pad))/((nMax+pad)-(nMin-pad)))*innerH;
+
+  let parts=[];
+  for(let i=0;i<=4;i++){
+    const nv = (nMin-pad)+((nMax+pad)-(nMin-pad))*i/4;
+    const yy=y(nv);
+    parts.push(`<line x1="${padL}" y1="${yy}" x2="${W-padR}" y2="${yy}" stroke="#2E2C40" stroke-width="1"/>`);
+    parts.push(`<text x="${padL-8}" y="${yy+4}" font-size="9" text-anchor="end">${nv.toFixed(3)}</text>`);
+  }
+  for(let lam=400; lam<=700; lam+=100){
+    parts.push(`<text x="${x(lam).toFixed(1)}" y="${H-10}" font-size="9" text-anchor="middle">${lam}nm</text>`);
+  }
+
+  let d = pts.map((p,i)=>(i===0?'M':'L')+x(p.lam).toFixed(1)+' '+y(p.n).toFixed(1)).join(' ');
+  parts.push(`<path d="${d}" fill="none" stroke="#8C7CF0" stroke-width="2.5"/>`);
+
+  const nH = nAt(lambdaHighlight,A,B);
+  parts.push(`<circle cx="${x(lambdaHighlight).toFixed(1)}" cy="${y(nH).toFixed(1)}" r="5" fill="${wavelengthToColor(lambdaHighlight)}" stroke="#EFEDF7" stroke-width="1.5"/>`);
+
+  svg.innerHTML = parts.join('');
+}
+
+populateMaterial();
+document.getElementById('material').addEventListener('change', ()=>{
+  const mat = MATERIAL.find(m=>m.id===document.getElementById('material').value);
+  document.getElementById('n0').value = mat.n0default;
+  hitung();
+});
+document.getElementById('n0').addEventListener('input', hitung);
+document.getElementById('lambda').addEventListener('input', hitung);
+hitung();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

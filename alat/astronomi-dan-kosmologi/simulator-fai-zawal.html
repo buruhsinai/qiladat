@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulator Fai Zawal — Laboratorium JAZMI</title>
+<style>
+  :root{
+    --bg:#0a1512; --bg2:#0f1e19; --card:#122420; --card2:#16302a; --line:#1f3d34;
+    --emerald:#22c98a; --emerald-dim:#0e6b4f; --gold:#e0b354; --text:#e9f3ee;
+    --muted:#8fada0; --danger:#e07a5f; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:'Georgia','Iowan Old Style',serif; line-height:1.65;}
+  .sans{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;}
+  header{padding:34px 20px 24px; text-align:center; background:radial-gradient(ellipse at top, #113b2e 0%, var(--bg) 70%); border-bottom:1px solid var(--line);}
+  header .kicker{font-family:-apple-system,sans-serif; letter-spacing:.14em; text-transform:uppercase; font-size:12px; color:var(--gold); margin-bottom:10px;}
+  header h1{font-size:1.5rem; margin:0 0 10px; font-weight:600; line-height:1.35;}
+  header p{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px; max-width:640px; margin:0 auto;}
+  nav.tabs{position:sticky; top:0; z-index:10; display:flex; overflow-x:auto; gap:6px; padding:10px 14px; background:rgba(10,21,18,.96); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); font-family:-apple-system,sans-serif; -webkit-overflow-scrolling:touch;}
+  nav.tabs a{flex:0 0 auto; padding:7px 13px; border-radius:999px; font-size:12.5px; color:var(--muted); text-decoration:none; border:1px solid var(--line); white-space:nowrap;}
+  main{max-width:780px; margin:0 auto; padding:8px 18px 60px;}
+  section{padding:32px 0; border-bottom:1px solid var(--line);}
+  section:last-child{border-bottom:none;}
+  h2{font-size:1.12rem; color:var(--emerald); margin:0 0 6px; display:flex; align-items:center; gap:8px;}
+  h2 .num{font-family:-apple-system,sans-serif; font-size:11px; background:var(--emerald-dim); color:#dff7ec; padding:2px 8px; border-radius:6px;}
+  h3{color:var(--gold); font-size:1rem; margin:20px 0 8px;}
+  p{margin:0 0 14px; font-size:15.5px;}
+  .lead{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin:14px 0;}
+  .qbox{background:var(--card2); border-left:3px solid var(--gold); border-radius:8px; padding:14px 16px; margin:16px 0; font-style:italic; color:#f0e6cc; font-size:14.5px;}
+  .sourceline{font-family:-apple-system,sans-serif; font-size:11.5px; color:var(--muted); margin-top:6px; padding-top:6px; border-top:1px dashed var(--line);}
+  .warn{background:#241407; border:1px solid #5c3a12; border-radius:10px; padding:14px 16px; margin:14px 0; font-family:-apple-system,sans-serif; font-size:13.5px; color:#f0d3a8;}
+  .warn b{color:var(--gold);}
+  .insight{background:#0e2a20; border-left:3px solid var(--emerald); border-radius:8px; padding:14px 16px; margin:14px 0; font-family:-apple-system,sans-serif; font-size:14px; color:#dff7ec;}
+  .insight .lbl{color:var(--emerald); font-size:11px; text-transform:uppercase; letter-spacing:.08em; display:block; margin-bottom:6px; font-weight:700;}
+  ul{padding-left:20px; margin:10px 0;} li{margin-bottom:7px; font-size:15px;}
+
+  .ctrl-card{font-family:-apple-system,sans-serif; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin:14px 0;}
+  .ctrl-card label{font-size:13px; color:var(--muted); display:block; margin-bottom:6px;}
+  .ctrl-card input[type=range]{width:100%; accent-color:var(--emerald); margin-bottom:14px;}
+  .val{color:var(--gold); font-weight:700;}
+  .preset-row{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;}
+  .preset-btn{font-size:12px; background:var(--card2); color:var(--emerald); border:1px solid var(--emerald-dim); border-radius:999px; padding:6px 11px; cursor:pointer;}
+  .preset-btn:active{opacity:.7;}
+
+  .map-wrap{background:var(--bg2); border-radius:var(--radius); border:1px solid var(--line); padding:10px; text-align:center;}
+  .map-wrap svg{width:100%; max-width:360px; height:auto; touch-action:manipulation;}
+  .map-hint{font-family:-apple-system,sans-serif; font-size:11.5px; color:var(--muted); margin-top:6px;}
+
+  .readout-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; font-family:-apple-system,sans-serif;}
+  .readout{background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:12px;}
+  .readout .rlabel{font-size:11px; color:var(--muted); text-transform:uppercase;}
+  .readout .rval{font-size:17px; color:var(--emerald); font-weight:700; margin-top:4px;}
+  .zawal-banner{
+    font-family:-apple-system,sans-serif; text-align:center; padding:14px; border-radius:10px; margin-top:14px;
+    background:linear-gradient(135deg,#2a2308,#3a2f0a); border:1px solid var(--gold); color:var(--gold); font-weight:700; font-size:14.5px;
+  }
+  .zawal-dates{font-family:-apple-system,sans-serif; font-size:13px; color:var(--muted); margin-top:8px; text-align:center;}
+
+  .closeup-wrap{background:linear-gradient(#8fc7e8,#dbeff9); border-radius:var(--radius); overflow:hidden; border:1px solid var(--line);}
+  .closeup-wrap svg{width:100%; height:auto; display:block;}
+  .closeup-readout{font-family:-apple-system,sans-serif; font-size:13px; color:var(--text); margin-top:10px; text-align:center;}
+
+  .refs{font-family:-apple-system,sans-serif; font-size:12.5px; color:var(--muted);} .refs li{margin-bottom:8px;}
+  footer{text-align:center; padding:30px 20px; color:var(--muted); font-family:-apple-system,sans-serif; font-size:12px;}
+  @media(max-width:420px){ .readout-grid{grid-template-columns:1fr;} }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  /* ---- Panel Model 3D (tambahan) ---- */
+  .model3d-wrap{background:linear-gradient(#1c3a2e,#0a1512); border-radius:var(--radius); border:1px solid var(--line); overflow:hidden; position:relative;}
+  .m3d-toggle{position:absolute; top:8px; left:8px; z-index:5; display:flex; gap:0; border:1px solid var(--emerald-dim); border-radius:8px; overflow:hidden; font-family:-apple-system,sans-serif;}
+  .m3d-toggle button{background:var(--card); color:var(--muted); border:none; font-size:11.5px; font-weight:600; padding:6px 12px; cursor:pointer; border-right:1px solid var(--emerald-dim);}
+  .m3d-toggle button:last-child{border-right:none;}
+  .m3d-toggle button.active{background:var(--emerald-dim); color:#dff7ec;}
+  #gnomon3d{width:100%; height:360px; cursor:grab; touch-action:none; -webkit-user-select:none; user-select:none;}
+  #gnomon3d.grabbing{cursor:grabbing;}
+  .model3d-hint{font-family:-apple-system,sans-serif; font-size:11.5px; color:var(--muted); margin-top:8px; text-align:center;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kicker">Laboratorium JAZMI · Sains &amp; Astronomi · Fai Zawal</div>
+  <h1>Kenapa Matahari Jarang Sekali Tepat di Atas Kepala Kita</h1>
+  <p>Level 1–5: Belajar → Model → Verifikasi → Eksplorasi. Simulasi lintang, tanggal, dan bayangan zawal — variabelnya bisa Anda ubah sendiri.</p>
+</header>
+
+<nav class="tabs">
+  <a href="#belajar">Belajar</a>
+  <a href="#pertanyaan">Pertanyaan Ilmiah</a>
+  <a href="#ekliptika">Ekliptika</a>
+  <a href="#peta">Peta &amp; Kontrol</a>
+  <a href="#hasil">Hasil Zawal</a>
+  <a href="#dekat">Pandangan Dekat</a>
+  <a href="#model3d">Model 3D</a>
+  <a href="#verifikasi">Verifikasi</a>
+  <a href="#batasan">Batasan</a>
+  <a href="#referensi">Referensi</a>
+</nav>
+
+<main>
+
+  <section id="belajar">
+    <h2><span class="num">01</span>Belajar</h2>
+    <p>Ini kesalahpahaman yang sangat umum: banyak orang membayangkan matahari selalu lewat "tepat di atas kepala" setiap tengah hari, di mana pun mereka berada. Kenyataannya, titik di permukaan Bumi yang benar-benar disinari matahari tegak lurus (disebut <em>titik subsolar</em>) hanya bergeser naik-turun di antara dua garis lintang — Tropic of Cancer (23,44° LU) dan Tropic of Capricorn (23,44° LS) — sepanjang tahun, mengikuti kemiringan sumbu Bumi.</p>
+    <p>Akibatnya: kalau lintang tempat Anda berada ada <strong>di dalam</strong> rentang itu, matahari akan tepat di atas kepala (bayangan nyaris hilang saat zawal) pada dua momen dalam setahun. Kalau lintang Anda <strong>di luar</strong> rentang itu — misalnya di Indonesia bagian selatan yang sudah dekat -8° masih masuk, tapi di London atau Tokyo tidak — momen itu <strong>tidak pernah terjadi sama sekali</strong>, seberapa pun Anda menunggu.</p>
+    <div class="qbox">"Yang Anda peragakan dengan tangan di atas benda itu sebenarnya sedang mensimulasikan dua variabel sekaligus: di lintang mana Anda berdiri, dan di lintang mana matahari sedang 'singgah' hari itu. Simulasi ini membuat dua variabel itu bisa diotak-atik langsung."</div>
+  </section>
+
+  <section id="pertanyaan">
+    <h2><span class="num">02</span>Pertanyaan Ilmiah</h2>
+    <ul>
+      <li>Kenapa titik di Bumi yang disinari matahari tegak lurus itu berpindah-pindah sepanjang tahun, bukan diam di ekuator?</li>
+      <li>Apa hubungan antara garis lintang tempat kita berdiri dengan garis lintang "singgahan" matahari hari itu, dalam menentukan ada-tidaknya bayangan saat zawal?</li>
+      <li>Untuk lintang berapa saja momen "tanpa bayangan" itu mungkin terjadi — dan berapa kali dalam setahun?</li>
+      <li>Kenapa bujur (garis lintang timur-barat posisi kita) sama sekali tidak memengaruhi jawaban ini?</li>
+      <li>Kalau lintang kita di luar rentang itu, ke arah mana bayangan zawal akan selalu jatuh — utara atau selatan — dan apakah itu tetap sepanjang tahun atau berubah?</li>
+    </ul>
+  </section>
+
+  <section id="ekliptika">
+    <h2><span class="num">03</span>Konsep: Ekliptika &amp; Deklinasi Matahari</h2>
+    <p>Sumbu rotasi Bumi miring 23,44° terhadap bidang orbitnya mengelilingi Matahari. Karena itu, sepanjang tahun, garis lintang tempat matahari tepat berada di zenith (disebut <em>deklinasi matahari</em>, δ) bergeser dari +23,44° (Tropic of Cancer, sekitar 21 Juni) turun ke 0° (ekuator, sekitar 21 Maret &amp; 23 September — momen ekuinoks) terus ke -23,44° (Tropic of Capricorn, sekitar 21 Desember), lalu naik kembali.</p>
+    <p>Saat zawal (tengah hari matahari, ketika matahari melintasi meridian lokal), sudut matahari dari titik zenith kita dihitung sederhana: <strong>sudut zenith = lintang kita − deklinasi matahari hari itu</strong>. Kalau angka ini nol, matahari persis di atas kepala — bayangan benda tegak nyaris hilang.</p>
+  </section>
+
+  <section id="peta">
+    <h2><span class="num">04</span>Peta &amp; Kontrol</h2>
+    <p class="lead">Peta proyeksi <em>azimuthal equidistant</em> berpusat di Kutub Utara, dipotong di 60° LS (Antartika sengaja tidak digambar karena akan sangat terdistorsi di proyeksi ini). Bentuk benuanya digambar tangan mendekati bentuk aslinya — bukan data survei presisi — karena yang dihitung di sini murni garis lintang.</p>
+
+    <div class="map-wrap">
+      <svg id="mapSVG" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="map-hint">Ketuk di peta untuk memilih lokasi, atau pakai penggeser &amp; tombol cepat di bawah.</div>
+    </div>
+
+    <div class="ctrl-card">
+      <label>Garis lintang lokasi kita: <span class="val" id="latVal">0.0°</span></label>
+      <input type="range" id="latRange" min="-60" max="90" step="0.5" value="0">
+
+      <div class="preset-row" id="presetRow"></div>
+
+      <label>Tanggal (menentukan deklinasi matahari): <span class="val" id="dateVal">21 Maret</span> — δ = <span class="val" id="declVal">0.0°</span></label>
+      <input type="range" id="dayRange" min="1" max="365" step="1" value="80">
+    </div>
+  </section>
+
+  <section id="hasil">
+    <h2><span class="num">05</span>Hasil Perhitungan Zawal</h2>
+    <div class="readout-grid">
+      <div class="readout"><div class="rlabel">Sudut Zenith Matahari</div><div class="rval" id="zenithVal">0.0°</div></div>
+      <div class="readout"><div class="rlabel">Arah Bayangan</div><div class="rval" id="shadowDirVal">–</div></div>
+      <div class="readout"><div class="rlabel">Rasio Panjang Bayangan</div><div class="rval" id="shadowRatioVal">0.0×</div></div>
+      <div class="readout"><div class="rlabel">Ketinggian Matahari (zawal)</div><div class="rval" id="altVal">90.0°</div></div>
+    </div>
+    <div class="zawal-banner" id="zawalBanner">Menghitung...</div>
+    <div class="zawal-dates" id="zawalDates"></div>
+  </section>
+
+  <section id="dekat">
+    <h2><span class="num">06</span>Pandangan Dekat: Seolah Kita Berdiri di Sana</h2>
+    <p class="lead">Panel ini mensimulasikan sudut pandang dari posisi kita, melihat tongkat (gnomon) berdiri, bayangannya, dan posisi matahari — sesuai lintang &amp; tanggal yang dipilih di atas.</p>
+    <div class="closeup-wrap">
+      <svg id="closeupSVG" viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div class="closeup-readout" id="closeupText"></div>
+  </section>
+
+  <section id="model3d">
+    <h2><span class="num">07</span>Model 3D: Gnomon &amp; Arah Matahari (bisa diputar)</h2>
+    <p class="lead">Panel di atas cuma skema 2D. Di sini posisi matahari, tinggi tongkat (gnomon), dan bayangannya digambar sebagai model tiga dimensi sungguhan yang bisa Anda putar bebas dari segala arah — memakai sudut zenith &amp; ketinggian matahari yang persis sama dengan hasil hitungan di atas.</p>
+    <div class="card" style="font-size:13.5px;">
+      Karena saat zawal matahari selalu berada tepat di <em>meridian</em> pengamat (garis utara–selatan, tegak lurus khatulistiwa), arah matahari di model ini murni ke utara atau ke selatan — tidak pernah menyimpang ke timur/barat. Putar kameranya dan lihat sendiri: bayangan gnomon selalu jatuh persis di garis utara–selatan, tidak peduli dari sudut mana Anda memandangnya. Ini yang menjawab pertanyaan "kenapa bujur tidak berpengaruh" di atas.
+    </div>
+    <div class="model3d-wrap">
+      <div class="m3d-toggle">
+        <button id="m3dBtnOrbit" class="active">Bebas putar</button>
+        <button id="m3dBtnTop">Tampak atas</button>
+      </div>
+      <div id="gnomon3d"></div>
+    </div>
+    <div class="model3d-hint">Seret = putar kamera · scroll (atau cubit 2 jari di HP) = zoom</div>
+    <div class="closeup-readout" id="closeup3dText"></div>
+  </section>
+
+  <section id="verifikasi">
+    <h2><span class="num">08</span>Verifikasi</h2>
+    <ul>
+      <li>Di lintang 0° (ekuator), simulasi ini menghasilkan dua tanggal zawal sempurna mendekati 21 Maret &amp; 23 September — sesuai definisi ekuinoks.</li>
+      <li>Di lintang 23,44° (Tropic of Cancer), simulasi menghasilkan hanya satu tanggal zawal sempurna, mendekati 21 Juni — sesuai definisi titik balik matahari (solstice).</li>
+      <li>Untuk lintang di luar ±23,44°, coba geser tanggal ke seluruh titik dalam setahun — banner akan selalu menunjukkan "tidak pernah terjadi", sesuai definisi wilayah di luar tropis.</li>
+    </ul>
+    <div class="sourceline">Formula deklinasi memakai pendekatan umum δ ≈ -23,44°·cos[(360/365)·(N+10)], N=hari ke berapa dalam tahun — pendekatan standar yang biasa dipakai untuk keperluan edukasi, bukan efemeris presisi tinggi.</div>
+  </section>
+
+  <section id="batasan">
+    <h2><span class="num">09</span>Batasan</h2>
+    <ul>
+      <li>Formula deklinasi yang dipakai adalah pendekatan sederhana (akurasi ±sekitar 1°) — bukan efemeris astronomi presisi tinggi yang dipakai observatorium sungguhan.</li>
+      <li>Perhitungan mengabaikan equation of time (selisih antara "tengah hari matahari sejati" dengan jam 12:00 waktu setempat), karena yang ditekankan di sini murni geometri lintang-deklinasi, bukan jam sesungguhnya.</li>
+      <li>Bentuk benua di peta digambar tangan mendekati bentuk aslinya, bukan data geografis presisi — hanya garis lintangnya yang dihitung akurat secara matematis.</li>
+      <li>Panel "Pandangan Dekat" adalah ilustrasi skematik 2D (hanya sudut dari zenith). Panel "Model 3D" sudah memperhitungkan arah (utara/selatan) karena posisi matahari saat zawal selalu di meridian pengamat — tapi tetap bukan render astronomi presisi tinggi.</li>
+      <li>Ini alat edukatif untuk memahami konsep zawal — bukan pengganti kalkulator waktu shalat/falak yang sudah divalidasi untuk keperluan ibadah.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <h2><span class="num">10</span>Referensi</h2>
+    <ul class="refs">
+      <li>Konsep dasar deklinasi matahari &amp; garis balik matahari (Tropic of Cancer/Capricorn) — astronomi posisi standar.</li>
+      <li>Formula pendekatan deklinasi matahari harian — rumus umum yang lazim dipakai pada materi pengantar astronomi/geografi.</li>
+      <li>Proyeksi peta azimuthal equidistant berpusat kutub — proyeksi kartografi standar, konsisten dengan pendekatan peta lain di seri JAZMI.</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  Laboratorium JAZMI — Jalinan Zamrud Islamiah · Belajar → Model → Uji → Tool<br>
+  Bagian dari roadmap Fai Zawal. Versi pengembangan awal — silakan diperiksa ulang &amp; dikembangkan lebih lanjut.
+</footer>
+
+<script>
+/* ================= KONSTAN & STATE ================= */
+const R_MAX = 178, CENTER = 200, CUT_COLAT = 150; // peta dipotong di -60 LS
+let state = { lat: 0, lon: 110, day: 80 };
+
+const MONTH_NAMES = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+const DAYS_IN_MONTH = [31,28,31,30,31,30,31,31,30,31,30,31];
+
+function dayToDateStr(n){
+  let d = n, m = 0;
+  while(d > DAYS_IN_MONTH[m]){ d -= DAYS_IN_MONTH[m]; m++; if(m>11){m=11;break;} }
+  return d + ' ' + MONTH_NAMES[m];
+}
+function toRad(deg){ return deg*Math.PI/180; }
+function toDeg(rad){ return rad*180/Math.PI; }
+function declination(n){ return -23.44*Math.cos(toRad((360/365)*(n+10))); }
+
+/* ================= PROYEKSI PETA ================= */
+function project(lon, lat){
+  const colat = Math.min(90 - lat, CUT_COLAT);
+  const rho = (colat/CUT_COLAT) * R_MAX;
+  const theta = toRad(lon);
+  return [CENTER + rho*Math.sin(theta), CENTER - rho*Math.cos(theta)];
+}
+function unproject(x, y){
+  const dx = x-CENTER, dy = y-CENTER;
+  const rho = Math.sqrt(dx*dx+dy*dy);
+  const colat = Math.min((rho/R_MAX)*CUT_COLAT, CUT_COLAT);
+  const lat = 90 - colat;
+  let theta = Math.atan2(dx, -dy);
+  let lon = toDeg(theta);
+  return {lat: Math.round(lat*10)/10, lon: Math.round(lon*10)/10};
+}
+function polyPoints(coords){
+  return coords.map(([lon,lat])=>project(lon,lat).join(',')).join(' ');
+}
+
+/* ================= DATA BENUA (digambar tangan, kasar) ================= */
+const LANDMASSES = [
+  [[-17,35],[10,37],[20,32],[32,31],[43,13],[51,12],[45,2],[40,-12],[35,-25],[20,-35],[14,-23],[9,-5],[-5,5],[-16,14],[-17,35]], // Afrika
+  [[-10,36],[0,44],[10,54],[20,60],[30,70],[40,70],[60,73],[90,75],[130,73],[160,68],[180,66],[175,60],[160,55],[145,45],[140,35],[130,32],[122,31],[110,20],[100,10],[95,5],[100,0],[105,-6],[95,-8],[80,8],[68,10],[60,25],[50,25],[45,15],[35,32],[27,36],[15,38],[0,38],[-10,36]], // Eurasia
+  [[-165,65],[-150,70],[-130,70],[-95,75],[-80,73],[-65,60],[-55,50],[-60,45],[-70,42],[-80,30],[-97,26],[-105,22],[-115,30],[-124,40],[-124,48],[-130,55],[-150,60],[-165,65]], // Amerika Utara
+  [[-80,10],[-70,10],[-60,5],[-50,0],[-35,-5],[-40,-15],[-45,-23],[-55,-34],[-68,-55],[-72,-50],[-70,-30],[-75,-15],[-80,0],[-80,10]], // Amerika Selatan
+  [[-55,60],[-45,62],[-25,70],[-20,78],[-35,83],[-55,75],[-55,60]], // Greenland
+  [[113,-22],[122,-18],[135,-12],[145,-16],[153,-28],[150,-37],[140,-38],[131,-32],[115,-34],[113,-22]], // Australia
+  [[-5,50],[-3,54],[0,53],[1,51],[-2,49],[-5,50]], // Britania
+  [[130,31],[133,34],[140,36],[142,40],[141,45],[139,42],[135,35],[130,31]], // Jepang
+  [[95,5],[97,3],[104,-1],[106,-3],[114,-3],[115,-8],[110,-8],[105,-6],[99,2],[95,5]], // Sumatra-Jawa
+  [[43,-12],[47,-13],[50,-16],[47,-25],[44,-22],[43,-16],[43,-12]] // Madagaskar
+];
+
+const CITIES = [
+  {name:"Pontianak (Khatulistiwa)", lat:0.0, lon:109.3},
+  {name:"Jakarta", lat:-6.2, lon:106.8},
+  {name:"Makkah", lat:21.4, lon:39.8},
+  {name:"Kutub Utara", lat:90, lon:0},
+  {name:"London", lat:51.5, lon:-0.1},
+  {name:"Sydney", lat:-33.9, lon:151.2},
+  {name:"Quito", lat:-0.2, lon:-78.5}
+];
+
+/* ================= GAMBAR PETA ================= */
+const mapSVG = document.getElementById('mapSVG');
+function drawMap(){
+  let html = `<circle cx="${CENTER}" cy="${CENTER}" r="${R_MAX}" fill="#0f1e19" stroke="#1f3d34"/>`;
+  // grid lintang
+  [0,30,60,90,120,150].forEach(colat=>{
+    const r = (colat/CUT_COLAT)*R_MAX;
+    html += `<circle cx="${CENTER}" cy="${CENTER}" r="${r}" fill="none" stroke="#1f3d34" stroke-width="1"/>`;
+  });
+  // grid bujur
+  for(let lon=0; lon<360; lon+=30){
+    const [x,y] = project(lon, -60);
+    html += `<line x1="${CENTER}" y1="${CENTER}" x2="${x}" y2="${y}" stroke="#1f3d34" stroke-width="1"/>`;
+  }
+  // referensi tropis & ekuator
+  [[23.44,'#e0b354','Tropic of Cancer'],[0,'#8fada0','Ekuator'],[-23.44,'#e0b354','Tropic of Capricorn']].forEach(([lat,col])=>{
+    const colat = 90-lat; const r = (colat/CUT_COLAT)*R_MAX;
+    html += `<circle cx="${CENTER}" cy="${CENTER}" r="${r}" fill="none" stroke="${col}" stroke-width="1.3" stroke-dasharray="4,3" opacity="0.8"/>`;
+  });
+  // benua
+  LANDMASSES.forEach(coords=>{
+    html += `<polygon points="${polyPoints(coords)}" fill="#22c98a" opacity="0.28" stroke="#22c98a" stroke-width="0.8"/>`;
+  });
+  mapSVG.dataset.staticHtml = html;
+  mapSVG.innerHTML = html;
+  mapSVG.addEventListener('click', onMapClick);
+}
+function onMapClick(e){
+  const rect = mapSVG.getBoundingClientRect();
+  const scaleX = 400/rect.width, scaleY = 400/rect.height;
+  const x = (e.clientX-rect.left)*scaleX, y = (e.clientY-rect.top)*scaleY;
+  const {lat,lon} = unproject(x,y);
+  state.lat = Math.max(-60, Math.min(90, lat));
+  state.lon = lon;
+  document.getElementById('latRange').value = state.lat;
+  updateAll();
+}
+function redrawDynamicMapLayers(){
+  let html = mapSVG.dataset.staticHtml;
+  // cincin lintang subsolar (dinamis)
+  const delta = declination(state.day);
+  const colatD = 90-delta; const rD = (colatD/CUT_COLAT)*R_MAX;
+  html += `<circle cx="${CENTER}" cy="${CENTER}" r="${rD}" fill="none" stroke="#e0b354" stroke-width="2.2"/>`;
+  // marker lokasi
+  const [mx,my] = project(state.lon, state.lat);
+  html += `<circle cx="${mx}" cy="${my}" r="6" fill="#22c98a" stroke="#0a1512" stroke-width="2"/>`;
+  html += `<circle cx="${mx}" cy="${my}" r="10" fill="none" stroke="#22c98a" stroke-width="1.5" opacity="0.6"><animate attributeName="r" values="8;16;8" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0;0.6" dur="2s" repeatCount="indefinite"/></circle>`;
+  mapSVG.innerHTML = html;
+  mapSVG.addEventListener('click', onMapClick);
+}
+
+/* ================= KONTROL ================= */
+const latRange = document.getElementById('latRange');
+const dayRange = document.getElementById('dayRange');
+const presetRow = document.getElementById('presetRow');
+
+CITIES.forEach(c=>{
+  const btn = document.createElement('button');
+  btn.className = 'preset-btn'; btn.type='button'; btn.textContent = c.name;
+  btn.addEventListener('click', ()=>{
+    state.lat = c.lat; state.lon = c.lon;
+    latRange.value = c.lat;
+    updateAll();
+  });
+  presetRow.appendChild(btn);
+});
+
+latRange.addEventListener('input', ()=>{ state.lat = parseFloat(latRange.value); updateAll(); });
+dayRange.addEventListener('input', ()=>{ state.day = parseInt(dayRange.value); updateAll(); });
+
+/* ================= PERHITUNGAN & OUTPUT ================= */
+function findZawalDates(lat){
+  const dates = [];
+  let prevDiff = declination(1) - lat;
+  let minAbs = Math.abs(prevDiff), minDay = 1;
+  for(let d=2; d<=365; d++){
+    const diff = declination(d) - lat;
+    if(Math.abs(diff) < minAbs){ minAbs = Math.abs(diff); minDay = d; }
+    if(prevDiff===0 || (prevDiff<0 && diff>0) || (prevDiff>0 && diff<0)){
+      dates.push(d);
+    }
+    prevDiff = diff;
+  }
+  if(dates.length===0 && minAbs < 0.15){ dates.push(minDay); }
+  return dates;
+}
+
+function updateAll(){
+  document.getElementById('latVal').textContent = state.lat.toFixed(1) + '°';
+  document.getElementById('dateVal').textContent = dayToDateStr(state.day);
+  const delta = declination(state.day);
+  document.getElementById('declVal').textContent = delta.toFixed(1) + '°';
+
+  const Z = state.lat - delta;
+  const absZ = Math.abs(Z);
+  const altitude = 90 - absZ;
+  document.getElementById('zenithVal').textContent = absZ.toFixed(1) + '°';
+  document.getElementById('altVal').textContent = altitude.toFixed(1) + '°';
+
+  let dirText, ratioText;
+  if(altitude <= 0){
+    dirText = 'Matahari di bawah ufuk';
+    ratioText = '–';
+  } else if(absZ < 0.3){
+    dirText = 'Tidak ada bayangan';
+    ratioText = '≈0×';
+  } else {
+    dirText = Z > 0 ? 'Ke arah Utara' : 'Ke arah Selatan';
+    ratioText = Math.tan(toRad(Math.min(absZ,85))).toFixed(2) + '×';
+  }
+  document.getElementById('shadowDirVal').textContent = dirText;
+  document.getElementById('shadowRatioVal').textContent = ratioText;
+
+  const banner = document.getElementById('zawalBanner');
+  if(altitude>0 && absZ < 0.3){
+    banner.textContent = '☀ Momen Zawal Sempurna — matahari tepat di atas kepala, bayangan nyaris hilang!';
+    banner.style.color = '#e0b354';
+  } else if(Math.abs(state.lat) > 23.44){
+    banner.textContent = 'Di lintang ini, matahari TIDAK PERNAH tepat di atas kepala sepanjang tahun.';
+    banner.style.color = '#8fada0';
+  } else {
+    banner.textContent = 'Bukan momen zawal sempurna hari ini — geser tanggal untuk mencarinya.';
+    banner.style.color = '#8fada0';
+  }
+
+  const zdates = findZawalDates(state.lat);
+  const zdatesEl = document.getElementById('zawalDates');
+  if(Math.abs(state.lat) > 23.44 + 0.05){
+    zdatesEl.textContent = 'Lintang ini berada di luar rentang ekliptika (±23,44°) — momen ini memang tidak pernah terjadi di sini.';
+  } else if(zdates.length){
+    zdatesEl.textContent = 'Tanggal zawal sempurna di lintang ' + state.lat.toFixed(1) + '°: ' + zdates.map(dayToDateStr).join(' & ') + ' (perkiraan).';
+  } else {
+    zdatesEl.textContent = '';
+  }
+
+  redrawDynamicMapLayers();
+  drawCloseup(Z, altitude);
+  updateGnomon3D(Z, altitude);
+}
+
+/* ================= PANEL PANDANGAN DEKAT ================= */
+const closeupSVG = document.getElementById('closeupSVG');
+function drawCloseup(Z, altitude){
+  const groundY = 230, stickTopY = 130, stickX = 200, stickHeight = groundY - stickTopY;
+  let html = `<rect x="0" y="${groundY}" width="400" height="50" fill="#3a5a3a"/>`;
+  html += `<line x1="0" y1="${groundY}" x2="400" y2="${groundY}" stroke="#264d26" stroke-width="2"/>`;
+  // gnomon
+  html += `<line x1="${stickX}" y1="${groundY}" x2="${stickX}" y2="${stickTopY}" stroke="#3a2a1a" stroke-width="6" stroke-linecap="round"/>`;
+  // garis zenith putus-putus
+  html += `<line x1="${stickX}" y1="${stickTopY}" x2="${stickX}" y2="20" stroke="#ffffff" stroke-width="1" stroke-dasharray="4,4" opacity="0.55"/>`;
+  html += `<text x="${stickX+6}" y="30" font-size="10" fill="#ffffff" font-family="sans-serif" opacity="0.7">zenith</text>`;
+
+  if(altitude <= 0){
+    html += `<text x="200" y="150" text-anchor="middle" font-size="14" fill="#345" font-family="sans-serif" font-weight="700">Matahari di bawah ufuk</text>`;
+  } else {
+    const zClamped = Math.max(-85, Math.min(85, Z));
+    const angleRad = toRad(zClamped);
+    const sunDist = 150;
+    const sunX = stickX + sunDist*Math.sin(angleRad);
+    const sunY = stickTopY - sunDist*Math.cos(angleRad);
+    // sinar matahari ke tongkat
+    html += `<line x1="${sunX}" y1="${sunY}" x2="${stickX}" y2="${stickTopY}" stroke="#f4d35e" stroke-width="2" stroke-dasharray="3,3" opacity="0.7"/>`;
+    // matahari
+    html += `<circle cx="${sunX}" cy="${sunY}" r="20" fill="#ffd94a"/>`;
+    for(let i=0;i<8;i++){
+      const a = i*45*Math.PI/180;
+      html += `<line x1="${sunX+24*Math.cos(a)}" y1="${sunY+24*Math.sin(a)}" x2="${sunX+32*Math.cos(a)}" y2="${sunY+32*Math.sin(a)}" stroke="#ffd94a" stroke-width="3" stroke-linecap="round"/>`;
+    }
+    // bayangan
+    if(Math.abs(Z) > 0.3){
+      const shadowLen = Math.min(160, stickHeight * Math.tan(toRad(Math.min(Math.abs(Z),85))));
+      const dir = Z > 0 ? -1 : 1; // bayangan berlawanan arah matahari
+      html += `<line x1="${stickX}" y1="${groundY}" x2="${stickX+dir*shadowLen}" y2="${groundY}" stroke="#1a1a1a" stroke-width="6" stroke-linecap="round" opacity="0.75"/>`;
+    } else {
+      html += `<circle cx="${stickX}" cy="${groundY}" r="5" fill="#1a1a1a" opacity="0.75"/>`;
+    }
+  }
+  closeupSVG.innerHTML = html;
+
+  const txt = altitude<=0 ? 'Malam / matahari belum terbit pada kondisi ini.' :
+    `Ketinggian matahari saat zawal: ${altitude.toFixed(1)}° dari ufuk · sudut dari zenith: ${Math.abs(Z).toFixed(1)}°`;
+  document.getElementById('closeupText').textContent = txt;
+}
+
+/* ===================================================================
+   MODEL 3D (Three.js) — gnomon, matahari & bayangan, bisa diputar bebas
+   (Panel tambahan — tidak menggantikan panel "Pandangan Dekat" 2D)
+   =================================================================== */
+const G3D = { GNOMON_H:4, GNOMON_R:0.16, SUN_DIST:16, GROUND:22 };
+let g3d = null; // { scene, camera, renderer, sunMesh, sunLight, shadowMesh, ambient }
+
+function makeLabelSprite(text, color){
+  const cnv = document.createElement('canvas');
+  cnv.width = 128; cnv.height = 64;
+  const ctx = cnv.getContext('2d');
+  ctx.font = '600 40px -apple-system,sans-serif';
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, 64, 34);
+  const tex = new THREE.CanvasTexture(cnv);
+  const mat = new THREE.SpriteMaterial({map:tex, transparent:true, depthTest:false});
+  const spr = new THREE.Sprite(mat);
+  spr.scale.set(2.2, 1.1, 1);
+  return spr;
+}
+
+function initGnomon3D(){
+  if(g3d) return;
+  const container = document.getElementById('gnomon3d');
+  const w = container.clientWidth, h = container.clientHeight;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, w/h, 0.1, 500);
+  const target = new THREE.Vector3(0, G3D.GNOMON_H*0.4, 0);
+  let radius = 22, theta = Math.PI*0.22, phi = 1.05;
+
+  const renderer = new THREE.WebGLRenderer({antialias:true});
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+
+  const ambient = new THREE.AmbientLight(0xffffff, 0.55);
+  scene.add(ambient);
+  const sunLight = new THREE.DirectionalLight(0xffffff, 0.9);
+  sunLight.target.position.set(0,0,0);
+  scene.add(sunLight);
+  scene.add(sunLight.target);
+
+  // tanah
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(G3D.GROUND, G3D.GROUND),
+    new THREE.MeshStandardMaterial({color:0x3a5a3a})
+  );
+  ground.rotation.x = -Math.PI/2;
+  scene.add(ground);
+  scene.add(new THREE.GridHelper(G3D.GROUND, 22, 0x264d26, 0x2e5230));
+
+  // gnomon (tongkat tegak)
+  const gnomon = new THREE.Mesh(
+    new THREE.CylinderGeometry(G3D.GNOMON_R, G3D.GNOMON_R, G3D.GNOMON_H, 16),
+    new THREE.MeshStandardMaterial({color:0x3a2a1a})
+  );
+  gnomon.position.y = G3D.GNOMON_H/2;
+  scene.add(gnomon);
+
+  // garis zenith putus-putus (referensi visual "lurus ke atas")
+  const zenithGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, G3D.GNOMON_H, 0), new THREE.Vector3(0, G3D.GNOMON_H+7, 0)
+  ]);
+  const zenithMat = new THREE.LineDashedMaterial({color:0xffffff, dashSize:0.3, gapSize:0.25, transparent:true, opacity:0.5});
+  const zenithLine = new THREE.Line(zenithGeo, zenithMat);
+  zenithLine.computeLineDistances();
+  scene.add(zenithLine);
+
+  // matahari (bola kecil, mengikuti sunLight)
+  const sunMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(0.9, 20, 20),
+    new THREE.MeshBasicMaterial({color:0xffd94a})
+  );
+  scene.add(sunMesh);
+
+  // bayangan (kotak pipih di tanah, diarahkan ke utara/selatan)
+  const shadowMesh = new THREE.Mesh(
+    new THREE.BoxGeometry(0.5, 0.02, 1),
+    new THREE.MeshBasicMaterial({color:0x0a1512, transparent:true, opacity:0.75})
+  );
+  shadowMesh.position.y = 0.011;
+  scene.add(shadowMesh);
+
+  // label arah mata angin
+  const labelU = makeLabelSprite('U', '#e9f3ee'); labelU.position.set(0, 0.4, -G3D.GROUND/2+1.2); scene.add(labelU);
+  const labelS = makeLabelSprite('S', '#e9f3ee'); labelS.position.set(0, 0.4, G3D.GROUND/2-1.2); scene.add(labelS);
+  const labelT = makeLabelSprite('T', '#8fada0'); labelT.position.set(G3D.GROUND/2-1.2, 0.4, 0); scene.add(labelT);
+  const labelB = makeLabelSprite('B', '#8fada0'); labelB.position.set(-G3D.GROUND/2+1.2, 0.4, 0); scene.add(labelB);
+
+  function updateCamera(){
+    camera.position.x = target.x + radius*Math.sin(phi)*Math.sin(theta);
+    camera.position.z = target.z + radius*Math.sin(phi)*Math.cos(theta);
+    camera.position.y = target.y + radius*Math.cos(phi);
+    camera.lookAt(target);
+  }
+  updateCamera();
+
+  // orbit manual: drag = putar, wheel/pinch = zoom
+  let dragging = false, lastX=0, lastY=0;
+  renderer.domElement.addEventListener('pointerdown', e=>{ dragging=true; lastX=e.clientX; lastY=e.clientY; container.classList.add('grabbing'); });
+  window.addEventListener('pointerup', ()=>{ dragging=false; container.classList.remove('grabbing'); });
+  window.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    theta -= (e.clientX-lastX)*0.006;
+    phi   -= (e.clientY-lastY)*0.006;
+    phi = Math.max(0.05, Math.min(1.5, phi));
+    lastX=e.clientX; lastY=e.clientY;
+    updateCamera();
+  });
+  renderer.domElement.addEventListener('wheel', e=>{
+    e.preventDefault();
+    radius = Math.max(6, Math.min(60, radius + e.deltaY*0.02));
+    updateCamera();
+  }, {passive:false});
+  let pinchDist = null;
+  function touchDist(t0,t1){ return Math.hypot(t1.clientX-t0.clientX, t1.clientY-t0.clientY); }
+  renderer.domElement.addEventListener('touchstart', e=>{
+    if(e.touches.length===2){ pinchDist = touchDist(e.touches[0], e.touches[1]); dragging=false; }
+  }, {passive:true});
+  renderer.domElement.addEventListener('touchmove', e=>{
+    if(e.touches.length===2 && pinchDist!==null){
+      e.preventDefault();
+      const d = touchDist(e.touches[0], e.touches[1]);
+      radius = Math.max(6, Math.min(60, radius - (d-pinchDist)*0.05));
+      pinchDist = d;
+      updateCamera();
+    }
+  }, {passive:false});
+  renderer.domElement.addEventListener('touchend', e=>{ if(e.touches.length<2) pinchDist=null; }, {passive:true});
+
+  function onResize(){
+    const w2 = container.clientWidth, h2 = container.clientHeight;
+    if(!w2||!h2) return;
+    camera.aspect = w2/h2; camera.updateProjectionMatrix();
+    renderer.setSize(w2, h2);
+  }
+  window.addEventListener('resize', onResize);
+
+  function loop(){ requestAnimationFrame(loop); renderer.render(scene, camera); }
+  loop();
+
+  g3d = { scene, camera, renderer, sunMesh, sunLight, shadowMesh, ambient, target,
+    setTopView(){ phi = 0.08; theta = 0; radius = 20; updateCamera(); },
+    setOrbitView(){ phi = 1.05; theta = Math.PI*0.22; radius = 22; updateCamera(); } };
+}
+
+function updateGnomon3D(Z, altitude){
+  if(!g3d) return;
+  const absZ = Math.abs(Z);
+  const signSouth = Z >= 0; // Z>0 -> bayangan ke Utara -> matahari di Selatan
+
+  if(altitude <= 0){
+    // malam / matahari di bawah ufuk
+    g3d.sunMesh.visible = false;
+    g3d.sunLight.intensity = 0;
+    g3d.ambient.intensity = 0.18;
+    g3d.scene.background = new THREE.Color(0x050a08);
+    g3d.shadowMesh.visible = false;
+  } else {
+    g3d.sunMesh.visible = true;
+    g3d.sunLight.intensity = 0.9;
+    g3d.ambient.intensity = 0.55;
+    const dayness = Math.max(0.15, Math.sin(toRad(altitude)));
+    g3d.scene.background = new THREE.Color().setHSL(0.55, 0.35, 0.18 + dayness*0.25);
+
+    const horiz = Math.cos(toRad(altitude)) * G3D.SUN_DIST;
+    const vert  = Math.sin(toRad(altitude)) * G3D.SUN_DIST;
+    const zSign = signSouth ? 1 : -1; // +Z = Selatan di scene ini
+    const sunPos = new THREE.Vector3(0, vert, horiz*zSign);
+    g3d.sunMesh.position.copy(sunPos);
+    g3d.sunLight.position.copy(sunPos);
+
+    if(absZ < 0.3){
+      g3d.shadowMesh.visible = true;
+      g3d.shadowMesh.scale.set(1,1,0.4);
+      g3d.shadowMesh.position.set(0, 0.011, 0);
+    } else {
+      const shadowLen = Math.min(14, G3D.GNOMON_H * Math.tan(toRad(Math.min(absZ,85))));
+      const shadowZ = -zSign * shadowLen/2; // bayangan berlawanan arah matahari
+      g3d.shadowMesh.visible = true;
+      g3d.shadowMesh.geometry.dispose();
+      g3d.shadowMesh.geometry = new THREE.BoxGeometry(0.5, 0.02, Math.max(0.3, shadowLen));
+      g3d.shadowMesh.position.set(0, 0.011, shadowZ);
+    }
+  }
+}
+
+document.getElementById('m3dBtnOrbit').addEventListener('click', ()=>{
+  document.getElementById('m3dBtnOrbit').classList.add('active');
+  document.getElementById('m3dBtnTop').classList.remove('active');
+  if(g3d) g3d.setOrbitView();
+});
+document.getElementById('m3dBtnTop').addEventListener('click', ()=>{
+  document.getElementById('m3dBtnTop').classList.add('active');
+  document.getElementById('m3dBtnOrbit').classList.remove('active');
+  if(g3d) g3d.setTopView();
+});
+
+/* ================= INIT ================= */
+drawMap();
+initGnomon3D();
+updateAll();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

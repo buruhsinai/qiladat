@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulator Kurva Phillips — Inflasi vs Pengangguran</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12151a; --bg-panel:#1a1e25; --bg-panel-2:#20242c; --line:#2c313b;
+    --text:#e9e6df; --text-dim:#9aa1ad;
+    --gold:#c9a24b; --gold-soft:#e3c988;
+    --ok:#4f9c94; --warn:#e3766a; --blue:#5b8fc9; --purple:#9b7fc9;
+    --font-display:"Fraunces",serif; --font-body:"Karla",sans-serif; --font-mono:"JetBrains Mono",monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px 80px;}
+  header.hero{padding:56px 20px 40px;text-align:center;border-bottom:1px solid var(--line);
+    background:radial-gradient(ellipse at 50% 0%, rgba(79,156,148,0.10), transparent 60%);}
+  .eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ok);margin-bottom:14px;}
+  .brand{font-family:var(--font-mono);font-size:12px;letter-spacing:.03em;color:var(--text-dim);margin:0 0 8px;}
+  h1{font-family:var(--font-display);font-weight:600;font-size:clamp(26px,5vw,40px);margin:0 0 12px;}
+  .subtitle{color:var(--text-dim);font-size:15px;max-width:640px;margin:0 auto;}
+  section{padding:36px 0;border-bottom:1px solid var(--line);} section:last-of-type{border-bottom:none;}
+  h2{font-family:var(--font-display);font-weight:600;font-size:22px;color:var(--gold-soft);margin:0 0 6px;display:flex;align-items:baseline;gap:10px;}
+  h2 .num{font-family:var(--font-mono);font-size:13px;color:var(--text-dim);font-weight:400;}
+  h3{font-family:var(--font-display);font-weight:600;font-size:16.5px;color:var(--text);margin:22px 0 10px;}
+  p{font-size:15.5px;} p.dim{color:var(--text-dim);font-size:14px;}
+  ul{padding-left:20px;} li{margin-bottom:6px;font-size:14.5px;}
+
+  .panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:24px;}
+  .mode-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
+  .mode-btn{background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text-dim);
+    padding:10px 15px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;}
+  .mode-btn.active{border-color:var(--ok);color:var(--ok);background:rgba(79,156,148,0.10);}
+
+  .controls-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:18px;}
+  .field label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--text-dim);margin-bottom:6px;font-family:var(--font-mono);text-transform:uppercase;}
+  .field label .val{color:var(--gold-soft);}
+  .field input[type=range]{width:100%;accent-color:var(--blue);}
+
+  svg.chart{width:100%;height:auto;display:block;background:var(--bg-panel-2);border-radius:8px;border:1px solid var(--line);}
+  .results{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px;}
+  .result-card{background:var(--bg-panel-2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;}
+  .result-card .l{font-family:var(--font-mono);font-size:10.5px;color:var(--text-dim);text-transform:uppercase;}
+  .result-card .v{font-family:var(--font-display);font-size:19px;color:var(--gold-soft);}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:12.5px;color:var(--text-dim);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .swatch{width:14px;height:14px;border-radius:3px;display:inline-block;}
+  .insight-box{margin-top:16px;background:var(--bg-panel-2);border:1px dashed var(--gold);border-radius:8px;padding:14px 18px;font-size:14px;color:var(--text);}
+  .insight-box b{color:var(--gold-soft);}
+
+  .benefit-list{display:grid;gap:10px;}
+  .benefit-item{background:var(--bg-panel);border:1px solid var(--line);border-radius:8px;padding:14px 18px;}
+  .benefit-item .btitle{font-weight:700;color:var(--gold-soft);font-size:15px;margin-bottom:4px;}
+  .limit-item{background:var(--bg-panel);border:1px solid var(--line);border-left:3px solid var(--warn);
+    padding:12px 16px;border-radius:6px;margin-bottom:8px;font-size:14.5px;color:var(--text-dim);}
+  table.refs{width:100%;border-collapse:collapse;font-size:14px;}
+  table.refs td{padding:8px 4px;border-bottom:1px solid var(--line);color:var(--text-dim);vertical-align:top;}
+  table.refs td:first-child{color:var(--text);width:32%;font-weight:600;}
+  footer{text-align:center;padding:36px 20px 10px;color:var(--text-dim);font-size:12.5px;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <p class="brand">JAZMI &mdash; Modul Ekonomi &middot; Inflasi &amp; Pengangguran</p>
+  <div class="eyebrow">Ilmu Ekonomi Murni · Makroekonomi &amp; Kebijakan Moneter</div>
+  <h1>Simulator Kurva Phillips</h1>
+  <p class="subtitle">Bank sentral ingin inflasi rendah SEKALIGUS pengangguran rendah. Dalam jangka pendek, keduanya seperti tarik-menarik: menekan pengangguran cenderung menaikkan inflasi, dan sebaliknya. Tapi kalau dipaksakan terus-menerus, apa yang sebenarnya terjadi? Geser ekspektasi inflasi &amp; target pengangguran, lalu lihat sendiri kenapa "memaksa" pengangguran tetap rendah selamanya berakhir pada inflasi yang terus berakselerasi.</p>
+</header>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <h2><span class="num">01</span> Belajar</h2>
+    <p>Ekonom Inggris A.W. Phillips (1958) menemukan hubungan negatif secara empiris antara tingkat pengangguran dan laju kenaikan upah/harga: makin rendah pengangguran, makin tinggi tekanan inflasi. Versi modern hubungan ini disebut <strong>Kurva Phillips Jangka Pendek (SRPC)</strong>:</p>
+    <p style="font-family:var(--font-mono);font-size:14px;color:var(--gold-soft);text-align:center;">π = πᵉ − β × (u − uₙ) + ε</p>
+    <p>di mana <strong>π</strong> = inflasi aktual, <strong>πᵉ</strong> = inflasi yang DIHARAPKAN pelaku ekonomi, <strong>u</strong> = pengangguran aktual, <strong>uₙ</strong> = tingkat pengangguran alami/NAIRU (Non-Accelerating Inflation Rate of Unemployment), <strong>β</strong> = seberapa sensitif inflasi terhadap kesenjangan pengangguran, dan <strong>ε</strong> = guncangan penawaran (misalnya lonjakan harga minyak).</p>
+    <p>Kuncinya: <strong>πᵉ bukan angka tetap</strong>. Dalam model ekspektasi adaptif, pelaku ekonomi menyesuaikan ekspektasi mereka berdasarkan inflasi yang benar-benar terjadi kemarin. Ini yang membuat SRPC terus BERGESER dari waktu ke waktu — dan itulah alasan trade-off inflasi-pengangguran hanya berlaku SEMENTARA, bukan selamanya.</p>
+  </section>
+
+  <section id="pertanyaan">
+    <h2><span class="num">02</span> Pertanyaan Ilmiah</h2>
+    <p class="dim" style="font-style:italic;">Kalau bank sentral terus-menerus mendorong pengangguran tetap di bawah tingkat alaminya (uₙ) lewat kebijakan moneter longgar, apa yang terjadi pada inflasi dari tahun ke tahun — bukan hanya di tahun pertama? Kenapa "Kurva Phillips Jangka Panjang" digambarkan tegak lurus (vertikal), bukan miring seperti versi jangka pendeknya? Apakah benar tidak ada trade-off sama sekali dalam jangka panjang?</p>
+  </section>
+
+  <section id="eksplorasi">
+    <h2><span class="num">03</span> Eksplorasi &amp; Perhitungan</h2>
+    <div class="panel">
+
+      <h3>A. Kurva Phillips Jangka Pendek vs Jangka Panjang</h3>
+      <div class="controls-row">
+        <div class="field"><label>Ekspektasi Inflasi (πᵉ) <span class="val" id="vPe">3%</span></label><input type="range" id="inPe" min="0" max="15" step="0.5" value="3"></div>
+        <div class="field"><label>Pengangguran Alami/NAIRU (uₙ) <span class="val" id="vUn">5%</span></label><input type="range" id="inUn" min="2" max="10" step="0.5" value="5"></div>
+        <div class="field"><label>Sensitivitas Phillips (β) <span class="val" id="vBeta">1.0</span></label><input type="range" id="inBeta" min="0.2" max="3" step="0.1" value="1.0"></div>
+        <div class="field"><label>Guncangan Penawaran (ε) <span class="val" id="vEps">0%</span></label><input type="range" id="inEps" min="-5" max="5" step="0.5" value="0"></div>
+        <div class="field"><label>Pengangguran Aktual Dipilih (u) <span class="val" id="vU">5%</span></label><input type="range" id="inU" min="1" max="12" step="0.25" value="5"></div>
+      </div>
+
+      <svg class="chart" id="svgPC" viewBox="0 0 620 380"></svg>
+      <div class="legend">
+        <span><span class="swatch" style="background:#4f9c94"></span> SRPC — Kurva Jangka Pendek</span>
+        <span><span class="swatch" style="background:#e3766a"></span> LRPC — Kurva Jangka Panjang (di uₙ)</span>
+        <span><span class="swatch" style="background:#c9a24b"></span> Titik Pilihan Anda</span>
+      </div>
+
+      <div class="results" id="resultsGridA"></div>
+      <div class="insight-box" id="insightBoxA"></div>
+
+      <h3>B. Simulasi Dinamis — Memaksa Pengangguran Tetap Rendah, Bertahun-tahun</h3>
+      <p class="dim">Sekarang anggap bank sentral BERSIKERAS mempertahankan pengangguran pada level tertentu setiap tahun, sementara ekspektasi inflasi masyarakat DISESUAIKAN setiap tahun mengikuti inflasi aktual tahun sebelumnya (πᵉ tahun ini = π aktual tahun lalu).</p>
+      <div class="mode-row" id="modeRow">
+        <button class="mode-btn" data-u="7">Pengangguran Dijaga di Atas uₙ</button>
+        <button class="mode-btn" data-u="5">Pengangguran = uₙ (Alami)</button>
+        <button class="mode-btn active" data-u="3">Pengangguran Dipaksa di Bawah uₙ</button>
+      </div>
+      <div class="controls-row">
+        <div class="field"><label>Target Pengangguran Dipertahankan <span class="val" id="vUtarget">3%</span></label><input type="range" id="inUtarget" min="1" max="10" step="0.25" value="3"></div>
+        <div class="field"><label>Jumlah Tahun Simulasi <span class="val" id="vYears">10</span></label><input type="range" id="inYears" min="3" max="25" step="1" value="10"></div>
+      </div>
+
+      <svg class="chart" id="svgDyn" viewBox="0 0 620 320"></svg>
+      <div class="legend">
+        <span><span class="swatch" style="background:#e3766a"></span> Inflasi Aktual per Tahun</span>
+        <span><span class="swatch" style="background:#5b8fc9"></span> Ekspektasi Inflasi per Tahun</span>
+      </div>
+      <div class="results" id="resultsGridB"></div>
+      <div class="insight-box" id="insightBoxB"></div>
+    </div>
+  </section>
+
+  <section id="manfaat">
+    <h2><span class="num">04</span> Manfaat &amp; Kegunaan</h2>
+    <div class="benefit-list">
+      <div class="benefit-item"><div class="btitle">Memahami independensi bank sentral</div>Menjelaskan kenapa banyak negara sengaja membuat bank sentral independen dari tekanan politik jangka pendek — supaya tidak tergoda memaksakan pengangguran rendah demi popularitas, dengan ongkos inflasi yang baru terasa belakangan.</div>
+      <div class="benefit-item"><div class="btitle">Memahami era stagflasi 1970-an</div>Simulator ini membantu menjelaskan fenomena nyata: kombinasi inflasi tinggi DAN pengangguran tinggi sekaligus (stagflasi) yang meruntuhkan kepercayaan pada trade-off Phillips versi naif di banyak negara Barat pada dekade 1970-an.</div>
+      <div class="benefit-item"><div class="btitle">Dasar memahami "forward guidance" bank sentral</div>Karena ekspektasi inflasi begitu berpengaruh, bank sentral modern menghabiskan banyak upaya mengelola EKSPEKTASI publik (lewat komunikasi kebijakan) — bukan hanya suku bunga itu sendiri.</div>
+      <div class="benefit-item"><div class="btitle">Menjelaskan konsep NAIRU dalam kebijakan riil</div>Membantu memahami kenapa bank sentral memantau estimasi NAIRU (uₙ) sebagai patokan, meski angka pastinya selalu diperdebatkan dan sulit diukur langsung.</div>
+    </div>
+  </section>
+
+  <section id="batasan">
+    <h2><span class="num">05</span> Batasan</h2>
+    <div class="limit-item">Model ini memakai <strong>ekspektasi adaptif</strong> (πᵉ = π aktual tahun lalu) untuk kejelasan. Sebagian ekonom modern memakai kerangka <strong>ekspektasi rasional</strong>, di mana pelaku ekonomi bisa mengantisipasi kebijakan bank sentral lebih cepat — membuat trade-off jangka pendek bisa menghilang lebih cepat dari yang ditunjukkan simulator ini.</div>
+    <div class="limit-item">Nilai <strong>uₙ (NAIRU)</strong> dalam dunia nyata TIDAK bisa diamati langsung — hanya diestimasi, dan estimasinya berubah-ubah antar periode &amp; antar lembaga (mis. The Fed vs IMF bisa berbeda pendapat).</div>
+    <div class="limit-item">Model ini linear &amp; deterministik. Dunia nyata penuh guncangan acak (ε) yang sulit diprediksi — pandemi, perang, krisis energi — yang bisa menggeser SRPC secara tiba-tiba dan tidak simetris.</div>
+    <div class="limit-item">Simulasi dinamis pada Bagian B mengasumsikan bank sentral BISA mempertahankan pengangguran di angka manapun secara sengaja lewat kebijakan moneter — pada kenyataannya kontrol otoritas moneter atas pengangguran riil tidak sepresisi itu &amp; punya banyak jeda waktu (lag kebijakan).</div>
+    <div class="limit-item">Simulator ini tidak memodelkan kemungkinan inflasi negatif ekstrem (deflasi berkepanjangan) atau perangkap likuiditas, yang mengubah dinamika kebijakan moneter secara signifikan.</div>
+  </section>
+
+  <section id="referensi">
+    <h2><span class="num">06</span> Referensi</h2>
+    <table class="refs">
+      <tr><td>A.W. Phillips — "The Relation between Unemployment and the Rate of Change of Money Wages in the United Kingdom" (1958)</td><td>Studi empiris asli hubungan pengangguran-upah</td></tr>
+      <tr><td>Milton Friedman — pidato presidensial AEA (1968); Edmund Phelps (1967)</td><td>Sumber konsep tingkat pengangguran alami (NAIRU) &amp; kritik trade-off jangka panjang</td></tr>
+      <tr><td>Mankiw — <em>Macroeconomics</em>, bab Kurva Phillips</td><td>Kerangka persamaan SRPC/LRPC yang dipakai dalam simulator ini</td></tr>
+      <tr><td>Federal Reserve / Bank Indonesia — publikasi riset estimasi NAIRU</td><td>Contoh penerapan &amp; perdebatan nyata estimasi uₙ dalam kebijakan moneter</td></tr>
+    </table>
+  </section>
+
+</div>
+
+<footer>JAZMI &mdash; Modul Ekonomi &middot; Belajar &rarr; Memodelkan &rarr; Menguji &rarr; Membuat</footer>
+
+<script>
+(function(){
+  const el = id => document.getElementById(id);
+  const state = { pe:3, un:5, beta:1.0, eps:0, u:5, uTarget:3, years:10 };
+
+  const inPe=el('inPe'), inUn=el('inUn'), inBeta=el('inBeta'), inEps=el('inEps'), inU=el('inU');
+  const inUtarget=el('inUtarget'), inYears=el('inYears');
+
+  [inPe,inUn,inBeta,inEps,inU].forEach(inp=>inp.addEventListener('input', ()=>{
+    state.pe=+inPe.value; state.un=+inUn.value; state.beta=+inBeta.value; state.eps=+inEps.value; state.u=+inU.value;
+    recomputeA();
+  }));
+  inUtarget.addEventListener('input', ()=>{
+    state.uTarget=+inUtarget.value;
+    document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+    recomputeB();
+  });
+  inYears.addEventListener('input', ()=>{ state.years=+inYears.value; recomputeB(); });
+
+  document.querySelectorAll('.mode-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      state.uTarget = +btn.dataset.u;
+      inUtarget.value = state.uTarget;
+      recomputeB();
+    });
+  });
+
+  function num(n,dec){ return Number(n.toFixed(dec===undefined?1:dec)); }
+
+  function recomputeA(){
+    const {pe,un,beta,eps,u} = state;
+    function srpc(uu){ return pe - beta*(uu-un) + eps; }
+    const piAtU = srpc(u);
+
+    const Umax=13, Pmin=-10, Pmax=25;
+    const W=620,H=380, padL=55,padR=20,padT=20,padB=40;
+    const plotW=W-padL-padR, plotH=H-padT-padB;
+    const sx = plotW/Umax, sy = plotH/(Pmax-Pmin);
+    function pt(uu,pp){ return [padL+uu*sx, H-padB-(pp-Pmin)*sy]; }
+
+    let svg='';
+    svg += `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-padB}" stroke="#3a4150" stroke-width="1"/>`;
+    svg += `<line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#3a4150" stroke-width="1"/>`;
+    const zero = pt(0,0);
+    svg += `<line x1="${padL}" y1="${zero[1]}" x2="${W-padR}" y2="${zero[1]}" stroke="#3a4150" stroke-width="1" stroke-dasharray="2,4"/>`;
+    svg += `<text x="${W-padR}" y="${H-padB+18}" fill="#9aa1ad" font-size="11" text-anchor="end" font-family="JetBrains Mono, monospace">pengangguran (u) %</text>`;
+    svg += `<text x="${padL-8}" y="${padT+4}" fill="#9aa1ad" font-size="11" text-anchor="end" font-family="JetBrains Mono, monospace">inflasi (π) %</text>`;
+
+    // SRPC line
+    let pts=[];
+    for(let i=0;i<=40;i++){ const uu=Umax*i/40; pts.push(pt(uu,srpc(uu)).join(',')); }
+    svg += `<polyline points="${pts.join(' ')}" fill="none" stroke="#4f9c94" stroke-width="2.5"/>`;
+
+    // LRPC vertical at un
+    const l1=pt(un,Pmin), l2=pt(un,Pmax);
+    svg += `<line x1="${l1[0]}" y1="${l1[1]}" x2="${l2[0]}" y2="${l2[1]}" stroke="#e3766a" stroke-width="2.5" stroke-dasharray="6,4"/>`;
+    svg += `<text x="${l1[0]}" y="${padT+12}" fill="#e3766a" font-size="11" text-anchor="middle" font-family="JetBrains Mono, monospace">uₙ</text>`;
+
+    // chosen point
+    const cp = pt(u,piAtU);
+    svg += `<circle cx="${cp[0]}" cy="${cp[1]}" r="6" fill="#c9a24b" stroke="#12151a" stroke-width="2"/>`;
+
+    el('svgPC').innerHTML = svg;
+
+    el('resultsGridA').innerHTML = [
+      {l:'Inflasi Aktual (π) pada u dipilih', v: num(piAtU,1)+'%'},
+      {l:'Kesenjangan Pengangguran (u−uₙ)', v: num(u-un,2)+' poin'},
+      {l:'Posisi', v: Math.abs(u-un)<0.01 ? 'Tepat di uₙ' : (u<un?'Di bawah uₙ':'Di atas uₙ')},
+    ].map(r=>`<div class="result-card"><div class="l">${r.l}</div><div class="v">${r.v}</div></div>`).join('');
+
+    let insight;
+    if(Math.abs(u-un)<0.01){
+      insight = `Pada u = uₙ = ${un}%, inflasi aktual sama persis dengan ekspektasi (π = πᵉ = ${num(piAtU,1)}%). Inilah titik LRPC — tidak ada tekanan untuk ekspektasi berubah, sehingga posisi ini bisa bertahan stabil TANPA batas waktu.`;
+    } else if(u<un){
+      insight = `Anda memilih pengangguran u=${u}% — DI BAWAH tingkat alami uₙ=${un}%. Hasilnya inflasi aktual naik jadi ${num(piAtU,1)}%, LEBIH TINGGI dari ekspektasi πᵉ=${pe}%. Tapi ingat: posisi ini TIDAK STABIL — begitu masyarakat menyadari inflasi senyatanya lebih tinggi, ekspektasi mereka akan naik mengejar, dan SRPC akan bergeser ke atas (lihat Bagian B).`;
+    } else {
+      insight = `Anda memilih pengangguran u=${u}% — DI ATAS tingkat alami uₙ=${un}%. Hasilnya inflasi aktual turun jadi ${num(piAtU,1)}%, LEBIH RENDAH dari ekspektasi πᵉ=${pe}%. Ini pola khas resesi: pengangguran tinggi biasanya berhasil "mendinginkan" inflasi, tapi dengan ongkos sosial berupa pengangguran itu sendiri.`;
+    }
+    el('insightBoxA').innerHTML = insight;
+
+    el('vPe').textContent=pe+'%'; el('vUn').textContent=un+'%'; el('vBeta').textContent=num(beta,1);
+    el('vEps').textContent=eps+'%'; el('vU').textContent=u+'%';
+
+    recomputeB();
+  }
+
+  function recomputeB(){
+    const {un,beta,eps,uTarget,years} = state;
+    let pe = state.pe; // start expectation same as section A's initial expectation
+    let piArr=[], peArr=[];
+    for(let yr=0; yr<years; yr++){
+      const pi = pe - beta*(uTarget-un) + eps;
+      piArr.push(pi); peArr.push(pe);
+      pe = pi; // adaptive expectations: next year's expectation = this year's actual
+    }
+
+    const W=620,H=320, padL=55,padR=20,padT=20,padB=36;
+    const plotW=W-padL-padR, plotH=H-padT-padB;
+    const allVals=[...piArr,...peArr];
+    const maxV = Math.max(...allVals, 1)*1.15;
+    const minV = Math.min(...allVals, 0)*1.15;
+    const sx = plotW/((years-1)||1), sy = plotH/(maxV-minV || 1);
+    function pt(i,v){ return [padL+i*sx, H-padB-(v-minV)*sy]; }
+    function poly(arr,color){
+      const pts = arr.map((v,i)=>pt(i,v).join(',')).join(' ');
+      return `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5"/>`;
+    }
+    let svg='';
+    svg += `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-padB}" stroke="#3a4150" stroke-width="1"/>`;
+    svg += `<line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#3a4150" stroke-width="1"/>`;
+    svg += `<text x="${W-padR}" y="${H-padB+18}" fill="#9aa1ad" font-size="11" text-anchor="end" font-family="JetBrains Mono, monospace">tahun</text>`;
+    svg += `<text x="${padL-8}" y="${padT+4}" fill="#9aa1ad" font-size="11" text-anchor="end" font-family="JetBrains Mono, monospace">%</text>`;
+    svg += poly(piArr,'#e3766a');
+    svg += poly(peArr,'#5b8fc9');
+    el('svgDyn').innerHTML = svg;
+
+    const firstPi = piArr[0], lastPi = piArr[years-1];
+    const deltaPerYear = beta*(un-uTarget);
+
+    el('resultsGridB').innerHTML = [
+      {l:'Inflasi Tahun ke-1', v: num(firstPi,1)+'%'},
+      {l:'Inflasi Tahun ke-'+years, v: num(lastPi,1)+'%'},
+      {l:'Kenaikan Inflasi per Tahun', v: num(deltaPerYear,2)+' poin/th'},
+      {l:'Kesenjangan (uₙ−u)', v: num(un-uTarget,2)+' poin'},
+    ].map(r=>`<div class="result-card"><div class="l">${r.l}</div><div class="v">${r.v}</div></div>`).join('');
+
+    let insight;
+    if(Math.abs(uTarget-un)<0.01){
+      insight = `Karena pengangguran dipertahankan TEPAT di uₙ=${un}%, inflasi tetap konstan di ${num(firstPi,1)}% setiap tahun — tidak ada tekanan naik maupun turun. Inilah alasan LRPC digambarkan vertikal: dalam jangka panjang, HANYA di titik uₙ inflasi bisa stabil berapa pun besarnya.`;
+    } else if(uTarget<un){
+      insight = `Dengan memaksa pengangguran tetap ${uTarget}% (di bawah uₙ=${un}%) setiap tahun, inflasi TIDAK berhenti di satu angka — ia naik terus sekitar <b>${num(deltaPerYear,2)} poin persentase per tahun</b>, dari ${num(firstPi,1)}% di tahun pertama menjadi ${num(lastPi,1)}% di tahun ke-${years}. Inilah <b>hipotesis akselerasionis</b>: mempertahankan pengangguran di bawah tingkat alami secara permanen membutuhkan inflasi yang terus BERAKSELERASI, bukan sekadar "sedikit lebih tinggi". Cepat atau lambat ini menjadi tidak tertahankan secara sosial &amp; politik.`;
+    } else {
+      insight = `Dengan mempertahankan pengangguran di ${uTarget}% (di atas uₙ=${un}%), inflasi justru terus TURUN sekitar ${num(Math.abs(deltaPerYear),2)} poin persentase per tahun — dari ${num(firstPi,1)}% menjadi ${num(lastPi,1)}% di tahun ke-${years}. Kalau dibiarkan lama, ini bisa mendorong ekonomi menuju deflasi (lihat Simulator Inflasi vs Deflasi untuk risikonya).`;
+    }
+    el('insightBoxB').innerHTML = insight;
+    el('vUtarget').textContent = uTarget+'%'; el('vYears').textContent = years;
+  }
+
+  recomputeA();
+})();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

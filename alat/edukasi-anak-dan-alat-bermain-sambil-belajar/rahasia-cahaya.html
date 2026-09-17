@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rahasia Cahaya</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fdf6e8; --card:#ffffff; --line:#f0e2c4;
+    --ink:#3a3226; --dim:#8a7c62;
+    --accent:#c9784f; --accent-soft:#f7e9df;
+    --display:'Fredoka',sans-serif; --sans:'Quicksand',sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;}
+  .wrap{max-width:520px;margin:0 auto;padding:0 18px 70px;}
+
+  .hero{padding:36px 10px 18px;text-align:center;}
+  .hero h1{font-family:var(--display);font-weight:700;font-size:clamp(24px,6.5vw,32px);margin:0 0 8px;color:#8a4a2a;}
+  .hero p{color:var(--dim);font-size:14px;max-width:440px;margin:0 auto;}
+
+  .tab-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:18px;}
+  .tab-btn{font-family:var(--display);font-weight:600;font-size:11.5px;background:#fff;border:2px solid var(--line);
+    color:var(--dim);padding:11px 3px;border-radius:12px;cursor:pointer;text-align:center;line-height:1.3;}
+  .tab-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  .card{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px 18px;margin-bottom:16px;}
+  .card p.desc{font-size:13.5px;color:var(--dim);margin:0 0 16px;}
+
+  .stage{position:relative;height:200px;margin-bottom:16px;}
+  .stage svg{width:100%;height:100%;}
+
+  .field{margin-bottom:16px;}
+  .field label{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;color:var(--dim);margin-bottom:7px;}
+  .field label .val{color:var(--accent);font-weight:700;}
+  input[type=range]{width:100%;height:4px;-webkit-appearance:none;appearance:none;background:var(--line);border-radius:4px;outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.15);}
+  input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;border:3px solid #fff;}
+
+  .result-panel{background:var(--accent-soft);border-radius:14px;padding:16px;text-align:center;margin-top:6px;}
+  .result-num{font-family:var(--display);font-weight:700;font-size:26px;color:#8a4a2a;}
+  .result-sub{font-size:12.5px;color:var(--dim);margin-top:4px;}
+  .compare-row{display:flex;justify-content:space-around;margin-top:12px;padding-top:12px;border-top:1px dashed #e0c8a8;}
+  .compare-box .n{font-family:var(--display);font-weight:700;font-size:16px;color:#8a4a2a;}
+  .compare-box .l{font-size:10.5px;color:var(--dim);font-family:var(--mono);}
+
+  .note-card{background:var(--accent-soft);border-radius:14px;padding:14px 16px;font-size:12.5px;color:#6b4a30;margin-top:14px;}
+  .note-card strong{color:#4a2e18;}
+
+  footer{text-align:center;padding-top:26px;color:#b9ad94;font-size:11.5px;font-family:var(--mono);}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>💡 Rahasia Cahaya</h1>
+    <p>Empat sifat cahaya yang bisa kamu lihat sendiri — atur sudut, jarak, dan bahan, lihat langsung bagaimana cahaya berbelok, memantul, dan membentuk bayangan.</p>
+  </div>
+
+  <div class="tab-nav">
+    <button class="tab-btn active" data-tab="pantul">🪞 Pantulan</button>
+    <button class="tab-btn" data-tab="bias">🌈 Pembiasan</button>
+    <button class="tab-btn" data-tab="bayangan">🕯️ Bayangan</button>
+    <button class="tab-btn" data-tab="lensa">🔍 Lensa</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-pantul">
+    <div class="card">
+      <p class="desc">Cahaya yang memantul dari cermin selalu mengikuti satu aturan tetap — sudut datang dan sudut pantul selalu sama besar, diukur dari garis normal (garis tegak lurus cermin).</p>
+      <div class="stage"><svg id="pantulSvg" viewBox="0 0 300 200"></svg></div>
+
+      <div class="field">
+        <label>Sudut Datang (dari garis normal) <span class="val" id="pantulSudutVal">40°</span></label>
+        <input type="range" id="pantulSudut" min="5" max="80" value="40">
+      </div>
+
+      <div class="result-panel">
+        <div class="result-num" id="pantulHasil">40°</div>
+        <div class="result-sub">Sudut pantul yang dihasilkan cermin</div>
+        <div class="compare-row">
+          <div class="compare-box"><div class="n" id="pantulDatangN">40°</div><div class="l">SUDUT DATANG</div></div>
+          <div class="compare-box"><div class="n" id="pantulPantulN">40°</div><div class="l">SUDUT PANTUL</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="note-card"><strong>Kenapa selalu sama?</strong> Cermin memantulkan cahaya seperti bola yang memantul di lantai licin — arah datang dan arah pergi selalu simetris terhadap garis tegak lurus permukaannya, berapa pun besar sudutnya.</div>
+  </div>
+
+  <div class="tab-panel" id="tab-bias">
+    <div class="card">
+      <p class="desc">Saat cahaya pindah dari satu bahan ke bahan lain (misalnya dari udara ke air), lintasannya membelok — makin padat bahannya, makin besar pula belokannya.</p>
+      <div class="stage"><svg id="biasSvg" viewBox="0 0 300 200"></svg></div>
+
+      <div class="field">
+        <label>Sudut Datang (dari udara) <span class="val" id="biasSudutVal">40°</span></label>
+        <input type="range" id="biasSudut" min="0" max="80" value="40">
+      </div>
+      <div class="field">
+        <label>Indeks Bias Bahan Kedua <span class="val" id="biasNVal">1,33</span></label>
+        <input type="range" id="biasN" min="1.00" max="2.42" step="0.01" value="1.33">
+      </div>
+
+      <div class="result-panel">
+        <div class="result-num" id="biasHasil">28,9°</div>
+        <div class="result-sub">Sudut bias di dalam <span id="biasNamaBahan">air</span></div>
+      </div>
+    </div>
+    <div class="note-card"><strong>Kenapa bisa membelok?</strong> Cahaya melambat begitu masuk ke bahan yang lebih padat (seperti mobil melambat masuk ke pasir) — sisi berkas yang lebih dulu menyentuh bahan baru melambat duluan, sehingga seluruh berkas membelok arah.</div>
+  </div>
+
+  <div class="tab-panel" id="tab-bayangan">
+    <div class="card">
+      <p class="desc">Bayangan terbentuk karena cahaya merambat lurus — benda yang menghalangi cahaya dari sebuah lampu akan melempar bayangan sepanjang jarak tertentu di lantai.</p>
+      <div class="stage"><svg id="bayanganSvg" viewBox="0 0 300 200"></svg></div>
+
+      <div class="field">
+        <label>Tinggi Lampu (cm) <span class="val" id="bayanganHlVal">200</span></label>
+        <input type="range" id="bayanganHl" min="150" max="300" step="5" value="200">
+      </div>
+      <div class="field">
+        <label>Tinggi Benda (cm) <span class="val" id="bayanganHoVal">60</span></label>
+        <input type="range" id="bayanganHo" min="20" max="140" step="5" value="60">
+      </div>
+      <div class="field">
+        <label>Jarak Benda dari Lampu (cm) <span class="val" id="bayanganDVal">120</span></label>
+        <input type="range" id="bayanganD" min="20" max="300" step="5" value="120">
+      </div>
+
+      <div class="result-panel">
+        <div class="result-num" id="bayanganHasil">51,4 cm</div>
+        <div class="result-sub">Panjang bayangan di lantai</div>
+      </div>
+    </div>
+    <div class="note-card"><strong>Kenapa bisa dihitung?</strong> Garis dari lampu, ke ujung benda, sampai ke ujung bayangan membentuk dua segitiga sebangun — itu sebabnya bayangan benda pendek dekat lampu rendah bisa jauh lebih panjang dari bendanya sendiri.</div>
+  </div>
+
+  <div class="tab-panel" id="tab-lensa">
+    <div class="card">
+      <p class="desc">Lensa cembung mengumpulkan berkas cahaya sejajar ke satu titik — disebut titik fokus. Bentuk kelengkungan dan bahan kacanya menentukan seberapa dekat titik itu.</p>
+      <div class="stage"><svg id="lensaSvg" viewBox="0 0 300 200"></svg></div>
+
+      <div class="field">
+        <label>Jari-Jari Kelengkungan Lensa (cm) <span class="val" id="lensaRVal">60</span></label>
+        <input type="range" id="lensaR" min="20" max="100" step="5" value="60">
+      </div>
+      <div class="field">
+        <label>Indeks Bias Kaca Lensa <span class="val" id="lensaNVal">1,50</span></label>
+        <input type="range" id="lensaN" min="1.30" max="1.80" step="0.01" value="1.50">
+      </div>
+
+      <div class="result-panel">
+        <div class="result-num" id="lensaHasil">60,0 cm</div>
+        <div class="result-sub">Jarak fokus lensa</div>
+        <div class="compare-row">
+          <div class="compare-box"><div class="n" id="lensaKekuatanN">1,67 D</div><div class="l">KEKUATAN LENSA</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="note-card"><strong>Kenapa berbanding terbalik?</strong> Lensa yang lebih melengkung (jari-jari kecil) membelokkan cahaya lebih tajam, jadi titik fokusnya lebih dekat — itu sebabnya kaca pembesar yang tebal punya jarak fokus pendek.</div>
+  </div>
+
+  <footer>Laboratorium Cahaya & Optik Anak — Bank Alat JAZMI/Qiladat</footer>
+</div>
+
+<script>
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  function fmt1(n){ return n.toFixed(1).replace('.',','); }
+  function fmt2(n){ return n.toFixed(2).replace('.',','); }
+
+  /* ============ TAB 1: PANTULAN (Hukum Pemantulan) ============ */
+  function renderPantul(){
+    const theta = parseFloat(document.getElementById('pantulSudut').value);
+    document.getElementById('pantulSudutVal').textContent = theta + '°';
+    document.getElementById('pantulHasil').textContent = theta + '°';
+    document.getElementById('pantulDatangN').textContent = theta + '°';
+    document.getElementById('pantulPantulN').textContent = theta + '°';
+
+    const rad = theta * Math.PI/180;
+    const hitX = 150, hitY = 150, L = 100;
+    const startX = hitX - L*Math.sin(rad), startY = hitY - L*Math.cos(rad);
+    const endX = hitX + L*Math.sin(rad), endY = hitY - L*Math.cos(rad);
+
+    let hatch = '';
+    for(let x=45; x<=255; x+=15){
+      hatch += `<line x1="${x}" y1="150" x2="${x-8}" y2="162" stroke="#c9c0a4" stroke-width="2"/>`;
+    }
+
+    const svg = document.getElementById('pantulSvg');
+    svg.innerHTML = `
+      <line x1="40" y1="150" x2="260" y2="150" stroke="#3a3226" stroke-width="4"/>
+      ${hatch}
+      <line x1="150" y1="150" x2="150" y2="45" stroke="#8a7c62" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <line x1="${startX}" y1="${startY}" x2="${hitX}" y2="${hitY}" stroke="#c9784f" stroke-width="3" stroke-linecap="round"/>
+      <line x1="${hitX}" y1="${hitY}" x2="${endX}" y2="${endY}" stroke="#5a8a7c" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="${startX}" cy="${startY}" r="4" fill="#c9784f"/>
+      <circle cx="${endX}" cy="${endY}" r="4" fill="#5a8a7c"/>
+      <circle cx="${hitX}" cy="${hitY}" r="3.5" fill="#3a3226"/>
+      <text x="${startX-6}" y="${startY-8}" text-anchor="end" font-family="JetBrains Mono" font-size="9" fill="#c9784f">datang</text>
+      <text x="${endX+6}" y="${endY-8}" text-anchor="start" font-family="JetBrains Mono" font-size="9" fill="#5a8a7c">pantul</text>
+      <text x="153" y="55" text-anchor="start" font-family="JetBrains Mono" font-size="9" fill="#8a7c62">normal</text>
+    `;
+  }
+  document.getElementById('pantulSudut').addEventListener('input', renderPantul);
+
+  /* ============ TAB 2: PEMBIASAN (Hukum Snellius) ============ */
+  function namaBahan(n){
+    if(n < 1.05) return 'udara';
+    if(n < 1.40) return 'air';
+    if(n < 1.60) return 'kaca';
+    return 'berlian';
+  }
+  function renderBias(){
+    const theta1 = parseFloat(document.getElementById('biasSudut').value);
+    const n2 = parseFloat(document.getElementById('biasN').value);
+    document.getElementById('biasSudutVal').textContent = theta1 + '°';
+    document.getElementById('biasNVal').textContent = fmt2(n2);
+
+    const theta2 = Math.asin(Math.sin(theta1*Math.PI/180)/n2) * 180/Math.PI;
+    document.getElementById('biasHasil').textContent = fmt1(theta2) + '°';
+    document.getElementById('biasNamaBahan').textContent = namaBahan(n2);
+
+    const rad1 = theta1*Math.PI/180, rad2 = theta2*Math.PI/180;
+    const hitX = 150, hitY = 100, L1 = 80, L2 = 80;
+    const startX = hitX - L1*Math.sin(rad1), startY = hitY - L1*Math.cos(rad1);
+    const endX = hitX + L2*Math.sin(rad2), endY = hitY + L2*Math.cos(rad2);
+
+    const svg = document.getElementById('biasSvg');
+    svg.innerHTML = `
+      <rect x="20" y="100" width="260" height="80" fill="#dce8e4"/>
+      <line x1="20" y1="100" x2="280" y2="100" stroke="#3a3226" stroke-width="3"/>
+      <line x1="150" y1="180" x2="150" y2="20" stroke="#8a7c62" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <line x1="${startX}" y1="${startY}" x2="${hitX}" y2="${hitY}" stroke="#c9784f" stroke-width="3" stroke-linecap="round"/>
+      <line x1="${hitX}" y1="${hitY}" x2="${endX}" y2="${endY}" stroke="#5a8a7c" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="${startX}" cy="${startY}" r="4" fill="#c9784f"/>
+      <circle cx="${endX}" cy="${endY}" r="4" fill="#5a8a7c"/>
+      <circle cx="${hitX}" cy="${hitY}" r="3.5" fill="#3a3226"/>
+      <text x="24" y="35" font-family="JetBrains Mono" font-size="9" fill="#8a7c62">udara</text>
+      <text x="24" y="172" font-family="JetBrains Mono" font-size="9" fill="#5a7a70">${namaBahan(n2)}</text>
+    `;
+  }
+  ['biasSudut','biasN'].forEach(id => document.getElementById(id).addEventListener('input', renderBias));
+
+  /* ============ TAB 3: BAYANGAN (Segitiga Sebangun) ============ */
+  function renderBayangan(){
+    const Hl = parseFloat(document.getElementById('bayanganHl').value);
+    const Ho = parseFloat(document.getElementById('bayanganHo').value);
+    const d = parseFloat(document.getElementById('bayanganD').value);
+    document.getElementById('bayanganHlVal').textContent = Hl;
+    document.getElementById('bayanganHoVal').textContent = Ho;
+    document.getElementById('bayanganDVal').textContent = d;
+
+    const s = d*Ho/(Hl-Ho);
+    document.getElementById('bayanganHasil').textContent = fmt1(s) + ' cm';
+
+    const groundY = 170, marginX = 20, availW = 260, availH = 150;
+    const sceneW = (d + s) * 1.08;
+    const sceneH = Hl * 1.08;
+    const scale = Math.min(availW/sceneW, availH/sceneH);
+
+    const lampX = marginX;
+    const lampTopY = groundY - Hl*scale;
+    const objX = lampX + d*scale;
+    const objTopY = groundY - Ho*scale;
+    const shadowTipX = lampX + (d+s)*scale;
+
+    const svg = document.getElementById('bayanganSvg');
+    svg.innerHTML = `
+      <line x1="${marginX}" y1="${groundY}" x2="290" y2="${groundY}" stroke="#8a7c62" stroke-width="3"/>
+      <line x1="${lampX}" y1="${groundY}" x2="${objX}" y2="${objTopY}" stroke="#e0c8a8" stroke-width="1.5" stroke-dasharray="3 3"/>
+      <line x1="${objX}" y1="${objTopY}" x2="${shadowTipX}" y2="${groundY}" stroke="#e0c8a8" stroke-width="1.5" stroke-dasharray="3 3"/>
+      <line x1="${lampX}" y1="${groundY}" x2="${lampX}" y2="${lampTopY}" stroke="#3a3226" stroke-width="3"/>
+      <circle cx="${lampX}" cy="${lampTopY}" r="7" fill="#c9784f"/>
+      <line x1="${objX}" y1="${groundY}" x2="${objX}" y2="${objTopY}" stroke="#5a8a7c" stroke-width="6" stroke-linecap="round"/>
+      <line x1="${objX}" y1="${groundY+1}" x2="${shadowTipX}" y2="${groundY+1}" stroke="#c9c0a4" stroke-width="5" stroke-linecap="round"/>
+      <text x="${lampX}" y="${lampTopY-12}" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8a7c62">lampu</text>
+      <text x="${objX}" y="${objTopY-10}" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#5a7a70">benda</text>
+    `;
+  }
+  ['bayanganHl','bayanganHo','bayanganD'].forEach(id => document.getElementById(id).addEventListener('input', renderBayangan));
+
+  /* ============ TAB 4: LENSA CEMBUNG (Persamaan Pembuat Lensa) ============ */
+  function renderLensa(){
+    const R = parseFloat(document.getElementById('lensaR').value);
+    const n = parseFloat(document.getElementById('lensaN').value);
+    document.getElementById('lensaRVal').textContent = R;
+    document.getElementById('lensaNVal').textContent = fmt2(n);
+
+    const f = R / (2*(n-1));
+    document.getElementById('lensaHasil').textContent = fmt1(f) + ' cm';
+    document.getElementById('lensaKekuatanN').textContent = fmt2(100/f) + ' D';
+
+    const lensX = 150, axisY = 100, scale = 0.7;
+    const focalX = lensX + f*scale;
+    const heights = [70, 100, 130];
+    let rays = '';
+    heights.forEach(h => {
+      rays += `<line x1="20" y1="${h}" x2="${lensX}" y2="${h}" stroke="#c9784f" stroke-width="2.5" stroke-linecap="round"/>`;
+      rays += `<line x1="${lensX}" y1="${h}" x2="${focalX}" y2="${axisY}" stroke="#5a8a7c" stroke-width="2.5" stroke-linecap="round"/>`;
+    });
+
+    const svg = document.getElementById('lensaSvg');
+    svg.innerHTML = `
+      <line x1="15" y1="${axisY}" x2="285" y2="${axisY}" stroke="#c9c0a4" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <path d="M ${lensX} 30 Q ${lensX+16} 100 ${lensX} 170 Q ${lensX-16} 100 ${lensX} 30 Z" fill="#dce8e4" stroke="#8a7c62" stroke-width="2"/>
+      ${rays}
+      <circle cx="${focalX}" cy="${axisY}" r="4" fill="#3a3226"/>
+      <text x="${focalX}" y="${axisY+18}" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#3a3226">F</text>
+    `;
+  }
+  ['lensaR','lensaN'].forEach(id => document.getElementById(id).addEventListener('input', renderLensa));
+
+  renderPantul();
+  renderBias();
+  renderBayangan();
+  renderLensa();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

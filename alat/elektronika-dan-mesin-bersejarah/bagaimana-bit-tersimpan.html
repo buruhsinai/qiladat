@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bagaimana Benda Mati Menyimpan 0 dan 1 — Laboratorium JAZMI</title>
+<style>
+  :root{
+    --bg:#0a1512;
+    --bg2:#0f1e19;
+    --card:#122420;
+    --card2:#16302a;
+    --line:#1f3d34;
+    --emerald:#22c98a;
+    --emerald-dim:#0e6b4f;
+    --gold:#e0b354;
+    --text:#e9f3ee;
+    --muted:#8fada0;
+    --danger:#e07a5f;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'Georgia','Iowan Old Style',serif;
+    line-height:1.65;
+  }
+  .sans{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;}
+  header{
+    padding:34px 20px 24px; text-align:center;
+    background:radial-gradient(ellipse at top, #113b2e 0%, var(--bg) 70%);
+    border-bottom:1px solid var(--line);
+  }
+  header .kicker{
+    font-family:-apple-system,sans-serif; letter-spacing:.14em; text-transform:uppercase;
+    font-size:12px; color:var(--gold); margin-bottom:10px;
+  }
+  header h1{font-size:1.55rem; margin:0 0 10px; font-weight:600; line-height:1.35;}
+  header p{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px; max-width:640px; margin:0 auto;}
+
+  nav.tabs{
+    position:sticky; top:0; z-index:10; display:flex; overflow-x:auto;
+    gap:6px; padding:10px 14px; background:rgba(10,21,18,.96);
+    backdrop-filter:blur(6px); border-bottom:1px solid var(--line);
+    font-family:-apple-system,sans-serif; -webkit-overflow-scrolling:touch;
+  }
+  nav.tabs a{
+    flex:0 0 auto; padding:7px 13px; border-radius:999px; font-size:12.5px;
+    color:var(--muted); text-decoration:none; border:1px solid var(--line); white-space:nowrap;
+  }
+  nav.tabs a:hover{color:var(--emerald); border-color:var(--emerald-dim);}
+
+  main{max-width:760px; margin:0 auto; padding:8px 18px 60px;}
+  section{padding:34px 0; border-bottom:1px solid var(--line);}
+  section:last-child{border-bottom:none;}
+  h2{
+    font-size:1.18rem; color:var(--emerald); margin:0 0 6px; display:flex; align-items:center; gap:8px;
+  }
+  h2 .num{
+    font-family:-apple-system,sans-serif; font-size:11px; background:var(--emerald-dim);
+    color:#dff7ec; padding:2px 8px; border-radius:6px; letter-spacing:.05em;
+  }
+  h3{color:var(--gold); font-size:1rem; margin:22px 0 8px;}
+  p{margin:0 0 14px; font-size:15.5px;}
+  .lead{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px;}
+
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:18px; margin:14px 0;
+  }
+  .card.gold{border-color:#4a3a1e; background:#1a1408;}
+  .qbox{
+    background:var(--card2); border-left:3px solid var(--gold); border-radius:8px;
+    padding:14px 16px; margin:16px 0; font-style:italic; color:#f0e6cc; font-size:14.5px;
+  }
+  ul{padding-left:20px; margin:10px 0;}
+  li{margin-bottom:7px; font-size:15px;}
+  .sourceline{
+    font-family:-apple-system,sans-serif; font-size:11.5px; color:var(--muted);
+    margin-top:6px; padding-top:6px; border-top:1px dashed var(--line);
+  }
+
+  /* timeline generasi cards */
+  .gen-grid{display:flex; flex-direction:column; gap:12px;}
+  .gen-card{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px; position:relative;
+  }
+  .gen-card .tag{
+    font-family:-apple-system,sans-serif; font-size:11px; text-transform:uppercase;
+    letter-spacing:.08em; color:var(--gold); margin-bottom:4px; display:block;
+  }
+  .gen-card h4{margin:0 0 8px; font-size:1.02rem; color:var(--text);}
+  .statline{
+    display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; font-family:-apple-system,sans-serif;
+  }
+  .stat{
+    background:var(--bg2); border:1px solid var(--line); border-radius:8px; padding:6px 10px;
+    font-size:12px; color:var(--emerald);
+  }
+  .stat b{display:block; font-size:14px; color:var(--text);}
+
+  /* SVG interactive */
+  .fg-wrap{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px; text-align:center;
+  }
+  .fg-cells{display:flex; justify-content:center; gap:22px; flex-wrap:wrap; margin:14px 0;}
+  .fg-cell{cursor:pointer; user-select:none; -webkit-tap-highlight-color:transparent;}
+  .fg-caption{
+    font-family:-apple-system,sans-serif; font-size:13px; color:var(--muted); margin-top:6px;
+  }
+  .fg-state{
+    font-family:-apple-system,sans-serif; font-weight:700; font-size:15px; margin-top:4px;
+  }
+  .fg-state.zero{color:var(--danger);}
+  .fg-state.one{color:var(--emerald);}
+  button.tool-btn{
+    font-family:-apple-system,sans-serif; background:var(--emerald-dim); color:#e9fff5;
+    border:none; padding:9px 16px; border-radius:8px; font-size:13px; cursor:pointer; margin-top:10px;
+  }
+  button.tool-btn:active{opacity:.8;}
+  button.tool-btn:disabled{opacity:.4; cursor:not-allowed;}
+  button.tool-btn.secondary{background:var(--card2); color:var(--text); border:1px solid var(--line);}
+  button.tool-btn.danger{background:#5c2a1e; color:#ffe6dc;}
+
+  /* Simulator Tulis/Baca/Hapus */
+  .fgsim-status{
+    display:flex; flex-direction:column; gap:6px; font-family:-apple-system,sans-serif;
+    background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:10px 14px; margin-bottom:14px;
+    text-align:left; max-width:340px; margin-left:auto; margin-right:auto;
+  }
+  .fgsim-row{display:flex; justify-content:space-between; font-size:12.5px; color:var(--muted);}
+  .fgsim-row b{color:var(--text); font-size:13px;}
+  .fgsim-btns{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:12px;}
+  .fgsim-caption{
+    font-family:-apple-system,sans-serif; font-size:13.5px; color:var(--text); margin:10px 0 0;
+    min-height:20px; transition:opacity .2s;
+  }
+  .fgsim-phase{
+    display:inline-block; font-family:-apple-system,sans-serif; font-size:10.5px; letter-spacing:.06em;
+    text-transform:uppercase; padding:2px 9px; border-radius:999px; background:var(--emerald-dim); color:#dff7ec;
+    margin-bottom:6px;
+  }
+
+  /* Panel Skala Nyata (zoom lintas orde besar) */
+  #scaleZoom3D{width:100%;height:320px;border-radius:10px;overflow:hidden;background:#05100c;position:relative;}
+  .sz-trail{display:flex; justify-content:center; gap:4px; flex-wrap:wrap; margin-bottom:12px; font-family:-apple-system,sans-serif;}
+  .sz-trail span{
+    font-size:10.5px; color:var(--muted); padding:3px 8px; border-radius:999px; border:1px solid var(--line);
+    white-space:nowrap;
+  }
+  .sz-trail span.active{background:var(--gold); color:#241b06; border-color:var(--gold); font-weight:700;}
+  .sz-readout{
+    background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-top:12px;
+    font-family:-apple-system,sans-serif; text-align:left; max-width:420px; margin-left:auto; margin-right:auto;
+  }
+  .sz-readout .sz-width{color:var(--gold); font-weight:700; font-size:15px;}
+  .sz-readout .sz-name{color:var(--text); font-weight:700; font-size:14px; margin-bottom:2px;}
+  .sz-readout .sz-compare{color:var(--muted); font-size:12.5px; margin-top:6px; line-height:1.5;}
+  .sz-nav{display:flex; align-items:center; justify-content:center; gap:12px; margin-top:12px;}
+  .sz-nav input[type=range]{flex:1; max-width:220px; accent-color:var(--gold);}
+
+  /* calculator */
+  .calc{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px;}
+  .calc label{font-family:-apple-system,sans-serif; font-size:13px; color:var(--muted); display:block; margin-bottom:6px;}
+  .calc input[type=range]{width:100%; accent-color:var(--emerald);}
+  .calc .val{font-family:-apple-system,sans-serif; color:var(--gold); font-weight:700;}
+  .calc-results{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px;}
+  .result-box{
+    background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:12px;
+    font-family:-apple-system,sans-serif;
+  }
+  .result-box .rlabel{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em;}
+  .result-box .rval{font-size:18px; color:var(--emerald); font-weight:700; margin-top:4px;}
+  .result-box .rsub{font-size:12px; color:var(--muted); margin-top:2px;}
+  .ratio-line{
+    font-family:-apple-system,sans-serif; text-align:center; margin-top:14px; padding:10px;
+    background:#0e2a20; border-radius:8px; color:var(--gold); font-size:13.5px;
+  }
+
+  table{width:100%; border-collapse:collapse; font-family:-apple-system,sans-serif; font-size:13px; margin:14px 0;}
+  th,td{padding:8px 10px; border-bottom:1px solid var(--line); text-align:left;}
+  th{color:var(--gold); font-weight:600; font-size:12px;}
+  td{color:var(--text);}
+  td.mut{color:var(--muted);}
+
+  .density-viz{display:flex; justify-content:space-around; align-items:flex-end; gap:10px; margin:16px 0; flex-wrap:wrap;}
+  .density-col{text-align:center; font-family:-apple-system,sans-serif;}
+  .density-box{
+    background:var(--bg2); border:1px solid var(--emerald-dim); border-radius:6px; margin:0 auto 8px;
+    position:relative; overflow:hidden;
+  }
+  .density-label{font-size:11px; color:var(--muted);}
+  .density-label b{color:var(--emerald); display:block; font-size:13px;}
+
+  .warn{
+    background:#241407; border:1px solid #5c3a12; border-radius:10px; padding:14px 16px; margin:14px 0;
+    font-family:-apple-system,sans-serif; font-size:13.5px; color:#f0d3a8;
+  }
+  .warn b{color:var(--gold);}
+
+  .correction{
+    background:#1a0f0f; border-left:3px solid var(--danger); border-radius:8px; padding:14px 16px; margin:14px 0;
+    font-family:-apple-system,sans-serif; font-size:14px;
+  }
+  .correction .lbl{color:var(--danger); font-size:11px; text-transform:uppercase; letter-spacing:.08em; display:block; margin-bottom:6px;}
+
+  footer{
+    text-align:center; padding:30px 20px; color:var(--muted); font-family:-apple-system,sans-serif; font-size:12px;
+  }
+  .refs{font-family:-apple-system,sans-serif; font-size:12.5px; color:var(--muted);}
+  .refs li{margin-bottom:8px;}
+  .refs a{color:var(--emerald); text-decoration:none;}
+
+  @media(max-width:420px){
+    .calc-results{grid-template-columns:1fr;}
+    .fg-cells{gap:12px;}
+  }
+
+  /* Model 3D tambahan */
+  #floatGate3D{width:100%;height:340px;border-radius:10px;overflow:hidden;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;background:#0a1512;}
+  .fg3d-legend{display:flex;flex-wrap:wrap;gap:8px 14px;justify-content:center;margin-top:10px;font-family:-apple-system,sans-serif;font-size:11.5px;color:var(--muted);}
+  .fg3d-legend span{display:inline-flex;align-items:center;gap:5px;}
+  .fg3d-sw{width:10px;height:10px;border-radius:2px;display:inline-block;}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="kicker">Laboratorium JAZMI · Sains &amp; Material</div>
+  <h1>Bagaimana Benda Mati Menyimpan Ingatan?<br>Dari Listrik yang Mengalir ke Bit yang Tersegel</h1>
+  <p>Level 1–5: Belajar → Model → Verifikasi → Eksplorasi. Bukan sekadar "komputer pakai listrik" — tapi kenapa listrik saja tidak cukup untuk <em>mengingat</em>, dan bagaimana bahan material menyelesaikan apa yang listrik sendiri tidak bisa.</p>
+</header>
+
+<nav class="tabs">
+  <a href="#belajar">Belajar</a>
+  <a href="#pertanyaan">Pertanyaan Ilmiah</a>
+  <a href="#mengalir">Mengalir vs Tersimpan</a>
+  <a href="#generasi">Tiga Generasi</a>
+  <a href="#gerbang">Gerbang Terapung</a>
+  <a href="#model3d">Model 3D</a>
+  <a href="#skala3d">Skala Nyata</a>
+  <a href="#konteks3d">Di Dalam Ponsel</a>
+  <a href="#andaikan">Andaikan</a>
+  <a href="#nanometer">Nanometer &amp; Taiwan</a>
+  <a href="#kuantum">Catatan Kuantum</a>
+  <a href="#batasan">Batasan</a>
+  <a href="#referensi">Referensi</a>
+</nav>
+
+<main>
+
+  <section id="belajar">
+    <h2><span class="num">01</span>Belajar</h2>
+    <p>Ada satu lompatan konsep yang mudah terlewat: <strong>listrik mengalir, tapi mengalir bukan berarti mengingat.</strong> Nyalakan lampu, matikan lampu — tidak ada "ingatan" yang tersisa di dalam kawatnya. Arus listrik pada dasarnya adalah peristiwa yang terjadi <em>selama</em> ada tenaga, lalu selesai begitu tenaga dicabut.</p>
+    <p>Maka pertanyaan yang sebenarnya diajukan bukan "bagaimana listrik menyimpan data", tapi: <strong>bahan apa yang bisa memerangkap sebuah keadaan listrik, sehingga keadaan itu tetap bisa dibaca ulang bahkan lama setelah peristiwa listriknya sendiri lewat?</strong> Itulah kenapa jawabannya selalu berakhir di ilmu material, bukan cuma ilmu rangkaian.</p>
+    <div class="qbox">
+      "Yang tersimpan bukanlah listriknya. Yang tersimpan adalah <em>bekas</em> yang ditinggalkan listrik pada suatu bahan — dan seberapa lama bekas itu bertahan, seberapa kecil ia bisa dibuat, itu murni soal bahan apa yang dipakai."
+    </div>
+  </section>
+
+  <section id="pertanyaan">
+    <h2><span class="num">02</span>Pertanyaan Ilmiah (sebelum spesifikasi)</h2>
+    <p class="lead">Mengikuti metode "Pertanyaan Ilmiah sebelum Spesifikasi" dari dokumen proyek — bukan langsung "bagaimana chip bekerja", tapi:</p>
+    <ul>
+      <li>Apa beda "arus mengalir" dengan "keadaan tersimpan"?</li>
+      <li>Kenapa dibutuhkan bahan <em>terisolasi</em>, bukan sekadar bahan penghantar?</li>
+      <li>Bagaimana satu keadaan fisik (ada muatan / tidak ada muatan) dibaca ulang sebagai angka 0 atau 1?</li>
+      <li>Kalau bahan yang dipakai diganti (tabung → transistor → gerbang terapung), apa yang sebenarnya berubah: prinsip fisikanya, atau cuma ukurannya?</li>
+      <li>Kenapa dua chip yang kelihatan identik dari luar bisa punya kapasitas sangat berbeda?</li>
+      <li>Apakah "komputer kuantum" itu benar-benar melampaui listrik biasa, atau hanya soal material yang berperilaku berbeda?</li>
+    </ul>
+  </section>
+
+  <section id="mengalir">
+    <h2><span class="num">03</span>Mengalir vs Tersimpan</h2>
+    <p>Sebuah sirkuit sederhana (baterai–kabel–lampu) adalah <strong>peristiwa</strong>: elektron didorong oleh beda potensial, mengalir selama rangkaian tertutup, berhenti begitu rangkaian diputus atau baterai habis. Tidak ada bagian dari rangkaian itu yang "mengingat" apa pun setelahnya.</p>
+    <p>Untuk mengubah peristiwa itu menjadi <strong>ingatan</strong>, dibutuhkan tiga syarat yang harus dipenuhi sekaligus oleh bahannya:</p>
+    <ul>
+      <li><strong>Bisa memiliki dua keadaan berbeda yang stabil</strong> — bukan terus berubah-ubah sendiri (dua keadaan inilah yang nanti dibaca sebagai 0 dan 1).</li>
+      <li><strong>Bisa dipaksa berpindah dari satu keadaan ke keadaan lain</strong> secara sengaja (menulis data).</li>
+      <li><strong>Keadaan itu bertahan cukup lama untuk dibaca ulang</strong> — entah selama ada tenaga (memori "mudah hilang"/volatile) atau bahkan tanpa tenaga sama sekali (memori "tetap"/non-volatile).</li>
+    </ul>
+    <p>Relai mekanis abad ke-19, tabung vakum abad ke-20, transistor silikon, hingga gerbang terapung pada flash memory — semuanya adalah jawaban berbeda-beda untuk tiga syarat yang sama itu. Bedanya cuma bahan, ukuran, dan seberapa lama "bekas" itu bertahan.</p>
+  </section>
+
+  <section id="generasi">
+    <h2><span class="num">04</span>Tiga Generasi Penjaga Bit</h2>
+    <p class="lead">Bukan cerita "makin canggih makin kecil" yang kosong — setiap generasi diverifikasi dengan angka nyata yang pernah tercatat.</p>
+
+    <div class="gen-grid">
+      <div class="gen-card">
+        <span class="tag">Generasi 0 · 1946</span>
+        <h4>Tabung Vakum (ENIAC)</h4>
+        <p style="margin-bottom:6px;">Tabung vakum bekerja seperti bola lampu yang dipaksa jadi saklar: aliran elektron di dalam ruang hampa dikendalikan oleh tegangan pada elektrode, sehingga bisa dibuat "menyala" (mengalirkan arus) atau "mati" (menyumbat arus).</p>
+        <div class="statline">
+          <div class="stat"><b>≈18.000</b>tabung vakum</div>
+          <div class="stat"><b>≈27 ton</b>berat total</div>
+          <div class="stat"><b>≈167 m²</b>luas ruangan</div>
+          <div class="stat"><b>174.000 W</b>daya panas</div>
+        </div>
+        <div class="sourceline">ENIAC, University of Pennsylvania — dikutip dari beberapa sumber sejarah komputasi, saling cocok pada kisaran 18.000 tabung &amp; 27–30 ton.</div>
+      </div>
+
+      <div class="gen-card">
+        <span class="tag">Generasi 1 · 1971</span>
+        <h4>Transistor Solid-State (Intel 4004)</h4>
+        <p style="margin-bottom:6px;">Transistor mengganti ruang hampa dengan kristal silikon yang sengaja "dicemari" (doping) sehingga punya daerah kaya elektron dan daerah miskin elektron. Sambungan p-n inilah yang berfungsi sebagai saklar — tanpa tabung kaca, tanpa perlu dipanaskan.</p>
+        <div class="statline">
+          <div class="stat"><b>2.300</b>transistor</div>
+          <div class="stat"><b>10 mikron</b>ukuran fitur</div>
+          <div class="stat"><b>1 keping</b>silikon tunggal</div>
+        </div>
+        <div class="sourceline">Intel 4004, 15 November 1971 — dokumentasi ulang tahun resmi Intel &amp; Wikipedia.</div>
+      </div>
+
+      <div class="gen-card">
+        <span class="tag">Generasi 2 · 1980-an–kini</span>
+        <h4>Gerbang Terapung (Flash Memory)</h4>
+        <p style="margin-bottom:6px;">Ini jawaban untuk syarat ketiga: <em>bertahan tanpa listrik sama sekali</em>. Sebuah gerbang logam dikubur di dalam lapisan oksida yang mengisolasinya total dari sekelilingnya — elektron yang "dipaksa masuk" ke situ akan terjebak, secara harfiah, hingga bertahun-tahun.</p>
+        <div class="statline">
+          <div class="stat"><b>±0</b>daya untuk menyimpan</div>
+          <div class="stat"><b>Tahunan</b>daya tahan tanpa listrik</div>
+        </div>
+        <div class="sourceline">Prinsip floating-gate transistor — TechTarget, ScienceDirect, dokumen paten flash memory.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="gerbang">
+    <h2><span class="num">05</span>Eksplorasi: Tulis, Baca, Hapus — Apa yang Masuk, Terjadi, Keluar</h2>
+    <p>Ini bukan cuma "sakelar nyala/mati". Ada tiga peristiwa listrik yang benar-benar berbeda: <strong>apa yang dipaksa masuk</strong> (tegangan), <strong>apa yang terjadi di dalam</strong> (elektron menerobos lapisan isolator), dan <strong>apa yang keluar</strong> saat sel dibaca ulang. Tekan tombol 1 → 2 → 3 secara berurutan dan amati setiap lapisan.</p>
+
+    <div class="fg-wrap">
+      <span class="fgsim-phase" id="fgPhase">Keadaan Awal</span>
+      <div class="fgsim-status">
+        <div class="fgsim-row"><span>Tegangan pada Gerbang Kendali</span><b id="vGate">0 V (idle)</b></div>
+        <div class="fgsim-row"><span>Elektron terjebak di Gerbang Terapung</span><b id="eCount">0 elektron</b></div>
+        <div class="fgsim-row"><span>Bit yang tersimpan sekarang</span><b class="fg-state one" id="bitNow">1</b></div>
+      </div>
+
+      <svg id="fgSim" viewBox="0 0 320 210" width="100%" style="max-width:340px;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+        <rect x="60" y="12" width="200" height="24" rx="4" fill="#e0b354"/>
+        <text x="160" y="28" font-size="9" fill="#0a1512" text-anchor="middle" font-family="sans-serif" font-weight="bold">Gerbang Kendali</text>
+
+        <rect x="70" y="40" width="180" height="14" fill="#2a4038" stroke="#8fada0" stroke-width="0.6"/>
+        <text x="255" y="50" font-size="7" fill="#8fada0" font-family="sans-serif">oksida</text>
+
+        <rect x="80" y="57" width="160" height="26" rx="3" fill="#2a3f38" stroke="#8fada0" stroke-width="1"/>
+        <text x="160" y="49" font-size="7.5" fill="var(--muted)" text-anchor="middle" font-family="sans-serif">Gerbang Terapung</text>
+        <g id="electronsGroup"></g>
+
+        <rect x="70" y="86" width="180" height="14" fill="#2a4038" stroke="#8fada0" stroke-width="0.6"/>
+        <text x="255" y="96" font-size="7" fill="#8fada0" font-family="sans-serif">oksida</text>
+
+        <rect id="channelRect" x="56" y="103" width="208" height="24" fill="#22c98a" opacity="0.9"/>
+        <text x="160" y="119" font-size="8" fill="#0a1512" text-anchor="middle" font-family="sans-serif" font-weight="bold" id="channelLabel">Arus mengalir</text>
+
+        <rect x="20" y="98" width="36" height="34" fill="#e0b354"/>
+        <text x="38" y="119" font-size="9" fill="#0a1512" text-anchor="middle" font-family="sans-serif" font-weight="bold">S</text>
+        <rect x="264" y="98" width="36" height="34" fill="#e0b354"/>
+        <text x="282" y="119" font-size="9" fill="#0a1512" text-anchor="middle" font-family="sans-serif" font-weight="bold">D</text>
+
+        <rect x="40" y="130" width="240" height="18" fill="#16302a"/>
+        <text x="160" y="143" font-size="7.5" fill="var(--muted)" text-anchor="middle" font-family="sans-serif">Substrat (silikon)</text>
+
+        <line id="barrierLine" x1="160" y1="100" x2="160" y2="130" stroke="var(--danger)" stroke-width="2" stroke-dasharray="3,2" opacity="0"/>
+        <g id="carriersGroup"></g>
+      </svg>
+
+      <p class="fgsim-caption" id="fgCaption">Sel dalam keadaan awal: gerbang terapung kosong, kanal konduktif → bit dibaca sebagai 1.</p>
+
+      <div class="fgsim-btns">
+        <button class="tool-btn" id="btnWrite">1 · Tulis (paksa jadi 0)</button>
+        <button class="tool-btn secondary" id="btnRead">2 · Baca</button>
+        <button class="tool-btn danger" id="btnErase">3 · Hapus (kembali ke 1)</button>
+      </div>
+    </div>
+
+    <h3>Apa yang sebenarnya terjadi di balik tiga tombol itu?</h3>
+    <div class="card">
+      <p><strong>1 · Tulis (Program):</strong> tegangan yang jauh lebih tinggi dari tegangan operasi normal dipaksakan sesaat ke Gerbang Kendali. Medan listrik sebesar itu memaksa sebagian elektron di kanal "menerobos" lapisan oksida yang seharusnya mengisolasi total — proses yang dalam fisika disebut <em>tunneling</em> (quantum tunneling / Fowler–Nordheim), bukan lubang fisik yang benar-benar terbentuk di oksidanya.</p>
+      <p><strong>2 · Baca:</strong> tegangan kecil (mendekati tegangan operasi normal) diberikan ke gerbang. Elektron yang terjebak di gerbang terapung ikut memengaruhi medan listrik di kanal di bawahnya, menaikkan "tegangan ambang" (V<sub>t</sub>) yang dibutuhkan supaya kanal menghantar. Kalau ambang itu terlanjur naik karena ada elektron terjebak, arus baca kecil tadi tidak sanggup menembus kanal → dibaca <strong>0</strong>. Kalau gerbang terapung kosong, arus mengalir normal → dibaca <strong>1</strong>.</p>
+      <p><strong>3 · Hapus (Erase):</strong> tegangan tinggi diberikan dengan arah/konfigurasi kebalikan dari saat menulis (mis. lewat substrat), menarik elektron yang terjebak keluar lagi lewat oksida yang sama, mengosongkan gerbang terapung dan mengembalikan sel ke keadaan default (1).</p>
+    </div>
+    <div class="warn"><b>Catatan jujur:</b> angka tegangan yang ditampilkan pada simulator ini ("tinggi", "rendah", dsb.) adalah <em>orde besar ilustratif</em> untuk memberi rasa perbandingan skala — bukan nilai dari datasheet chip tertentu, dan berbeda-beda antar generasi/teknologi flash memory sesungguhnya.</div>
+
+    <div class="sourceline">Mekanisme: floating gate diisolasi lapisan oksida dari kanal maupun gerbang kendali; muatan yang terperangkap mengubah tegangan ambang (Vt) transistor, dan itulah yang dibaca sebagai 0/1 saat sel diakses.</div>
+  </section>
+
+  <section id="model3d">
+    <h2><span class="num">05B</span>Eksplorasi 3D: Tulis, Baca, Hapus dalam Ruang</h2>
+    <p>Panel tambahan — versi ruang (3D) dari simulator yang sama di atas, supaya perjalanan elektron dari kanal menembus oksida ke gerbang terapung (dan sebaliknya) terlihat sebagai gerakan fisik dalam tumpukan lapisan, bukan cuma diagram datar.</p>
+    <div class="fg-wrap">
+      <span class="fgsim-phase" id="fgPhase3D">Keadaan Awal</span>
+      <div class="fgsim-status">
+        <div class="fgsim-row"><span>Tegangan pada Gerbang Kendali</span><b id="vGate3D">0 V (idle)</b></div>
+        <div class="fgsim-row"><span>Elektron terjebak di Gerbang Terapung</span><b id="eCount3D">0 elektron</b></div>
+        <div class="fgsim-row"><span>Bit yang tersimpan sekarang</span><b class="fg-state one" id="bitNow3D">1</b></div>
+      </div>
+      <div id="floatGate3D"></div>
+      <p class="fg-caption">Seret untuk memutar · scroll / cubit dua jari untuk zoom.</p>
+      <p class="fgsim-caption" id="fgCaption3D">Sel dalam keadaan awal: gerbang terapung kosong, kanal konduktif → bit dibaca sebagai 1.</p>
+      <div class="fgsim-btns">
+        <button class="tool-btn" id="btnWrite3D">1 · Tulis (paksa jadi 0)</button>
+        <button class="tool-btn secondary" id="btnRead3D">2 · Baca</button>
+        <button class="tool-btn danger" id="btnErase3D">3 · Hapus (kembali ke 1)</button>
+      </div>
+      <div class="fg3d-legend">
+        <span><i class="fg3d-sw" style="background:#e0b354"></i>Gerbang kendali / kontak S-D</span>
+        <span><i class="fg3d-sw" style="background:#8fada0"></i>Lapisan oksida (isolator)</span>
+        <span><i class="fg3d-sw" style="background:#2a3f38"></i>Gerbang terapung</span>
+        <span><i class="fg3d-sw" style="background:#22c98a"></i>Kanal (arus mengalir)</span>
+        <span><i class="fg3d-sw" style="background:#e07a5f"></i>Elektron terperangkap</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="skala3d">
+    <h2><span class="num">05C</span>Model 3D Skala Nyata: Zoom dari Kemasan Chip ke Atom</h2>
+    <p>Panel tambahan lagi — dua panel di atas (sel gerbang terapung 2D dan 3D) sengaja digambar <em>sebesar layar</em> supaya jelas dilihat, jadi proporsinya tidak realistis. Panel ini berbeda tujuannya: bergerak selangkah demi selangkah lintas <strong>enam orde besaran ukuran</strong> — dari kemasan chip yang bisa dipegang tangan, sampai jarak antar-atom — supaya "rasa" seberapa kecil sebuah sel penyimpanan itu benar-benar terasa, bukan cuma angka nanometer yang lewat begitu saja.</p>
+
+    <div class="fg-wrap">
+      <div class="sz-trail" id="szTrail"></div>
+      <div id="scaleZoom3D"></div>
+
+      <div class="sz-readout">
+        <div class="sz-name" id="szName">Kemasan Chip (BGA)</div>
+        <div>Lebar pandangan ini ≈ <span class="sz-width" id="szWidth">10 mm</span></div>
+        <div class="sz-compare" id="szCompare">Seukuran satu ruas jari kelingking orang dewasa.</div>
+      </div>
+
+      <div class="sz-nav">
+        <button class="tool-btn secondary" id="szPrev">◀ Perkecil</button>
+        <input type="range" id="szSlider" min="0" max="5" step="1" value="0">
+        <button class="tool-btn secondary" id="szNext">Perbesar ▶</button>
+      </div>
+      <p class="fg-caption">Seret untuk memutar tiap tahap · geser slider atau pakai tombol untuk pindah skala.</p>
+    </div>
+
+    <h3>Kenapa "rasa skala" ini penting?</h3>
+    <p>Setiap kali kita geser satu langkah, ukuran dunia yang kita lihat mengecil sekitar <strong>10 sampai 100 kali lipat</strong> dari langkah sebelumnya — bukan dua atau tiga kali. Enam langkah kecil di slider itu sebenarnya mewakili rentang ukuran dari sekitar 1 sentimeter sampai kurang dari 1 nanometer: selisihnya sekitar <strong>sepuluh juta kali</strong>. Tidak ada kamera atau mata yang bisa "memperbesar" rentang sejauh itu secara mulus dalam satu gerakan — makanya perjalanannya dipecah jadi tahapan, mirip cara film dokumenter sains menunjukkan perbandingan ukuran alam semesta.</p>
+    <div class="warn"><b>Catatan jujur:</b> ukuran pada tiap tahap adalah <em>urutan besaran ilustratif</em> (dibulatkan ke pangkat sepuluh terdekat), bukan spesifikasi satu chip nyata tertentu; kisi atom pada tahap terakhir digambar rapi untuk kejelasan, padahal lapisan oksida sesungguhnya umumnya amorf (tidak tersusun serapi kristal).</div>
+  </section>
+
+  <section id="konteks3d">
+    <h2><span class="num">05D</span>Model 3D: Ternyata Ini Ada di Ponselmu</h2>
+    <p>Panel tambahan terakhir — kalau dua panel 3D sebelumnya membawa kita <em>masuk</em> ke dalam sel (sampai ke atom), panel ini membawa kita <em>keluar</em>: menunjukkan di mana sebenarnya benda sekecil itu duduk, di dalam alat yang mungkin sedang ada di tanganmu atau sakumu sekarang — ponsel pintar. <span style="opacity:.75">(Asumsi: memori flash paling umum ditemui orang di ponsel sehari-hari; prinsip yang sama berlaku di SSD laptop, kartu SD, atau flash drive.)</span></p>
+
+    <div class="fg-wrap">
+      <div class="sz-trail" id="kxTrail"></div>
+      <div id="konteksZoom3D" style="width:100%;height:320px;border-radius:10px;overflow:hidden;background:#05100c;"></div>
+
+      <div class="sz-readout">
+        <div class="sz-name" id="kxName">Ponsel Pintar (utuh)</div>
+        <div>Skala kira-kira ≈ <span class="sz-width" id="kxWidth">14 cm</span></div>
+        <div class="sz-compare" id="kxCompare">Alat yang mungkin sedang kamu pegang atau ada di sakumu sekarang.</div>
+      </div>
+
+      <div class="sz-nav">
+        <button class="tool-btn secondary" id="kxPrev">◀ Zoom keluar</button>
+        <input type="range" id="kxSlider" min="0" max="3" step="1" value="0">
+        <button class="tool-btn secondary" id="kxNext">Zoom masuk ▶</button>
+      </div>
+      <p class="fg-caption">Seret untuk memutar tiap tahap · geser slider untuk membuka ponsel sampai ke dalam chip-nya.</p>
+    </div>
+
+    <h3>Jadi, benda sekecil atom itu ada di mana persisnya?</h3>
+    <p>Di ponselmu ada satu papan sirkuit yang memuat belasan komponen kecil berdempetan. Satu di antaranya adalah chip penyimpanan flash — kotak hitam yang mungkin tidak lebih besar dari kuku jempolmu. Di dalam kotak hitam itu ada keping silikon (die) yang berisi <strong>miliaran</strong> sel gerbang terapung persis seperti yang kita bedah di panel-panel sebelumnya — masing-masing menyimpan satu bit, lewat mekanisme elektron terjebak yang sama persis.</p>
+    <div class="warn"><b>Catatan jujur:</b> tata letak papan dan bentuk chip di sini disederhanakan untuk kejelasan (bukan bongkar-pasang model ponsel tertentu secara literal). Pada ponsel nyata, chip penyimpanan kadang digabung dalam satu paket bersama pengendali (controller) atau bahkan ditumpuk (package-on-package) di atas chip lain — variasinya banyak, tapi prinsip "kotak hitam kecil di papan → keping silikon → miliaran sel" ini berlaku umum.</div>
+  </section>
+
+  <section id="andaikan">
+    <h2><span class="num">06</span>Andaikan Kita Tidak Pernah Beralih dari Tabung</h2>
+    <p>Ini pengandaian yang diajukan di awal — dan jawabannya sudah pernah dihitung langsung oleh Intel sendiri untuk ulang tahun ke-40 mikroprosesor mereka: <strong>jika sebuah chip berisi 1 miliar transistor dibuat memakai proses 10 mikron tahun 1971 (bukan proses modern), luasnya menjadi ≈21 m² (≈227 kaki persegi)</strong> — dari yang aslinya cuma 216 mm². Geser penggeser di bawah untuk melihat pengandaian itu pada skala berapa pun.</p>
+
+    <div class="calc">
+      <label>Jumlah transistor yang ingin dibayangkan: <span class="val" id="calcValLabel">1</span> miliar</label>
+      <input type="range" id="calcRange" min="0.1" max="200" step="0.1" value="1">
+      <div class="calc-results">
+        <div class="result-box">
+          <div class="rlabel">Andai dibuat 1971 (10 mikron)</div>
+          <div class="rval" id="oldArea">21 m²</div>
+          <div class="rsub" id="oldCompare">seukuran ruang kelas</div>
+        </div>
+        <div class="result-box">
+          <div class="rlabel">Kenyataan 2011 (32 nanometer)</div>
+          <div class="rval" id="newArea">216 mm²</div>
+          <div class="rsub" id="newCompare">seukuran perangko</div>
+        </div>
+      </div>
+      <div class="ratio-line" id="ratioLine">Selisih luas: ≈97.000×</div>
+    </div>
+
+    <div class="warn"><b>Catatan jujur:</b> perhitungan ini murni skala linear dari satu titik data resmi Intel (216 mm² untuk 1 miliar transistor di 32nm, vs 21 m² bila dibuat di 10 mikron). Chip nyata tidak seragam kerapatannya (cache berbeda kerapatan dari logika inti), jadi ini gambaran kasar, bukan cetak biru presisi.</div>
+
+    <h3>Sebagai perbandingan nyata (bukan hasil hitungan, angka asli)</h3>
+    <table>
+      <tr><th>Chip</th><th>Tahun</th><th>Transistor</th><th>Proses</th></tr>
+      <tr><td>Intel 4004</td><td class="mut">1971</td><td>2.300</td><td class="mut">10 mikron</td></tr>
+      <tr><td>Intel Pentium</td><td class="mut">1993</td><td>3,1 juta</td><td class="mut">0,8 mikron</td></tr>
+      <tr><td>Apple M1</td><td class="mut">2020</td><td>16 miliar</td><td class="mut">5 nm</td></tr>
+      <tr><td>Nvidia B200</td><td class="mut">2024</td><td>208 miliar</td><td class="mut">4 nm (custom TSMC)</td></tr>
+    </table>
+  </section>
+
+  <section id="nanometer">
+    <h2><span class="num">07</span>Nanometer, Kerapatan, dan Mengapa Taiwan Bermain di Sana</h2>
+    <p>Ini menjawab pengamatan yang diajukan: dua chip bisa <em>terlihat sama persis dari luar</em> — sama-sama keping hitam kecil berkaki logam — tapi kapasitasnya berlipat-lipat berbeda. Bedanya sama sekali tidak kelihatan dari luar, karena letaknya di seberapa rapat transistor bisa disusun <em>di dalam</em> struktur kristal silikon itu, dalam skala nanometer (sepermiliar meter).</p>
+
+    <div class="warn"><b>Satu koreksi penting:</b> sejak generasi ~2010-an, angka "nm" pada nama proses (mis. "3nm", "2nm") sudah menjadi <em>label pemasaran</em>, bukan ukuran fisik transistor yang benar-benar diukur secara harfiah. Tapi label itu tetap mewakili urutan generasi kerapatan yang nyata — makin kecil labelnya, makin rapat transistornya, walau bukan pengukuran literal.</div>
+
+    <h3>Kenapa TSMC (Taiwan) jadi pusat perhatian dunia</h3>
+    <p>Merancang tata letak sebuah chip (arsitektur) itu satu pekerjaan; benar-benar <em>mencetak</em> transistor sekecil beberapa nanometer di atas lempeng silikon secara massal dan konsisten adalah pekerjaan yang sama sekali berbeda — butuh mesin litografi ultraviolet ekstrem yang hanya bisa dibuat segelintir perusahaan di dunia. TSMC menguasai kemampuan mencetak pada node paling rapat saat ini (3nm produksi massal sejak 2022, 2nm menyusul), sehingga siapa pun yang merancang chip tercanggih — Apple, Nvidia, AMD — pada akhirnya tetap harus antre ke pabrik yang sama.</p>
+
+    <div class="density-viz">
+      <div class="density-col">
+        <div class="density-box" style="width:70px; height:70px; background-image:radial-gradient(circle, var(--emerald) 1px, transparent 1.4px); background-size:14px 14px;"></div>
+        <div class="density-label"><b>1971</b>10 mikron</div>
+      </div>
+      <div class="density-col">
+        <div class="density-box" style="width:70px; height:70px; background-image:radial-gradient(circle, var(--emerald) 1px, transparent 1.4px); background-size:6px 6px;"></div>
+        <div class="density-label"><b>2011</b>32 nanometer</div>
+      </div>
+      <div class="density-col">
+        <div class="density-box" style="width:70px; height:70px; background-image:radial-gradient(circle, var(--emerald) 1px, transparent 1.4px); background-size:2px 2px;"></div>
+        <div class="density-label"><b>2022+</b>label "3 nm"</div>
+      </div>
+    </div>
+    <p class="sourceline" style="text-align:center;">Ilustrasi kerapatan titik di atas bersifat skematik (untuk memberi kesan visual), bukan proporsi kerapatan transistor yang presisi secara matematis.</p>
+  </section>
+
+  <section id="kuantum">
+    <h2><span class="num">08</span>Catatan Epistemik: Komputer Kuantum</h2>
+    <p>Bagian ini menyentuh dugaan yang diajukan di awal — dan perlu diluruskan sedikit sebelum dilanjutkan, supaya lab ini tetap jujur secara ilmiah, bukan cuma kelihatan ilmiah.</p>
+    <div class="correction">
+      <span class="lbl">Koreksi jujur</span>
+      Betul bahwa <strong>rekayasa</strong> komputer kuantum sangat bertumpu pada ilmu material — mencari bahan/sistem (sirkuit superkonduktor, ion terperangkap, foton, dsb) yang bisa mempertahankan keadaan kuantumnya cukup lama untuk dihitung. Tapi ini bukan berarti fisika kuantum "tidak benar-benar terlibat" — <strong>perilaku yang dimanfaatkan (superposisi, keterjeratan/entanglement) itu sendiri adalah fenomena kuantum yang nyata</strong>, bukan sekadar istilah yang dipinjam karena kedengarannya keren. Yang tepat dikatakan: seorang insinyur komputer kuantum sehari-hari lebih sering bergulat dengan masalah material &amp; rekayasa (menjaga sistem tetap dingin, mengisolasi dari gangguan luar) daripada menurunkan persamaan Schrödinger dari nol — tapi sistem yang mereka bangun tetap harus benar-benar berperilaku kuantum secara fisik, bukan cuma diberi nama "kuantum".
+    </div>
+    <p>Jadi pengandaiannya lebih tepat begini: <strong>listrik konvensional (generasi 0–2 di atas) sengaja menghindari perilaku kuantum yang aneh</strong> — transistor modern dirancang supaya elektronnya berperilaku "klasik" dan bisa diprediksi. Komputer kuantum melakukan kebalikannya: sengaja mencari material yang perilaku kuantumnya tidak bisa disembunyikan, lalu memanfaatkannya. Keduanya soal material — tapi tujuannya berlawanan arah.</p>
+  </section>
+
+  <section id="batasan">
+    <h2><span class="num">09</span>Batasan</h2>
+    <ul>
+      <li>Perhitungan "andaikan" di Bagian 6 adalah skala linear dari satu titik data resmi — bukan simulasi VLSI, dan mengasumsikan kerapatan seragam yang sebenarnya tidak berlaku persis di chip nyata.</li>
+      <li>Simulator Tulis/Baca/Hapus (2D &amp; 3D) menampilkan urutan sebab-akibat secara benar (tegangan → tunneling → muatan terjebak → pergeseran V<sub>t</sub> → hasil baca), tetapi angka tegangan ("tinggi"/"rendah") bersifat ilustratif-kualitatif, bukan nilai kuantitatif dari datasheet chip tertentu; kecepatan animasi juga dipercepat drastis dari skala waktu tunneling sesungguhnya (mikrodetik–milidetik) agar bisa diamati mata.</li>
+      <li>Label nanometer sejak era ~2010-an bersifat pemasaran, bukan ukuran fisik literal — dijelaskan di Bagian 7, tapi ilustrasi kerapatan titiknya tetap skematik, bukan proporsi terukur.</li>
+      <li>Bagian komputer kuantum bersifat konseptual/epistemik, bukan tool penghitung — tidak dimaksudkan menggantikan pengantar mekanika kuantum yang sesungguhnya.</li>
+      <li>Halaman ini adalah pengantar sains populer berbasis sumber sekunder terverifikasi, bukan pengganti buku teks fisika benda padat atau rekayasa semikonduktor.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <h2><span class="num">10</span>Referensi</h2>
+    <ul class="refs">
+      <li>An Illustrated History of Computers — spesifikasi ENIAC (tabung vakum, berat, daya).</li>
+      <li>Intel Newsroom — "40 Years of Processors" (perbandingan 4004 vs proses 10 mikron, termasuk angka 21 m²).</li>
+      <li>Wikipedia — Intel 4004 (spesifikasi teknis resmi).</li>
+      <li>TechTarget — "What is a floating gate transistor?" (mekanisme penyimpanan elektron pada flash memory).</li>
+      <li>ScienceDirect Topics — Floating-Gate Transistor (struktur EEPROM/flash).</li>
+      <li>Ringkasan sejarah kerapatan transistor 1971–2024 (Intel 4004 → Apple M-series → Nvidia B200).</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  Laboratorium JAZMI — Jalinan Zamrud Islamiah · Belajar → Model → Uji → Tool<br>
+  Versi pengembangan awal. Silakan diperiksa ulang, dikoreksi, dan didiskusikan lebih lanjut.
+</footer>
+
+<script>
+// ---------- Simulator 2D: Tulis / Baca / Hapus ----------
+const NS = 'http://www.w3.org/2000/svg';
+const electronsGroup = document.getElementById('electronsGroup');
+const carriersGroup = document.getElementById('carriersGroup');
+const channelRect = document.getElementById('channelRect');
+const channelLabel = document.getElementById('channelLabel');
+const barrierLine = document.getElementById('barrierLine');
+const vGateEl = document.getElementById('vGate');
+const eCountEl = document.getElementById('eCount');
+const bitNowEl = document.getElementById('bitNow');
+const fgCaptionEl = document.getElementById('fgCaption');
+const fgPhaseEl = document.getElementById('fgPhase');
+const btnWrite = document.getElementById('btnWrite');
+const btnRead = document.getElementById('btnRead');
+const btnErase = document.getElementById('btnErase');
+
+const E_START = [{x:100,y:112},{x:130,y:118},{x:160,y:112},{x:190,y:118},{x:220,y:112}];
+const E_END   = [{x:105,y:66},{x:130,y:72},{x:160,y:66},{x:190,y:72},{x:215,y:66}];
+
+const electronEls = E_START.map(p=>{
+  const c = document.createElementNS(NS,'circle');
+  c.setAttribute('cx', p.x); c.setAttribute('cy', p.y); c.setAttribute('r', 3.4);
+  c.setAttribute('fill', '#e07a5f'); c.style.opacity = 0;
+  electronsGroup.appendChild(c);
+  return c;
+});
+
+let bitState2D = 'one'; // 'one' = kosong (bit 1), 'zero' = terisi (bit 0)
+let animating2D = false;
+
+function tween(duration, onUpdate, onDone){
+  const start = performance.now();
+  function step(now){
+    const t = Math.min((now-start)/duration, 1);
+    const eased = t<0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
+    onUpdate(eased);
+    if(t<1) requestAnimationFrame(step); else if(onDone) onDone();
+  }
+  requestAnimationFrame(step);
+}
+
+function setButtons2D(disabled){
+  btnWrite.disabled = disabled; btnRead.disabled = disabled; btnErase.disabled = disabled;
+}
+
+function updateChannelVisual2D(){
+  const charged = bitState2D === 'zero';
+  channelRect.setAttribute('fill', charged ? '#3a2a26' : '#22c98a');
+  channelRect.setAttribute('opacity', charged ? '0.5' : '0.9');
+  channelLabel.textContent = charged ? 'Kanal terhalang' : 'Arus mengalir';
+}
+
+function updateStatus2D(){
+  bitNowEl.textContent = bitState2D === 'zero' ? '0' : '1';
+  bitNowEl.className = 'fg-state ' + (bitState2D === 'zero' ? 'zero' : 'one');
+  eCountEl.textContent = (bitState2D === 'zero' ? '5' : '0') + ' elektron';
+  updateChannelVisual2D();
+}
+updateStatus2D();
+
+function doWrite2D(){
+  if(animating2D || bitState2D === 'zero') return;
+  animating2D = true; setButtons2D(true);
+  fgPhaseEl.textContent = 'Menulis (Program)';
+  vGateEl.textContent = '≈ tinggi (sesaat)';
+  fgCaptionEl.textContent = 'Tegangan tinggi diberikan ke Gerbang Kendali → elektron dari kanal menerobos oksida (tunneling)…';
+  electronEls.forEach(el => el.style.opacity = 1);
+  tween(1400, p=>{
+    electronEls.forEach((el,i)=>{
+      const s=E_START[i], e=E_END[i];
+      el.setAttribute('cx', s.x + (e.x-s.x)*p);
+      el.setAttribute('cy', s.y + (e.y-s.y)*p);
+    });
+  }, ()=>{
+    bitState2D = 'zero';
+    updateStatus2D();
+    vGateEl.textContent = '0 V (idle)';
+    fgPhaseEl.textContent = 'Tersimpan';
+    fgCaptionEl.textContent = 'Elektron terjebak di gerbang terapung. Tegangan sudah dicabut — elektron tidak punya jalan keluar → bit = 0, bertahan tanpa daya.';
+    animating2D = false; setButtons2D(false);
+  });
+}
+
+function doErase2D(){
+  if(animating2D || bitState2D === 'one') return;
+  animating2D = true; setButtons2D(true);
+  fgPhaseEl.textContent = 'Menghapus (Erase)';
+  vGateEl.textContent = '≈ tinggi, arah terbalik';
+  fgCaptionEl.textContent = 'Tegangan tinggi berlawanan arah menarik elektron keluar lagi dari gerbang terapung, menembus oksida yang sama…';
+  tween(1200, p=>{
+    electronEls.forEach((el,i)=>{
+      const s=E_START[i], e=E_END[i];
+      el.setAttribute('cx', e.x + (s.x-e.x)*p);
+      el.setAttribute('cy', e.y + (s.y-e.y)*p);
+      el.style.opacity = 1 - p*0.9;
+    });
+  }, ()=>{
+    electronEls.forEach(el => el.style.opacity = 0);
+    bitState2D = 'one';
+    updateStatus2D();
+    vGateEl.textContent = '0 V (idle)';
+    fgPhaseEl.textContent = 'Keadaan Awal';
+    fgCaptionEl.textContent = 'Gerbang terapung kosong kembali, kanal konduktif → bit = 1.';
+    animating2D = false; setButtons2D(false);
+  });
+}
+
+function doRead2D(){
+  if(animating2D) return;
+  animating2D = true; setButtons2D(true);
+  fgPhaseEl.textContent = 'Membaca';
+  vGateEl.textContent = '≈ rendah (baca)';
+  const blocked = bitState2D === 'zero';
+  fgCaptionEl.textContent = 'Tegangan baca kecil diberikan… mengirim pembawa arus dari Source menuju Drain melalui kanal.';
+
+  const carriers = [112,119,126].map(y=>{
+    const c = document.createElementNS(NS,'circle');
+    c.setAttribute('cx', 50); c.setAttribute('cy', y); c.setAttribute('r', 2.6);
+    c.setAttribute('fill', '#dff7ec'); c.style.opacity = 0.95;
+    carriersGroup.appendChild(c);
+    return c;
+  });
+
+  const targetX = blocked ? 158 : 268;
+  tween(900, p=>{
+    carriers.forEach(c => c.setAttribute('cx', 50 + (targetX-50)*p));
+  }, ()=>{
+    if(blocked){
+      barrierLine.style.opacity = 1;
+      tween(300, ()=>{}, ()=>{
+        carriers.forEach(c=> c.style.opacity = 0);
+        setTimeout(()=>{ barrierLine.style.opacity = 0; carriers.forEach(c=>c.remove()); }, 350);
+      });
+      fgCaptionEl.textContent = 'Ambang (Vt) sudah tergeser oleh elektron yang terjebak → arus baca tidak sanggup menembus kanal → dibaca 0.';
+    } else {
+      carriers.forEach(c=> c.style.opacity = 0.4);
+      setTimeout(()=> carriers.forEach(c=>c.remove()), 350);
+      fgCaptionEl.textContent = 'Kanal kosong dari muatan terjebak, ambang normal → arus baca berhasil menembus S→D → dibaca 1.';
+    }
+    vGateEl.textContent = '0 V (idle)';
+    fgPhaseEl.textContent = bitState2D === 'zero' ? 'Tersimpan' : 'Keadaan Awal';
+    animating2D = false; setButtons2D(false);
+  });
+}
+
+btnWrite.addEventListener('click', doWrite2D);
+btnRead.addEventListener('click', doRead2D);
+btnErase.addEventListener('click', doErase2D);
+
+// ---------- Calculator "andaikan" ----------
+const calcRange = document.getElementById('calcRange');
+const calcValLabel = document.getElementById('calcValLabel');
+const oldArea = document.getElementById('oldArea');
+const newArea = document.getElementById('newArea');
+const oldCompare = document.getElementById('oldCompare');
+const newCompare = document.getElementById('newCompare');
+const ratioLine = document.getElementById('ratioLine');
+
+const OLD_M2_PER_BILLION = 21;        // m² per 1 miliar transistor @ 10 mikron (sumber: Intel)
+const NEW_M2_PER_BILLION = 0.000216;  // m² per 1 miliar transistor @ 32nm (216 mm², sumber: Intel)
+
+function compareOld(m2){
+  if(m2 < 1) return 'lebih kecil dari kamar mandi';
+  if(m2 < 30) return 'seukuran kamar tidur';
+  if(m2 < 60) return 'seukuran ruang kelas';
+  if(m2 < 200) return 'seukuran lapangan bulu tangkis';
+  if(m2 < 600) return 'seukuran lapangan basket';
+  if(m2 < 3000) return 'seukuran lapangan sepak bola';
+  return 'lebih luas dari beberapa lapangan sepak bola';
+}
+function compareNew(mm2){
+  if(mm2 < 5) return 'seukuran kuku jari';
+  if(mm2 < 50) return 'seukuran perangko';
+  if(mm2 < 300) return 'seukuran kartu SIM';
+  if(mm2 < 2000) return 'seukuran korek api';
+  return 'seukuran kartu nama';
+}
+
+function fmt(n, digits=1){
+  return n.toLocaleString('id-ID', {maximumFractionDigits:digits});
+}
+
+function updateCalc(){
+  const N = parseFloat(calcRange.value);
+  calcValLabel.textContent = fmt(N,1);
+  const oM2 = OLD_M2_PER_BILLION * N;
+  const nM2 = NEW_M2_PER_BILLION * N;
+  const nMm2 = nM2 * 1000000;
+
+  oldArea.textContent = fmt(oM2,1) + ' m²';
+  oldCompare.textContent = compareOld(oM2);
+
+  if(nMm2 < 1000){
+    newArea.textContent = fmt(nMm2,1) + ' mm²';
+  } else {
+    newArea.textContent = fmt(nMm2/100,1) + ' cm²';
+  }
+  newCompare.textContent = compareNew(nMm2);
+
+  ratioLine.textContent = 'Selisih luas pada kerapatan yang sama: ≈' + fmt(OLD_M2_PER_BILLION/NEW_M2_PER_BILLION,0) + '× lebih besar bila dibuat dengan teknologi 1971';
+}
+calcRange.addEventListener('input', updateCalc);
+updateCalc();
+
+// ---------- Model 3D Gerbang Terapung: Tulis / Baca / Hapus ----------
+let fg3d = null;
+let bitState3D = 'one';
+let animating3D = false;
+
+const vGate3DEl = document.getElementById('vGate3D');
+const eCount3DEl = document.getElementById('eCount3D');
+const bitNow3DEl = document.getElementById('bitNow3D');
+const fgCaption3DEl = document.getElementById('fgCaption3D');
+const fgPhase3DEl = document.getElementById('fgPhase3D');
+const btnWrite3D = document.getElementById('btnWrite3D');
+const btnRead3D = document.getElementById('btnRead3D');
+const btnErase3D = document.getElementById('btnErase3D');
+
+function setButtons3D(disabled){
+  btnWrite3D.disabled = disabled; btnRead3D.disabled = disabled; btnErase3D.disabled = disabled;
+}
+function updateStatus3D(){
+  bitNow3DEl.textContent = bitState3D === 'zero' ? '0' : '1';
+  bitNow3DEl.className = 'fg-state ' + (bitState3D === 'zero' ? 'zero' : 'one');
+  eCount3DEl.textContent = (bitState3D === 'zero' ? '6' : '0') + ' elektron';
+}
+updateStatus3D();
+
+function initFG3D(){
+  if(fg3d) return;
+  const container = document.getElementById('floatGate3D');
+  const w = container.clientWidth || 300, h = container.clientHeight || 340;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a1512);
+
+  const camera = new THREE.PerspectiveCamera(42, w/h, 0.1, 500);
+  const target = new THREE.Vector3(0, 1.5, 0);
+
+  const renderer = new THREE.WebGLRenderer({antialias:true});
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.75);
+  sun.position.set(6, 10, 6);
+  scene.add(sun);
+  const fillLight = new THREE.DirectionalLight(0xffffff, 0.25);
+  fillLight.position.set(-6, 4, -6);
+  scene.add(fillLight);
+
+  const mats = {
+    contact: new THREE.MeshStandardMaterial({color:0xe0b354}),
+    channelOn: new THREE.MeshStandardMaterial({color:0x22c98a}),
+    channelOff: new THREE.MeshStandardMaterial({color:0x3a2a26}),
+    oxide: new THREE.MeshStandardMaterial({color:0x8fada0, transparent:true, opacity:0.28}),
+    fgate: new THREE.MeshStandardMaterial({color:0x2a3f38}),
+    electron: new THREE.MeshStandardMaterial({color:0xe07a5f, emissive:0x4a140b}),
+    carrier: new THREE.MeshStandardMaterial({color:0xdff7ec, emissive:0x145c42}),
+    barrier: new THREE.MeshStandardMaterial({color:0xe07a5f, transparent:true, opacity:0})
+  };
+
+  function box(w_,h_,d_,mat,x,y,z){
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w_,h_,d_), mat);
+    m.position.set(x,y,z);
+    scene.add(m);
+    return m;
+  }
+
+  box(1.6, 1.0, 3.2, mats.contact, -2.9, 1.1, 0);      // kontak Source
+  box(1.6, 1.0, 3.2, mats.contact, 2.9, 1.1, 0);       // kontak Drain
+  const channel = box(4.6, 0.5, 3.2, mats.channelOn, 0, 0.85, 0);
+  box(6.2, 0.35, 3.6, mats.oxide, 0, 1.28, 0);         // oksida bawah
+  box(4.2, 0.5, 3.0, mats.fgate, 0, 1.72, 0);          // gerbang terapung
+  box(6.2, 0.35, 3.6, mats.oxide, 0, 2.15, 0);         // oksida atas
+  box(6.6, 0.55, 4.0, mats.contact, 0, 2.55, 0);       // gerbang kendali
+  const barrierWall = box(0.12, 0.6, 3.2, mats.barrier, 0, 0.85, 0); // penghalang saat baca terblokir
+
+  const E_START_3D = [[-1.4,0.95,-0.8],[0,0.95,-0.8],[1.4,0.95,-0.8],[-1.4,0.95,0.8],[0,0.95,0.8],[1.4,0.95,0.8]];
+  const E_END_3D   = [[-1.4,1.72,-0.8],[0,1.72,-0.8],[1.4,1.72,-0.8],[-1.4,1.72,0.8],[0,1.72,0.8],[1.4,1.72,0.8]];
+  const electrons = E_START_3D.map(p=>{
+    const e = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 12), mats.electron);
+    e.position.set(p[0],p[1],p[2]);
+    e.visible = false;
+    scene.add(e);
+    return e;
+  });
+
+  function tween3D(duration, onUpdate, onDone){
+    const start = performance.now();
+    function step(now){
+      const t = Math.min((now-start)/duration, 1);
+      const eased = t<0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
+      onUpdate(eased);
+      if(t<1) requestAnimationFrame(step); else if(onDone) onDone();
+    }
+    requestAnimationFrame(step);
+  }
+
+  function write3D(onDone){
+    electrons.forEach(e => e.visible = true);
+    tween3D(1400, p=>{
+      electrons.forEach((e,i)=>{
+        const s=E_START_3D[i], en=E_END_3D[i];
+        e.position.set(s[0]+(en[0]-s[0])*p, s[1]+(en[1]-s[1])*p, s[2]+(en[2]-s[2])*p);
+      });
+    }, ()=>{ channel.material = mats.channelOff; onDone && onDone(); });
+  }
+
+  function erase3D(onDone){
+    tween3D(1200, p=>{
+      electrons.forEach((e,i)=>{
+        const s=E_START_3D[i], en=E_END_3D[i];
+        e.position.set(en[0]+(s[0]-en[0])*p, en[1]+(s[1]-en[1])*p, en[2]+(s[2]-en[2])*p);
+        e.material.opacity = 1; e.material.transparent = true;
+        e.scale.setScalar(1-p*0.6);
+      });
+    }, ()=>{
+      electrons.forEach(e => e.visible = false);
+      channel.material = mats.channelOn;
+      onDone && onDone();
+    });
+  }
+
+  function read3D(blocked, onDone){
+    const carriers = [-0.6,0,0.6].map(z=>{
+      const c = new THREE.Mesh(new THREE.SphereGeometry(0.13,10,10), mats.carrier);
+      c.position.set(-2.9, 0.95, z);
+      scene.add(c);
+      return c;
+    });
+    const targetX = blocked ? 0 : 2.9;
+    tween3D(900, p=>{
+      carriers.forEach(c => c.position.x = -2.9 + (targetX+2.9)*p);
+    }, ()=>{
+      if(blocked){
+        mats.barrier.opacity = 0.85;
+        setTimeout(()=>{
+          carriers.forEach(c=> scene.remove(c));
+          mats.barrier.opacity = 0;
+        }, 400);
+      } else {
+        setTimeout(()=> carriers.forEach(c=> scene.remove(c)), 250);
+      }
+      onDone && onDone();
+    });
+  }
+
+  let radius = 11, theta = 0.85, phi = 1.15;
+  let dragging = false, lastX = 0, lastY = 0, touchDist = null;
+
+  function updateCam(){
+    camera.position.x = target.x + radius*Math.sin(phi)*Math.sin(theta);
+    camera.position.z = target.z + radius*Math.sin(phi)*Math.cos(theta);
+    camera.position.y = target.y + radius*Math.cos(phi);
+    camera.lookAt(target);
+  }
+  updateCam();
+
+  renderer.domElement.addEventListener('pointerdown', e=>{
+    dragging = true; lastX = e.clientX; lastY = e.clientY; container.style.cursor = 'grabbing';
+  });
+  window.addEventListener('pointerup', ()=>{ dragging = false; container.style.cursor = 'grab'; });
+  window.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    const dx = e.clientX - lastX, dy = e.clientY - lastY;
+    theta -= dx*0.006;
+    phi = Math.min(Math.max(phi - dy*0.006, 0.3), Math.PI - 0.3);
+    lastX = e.clientX; lastY = e.clientY;
+    updateCam();
+  });
+  renderer.domElement.addEventListener('wheel', e=>{
+    e.preventDefault();
+    radius = Math.min(Math.max(radius + e.deltaY*0.01, 5), 22);
+    updateCam();
+  }, {passive:false});
+
+  renderer.domElement.addEventListener('touchstart', e=>{
+    if(e.touches.length===1){ dragging=true; lastX=e.touches[0].clientX; lastY=e.touches[0].clientY; }
+    else if(e.touches.length===2){
+      touchDist = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+    }
+  }, {passive:true});
+  renderer.domElement.addEventListener('touchmove', e=>{
+    if(e.touches.length===1 && dragging){
+      const dx = e.touches[0].clientX-lastX, dy = e.touches[0].clientY-lastY;
+      theta -= dx*0.006;
+      phi = Math.min(Math.max(phi - dy*0.006, 0.3), Math.PI - 0.3);
+      lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
+      updateCam();
+    } else if(e.touches.length===2 && touchDist!==null){
+      const d = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+      radius = Math.min(Math.max(radius - (d-touchDist)*0.03, 5), 22);
+      touchDist = d;
+      updateCam();
+    }
+  }, {passive:true});
+  renderer.domElement.addEventListener('touchend', ()=>{ dragging=false; touchDist=null; });
+
+  window.addEventListener('resize', ()=>{
+    const w2 = container.clientWidth, h2 = container.clientHeight;
+    if(!w2 || !h2) return;
+    camera.aspect = w2/h2; camera.updateProjectionMatrix();
+    renderer.setSize(w2, h2);
+  });
+
+  function loop(){
+    requestAnimationFrame(loop);
+    barrierWall.material.opacity = mats.barrier.opacity;
+    renderer.render(scene, camera);
+  }
+  loop();
+
+  fg3d = { write3D, erase3D, read3D };
+}
+
+btnWrite3D.addEventListener('click', ()=>{
+  if(animating3D || bitState3D === 'zero' || !fg3d) return;
+  animating3D = true; setButtons3D(true);
+  fgPhase3DEl.textContent = 'Menulis (Program)';
+  vGate3DEl.textContent = '≈ tinggi (sesaat)';
+  fgCaption3DEl.textContent = 'Tegangan tinggi ke Gerbang Kendali → elektron menerobos oksida menuju gerbang terapung…';
+  fg3d.write3D(()=>{
+    bitState3D = 'zero'; updateStatus3D();
+    vGate3DEl.textContent = '0 V (idle)';
+    fgPhase3DEl.textContent = 'Tersimpan';
+    fgCaption3DEl.textContent = 'Elektron terjebak, tegangan sudah dicabut → bit = 0, bertahan tanpa daya.';
+    animating3D = false; setButtons3D(false);
+  });
+});
+
+btnErase3D.addEventListener('click', ()=>{
+  if(animating3D || bitState3D === 'one' || !fg3d) return;
+  animating3D = true; setButtons3D(true);
+  fgPhase3DEl.textContent = 'Menghapus (Erase)';
+  vGate3DEl.textContent = '≈ tinggi, arah terbalik';
+  fgCaption3DEl.textContent = 'Tegangan tinggi berlawanan arah menarik elektron keluar lagi dari gerbang terapung…';
+  fg3d.erase3D(()=>{
+    bitState3D = 'one'; updateStatus3D();
+    vGate3DEl.textContent = '0 V (idle)';
+    fgPhase3DEl.textContent = 'Keadaan Awal';
+    fgCaption3DEl.textContent = 'Gerbang terapung kosong kembali, kanal konduktif → bit = 1.';
+    animating3D = false; setButtons3D(false);
+  });
+});
+
+btnRead3D.addEventListener('click', ()=>{
+  if(animating3D || !fg3d) return;
+  animating3D = true; setButtons3D(true);
+  const blocked = bitState3D === 'zero';
+  fgPhase3DEl.textContent = 'Membaca';
+  vGate3DEl.textContent = '≈ rendah (baca)';
+  fgCaption3DEl.textContent = 'Tegangan baca kecil mengirim pembawa arus dari Source menuju Drain…';
+  fg3d.read3D(blocked, ()=>{
+    fgCaption3DEl.textContent = blocked
+      ? 'Ambang (Vt) sudah tergeser oleh elektron yang terjebak → arus baca terhalang → dibaca 0.'
+      : 'Kanal bebas muatan terjebak → arus baca menembus S→D → dibaca 1.';
+    vGate3DEl.textContent = '0 V (idle)';
+    fgPhase3DEl.textContent = bitState3D === 'zero' ? 'Tersimpan' : 'Keadaan Awal';
+    animating3D = false; setButtons3D(false);
+  });
+});
+
+// Inisialisasi hanya saat panel 3D pertama kali terlihat di layar (hemat sumber daya)
+const fg3dObserver = new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){ initFG3D(); fg3dObserver.disconnect(); }
+  });
+}, {threshold:0.15});
+fg3dObserver.observe(document.getElementById('model3d'));
+
+// ---------- Panel Skala Nyata: zoom lintas 6 orde besaran ----------
+const SZ_STOPS = [
+  {
+    name: 'Kemasan Chip (BGA)', width: '10 mm',
+    compare: 'Seukuran satu ruas jari kelingking orang dewasa.'
+  },
+  {
+    name: 'Die Silikon di dalamnya', width: '1 mm',
+    compare: 'Selebar ujung inti pensil mekanik 0,5 mm — kotak kecil di kemasan sebelumnya adalah ini.'
+  },
+  {
+    name: 'Larik Sel Memori (NAND array)', width: '1 µm (1.000 nm)',
+    compare: 'Sekitar 1/80 lebar satu helai rambut manusia (rambut ≈ 80.000 nm).'
+  },
+  {
+    name: 'Satu Sel Gerbang Terapung', width: '≈ 40–80 nm',
+    compare: 'Sekitar 1.000× lebih kecil dari satu bakteri E. coli.'
+  },
+  {
+    name: 'Lapisan Oksida (close-up)', width: '≈ 7–9 nm',
+    compare: 'Setipis ini hanya berisi kira-kira 13–15 lapis atom yang ditumpuk.'
+  },
+  {
+    name: 'Jarak Antar-Atom Silikon', width: '≈ 0,24 nm',
+    compare: 'Ini batas fisik akhirnya — jarak ikatan atom Si–Si. Tidak bisa "diperkecil lagi" tanpa mengganti materialnya.'
+  }
+];
+
+let szStopIndex = 0;
+let sz3d = null;
+
+const szTrailEl = document.getElementById('szTrail');
+SZ_STOPS.forEach((s,i)=>{
+  const span = document.createElement('span');
+  span.textContent = (i+1)+'. '+s.name.split('(')[0].trim();
+  span.dataset.i = i;
+  szTrailEl.appendChild(span);
+});
+
+function updateSzReadout(){
+  const s = SZ_STOPS[szStopIndex];
+  document.getElementById('szName').textContent = s.name;
+  document.getElementById('szWidth').textContent = s.width;
+  document.getElementById('szCompare').textContent = s.compare;
+  document.getElementById('szSlider').value = szStopIndex;
+  [...szTrailEl.children].forEach((el,i)=> el.classList.toggle('active', i===szStopIndex));
+  document.getElementById('szPrev').disabled = szStopIndex === 0;
+  document.getElementById('szNext').disabled = szStopIndex === SZ_STOPS.length-1;
+}
+
+function initScaleZoom3D(){
+  if(sz3d) return;
+  const container = document.getElementById('scaleZoom3D');
+  const w = container.clientWidth || 300, h = container.clientHeight || 320;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x05100c);
+  const camera = new THREE.PerspectiveCamera(40, w/h, 0.01, 500);
+  const target = new THREE.Vector3(0,0,0);
+  const renderer = new THREE.WebGLRenderer({antialias:true});
+  renderer.setSize(w,h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  container.appendChild(renderer.domElement);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.7);
+  sun.position.set(6,10,6);
+  scene.add(sun);
+
+  let radius = 9, theta = 0.8, phi = 1.1;
+  let dragging = false, lastX=0, lastY=0, touchDist=null;
+  function updateCam(){
+    camera.position.x = target.x + radius*Math.sin(phi)*Math.sin(theta);
+    camera.position.z = target.z + radius*Math.sin(phi)*Math.cos(theta);
+    camera.position.y = target.y + radius*Math.cos(phi);
+    camera.lookAt(target);
+  }
+  updateCam();
+  renderer.domElement.addEventListener('pointerdown', e=>{ dragging=true; lastX=e.clientX; lastY=e.clientY; container.style.cursor='grabbing'; });
+  window.addEventListener('pointerup', ()=>{ dragging=false; container.style.cursor='grab'; });
+  window.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    theta -= (e.clientX-lastX)*0.006;
+    phi = Math.min(Math.max(phi - (e.clientY-lastY)*0.006, 0.3), Math.PI-0.3);
+    lastX=e.clientX; lastY=e.clientY; updateCam();
+  });
+  renderer.domElement.addEventListener('touchstart', e=>{
+    if(e.touches.length===1){ dragging=true; lastX=e.touches[0].clientX; lastY=e.touches[0].clientY; }
+    else if(e.touches.length===2){ touchDist = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); }
+  }, {passive:true});
+  renderer.domElement.addEventListener('touchmove', e=>{
+    if(e.touches.length===1 && dragging){
+      theta -= (e.touches[0].clientX-lastX)*0.006;
+      phi = Math.min(Math.max(phi - (e.touches[0].clientY-lastY)*0.006, 0.3), Math.PI-0.3);
+      lastX=e.touches[0].clientX; lastY=e.touches[0].clientY; updateCam();
+    } else if(e.touches.length===2 && touchDist!==null){
+      const d = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+      radius = Math.min(Math.max(radius - (d-touchDist)*0.02, 4), 16);
+      touchDist = d; updateCam();
+    }
+  }, {passive:true});
+  renderer.domElement.addEventListener('touchend', ()=>{ dragging=false; touchDist=null; });
+  renderer.domElement.addEventListener('wheel', e=>{
+    e.preventDefault();
+    radius = Math.min(Math.max(radius + e.deltaY*0.008, 4), 16);
+    updateCam();
+  }, {passive:false});
+  window.addEventListener('resize', ()=>{
+    const w2 = container.clientWidth, h2 = container.clientHeight;
+    if(!w2||!h2) return;
+    camera.aspect = w2/h2; camera.updateProjectionMatrix();
+    renderer.setSize(w2,h2);
+  });
+
+  const contentGroup = new THREE.Group();
+  scene.add(contentGroup);
+
+  const M = {
+    body: new THREE.MeshStandardMaterial({color:0x1c1c1c}),
+    pin: new THREE.MeshStandardMaterial({color:0xc9a24a}),
+    die: new THREE.MeshStandardMaterial({color:0x33413c}),
+    highlight: new THREE.MeshStandardMaterial({color:0xe0b354, transparent:true, opacity:0.9}),
+    block: new THREE.MeshStandardMaterial({color:0x2a3f38}),
+    blockAlt: new THREE.MeshStandardMaterial({color:0x22c98a}),
+    contact: new THREE.MeshStandardMaterial({color:0xe0b354}),
+    channel: new THREE.MeshStandardMaterial({color:0x22c98a}),
+    oxide: new THREE.MeshStandardMaterial({color:0x8fada0, transparent:true, opacity:0.35}),
+    fgate: new THREE.MeshStandardMaterial({color:0x2a3f38}),
+    atomSi: new THREE.MeshStandardMaterial({color:0xdfe6e4}),
+    atomO: new THREE.MeshStandardMaterial({color:0xe07a5f}),
+    bond: new THREE.MeshStandardMaterial({color:0x5c7a70})
+  };
+
+  function box(w_,h_,d_,mat,x,y,z){
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w_,h_,d_), mat);
+    m.position.set(x,y,z); contentGroup.add(m); return m;
+  }
+  function sph(r,mat,x,y,z){
+    const m = new THREE.Mesh(new THREE.SphereGeometry(r,16,16), mat);
+    m.position.set(x,y,z); contentGroup.add(m); return m;
+  }
+  function wireBox(w_,h_,d_,color,x,y,z){
+    const geo = new THREE.EdgesGeometry(new THREE.BoxGeometry(w_,h_,d_));
+    const line = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({color}));
+    line.position.set(x,y,z); contentGroup.add(line); return line;
+  }
+
+  function clearScene(){
+    while(contentGroup.children.length){
+      const o = contentGroup.children.pop();
+      if(o.geometry) o.geometry.dispose();
+    }
+  }
+
+  const builders = [
+    // 0. Kemasan chip
+    () => {
+      box(6,0.8,6, M.body, 0,0,0);
+      for(let i=0;i<6;i++) for(let j=0;j<6;j++){
+        sph(0.14, M.pin, -2.5+i*1, -0.45, -2.5+j*1);
+      }
+      wireBox(1.6,0.85,1.6, 0xe0b354, 1.2,0.02,1.2); // penanda area die
+    },
+    // 1. Die silikon
+    () => {
+      box(6,0.4,6, M.die, 0,0,0);
+      for(let i=-2;i<=2;i++){
+        box(5.6,0.02,0.02, M.contact, 0,0.21,i*1); // garis kisi horizontal
+        box(0.02,0.02,5.6, M.contact, i*1,0.21,0); // garis kisi vertikal
+      }
+      wireBox(1.4,0.42,1.4, 0xe0b354, 1.5,0,1.5); // penanda area larik memori
+    },
+    // 2. Larik sel memori
+    () => {
+      const n = 8;
+      for(let i=0;i<n;i++) for(let j=0;j<n;j++){
+        const isTarget = (i===Math.floor(n/2) && j===Math.floor(n/2));
+        box(0.55,0.3,0.55, isTarget?M.blockAlt:M.block, -2+i*0.62,0,-2+j*0.62);
+      }
+      wireBox(0.65,0.4,0.65, 0xe0b354, 0,0,0);
+    },
+    // 3. Satu sel gerbang terapung (proporsi nyata, gepeng)
+    () => {
+      box(1.4,0.28,1.0, M.contact, -1.35,0.5,0);
+      box(1.4,0.28,1.0, M.contact, 1.35,0.5,0);
+      box(3.4,0.14,1.0, M.channel, 0,0.24,0);
+      box(4.0,0.08,1.2, M.oxide, 0,0.4,0);
+      box(2.6,0.14,0.9, M.fgate, 0,0.5,0);
+      box(4.0,0.08,1.2, M.oxide, 0,0.6,0);
+      box(4.2,0.16,1.3, M.contact, 0,0.72,0);
+      wireBox(4.0,0.09,1.21, 0xe07a5f, 0,0.4,0); // penanda oksida yang akan diperbesar
+    },
+    // 4. Lapisan oksida close-up (kisi atom sederhana)
+    () => {
+      box(4.2,0.3,3.0, M.oxide, 0,0,0);
+      for(let layer=0;layer<5;layer++){
+        for(let i=-3;i<=3;i++){
+          const mat = layer%2===0 ? M.atomSi : M.atomO;
+          sph(0.12, mat, i*0.55, -0.6+layer*0.32, (layer%2)*0.25);
+        }
+      }
+      wireBox(1.1,0.32,0.4, 0xe07a5f, 0,-0.44,0.25); // penanda area atom
+    },
+    // 5. Skala atom (ikatan Si-Si)
+    () => {
+      const a1 = sph(0.5, M.atomSi, -0.6,0,0);
+      const a2 = sph(0.5, M.atomSi, 0.6,0,0);
+      const bondGeo = new THREE.CylinderGeometry(0.05,0.05,1.2,8);
+      const bond = new THREE.Mesh(bondGeo, M.bond);
+      bond.rotation.z = Math.PI/2; contentGroup.add(bond);
+      sph(0.5, M.atomSi, 0, 0.9, -0.9);
+      sph(0.5, M.atomSi, 0, -0.9, 0.9);
+    }
+  ];
+
+  function renderStop(i){
+    clearScene();
+    builders[i]();
+  }
+  renderStop(0);
+
+  function loop(){ requestAnimationFrame(loop); renderer.render(scene, camera); }
+  loop();
+
+  sz3d = { renderStop };
+}
+
+function goToStop(i){
+  szStopIndex = Math.max(0, Math.min(SZ_STOPS.length-1, i));
+  updateSzReadout();
+  if(sz3d) sz3d.renderStop(szStopIndex);
+}
+
+updateSzReadout();
+document.getElementById('szPrev').addEventListener('click', ()=> goToStop(szStopIndex-1));
+document.getElementById('szNext').addEventListener('click', ()=> goToStop(szStopIndex+1));
+document.getElementById('szSlider').addEventListener('input', e=> goToStop(parseInt(e.target.value,10)));
+szTrailEl.addEventListener('click', e=>{
+  const span = e.target.closest('span');
+  if(span) goToStop(parseInt(span.dataset.i,10));
+});
+
+const szObserver = new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){ initScaleZoom3D(); szObserver.disconnect(); }
+  });
+}, {threshold:0.15});
+szObserver.observe(document.getElementById('skala3d'));
+
+// ---------- Panel Konteks: di dalam ponsel sehari-hari ----------
+const KX_STOPS = [
+  { name:'Ponsel Pintar (utuh)', width:'≈ 14 cm', compare:'Alat yang mungkin sedang kamu pegang atau ada di sakumu sekarang.' },
+  { name:'Bagian Dalam Ponsel', width:'papan ≈ 8×15 cm', compare:'Baterai, modul kamera, dan belasan chip kecil berdempetan di satu papan sirkuit.' },
+  { name:'Chip Penyimpanan di Papan', width:'≈ 1 cm', compare:'Satu kotak hitam kecil ini yang menyimpan seluruh foto, video, dan aplikasimu.' },
+  { name:'Bagian Dalam Chip (Die)', width:'≈ 1 mm', compare:'Inilah persis yang kita telusuri turun ke atom di panel "Skala Nyata" sebelumnya.' }
+];
+
+let kxStopIndex = 0;
+let kx3d = null;
+
+const kxTrailEl = document.getElementById('kxTrail');
+KX_STOPS.forEach((s,i)=>{
+  const span = document.createElement('span');
+  span.textContent = (i+1)+'. '+s.name.split('(')[0].trim();
+  span.dataset.i = i;
+  kxTrailEl.appendChild(span);
+});
+
+function updateKxReadout(){
+  const s = KX_STOPS[kxStopIndex];
+  document.getElementById('kxName').textContent = s.name;
+  document.getElementById('kxWidth').textContent = s.width;
+  document.getElementById('kxCompare').textContent = s.compare;
+  document.getElementById('kxSlider').value = kxStopIndex;
+  [...kxTrailEl.children].forEach((el,i)=> el.classList.toggle('active', i===kxStopIndex));
+  document.getElementById('kxPrev').disabled = kxStopIndex === 0;
+  document.getElementById('kxNext').disabled = kxStopIndex === KX_STOPS.length-1;
+}
+
+function initKonteks3D(){
+  if(kx3d) return;
+  const container = document.getElementById('konteksZoom3D');
+  const w = container.clientWidth || 300, h = container.clientHeight || 320;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x05100c);
+  const camera = new THREE.PerspectiveCamera(40, w/h, 0.01, 500);
+  const target = new THREE.Vector3(0,0,0);
+  const renderer = new THREE.WebGLRenderer({antialias:true});
+  renderer.setSize(w,h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  container.appendChild(renderer.domElement);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.7);
+  sun.position.set(6,10,6);
+  scene.add(sun);
+
+  let radius = 9, theta = 0.8, phi = 1.1;
+  let dragging = false, lastX=0, lastY=0, touchDist=null;
+  function updateCam(){
+    camera.position.x = target.x + radius*Math.sin(phi)*Math.sin(theta);
+    camera.position.z = target.z + radius*Math.sin(phi)*Math.cos(theta);
+    camera.position.y = target.y + radius*Math.cos(phi);
+    camera.lookAt(target);
+  }
+  updateCam();
+  renderer.domElement.addEventListener('pointerdown', e=>{ dragging=true; lastX=e.clientX; lastY=e.clientY; container.style.cursor='grabbing'; });
+  window.addEventListener('pointerup', ()=>{ dragging=false; container.style.cursor='grab'; });
+  window.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    theta -= (e.clientX-lastX)*0.006;
+    phi = Math.min(Math.max(phi - (e.clientY-lastY)*0.006, 0.3), Math.PI-0.3);
+    lastX=e.clientX; lastY=e.clientY; updateCam();
+  });
+  renderer.domElement.addEventListener('touchstart', e=>{
+    if(e.touches.length===1){ dragging=true; lastX=e.touches[0].clientX; lastY=e.touches[0].clientY; }
+    else if(e.touches.length===2){ touchDist = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); }
+  }, {passive:true});
+  renderer.domElement.addEventListener('touchmove', e=>{
+    if(e.touches.length===1 && dragging){
+      theta -= (e.touches[0].clientX-lastX)*0.006;
+      phi = Math.min(Math.max(phi - (e.touches[0].clientY-lastY)*0.006, 0.3), Math.PI-0.3);
+      lastX=e.touches[0].clientX; lastY=e.touches[0].clientY; updateCam();
+    } else if(e.touches.length===2 && touchDist!==null){
+      const d = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+      radius = Math.min(Math.max(radius - (d-touchDist)*0.02, 4), 16);
+      touchDist = d; updateCam();
+    }
+  }, {passive:true});
+  renderer.domElement.addEventListener('touchend', ()=>{ dragging=false; touchDist=null; });
+  renderer.domElement.addEventListener('wheel', e=>{
+    e.preventDefault();
+    radius = Math.min(Math.max(radius + e.deltaY*0.008, 4), 16);
+    updateCam();
+  }, {passive:false});
+  window.addEventListener('resize', ()=>{
+    const w2 = container.clientWidth, h2 = container.clientHeight;
+    if(!w2||!h2) return;
+    camera.aspect = w2/h2; camera.updateProjectionMatrix();
+    renderer.setSize(w2,h2);
+  });
+
+  const contentGroup = new THREE.Group();
+  scene.add(contentGroup);
+  let clock = 0;
+  let pulseTargets = [];
+
+  const M = {
+    screen: new THREE.MeshStandardMaterial({color:0x0d0d0d}),
+    frame: new THREE.MeshStandardMaterial({color:0x3a3a3a}),
+    board: new THREE.MeshStandardMaterial({color:0x1f4a3a}),
+    battery: new THREE.MeshStandardMaterial({color:0x8a8a8a}),
+    camMod: new THREE.MeshStandardMaterial({color:0x222222}),
+    icSmall: new THREE.MeshStandardMaterial({color:0x2a2a2a}),
+    icStorage: new THREE.MeshStandardMaterial({color:0xe0b354, emissive:0x3a2c08, transparent:true, opacity:1}),
+    body: new THREE.MeshStandardMaterial({color:0x1c1c1c}),
+    pin: new THREE.MeshStandardMaterial({color:0xc9a24a}),
+    die: new THREE.MeshStandardMaterial({color:0x33413c})
+  };
+
+  function box(w_,h_,d_,mat,x,y,z){
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w_,h_,d_), mat);
+    m.position.set(x,y,z); contentGroup.add(m); return m;
+  }
+  function sph(r,mat,x,y,z){
+    const m = new THREE.Mesh(new THREE.SphereGeometry(r,16,16), mat);
+    m.position.set(x,y,z); contentGroup.add(m); return m;
+  }
+  function wireBox(w_,h_,d_,color,x,y,z){
+    const geo = new THREE.EdgesGeometry(new THREE.BoxGeometry(w_,h_,d_));
+    const line = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({color}));
+    line.position.set(x,y,z); contentGroup.add(line); return line;
+  }
+  function clearScene(){
+    while(contentGroup.children.length){
+      const o = contentGroup.children.pop();
+      if(o.geometry) o.geometry.dispose();
+    }
+    pulseTargets = [];
+  }
+
+  const builders = [
+    // 0. Ponsel utuh
+    () => {
+      box(3.2,7,0.35, M.frame, 0,0,0);
+      box(3.0,6.6,0.05, M.screen, 0,0,0.19);
+    },
+    // 1. Bagian dalam ponsel (papan terlihat)
+    () => {
+      box(3.2,7,0.06, M.frame, 0,0,-0.3); // casing belakang, digeser
+      const board = box(2.6,5.6,0.12, M.board, 0,0.1,0);
+      box(1.0,1.6,0.18, M.battery, -0.6,-1.6,0.08);
+      box(0.55,0.55,0.22, M.camMod, 0.8,2.3,0.1);
+      const icPositions = [[-0.8,1.6],[0.2,1.7],[0.9,0.9],[-0.4,0.6],[0.6,-0.2],[-0.9,-0.6]];
+      icPositions.forEach(p=> box(0.42,0.42,0.14, M.icSmall, p[0],p[1],0.09));
+      box(0.5,0.5,0.16, M.icStorage, -0.1,-1.0,0.09);
+      wireBox(0.55,0.55,0.2, 0xe0b354, -0.1,-1.0,0.09);
+      pulseTargets.push({mesh: contentGroup.children[contentGroup.children.length-2] || null});
+    },
+    // 2. Chip penyimpanan di papan (close-up)
+    () => {
+      box(2.6,5.6,0.12, M.board, 0,0,-1.4);
+      const chip = box(1.6,1.6,0.5, M.body, 0,0,0);
+      for(let i=-2;i<=2;i++) for(let j=-2;j<=2;j++){
+        if(Math.abs(i)===2 || Math.abs(j)===2) sph(0.05, M.pin, i*0.3, j*0.3, -0.28);
+      }
+      wireBox(0.7,0.7,0.52, 0xe0b354, 0.3,0.3,0);
+    },
+    // 3. Bagian dalam chip (die) — konsisten dgn panel Skala Nyata
+    () => {
+      box(3.2,0.6,3.2, M.body, 0,0,0);
+      for(let i=0;i<5;i++) for(let j=0;j<5;j++) sph(0.09, M.pin, -1.2+i*0.6,-0.32,-1.2+j*0.6);
+      box(1.6,0.62,1.6, M.die, 0.6,0,0.6);
+      wireBox(1.6,0.65,1.6, 0xe0b354, 0.6,0.02,0.6);
+    }
+  ];
+
+  function renderStop(i){
+    clearScene();
+    builders[i]();
+  }
+  renderStop(0);
+
+  function loop(t){
+    requestAnimationFrame(loop);
+    clock = t*0.003;
+    pulseTargets.forEach(p=>{
+      if(p && p.mesh){ p.mesh.material.opacity = 0.5 + Math.sin(clock*3)*0.4; }
+    });
+    renderer.render(scene, camera);
+  }
+  loop(0);
+
+  kx3d = { renderStop };
+}
+
+function kxGoToStop(i){
+  kxStopIndex = Math.max(0, Math.min(KX_STOPS.length-1, i));
+  updateKxReadout();
+  if(kx3d) kx3d.renderStop(kxStopIndex);
+}
+
+updateKxReadout();
+document.getElementById('kxPrev').addEventListener('click', ()=> kxGoToStop(kxStopIndex-1));
+document.getElementById('kxNext').addEventListener('click', ()=> kxGoToStop(kxStopIndex+1));
+document.getElementById('kxSlider').addEventListener('input', e=> kxGoToStop(parseInt(e.target.value,10)));
+kxTrailEl.addEventListener('click', e=>{
+  const span = e.target.closest('span');
+  if(span) kxGoToStop(parseInt(span.dataset.i,10));
+});
+
+const kxObserver = new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){ initKonteks3D(); kxObserver.disconnect(); }
+  });
+}, {threshold:0.15});
+kxObserver.observe(document.getElementById('konteks3d'));
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

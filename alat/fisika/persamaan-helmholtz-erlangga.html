@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Persamaan Helmholtz & Jalan Pintas Erlangga — Laboratorium JAZMI</title>
+<style>
+  :root{
+    --bg:#0a1512; --bg2:#0f1e19; --card:#122420; --card2:#16302a; --line:#1f3d34;
+    --emerald:#22c98a; --emerald-dim:#0e6b4f; --gold:#e0b354; --text:#e9f3ee;
+    --muted:#8fada0; --danger:#e07a5f; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:'Georgia','Iowan Old Style',serif; line-height:1.65;}
+  .sans{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;}
+  header{padding:34px 20px 24px; text-align:center; background:radial-gradient(ellipse at top, #113b2e 0%, var(--bg) 70%); border-bottom:1px solid var(--line);}
+  header .kicker{font-family:-apple-system,sans-serif; letter-spacing:.14em; text-transform:uppercase; font-size:12px; color:var(--gold); margin-bottom:10px;}
+  header h1{font-size:1.5rem; margin:0 0 10px; font-weight:600; line-height:1.35;}
+  header p{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px; max-width:640px; margin:0 auto;}
+  nav.tabs{position:sticky; top:0; z-index:10; display:flex; overflow-x:auto; gap:6px; padding:10px 14px; background:rgba(10,21,18,.96); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); font-family:-apple-system,sans-serif; -webkit-overflow-scrolling:touch;}
+  nav.tabs a{flex:0 0 auto; padding:7px 13px; border-radius:999px; font-size:12.5px; color:var(--muted); text-decoration:none; border:1px solid var(--line); white-space:nowrap;}
+  nav.tabs a:hover{color:var(--emerald); border-color:var(--emerald-dim);}
+  main{max-width:760px; margin:0 auto; padding:8px 18px 60px;}
+  section{padding:34px 0; border-bottom:1px solid var(--line);}
+  section:last-child{border-bottom:none;}
+  h2{font-size:1.15rem; color:var(--emerald); margin:0 0 6px; display:flex; align-items:center; gap:8px;}
+  h2 .num{font-family:-apple-system,sans-serif; font-size:11px; background:var(--emerald-dim); color:#dff7ec; padding:2px 8px; border-radius:6px; letter-spacing:.05em;}
+  h3{color:var(--gold); font-size:1rem; margin:22px 0 8px;}
+  p{margin:0 0 14px; font-size:15.5px;}
+  .lead{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px; margin:14px 0;}
+  .qbox{background:var(--card2); border-left:3px solid var(--gold); border-radius:8px; padding:14px 16px; margin:16px 0; font-style:italic; color:#f0e6cc; font-size:14.5px;}
+  ul{padding-left:20px; margin:10px 0;}
+  li{margin-bottom:7px; font-size:15px;}
+  .sourceline{font-family:-apple-system,sans-serif; font-size:11.5px; color:var(--muted); margin-top:6px; padding-top:6px; border-top:1px dashed var(--line);}
+  .eq{font-family:'Cambria Math',Georgia,serif; text-align:center; font-size:1.35rem; background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:18px; margin:16px 0; color:var(--emerald);}
+  .eq small{display:block; font-family:-apple-system,sans-serif; font-size:11px; color:var(--muted); margin-top:8px;}
+  .biocard{display:flex; gap:14px; align-items:flex-start; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px;}
+  .biocard .badge{flex:0 0 auto; width:44px; height:44px; border-radius:50%; background:var(--emerald-dim); display:flex; align-items:center; justify-content:center; font-family:-apple-system,sans-serif; font-weight:700; color:#dff7ec;}
+  table{width:100%; border-collapse:collapse; font-family:-apple-system,sans-serif; font-size:13px; margin:14px 0;}
+  th,td{padding:8px 10px; border-bottom:1px solid var(--line); text-align:left;}
+  th{color:var(--gold); font-weight:600; font-size:12px;}
+  td{color:var(--text);} td.mut{color:var(--muted);}
+  .warn{background:#241407; border:1px solid #5c3a12; border-radius:10px; padding:14px 16px; margin:14px 0; font-family:-apple-system,sans-serif; font-size:13.5px; color:#f0d3a8;}
+  .warn b{color:var(--gold);}
+  .correction{background:#1a0f0f; border-left:3px solid var(--danger); border-radius:8px; padding:14px 16px; margin:14px 0; font-family:-apple-system,sans-serif; font-size:14px;}
+  .correction .lbl{color:var(--danger); font-size:11px; text-transform:uppercase; letter-spacing:.08em; display:block; margin-bottom:6px;}
+
+  .wavepanels{display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin:14px 0;}
+  .wavebox{flex:1 1 260px; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:12px; text-align:center;}
+  .wavebox h4{margin:0 0 6px; font-family:-apple-system,sans-serif; font-size:13px; color:var(--gold);}
+  canvas{width:100%; height:100px; background:var(--bg2); border-radius:8px;}
+  .wavebox p.cap{font-family:-apple-system,sans-serif; font-size:12px; color:var(--muted); margin:8px 0 0;}
+  button.tool-btn{font-family:-apple-system,sans-serif; background:var(--emerald-dim); color:#e9fff5; border:none; padding:9px 16px; border-radius:8px; font-size:13px; cursor:pointer; margin-top:10px;}
+  button.tool-btn:active{opacity:.8;}
+
+  .path-svg-wrap{display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin:14px 0;}
+  .path-box{flex:1 1 240px; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:12px; text-align:center;}
+  .path-box h4{margin:0 0 6px; font-family:-apple-system,sans-serif; font-size:13px;}
+  .path-box.bad h4{color:var(--danger);} .path-box.good h4{color:var(--emerald);}
+  .path-box p.cap{font-family:-apple-system,sans-serif; font-size:12px; color:var(--muted); margin:6px 0 0;}
+
+  .calc{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px;}
+  .calc label{font-family:-apple-system,sans-serif; font-size:13px; color:var(--muted); display:block; margin-bottom:6px;}
+  .calc input[type=range]{width:100%; accent-color:var(--emerald);}
+  .calc .val{font-family:-apple-system,sans-serif; color:var(--gold); font-weight:700;}
+  .bar-chart{margin-top:16px; font-family:-apple-system,sans-serif;}
+  .bar-row{display:flex; align-items:center; gap:10px; margin-bottom:10px;}
+  .bar-label{flex:0 0 170px; font-size:12.5px; color:var(--muted);}
+  .bar-track{flex:1; background:var(--bg2); border-radius:6px; height:20px; overflow:hidden; position:relative;}
+  .bar-fill{height:100%; border-radius:6px; transition:width .25s ease;}
+  .bar-fill.bad{background:var(--danger);}
+  .bar-fill.good{background:var(--emerald);}
+  .bar-num{flex:0 0 60px; font-size:12.5px; text-align:right; color:var(--text);}
+
+  .refs{font-family:-apple-system,sans-serif; font-size:12.5px; color:var(--muted);}
+  .refs li{margin-bottom:8px;}
+  footer{text-align:center; padding:30px 20px; color:var(--muted); font-family:-apple-system,sans-serif; font-size:12px;}
+  @media(max-width:420px){ .bar-label{flex:0 0 120px; font-size:11.5px;} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kicker">Laboratorium JAZMI · Sains &amp; Matematika Terapan</div>
+  <h1>Gelombang yang Menolak Dihitung Cepat<br>Persamaan Helmholtz &amp; Jalan Pintas Yogi Ahmad Erlangga</h1>
+  <p>Level 1–5: Belajar → Model → Verifikasi → Eksplorasi. Bukan cerita "orang Indonesia jenius memecahkan rumus", tapi apa sebenarnya yang sulit dari persamaan ini, dan apa sebenarnya yang ditemukan.</p>
+</header>
+
+<nav class="tabs">
+  <a href="#belajar">Belajar</a>
+  <a href="#pertanyaan">Pertanyaan Ilmiah</a>
+  <a href="#persamaan">Persamaannya</a>
+  <a href="#kenapa-sulit">Kenapa Sulit</a>
+  <a href="#preconditioner">Preconditioner</a>
+  <a href="#eksplorasi">Eksplorasi</a>
+  <a href="#erlangga">Yogi Ahmad Erlangga</a>
+  <a href="#batasan">Batasan</a>
+  <a href="#referensi">Referensi</a>
+</nav>
+
+<main>
+
+  <section id="belajar">
+    <h2><span class="num">01</span>Belajar</h2>
+    <p>Persamaan Helmholtz sendiri pendek dan sudah dikenal lebih dari satu abad — bukan itu yang sulit. Yang sulit adalah <strong>menghitungnya secara numerik dalam ukuran industri</strong>: jutaan titik grid, gelombang frekuensi tinggi, dalam ruang tiga dimensi, dan harus selesai dalam waktu yang masuk akal untuk dipakai bekerja (misalnya mencari cadangan minyak dari data gelombang seismik).</p>
+    <p>Yang ditemukan Yogi Ahmad Erlangga bukan "rumus baru untuk persamaan Helmholtz" — persamaannya sudah ada. Yang ia temukan adalah <strong>cara memandu proses hitung iteratif supaya tidak tersesat</strong>, yang disebut <em>preconditioner</em>. Itulah yang membuat pemrosesan data seismik yang tadinya lambat menjadi jauh lebih cepat.</p>
+    <div class="qbox">"Persoalan intinya bukan 'apa jawabannya', tapi 'lewat jalan mana proses coba-coba menuju jawaban itu bisa dipercepat tanpa tersesat', ketika ruang pencariannya berukuran jutaan dimensi."</div>
+  </section>
+
+  <section id="pertanyaan">
+    <h2><span class="num">02</span>Pertanyaan Ilmiah (sebelum spesifikasi)</h2>
+    <ul>
+      <li>Apa beda persamaan gelombang biasa (berubah terhadap waktu) dengan persamaan Helmholtz (dibekukan pada satu frekuensi)?</li>
+      <li>Kalau rumusnya pendek, kenapa menghitungnya secara numerik bisa sangat berat?</li>
+      <li>Apa itu metode iteratif untuk sistem persamaan linear, dan kenapa metode klasik gagal khusus untuk Helmholtz frekuensi tinggi?</li>
+      <li>Apa sebenarnya arti "preconditioner" — apakah itu jawaban, atau cuma alat bantu supaya proses mencari jawaban lebih cepat?</li>
+      <li>Apa tepatnya kontribusi Erlangga: satu preconditioner (disebut "shifted Laplace"), dipasangkan dengan multigrid dan metode Krylov — bukan menyelesaikan persamaan itu untuk pertama kali dalam sejarah.</li>
+      <li>Kenapa ini penting secara industri, bukan cuma matematika murni di atas kertas?</li>
+    </ul>
+  </section>
+
+  <section id="persamaan">
+    <h2><span class="num">03</span>Dari Gelombang Berjalan ke Potret yang Dibekukan</h2>
+    <p>Persamaan gelombang biasa melacak bagaimana sesuatu bergetar <em>dari waktu ke waktu</em>: tekanan udara, medan listrik, permukaan air — semuanya berubah terus. Persamaan Helmholtz mengambil jalan pintas konseptual: <strong>anggap saja getarannya sudah berlangsung pada satu frekuensi tunggal selamanya</strong>, lalu tanya "seperti apa bentuk keruangannya?" — waktunya "dibekukan", yang dicari tinggal pola amplitudonya di ruang.</p>
+
+    <div class="eq">
+      ∇²u + k²u = f
+      <small>u = amplitudo gelombang di ruang (yang dicari) · k = bilangan gelombang (2π/λ, terkait frekuensi) · f = sumber gelombang</small>
+    </div>
+
+    <div class="wavepanels">
+      <div class="wavebox">
+        <h4>Persamaan Gelombang (domain waktu)</h4>
+        <canvas id="waveTime" width="300" height="100"></canvas>
+        <p class="cap">Bergerak terus — nilainya beda di setiap saat.</p>
+      </div>
+      <div class="wavebox">
+        <h4>Persamaan Helmholtz (domain frekuensi)</h4>
+        <canvas id="waveFreq" width="300" height="100"></canvas>
+        <p class="cap">Beku — satu potret amplitudo untuk satu frekuensi.</p>
+      </div>
+    </div>
+    <p>Trik "membekukan waktu" ini sangat berharga: banyak soal gelombang (akustik, elektromagnetik, seismik) jadi lebih mudah dianalisis secara matematis begitu waktunya dihilangkan. Tapi trik yang sama ini pula yang nanti membuatnya berat dihitung secara numerik — dijelaskan di bagian berikut.</p>
+  </section>
+
+  <section id="kenapa-sulit">
+    <h2><span class="num">04</span>Kenapa Sulit Dihitung Secara Numerik?</h2>
+    <p>Untuk dihitung komputer, ruang terus-menerus dipotong jadi titik-titik grid (diskritisasi), lalu persamaan Helmholtz berubah jadi sistem persamaan linear raksasa <strong>Au = f</strong> — bisa jutaan baris untuk masalah 3D beresolusi tinggi. Dua hal membuat sistem ini sulit:</p>
+    <ul>
+      <li><strong>Ukurannya sendiri sudah besar</strong> — makin tinggi frekuensi gelombang yang dihitung, makin rapat grid yang dibutuhkan (aturan praktis: minimal ~10 titik per panjang gelombang), jadi jumlah titik grid meledak untuk gelombang frekuensi tinggi.</li>
+      <li><strong>Matriks-nya "indefinite"</strong> — istilah teknis untuk: matriksnya punya campuran nilai eigen positif dan negatif. Metode iteratif klasik (Jacobi, Gauss-Seidel, multigrid standar) dirancang berasumsi errornya menyusut mulus ke satu arah; begitu matriksnya indefinite, asumsi itu runtuh, dan metode-metode itu bisa gagal konvergen sama sekali — bukan cuma lambat, tapi macet.</li>
+    </ul>
+    <p class="lead">Inilah yang oleh sejumlah makalah ilmiah disebut sebagai kesulitan mendasar solver iteratif klasik saat berhadapan dengan persamaan Helmholtz frekuensi tinggi — bukan sekadar soal "komputer belum cukup cepat".</p>
+  </section>
+
+  <section id="preconditioner">
+    <h2><span class="num">05</span>Preconditioner: Peta Jalan Pintas, Bukan Jawabannya Sendiri</h2>
+    <p>Menyelesaikan Au=f secara iteratif itu seperti menyusuri medan asing dengan coba-coba: mulai dari tebakan kasar, lalu berjalan sedikit demi sedikit mendekati jawaban sebenarnya. Kalau medannya berlekuk-lekuk tajam (matriks indefinite tadi), perjalanan itu bisa berputar-putar tanpa maju.</p>
+    <p><strong>Preconditioner</strong> adalah "peta bantuan" — sebuah operator lain, mirip dengan operator aslinya tapi jauh lebih murah untuk dibalik/diselesaikan, yang dipasang mendampingi sistem asli supaya medannya terasa lebih rata bagi si pencari jalan (metode iteratif Krylov seperti GMRES/Bi-CGSTAB).</p>
+
+    <h3>Yang secara spesifik diusulkan: Shifted Laplace Preconditioner</h3>
+    <p>Alih-alih memandu dengan operator Helmholtz aslinya (yang sulit), Erlangga bersama pembimbingnya (Cornelis Vuik dan Cornelis Oosterlee, TU Delft) mengusulkan operator "serupa tapi digeser" — menambahkan suku kompleks pada persamaannya sehingga sifat indefinite-nya berkurang drastis, cukup ramah untuk didekati murah dengan satu putaran multigrid, tapi tetap cukup mirip aslinya untuk benar-benar mempercepat pencarian jawaban yang sesungguhnya.</p>
+
+    <div class="path-svg-wrap">
+      <div class="path-box bad">
+        <h4>Tanpa preconditioner</h4>
+        <svg width="100%" height="90" viewBox="0 0 200 90"><path d="M10,80 Q40,10 60,70 T110,20 T160,75 T190,15" stroke="#e07a5f" stroke-width="2.5" fill="none"/></svg>
+        <p class="cap">Berputar-putar, lambat mendekati jawaban — kadang tidak konvergen sama sekali.</p>
+      </div>
+      <div class="path-box good">
+        <h4>Dengan shifted-Laplace preconditioner</h4>
+        <svg width="100%" height="90" viewBox="0 0 200 90"><path d="M10,80 Q100,60 190,15" stroke="#22c98a" stroke-width="2.5" fill="none"/></svg>
+        <p class="cap">Jalur lebih langsung — jumlah langkah tidak meledak walau grid/frekuensi dinaikkan.</p>
+      </div>
+    </div>
+    <p class="sourceline">Ilustrasi jalur di atas bersifat skematik untuk membantu intuisi — bukan hasil plot data numerik sesungguhnya dari makalah.</p>
+  </section>
+
+  <section id="eksplorasi">
+    <h2><span class="num">06</span>Eksplorasi: Kenapa Ini Penting secara Praktis</h2>
+    <p>Temuan intinya (dilaporkan pada makalah Erlangga, Vuik &amp; Oosterlee, dan disertasi doktoral TU Delft 2005): jumlah iterasi metode Krylov yang dipandu shifted-Laplace preconditioner ini bisa dibuat <strong>hampir tidak bertambah</strong> walau ukuran grid dan bilangan gelombang k dinaikkan — sesuatu yang sebelumnya tidak tercapai metode-metode iteratif klasik, yang jumlah iterasinya justru meledak seiring k membesar. Geser penggeser untuk melihat kecenderungan itu secara ilustratif.</p>
+
+    <div class="calc">
+      <label>Bilangan gelombang k (semakin besar = frekuensi makin tinggi): <span class="val" id="kValLabel">10</span></label>
+      <input type="range" id="kRange" min="5" max="100" step="1" value="10">
+      <div class="bar-chart">
+        <div class="bar-row">
+          <div class="bar-label">Tanpa preconditioner</div>
+          <div class="bar-track"><div class="bar-fill bad" id="barBad" style="width:10%;"></div></div>
+          <div class="bar-num" id="numBad">~50</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Shifted-Laplace + multigrid</div>
+          <div class="bar-track"><div class="bar-fill good" id="barGood" style="width:10%;"></div></div>
+          <div class="bar-num" id="numGood">~15</div>
+        </div>
+      </div>
+    </div>
+    <div class="warn"><b>Catatan jujur:</b> angka iterasi di atas adalah <em>ilustrasi kecenderungan</em> (pertumbuhan mendekati linear terhadap k tanpa preconditioner, vs relatif datar dengan shifted-Laplace) berdasarkan pola umum yang dilaporkan pada makalah-makalah terkait — bukan reproduksi angka eksperimen presisi dari makalah aslinya.</p>
+    </div>
+
+    <h3>Dampak yang sering disebut media/profil</h3>
+    <p>Menurut sejumlah artikel profil dan siaran pers TU Delft (bukan dari makalah teknisnya sendiri), pendekatan ini dilaporkan mempercepat pemrosesan data seismik industri migas hingga sekitar seratus kali lipat, dan prinsip yang sama relevan untuk soal gelombang lain seperti radar dan elektromagnetik.</p>
+  </section>
+
+  <section id="erlangga">
+    <h2><span class="num">07</span>Yogi Ahmad Erlangga</h2>
+    <div class="biocard">
+      <div class="badge">YE</div>
+      <div>
+        <p style="margin-bottom:8px;">Lahir di Tasikmalaya, Jawa Barat, 8 Oktober 1974. Menempuh S1 Teknik Penerbangan di Institut Teknologi Bandung (lulus 1998), lalu melanjutkan S2 dan S3 Matematika Terapan di Delft University of Technology, Belanda, di bawah bimbingan Kees (Cornelis) Vuik. Disertasi doktoralnya dipertahankan Desember 2005, membahas preconditioner untuk persamaan Helmholtz — riset yang menurut sejumlah sumber sempat mendapat dorongan minat dari industri migas (Shell) terkait pemrosesan data seismik. Ia kemudian menjalani post-doctoral di Jerman, menjadi asisten profesor di Universitas Alfaisal (Arab Saudi), lalu profesor asosiasi di Zayed University, Uni Emirat Arab. Menerima Penghargaan Achmad Bakrie pada 2012.</p>
+      </div>
+    </div>
+    <div class="sourceline">Sumber: Wikipedia Bahasa Indonesia (Yogi Ahmad Erlangga) dan sejumlah artikel profil (DAAI TV, iNews, Ruangatas) — lihat Referensi.</div>
+
+    <div class="correction">
+      <span class="lbl">Koreksi jujur</span>
+      Banyak artikel populer menulis judul seperti "memecahkan persamaan yang 30 tahun tak terpecahkan". Ini framing jurnalistik yang perlu diluruskan: persamaan Helmholtz sendiri sudah bisa diselesaikan sejak lama dengan metode langsung (bukan iteratif) — yang selama puluhan tahun sulit adalah membuat metode <em>iteratif</em> yang cepat dan andal untuk kasus frekuensi tinggi berskala industri, karena sifat matriksnya yang indefinite (dijelaskan di Bagian 4). Kontribusi Erlangga bersama Vuik dan Oosterlee adalah preconditioner shifted-Laplace yang dipasangkan multigrid dan metode Krylov — sebuah lompatan besar pada solver iteratif, bukan penemuan pertama atas persamaannya sendiri.
+    </div>
+  </section>
+
+  <section id="batasan">
+    <h2><span class="num">08</span>Batasan</h2>
+    <ul>
+      <li>Penjelasan di halaman ini disederhanakan untuk intuisi umum — tidak menampilkan diskretisasi elemen hingga/beda hingga secara matematis, atau mekanisme multigrid V-cycle secara rinci.</li>
+      <li>Grafik batang pada Bagian 6 adalah ilustrasi kecenderungan (tren pertumbuhan iterasi), bukan reproduksi angka numerik presisi dari makalah aslinya — angka aslinya bergantung pada jenis masalah, dimensi (2D/3D), dan pengaturan diskretisasi spesifik.</li>
+      <li>Klaim "seratus kali lebih cepat" dan detail penerapan di industri migas berasal dari artikel profil/pers, bukan dikutip langsung dari makalah teknis Erlangga, Vuik &amp; Oosterlee.</li>
+      <li>Detail biografis (tanggal, riwayat institusi) bersumber dari Wikipedia Bahasa Indonesia dan artikel media — belum diverifikasi silang dengan CV akademik resmi.</li>
+      <li>Halaman ini adalah pengantar populer berbasis sumber sekunder terverifikasi, bukan pengganti makalah aslinya atau buku teks metode numerik untuk persamaan diferensial parsial.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <h2><span class="num">09</span>Referensi</h2>
+    <ul class="refs">
+      <li>Erlangga, Y.A., Vuik, C., Oosterlee, C.W. — "On a class of preconditioners for solving the Helmholtz equation", Applied Numerical Mathematics 50 (2004).</li>
+      <li>Erlangga, Y.A., Oosterlee, C.W., Vuik, C. — "A novel multigrid based preconditioner for heterogeneous Helmholtz problems", SIAM J. Sci. Comput. 27 (2006).</li>
+      <li>Erlangga, Y.A. — "Advances in Iterative Methods and Preconditioners for the Helmholtz Equation" (survei), Archives of Computational Methods in Engineering 15 (2008).</li>
+      <li>Wikipedia Bahasa Indonesia — "Yogi Ahmad Erlangga".</li>
+      <li>Artikel profil: DAAI TV, iNews.id, Ruangatas.com, Leiden Institute — riwayat pendidikan dan konteks industri (dampak pada pemrosesan data seismik).</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  Laboratorium JAZMI — Jalinan Zamrud Islamiah · Belajar → Model → Uji → Tool<br>
+  Versi pengembangan awal. Silakan diperiksa ulang, dikoreksi, dan didiskusikan lebih lanjut.
+</footer>
+
+<script>
+// wave time-domain animation
+const cTime = document.getElementById('waveTime').getContext('2d');
+const cFreq = document.getElementById('waveFreq').getContext('2d');
+let phase = 0;
+
+function drawTimeWave(){
+  const w = cTime.canvas.width, h = cTime.canvas.height;
+  cTime.clearRect(0,0,w,h);
+  cTime.strokeStyle = '#22c98a'; cTime.lineWidth = 2;
+  cTime.beginPath();
+  for(let x=0;x<w;x++){
+    const y = h/2 + 28*Math.sin((x*0.06) - phase);
+    if(x===0) cTime.moveTo(x,y); else cTime.lineTo(x,y);
+  }
+  cTime.stroke();
+  phase += 0.07;
+}
+
+function drawFreqWave(){
+  const w = cFreq.canvas.width, h = cFreq.canvas.height;
+  cFreq.clearRect(0,0,w,h);
+  cFreq.strokeStyle = '#e0b354'; cFreq.lineWidth = 2;
+  cFreq.beginPath();
+  for(let x=0;x<w;x++){
+    const y = h/2 + 28*Math.sin(x*0.06);
+    if(x===0) cFreq.moveTo(x,y); else cFreq.lineTo(x,y);
+  }
+  cFreq.stroke();
+}
+
+function animate(){
+  drawTimeWave();
+  requestAnimationFrame(animate);
+}
+drawFreqWave();
+animate();
+
+// resize canvas to actual pixel width for crispness
+function fitCanvas(canvas){
+  const ratio = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * ratio;
+  canvas.height = rect.height * ratio;
+  canvas.getContext('2d').scale(ratio, ratio);
+}
+
+// iteration illustration
+const kRange = document.getElementById('kRange');
+const kValLabel = document.getElementById('kValLabel');
+const barBad = document.getElementById('barBad');
+const barGood = document.getElementById('barGood');
+const numBad = document.getElementById('numBad');
+const numGood = document.getElementById('numGood');
+
+function updateBars(){
+  const k = parseInt(kRange.value);
+  kValLabel.textContent = k;
+  // illustrative trend only
+  const badIter = Math.round(k * 5.2 + 4);
+  const goodIter = Math.round(12 + Math.sqrt(k) * 1.6);
+  const maxScale = Math.round(100 * 5.2 + 4);
+  barBad.style.width = Math.min(100, (badIter/maxScale)*100) + '%';
+  barGood.style.width = Math.min(100, (goodIter/maxScale)*100) + '%';
+  numBad.textContent = '~' + badIter;
+  numGood.textContent = '~' + goodIter;
+}
+kRange.addEventListener('input', updateBars);
+updateBars();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

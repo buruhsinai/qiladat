@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Playground SOP & CORS — Kenapa Browser Kadang Blokir Fetch</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0F1115;--panel:#161A21;--panel2:#1D222B;--ink:#E7E9EE;--dim:#98A0AE;--dimmer:#5E6673;
+--line:rgba(231,233,238,.1);--red:#E5534B;--amber:#E0A730;--green:#3FB37F;--blue:#5B9BD5;
+--rsoft:rgba(229,83,75,.14);--asoft:rgba(224,167,48,.14);--gsoft:rgba(63,179,127,.14);--bsoft:rgba(91,155,213,.14);}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Karla',sans-serif;line-height:1.6}
+.mono{font-family:'JetBrains Mono',monospace}
+h1,h2{font-family:'Fraunces',serif;font-weight:600;margin:0}
+.wrap{max-width:900px;margin:0 auto;padding:32px 18px 70px}
+.kicker{font-size:.82rem;color:var(--blue);font-weight:700;margin-bottom:10px}
+h1{font-size:1.5rem;margin-bottom:10px}
+header p{color:var(--dim);font-size:.92rem;max-width:66ch;}
+
+.lab{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:22px;}
+label{display:block;font-size:.82rem;color:var(--dimmer);margin-bottom:6px;font-weight:600}
+select{background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:8px;color:var(--ink);padding:8px 10px;font-family:'Karla',sans-serif;font-size:.84rem;width:100%;}
+.field{margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media (max-width:640px){.grid2{grid-template-columns:1fr;}}
+.toggle-row{display:flex;align-items:center;gap:10px;font-size:.85rem;color:var(--dim);margin:10px 0;cursor:pointer;user-select:none;}
+.toggle-row input{width:16px;height:16px;}
+
+.preset-row{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0;}
+.preset{padding:7px 13px;border-radius:20px;border:1px solid var(--line);background:var(--panel2);color:var(--dim);font-size:.78rem;cursor:pointer;}
+.preset:hover{border-color:var(--blue);color:var(--blue);}
+
+.sites{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin:22px 0;}
+@media (max-width:640px){.sites{grid-template-columns:1fr;}}
+.site{border:1px solid var(--line);border-radius:12px;padding:14px;background:rgba(0,0,0,.18);text-align:center;}
+.site .role{font-size:.72rem;color:var(--dimmer);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;}
+.site .origin{font-family:'JetBrains Mono',monospace;font-size:.88rem;color:var(--ink);}
+.arrow-col{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:70px;}
+.arrow-col .arrow{font-size:1.6rem;color:var(--dimmer);transition:color .2s;}
+.arrow-col .arrow.active{color:var(--blue);}
+.arrow-col .arrow.blocked{color:var(--red);}
+.arrow-col .stage-label{font-size:.68rem;color:var(--dimmer);text-align:center;}
+
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 4px;}
+.btn{padding:10px 18px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--dim);cursor:pointer;font-size:.86rem;font-weight:600;}
+.btn.primary{border-color:rgba(91,155,213,.4);color:var(--blue);background:var(--bsoft);}
+
+.console{margin-top:18px;background:#000;border-radius:10px;border:1px solid var(--line);padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:.82rem;min-height:70px;}
+.console .line{margin-bottom:4px;}
+.console .ok{color:var(--green);}
+.console .err{color:var(--red);}
+.console .info{color:var(--dimmer);}
+
+.verdict{margin-top:14px;padding:12px 16px;border-radius:10px;font-size:.9rem;font-weight:600;}
+.verdict.allowed{background:var(--gsoft);color:var(--green);border:1px solid rgba(63,179,127,.35);}
+.verdict.blocked{background:var(--rsoft);color:var(--red);border:1px solid rgba(229,83,75,.35);}
+.verdict-reason{font-weight:400;font-size:.85rem;color:var(--dim);margin-top:6px;}
+
+.explain{margin-top:26px;color:var(--dim);font-size:.88rem;}
+.explain h2{font-size:1.1rem;color:var(--ink);margin-bottom:8px;}
+.explain p{margin:0 0 12px;}
+.explain b{color:var(--ink);}
+.explain code{font-family:'JetBrains Mono',monospace;background:var(--panel2);color:var(--blue);padding:1px 6px;border-radius:4px;font-size:.85em;}
+footer{margin-top:28px;font-size:.78rem;color:var(--dimmer)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <p class="kicker">Laboratorium JAZMI — Modul Keamanan Siber</p>
+  <h1>Playground SOP &amp; CORS</h1>
+  <p>Kenapa kadang <code class="mono">fetch()</code> ke situs lain gagal dengan error CORS di console, padahal request-nya "seharusnya" jalan? Atur konfigurasi Situs B di bawah, tekan kirim, dan lihat sendiri kapan browser mengizinkan dan kapan memblokir — plus alasannya, bukan cuma statusnya.</p>
+</header>
+
+<div class="lab">
+  <div class="preset-row">
+    <div class="preset" data-preset="terbuka">API publik terbuka (ACAO: *)</div>
+    <div class="preset" data-preset="tanpa-cors">API tanpa konfigurasi CORS</div>
+    <div class="preset" data-preset="salah-kredensial">Cookie + wildcard (salah)</div>
+    <div class="preset" data-preset="benar-kredensial">Cookie dikonfigurasi benar</div>
+    <div class="preset" data-preset="preflight-gagal">Request kompleks tanpa preflight OK</div>
+  </div>
+
+  <div class="grid2">
+    <div class="field">
+      <label>Header Access-Control-Allow-Origin di respons Situs B</label>
+      <select id="acaoSelect">
+        <option value="none">(tidak dikirim sama sekali)</option>
+        <option value="wildcard">*</option>
+        <option value="match">https://toko-a.contoh (cocok dengan pemanggil)</option>
+        <option value="mismatch">https://situs-lain.contoh (origin lain)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Jenis request dari Situs A</label>
+      <select id="reqType">
+        <option value="simple">Sederhana (GET biasa)</option>
+        <option value="complex">Kompleks — perlu preflight (PUT/DELETE atau header custom)</option>
+      </select>
+    </div>
+  </div>
+
+  <label class="toggle-row" for="withCred"><input type="checkbox" id="withCred"> Request menyertakan cookie/kredensial (<span class="mono">credentials: 'include'</span>)</label>
+  <label class="toggle-row" for="acacToggle"><input type="checkbox" id="acacToggle"> Situs B mengirim <span class="mono">Access-Control-Allow-Credentials: true</span></label>
+
+  <div class="sites">
+    <div class="site"><div class="role">Pemanggil</div><div class="origin">https://toko-a.contoh</div></div>
+    <div class="arrow-col">
+      <div class="arrow" id="arrowOut">→</div>
+      <div class="stage-label" id="stageLabel">menunggu</div>
+    </div>
+    <div class="site"><div class="role">Target Fetch</div><div class="origin">https://api-b.contoh</div></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn primary" id="btnSend">🚀 Kirim fetch() dari Situs A</button>
+  </div>
+
+  <div class="console" id="consoleBox"><div class="line info">// console browser akan muncul di sini</div></div>
+  <div id="verdictBox"></div>
+</div>
+
+<div class="explain">
+  <h2>Aturan yang sebenarnya dipakai browser</h2>
+  <p><b>Same-origin selalu bebas</b> — kalau protokol, domain, dan port persis sama, tidak ada pengecekan CORS sama sekali. Begitu salah satu beda (termasuk cuma beda subdomain atau port), itu sudah dianggap origin lain.</p>
+  <p>Untuk request <b>sederhana</b> (GET/POST dengan header standar), browser tetap mengirim request-nya dan menerima responsnya — yang diblokir adalah <b>izin JavaScript untuk membaca hasilnya</b>, kalau header <code>Access-Control-Allow-Origin</code> tidak cocok. Untuk request <b>kompleks</b> (method seperti PUT/DELETE, atau header custom), browser mengirim <b>preflight</b> — request OPTIONS terpisah bertanya izin dulu — dan kalau preflight-nya saja sudah ditolak, request asli tidak pernah dikirim sama sekali.</p>
+  <p>Kasus yang sering bikin bingung: <code>Access-Control-Allow-Origin: *</code> terlihat "paling terbuka", tapi begitu request menyertakan cookie/kredensial, wildcard ini <b>tidak sah</b> dipakai browser — server wajib menyebut origin spesifik plus header <code>Access-Control-Allow-Credentials: true</code>. Ini bukan bug, ini disengaja: mencegah situs mana pun diam-diam memakai cookie sesi Anda di situs lain.</p>
+</div>
+</div>
+
+<footer>Bagian dari Laboratorium JAZMI — ini simulasi murni (tidak ada request jaringan sungguhan dikirim); logikanya meniru aturan CORS asli browser untuk keperluan belajar.</footer>
+
+<script>
+const ORIGIN_A = 'https://toko-a.contoh';
+const ORIGIN_B = 'https://api-b.contoh';
+
+function corsVerdict({ acaoValue, requestType, withCredentials, acacTrue }){
+  const acaoHeader = acaoValue==='none' ? null : (acaoValue==='wildcard' ? '*' : (acaoValue==='match' ? ORIGIN_A : 'https://situs-lain.contoh'));
+  const needsPreflight = requestType === 'complex';
+
+  if(needsPreflight && !acaoHeader){
+    return {allowed:false, stage:'preflight', reason:'Preflight (OPTIONS) tidak mendapat header Access-Control-Allow-Origin — browser blokir SEBELUM request asli sempat dikirim ke server sama sekali.'};
+  }
+  if(!acaoHeader){
+    return {allowed:false, stage:'response', reason:'Situs B tidak mengirim header Access-Control-Allow-Origin — server menerima & memproses request (kalau sederhana), tapi browser mencegah JavaScript membaca responsnya.'};
+  }
+  if(withCredentials){
+    if(acaoHeader==='*') return {allowed:false, stage:'response', reason:'Request menyertakan cookie, tapi Access-Control-Allow-Origin bernilai "*" — wildcard tidak sah dipakai bersama kredensial. Server wajib menyebut origin spesifik.'};
+    if(acaoHeader!==ORIGIN_A) return {allowed:false, stage:'response', reason:'Access-Control-Allow-Origin ("'+acaoHeader+'") tidak cocok dengan origin pemanggil ("'+ORIGIN_A+'").'};
+    if(!acacTrue) return {allowed:false, stage:'response', reason:'Origin sudah cocok, tapi Situs B tidak mengirim Access-Control-Allow-Credentials: true — kredensial tetap diblokir.'};
+    return {allowed:true, stage:'response', reason:'Origin cocok persis + Access-Control-Allow-Credentials: true — kredensial (cookie) diizinkan terbaca.'};
+  }
+  if(acaoHeader==='*' || acaoHeader===ORIGIN_A){
+    return {allowed:true, stage:'response', reason:'Access-Control-Allow-Origin cocok (atau wildcard, dan tanpa kredensial itu sah) — respons diizinkan dibaca JavaScript.'};
+  }
+  return {allowed:false, stage:'response', reason:'Access-Control-Allow-Origin ("'+acaoHeader+'") tidak cocok dengan origin pemanggil ("'+ORIGIN_A+'").'};
+}
+
+function logConsole(lines){
+  const box = document.getElementById('consoleBox');
+  box.innerHTML = lines.map(([cls,text])=>`<div class="line ${cls}">${text}</div>`).join('');
+}
+
+function run(){
+  const acaoValue = document.getElementById('acaoSelect').value;
+  const requestType = document.getElementById('reqType').value;
+  const withCredentials = document.getElementById('withCred').checked;
+  const acacTrue = document.getElementById('acacToggle').checked;
+
+  const arrow = document.getElementById('arrowOut');
+  const stageLabel = document.getElementById('stageLabel');
+  arrow.className='arrow'; stageLabel.textContent='mengirim…';
+
+  const v = corsVerdict({acaoValue, requestType, withCredentials, acacTrue});
+
+  setTimeout(()=>{
+    const lines = [];
+    if(requestType==='complex'){
+      lines.push(['info', `OPTIONS ${ORIGIN_B}/data  (preflight)`]);
+      if(v.stage==='preflight'){
+        lines.push(['err', `Access to fetch at '${ORIGIN_B}/data' from origin '${ORIGIN_A}' has been blocked by CORS policy: Response to preflight request doesn't pass access control check.`]);
+        arrow.classList.add('blocked'); stageLabel.textContent='diblokir saat preflight';
+        finish(v); return;
+      }
+      lines.push(['ok', `HTTP 204 No Content — preflight diizinkan`]);
+    }
+    lines.push(['info', `GET ${ORIGIN_B}/data`+(withCredentials?'  (credentials: include)':'')]);
+    if(v.allowed){
+      lines.push(['ok', `HTTP 200 OK — respons berhasil dibaca JavaScript`]);
+      arrow.classList.add('active'); stageLabel.textContent='berhasil';
+    } else {
+      lines.push(['err', `Access to fetch at '${ORIGIN_B}/data' from origin '${ORIGIN_A}' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource, or it does not match.`]);
+      arrow.classList.add('blocked'); stageLabel.textContent='diblokir';
+    }
+    finish(v, lines);
+  }, 500);
+
+  function finish(v, lines){
+    if(lines) logConsole(lines);
+    const box = document.getElementById('verdictBox');
+    box.innerHTML = `<div class="verdict ${v.allowed?'allowed':'blocked'}">${v.allowed?'✅ DIIZINKAN':'🚫 DIBLOKIR'}
+      <div class="verdict-reason">${v.reason}</div></div>`;
+  }
+}
+document.getElementById('btnSend').addEventListener('click', run);
+
+const PRESETS = {
+  terbuka: {acao:'wildcard', req:'simple', cred:false, acac:false},
+  'tanpa-cors': {acao:'none', req:'simple', cred:false, acac:false},
+  'salah-kredensial': {acao:'wildcard', req:'simple', cred:true, acac:false},
+  'benar-kredensial': {acao:'match', req:'simple', cred:true, acac:true},
+  'preflight-gagal': {acao:'none', req:'complex', cred:false, acac:false},
+};
+document.querySelectorAll('.preset').forEach(p=>p.addEventListener('click', ()=>{
+  const cfg = PRESETS[p.dataset.preset];
+  document.getElementById('acaoSelect').value = cfg.acao;
+  document.getElementById('reqType').value = cfg.req;
+  document.getElementById('withCred').checked = cfg.cred;
+  document.getElementById('acacToggle').checked = cfg.acac;
+  run();
+}));
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

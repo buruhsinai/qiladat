@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ketahanan Rumah Tangga — Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EFE7D2; --surface:#FBF8EE; --surface-2:#F4EEDC;
+    --ink:#241C10; --ink-soft:#55492E; --ink-faint:#8A7D5C;
+    --green:#3F5D3A; --green-soft:#DCE4D2; --green-deep:#233B20;
+    --orange:#B5741F; --orange-soft:#F1E0C4; --orange-deep:#7A4A10;
+    --teal:#2C625B; --teal-soft:#D8E6E3; --teal-deep:#1E4A44;
+    --red:#B5502B; --red-soft:#F4D9D2; --red-deep:#5E2716;
+    --line:#CBBB8E; --line-soft:#E1D6B3;
+    --shadow-sm: 0 1px 2px rgba(36,28,16,.05), 0 1px 1px rgba(36,28,16,.04);
+    --shadow-md: 0 3px 10px rgba(36,28,16,.07), 0 1px 3px rgba(36,28,16,.05);
+    --radius: 4px;
+    --space-1: 6px; --space-2: 10px; --space-3: 16px; --space-4: 24px; --space-5: 36px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto;} }
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:'IBM Plex Sans', sans-serif; font-size:15.5px; line-height:1.62; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;}
+  .wrap{max-width:760px; margin:0 auto; padding:0 20px 100px; counter-reset:sec;}
+  h1,h2,h3{font-family:'Fraunces', serif; margin:0; color:var(--ink);}
+  ::selection{background:var(--orange-soft); color:var(--ink);}
+
+  /* focus visibility for keyboard + long-session accessibility */
+  input:focus-visible, select:focus-visible, a:focus-visible, .radio-opt:focus-within{
+    outline:2px solid var(--orange); outline-offset:2px;
+  }
+
+  .brand{font-family:'IBM Plex Sans', sans-serif; font-size:11.5px; letter-spacing:.06em; color:var(--ink-faint); margin:22px 0 0; text-transform:uppercase;}
+
+  /* ---------- hero brand block (logo, badge, kicker) ---------- */
+  .hero-inner{display:flex; align-items:center; justify-content:space-between; gap:28px; flex-wrap:wrap;}
+  .hero-text{flex:1 1 380px; min-width:0;}
+  .brand-tag{font-family:'IBM Plex Sans', sans-serif; font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint); opacity:.9; margin-bottom:10px;}
+  .brand-tag b{color:var(--green); letter-spacing:.14em; font-weight:700;}
+  .brand-tag .sep{opacity:.5; margin:0 .35em;}
+  .hero-badge{display:inline-block; font-family:'IBM Plex Sans', sans-serif; font-size:12px; font-weight:600; color:var(--orange-deep); background:var(--orange-soft); padding:.3em .8em; border-radius:999px; margin-bottom:12px;}
+  .kicker{font-family:'Fraunces', serif; font-style:italic; color:var(--green); font-size:15px; margin-bottom:8px; display:block;}
+  svg.housemark{width:110px; height:110px; flex:0 0 auto; color:var(--orange);}
+  @media (max-width:640px){ .hero-inner{flex-direction:column; text-align:center;} svg.housemark{width:86px; height:86px;} }
+
+  .wa-btn{display:inline-flex; align-items:center; gap:.5em; background:var(--green); color:var(--surface); font-family:'IBM Plex Sans', sans-serif; font-weight:600; font-size:13px; padding:.6em 1.2em; border-radius:999px; text-decoration:none; margin-top:12px; box-shadow:var(--shadow-md); transition:transform .15s, box-shadow .15s;}
+  .wa-btn:hover{transform:translateY(-1px); color:var(--surface);}
+  .wa-btn svg{width:16px; height:16px; fill:var(--surface); flex:0 0 auto;}
+
+  /* ---------- progress bar ---------- */
+  .progress-bar{position:fixed; top:0; left:0; height:3px; width:0%; background:var(--orange); z-index:60; transition:width .1s linear;}
+
+  /* ---------- sticky section nav ---------- */
+  .toc-nav{position:sticky; top:0; z-index:50; width:100%; background:rgba(239,231,210,.92); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); border-bottom:1px solid var(--line);}
+  .toc-inner{max-width:760px; margin:0 auto; padding:9px 20px; overflow-x:auto; white-space:nowrap; scrollbar-width:none;}
+  .toc-inner::-webkit-scrollbar{display:none;}
+  .toc-nav a{display:inline-block; font-size:12px; font-weight:500; color:var(--ink-soft); text-decoration:none; padding:5px 11px; margin-right:6px; border:1px solid var(--line); border-radius:20px; background:var(--surface);}
+  .toc-nav a.active{color:var(--surface); background:var(--green); border-color:var(--green);}
+
+  header.hero{padding:20px 0 30px; border-bottom:1px solid var(--line);}
+  header.hero h1{font-weight:700; font-size:clamp(27px,7vw,38px); line-height:1.1; letter-spacing:-0.01em;}
+  header.hero p{max-width:56ch; color:var(--ink-soft); font-size:15.5px; margin:14px 0 0;}
+  header.hero blockquote{margin:18px 0 0; padding-left:14px; border-left:2px solid var(--orange); font-family:'Fraunces', serif; font-style:italic; font-size:16.5px; color:var(--ink); max-width:52ch;}
+  header.hero .note{margin-top:16px; font-size:12.5px; color:var(--ink-faint); line-height:1.55; max-width:58ch;}
+
+  section{padding:var(--space-5) 0; border-bottom:1px solid var(--line-soft); scroll-margin-top:56px;}
+  .sec-head{display:flex; align-items:center; gap:11px; margin-bottom:8px;}
+  .sec-head svg{flex:none; width:25px; height:25px; color:var(--green); padding:4px; box-sizing:content-box; background:var(--green-soft); border-radius:50%;}
+  .sec-head.protein svg{color:var(--teal); background:var(--teal-soft);}
+  .sec-head.veg svg{color:#4C7A34; background:#E4EBDA;}
+  .sec-head.legum svg{color:#8A6B22; background:#EFE3C4;}
+  .sec-head h2{font-size:20.5px; font-weight:600; line-height:1.3;}
+  section{counter-increment:sec;}
+  .sec-head h2::before{content:counter(sec,decimal-leading-zero) "  "; color:var(--ink-faint); font-weight:500; font-size:.62em; letter-spacing:.04em;}
+  .sec-sub{color:var(--ink-soft); font-size:13.5px; line-height:1.55; margin:0 0 18px; max-width:58ch;}
+
+  .grid-fields{display:grid; grid-template-columns:repeat(2,1fr); gap:12px 14px;}
+  .field{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:10px 12px; box-shadow:var(--shadow-sm);}
+  .field label{display:block; font-size:11.5px; color:var(--ink-soft); margin-bottom:4px; letter-spacing:.01em;}
+  .field input[type=number]{width:100%; border:none; background:transparent; font-family:'IBM Plex Sans'; font-size:16.5px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums; padding:0;}
+  .field input[type=number]:focus{outline:none;}
+  .field select{width:100%; border:none; background:transparent; font-family:'IBM Plex Sans'; font-size:14px; font-weight:600; color:var(--ink); padding:2px 0;}
+  .field.wide{grid-column:1/-1;}
+
+  .radio-group{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px;}
+  .radio-opt{border:1px solid var(--line); background:var(--surface); border-radius:20px; padding:7px 13px; font-size:12.5px; display:flex; align-items:center; gap:6px; cursor:pointer; transition:background .15s, border-color .15s;}
+  .radio-opt:has(input:checked){background:var(--green-soft); border-color:var(--green); color:var(--green-deep); font-weight:600;}
+  .radio-opt input{margin:0; accent-color:var(--green);}
+  .helper{font-size:12.5px; color:var(--ink-soft); margin:0 0 6px; line-height:1.5;}
+
+  .item{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--green); border-radius:var(--radius); padding:15px 16px; margin-bottom:11px; box-shadow:var(--shadow-sm); transition:box-shadow .15s;}
+  .item:has(.item-head input:checked){box-shadow:var(--shadow-md); border-color:var(--green);}
+  .items.protein .item{border-left-color:var(--teal);}
+  .items.protein .item:has(.item-head input:checked){border-color:var(--teal);}
+  .items.veg .item{border-left-color:#4C7A34;}
+  .items.veg .item:has(.item-head input:checked){border-color:#4C7A34;}
+  .items.legum .item{border-left-color:#8A6B22;}
+  .items.legum .item:has(.item-head input:checked){border-color:#8A6B22;}
+  .item-head{display:flex; align-items:flex-start; gap:11px; cursor:pointer;}
+  .item-head input[type=checkbox]{margin-top:3px; width:17px; height:17px; accent-color:var(--green); flex:none;}
+  .items.protein .item-head input[type=checkbox]{accent-color:var(--teal);}
+  .items.veg .item-head input[type=checkbox]{accent-color:#4C7A34;}
+  .items.legum .item-head input[type=checkbox]{accent-color:#8A6B22;}
+  .item-name{font-weight:600; font-size:15.5px;}
+  .item-meta{display:block; font-size:12.5px; color:var(--ink-soft); margin-top:3px; line-height:1.5;}
+  .risk-badge{display:inline-block; font-size:11px; font-weight:600; padding:2px 7px; border-radius:10px; margin-right:6px; background:var(--surface-2); border:1px solid var(--line);}
+  .risk-air-3, .risk-hama-3{background:var(--red-soft); border-color:var(--red); color:var(--red-deep);}
+  .risk-air-2, .risk-hama-2{background:var(--orange-soft); border-color:var(--orange); color:var(--orange-deep);}
+  .risk-air-1, .risk-hama-1{background:var(--green-soft); border-color:var(--green); color:var(--green-deep);}
+  .item-note{margin:9px 0 11px 28px; font-size:13px; line-height:1.55; color:var(--ink-soft); max-width:54ch;}
+  .src-tag{margin:0 0 12px 28px; padding:9px 11px; background:var(--surface-2); border:1px dashed var(--line); border-radius:3px; max-width:56ch;}
+  .src-tag--lapangan{border-color:var(--orange); background:var(--orange-soft);}
+  .src-tier{display:block; font-size:10.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; color:var(--green-deep); margin-bottom:3px;}
+  .src-tag--lapangan .src-tier{color:var(--orange-deep);}
+  .src-range{display:block; font-size:12px; font-weight:600; color:var(--ink); margin-bottom:2px; font-variant-numeric:tabular-nums;}
+  .src-text{display:block; font-size:11.5px; line-height:1.5; color:var(--ink-soft);}
+  .item-params{display:grid; grid-template-columns:repeat(2,1fr); gap:8px 10px; margin-left:28px;}
+  .item-params label{font-size:11px; color:var(--ink-soft); display:flex; flex-direction:column; gap:3px;}
+  .item-params input[type=number]{border:1px solid var(--line); border-radius:3px; background:var(--surface-2); padding:6px 7px; font-family:'IBM Plex Sans'; font-size:13.5px; color:var(--ink); font-variant-numeric:tabular-nums;}
+  .item-params .checkbox-inline{grid-column:1/-1; flex-direction:row; align-items:center; gap:7px; font-size:12px;}
+  .item-params .checkbox-inline input{width:14px; height:14px;}
+
+  .toggle-row{display:flex; align-items:center; gap:11px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:13px 15px; margin-bottom:14px; box-shadow:var(--shadow-sm);}
+  .toggle-row:has(input:checked){border-color:var(--orange); background:var(--orange-soft);}
+  .toggle-row input[type=checkbox]{width:18px; height:18px; accent-color:var(--orange); flex:none;}
+  .toggle-row .t-label{font-weight:600; font-size:14.5px;}
+  .toggle-row .t-sub{display:block; font-size:12.5px; color:var(--ink-soft); font-weight:400; margin-top:2px;}
+
+  .state-badge{display:inline-block; padding:8px 16px; font-family:'Fraunces',serif; font-weight:600; font-size:17px; border:1px solid var(--line); border-radius:var(--radius); margin-bottom:10px;}
+  .state-dependen{background:var(--red-soft); border-color:var(--red); color:var(--red-deep);}
+  .state-tangguh{background:var(--orange-soft); border-color:var(--orange); color:var(--orange-deep);}
+  .state-sebagian{background:var(--teal-soft); border-color:var(--teal); color:var(--teal-deep);}
+  .state-mandiri{background:var(--green-soft); border-color:var(--green); color:var(--green-deep);}
+  .dep-note{font-size:13.5px; line-height:1.6; color:var(--ink-soft); margin:2px 0 22px; max-width:58ch;}
+
+  .warn{background:var(--red-soft); border-left:3px solid var(--red); border-radius:0 var(--radius) var(--radius) 0; padding:10px 13px; font-size:13px; line-height:1.5; margin-bottom:10px; color:var(--red-deep);}
+
+  .summary-grid{display:grid; grid-template-columns:1fr 1fr; gap:11px; margin-bottom:20px;}
+  .stat{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:14px 14px 12px; box-shadow:var(--shadow-sm);}
+  .stat .v{font-family:'Fraunces', serif; font-weight:600; font-size:21px; font-variant-numeric:tabular-nums; color:var(--ink); line-height:1.25;}
+  .stat .l{font-size:11.5px; line-height:1.4; color:var(--ink-soft); margin-top:4px;}
+  .stat.accent{border-color:var(--orange); background:var(--orange-soft);}
+  .stat.accent .v{color:var(--orange-deep);}
+
+  .radar-wrap{display:flex; justify-content:center; margin:8px 0 22px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:8px 0; box-shadow:var(--shadow-sm);}
+
+  .table-scroll{overflow-x:auto; margin:0 -2px 22px; padding:0 2px;}
+  table.results{width:100%; min-width:480px; border-collapse:collapse; font-size:13.5px;}
+  table.results thead th{background:var(--bg); text-align:left; padding:8px 7px; border-bottom:2px solid var(--line); color:var(--ink-soft); font-weight:600; font-size:11.5px; letter-spacing:.02em; text-transform:uppercase;}
+  table.results td{text-align:left; padding:9px 7px; border-bottom:1px solid var(--line-soft);}
+  table.results td.num, table.results th.num{font-variant-numeric:tabular-nums; text-align:right;}
+  table.results tbody tr:nth-child(even){background:var(--surface);}
+  table.results tbody tr:hover{background:var(--orange-soft);}
+  table.results td:first-child{font-weight:600;}
+  .regen-yes{color:var(--green-deep); font-weight:600;}
+  .regen-no{color:var(--ink-faint);}
+
+  .bars{margin-bottom:8px;}
+  .bar-row{margin-bottom:12px;}
+  .bar-row .bar-label{display:flex; justify-content:space-between; gap:10px; font-size:12.5px; margin-bottom:5px;}
+  .bar-row .bar-label span:first-child{font-weight:600;}
+  .bar-row .bar-label span:last-child{font-variant-numeric:tabular-nums; color:var(--ink-soft);}
+  .bar-track{background:var(--surface-2); border:1px solid var(--line); border-radius:8px; height:14px; position:relative; overflow:hidden;}
+  .bar-fill{background:linear-gradient(90deg, var(--green), var(--teal)); height:100%; border-radius:8px;}
+
+  .empty-msg{color:var(--ink-soft); font-size:14.5px; line-height:1.6; padding:20px; background:var(--surface); border:1px dashed var(--line); border-radius:var(--radius);}
+
+  /* ---------- panel 3D ---------- */
+  .plot3d-wrap{position:relative; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow-sm); background:linear-gradient(180deg, #E7E0C6, #DCD5B8);}
+  #plot3d{width:100%; height:340px; touch-action:none; cursor:grab;}
+  #plot3d.grabbing{cursor:grabbing;}
+  .plot3d-hint{position:absolute; top:10px; left:12px; margin:0; font-size:11px; color:var(--ink-soft); background:rgba(251,248,238,.85); padding:4px 9px; border-radius:12px; pointer-events:none;}
+  .plot3d-info{position:absolute; bottom:12px; left:12px; right:12px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:10px 13px; box-shadow:var(--shadow-md); font-size:13px; line-height:1.5;}
+  .plot3d-info strong{display:block; font-family:'Fraunces',serif; font-size:15.5px; margin-bottom:2px;}
+  .plot3d-info .close-info{position:absolute; top:6px; right:9px; background:none; border:none; font-size:15px; color:var(--ink-faint); cursor:pointer; padding:4px;}
+  .plot3d-legend{display:flex; flex-wrap:wrap; gap:7px 12px; margin-top:12px;}
+  .plot3d-legend .lg-item{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-soft);}
+  .plot3d-legend .lg-swatch{width:11px; height:11px; border-radius:3px; flex:none; display:inline-block;}
+  .season-bar{display:flex; align-items:center; gap:12px; margin-top:12px; padding:10px 12px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow-sm);}
+  .season-play{flex:none; width:34px; height:34px; border-radius:50%; border:1px solid var(--green); background:var(--green-soft); color:var(--green-deep); font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+  .season-play.playing{background:var(--green); color:#fff;}
+  .season-slider-col{flex:1; min-width:0;}
+  .season-slider-col label{display:block; font-size:12px; color:var(--ink-soft); margin-bottom:5px;}
+  .season-slider-col label span{font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums;}
+  #musimSlider{width:100%; accent-color:var(--green);}
+
+  .principle{font-family:'Fraunces', serif; font-style:italic; font-size:17px; line-height:1.62; color:var(--ink); border-left:2px solid var(--green); padding-left:17px; margin:0 0 18px;}
+  .principle strong{font-style:normal; font-weight:700;}
+
+  .status-legend{font-size:12.5px; line-height:1.5; color:var(--ink-soft); margin-top:2px;}
+
+  footer{padding:30px 0 14px; font-size:12.5px; line-height:1.6; color:var(--ink-faint);}
+
+  /* ---------- back to top ---------- */
+  .back-top{position:fixed; right:18px; bottom:18px; width:42px; height:42px; border-radius:50%; background:var(--green); color:#fff; border:none; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-md); cursor:pointer; opacity:0; transform:translateY(8px); pointer-events:none; transition:opacity .2s, transform .2s; z-index:55;}
+  .back-top.show{opacity:1; transform:translateY(0); pointer-events:auto;}
+  .back-top svg{width:19px; height:19px;}
+
+  @media(min-width:600px){
+    .grid-fields{grid-template-columns:repeat(4,1fr);}
+    .item-params{grid-template-columns:repeat(4,1fr);}
+    .summary-grid{grid-template-columns:repeat(4,1fr);}
+  }
+</style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<nav class="toc-nav" id="tocNav" aria-label="Navigasi bagian">
+  <div class="toc-inner">
+    <a href="#keluarga">Profil</a>
+    <a href="#sumberdaya">Sumber Daya</a>
+    <a href="#target">Target</a>
+    <a href="#carb">Energi</a>
+    <a href="#legum">Nabati</a>
+    <a href="#protein">Hewani</a>
+    <a href="#veg">Sayur</a>
+    <a href="#surplus">Surplus</a>
+    <a href="#risiko">Risiko</a>
+    <a href="#hasil">Hasil</a>
+    <a href="#denah3d">Denah 3D</a>
+    <a href="#sumber">Sumber</a>
+    <a href="#prinsip">Prinsip</a>
+  </div>
+</nav>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="hero-text">
+        <div class="brand-tag"><b>JAZMI</b> — Jalinan Zamrud Islamiyah <span class="sep">·</span> qiladat.com</div>
+        <span class="hero-badge">Simulator &amp; Kalkulator Interaktif</span>
+        <span class="kicker">Dilengkapi rentang riset BPS/Kementan, skenario gangguan, dan denah 3D pekarangan</span>
+        <h1>Ketahanan Rumah Tangga</h1>
+        <p>Bukan tentang hidup tanpa uang — tetapi seberapa banyak kebutuhan hidup yang bisa dipenuhi tanpa harus selalu diubah jadi uang lebih dulu. Lahan, air, waktu, dan modal Anda dipakai untuk menghitung seberapa jauh itu bisa tercapai, dan apa yang tetap harus dibeli.</p>
+        <blockquote>Sumber daya → kebutuhan dasar → surplus → uang → kebutuhan yang sulit diproduksi sendiri.</blockquote>
+        <p class="note">Semua angka (hari panen, hasil, modal, biaya berulang, jam kerja) adalah taksiran umum yang bisa Anda ubah bebas — bukan angka pasti. Tool ini tidak akan pernah menyebut siapa pun "100% mandiri"; selalu ada indeks ketergantungan eksternal yang ditampilkan apa adanya.</p>
+      </div>
+      <svg class="housemark" viewBox="0 0 200 200" fill="none">
+        <path d="M40 100 L100 50 L160 100" stroke="#B5741F" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M55 95 L55 155 L145 155 L145 95" stroke="#3F5D3A" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M100 155 L100 115 C100 100 115 100 115 85 C115 70 100 68 100 55" stroke="#3F5D3A" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path d="M100 100 C90 92 78 95 74 108 C86 112 96 108 100 100 Z" fill="#DCE4D2" stroke="#3F5D3A" stroke-width="3"/>
+        <path d="M100 128 C110 120 122 123 126 136 C114 140 104 136 100 128 Z" fill="#DCE4D2" stroke="#3F5D3A" stroke-width="3"/>
+      </svg>
+    </div>
+  </header>
+
+  <section id="keluarga">
+    <div class="sec-head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="7" r="2.6"/><circle cx="16" cy="8" r="2"/><path d="M3 19c0-3 2.2-5 5-5s5 2 5 5"/><path d="M13.5 15.2c2.6.2 4.5 1.9 4.5 3.8"/></svg>
+      <h2>Profil keluarga</h2>
+    </div>
+    <div class="grid-fields">
+      <div class="field"><label>Jumlah dewasa</label><input type="number" id="dewasa" value="2" min="0"></div>
+      <div class="field"><label>Jumlah anak</label><input type="number" id="anak" value="3" min="0"></div>
+      <div class="field"><label>Kkal/hari per dewasa</label><input type="number" id="kkalDewasa" value="2200"></div>
+      <div class="field"><label>Kkal/hari per anak</label><input type="number" id="kkalAnak" value="1400"></div>
+    </div>
+  </section>
+
+  <section id="sumberdaya">
+    <div class="sec-head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 20V10l8-6 8 6v10"/><path d="M9 20v-6h6v6"/></svg>
+      <h2>Sumber daya yang tersedia</h2>
+    </div>
+    <p class="sec-sub">Ini yang membatasi apa yang benar-benar bisa dijalankan — bukan sekadar keinginan. Sistem yang secara teori bisa banyak hasil tapi butuh 12 jam kerja/hari bukan sistem yang mudah dijalani.</p>
+    <div class="grid-fields">
+      <div class="field"><label>Luas lahan tersedia (m²)</label><input type="number" id="lahanTersedia" value="100" min="0"></div>
+      <div class="field"><label>Modal tersedia (Rp)</label><input type="number" id="modalTersedia" value="300000" min="0"></div>
+      <div class="field"><label>Waktu tersedia (jam/hari)</label><input type="number" id="waktuTersedia" value="2" step="0.5" min="0"></div>
+      <div class="field">
+        <label>Ketersediaan air</label>
+        <select id="airKetersediaan">
+          <option value="terbatas">Terbatas (sumur kecil/hujan saja)</option>
+          <option value="sedang" selected>Sedang (sumur/irigasi musiman)</option>
+          <option value="melimpah">Melimpah (sungai/irigasi tetap)</option>
+        </select>
+      </div>
+    </div>
+    <p class="helper" style="margin-top:14px;">Jalur modal — memilih ini akan mengatur ulang tanda "anggap modal Rp0" pada semua item di bawah:</p>
+    <div class="radio-group" id="modalFilosofi">
+      <label class="radio-opt"><input type="radio" name="modalMode" value="nol"> Dari nol (Rp0)</label>
+      <label class="radio-opt"><input type="radio" name="modalMode" value="minimal" checked> Modal minimal</label>
+      <label class="radio-opt"><input type="radio" name="modalMode" value="cepat"> Jalur cepat (beli semua)</label>
+      <label class="radio-opt"><input type="radio" name="modalMode" value="hibrid"> Hibrid (atur manual)</label>
+    </div>
+  </section>
+
+  <section id="target">
+    <div class="sec-head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 20c6-1 10-5 10-11"/><path d="M14 9c3 0 6-2 6-6-4 0-6 3-6 6z"/></svg>
+      <h2>Target substitusi harian</h2>
+    </div>
+    <p class="sec-sub">Berapa banyak dari tiap kebutuhan yang ingin dipenuhi sendiri — per orang, per hari. Ini kebutuhan fungsi (energi/protein/sayur), bukan "harus beras" atau "harus daging".</p>
+    <div class="grid-fields">
+      <div class="field"><label>Energi/karbohidrat (kkal/orang)</label><input type="number" id="karboTarget" value="1200"></div>
+      <div class="field"><label>Protein hewani (gram/orang)</label><input type="number" id="proteinHewaniTarget" value="40"></div>
+      <div class="field"><label>Protein nabati (gram/orang)</label><input type="number" id="proteinNabatiTarget" value="20"></div>
+      <div class="field"><label>Sayur / gizi tambahan (gram/orang)</label><input type="number" id="sayurTarget" value="80"></div>
+    </div>
+  </section>
+
+  <section id="carb">
+    <div class="sec-head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><ellipse cx="12" cy="9" rx="6" ry="5"/><path d="M9 14c-1 3-2 4-3 6M12 14v6M15 14c1 3 2 4 3 6"/></svg>
+      <h2>Sumber energi / karbohidrat</h2>
+    </div>
+    <p class="sec-sub">Pengganti beras — dipilih dari yang paling mudah dan cepat di skala rumah tangga. Tiap item punya rentang hasil panen &amp; sumber sendiri (kotak putus-putus di bawah catatannya) — detail lengkap ada di bagian "Sumber &amp; rentang angka" menjelang akhir halaman.</p>
+    <div class="items carb" id="carb-list"></div>
+  </section>
+
+  <section id="legum">
+    <div class="sec-head legum">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><circle cx="12" cy="16" r="3"/></svg>
+      <h2>Protein nabati</h2>
+    </div>
+    <p class="sec-sub">Kacang-kacangan — biji bisa disimpan sendiri sebagai benih, salah satu yang paling murah ketergantungannya.</p>
+    <div class="items legum" id="legum-list"></div>
+  </section>
+
+  <section id="protein">
+    <div class="sec-head protein">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 12c3-4 9-4 12 0-3 4-9 4-12 0z"/><path d="M15 12l4-3v6l-4-3z"/><circle cx="7" cy="11.3" r="0.6" fill="currentColor" stroke="none"/></svg>
+      <h2>Protein hewani</h2>
+    </div>
+    <p class="sec-sub">Tidak perlu empang besar — kolam terpal kecil atau beberapa ekor unggas sudah cukup untuk skala keluarga.</p>
+    <div class="items protein" id="protein-list"></div>
+  </section>
+
+  <section id="veg">
+    <div class="sec-head veg">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 20C4 10 12 4 20 4c0 8-6 16-16 16z"/><path d="M5 19c4-5 8-10 14-14"/></svg>
+      <h2>Sayur &amp; gizi tambahan</h2>
+    </div>
+    <p class="sec-sub">Kelor jadi sorotan karena hasilnya cepat, murah, dan terus dipetik tanpa tanam ulang.</p>
+    <div class="items veg" id="veg-list"></div>
+  </section>
+
+  <section id="surplus">
+    <div class="sec-head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 17l5-5 4 4 7-8"/><path d="M15 8h5v5"/></svg>
+      <h2>Rencana kelebihan panen</h2>
+    </div>
+    <p class="sec-sub">Uang tetap perlu untuk hal yang sulit dipenuhi sendiri (sabun, listrik, dll). Surplus adalah lapisan kedua, bukan tujuan utama.</p>
+    <div class="toggle-row">
+      <input type="checkbox" id="surplusToggle">
+      <div><span class="t-label">Rencanakan produksi lebih untuk dijual</span><span class="t-sub">Menambah target produksi di atas kebutuhan konsumsi keluarga</span></div>
+    </div>
+    <div class="grid-fields">
+      <div class="field wide"><label>Tambahan produksi untuk dijual (%)</label><input type="number" id="surplusPct" value="20" min="0"></div>
+    </div>
+  </section>
+
+  <section id="risiko">
+    <div class="sec-head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z"/><path d="M12 8v5"/><circle cx="12" cy="16" r="0.6" fill="currentColor" stroke="none"/></svg>
+      <h2>Skenario gangguan</h2>
+    </div>
+    <p class="sec-sub">Rencana di atas mengasumsikan hasil panen normal. Di dunia nyata, kekeringan dan hama/penyakit adalah alasan paling umum kenapa target meleset — bukan kesalahan hitung. Pilih skenario untuk melihat berapa lahan/kolam/kandang <em>ekstra</em> yang sebenarnya perlu Anda siapkan sebagai cadangan agar tetap capai target yang sama.</p>
+    <div class="grid-fields">
+      <div class="field wide">
+        <label>Jenis gangguan</label>
+        <select id="skenarioJenis">
+          <option value="normal" selected>Tidak ada gangguan (kondisi normal)</option>
+          <option value="kekeringan">Kekeringan musiman</option>
+          <option value="hama">Serangan hama &amp; penyakit</option>
+          <option value="kombinasi">Kombinasi (kekeringan + hama bersamaan)</option>
+        </select>
+      </div>
+      <div class="field wide">
+        <label>Tingkat keparahan</label>
+        <select id="skenarioKeparahan">
+          <option value="ringan">Ringan (~15% penurunan hasil pada sumber paling rentan)</option>
+          <option value="sedang" selected>Sedang (~35%)</option>
+          <option value="berat">Berat (~60%)</option>
+        </select>
+      </div>
+    </div>
+    <p class="helper" style="margin-top:14px;">Setiap sumber pangan bereaksi berbeda — lihat badge 💧 (ketergantungan air) dan 🐛 (risiko hama) di tiap item pada bagian 4–7 di atas. Sumber dengan badge hijau (rendah) hanya terkena sebagian kecil dari persentase di atas; badge merah (tinggi) terkena hampir penuh. Ini alasan teknis kenapa diversifikasi sumber benar-benar mengurangi risiko, bukan sekadar saran umum.</p>
+  </section>
+
+  <section id="hasil">
+    <div class="sec-head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M8 15l3-4 3 3 2-5"/></svg>
+      <h2>Hasil simulasi</h2>
+    </div>
+    <p class="sec-sub">Diperbarui otomatis setiap kali Anda mengubah pilihan atau angka di atas.</p>
+    <div id="hasil-top"></div>
+    <div class="radar-wrap" id="radarWrap" style="display:none;">
+      <div id="radarSvg"></div>
+    </div>
+    <div id="hasil-bottom"></div>
+  </section>
+
+  <section id="denah3d">
+    <div class="sec-head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 9l9-6 9 6-9 6-9-6z"/><path d="M3 9v6l9 6 9-6V9"/><path d="M12 15v6"/></svg>
+      <h2>Denah 3D pekarangan Anda</h2>
+    </div>
+    <p class="sec-sub">Bukan ilustrasi generik — tiap kotak berskala langsung dari luas lahan (bagian 2) dan angka hasil simulasi di atas. Geser untuk putar, scroll/cubit untuk zoom, ketuk kotak untuk lihat detailnya.</p>
+    <div class="plot3d-wrap">
+      <div id="plot3d"></div>
+      <p class="plot3d-hint" id="plot3dHint">Geser · scroll untuk zoom · ketuk kotak</p>
+      <div class="plot3d-info" id="plot3dInfo" style="display:none;"></div>
+      <p class="empty-msg" id="plot3dEmpty" style="display:none; margin:0;">Pilih minimal satu sumber pangan pada bagian 4–7 untuk melihat denahnya di sini.</p>
+    </div>
+    <div class="season-bar" id="seasonBar">
+      <button type="button" id="musimPlayBtn" class="season-play" title="Putar simulasi musim" aria-label="Putar simulasi musim">▶</button>
+      <div class="season-slider-col">
+        <label for="musimSlider">Simulasi musim — hari ke-<span id="musimHariLabel">0</span> dari <span id="musimHariMax">0</span></label>
+        <input type="range" id="musimSlider" min="0" max="1" value="0" step="1">
+      </div>
+    </div>
+    <p class="helper" id="seasonHelper" style="margin-top:2px;">Tarik ke kiri untuk lihat kondisi awal tanam (baru ditanam/ditebar), ke kanan mendekati siap panen. Siklus pendek (mis. kangkung ~28 hari) akan terlihat panen-tanam ulang beberapa kali sebelum siklus panjang (mis. singkong ~270 hari) selesai sekali. Kandang ternak tidak dianimasikan — hanya tinggi tanaman &amp; isi kolam.</p>
+    <div class="plot3d-legend" id="plot3dLegend"></div>
+    <p class="helper" style="margin-top:10px;">Blok petak tanam (hijau/cokelat) mengikuti luas lahan yang Anda punya. Blok kolam &amp; kandang digambar terpisah di baris belakang — keduanya belum ikut dibatasi oleh luas lahan pada perhitungan saat ini.</p>
+  </section>
+
+  <section id="sumber">
+    <div class="sec-head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <h2>Sumber &amp; rentang angka</h2>
+    </div>
+    <p class="sec-sub">Setiap item pada bagian 4–7 sekarang punya rentang hasil panen dan catatan sumber sendiri (bisa dilihat di kotak putus-putus di bawah tiap item) — bukan lagi satu angka tetap tanpa asal-usul.</p>
+    <p class="dep-note" style="margin-bottom:14px;">Ada dua tingkat keyakinan: <strong>Data resmi (BPS/Kementan)</strong> untuk komoditas yang punya statistik produktivitas nasional terpublikasi, dan <strong>kisaran praktik lapangan</strong> untuk item yang datanya lebih tersebar/anekdotal (talas, pisang, kelor, sayuran daun) — ditandai warna oranye pada kotaknya. Nilai default yang bisa Anda ubah di tiap item diletakkan di dalam rentang tersebut, bukan di titik tunggal yang diklaim pasti.</p>
+    <p class="dep-note" style="margin-bottom:14px;"><strong>Koreksi dari versi sebelumnya:</strong> tiga default ternyata jauh meleset dari data riil dan sudah diperbaiki — singkong (8&nbsp;→&nbsp;3,2&nbsp;kg/m², asumsi lama setara ±80&nbsp;ton/ha, jauh di atas rata-rata nasional ±20–23&nbsp;ton/ha), kacang-kacangan (kacang tanah/hijau/kedelai diturunkan sekitar setengahnya agar sesuai rata-rata nasional), dan yang paling signifikan: telur ayam kampung (1,5&nbsp;→&nbsp;0,35&nbsp;kg/ekor/bulan — asumsi lama 3–4× lebih tinggi dari produksi telur ayam kampung nyata, kemungkinan tertukar dengan ayam ras petelur komersial).</p>
+    <p class="status-legend" style="margin-bottom:0;">Referensi utama: BPS (Luas Panen, Produksi &amp; Produktivitas Tanaman Pangan), Badan Litbang Pertanian (Kementan), serta beberapa laporan praktik budidaya lapangan untuk komoditas yang belum punya statistik nasional. Modal &amp; biaya berulang tetap berupa <em>kisaran harga pasar</em> (bisa berubah menurut wilayah dan waktu) — bukan hasil studi ilmiah, ditandai terpisah dari rentang hasil panen.</p>
+  </section>
+
+  <section id="prinsip" style="border-bottom:none;">
+    <div class="sec-head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 3v14"/><path d="M5 8l7-5 7 5"/><path d="M4 21h16"/></svg>
+      <h2>Dua prinsip pendamping</h2>
+    </div>
+    <p class="principle"><strong>Pendidikan</strong> ditandai sejak awal bukan sebagai masalah — diarahkan ke belajar di rumah, sekolah tak berbayar, atau komunitas belajar kecil bersama beberapa keluarga, bukan komoditas yang dihitung per kilogram atau rupiah.</p>
+    <p class="principle"><strong>Tempat tinggal</strong> di desa punya lahan dan ruang jauh lebih besar dibanding sewa atau kontrak di kota — bukan berarti desa selalu lebih baik, tetapi dalam parameter tool ini, ruang untuk produksi lebih menentukan.</p>
+  </section>
+
+  <footer>
+    Semua angka hasil dan biaya di atas adalah simulasi berbasis parameter yang Anda atur sendiri, bukan jaminan hasil nyata di lapangan — kondisi tanah, iklim, musim, dan lokasi tetap menentukan. Tool ini sudah memodelkan skenario gangguan per sumber pangan (lihat bagian "Skenario gangguan"), tapi belum memodelkan kenaikan harga pasar atau skala komunitas antar-keluarga — itu arah pengembangan berikutnya.
+    <div>
+      <a class="wa-btn" href="https://wa.me/6281356572588?text=Halo%2C%20saya%20ingin%20bertanya%20soal%20Ketahanan%20Rumah%20Tangga%20di%20qiladat.com" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.03 2 11c0 2.09.87 4 2.3 5.5L3 22l5.8-1.52C10.02 20.8 11 21 12 21c5.52 0 10-4.03 10-9S17.52 2 12 2z"/></svg>
+        Hubungi Pengembang via WhatsApp
+      </a>
+    </div>
+  </footer>
+
+</div>
+
+<button class="back-top" id="backTop" aria-label="Kembali ke atas" title="Kembali ke atas">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+</button>
+
+<script>
+const CARBS = [
+  {id:'kentang', nama:'Kentang', unit:'m²', kkalKg:770, hari:95, hariMin:80, hariMax:110, hasil:2.4, hasilMin:1.5, hasilMax:3.2, modal:15000, modalMin:10000, modalMax:22000, biayaBerulang:2000, harga:8000, jam:1.5, mudah:4, regen:true, tier:'resmi', air:2, hama:2, sumber:'Produktivitas nasional kentang ±17–19 ton/ha per musim (BPS); pekarangan yang dirawat intensif bisa mendekati 2× rata-rata itu.', catatan:'Sisakan sebagian umbi kecil sebagai bibit musim berikutnya. Cocok dataran sedang–tinggi.'},
+  {id:'singkong', nama:'Singkong', unit:'m²', kkalKg:1210, hari:270, hariMin:210, hariMax:330, hasil:3.2, hasilMin:2.0, hasilMax:4.5, modal:8000, modalMin:5000, modalMax:12000, biayaBerulang:0, harga:3000, jam:0.5, mudah:5, regen:true, tier:'resmi', air:1, hama:1, sumber:'Produktivitas nasional ubi kayu ±20–23 ton/ha (BPS); varietas unggul/pekarangan subur bisa capai 35–45 ton/ha. Koreksi: default versi sebelumnya (8 kg/m² ≈ 80 ton/ha) jauh di atas rentang wajar ini.', catatan:'Sangat toleran tanah kering, minim rawatan. Bibit dari stek batang, nyaris tanpa biaya.'},
+  {id:'ubijalar', nama:'Ubi Jalar', unit:'m²', kkalKg:860, hari:120, hariMin:100, hariMax:140, hasil:1.7, hasilMin:1.3, hasilMax:2.2, modal:10000, modalMin:7000, modalMax:14000, biayaBerulang:0, harga:6000, jam:1, mudah:5, regen:true, tier:'resmi', air:1, hama:2, sumber:'Produktivitas nasional ubi jalar ±13–18 ton/ha per musim (BPS).', catatan:'Diperbanyak dari stek sulur sendiri. Daunnya juga bisa jadi sayur.'},
+  {id:'jagung', nama:'Jagung', unit:'m²', kkalKg:3650, hari:100, hariMin:90, hariMax:110, hasil:0.6, hasilMin:0.45, hasilMax:0.8, modal:12000, modalMin:8000, modalMax:18000, biayaBerulang:3000, harga:5000, jam:1, mudah:3, regen:true, tier:'resmi', air:2, hama:3, sumber:'Produktivitas nasional jagung pipilan kering ±5–7 ton/ha (BPS).', catatan:'Simpan biji kering terbaik dari panen sebagai benih musim depan.'},
+  {id:'talas', nama:'Talas', unit:'m²', kkalKg:1120, hari:180, hariMin:150, hariMax:210, hasil:1.2, hasilMin:0.8, hasilMax:1.6, modal:9000, modalMin:6000, modalMax:13000, biayaBerulang:0, harga:6000, jam:1, mudah:4, regen:true, tier:'lapangan', air:3, hama:1, sumber:'Belum ada data agregat nasional yang konsisten; kisaran dari laporan budidaya talas skala kecil ±8–16 ton/ha. Keyakinan lebih rendah dibanding komoditas BPS di atas.', catatan:'Anakan umbi bisa langsung ditanam ulang tanpa beli bibit baru.'},
+  {id:'pisang', nama:'Pisang', unit:'m²', kkalKg:1040, hari:300, hariMin:270, hariMax:360, hasil:4, hasilMin:3, hasilMax:6, modal:20000, modalMin:15000, modalMax:30000, biayaBerulang:0, harga:5000, jam:0.5, mudah:4, regen:true, tier:'lapangan', air:2, hama:2, sumber:'Dihitung dari bobot tandan umum 15–25 kg/rumpun pada jarak tanam standar 2×2 m — estimasi turunan, bukan data agregat per hektar.', catatan:'Anakan/tunas bisa dipindah tanam sendiri, terus berbuah tiap tahun.'}
+];
+const LEGUMES = [
+  {id:'kacangtanah', nama:'Kacang Tanah', unit:'m²', kkalKg:null, hari:90, hariMin:85, hariMax:100, hasil:0.13, hasilMin:0.10, hasilMax:0.16, modal:10000, modalMin:7000, modalMax:14000, biayaBerulang:0, harga:15000, jam:1, mudah:3, regen:true, tier:'resmi', air:2, hama:2, sumber:'Produktivitas nasional kacang tanah (polong kering) ±1,0–1,6 ton/ha (BPS). Koreksi turun dari default sebelumnya yang mendekati 2× rentang ini.', catatan:'Simpan sebagian biji kering sebagai benih musim depan.'},
+  {id:'kacanghijau', nama:'Kacang Hijau', unit:'m²', kkalKg:null, hari:65, hariMin:60, hariMax:70, hasil:0.09, hasilMin:0.07, hasilMax:0.12, modal:8000, modalMin:5000, modalMax:12000, biayaBerulang:0, harga:18000, jam:1, mudah:4, regen:true, tier:'resmi', air:1, hama:2, sumber:'Produktivitas nasional kacang hijau ±0,7–1,2 ton/ha (BPS).', catatan:'Siklus pendek, biji mudah disimpan lama.'},
+  {id:'kedelai', nama:'Kedelai', unit:'m²', kkalKg:null, hari:85, hariMin:80, hariMax:95, hasil:0.15, hasilMin:0.12, hasilMax:0.18, modal:9000, modalMin:6000, modalMax:13000, biayaBerulang:0, harga:12000, jam:1, mudah:3, regen:true, tier:'resmi', air:2, hama:3, sumber:'Produktivitas nasional kedelai ±1,2–1,8 ton/ha (BPS).', catatan:'Bisa diolah jadi tempe/tahu sendiri di rumah.'}
+];
+const PROTEINS = [
+  {id:'lele', nama:'Ikan Lele (kolam terpal)', unit:'m³ kolam', kkalKg:null, hari:75, hariMin:60, hariMax:90, hasil:25, hasilMin:15, hasilMax:45, modal:250000, modalMin:150000, modalMax:400000, biayaBerulang:150000, harga:25000, jam:3.5, mudah:4, regen:false, tier:'lapangan', air:3, hama:2, sumber:'Sangat tergantung sistem: kolam konvensional padat-tebar rendah ±10–20 kg/m³/siklus (contoh lapangan: kolam 3×4×1m panen ±100–135 kg ≈ 8–11 kg/m³), sistem bioflok/intensif bisa >40 kg/m³. Default diturunkan dari 40 → 25 kg/m³ agar mewakili praktik menengah, bukan skenario bioflok terbaik.', catatan:'Perlu bibit baru tiap siklus kecuali menyisakan indukan. Pakan adalah biaya berulang terbesar. Bisa mendekati 0 modal dengan kolam tanah dan pakan alami, tapi lebih lambat.'},
+  {id:'ayam', nama:'Ayam Kampung (telur)', unit:'ekor', kkalKg:null, hari:30, hasil:0.35, hasilMin:0.15, hasilMax:0.5, modal:60000, modalMin:45000, modalMax:80000, biayaBerulang:20000, harga:25000, jam:2, mudah:4, regen:true, tier:'resmi', air:1, hama:3, sumber:'Dihitung dari produksi telur ayam kampung terdokumentasi ±40–150 butir/ekor/tahun (pemeliharaan tradisional–intensif, beberapa kajian peternakan) × ±40 gram/butir. Koreksi penting: default versi sebelumnya (1,5 kg/ekor/bulan) sekitar 3–4× lebih tinggi dari angka realistis ini — kemungkinan tertukar dengan ayam ras petelur komersial.', catatan:'Bisa menetaskan sendiri lewat induk. Pakan bisa dikurangi jika diumbar cari makan sendiri.'},
+  {id:'itik', nama:'Itik / Bebek (telur)', unit:'ekor', kkalKg:null, hari:30, hasil:1.1, hasilMin:0.6, hasilMax:1.8, modal:70000, modalMin:55000, modalMax:90000, biayaBerulang:25000, harga:30000, jam:2, mudah:3, regen:true, tier:'resmi', air:2, hama:2, sumber:'Dihitung dari produksi telur itik ±100–300 butir/ekor/tahun (kampung tradisional hingga ras unggul seperti Itik Tegal yang dipelihara intensif) × ±60–65 gram/butir.', catatan:'Sama seperti ayam, populasi bisa berkembang biak sendiri. Suka dekat air.'},
+  {id:'kelinci', nama:'Kelinci (daging)', unit:'ekor', kkalKg:null, hari:100, hariMin:90, hariMax:120, hasil:1.2, hasilMin:1.0, hasilMax:1.5, modal:50000, modalMin:35000, modalMax:70000, biayaBerulang:15000, harga:45000, jam:1.5, mudah:3, regen:true, tier:'resmi', air:1, hama:2, sumber:'Bobot hidup panen umum 2–3 kg pada usia 3–4 bulan, rendemen daging ±50% — konsisten dengan default versi sebelumnya, tidak dikoreksi.', catatan:'Berkembang biak cepat, pakan bisa dari hijauan sekitar.'}
+];
+const VEGGIES = [
+  {id:'kelor', nama:'Kelor', unit:'m²', kkalKg:null, hari:55, hariMin:45, hariMax:60, hasil:1.4, hasilMin:1.0, hasilMax:2.0, modal:5000, modalMin:3000, modalMax:8000, biayaBerulang:0, harga:15000, jam:0.5, mudah:5, regen:true, tier:'lapangan', air:1, hama:1, sumber:'Belum ada data agregat nasional; kisaran dari praktik budidaya kelor intensif untuk daun. Variasi tinggi tergantung densitas tanam & frekuensi pemangkasan.', catatan:'Stek batang nyaris tanpa biaya, daun terus dipetik tanpa tanam ulang.'},
+  {id:'kangkung', nama:'Kangkung', unit:'m²', kkalKg:null, hari:28, hariMin:25, hariMax:30, hasil:2, hasilMin:1.5, hasilMax:2.5, modal:4000, modalMin:2500, modalMax:6000, biayaBerulang:0, harga:5000, jam:1, mudah:5, regen:true, tier:'lapangan', air:3, hama:1, sumber:'Kisaran umum budidaya sayuran daun cepat panen skala pekarangan — belum diverifikasi lewat data agregat resmi.', catatan:'Diperbanyak dari biji atau stek batang sendiri.'},
+  {id:'bayam', nama:'Bayam', unit:'m²', kkalKg:null, hari:24, hariMin:21, hariMax:28, hasil:1.5, hasilMin:1.0, hasilMax:2.0, modal:4000, modalMin:2500, modalMax:6000, biayaBerulang:0, harga:6000, jam:1, mudah:5, regen:true, tier:'lapangan', air:2, hama:2, sumber:'Kisaran umum budidaya sayuran daun cepat panen skala pekarangan — belum diverifikasi lewat data agregat resmi.', catatan:'Biji mudah disimpan untuk musim tanam berikutnya.'},
+  {id:'kacangpanjang', nama:'Kacang Panjang', unit:'m²', kkalKg:null, hari:50, hariMin:45, hariMax:55, hasil:1.1, hasilMin:0.8, hasilMax:1.5, modal:6000, modalMin:4000, modalMax:9000, biayaBerulang:0, harga:8000, jam:1.5, mudah:4, regen:true, tier:'resmi', air:2, hama:3, sumber:'Produktivitas nasional kacang panjang ±4–8 ton/ha (BPS).', catatan:'Simpan sebagian polong tua sebagai benih untuk siklus berikutnya.'}
+];
+
+const CATS = [
+  {key:'carb', prefix:'carb', items:CARBS, mode:'kalori', landScaled:true, containerId:'carb-list'},
+  {key:'legum', prefix:'legum', items:LEGUMES, mode:'massa', landScaled:true, containerId:'legum-list'},
+  {key:'prot', prefix:'prot', items:PROTEINS, mode:'massa', landScaled:false, containerId:'protein-list'},
+  {key:'veg', prefix:'veg', items:VEGGIES, mode:'massa', landScaled:true, containerId:'veg-list'}
+];
+
+const DEFAULT_SELECTED = ['singkong','kacangtanah','lele','kelor'];
+
+function val(id){ const el=document.getElementById(id); return el? parseFloat(el.value):0; }
+function checked(id){ const el=document.getElementById(id); return el? el.checked:false; }
+function rp(n){ return 'Rp' + Math.round(n).toLocaleString('id-ID'); }
+function num(n, d){ if(!isFinite(n)) return '0'; return n.toLocaleString('id-ID', {maximumFractionDigits: d===undefined?1:d}); }
+function clamp(v,lo,hi){ return Math.max(lo, Math.min(hi, v)); }
+
+function renderItem(it, cat){
+  const sel = DEFAULT_SELECTED.includes(it.id) ? 'checked' : '';
+  const kkalField = cat==='carb' ? `<label>Kalori/kg<input type="number" id="${cat}-${it.id}-kkalKg" value="${it.kkalKg}"></label>` : '';
+  const tierLabel = it.tier==='resmi' ? 'Data resmi (BPS/Kementan)' : 'Kisaran praktik lapangan — keyakinan lebih rendah';
+  const hariRentang = (it.hariMin!==undefined && it.hariMax!==undefined) ? `${it.hariMin}–${it.hariMax} hari` : `±${it.hari} hari`;
+  const rd = (v)=> v<1 ? 2 : 1;
+  const hasilRentang = `${num(it.hasilMin,rd(it.hasilMin))}–${num(it.hasilMax,rd(it.hasilMax))} ${it.unit==='ekor' ? 'kg/ekor/siklus' : (it.unit==='m³ kolam' ? 'kg/m³/siklus' : 'kg/m²/siklus')}`;
+  const riskLabel = (n)=> n===1 ? 'rendah' : (n===2 ? 'sedang' : 'tinggi');
+  const riskBadge = `<span class="risk-badge risk-air-${it.air}" title="Ketergantungan pada air">💧 ${riskLabel(it.air)}</span><span class="risk-badge risk-hama-${it.hama}" title="Risiko hama/penyakit">🐛 ${riskLabel(it.hama)}</span>`;
+  return `<div class="item">
+    <label class="item-head">
+      <input type="checkbox" id="${cat}-${it.id}-sel" ${sel}>
+      <span>
+        <span class="item-name">${it.nama}</span>
+        <span class="item-meta">${it.hari} hari/siklus · kemudahan ${it.mudah}/5 · ${it.regen ? '♻ bisa regenerasi sendiri' : 'perlu bibit baru tiap siklus'}</span>
+        <span class="item-meta">${riskBadge}</span>
+      </span>
+    </label>
+    <p class="item-note">${it.catatan}</p>
+    <div class="src-tag src-tag--${it.tier}">
+      <span class="src-tier">${tierLabel}</span>
+      <span class="src-range">Rentang riset: ${hasilRentang} · siklus ${hariRentang}</span>
+      <span class="src-text">${it.sumber}</span>
+    </div>
+    <div class="item-params">
+      ${kkalField}
+      <label>Hari/siklus<input type="number" id="${cat}-${it.id}-hari" value="${it.hari}" title="Rentang riset: ${hariRentang}"></label>
+      <label>Hasil/${it.unit} (kg)<input type="number" step="0.05" id="${cat}-${it.id}-hasil" value="${it.hasil}" title="Rentang riset: ${hasilRentang}"></label>
+      <label>Modal awal/${it.unit} (Rp)<input type="number" id="${cat}-${it.id}-modal" value="${it.modal}" title="Kisaran pasar: ${rp(it.modalMin)}–${rp(it.modalMax)}"></label>
+      <label>Biaya berulang/siklus (Rp)<input type="number" id="${cat}-${it.id}-biayaBerulang" value="${it.biayaBerulang}"></label>
+      <label>Harga jual/kg (Rp)<input type="number" id="${cat}-${it.id}-harga" value="${it.harga}"></label>
+      <label>Jam kerja/minggu<input type="number" step="0.5" id="${cat}-${it.id}-jam" value="${it.jam}"></label>
+      <label>Bobot pilihan<input type="number" step="0.1" min="0" id="${cat}-${it.id}-bobot" value="1"></label>
+      <label class="checkbox-inline"><input type="checkbox" id="${cat}-${it.id}-modalNol"> Anggap modal Rp0 (sudah tersedia)</label>
+    </div>
+  </div>`;
+}
+
+CATS.forEach(c=>{
+  document.getElementById(c.containerId).innerHTML = c.items.map(it=>renderItem(it,c.prefix)).join('');
+});
+
+function setAllModalNol(state){
+  CATS.forEach(c=>{
+    c.items.forEach(it=>{
+      const el = document.getElementById(`${c.prefix}-${it.id}-modalNol`);
+      if(el) el.checked = state;
+    });
+  });
+}
+document.querySelectorAll('input[name="modalMode"]').forEach(r=>{
+  r.addEventListener('change', ()=>{
+    if(r.value==='nol' && r.checked) setAllModalNol(true);
+    if(r.value==='cepat' && r.checked) setAllModalNol(false);
+    recalc();
+  });
+});
+
+function stressReduction(it, scenario, severityFrac){
+  if(scenario==='normal' || !scenario) return 0;
+  const weight = (lvl)=> lvl===1 ? 0.2 : (lvl===2 ? 0.55 : 1.0);
+  const airCut = severityFrac*weight(it.air);
+  const hamaCut = severityFrac*weight(it.hama);
+  if(scenario==='kekeringan') return airCut;
+  if(scenario==='hama') return hamaCut;
+  if(scenario==='kombinasi') return 1-(1-airCut)*(1-hamaCut);
+  return 0;
+}
+
+function computeCategory(cfg, targetTotal, surplusOn, surplusPct, scenario, severityFrac){
+  const selected = cfg.items.filter(it=>checked(`${cfg.prefix}-${it.id}-sel`));
+  if(selected.length===0) return [];
+  let sumBobot = 0;
+  selected.forEach(it=>{ sumBobot += (val(`${cfg.prefix}-${it.id}-bobot`)||1); });
+  if(sumBobot<=0) sumBobot = selected.length;
+  return selected.map(it=>{
+    const cat = cfg.prefix;
+    const bobot = val(`${cat}-${it.id}-bobot`)||1;
+    const share = bobot/sumBobot;
+    const hari = val(`${cat}-${it.id}-hari`)||it.hari;
+    const hasil = val(`${cat}-${it.id}-hasil`)||it.hasil;
+    const modal = val(`${cat}-${it.id}-modal`)||0;
+    const biayaBerulang = val(`${cat}-${it.id}-biayaBerulang`)||0;
+    const harga = val(`${cat}-${it.id}-harga`)||0;
+    const jam = val(`${cat}-${it.id}-jam`)||0;
+    const modalNol = checked(`${cat}-${it.id}-modalNol`);
+    const reduksi = stressReduction(it, scenario, severityFrac);
+    const hasilEfektif = Math.max(hasil*(1-reduksi), hasil*0.1);
+    let kgPerHari;
+    if(cfg.mode==='kalori'){
+      const kkalKg = val(`${cat}-${it.id}-kkalKg`)||it.kkalKg||1;
+      kgPerHari = (targetTotal*share)/kkalKg;
+    } else {
+      kgPerHari = targetTotal*share;
+    }
+    const kgPerSiklus = kgPerHari*hari;
+    const unit = hasilEfektif>0 ? kgPerSiklus/hasilEfektif : 0;
+    const unitNormal = hasil>0 ? kgPerSiklus/hasil : 0;
+    const modalReal = modalNol ? 0 : unit*modal;
+    const biayaBerulangReal = modalNol ? 0 : unit*biayaBerulang;
+    let surplusUnit=0, surplusModal=0, surplusRevenueBulan=0;
+    if(surplusOn){
+      surplusUnit = unit*(surplusPct/100);
+      surplusModal = modalNol ? 0 : surplusUnit*modal;
+      const surplusKg = surplusUnit*hasilEfektif;
+      const revenuePerSiklus = surplusKg*harga;
+      surplusRevenueBulan = hari>0 ? (revenuePerSiklus/hari)*30 : 0;
+    }
+    return {
+      id:it.id, nama:it.nama, unitLabel:it.unit, hari, unit, unitNormal, modalReal, biayaBerulangReal,
+      jamMinggu:jam, surplusUnit, surplusModal, surplusRevenueBulan, reduksiPct:reduksi*100,
+      mudah:it.mudah, regen:it.regen, landScaled:cfg.landScaled, hasBiayaBerulang: biayaBerulang>0
+    };
+  });
+}
+
+function drawRadar(labels, values){
+  const size=280, cx=size/2, cy=size/2, R=100;
+  const n=labels.length;
+  const pt=(i,r)=>{
+    const ang = -Math.PI/2 + i*(2*Math.PI/n);
+    return [cx + r*Math.cos(ang), cy + r*Math.sin(ang)];
+  };
+  let rings='';
+  [0.25,0.5,0.75,1].forEach(f=>{
+    let pts='';
+    for(let i=0;i<n;i++){ const [x,y]=pt(i,R*f); pts+=x.toFixed(1)+','+y.toFixed(1)+' '; }
+    rings += `<polygon points="${pts}" fill="none" stroke="#CBBB8E" stroke-width="1"/>`;
+  });
+  let axes='';
+  let labelsSvg='';
+  for(let i=0;i<n;i++){
+    const [x,y]=pt(i,R);
+    axes += `<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#CBBB8E" stroke-width="1"/>`;
+    const [lx,ly]=pt(i,R+22);
+    labelsSvg += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="11.5" fill="#55492E" font-family="IBM Plex Sans">${labels[i]}</text>`;
+  }
+  let dataPts='';
+  for(let i=0;i<n;i++){ const [x,y]=pt(i,R*clamp(values[i],0,100)/100); dataPts+=x.toFixed(1)+','+y.toFixed(1)+' '; }
+  return `<svg viewBox="0 0 ${size} ${size+20}" width="280" height="300">
+    ${rings}${axes}
+    <polygon points="${dataPts}" fill="#3F5D3A" fill-opacity="0.28" stroke="#3F5D3A" stroke-width="2"/>
+    ${labelsSvg}
+  </svg>`;
+}
+
+function recalc(){
+  const dewasa = val('dewasa')||0;
+  const anak = val('anak')||0;
+  const kkalDewasa = val('kkalDewasa')||2200;
+  const kkalAnak = val('kkalAnak')||1400;
+  const totalOrang = dewasa+anak;
+  const totalKkal = dewasa*kkalDewasa + anak*kkalAnak;
+
+  const lahanTersedia = val('lahanTersedia')||0;
+  const modalTersedia = val('modalTersedia')||0;
+  const waktuTersedia = val('waktuTersedia')||0;
+  const air = document.getElementById('airKetersediaan').value;
+
+  const karboPerOrang = val('karboTarget')||0;
+  const protHewaniPerOrang = val('proteinHewaniTarget')||0;
+  const protNabatiPerOrang = val('proteinNabatiTarget')||0;
+  const sayurPerOrang = val('sayurTarget')||0;
+
+  const surplusOn = checked('surplusToggle');
+  const surplusPct = val('surplusPct')||0;
+
+  const skenarioJenis = document.getElementById('skenarioJenis').value;
+  const skenarioKeparahan = document.getElementById('skenarioKeparahan').value;
+  const severityMap = {ringan:0.15, sedang:0.35, berat:0.60};
+  const severityFrac = severityMap[skenarioKeparahan]||0;
+
+  const carbTargetKkal = totalOrang*karboPerOrang;
+  const legumTargetKg = (totalOrang*protNabatiPerOrang)/1000;
+  const protTargetKg = (totalOrang*protHewaniPerOrang)/1000;
+  const vegTargetKg = (totalOrang*sayurPerOrang)/1000;
+
+  const carbR = computeCategory(CATS[0], carbTargetKkal, surplusOn, surplusPct, skenarioJenis, severityFrac);
+  const legumR = computeCategory(CATS[1], legumTargetKg, surplusOn, surplusPct, skenarioJenis, severityFrac);
+  const protR = computeCategory(CATS[2], protTargetKg, surplusOn, surplusPct, skenarioJenis, severityFrac);
+  const vegR = computeCategory(CATS[3], vegTargetKg, surplusOn, surplusPct, skenarioJenis, severityFrac);
+
+  const bodyTop = document.getElementById('hasil-top');
+  const bodyBottom = document.getElementById('hasil-bottom');
+  const radarWrap = document.getElementById('radarWrap');
+  const allRaw = carbR.concat(legumR, protR, vegR);
+
+  if(allRaw.length===0){
+    bodyTop.innerHTML = '<p class="empty-msg">Pilih minimal satu sumber pada bagian energi, protein nabati, protein hewani, atau sayur di atas untuk melihat simulasinya.</p>';
+    bodyBottom.innerHTML = '';
+    radarWrap.style.display = 'none';
+    return;
+  }
+
+  // land scaling
+  const landItems = carbR.concat(legumR, vegR);
+  const luasM2Raw = landItems.reduce((s,r)=>s+r.unit,0);
+  const scaleLahan = (lahanTersedia>0 && luasM2Raw>lahanTersedia) ? lahanTersedia/luasM2Raw : 1;
+  landItems.forEach(r=>{
+    r.unit *= scaleLahan; r.modalReal *= scaleLahan; r.biayaBerulangReal *= scaleLahan;
+    r.surplusUnit *= scaleLahan; r.surplusModal *= scaleLahan; r.surplusRevenueBulan *= scaleLahan;
+    r.jamMinggu *= scaleLahan;
+  });
+  const all = carbR.concat(legumR, protR, vegR);
+
+  const totalModal = all.reduce((s,r)=>s+r.modalReal,0);
+  const totalBiayaBerulangBulanan = all.reduce((s,r)=> s + (r.hari>0 ? (r.biayaBerulangReal/r.hari)*30 : 0), 0);
+  const totalPendapatanBulan = all.reduce((s,r)=>s+r.surplusRevenueBulan,0);
+  const totalModalSurplus = all.reduce((s,r)=>s+r.surplusModal,0);
+  const luasM2 = landItems.reduce((s,r)=>s+r.unit,0);
+  const kolamM3 = protR.filter(r=>r.unitLabel==='m³ kolam').reduce((s,r)=>s+r.unit,0);
+  const ekor = protR.filter(r=>r.unitLabel==='ekor').reduce((s,r)=>s+r.unit,0);
+  const hariList = all.map(r=>r.hari);
+  const hariMin = Math.min(...hariList), hariMax = Math.max(...hariList);
+  const mudahAvg = all.reduce((s,r)=>s+r.mudah,0)/all.length;
+  const regenCount = all.filter(r=>r.regen).length;
+  const totalJamHari = all.reduce((s,r)=>s+r.jamMinggu,0)/7;
+
+  // coverage per category
+  const cov = (results, target) => target<=0 ? 100 : (results.length>0 ? (results[0].landScaled ? scaleLahan*100 : 100) : 0);
+  const cakupanKarbo = cov(carbR, carboPerOrangCheck(karboPerOrang));
+  function carboPerOrangCheck(v){ return v; }
+  const cakupanNabati = cov(legumR, protNabatiPerOrang);
+  const cakupanHewani = cov(protR, protHewaniPerOrang);
+  const cakupanSayur = cov(vegR, sayurPerOrang);
+  const cakupanProtein = (cakupanNabati+cakupanHewani)/2;
+  const cakupanDasar = (cakupanKarbo+cakupanProtein+cakupanSayur)/3;
+
+  // dependency index
+  const depScore = all.map(r => (r.regen?0:50) + (r.hasBiayaBerulang?50:0));
+  const dependencyIndex = depScore.reduce((s,v)=>s+v,0)/all.length;
+  const mandiriDariLuar = 100-dependencyIndex;
+
+  const regenPct = (regenCount/all.length)*100;
+  const modalScore = totalModal<=0 ? 100 : (modalTersedia<=0 ? 100 : clamp((modalTersedia/totalModal)*100,0,100));
+  const waktuScore = totalJamHari<=0 ? 100 : (waktuTersedia<=0 ? 100 : clamp((waktuTersedia/totalJamHari)*100,0,100));
+
+  let stateKey, stateLabel;
+  if(cakupanDasar<40){ stateKey='dependen'; stateLabel='Dependen'; }
+  else if(cakupanDasar<70){ stateKey='tangguh'; stateLabel='Tangguh'; }
+  else if(cakupanDasar<100){ stateKey='sebagian'; stateLabel='Mandiri Sebagian'; }
+  else { stateKey='mandiri'; stateLabel='Sangat Mandiri'; }
+
+  let html = '';
+
+  // warnings
+  if(lahanTersedia>0 && luasM2Raw>lahanTersedia){
+    html += `<div class="warn">⚠ Target Anda butuh sekitar ${num(luasM2Raw,1)} m², tapi lahan tersedia hanya ${num(lahanTersedia,0)} m². Perhitungan di bawah sudah diskalakan turun ke lahan yang ada — cakupan energi/sayur/nabati akan di bawah 100%.</div>`;
+  }
+  if(waktuTersedia>0 && totalJamHari>waktuTersedia){
+    html += `<div class="warn">⚠ Kombinasi ini butuh kira-kira ${num(totalJamHari,1)} jam/hari, lebih dari ${num(waktuTersedia,1)} jam/hari yang Anda punya. Pertimbangkan kurangi item atau pilih yang lebih rendah jam kerjanya.</div>`;
+  }
+  if(modalTersedia>0 && totalModal>modalTersedia){
+    html += `<div class="warn">⚠ Modal awal yang dibutuhkan (${rp(totalModal)}) melebihi modal tersedia (${rp(modalTersedia)}). Coba centang "anggap modal Rp0" pada item yang sumber dayanya sudah Anda punya, atau pilih jalur "Dari nol".</div>`;
+  }
+  if(air==='terbatas' && protR.some(r=>r.unitLabel==='m³ kolam')){
+    html += `<div class="warn">⚠ Air ditandai terbatas, sementara ikan kolam dipilih — pertimbangkan kolam lebih kecil, ikan yang lebih tahan air minim, atau prioritaskan unggas.</div>`;
+  }
+  if(skenarioJenis!=='normal'){
+    const extraUnit = all.reduce((s,r)=>s+Math.max(r.unit-r.unitNormal,0),0);
+    const extraModal = all.reduce((s,r)=> s + (r.unitNormal>0 ? (r.unit/r.unitNormal - 1)*r.modalReal : 0), 0);
+    const label = {kekeringan:'Kekeringan musiman', hama:'Serangan hama & penyakit', kombinasi:'Kombinasi kekeringan + hama'}[skenarioJenis];
+    const sevLabel = {ringan:'ringan', sedang:'sedang', berat:'berat'}[skenarioKeparahan];
+    html += `<div class="warn" style="border-left-color:var(--orange); background:var(--orange-soft); color:var(--orange-deep);">⚠ Skenario aktif: <strong>${label} (${sevLabel})</strong>. Angka lahan/kolam/kandang, modal, dan jam kerja di bawah <em>sudah termasuk</em> cadangan ekstra agar tetap capai target yang sama meski hasil panen turun — kira-kira ${extraModal>0?'+'+rp(extraModal)+' modal awal':'tidak ada tambahan modal signifikan'} dibanding kondisi normal.</div>`;
+  }
+  const catCounts = [
+    {nama:'energi/karbohidrat', n:carbR.length}, {nama:'protein nabati', n:legumR.length},
+    {nama:'protein hewani', n:protR.length}, {nama:'sayur', n:vegR.length}
+  ];
+  catCounts.filter(c=>c.n===1).forEach(c=>{
+    html += `<div class="warn">⚠ Anda hanya mengandalkan <strong>1 sumber</strong> untuk kategori ${c.nama}. Kalau sumber ini gagal total (bukan cuma turun hasil — misalnya wabah penyakit ternak atau gagal panen total), cakupan kategori ini bisa jatuh ke 0%. Menambah 1 sumber kedua dengan tingkat risiko air/hama yang berbeda (lihat badge 💧🐛 di tiap item) akan benar-benar mengurangi risiko ini.</div>`;
+  });
+
+  html += `<span class="state-badge state-${stateKey}">${stateLabel}</span>`;
+  html += `<p class="dep-note">Cakupan kebutuhan dasar (energi, protein, sayur): <strong>${cakupanDasar.toFixed(0)}%</strong> · Indeks ketergantungan eksternal: <strong>${dependencyIndex.toFixed(0)}%</strong> (bibit/pakan yang masih perlu dibeli berulang)${stateKey==='mandiri' ? ' — tetap ada kebutuhan lain (garam, sabun, alat, obat) yang biasanya masih perlu dibeli.' : ''}</p>`;
+
+  bodyTop.innerHTML = html;
+  radarWrap.style.display = '';
+  const radarLabels = ['Pangan','Protein','Sayur','Regenerasi','Mandiri dr Luar','Waktu','Modal'];
+  const radarValues = [cakupanKarbo, cakupanProtein, cakupanSayur, regenPct, mandiriDariLuar, waktuScore, modalScore];
+  document.getElementById('radarSvg').innerHTML = drawRadar(radarLabels, radarValues);
+
+  html = '<div class="summary-grid">';
+  html += `<div class="stat"><div class="v">${num(totalKkal,0)}</div><div class="l">kkal/hari kebutuhan keluarga (${totalOrang} orang)</div></div>`;
+  html += `<div class="stat"><div class="v">${num(luasM2,1)}${lahanTersedia>0?' / '+num(lahanTersedia,0):''} m²</div><div class="l">lahan dipakai / tersedia</div></div>`;
+  html += `<div class="stat"><div class="v">${num(kolamM3,2)} m³ · ${Math.ceil(ekor)} ekor</div><div class="l">kolam &amp; ternak dibutuhkan</div></div>`;
+  html += `<div class="stat"><div class="v">${rp(totalModal)}</div><div class="l">modal awal dibutuhkan${modalTersedia>0?' (tersedia '+rp(modalTersedia)+')':''}</div></div>`;
+  html += `<div class="stat"><div class="v">${rp(totalBiayaBerulangBulanan)}</div><div class="l">estimasi biaya berulang/bulan (pakan, dll)</div></div>`;
+  html += `<div class="stat"><div class="v">${num(totalJamHari,1)}${waktuTersedia>0?' / '+num(waktuTersedia,1):''} jam</div><div class="l">jam kerja/hari dibutuhkan / tersedia</div></div>`;
+  html += `<div class="stat"><div class="v">${hariMin===hariMax? hariMin : hariMin+'–'+hariMax}</div><div class="l">hari sampai panen pertama</div></div>`;
+  html += `<div class="stat"><div class="v">${mudahAvg.toFixed(1)}/5</div><div class="l">rata-rata tingkat kemudahan</div></div>`;
+  if(surplusOn){
+    html += `<div class="stat accent"><div class="v">${rp(totalPendapatanBulan)}</div><div class="l">estimasi pendapatan/bulan dari surplus (+${rp(totalModalSurplus)} modal tambahan) — perkiraan kasar, harga pasar bisa berubah</div></div>`;
+  }
+  html += '</div>';
+
+  const showReduksi = skenarioJenis!=='normal';
+  html += `<div class="table-scroll"><table class="results"><thead><tr><th>Sumber</th><th class="num">Kebutuhan</th>${showReduksi?'<th class="num">Turun akibat gangguan</th>':''}<th class="num">Modal awal</th><th class="num">Biaya berulang</th><th class="num">Siklus</th><th>Regenerasi</th></tr></thead><tbody>`;
+  all.forEach(r=>{
+    html += `<tr><td>${r.nama}</td><td class="num">${num(r.unit,1)} ${r.unitLabel}</td>${showReduksi?`<td class="num">${r.reduksiPct>0?'-'+num(r.reduksiPct,0)+'%':'–'}</td>`:''}<td class="num">${rp(r.modalReal)}</td><td class="num">${rp(r.biayaBerulangReal)}/siklus</td><td class="num">${r.hari} hari</td><td class="${r.regen?'regen-yes':'regen-no'}">${r.regen?'Ya':'Tidak'}</td></tr>`;
+  });
+  html += '</tbody></table></div>';
+
+  const maxModal = Math.max(...all.map(r=>r.modalReal), 1);
+  html += '<div class="bars">';
+  all.forEach(r=>{
+    const pct = (r.modalReal/maxModal*100);
+    html += `<div class="bar-row"><div class="bar-label"><span>${r.nama}</span><span>${rp(r.modalReal)}</span></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div></div>`;
+  });
+  html += '</div>';
+  html += '<p class="status-legend">Dependen &lt;40% · Tangguh 40–69% · Mandiri Sebagian 70–99% · Sangat Mandiri ≥100% — dihitung dari rata-rata cakupan energi, protein, dan sayur.</p>';
+
+  bodyBottom.innerHTML = html;
+  if(typeof updatePlot3D==='function') updatePlot3D(carbR, legumR, protR, vegR, lahanTersedia);
+}
+
+document.addEventListener('input', recalc);
+document.addEventListener('change', recalc);
+recalc();
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ============================================================
+// DENAH 3D PEKARANGAN — divisualisasikan langsung dari hasil simulasi.
+// Tidak ada model/ukuran yang dikarang: setiap kotak = luas (m²), volume
+// kolam (m³), atau jumlah ekor yang sama seperti di tabel "Hasil simulasi".
+// ============================================================
+
+const PLOT_STYLE = {
+  kentang:{color:0xC9A227}, singkong:{color:0x8FA05C}, ubijalar:{color:0xB5741F},
+  jagung:{color:0xE0B83C}, talas:{color:0x6B8E4E}, pisang:{color:0x9CB86B},
+  kacangtanah:{color:0x8A6B22}, kacanghijau:{color:0x6FA05A}, kedelai:{color:0xC2A24A},
+  lele:{color:0x2E6B85, kind:'kolam', depth:0.8},
+  ayam:{color:0xB5741F, kind:'kandang', density:0.35},
+  itik:{color:0xCC8A3D, kind:'kandang', density:0.4},
+  kelinci:{color:0xA8875A, kind:'kandang', density:0.18},
+  kelor:{color:0x4C7A34}, kangkung:{color:0x5E9142}, bayam:{color:0x6FA455}, kacangpanjang:{color:0x3F5D3A}
+};
+
+function packItems(items, containerWidth){
+  const gap = 0.5, minSide = 0.7;
+  let x = gap, z = gap, rowH = 0;
+  const placed = [];
+  items.forEach(it=>{
+    let side = Math.max(Math.sqrt(Math.max(it.area,0.01)), minSide);
+    if(x + side + gap > containerWidth && x > gap){ x = gap; z += rowH + gap; rowH = 0; }
+    placed.push(Object.assign({}, it, {x1:x, x2:x+side, z1:z, z2:z+side}));
+    x += side + gap;
+    rowH = Math.max(rowH, side);
+  });
+  return {placed, depth: z + rowH + gap};
+}
+
+function buildPlotItems(carbR, legumR, protR, vegR){
+  const beds = [], infra = [];
+  carbR.concat(legumR, vegR).forEach(r=>{
+    const st = PLOT_STYLE[r.id] || {color:0x8FA05C};
+    beds.push({id:r.id, nama:r.nama, area:r.unit, color:st.color, kind:'bed', hari:r.hari, detail:`${num(r.unit,1)} m²`});
+  });
+  protR.forEach(r=>{
+    const st = PLOT_STYLE[r.id] || {color:0xB5741F, kind:'kandang', density:0.3};
+    if(st.kind==='kolam'){
+      infra.push({id:r.id, nama:r.nama, area:r.unit/(st.depth||0.8), color:st.color, kind:'kolam', hari:r.hari, detail:`${num(r.unit,2)} m³ kolam`});
+    } else {
+      infra.push({id:r.id, nama:r.nama, area:r.unit*(st.density||0.3), color:st.color, kind:'kandang', hari:r.hari, detail:`${Math.ceil(r.unit)} ekor`});
+    }
+  });
+  return {beds, infra};
+}
+
+let plot3D = null;
+let lastPlotArgs = null;
+
+// --- Simulasi musim: hari ke-berapa yang sedang ditampilkan ---
+let seasonDay = null;
+let seasonMax = 1;
+
+function applyGrowth(mesh, day){
+  const u = mesh.userData;
+  if(!u || !u.growable) return;
+  const hari = u.hari || 1;
+  const cyclePos = ((day % hari) + hari) % hari;
+  const progress = clamp(cyclePos/hari, 0.06, 1);
+  mesh.scale.y = progress;
+  mesh.position.y = u.baseY + (u.fullHeight*progress)/2;
+}
+
+function updateSeasonVisual(){
+  if(!plot3D) return;
+  plot3D.group.children.forEach(m=> applyGrowth(m, seasonDay==null?0:seasonDay));
+}
+
+function refreshSeasonUI(){
+  const slider = document.getElementById('musimSlider');
+  const lblMax = document.getElementById('musimHariMax');
+  const lblCur = document.getElementById('musimHariLabel');
+  if(!slider) return;
+  slider.max = seasonMax;
+  if(seasonDay===null) seasonDay = seasonMax;
+  if(seasonDay>seasonMax) seasonDay = seasonMax;
+  slider.value = seasonDay;
+  lblMax.textContent = seasonMax;
+  lblCur.textContent = seasonDay;
+}
+
+function updatePlot3D(carbR, legumR, protR, vegR, lahanTersedia){
+  lastPlotArgs = {carbR, legumR, protR, vegR, lahanTersedia};
+  const empty = document.getElementById('plot3dEmpty');
+  const legend = document.getElementById('plot3dLegend');
+  const seasonBar = document.getElementById('seasonBar');
+  const {beds, infra} = buildPlotItems(carbR, legumR, protR, vegR);
+
+  if(beds.length===0 && infra.length===0){
+    empty.style.display = '';
+    legend.innerHTML = '';
+    if(seasonBar) seasonBar.style.display = 'none';
+    if(plot3D) plot3D.group.visible = false;
+    return;
+  }
+  empty.style.display = 'none';
+  if(seasonBar) seasonBar.style.display = '';
+  if(plot3D) plot3D.group.visible = true;
+
+  // hari siklus terpanjang di antara yang dianimasikan (petak & kolam) menentukan rentang slider musim
+  const growHari = beds.map(b=>b.hari).concat(infra.filter(i=>i.kind==='kolam').map(i=>i.hari)).filter(h=>h>0);
+  seasonMax = Math.max(1, ...growHari);
+  refreshSeasonUI();
+
+  // legenda (selalu diperbarui, tidak butuh WebGL)
+  const allItems = beds.concat(infra);
+  legend.innerHTML = allItems.map(it=>
+    `<span class="lg-item"><span class="lg-swatch" style="background:#${it.color.toString(16).padStart(6,'0')}"></span>${it.nama} · ${it.detail}</span>`
+  ).join('');
+
+  if(!plot3D || typeof THREE==='undefined') return; // belum di-init (lazy) atau THREE gagal dimuat
+  renderPlot3D(beds, infra, lahanTersedia);
+}
+
+function renderPlot3D(beds, infra, lahanTersedia){
+  const {group, scene} = plot3D;
+  // bersihkan mesh lama
+  while(group.children.length){
+    const m = group.children.pop();
+    m.geometry && m.geometry.dispose();
+    m.material && m.material.dispose();
+  }
+
+  const bedW = beds.length ? Math.sqrt(Math.max(lahanTersedia, beds.reduce((s,b)=>s+b.area,0)*1.1, 4)) : 4;
+  const bedPack = packItems(beds, bedW);
+  const infraW = infra.length ? Math.sqrt(Math.max(infra.reduce((s,b)=>s+b.area,0)*1.4, 4)) : 4;
+  const infraPack = packItems(infra, infraW);
+
+  const totalW = Math.max(bedW, infraW, 4);
+  const pathGap = 1.6;
+  const infraOffsetZ = bedPack.depth + pathGap;
+  const totalDepth = infraOffsetZ + infraPack.depth;
+
+  function placeBox(p, baseY, height, growOpts){
+    const w_ = p.x2-p.x1, d_ = p.z2-p.z1;
+    const geo = new THREE.BoxGeometry(w_, height, d_);
+    const mat = new THREE.MeshStandardMaterial({color:p.color});
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(p.x1+w_/2 - totalW/2, baseY + height/2, p.z1+d_/2 - totalDepth/2);
+    mesh.userData = {nama:p.nama, detail:p.detail};
+    if(growOpts && growOpts.growable){
+      mesh.userData.growable = true;
+      mesh.userData.hari = growOpts.hari||1;
+      mesh.userData.fullHeight = height;
+      mesh.userData.baseY = baseY;
+      applyGrowth(mesh, seasonDay==null?seasonMax:seasonDay);
+    }
+    group.add(mesh);
+    return mesh;
+  }
+
+  bedPack.placed.forEach(p=> placeBox(p, 0, 0.55, {growable:true, hari:p.hari}));
+  infraPack.placed.forEach(p=>{
+    const shifted = Object.assign({}, p, {z1:p.z1+infraOffsetZ, z2:p.z2+infraOffsetZ});
+    if(p.kind==='kolam'){
+      placeBox(shifted, -0.35, 0.45, {growable:true, hari:p.hari});
+    } else {
+      const mesh = placeBox(shifted, 0, 0.55, false);
+      const w_ = shifted.x2-shifted.x1, d_ = shifted.z2-shifted.z1;
+      const roofGeo = new THREE.ConeGeometry(Math.sqrt(w_*w_+d_*d_)/2*0.95, 0.35, 4);
+      const roofMat = new THREE.MeshStandardMaterial({color:0x5a3a28});
+      const roof = new THREE.Mesh(roofGeo, roofMat);
+      roof.rotation.y = Math.PI/4;
+      roof.position.set(mesh.position.x, 0.55+0.35/2, mesh.position.z);
+      roof.userData = {nama:p.nama, detail:p.detail};
+      group.add(roof);
+    }
+  });
+
+  // tanah & batas lahan
+  const groundSize = Math.max(totalW, totalDepth)*1.8 + 6;
+  plot3D.ground.geometry.dispose();
+  plot3D.ground.geometry = new THREE.PlaneGeometry(groundSize, groundSize);
+  plot3D.ground.position.set(0, -0.01, 0);
+
+  if(plot3D.boundary){ scene.remove(plot3D.boundary); plot3D.boundary.geometry.dispose(); plot3D.boundary.material.dispose(); }
+  if(beds.length && lahanTersedia>0){
+    const bw = bedW, bd = bedPack.depth;
+    const pts = [
+      new THREE.Vector3(-totalW/2, 0.02, -totalDepth/2),
+      new THREE.Vector3(-totalW/2+bw, 0.02, -totalDepth/2),
+      new THREE.Vector3(-totalW/2+bw, 0.02, -totalDepth/2+bd),
+      new THREE.Vector3(-totalW/2, 0.02, -totalDepth/2+bd),
+      new THREE.Vector3(-totalW/2, 0.02, -totalDepth/2)
+    ];
+    const bGeo = new THREE.BufferGeometry().setFromPoints(pts);
+    const bMat = new THREE.LineBasicMaterial({color:0x3F5D3A});
+    plot3D.boundary = new THREE.Line(bGeo, bMat);
+    scene.add(plot3D.boundary);
+  } else {
+    plot3D.boundary = null;
+  }
+
+  // arahkan kamera ke tengah layout (pertahankan sudut/zoom milik pengguna)
+  plot3D.target.set(0, 0.8, 0);
+  plot3D.updateCamera();
+}
+
+function initPlot3D(){
+  if(plot3D || typeof THREE==='undefined'){
+    if(typeof THREE==='undefined'){
+      document.getElementById('plot3dHint').textContent = 'Model 3D butuh koneksi internet untuk memuat pustaka Three.js.';
+    }
+    return;
+  }
+  const container = document.getElementById('plot3d');
+  const w = container.clientWidth, h = container.clientHeight;
+  const scene = new THREE.Scene();
+  scene.background = null;
+
+  const camera = new THREE.PerspectiveCamera(40, w/h, 0.1, 500);
+  const target = new THREE.Vector3(0,0.8,0);
+  let radius = 16, theta = Math.PI*0.28, phi = 1.0;
+
+  const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+  renderer.setSize(w,h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  container.appendChild(renderer.domElement);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.65);
+  sun.position.set(10,16,6);
+  scene.add(sun);
+
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(30,30), new THREE.MeshStandardMaterial({color:0xD8CE9F}));
+  ground.rotation.x = -Math.PI/2;
+  scene.add(ground);
+  const grid = new THREE.GridHelper(30, 20, 0xB8AE81, 0xC7BD91);
+  scene.add(grid);
+
+  const group = new THREE.Group();
+  scene.add(group);
+
+  function updateCamera(){
+    camera.position.x = target.x + radius*Math.sin(phi)*Math.sin(theta);
+    camera.position.z = target.z + radius*Math.sin(phi)*Math.cos(theta);
+    camera.position.y = target.y + radius*Math.cos(phi);
+    camera.lookAt(target);
+  }
+  updateCamera();
+
+  let dragging=false, lastX=0, lastY=0, downPos=null;
+  renderer.domElement.addEventListener('pointerdown', e=>{ dragging=true; downPos={x:e.clientX,y:e.clientY}; lastX=e.clientX; lastY=e.clientY; container.classList.add('grabbing'); });
+  window.addEventListener('pointerup', e=>{
+    if(dragging && downPos){
+      const moved = Math.hypot(e.clientX-downPos.x, e.clientY-downPos.y);
+      if(moved<=4) handleTap(e);
+    }
+    dragging=false; container.classList.remove('grabbing');
+  });
+  window.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    theta -= (e.clientX-lastX)*0.007;
+    phi   -= (e.clientY-lastY)*0.007;
+    phi = Math.max(0.28, Math.min(1.45, phi));
+    lastX=e.clientX; lastY=e.clientY;
+    updateCamera();
+  });
+  renderer.domElement.addEventListener('wheel', e=>{
+    e.preventDefault();
+    radius = Math.max(5, Math.min(45, radius + e.deltaY*0.015));
+    updateCamera();
+  }, {passive:false});
+  let pinchDist=null;
+  renderer.domElement.addEventListener('touchstart', e=>{ if(e.touches.length===2){ pinchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); dragging=false; } }, {passive:true});
+  renderer.domElement.addEventListener('touchmove', e=>{
+    if(e.touches.length===2 && pinchDist!==null){
+      e.preventDefault();
+      const d = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+      radius = Math.max(5, Math.min(45, radius - (d-pinchDist)*0.03));
+      pinchDist = d;
+      updateCamera();
+    }
+  }, {passive:false});
+  renderer.domElement.addEventListener('touchend', e=>{ if(e.touches.length<2) pinchDist=null; }, {passive:true});
+
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+  function handleTap(e){
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((e.clientX-rect.left)/rect.width)*2-1;
+    mouse.y = -((e.clientY-rect.top)/rect.height)*2+1;
+    raycaster.setFromCamera(mouse, camera);
+    const hits = raycaster.intersectObjects(group.children).filter(h=>h.object.userData && h.object.userData.nama);
+    const info = document.getElementById('plot3dInfo');
+    if(hits.length){
+      const d = hits[0].object.userData;
+      info.style.display = '';
+      info.innerHTML = `<button class="close-info" onclick="document.getElementById('plot3dInfo').style.display='none'">✕</button><strong>${d.nama}</strong>${d.detail}`;
+    } else {
+      info.style.display = 'none';
+    }
+  }
+
+  function onResize(){
+    const w2 = container.clientWidth, h2 = container.clientHeight;
+    if(w2===0||h2===0) return;
+    camera.aspect = w2/h2; camera.updateProjectionMatrix();
+    renderer.setSize(w2,h2);
+  }
+  window.addEventListener('resize', onResize);
+
+  function loop(){ requestAnimationFrame(loop); renderer.render(scene, camera); }
+  loop();
+
+  plot3D = {scene, camera, renderer, group, ground, target, updateCamera, boundary:null};
+}
+
+if('IntersectionObserver' in window){
+  const obs = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        initPlot3D();
+        if(lastPlotArgs) updatePlot3D(lastPlotArgs.carbR, lastPlotArgs.legumR, lastPlotArgs.protR, lastPlotArgs.vegR, lastPlotArgs.lahanTersedia);
+        obs.disconnect();
+      }
+    });
+  }, {rootMargin:'150px'});
+  const target3d = document.getElementById('plot3d');
+  if(target3d) obs.observe(target3d);
+} else {
+  initPlot3D();
+}
+
+// --- Kontrol slider "simulasi musim" pada Denah 3D ---
+(function(){
+  const slider = document.getElementById('musimSlider');
+  const playBtn = document.getElementById('musimPlayBtn');
+  const lblCur = document.getElementById('musimHariLabel');
+  if(!slider || !playBtn) return;
+
+  slider.addEventListener('input', ()=>{
+    seasonDay = +slider.value;
+    lblCur.textContent = seasonDay;
+    stopSeasonPlay();
+    updateSeasonVisual();
+  });
+
+  let seasonTimer = null;
+  function stopSeasonPlay(){
+    if(seasonTimer){ clearInterval(seasonTimer); seasonTimer=null; playBtn.classList.remove('playing'); playBtn.textContent='▶'; }
+  }
+  playBtn.addEventListener('click', ()=>{
+    if(seasonTimer){ stopSeasonPlay(); return; }
+    playBtn.classList.add('playing'); playBtn.textContent='⏸';
+    seasonTimer = setInterval(()=>{
+      seasonDay = (seasonDay + Math.max(1, Math.round(seasonMax/120))) % (seasonMax+1);
+      slider.value = seasonDay;
+      lblCur.textContent = seasonDay;
+      updateSeasonVisual();
+    }, 60);
+  });
+})();
+
+recalc();
+</script>
+
+<script>
+// --- Pengalaman baca: progress bar, navigasi aktif, tombol kembali ke atas ---
+(function(){
+  const progressBar = document.getElementById('progressBar');
+  const backTop = document.getElementById('backTop');
+  const navLinks = Array.from(document.querySelectorAll('.toc-nav a'));
+  const sections = navLinks.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+
+  function onScroll(){
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    progressBar.style.width = pct + '%';
+    backTop.classList.toggle('show', scrollTop > 500);
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+
+  backTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+
+  if('IntersectionObserver' in window){
+    const obs = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        const link = navLinks.find(a => a.getAttribute('href') === '#'+entry.target.id);
+        if(!link) return;
+        if(entry.isIntersecting) link.classList.add('active');
+        else link.classList.remove('active');
+      });
+      // Keep exactly one active: prefer first intersecting in document order
+      const activeLinks = navLinks.filter(a=>a.classList.contains('active'));
+      if(activeLinks.length>1){
+        activeLinks.slice(1).forEach(a=>a.classList.remove('active'));
+      }
+    }, {rootMargin:'-45% 0px -50% 0px', threshold:0});
+    sections.forEach(s=>obs.observe(s));
+  }
+})();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

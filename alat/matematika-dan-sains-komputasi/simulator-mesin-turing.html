@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulator Mesin Turing — JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-900:#1b1815;
+    --ink-800:#221e19;
+    --ink-700:#2a2520;
+    --ink-600:#3a332b;
+    --paper-100:#efe6d2;
+    --paper-200:#e2d6ba;
+    --brass-500:#c39a54;
+    --brass-300:#d9bc85;
+    --teal-600:#3f7d76;
+    --teal-400:#66a89f;
+    --rust-500:#b1543a;
+    --text-hi:#f1e9d8;
+    --text-mid:#b7ab93;
+    --text-dim:#867a64;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink-900);
+    color:var(--text-hi);
+    font-family:'Karla',sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--brass-500);color:var(--ink-900);}
+
+  a{color:var(--brass-300);}
+
+  .wrap{max-width:880px;margin:0 auto;padding:0 20px;}
+
+  /* HERO */
+  .hero{
+    position:relative;
+    padding:64px 0 40px;
+    overflow:hidden;
+    border-bottom:1px solid var(--ink-600);
+    background:
+      radial-gradient(ellipse at 20% -10%, rgba(195,154,84,0.10), transparent 55%),
+      var(--ink-900);
+  }
+  .tape-strip{
+    display:flex;
+    gap:6px;
+    padding:14px 0;
+    margin:0 0 34px;
+    overflow:hidden;
+    white-space:nowrap;
+    -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
+    mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
+  }
+  .tape-strip .cell{
+    flex:0 0 auto;
+    width:34px;height:34px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:15px;
+    color:var(--ink-900);
+    background:var(--paper-100);
+    border-radius:3px;
+    animation:driftTape 22s linear infinite;
+  }
+  @keyframes driftTape{
+    0%{transform:translateX(0);}
+    100%{transform:translateX(-320px);}
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--brass-300);
+    margin:0 0 14px;
+  }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:clamp(28px,5vw,44px);
+    line-height:1.1;
+    margin:0 0 16px;
+    color:var(--text-hi);
+  }
+  .hero p.lede{
+    font-size:17px;
+    color:var(--text-mid);
+    max-width:60ch;
+    margin:0 0 6px;
+  }
+  .hero-lineage{
+    margin-top:24px;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--text-dim);
+  }
+  .hero-lineage span{
+    border:1px solid var(--ink-600);
+    padding:4px 10px;
+    border-radius:999px;
+  }
+  .hero-lineage span b{color:var(--teal-400);font-weight:600;}
+
+  /* SECTIONS */
+  section{padding:44px 0;border-bottom:1px solid var(--ink-700);}
+  section:last-of-type{border-bottom:none;}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin:0 0 18px;}
+  .sec-num{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    color:var(--brass-500);
+    border:1px solid var(--ink-600);
+    border-radius:4px;
+    padding:2px 7px;
+  }
+  h2{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:23px;
+    margin:0;
+    color:var(--text-hi);
+  }
+  h3{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:17px;
+    margin:0 0 8px;
+    color:var(--text-hi);
+  }
+  p{color:var(--text-mid);margin:0 0 12px;}
+  ul{color:var(--text-mid);padding-left:20px;margin:0 0 12px;}
+  li{margin-bottom:6px;}
+  code, .mono{font-family:'IBM Plex Mono',monospace;}
+  code{
+    background:var(--ink-700);
+    color:var(--brass-300);
+    padding:1px 6px;
+    border-radius:4px;
+    font-size:0.92em;
+  }
+
+  /* SIMULATOR */
+  .panel{
+    background:var(--ink-800);
+    border:1px solid var(--ink-600);
+    border-radius:10px;
+    padding:22px;
+  }
+  .machine-tabs{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:18px;
+  }
+  .machine-tabs button{
+    font-family:'Karla',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    color:var(--text-mid);
+    background:var(--ink-700);
+    border:1px solid var(--ink-600);
+    border-radius:999px;
+    padding:8px 14px;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .machine-tabs button.active{
+    background:var(--brass-500);
+    color:var(--ink-900);
+    border-color:var(--brass-500);
+  }
+  .machine-desc{font-size:14px;margin-bottom:18px;}
+
+  .input-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+    margin-bottom:18px;
+  }
+  .input-row input[type="text"]{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:15px;
+    background:var(--paper-100);
+    color:var(--ink-900);
+    border:none;
+    border-radius:6px;
+    padding:10px 12px;
+    width:220px;
+    letter-spacing:.05em;
+  }
+  .input-row .hint{font-size:12px;color:var(--text-dim);}
+  button.act{
+    font-family:'Karla',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    border-radius:6px;
+    padding:9px 16px;
+    cursor:pointer;
+    border:1px solid transparent;
+  }
+  .btn-primary{background:var(--teal-600);color:#eef7f5;}
+  .btn-primary:hover{background:var(--teal-400);}
+  .btn-ghost{background:transparent;color:var(--text-mid);border-color:var(--ink-600);}
+  .btn-ghost:hover{border-color:var(--brass-500);color:var(--brass-300);}
+  button.act:disabled{opacity:.4;cursor:not-allowed;}
+
+  .tape-viewport{
+    background:var(--ink-900);
+    border:1px solid var(--ink-600);
+    border-radius:8px;
+    padding:26px 10px;
+    display:flex;
+    justify-content:center;
+    overflow:hidden;
+    margin-bottom:16px;
+  }
+  .tape-row{display:flex;position:relative;}
+  .tcell{
+    flex:0 0 auto;
+    width:38px;height:38px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:16px;
+    background:var(--paper-100);
+    color:var(--ink-900);
+    border-right:1px solid var(--paper-200);
+  }
+  .tcell.head{
+    background:var(--brass-500);
+    box-shadow:0 0 0 2px var(--brass-300) inset;
+    font-weight:700;
+  }
+  .tcell:first-child{border-radius:5px 0 0 5px;}
+  .tcell:last-child{border-radius:0 5px 5px 0;border-right:none;}
+
+  .status-row{
+    display:flex;
+    gap:22px;
+    flex-wrap:wrap;
+    align-items:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    color:var(--text-mid);
+    margin-bottom:18px;
+  }
+  .status-row b{color:var(--text-hi);}
+  .badge{
+    display:inline-block;
+    padding:3px 10px;
+    border-radius:999px;
+    font-weight:600;
+    letter-spacing:.03em;
+  }
+  .badge.running{background:var(--ink-700);color:var(--text-hi);border:1px solid var(--ink-600);}
+  .badge.accept{background:var(--teal-600);color:#eef7f5;}
+  .badge.reject{background:var(--rust-500);color:#fdece7;}
+
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .speed-wrap{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);margin-left:auto;}
+  input[type="range"]{accent-color:var(--brass-500);}
+
+  table.ttable{
+    width:100%;
+    border-collapse:collapse;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    margin-top:22px;
+  }
+  table.ttable caption{
+    text-align:left;
+    font-family:'Karla',sans-serif;
+    font-size:13px;
+    color:var(--text-dim);
+    margin-bottom:8px;
+    caption-side:top;
+  }
+  table.ttable th, table.ttable td{
+    border:1px solid var(--ink-600);
+    padding:7px 10px;
+    text-align:center;
+    color:var(--text-mid);
+  }
+  table.ttable th{color:var(--brass-300);background:var(--ink-700);}
+  table.ttable td.cur{background:var(--ink-700);color:var(--text-hi);}
+
+  .grid2{display:grid;grid-template-columns:1fr;gap:22px;}
+  @media(min-width:720px){.grid2{grid-template-columns:1fr 1fr;}}
+
+  .whatsapp-box{
+    display:flex;
+    gap:14px;
+    align-items:center;
+    background:var(--ink-700);
+    border:1px solid var(--ink-600);
+    border-radius:10px;
+    padding:16px 18px;
+    margin-top:8px;
+  }
+  .whatsapp-box a{
+    font-family:'Karla',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    color:var(--ink-900);
+    background:var(--teal-600);
+    padding:9px 16px;
+    border-radius:6px;
+    text-decoration:none;
+    white-space:nowrap;
+  }
+  .whatsapp-box a:hover{background:var(--teal-400);}
+
+  footer{padding:30px 0 60px;color:var(--text-dim);font-size:12px;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="tape-strip" id="heroTape"></div>
+    <p class="eyebrow">JAZMI · Laboratorium Sejarah Komputasi</p>
+    <h1>Simulator Mesin Turing</h1>
+    <p class="lede">Sebelum ada komputer, ada mesin bayangan ini — sebuah pita tak terbatas, satu kepala baca-tulis, dan tabel aturan sederhana. Dari situ lahir definisi formal tentang apa artinya "dapat dihitung".</p>
+    <div class="hero-lineage">
+      <span><b>Al-Khawarizmi</b> · merumuskan algoritma</span>
+      <span><b>Leibniz</b> · memesinkan aritmetika</span>
+      <span><b>Turing</b> · memformalkan komputasi</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- BELAJAR -->
+  <section id="belajar">
+    <div class="sec-head"><span class="sec-num">01</span><h2>Belajar</h2></div>
+    <p>Pada tahun 1936, Alan Turing menerbitkan makalah <em>"On Computable Numbers"</em> untuk menjawab persoalan Entscheidungsproblem yang diajukan David Hilbert: apakah ada prosedur mekanis untuk memutuskan kebenaran pernyataan matematis apa pun? Untuk menjawabnya, Turing perlu lebih dulu mendefinisikan secara tepat apa itu "prosedur mekanis" — dan jawabannya adalah mesin abstrak yang kini disebut Mesin Turing.</p>
+    <p>Mesin ini sangat sederhana: sebuah <b>pita</b> yang terbagi menjadi sel-sel berisi simbol, sebuah <b>kepala</b> yang bisa membaca dan menulis satu sel pada satu waktu lalu bergerak kiri atau kanan, dan sebuah <b>tabel aturan</b> yang menentukan apa yang dilakukan kepala berdasarkan simbol yang dibaca dan status/keadaan (<i>state</i>) mesin saat itu.</p>
+    <p>Yang mengejutkan: dengan aturan sesederhana itu, mesin ini terbukti mampu menjalankan <b>apa pun</b> yang secara prinsip dapat dihitung — termasuk semua yang dilakukan komputer modern. Klaim ini dikenal sebagai <b>Church-Turing Thesis</b>: setiap fungsi yang "dapat dihitung" secara intuitif, dapat dihitung oleh sebuah Mesin Turing.</p>
+    <p>Ada benang merah historis yang layak dicatat: kata <em>algoritma</em> sendiri berasal dari nama Al-Khawarizmi, yang merumuskan prosedur langkah-demi-langkah untuk menyelesaikan persoalan matematis. Leibniz kemudian memesinkan salah satu bentuk prosedur itu — aritmetika — lewat roda bergigi. Turing menempuh jalan berbeda: bukan membuat mesin yang lebih canggih, tetapi mendefinisikan secara matematis apa yang membuat sebuah prosedur layak disebut "mekanis" sama sekali.</p>
+  </section>
+
+  <!-- EKSPLORASI -->
+  <section id="eksplorasi">
+    <div class="sec-head"><span class="sec-num">02</span><h2>Eksplorasi</h2></div>
+    <p>Pilih salah satu mesin di bawah, atur pita awal, lalu jalankan langkah demi langkah atau otomatis.</p>
+
+    <div class="panel">
+      <div class="machine-tabs" id="machineTabs"></div>
+      <p class="machine-desc" id="machineDesc"></p>
+
+      <div class="input-row">
+        <input type="text" id="tapeInput" class="mono" />
+        <button class="act btn-primary" id="btnLoad">Muat ke Pita</button>
+        <span class="hint" id="alphabetHint"></span>
+      </div>
+
+      <div class="tape-viewport">
+        <div class="tape-row" id="tapeRow"></div>
+      </div>
+
+      <div class="status-row">
+        <span>State: <b id="stState">—</b></span>
+        <span>Langkah: <b id="stStep">0</b></span>
+        <span>Status: <span class="badge running" id="stStatus">Siap</span></span>
+      </div>
+
+      <div class="controls">
+        <button class="act btn-primary" id="btnStep">Langkah ▸</button>
+        <button class="act btn-primary" id="btnRun">Jalankan ▸▸</button>
+        <button class="act btn-ghost" id="btnPause" disabled>Jeda ‖</button>
+        <button class="act btn-ghost" id="btnReset">Ulang</button>
+        <div class="speed-wrap">
+          <label for="speedRange">Kecepatan</label>
+          <input type="range" id="speedRange" min="1" max="10" value="5">
+        </div>
+      </div>
+
+      <table class="ttable" id="ttable"></table>
+    </div>
+  </section>
+
+  <!-- METODE -->
+  <section id="metode">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Metode</h2></div>
+    <p>Secara formal, Mesin Turing didefinisikan sebagai 7-tuple <code>(Q, Σ, Γ, δ, q₀, q_accept, q_reject)</code>:</p>
+    <ul>
+      <li><b>Q</b> — himpunan berhingga state (keadaan mesin)</li>
+      <li><b>Σ</b> — alfabet input (simbol yang boleh muncul di input awal)</li>
+      <li><b>Γ</b> — alfabet pita (Σ ditambah simbol kerja lain dan simbol kosong <code>_</code>)</li>
+      <li><b>δ</b> — fungsi transisi: <code>δ(state, simbol) → (state baru, simbol tulis, arah gerak)</code></li>
+      <li><b>q₀</b> — state awal</li>
+      <li><b>q_accept, q_reject</b> — state penerimaan dan penolakan (mesin berhenti di sini)</li>
+    </ul>
+    <p>Setiap langkah simulator ini murni menerapkan δ satu kali: baca simbol di posisi kepala, cari baris yang cocok di tabel transisi mesin yang dipilih, lalu tulis simbol baru, pindahkan kepala, dan ganti state. Tidak ada langkah "ajaib" — semua yang terlihat adalah penerapan tabel berulang-ulang.</p>
+    <p>Ketiga mesin pada bagian Eksplorasi sudah diverifikasi manual terhadap kasus uji yang hasilnya diketahui sebelum ditanam ke simulator ini (lihat catatan verifikasi di bagian Batasan).</p>
+  </section>
+
+  <!-- BATASAN -->
+  <section id="batasan">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Batasan</h2></div>
+    <ul>
+      <li><b>Pita dibatasi.</b> Mesin Turing asli mengasumsikan pita tak terbatas ke kedua arah. Simulator ini membatasi tampilan dan memori pita ke rentang praktis (ratusan sel) agar tetap ringan di peramban — bukan batasan konsep, hanya batasan implementasi.</li>
+      <li><b>Batas langkah pengaman.</b> Simulator berhenti paksa setelah 5.000 langkah bila mesin belum mencapai state penerimaan/penolakan. Ini <i>bukan</i> bukti formal bahwa mesin tidak akan pernah berhenti (Halting Problem) — hanya pengaman praktis. Menentukan secara umum apakah sembarang mesin Turing akan berhenti atau tidak, terbukti mustahil dilakukan oleh algoritma apa pun (hasil Turing sendiri, 1936).</li>
+      <li><b>Tiga mesin tetap (preset).</b> Simulator ini belum mendukung penyusunan tabel transisi bebas oleh pengguna — tiga contoh yang tersedia sudah diverifikasi manual sebagai berikut: Pembalik Bit (kasus sepele, verifikasi langsung), Penambah Biner +1 (diuji pada 1011→1100 dan kasus carry penuh 111→1000), Pemeriksa Seimbang (diuji pada string seimbang dan tidak seimbang, termasuk kasus kosong dan berat sebelah).</li>
+      <li><b>Ini alat bantu belajar, bukan bukti matematis.</b> Simulasi visual membantu intuisi, tetapi tidak menggantikan pembuktian formal di atas kertas untuk klaim seperti Church-Turing Thesis.</li>
+    </ul>
+  </section>
+
+  <!-- REFERENSI -->
+  <section id="referensi">
+    <div class="sec-head"><span class="sec-num">05</span><h2>Referensi</h2></div>
+    <ul>
+      <li>A. M. Turing, "On Computable Numbers, with an Application to the Entscheidungsproblem", Proceedings of the London Mathematical Society, 1936.</li>
+      <li>Michael Sipser, <i>Introduction to the Theory of Computation</i> — rujukan standar untuk definisi formal dan contoh konstruksi mesin a<sup>n</sup>b<sup>n</sup>.</li>
+      <li>Alonzo Church, "An Unsolvable Problem of Elementary Number Theory", 1936 — sumber paralel Church-Turing Thesis.</li>
+    </ul>
+
+    <div class="whatsapp-box">
+      <p style="margin:0;color:var(--text-mid);font-size:13.5px;">Alat ini bagian dari pengembangan tahap awal JAZMI. Ada koreksi konsep, saran mesin lain, atau mau diskusi lebih lanjut?</p>
+      <a id="waLink" href="#" target="_blank" rel="noopener">WhatsApp</a>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">Simulator Mesin Turing — bagian dari Laboratorium Sejarah Komputasi, JAZMI (Jalinan Zamrud Islamiah). Versi awal, dibangun mengikuti metode Belajar → Model → Uji → Tool.</div>
+</footer>
+
+<script>
+(function(){
+
+  /* ---------- Hero decorative tape ---------- */
+  const heroSyms = ['0','1','_','1','0','0','1','_','1','1','0','_','0','1','1','0','_','1'];
+  const heroTape = document.getElementById('heroTape');
+  for(let i=0;i<3;i++){
+    heroSyms.forEach(s=>{
+      const d = document.createElement('div');
+      d.className='cell';
+      d.textContent = s;
+      heroTape.appendChild(d);
+    });
+  }
+
+  /* ---------- Machine definitions ---------- */
+  const MACHINES = {
+    flip: {
+      name: "Pembalik Bit",
+      desc: "Mesin state tunggal: setiap 0 ditulis ulang jadi 1, setiap 1 jadi 0, lalu bergerak ke kanan sampai menemukan sel kosong dan berhenti.",
+      alphabet: ['0','1'],
+      blank: '_',
+      start: 'S',
+      accept: ['HALT'],
+      reject: [],
+      sample: '10110',
+      table: {
+        S: { '0':['1','R','S'], '1':['0','R','S'], '_':['_','R','HALT'] }
+      }
+    },
+    increment: {
+      name: "Penambah Biner (+1)",
+      desc: "Menjalankan aritmetika biner sungguhan: bergerak ke ujung kanan bilangan, lalu menjalarkan carry dari kanan ke kiri seperti bersusun manual.",
+      alphabet: ['0','1'],
+      blank: '_',
+      start: 'right',
+      accept: ['done'],
+      reject: [],
+      sample: '1011',
+      table: {
+        right: { '0':['0','R','right'], '1':['1','R','right'], '_':['_','L','add'] },
+        add:   { '1':['0','L','add'],   '0':['1','L','done'],  '_':['1','R','done'] }
+      }
+    },
+    balance: {
+      name: "Pemeriksa Seimbang (a…a b…b)",
+      desc: "Mengecek apakah jumlah 'a' di awal sama dengan jumlah 'b' di akhir dan urutannya benar — abstraksi dari pasangan pembuka-penutup, seperti kurung dalam kode program.",
+      alphabet: ['a','b'],
+      blank: '_',
+      start: 'q0',
+      accept: ['qacc'],
+      reject: ['qrej'],
+      sample: 'aaabbb',
+      table: {
+        q0: { 'a':['X','R','q1'], 'X':['X','R','q0'], 'Y':['Y','R','q0'], '_':['_','R','qacc'], 'b':['b','R','qrej'] },
+        q1: { 'a':['a','R','q1'], 'X':['X','R','q1'], 'Y':['Y','R','q1'], 'b':['Y','L','q2'],   '_':['_','R','qrej'] },
+        q2: { 'a':['a','L','q2'], 'X':['X','L','q2'], 'Y':['Y','L','q2'], '_':['_','R','q0'] }
+      }
+    }
+  };
+
+  let currentKey = 'flip';
+  let tape = {};      // sparse map index -> symbol
+  let head = 0;
+  let state = '';
+  let steps = 0;
+  let halted = false;
+  let minIdx = 0, maxIdx = 0;
+  let runTimer = null;
+
+  const els = {
+    tabs: document.getElementById('machineTabs'),
+    desc: document.getElementById('machineDesc'),
+    tapeInput: document.getElementById('tapeInput'),
+    alphaHint: document.getElementById('alphabetHint'),
+    btnLoad: document.getElementById('btnLoad'),
+    tapeRow: document.getElementById('tapeRow'),
+    stState: document.getElementById('stState'),
+    stStep: document.getElementById('stStep'),
+    stStatus: document.getElementById('stStatus'),
+    btnStep: document.getElementById('btnStep'),
+    btnRun: document.getElementById('btnRun'),
+    btnPause: document.getElementById('btnPause'),
+    btnReset: document.getElementById('btnReset'),
+    speed: document.getElementById('speedRange'),
+    ttable: document.getElementById('ttable'),
+    waLink: document.getElementById('waLink')
+  };
+
+  function machine(){ return MACHINES[currentKey]; }
+
+  function buildTabs(){
+    els.tabs.innerHTML = '';
+    Object.keys(MACHINES).forEach(key=>{
+      const b = document.createElement('button');
+      b.textContent = MACHINES[key].name;
+      b.className = key===currentKey ? 'active' : '';
+      b.addEventListener('click', ()=>{ selectMachine(key); });
+      els.tabs.appendChild(b);
+    });
+  }
+
+  function selectMachine(key){
+    currentKey = key;
+    buildTabs();
+    const m = machine();
+    els.desc.textContent = m.desc;
+    els.alphaHint.textContent = 'Alfabet: ' + m.alphabet.join(', ') + '  ·  kosong = _';
+    els.tapeInput.value = m.sample;
+    buildTable();
+    loadTape(m.sample);
+  }
+
+  function loadTape(str){
+    tape = {};
+    for(let i=0;i<str.length;i++){ tape[i] = str[i]; }
+    head = 0;
+    state = machine().start;
+    steps = 0;
+    halted = false;
+    minIdx = 0;
+    maxIdx = Math.max(0, str.length-1);
+    stopRun();
+    render();
+  }
+
+  function readCell(i){ return tape[i] === undefined ? machine().blank : tape[i]; }
+
+  function statusOf(){
+    const m = machine();
+    if(m.accept.includes(state)) return 'accept';
+    if(m.reject.includes(state)) return 'reject';
+    return 'running';
+  }
+
+  function step(){
+    if(halted) return false;
+    const m = machine();
+    const sym = readCell(head);
+    const row = m.table[state];
+    const rule = row ? row[sym] : undefined;
+    if(!rule){
+      halted = true;
+      render();
+      return false;
+    }
+    const [writeSym, dir, nextState] = rule;
+    tape[head] = writeSym;
+    head += (dir === 'R') ? 1 : -1;
+    state = nextState;
+    steps++;
+    minIdx = Math.min(minIdx, head);
+    maxIdx = Math.max(maxIdx, head);
+
+    const st = statusOf();
+    if(st === 'accept' || st === 'reject' || steps >= 5000){
+      halted = true;
+    }
+    render();
+    return !halted;
+  }
+
+  function stopRun(){
+    if(runTimer){ clearInterval(runTimer); runTimer = null; }
+    els.btnRun.disabled = false;
+    els.btnPause.disabled = true;
+  }
+
+  function runAuto(){
+    if(halted) return;
+    els.btnRun.disabled = true;
+    els.btnPause.disabled = false;
+    const delay = 550 - (parseInt(els.speed.value,10) * 50);
+    runTimer = setInterval(()=>{
+      const cont = step();
+      if(!cont){ stopRun(); }
+    }, Math.max(30, delay));
+  }
+
+  function buildTable(){
+    const m = machine();
+    let symbolsSet = new Set();
+    Object.values(m.table).forEach(row=>{
+      Object.keys(row).forEach(s=>symbolsSet.add(s));
+    });
+    const symbols = Array.from(symbolsSet);
+    const states = Object.keys(m.table);
+
+    let html = '<caption>Tabel transisi δ(state, simbol) → (tulis, arah, state baru) — mesin: ' + m.name + '</caption>';
+    html += '<tr><th>state \\ simbol</th>' + symbols.map(s=>'<th>'+s+'</th>').join('') + '</tr>';
+    states.forEach(st=>{
+      html += '<tr><th>'+st+'</th>';
+      symbols.forEach(sym=>{
+        const rule = m.table[st][sym];
+        const cls = (st===state) ? 'cur' : '';
+        html += '<td class="'+cls+'">' + (rule ? (rule[0]+', '+rule[1]+', '+rule[2]) : '—') + '</td>';
+      });
+      html += '</tr>';
+    });
+    els.ttable.innerHTML = html;
+  }
+
+  function render(){
+    // tape view: fixed window centered on head
+    const windowRadius = 8;
+    const from = head - windowRadius;
+    const to = head + windowRadius;
+    let rowHtml = '';
+    for(let i=from;i<=to;i++){
+      const cls = (i===head) ? 'tcell head' : 'tcell';
+      rowHtml += '<div class="'+cls+'">' + readCell(i) + '</div>';
+    }
+    els.tapeRow.innerHTML = rowHtml;
+
+    els.stState.textContent = state;
+    els.stStep.textContent = steps;
+
+    const st = statusOf();
+    els.stStatus.className = 'badge ' + (st==='running' ? 'running' : st);
+    els.stStatus.textContent = st==='running' ? (halted ? 'Berhenti (tanpa aturan)' : 'Berjalan') :
+                                 st==='accept' ? 'Diterima ✓' : 'Ditolak ✕';
+
+    els.btnStep.disabled = halted;
+    if(halted) stopRun();
+
+    buildTable();
+
+    // update whatsapp link with context
+    const msg = encodeURIComponent(
+      'Halo, saya baru mencoba Simulator Mesin Turing JAZMI (' + machine().name +
+      '). Ingin diskusi/validasi lebih lanjut.'
+    );
+    els.waLink.href = 'https://wa.me/6281356572588?text=' + msg;
+  }
+
+  els.btnLoad.addEventListener('click', ()=>{
+    const m = machine();
+    const val = els.tapeInput.value.split('').every(ch=>m.alphabet.includes(ch)) ? els.tapeInput.value : '';
+    loadTape(val || m.sample);
+  });
+  els.btnStep.addEventListener('click', ()=>{ stopRun(); step(); });
+  els.btnRun.addEventListener('click', runAuto);
+  els.btnPause.addEventListener('click', stopRun);
+  els.btnReset.addEventListener('click', ()=>{ loadTape(els.tapeInput.value || machine().sample); });
+
+  selectMachine('flip');
+})();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

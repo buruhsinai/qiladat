@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Efek Fotolistrik — Laboratorium JAZMI</title>
+<style>
+  :root{
+    --bg:#0a1512; --bg2:#0f1e19; --card:#122420; --card2:#16302a; --line:#1f3d34;
+    --emerald:#22c98a; --emerald-dim:#0e6b4f; --gold:#e0b354; --text:#e9f3ee;
+    --muted:#8fada0; --danger:#e07a5f; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:'Georgia',serif; line-height:1.65;}
+  .sans{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;}
+  header{padding:32px 20px 22px; text-align:center; background:radial-gradient(ellipse at top, #113b2e 0%, var(--bg) 70%); border-bottom:1px solid var(--line);}
+  header .kicker{font-family:-apple-system,sans-serif; letter-spacing:.14em; text-transform:uppercase; font-size:12px; color:var(--gold); margin-bottom:10px;}
+  header h1{font-size:1.4rem; margin:0 0 10px; font-weight:600; line-height:1.35;}
+  header p{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px; max-width:640px; margin:0 auto;}
+  nav.tabs{position:sticky; top:0; z-index:10; display:flex; overflow-x:auto; gap:6px; padding:10px 14px; background:rgba(10,21,18,.96); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); font-family:-apple-system,sans-serif; -webkit-overflow-scrolling:touch;}
+  nav.tabs a{flex:0 0 auto; padding:7px 13px; border-radius:999px; font-size:12.5px; color:var(--muted); text-decoration:none; border:1px solid var(--line); white-space:nowrap;}
+  main{max-width:800px; margin:0 auto; padding:8px 18px 60px;}
+  section{padding:30px 0; border-bottom:1px solid var(--line);}
+  section:last-child{border-bottom:none;}
+  h2{font-size:1.1rem; color:var(--emerald); margin:0 0 6px; display:flex; align-items:center; gap:8px;}
+  h2 .num{font-family:-apple-system,sans-serif; font-size:11px; background:var(--emerald-dim); color:#dff7ec; padding:2px 8px; border-radius:6px;}
+  h3{color:var(--gold); font-size:1rem; margin:20px 0 8px;}
+  p{margin:0 0 14px; font-size:15.5px;}
+  .lead{color:var(--muted); font-family:-apple-system,sans-serif; font-size:14.5px;}
+  .qbox{background:var(--card2); border-left:3px solid var(--gold); border-radius:8px; padding:14px 16px; margin:16px 0; font-style:italic; color:#f0e6cc; font-size:14.5px;}
+  ul{padding-left:20px; margin:10px 0;} li{margin-bottom:7px; font-size:15px;}
+  .sourceline{font-family:-apple-system,sans-serif; font-size:11.5px; color:var(--muted); margin-top:6px; padding-top:6px; border-top:1px dashed var(--line);}
+  .warn{background:#241407; border:1px solid #5c3a12; border-radius:10px; padding:14px 16px; margin:14px 0; font-family:-apple-system,sans-serif; font-size:13.5px; color:#f0d3a8;}
+  .insight{background:#0e2a20; border-left:3px solid var(--emerald); border-radius:8px; padding:14px 16px; margin:14px 0; font-family:-apple-system,sans-serif; font-size:14px; color:#dff7ec;}
+  .insight .lbl{color:var(--emerald); font-size:11px; text-transform:uppercase; letter-spacing:.08em; display:block; margin-bottom:6px; font-weight:700;}
+  .eq{font-family:Georgia,serif; text-align:center; font-size:1.2rem; background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:16px; margin:14px 0; color:var(--emerald);}
+  .eq small{display:block; font-family:-apple-system,sans-serif; font-size:11px; color:var(--muted); margin-top:8px;}
+
+  .sim-card{font-family:-apple-system,sans-serif; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin:14px 0;}
+  .sim-card label{font-size:13px; color:var(--muted); display:block; margin-bottom:6px;}
+  .sim-card input[type=range]{width:100%; accent-color:var(--emerald); margin-bottom:14px;}
+  .val{color:var(--gold); font-weight:700;}
+  .preset-row{display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap;}
+  .preset-btn{flex:1; min-width:70px; text-align:center; padding:8px 4px; border-radius:9px; border:1.5px solid var(--line); background:var(--card2); font-size:11.5px; font-weight:600; color:var(--muted); cursor:pointer;}
+  .preset-btn.active{background:#0e2a20; color:var(--emerald); border-color:var(--emerald);}
+  .plot-wrap{background:#050a08; border-radius:10px; border:1px solid var(--line); padding:8px;}
+  .plot-wrap svg{width:100%; height:auto;}
+  .result-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; font-family:-apple-system,sans-serif;}
+  .result-box{background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:12px; text-align:center;}
+  .result-box .rlabel{font-size:11px; color:var(--muted); text-transform:uppercase;}
+  .result-box .rval{font-size:1.15rem; color:var(--emerald); font-weight:800; margin-top:4px;}
+  .status-banner{margin-top:12px; padding:12px; border-radius:8px; text-align:center; font-weight:700; font-size:13.5px;}
+
+  table.compare{width:100%; border-collapse:collapse; font-family:-apple-system,sans-serif; font-size:12.5px; margin:14px 0;}
+  table.compare th, table.compare td{padding:8px 9px; border-bottom:1px solid var(--line); text-align:left;}
+  table.compare th{color:var(--gold); font-size:11px;}
+
+  .refs{font-family:-apple-system,sans-serif; font-size:12.5px; color:var(--muted);} .refs li{margin-bottom:8px;}
+  footer{text-align:center; padding:28px 20px; color:var(--muted); font-family:-apple-system,sans-serif; font-size:12px;}
+  @media(max-width:480px){ .result-grid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kicker">Laboratorium JAZMI · Fisika Kuantum · Tool Utama</div>
+  <h1>Efek Fotolistrik: Eksperimen yang Membuktikan Cahaya Itu Butiran, Bukan Cuma Gelombang</h1>
+  <p>Level 1–5. Satu percobaan virtual yang menjungkirbalikkan intuisi klasik — coba sendiri sebelum membaca penjelasannya, dan lihat apakah tebakan Anda benar.</p>
+</header>
+
+<nav class="tabs">
+  <a href="#belajar">Belajar</a>
+  <a href="#pertanyaan">Pertanyaan Ilmiah</a>
+  <a href="#rumus">Rumus Einstein</a>
+  <a href="#simulator">Eksperimen Virtual</a>
+  <a href="#temuan">Temuan yang Harus Anda Sendiri Buktikan</a>
+  <a href="#verifikasi">Verifikasi</a>
+  <a href="#batasan">Batasan</a>
+  <a href="#referensi">Referensi</a>
+</nav>
+
+<main>
+
+  <section id="belajar">
+    <h2><span class="num">01</span>Belajar</h2>
+    <p>Tembakkan cahaya ke lempeng logam, dan dalam kondisi tertentu, logam itu akan melepaskan elektron — inilah efek fotolistrik. Sebelum 1905, fisikawan berpikir cahaya adalah gelombang murni, dan menurut logika gelombang, <strong>cahaya yang lebih terang (lebih intens) seharusnya memberi lebih banyak energi ke elektron yang dilepaskan</strong> — semakin besar amplitudo gelombang, semakin keras ia "mengguncang" elektron.</p>
+    <p>Tapi eksperimen menunjukkan sesuatu yang aneh: menaikkan kecerahan cahaya memang menghasilkan <em>lebih banyak</em> elektron terlepas — tapi kecepatan maksimum tiap elektron sama sekali tidak berubah! Yang justru mengubah kecepatan elektron adalah <em>warna</em> cahayanya (frekuensinya) — sesuatu yang menurut teori gelombang klasik seharusnya tidak relevan sama sekali.</p>
+    <div class="qbox">"Einstein memecahkan teka-teki ini tahun 1905 dengan gagasan radikal: cahaya bukan gelombang kontinu, tapi terdiri dari paket-paket energi diskret (foton) — dan satu foton hanya bisa memberikan energinya ke SATU elektron, bukan dibagi-bagi ke banyak elektron sekaligus."</div>
+  </section>
+
+  <section id="pertanyaan">
+    <h2><span class="num">02</span>Pertanyaan Ilmiah</h2>
+    <ul>
+      <li>Kenapa menaikkan intensitas cahaya menghasilkan lebih banyak elektron, tapi tidak mempercepat elektron yang sudah terlepas?</li>
+      <li>Apa yang dimaksud "fungsi kerja" (work function) sebuah logam, dan kenapa tiap logam berbeda nilainya?</li>
+      <li>Apakah ada frekuensi cahaya minimum di bawah mana tidak ada elektron yang terlepas sama sekali, berapa pun intensitasnya?</li>
+      <li>Bagaimana hubungan matematis antara frekuensi foton dan energi kinetik maksimum elektron yang terlepas?</li>
+    </ul>
+  </section>
+
+  <section id="rumus">
+    <h2><span class="num">03</span>Rumus Einstein</h2>
+    <p>Setiap foton membawa energi E=hf (h=konstanta Planck, f=frekuensi cahaya). Untuk melepaskan elektron dari logam, sebagian energi foton harus dipakai mengatasi "fungsi kerja" (φ) — energi ikat minimum yang menahan elektron di logam. Sisa energinya menjadi energi kinetik elektron yang terlepas:</p>
+    <div class="eq">
+      KEmax = hf − φ
+      <small>Kalau hf {'<'} φ, TIDAK ADA elektron yang terlepas — berapa pun intensitas cahayanya</small>
+    </div>
+  </section>
+
+  <section id="simulator">
+    <h2><span class="num">04</span>Eksperimen Virtual</h2>
+    <p class="lead">Pilih logam, lalu geser frekuensi &amp; intensitas cahaya — amati sendiri foton menumbuk permukaan dan elektron yang (mungkin) terlepas.</p>
+    <div class="sim-card">
+      <label>Logam target (menentukan fungsi kerja φ):</label>
+      <div class="preset-row" id="metalPresets"></div>
+
+      <label>Frekuensi cahaya: <span class="val" id="freqVal">–</span></label>
+      <input type="range" id="freqRange" min="20" max="200" step="1" value="70">
+
+      <label>Intensitas cahaya (jumlah foton/detik): <span class="val" id="intVal">50%</span></label>
+      <input type="range" id="intRange" min="5" max="100" step="1" value="50">
+
+      <div class="plot-wrap">
+        <svg id="peSVG" viewBox="0 0 380 180" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-box"><div class="rlabel">Energi Foton (hf)</div><div class="rval" id="ephotonVal">– eV</div></div>
+        <div class="result-box"><div class="rlabel">Energi Kinetik Maks Elektron</div><div class="rval" id="keVal">– eV</div></div>
+      </div>
+      <div class="status-banner" id="statusBanner"></div>
+    </div>
+  </section>
+
+  <section id="temuan">
+    <h2><span class="num">05</span>Temuan yang Harus Anda Sendiri Buktikan</h2>
+    <p>Sebelum lanjut membaca, coba lakukan ini di simulator atas:</p>
+    <ul>
+      <li><strong>Naikkan intensitas ke maksimum</strong> tanpa mengubah frekuensi — perhatikan: elektron makin banyak/cepat muncul, tapi kecepatan lontarnya di animasi <strong>tidak berubah sama sekali</strong>.</li>
+      <li><strong>Turunkan frekuensi</strong> sampai di bawah ambang (garis KEmax jadi negatif) — lalu coba naikkan intensitas setinggi mungkin. Tidak ada satu pun elektron yang muncul, sekeras apa pun "cahayanya".</li>
+      <li><strong>Naikkan frekuensi</strong> (tanpa mengubah intensitas) — sekarang elektron melesat lebih cepat, membuktikan energi elektron murni fungsi frekuensi, bukan intensitas.</li>
+    </ul>
+    <div class="insight">
+      <span class="lbl">Kesimpulan yang Anda temukan sendiri</span>
+      Menaikkan intensitas ≠ menaikkan energi maksimum elektron. Intensitas hanya mengatur BERAPA BANYAK elektron (arus), sedangkan frekuensi yang mengatur SEBERAPA CEPAT tiap elektron (energi). Inilah bukti eksperimental paling langsung bahwa cahaya berperilaku sebagai paket energi diskret, bukan gelombang kontinu semata.
+    </div>
+  </section>
+
+  <section id="verifikasi">
+    <h2><span class="num">06</span>Verifikasi</h2>
+    <p>Temuan ini persis yang membuat Einstein meraih Hadiah Nobel Fisika 1921 — <strong>bukan untuk teori relativitasnya</strong> yang lebih terkenal, melainkan untuk penjelasan efek fotolistrik ini, karena inilah bukti eksperimental paling meyakinkan pada masanya bahwa cahaya punya sifat partikel (foton), melengkapi sifat gelombangnya yang sudah lama diketahui.</p>
+    <table class="compare">
+      <tr><th>Logam</th><th>Fungsi Kerja (φ)</th></tr>
+      <tr><td>Cesium</td><td>≈2,1 eV</td></tr>
+      <tr><td>Natrium</td><td>≈2,3 eV</td></tr>
+      <tr><td>Seng</td><td>≈4,3 eV</td></tr>
+      <tr><td>Tembaga</td><td>≈4,7 eV</td></tr>
+      <tr><td>Platina</td><td>≈6,35 eV</td></tr>
+    </table>
+  </section>
+
+  <section id="batasan">
+    <h2><span class="num">07</span>Batasan</h2>
+    <ul>
+      <li>Animasi foton/elektron adalah ilustrasi skematik untuk intuisi — bukan render fisik akurat (kecepatan piksel elektron di layar tidak dikalibrasi ke satuan fisik sesungguhnya, hanya proporsional relatif terhadap KEmax).</li>
+      <li>Nilai fungsi kerja logam adalah pendekatan umum buku teks — pengukuran sesungguhnya sedikit bervariasi tergantung kemurnian &amp; kondisi permukaan logam.</li>
+      <li>Model mengabaikan efek statistik/probabilistik sesungguhnya (tidak semua foton berhasil melepaskan elektron meski energinya cukup) — disederhanakan jadi hubungan deterministik untuk kejelasan edukasi.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <h2><span class="num">08</span>Referensi</h2>
+    <ul class="refs">
+      <li>Einstein, A. (1905) — "Über einen die Erzeugung und Verwandlung des Lichtes betreffenden heuristischen Gesichtspunkt" (makalah asli efek fotolistrik).</li>
+      <li>HyperPhysics — "Photoelectric Effect".</li>
+      <li>Tabel fungsi kerja logam — CRC Handbook of Chemistry and Physics (nilai standar buku teks).</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  Laboratorium JAZMI — Jalinan Zamrud Islamiah · Belajar → Model → Uji → Tool<br>
+  Tool utama seri Fisika Kuantum.
+</footer>
+
+<script>
+const H_EV = 4.1357e-15; // eV*s
+const METALS = {'Cesium':2.1,'Natrium':2.3,'Seng':4.3,'Tembaga':4.7,'Platina':6.35};
+let currentMetal='Cesium';
+
+const metalRow=document.getElementById('metalPresets');
+Object.keys(METALS).forEach(m=>{
+  const btn=document.createElement('div');
+  btn.className='preset-btn'+(m===currentMetal?' active':'');
+  btn.textContent=m;
+  btn.addEventListener('click',()=>{
+    currentMetal=m;
+    [...metalRow.children].forEach(c=>c.classList.remove('active'));
+    btn.classList.add('active');
+  });
+  metalRow.appendChild(btn);
+});
+
+const freqRange=document.getElementById('freqRange'), intRange=document.getElementById('intRange');
+
+let photons=[], electrons=[];
+let lastPhotonSpawn=0;
+const surfaceX=250;
+
+function getState(){
+  const freqSlider=parseFloat(freqRange.value); // represents f*1e14 Hz
+  const f=freqSlider*1e14;
+  const phi=METALS[currentMetal];
+  const Ephoton=H_EV*f;
+  const KEmax=Ephoton-phi;
+  return {f, phi, Ephoton, KEmax, freqSlider};
+}
+
+function updateReadout(){
+  const s=getState();
+  document.getElementById('freqVal').textContent=s.freqSlider.toFixed(0)+'×10¹⁴ Hz';
+  document.getElementById('intVal').textContent=intRange.value+'%';
+  document.getElementById('ephotonVal').textContent=s.Ephoton.toFixed(2)+' eV';
+  document.getElementById('keVal').textContent=(s.KEmax>0?s.KEmax.toFixed(2):'0.00')+' eV';
+  const banner=document.getElementById('statusBanner');
+  if(s.KEmax>0){
+    banner.style.background='#0e2a20'; banner.style.color='var(--emerald)';
+    banner.textContent='✓ Elektron TERLEPAS — energi foton cukup mengatasi fungsi kerja '+currentMetal+'.';
+  } else {
+    banner.style.background='#3a1414'; banner.style.color='var(--danger)';
+    banner.textContent='✕ TIDAK ADA elektron terlepas — frekuensi di bawah ambang, berapa pun intensitasnya.';
+  }
+}
+freqRange.addEventListener('input', updateReadout);
+intRange.addEventListener('input', updateReadout);
+document.querySelectorAll('.preset-btn').forEach(b=>b.addEventListener('click', updateReadout));
+
+function animate(ts){
+  const s=getState();
+  const intensity=parseFloat(intRange.value);
+  const spawnInterval = 600/(intensity/2+2); // ms between photon spawns
+
+  if(!lastPhotonSpawn || ts-lastPhotonSpawn>spawnInterval){
+    photons.push({x:10, y:30+Math.random()*120});
+    lastPhotonSpawn=ts;
+  }
+
+  photons.forEach(p=> p.x += 4);
+  photons = photons.filter(p=>{
+    if(p.x>=surfaceX){
+      if(s.KEmax>0){
+        const speed = 1.5+Math.sqrt(Math.max(0.01,s.KEmax))*2.2;
+        electrons.push({x:surfaceX, y:p.y, vx:speed});
+      }
+      return false;
+    }
+    return true;
+  });
+  electrons.forEach(e=> e.x += e.vx);
+  electrons = electrons.filter(e=>e.x<380);
+
+  let html = `<rect x="${surfaceX}" y="10" width="12" height="160" fill="#5a6a68"/>`;
+  html += `<text x="${surfaceX+6}" y="182" font-size="9" fill="#8fada0" text-anchor="middle" font-family="sans-serif">logam (${currentMetal})</text>`;
+  html += `<text x="70" y="14" font-size="9" fill="#8fada0" text-anchor="middle" font-family="sans-serif">foton →</text>`;
+  photons.forEach(p=>{ html += `<circle cx="${p.x}" cy="${p.y}" r="4" fill="#ffd94a"/>`; });
+  electrons.forEach(e=>{ html += `<circle cx="${e.x}" cy="${e.y}" r="3.5" fill="#7fa8d8"/>`; });
+  document.getElementById('peSVG').innerHTML = html;
+
+  requestAnimationFrame(animate);
+}
+updateReadout();
+requestAnimationFrame(animate);
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

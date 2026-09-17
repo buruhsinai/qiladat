@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suhu Warna Cahaya — JAZMI Fisika</title>
+<style>
+  :root{--bg:#141210;--panel:#1c1916;--panel2:#211d19;--gold:#c9a24b;--gold-soft:#8a7440;--text:#e8e0d0;--text-dim:#a89a80;--line:#3a332a;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Georgia,'Times New Roman',serif;line-height:1.6;}
+  .container{max-width:700px;margin:0 auto;padding:24px 16px 60px;}
+  header{text-align:center;margin-bottom:22px;border-bottom:1px solid var(--line);padding-bottom:16px;}
+  header h1{font-size:1.3rem;color:var(--gold);margin:0 0 6px;}
+  header p{color:var(--text-dim);margin:0;font-size:0.88rem;font-style:italic;}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:14px;}
+  p{margin:0 0 8px;font-size:0.9rem;} p:last-child{margin-bottom:0;}
+  .dim{color:var(--text-dim);font-size:0.82rem;}
+  h2{color:var(--gold);font-size:1rem;margin:0 0 10px;}
+  input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:var(--line);outline:none;margin-top:8px;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--gold);cursor:pointer;border:2px solid var(--bg);}
+  .swatch{width:100%;height:130px;border-radius:10px;margin:14px 0;border:1px solid var(--line);transition:background 0.15s;}
+  .readout{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:10px;}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;flex:1;text-align:center;}
+  .stat .l{font-size:0.68rem;color:var(--text-dim);text-transform:uppercase;}
+  .stat .v{font-size:1rem;color:var(--gold);}
+  .presets{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+  .presets button{background:var(--panel2);border:1px solid var(--gold-soft);color:var(--text);padding:5px 10px;border-radius:12px;font-family:inherit;font-size:0.76rem;cursor:pointer;}
+  ul{margin:6px 0;padding-left:20px;font-size:0.88rem;}
+  footer{text-align:center;color:var(--text-dim);font-size:0.74rem;margin-top:18px;}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>Suhu Warna Cahaya (Kelvin)</h1>
+  <p>Kenapa kardus lampu tertulis "3000K" atau "6500K"?</p>
+</header>
+
+<section>
+  <p>Setiap benda panas memancarkan cahaya dengan warna yang berubah sesuai suhunya — logam dipanaskan mula-mula merah menyala, lalu jadi kuning-putih kalau makin panas. Prinsip ini (radiasi benda hitam) yang dipakai industri lampu untuk memberi label "Suhu Warna" dalam Kelvin, meski lampu LED modern tidak benar-benar sepanas itu — angka Kelvin hanya menunjukkan <em>warna yang MIRIP</em> dengan benda sepanas itu.</p>
+  <p class="dim">Ini sambungan langsung dari spektrum elektromagnetik: makin tinggi suhu, puncak radiasinya bergeser ke panjang gelombang lebih pendek (lebih biru) — sebaliknya suhu rendah condong ke panjang gelombang panjang (lebih merah).</p>
+</section>
+
+<section>
+  <h2>Coba Sendiri</h2>
+  <div class="presets">
+    <button data-k="1900">Lilin</button>
+    <button data-k="2700">Bohlam Warm White</button>
+    <button data-k="4000">Netral</button>
+    <button data-k="5500">Siang Hari/Blitz Kamera</button>
+    <button data-k="6500">Cool Daylight</button>
+    <button data-k="10000">Langit Biru Cerah</button>
+  </div>
+  <input type="range" id="kelvin" min="1000" max="12000" step="50" value="6500">
+  <div class="swatch" id="swatch"></div>
+  <div class="readout">
+    <div class="stat"><div class="l">Suhu</div><div class="v" id="out_k">—</div></div>
+    <div class="stat"><div class="l">Kesan Warna</div><div class="v" id="out_nama">—</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Metode</h2>
+  <p class="dim">Memakai pendekatan aljabar Tanner Helland (2014) — pendekatan cepat yang banyak dipakai untuk mengonversi suhu warna (K) menjadi RGB layar, hasil fit numerik dari kurva radiasi benda hitam sesungguhnya. Akurat untuk visualisasi, bukan pengukuran fotometri presisi.</p>
+  <ul>
+    <li>&lt;3000K — hangat, oranye-kemerahan (lilin, bohlam pijar lama)</li>
+    <li>3000-4500K — putih hangat (kebanyakan lampu rumah)</li>
+    <li>5000-6500K — putih netral mendekati cahaya siang</li>
+    <li>&gt;7000K — putih kebiruan (langit cerah, monitor "cool")</li>
+  </ul>
+</section>
+
+<footer>Bagian dari Laboratorium Fisika — Bank Ide Qiladat/JAZMI. Pelengkap ringan No. 13.</footer>
+</div>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  function kelvinToRGB(kelvin){
+    const temp = kelvin/100;
+    let r,g,b;
+    if (temp<=66) r=255; else { r=329.698727446*Math.pow(temp-60,-0.1332047592); r=Math.max(0,Math.min(255,r)); }
+    if (temp<=66){ g=99.4708025861*Math.log(temp)-161.1195681661; } else { g=288.1221695283*Math.pow(temp-60,-0.0755148492); }
+    g=Math.max(0,Math.min(255,g));
+    if (temp>=66) b=255; else if (temp<=19) b=0; else { b=138.5177312231*Math.log(temp-10)-305.0447927307; b=Math.max(0,Math.min(255,b)); }
+    return [Math.round(r),Math.round(g),Math.round(b)];
+  }
+  function namaKesan(k){
+    if (k<2200) return 'Nyala Lilin';
+    if (k<3200) return 'Putih Hangat';
+    if (k<4500) return 'Putih Netral';
+    if (k<6000) return 'Cahaya Siang';
+    if (k<8000) return 'Putih Sejuk';
+    return 'Biru Langit Cerah';
+  }
+  function update(){
+    const k = parseFloat($('kelvin').value);
+    const [r,g,b] = kelvinToRGB(k);
+    $('swatch').style.background = `rgb(${r},${g},${b})`;
+    $('out_k').textContent = k+' K';
+    $('out_nama').textContent = namaKesan(k);
+  }
+  $('kelvin').addEventListener('input', update);
+  document.querySelectorAll('.presets button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ $('kelvin').value=btn.dataset.k; update(); });
+  });
+  update();
+})();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

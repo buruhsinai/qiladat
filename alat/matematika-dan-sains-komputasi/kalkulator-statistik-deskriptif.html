@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator Statistik Deskriptif Interaktif</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0D1117;--panel:#161B22;--deep:#010409;--text:#C9D1D9;--soft:#8B949E;--blue:#58A6FF;--green:#3FB950;--red:#F85149;--purple:#BC8CFF;--line:#30363D;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.6;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:900px;margin:0 auto;padding:36px 20px 80px;}
+  h1{font-size:1.7rem;margin:0 0 8px;color:#fff;}
+  h2{font-size:1.05rem;margin:0 0 10px;color:#fff;}
+  p{color:var(--soft);font-size:0.92rem;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin-bottom:22px;}
+  .row{margin-bottom:16px;}
+  label{display:flex;justify-content:space-between;font-size:0.85rem;color:var(--soft);margin-bottom:8px;}
+  input[type=range]{width:100%;accent-color:var(--blue);}
+  textarea{width:100%;min-height:110px;background:var(--deep);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:0.84rem;resize:vertical;}
+  .fmt-row{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;}
+  .fmt-btn{padding:7px 16px;border-radius:6px;border:1px solid var(--line);background:var(--deep);color:var(--soft);cursor:pointer;font-size:0.85rem;}
+  .fmt-btn.active{background:var(--blue);color:#0D1117;border-color:var(--blue);font-weight:600;}
+  button.act{padding:9px 16px;border-radius:6px;border:1px solid var(--blue);background:var(--blue);color:#0D1117;font-weight:700;font-size:0.86rem;cursor:pointer;}
+  button.sec{padding:9px 16px;border-radius:6px;border:1px solid var(--line);background:var(--deep);color:var(--text);font-size:0.86rem;cursor:pointer;margin-left:8px;}
+  .btn-row{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px 0;}
+  .warn{font-size:0.78rem;color:var(--red);margin-top:8px;min-height:1em;}
+  .foot{font-size:0.8rem;color:#565D66;margin-top:20px;}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;}
+  .stat-card{background:var(--deep);border:1px solid var(--line);border-radius:6px;padding:12px 14px;}
+  .stat-card .sc-label{font-size:0.72rem;color:var(--soft);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:4px;}
+  .stat-card .sc-value{font-family:'JetBrains Mono',monospace;font-size:1.15rem;color:#fff;font-weight:600;}
+  .stat-card.accent-mean{border-left:3px solid var(--blue);}
+  .stat-card.accent-median{border-left:3px solid var(--green);}
+  .stat-card.accent-mode{border-left:3px solid var(--purple);}
+
+  svg{display:block;width:100%;height:auto;}
+  .dot{fill:var(--soft);opacity:0.85;}
+  .dot.outlier{fill:var(--red);}
+  .axis-line{stroke:var(--line);stroke-width:1;}
+  .marker-line{stroke-width:2;}
+  .marker-mean{stroke:var(--blue);}
+  .marker-median{stroke:var(--green);}
+  .marker-label{font-family:'JetBrains Mono',monospace;font-size:11px;}
+
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:0.8rem;color:var(--soft);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .swatch{width:10px;height:10px;border-radius:2px;display:inline-block;}
+
+  .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;}
+  @media (max-width:560px){.compare-grid{grid-template-columns:1fr;}}
+  .compare-card{background:var(--deep);border:1px solid var(--line);border-radius:6px;padding:14px 16px;}
+  .compare-card h3{margin:0 0 10px;font-size:0.9rem;color:#fff;}
+  .compare-row{display:flex;justify-content:space-between;font-size:0.85rem;padding:4px 0;border-bottom:1px dashed var(--line);}
+  .compare-row:last-child{border-bottom:none;}
+  .compare-row .cv{font-family:'JetBrains Mono',monospace;font-weight:600;}
+  .shift-note{margin-top:10px;font-size:0.8rem;padding:10px 12px;border-radius:6px;background:rgba(88,166,255,0.08);border:1px solid rgba(88,166,255,0.25);color:var(--text);}
+  .shift-note b{color:var(--blue);}
+
+  .toggle-inline{display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--soft);margin-bottom:12px;}
+  .toggle-inline input{accent-color:var(--blue);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Kalkulator Statistik Deskriptif Interaktif</h1>
+  <p>Pasangan dari Data Analyzer/Visualizer dan Generator Data Uji — kalau keduanya membongkar dan membuat data, ini membantu memahami <i>angka</i> di dalamnya: mean, median, modus, sebaran, dan bagaimana satu nilai ekstrem bisa mengacaukan rata-rata tapi tidak median.</p>
+
+  <div class="panel">
+    <h2>1. Data</h2>
+    <div class="row">
+      <label>Masukkan angka (pisahkan dengan koma, spasi, atau baris baru — bisa tempel langsung dari kolom CSV)</label>
+      <textarea id="dataInput" class="mono" placeholder="contoh: 12, 15, 14, 18, 13, 16, 15, 14, 17, 15"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="act" id="btnParse">Hitung</button>
+      <button class="sec" id="btnRandom">Buat Sampel Acak</button>
+      <button class="sec" id="btnClear">Bersihkan</button>
+    </div>
+    <div class="warn" id="parseWarn"></div>
+  </div>
+
+  <div class="panel">
+    <h2>2. Ringkasan Statistik</h2>
+    <div class="stat-grid" id="statGrid">
+      <div class="stat-card"><div class="sc-label">N (jumlah)</div><div class="sc-value" id="statN">–</div></div>
+      <div class="stat-card"><div class="sc-label">Jumlah (Σ)</div><div class="sc-value" id="statSum">–</div></div>
+      <div class="stat-card accent-mean"><div class="sc-label">Mean</div><div class="sc-value" id="statMean">–</div></div>
+      <div class="stat-card accent-median"><div class="sc-label">Median</div><div class="sc-value" id="statMedian">–</div></div>
+      <div class="stat-card accent-mode"><div class="sc-label">Modus</div><div class="sc-value" id="statMode">–</div></div>
+      <div class="stat-card"><div class="sc-label">Min</div><div class="sc-value" id="statMin">–</div></div>
+      <div class="stat-card"><div class="sc-label">Maks</div><div class="sc-value" id="statMax">–</div></div>
+      <div class="stat-card"><div class="sc-label">Rentang</div><div class="sc-value" id="statRange">–</div></div>
+      <div class="stat-card"><div class="sc-label">Ragam (populasi)</div><div class="sc-value" id="statVar">–</div></div>
+      <div class="stat-card"><div class="sc-label">Simpangan Baku</div><div class="sc-value" id="statStd">–</div></div>
+      <div class="stat-card"><div class="sc-label">Q1</div><div class="sc-value" id="statQ1">–</div></div>
+      <div class="stat-card"><div class="sc-label">Q3</div><div class="sc-value" id="statQ3">–</div></div>
+      <div class="stat-card"><div class="sc-label">IQR</div><div class="sc-value" id="statIQR">–</div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>3. Sebaran Data</h2>
+    <p style="margin-bottom:10px;">Setiap titik abu-abu adalah satu angka dari data Anda. Garis biru = mean, garis hijau = median. Kalau keduanya berhimpit, datanya cenderung simetris.</p>
+    <svg id="plotSvg" viewBox="0 0 800 140"></svg>
+    <div class="legend">
+      <span><span class="swatch" style="background:var(--soft);"></span>Titik data</span>
+      <span><span class="swatch" style="background:var(--red);"></span>Outlier (jika diaktifkan)</span>
+      <span><span class="swatch" style="background:var(--blue);"></span>Mean</span>
+      <span><span class="swatch" style="background:var(--green);"></span>Median</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>4. Demo: Satu Angka Ekstrem vs. Mean &amp; Median</h2>
+    <p>Geser nilai outlier di bawah, lalu aktifkan untuk melihat langsung mana yang lebih goyah: mean atau median.</p>
+    <div class="toggle-inline">
+      <input type="checkbox" id="outlierToggle">
+      <label style="margin:0;" for="outlierToggle">Tambahkan outlier ke data</label>
+    </div>
+    <div class="row">
+      <label>Nilai outlier <span id="outlierPos" class="mono">0</span></label>
+      <input type="range" id="outlierSlider" min="-100" max="100" value="0" step="1">
+    </div>
+    <div class="compare-grid">
+      <div class="compare-card">
+        <h3>Sebelum outlier</h3>
+        <div class="compare-row"><span>Mean</span><span class="cv" id="beforeMean">–</span></div>
+        <div class="compare-row"><span>Median</span><span class="cv" id="beforeMedian">–</span></div>
+      </div>
+      <div class="compare-card">
+        <h3>Sesudah outlier</h3>
+        <div class="compare-row"><span>Mean</span><span class="cv" id="afterMean">–</span></div>
+        <div class="compare-row"><span>Median</span><span class="cv" id="afterMedian">–</span></div>
+      </div>
+    </div>
+    <div class="shift-note" id="shiftNote"></div>
+  </div>
+
+  <p class="foot">Ragam &amp; simpangan baku dihitung sebagai populasi (dibagi n), bukan sampel (dibagi n−1) — cocok untuk eksplorasi data apa adanya, bukan inferensi statistik formal.</p>
+</div>
+
+<script>
+// ---------- state ----------
+let dataArr = [];
+let parseIssues = 0;
+
+// ---------- parsing ----------
+function parseNumbers(raw){
+  const tokens = raw.split(/[\s,;]+/).map(t=>t.trim()).filter(t=>t.length>0);
+  const nums = [];
+  let issues = 0;
+  tokens.forEach(t=>{
+    const v = Number(t);
+    if(Number.isFinite(v)) nums.push(v); else issues++;
+  });
+  return {nums, issues};
+}
+
+// ---------- stats ----------
+function mean(arr){ return arr.reduce((a,b)=>a+b,0) / arr.length; }
+function median(arr){
+  const s = [...arr].sort((a,b)=>a-b);
+  const mid = Math.floor(s.length/2);
+  return s.length % 2 !== 0 ? s[mid] : (s[mid-1]+s[mid])/2;
+}
+function mode(arr){
+  const freq = {};
+  arr.forEach(v=> freq[v] = (freq[v]||0)+1 );
+  const maxFreq = Math.max(...Object.values(freq));
+  if(maxFreq <= 1) return {modes:[], maxFreq:1};
+  const modes = Object.keys(freq).filter(k=>freq[k]===maxFreq).map(Number);
+  return {modes, maxFreq};
+}
+function variance(arr){
+  const m = mean(arr);
+  return arr.reduce((a,b)=> a + Math.pow(b-m,2), 0) / arr.length;
+}
+function quantile(arr, q){
+  const s = [...arr].sort((a,b)=>a-b);
+  const pos = (s.length-1) * q;
+  const base = Math.floor(pos);
+  const rest = pos - base;
+  if(s[base+1] !== undefined) return s[base] + rest*(s[base+1]-s[base]);
+  return s[base];
+}
+function fmt(n){
+  if(!Number.isFinite(n)) return '–';
+  const r = Math.round(n*1000)/1000;
+  return r.toString();
+}
+
+// ---------- render stats ----------
+function renderStats(arr){
+  if(arr.length === 0){
+    ['statN','statSum','statMean','statMedian','statMode','statMin','statMax','statRange','statVar','statStd','statQ1','statQ3','statIQR']
+      .forEach(id=> document.getElementById(id).textContent = '–');
+    return;
+  }
+  const n = arr.length;
+  const sum = arr.reduce((a,b)=>a+b,0);
+  const m = mean(arr);
+  const med = median(arr);
+  const {modes, maxFreq} = mode(arr);
+  const mn = Math.min(...arr);
+  const mx = Math.max(...arr);
+  const v = variance(arr);
+  const std = Math.sqrt(v);
+  const q1 = quantile(arr, 0.25);
+  const q3 = quantile(arr, 0.75);
+
+  document.getElementById('statN').textContent = n;
+  document.getElementById('statSum').textContent = fmt(sum);
+  document.getElementById('statMean').textContent = fmt(m);
+  document.getElementById('statMedian').textContent = fmt(med);
+  document.getElementById('statMode').textContent = modes.length ? modes.map(fmt).join(', ') + ' (×' + maxFreq + ')' : 'tidak ada (semua unik)';
+  document.getElementById('statMin').textContent = fmt(mn);
+  document.getElementById('statMax').textContent = fmt(mx);
+  document.getElementById('statRange').textContent = fmt(mx-mn);
+  document.getElementById('statVar').textContent = fmt(v);
+  document.getElementById('statStd').textContent = fmt(std);
+  document.getElementById('statQ1').textContent = fmt(q1);
+  document.getElementById('statQ3').textContent = fmt(q3);
+  document.getElementById('statIQR').textContent = fmt(q3-q1);
+}
+
+// ---------- render plot ----------
+function renderPlot(baseArr, outlierVal, outlierOn){
+  const svg = document.getElementById('plotSvg');
+  svg.innerHTML = '';
+  const plotArr = outlierOn ? [...baseArr, outlierVal] : baseArr;
+  if(plotArr.length === 0) return;
+
+  const W = 800, H = 140, padL = 30, padR = 30, axisY = 90;
+  const mn = Math.min(...plotArr), mx = Math.max(...plotArr);
+  const span = (mx - mn) || 1;
+  const xScale = v => padL + ( (v-mn)/span ) * (W - padL - padR);
+
+  const ns = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs){
+    const e = document.createElementNS(ns, tag);
+    Object.keys(attrs).forEach(k=> e.setAttribute(k, attrs[k]));
+    return e;
+  }
+
+  // axis
+  svg.appendChild(el('line',{x1:padL,y1:axisY,x2:W-padR,y2:axisY,class:'axis-line'}));
+
+  // dots (jitter vertically a bit if overlapping is heavy — simple stacking by count at same rounded x)
+  const seen = {};
+  plotArr.forEach((v,i)=>{
+    const isOutlierPoint = outlierOn && i === plotArr.length-1;
+    const x = xScale(v);
+    const key = Math.round(x);
+    seen[key] = (seen[key]||0) + 1;
+    const stackOffset = (seen[key]-1) * 7;
+    const y = axisY - 8 - stackOffset;
+    const c = el('circle',{cx:x, cy:y, r:5, class: isOutlierPoint ? 'dot outlier' : 'dot'});
+    svg.appendChild(c);
+  });
+
+  // mean & median markers
+  const m = mean(plotArr);
+  const med = median(plotArr);
+  const mx_ = xScale(m);
+  const medx = xScale(med);
+
+  svg.appendChild(el('line',{x1:mx_,y1:20,x2:mx_,y2:axisY+10,class:'marker-line marker-mean'}));
+  svg.appendChild(el('line',{x1:medx,y1:20,x2:medx,y2:axisY+10,class:'marker-line marker-median'}));
+
+  const meanLabel = el('text',{x:mx_, y:14, class:'marker-label', fill:'var(--blue)', 'text-anchor':'middle'});
+  meanLabel.textContent = 'x̄=' + fmt(m);
+  svg.appendChild(meanLabel);
+
+  const medLabel = el('text',{x:medx, y: axisY+28, class:'marker-label', fill:'var(--green)', 'text-anchor':'middle'});
+  medLabel.textContent = 'md=' + fmt(med);
+  svg.appendChild(medLabel);
+
+  // min/max labels on axis
+  const minLabel = el('text',{x:padL, y:axisY+28, class:'marker-label', fill:'var(--soft)', 'text-anchor':'start'});
+  minLabel.textContent = fmt(mn);
+  svg.appendChild(minLabel);
+  const maxLabel = el('text',{x:W-padR, y:axisY+28, class:'marker-label', fill:'var(--soft)', 'text-anchor':'end'});
+  maxLabel.textContent = fmt(mx);
+  svg.appendChild(maxLabel);
+}
+
+// ---------- outlier demo ----------
+function renderOutlierDemo(){
+  const toggle = document.getElementById('outlierToggle').checked;
+  const outVal = Number(document.getElementById('outlierSlider').value);
+  document.getElementById('outlierPos').textContent = outVal;
+
+  if(dataArr.length === 0){
+    ['beforeMean','beforeMedian','afterMean','afterMedian'].forEach(id=>document.getElementById(id).textContent='–');
+    document.getElementById('shiftNote').textContent = '';
+    renderPlot([], outVal, false);
+    return;
+  }
+
+  const before = { mean: mean(dataArr), median: median(dataArr) };
+  const afterArr = [...dataArr, outVal];
+  const after = { mean: mean(afterArr), median: median(afterArr) };
+
+  document.getElementById('beforeMean').textContent = fmt(before.mean);
+  document.getElementById('beforeMedian').textContent = fmt(before.median);
+  document.getElementById('afterMean').textContent = fmt(after.mean);
+  document.getElementById('afterMedian').textContent = fmt(after.median);
+
+  const meanShift = Math.abs(after.mean - before.mean);
+  const medianShift = Math.abs(after.median - before.median);
+  let note;
+  if(!toggle){
+    note = 'Aktifkan kotak centang di atas untuk benar-benar memasukkan outlier ini ke dalam data dan melihat efeknya pada grafik di atas.';
+  } else if(meanShift > medianShift * 1.5 && meanShift > 0.001){
+    note = `<b>Mean bergeser lebih jauh</b> (Δ${fmt(meanShift)}) dibanding median (Δ${fmt(medianShift)}). Ini contoh klasik: rata-rata "menarik" nilainya ke arah outlier, sementara median relatif tenang karena hanya peduli posisi tengah, bukan besar nilainya.`;
+  } else if(medianShift > meanShift * 1.5 && medianShift > 0.001){
+    note = `Menariknya, di sini <b>median justru bergeser lebih jauh</b> (Δ${fmt(medianShift)}) dibanding mean (Δ${fmt(meanShift)}) — ini bisa terjadi pada dataset kecil ketika outlier mengubah posisi tengah urutan data.`;
+  } else {
+    note = `Pergeseran mean (Δ${fmt(meanShift)}) dan median (Δ${fmt(medianShift)}) relatif mirip untuk nilai outlier ini — coba geser ke angka yang jauh lebih ekstrem untuk melihat perbedaannya lebih jelas.`;
+  }
+  document.getElementById('shiftNote').innerHTML = note;
+
+  renderPlot(dataArr, outVal, toggle);
+}
+
+// ---------- main compute ----------
+function compute(){
+  const raw = document.getElementById('dataInput').value;
+  const {nums, issues} = parseNumbers(raw);
+  dataArr = nums;
+  parseIssues = issues;
+  document.getElementById('parseWarn').textContent = issues > 0
+    ? `${issues} token diabaikan karena bukan angka yang valid.`
+    : '';
+  renderStats(dataArr);
+
+  // keep outlier slider range sensible relative to data
+  if(dataArr.length){
+    const mn = Math.min(...dataArr), mx = Math.max(...dataArr);
+    const span = (mx-mn) || 10;
+    const slider = document.getElementById('outlierSlider');
+    slider.min = Math.floor(mn - span*2);
+    slider.max = Math.ceil(mx + span*2);
+  }
+  renderOutlierDemo();
+}
+
+// ---------- random sample ----------
+function randomSample(){
+  const n = 10 + Math.floor(Math.random()*8);
+  const center = 10 + Math.floor(Math.random()*40);
+  const spread = 2 + Math.floor(Math.random()*6);
+  const vals = [];
+  for(let i=0;i<n;i++){
+    vals.push(Math.round(center + (Math.random()-0.5)*2*spread));
+  }
+  document.getElementById('dataInput').value = vals.join(', ');
+  compute();
+}
+
+// ---------- events ----------
+document.getElementById('btnParse').addEventListener('click', compute);
+document.getElementById('btnRandom').addEventListener('click', randomSample);
+document.getElementById('btnClear').addEventListener('click', ()=>{
+  document.getElementById('dataInput').value = '';
+  compute();
+});
+document.getElementById('outlierSlider').addEventListener('input', renderOutlierDemo);
+document.getElementById('outlierToggle').addEventListener('change', renderOutlierDemo);
+
+// init with a starter sample
+document.getElementById('dataInput').value = '12, 15, 14, 18, 13, 16, 15, 14, 17, 15';
+compute();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

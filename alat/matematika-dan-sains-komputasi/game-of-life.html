@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game of Life Visualizer</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0D1117;--panel:#161B22;--deep:#010409;--text:#C9D1D9;--soft:#8B949E;--blue:#58A6FF;--green:#3FB950;--line:#30363D;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.6;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:720px;margin:0 auto;padding:32px 20px 60px;}
+  h1{font-size:1.6rem;margin:0 0 6px;color:#fff;}
+  p{color:var(--soft);font-size:0.9rem;margin:0 0 18px;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 18px;margin-bottom:18px;}
+  canvas{display:block;width:100%;background:var(--deep);border:1px solid var(--line);border-radius:6px;image-rendering:pixelated;cursor:pointer;}
+  .ctrl-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px;}
+  button{padding:8px 14px;border-radius:6px;border:1px solid var(--line);background:var(--deep);color:var(--text);font-size:0.85rem;cursor:pointer;}
+  button.act{background:var(--blue);color:#0D1117;border-color:var(--blue);font-weight:700;}
+  label{display:flex;justify-content:space-between;font-size:0.82rem;color:var(--soft);margin-bottom:6px;}
+  input[type=range]{width:100%;accent-color:var(--blue);}
+  .row{margin-top:12px;}
+  .stat-row{display:flex;gap:18px;margin-top:12px;font-size:0.82rem;color:var(--soft);}
+  .stat-row b{color:#fff;}
+  .rules{font-size:0.82rem;}
+  .rules li{margin-bottom:6px;}
+  .foot{font-size:0.78rem;color:#565D66;margin-top:14px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Game of Life Visualizer</h1>
+  <p>Arah yang benar-benar berbeda dari sorting: di sini tidak ada "hasil akhir" yang dituju. Hanya empat aturan sederhana, diterapkan berulang ke tiap sel — dan pola rumit muncul begitu saja tanpa ada yang merancangnya secara langsung.</p>
+
+  <div class="panel">
+    <canvas id="grid" width="600" height="400"></canvas>
+    <div class="ctrl-row">
+      <button class="act" id="btnPlay">▶ Jalankan</button>
+      <button id="btnStep">Langkah +1</button>
+      <button id="btnRandom">Acak</button>
+      <button id="btnClear">Bersihkan</button>
+      <button id="btnGlider">Contoh: Glider</button>
+    </div>
+    <div class="stat-row">
+      <span>Generasi: <b id="genCount">0</b></span>
+      <span>Sel hidup: <b id="liveCount">0</b></span>
+    </div>
+    <div class="row">
+      <label>Ukuran sel <span id="cellSizePos" class="mono">14px</span></label>
+      <input type="range" id="cellSizeSlider" min="6" max="24" value="14">
+    </div>
+    <div class="row">
+      <label>Kecepatan <span id="speedPos" class="mono">sedang</span></label>
+      <input type="range" id="speedSlider" min="1" max="5" value="3">
+    </div>
+  </div>
+
+  <div class="panel">
+    <p style="margin-bottom:8px;color:#fff;font-weight:600;">Empat aturan Conway (dijalankan serentak ke semua sel tiap generasi):</p>
+    <ul class="rules">
+      <li>Sel hidup dengan <b>&lt;2</b> tetangga hidup → mati (kesepian).</li>
+      <li>Sel hidup dengan <b>2–3</b> tetangga hidup → tetap hidup.</li>
+      <li>Sel hidup dengan <b>&gt;3</b> tetangga hidup → mati (kepadatan berlebih).</li>
+      <li>Sel mati dengan <b>tepat 3</b> tetangga hidup → hidup kembali (reproduksi).</li>
+    </ul>
+  </div>
+  <p class="foot">Klik pada grid (saat jeda) untuk menyalakan/mematikan sel secara manual.</p>
+</div>
+
+<script>
+const canvas = document.getElementById('grid');
+const ctx = canvas.getContext('2d');
+let cellSize = 14;
+let cols, rows, cells;
+let running = false;
+let timer = null;
+let generation = 0;
+
+function initGrid(){
+  cols = Math.floor(canvas.width / cellSize);
+  rows = Math.floor(canvas.height / cellSize);
+  cells = Array.from({length: rows}, () => new Array(cols).fill(0));
+  generation = 0;
+  draw();
+  updateStats();
+}
+
+function randomize(){
+  for(let y=0;y<rows;y++) for(let x=0;x<cols;x++) cells[y][x] = Math.random() < 0.25 ? 1 : 0;
+  generation = 0;
+  draw(); updateStats();
+}
+
+function countNeighbors(y,x){
+  let n = 0;
+  for(let dy=-1;dy<=1;dy++){
+    for(let dx=-1;dx<=1;dx++){
+      if(dy===0 && dx===0) continue;
+      const ny=(y+dy+rows)%rows, nx=(x+dx+cols)%cols;
+      n += cells[ny][nx];
+    }
+  }
+  return n;
+}
+
+function step(){
+  const next = Array.from({length: rows}, () => new Array(cols).fill(0));
+  for(let y=0;y<rows;y++){
+    for(let x=0;x<cols;x++){
+      const n = countNeighbors(y,x);
+      const alive = cells[y][x] === 1;
+      next[y][x] = alive ? (n===2||n===3 ? 1 : 0) : (n===3 ? 1 : 0);
+    }
+  }
+  cells = next;
+  generation++;
+  draw(); updateStats();
+}
+
+function draw(){
+  ctx.fillStyle = '#010409';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = '#3FB950';
+  for(let y=0;y<rows;y++){
+    for(let x=0;x<cols;x++){
+      if(cells[y][x]) ctx.fillRect(x*cellSize+1, y*cellSize+1, cellSize-2, cellSize-2);
+    }
+  }
+}
+
+function updateStats(){
+  let live = 0;
+  for(let y=0;y<rows;y++) for(let x=0;x<cols;x++) live += cells[y][x];
+  document.getElementById('genCount').textContent = generation;
+  document.getElementById('liveCount').textContent = live;
+}
+
+function speedToDelay(v){ return {1:800,2:400,3:200,4:100,5:40}[v] || 200; }
+
+function togglePlay(){
+  running = !running;
+  document.getElementById('btnPlay').textContent = running ? '⏸ Jeda' : '▶ Jalankan';
+  if(running){
+    const delay = speedToDelay(document.getElementById('speedSlider').value);
+    timer = setInterval(step, delay);
+  } else {
+    clearInterval(timer);
+  }
+}
+
+canvas.addEventListener('click', (e)=>{
+  if(running) return;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
+  const x = Math.floor((e.clientX - rect.left) * scaleX / cellSize);
+  const y = Math.floor((e.clientY - rect.top) * scaleY / cellSize);
+  if(y>=0 && y<rows && x>=0 && x<cols){
+    cells[y][x] = cells[y][x] ? 0 : 1;
+    draw(); updateStats();
+  }
+});
+
+document.getElementById('btnPlay').addEventListener('click', togglePlay);
+document.getElementById('btnStep').addEventListener('click', ()=>{ if(!running) step(); });
+document.getElementById('btnRandom').addEventListener('click', ()=>{ if(running) togglePlay(); randomize(); });
+document.getElementById('btnClear').addEventListener('click', ()=>{ if(running) togglePlay(); initGrid(); });
+document.getElementById('btnGlider').addEventListener('click', ()=>{
+  if(running) togglePlay();
+  initGrid();
+  const oy = Math.floor(rows/2)-1, ox = Math.floor(cols/2)-1;
+  const glider = [[0,1],[1,2],[2,0],[2,1],[2,2]];
+  glider.forEach(([dy,dx])=>{ cells[oy+dy][ox+dx] = 1; });
+  draw(); updateStats();
+});
+document.getElementById('cellSizeSlider').addEventListener('input', (e)=>{
+  cellSize = +e.target.value;
+  document.getElementById('cellSizePos').textContent = cellSize+'px';
+  if(running) togglePlay();
+  initGrid();
+});
+document.getElementById('speedSlider').addEventListener('input', (e)=>{
+  const labels = {1:'sangat lambat',2:'lambat',3:'sedang',4:'cepat',5:'sangat cepat'};
+  document.getElementById('speedPos').textContent = labels[e.target.value];
+  if(running){ togglePlay(); togglePlay(); }
+});
+
+initGrid();
+randomize();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

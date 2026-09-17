@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Akar Kesalahan yang Sama | Laboratorium JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14161D; --panel:#1A1D27; --panel-2:#222633;
+    --ink:#E9E7DE; --ink-dim:#A6AAB8; --ink-dimmer:#6B6F80;
+    --line:rgba(233,231,222,0.10);
+    --teal:#4FA8B8; --teal-soft:rgba(79,168,184,0.14); --teal-line:rgba(79,168,184,0.35);
+    --red:#C4634F; --red-soft:rgba(196,99,79,0.15); --red-line:rgba(196,99,79,0.38);
+    --gold:#C9A84A; --gold-soft:rgba(201,168,74,0.12); --gold-line:rgba(201,168,74,0.4);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:'Karla',sans-serif; line-height:1.65; -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:500;letter-spacing:-0.01em;color:var(--ink);}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:700px;margin:0 auto;padding:0 22px;}
+  .wide{max-width:780px;}
+
+  header.hero{padding:64px 0 30px;border-bottom:1px solid var(--line);}
+  .kicker{font-size:0.86rem;color:var(--teal);font-weight:600;margin:0 0 16px;}
+  header.hero h1{font-size:clamp(1.7rem,4.6vw,2.3rem);line-height:1.24;margin:0 0 18px;max-width:22ch;}
+  header.hero p{color:var(--ink-dim);font-size:1.02rem;max-width:56ch;margin:0 0 10px;}
+
+  section{padding:46px 0;}
+  section + section{border-top:1px solid var(--line);}
+  .step-tag{display:inline-flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--ink-dimmer);margin-bottom:14px;}
+  .step-tag .dot{width:7px;height:7px;border-radius:50%;background:var(--teal);display:inline-block;}
+  .step-tag.gold .dot{background:var(--gold);}
+  h2{font-size:1.4rem;margin:0 0 16px;}
+  p{margin:0 0 16px;}
+  .lede{color:var(--ink-dim);}
+
+  .premis-box{
+    margin:20px 0; padding:22px; text-align:center; border-radius:14px;
+    background:var(--teal-soft); border:1.5px solid var(--teal-line);
+  }
+  .premis-label{font-size:0.76rem;color:var(--ink-dimmer);margin-bottom:10px;}
+  .premis-formula{font-family:'Fraunces',serif;font-size:1.3rem;color:var(--teal);margin-bottom:8px;}
+  .premis-text{font-size:0.9rem;color:var(--ink-dim);}
+
+  .lab{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--line); border-radius:20px; padding:26px 24px 28px; margin:22px 0;
+  }
+  .slider-row{margin:16px 0 6px;}
+  .slider-row label{display:flex;justify-content:space-between;font-size:0.86rem;color:var(--ink-dimmer);margin-bottom:10px;}
+  input[type=range]{
+    -webkit-appearance:none;width:100%;height:4px;border-radius:4px;background:var(--line);outline:none;margin:6px 0 4px;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+    background:var(--teal);border:3px solid var(--bg);cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid var(--bg);cursor:pointer;}
+
+  .step-list{margin-top:18px;}
+  .step-item{
+    padding:14px 16px; border-radius:10px; margin-bottom:8px;
+    background:rgba(0,0,0,0.16); border:1px solid var(--line);
+    font-size:0.9rem; color:var(--ink-dim);
+  }
+  .step-item .tag{font-size:0.72rem;color:var(--ink-dimmer);margin-bottom:4px;}
+  .step-item.err{border-color:var(--red-line);background:var(--red-soft);}
+  .step-item.err .tag{color:var(--red);}
+  .step-item.err .isi{color:var(--ink);}
+  .step-item.ok{border-color:var(--teal-line);background:var(--teal-soft);}
+  .step-item.ok .tag{color:var(--teal);}
+  .step-item.ok .isi{color:var(--ink);}
+  .step-item .isi{font-family:'JetBrains Mono',monospace;font-size:0.86rem;margin-bottom:4px;}
+  .step-item .ket{font-size:0.86rem;color:var(--ink-dim);font-family:'Karla',sans-serif;}
+
+  .verdict-strip{
+    margin-top:16px; padding:16px 18px; border-radius:12px;
+    font-size:0.92rem;
+  }
+  .verdict-strip.bad{background:var(--red-soft);border:1px solid var(--red-line);color:var(--ink);}
+  .verdict-strip.good{background:var(--teal-soft);border:1px solid var(--teal-line);color:var(--ink);}
+
+  .closing-firm{
+    margin-top:22px;padding:24px 22px;border-radius:16px;
+    background:var(--gold-soft);border:1.5px solid var(--gold-line);
+  }
+  .closing-firm h3{color:var(--gold);font-size:1.15rem;margin:0 0 12px;}
+  .closing-firm p{color:var(--ink);font-size:0.96rem;margin-bottom:10px;}
+  .closing-firm p:last-child{margin-bottom:0;}
+
+  footer{padding:46px 0 66px;color:var(--ink-dimmer);font-size:0.85rem;}
+  footer .divider{height:1px;background:var(--line);margin-bottom:28px;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="kicker">Laboratorium JAZMI — Kesimpulan Penutup</p>
+    <h1>Dua kesimpulan yang bertolak belakang, satu akar kesalahan yang sama</h1>
+    <p>Menyamakan Allah dengan makhluk (tasybih) dan menolak nama-sifat-Nya sama sekali (ta'til) kelihatannya dua sikap yang berlawanan. Tapi kalau ditelusuri langkah logikanya, keduanya ternyata berangkat dari premis tersembunyi yang persis sama — dan premis itulah yang keliru, bukan salah satu ujungnya saja.</p>
+  </div>
+</header>
+
+<section id="premis">
+  <div class="wrap wide">
+    <div class="step-tag"><span class="dot"></span> Titik berangkat</div>
+    <h2>Premis yang mereka berdua diam-diam terima</h2>
+    <p class="lede">Sudah dibuktikan di alat-alat sebelumnya (lewat "kaki", "tinggi", dan "2a") bahwa premis ini tidak pernah benar sebagai aturan umum:</p>
+    <div class="premis-box">
+      <div class="premis-label">Premis P</div>
+      <div class="premis-formula">N(a) ∧ N(b) → Sama(a, b)</div>
+      <div class="premis-text">"Kalau dua hal sama-sama memiliki predikat/nama yang sama (N), maka wujud atau kaifiyyah keduanya pasti sama."</div>
+    </div>
+    <p>Yang benar: N(Allah) sama-sama diketahui benar (nash menyebutkannya), dan N(makhluk) juga benar (kata yang sama dipakai untuk makhluk). Yang membedakan dua kubu di bawah ini hanyalah apa yang mereka lakukan terhadap P.</p>
+  </div>
+</section>
+
+<section id="cabang">
+  <div class="wrap wide">
+    <div class="step-tag"><span class="dot"></span> Tiga cabang</div>
+    <h2>Geser untuk menelusuri tiga jalan yang mungkin diambil</h2>
+
+    <div class="lab">
+      <div class="slider-row">
+        <label>Pilih cabang <span id="cabPos"></span></label>
+        <input type="range" id="cabSlider" min="0" max="2" step="1" value="0">
+      </div>
+
+      <div class="step-list" id="stepList"></div>
+      <div class="verdict-strip" id="verdictStrip"></div>
+    </div>
+  </div>
+</section>
+
+<section id="kesimpulan" class="renungan">
+  <div class="wrap">
+    <div class="step-tag gold"><span class="dot"></span> Kesimpulan</div>
+    <h2>Kesalahannya bukan di ujungnya, tapi di titik awal yang sama</h2>
+    <div class="closing-firm">
+      <p>Kubu tasybih salah karena memakai P untuk <b>membenarkan</b> penyamaan. Kubu ta'til salah karena memakai P yang sama untuk <b>membenarkan</b> penolakan — dua-duanya mengorbankan hal yang berbeda (satu mengorbankan tanzih, satu mengorbankan penetapan nash) demi mempertahankan premis yang sama sekali belum pernah mereka periksa.</p>
+      <p>Begitu P ditolak — dan P memang terbukti salah, persis seperti "kaki" yang berlaku untuk manusia maupun kursi tanpa memaksa keduanya identik — maka N(Allah) ∧ ¬Sama(Allah, makhluk) bisa benar bersamaan, tanpa kontradiksi apa pun. Nama dan sifat itu diterima apa adanya, dan keserupaan dengan makhluk tetap dinafikan sepenuhnya. Tidak ada yang perlu dikorbankan dari salah satu keduanya.</p>
+      <p>Itulah sebabnya posisi pertengahan bukan kompromi di antara dua kesalahan, melainkan satu-satunya posisi yang tidak dibangun di atas premis yang keliru sejak awal.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="divider"></div>
+    Bagian dari Laboratorium JAZMI — dibangun mengikuti metode "Belajar → Memodelkan → Menguji → Membuat Tool".
+  </div>
+</footer>
+
+<script>
+  const cabang = [
+    {
+      nama: "Cabang A — Tasybih (menyamakan)",
+      steps: [
+        { tag:'Diterima', isi:'P: N(a) ∧ N(b) → Sama(a,b)', ket:'Premis ini diterima sebagai benar, tanpa pernah diuji.', type:'err' },
+        { tag:'Diketahui benar', isi:'N(Allah) ∧ N(makhluk)', ket:'Nash menyebut sifat itu pada Allah; kata yang sama juga dipakai untuk makhluk.', type:'' },
+        { tag:'Modus ponens', isi:'N(Allah) ∧ N(makhluk) ∧ P → Sama(Allah, makhluk)', ket:'Karena P diterima benar, kesimpulannya menyamakan wujud/kaifiyyah Allah dengan makhluk.', type:'err' },
+      ],
+      verdict: 'Salah — bukan karena N(Allah) diterima, tapi karena P dipakai sebagai jembatan yang sudah terbukti tidak valid.'
+    },
+    {
+      nama: "Cabang B — Ta'til (menolak)",
+      steps: [
+        { tag:'Diterima', isi:'P: N(a) ∧ N(b) → Sama(a,b)', ket:'Premis yang sama, diterima diam-diam sebagai benar juga di sini.', type:'err' },
+        { tag:'Diketahui benar', isi:'¬Sama(Allah, makhluk)', ket:'Keyakinan bahwa Allah tidak menyerupai makhluk ini sendiri benar dan tidak masalah.', type:'' },
+        { tag:'Modus tollens', isi:'P ∧ ¬Sama(Allah, makhluk) → ¬N(Allah) atau ¬N(makhluk)', ket:'Karena N(makhluk) jelas benar, yang dikorbankan adalah N(Allah) — sifat itu ditolak atau ditakwilkan habis.', type:'err' },
+      ],
+      verdict: 'Salah — bukan karena menjaga tanzih (itu benar), tapi karena mengorbankan N(Allah) padahal yang seharusnya digugurkan adalah P.'
+    },
+    {
+      nama: "Cabang C — Wasat (pertengahan)",
+      steps: [
+        { tag:'Diuji', isi:'P: N(a) ∧ N(b) → Sama(a,b)', ket:'Diuji lewat "kaki" (manusia vs kursi) dan "tinggi" (semut vs gedung) — P terbukti salah sebagai aturan umum.', type:'ok' },
+        { tag:'Ditolak', isi:'¬P', ket:'Karena terbukti salah, premis ini digugurkan sejak awal — bukan dipakai untuk menyimpulkan apa pun.', type:'ok' },
+        { tag:'Hasil', isi:'N(Allah) ∧ ¬Sama(Allah, makhluk)', ket:'Dua-duanya benar bersamaan tanpa kontradiksi: sifat diterima apa adanya, keserupaan tetap dinafikan sepenuhnya.', type:'ok' },
+      ],
+      verdict: 'Konsisten — tidak ada yang dikorbankan, karena jembatan yang keliru (P) sudah digugurkan lebih dulu.'
+    }
+  ];
+
+  const cabSlider = document.getElementById('cabSlider');
+  const cabPos = document.getElementById('cabPos');
+  const stepList = document.getElementById('stepList');
+  const verdictStrip = document.getElementById('verdictStrip');
+
+  function renderCabang(i){
+    const c = cabang[i];
+    cabPos.textContent = c.nama;
+    stepList.innerHTML = c.steps.map(s => `
+      <div class="step-item ${s.type}">
+        <div class="tag">${s.tag}</div>
+        <div class="isi">${s.isi}</div>
+        <div class="ket">${s.ket}</div>
+      </div>
+    `).join('');
+    const isGood = i === 2;
+    verdictStrip.className = 'verdict-strip ' + (isGood ? 'good' : 'bad');
+    verdictStrip.textContent = c.verdict;
+  }
+  cabSlider.addEventListener('input', e => renderCabang(+e.target.value));
+  renderCabang(0);
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

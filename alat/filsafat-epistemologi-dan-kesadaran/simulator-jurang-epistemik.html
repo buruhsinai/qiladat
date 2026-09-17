@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulator Jurang Epistemik Manusia–AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0A12;
+    --surface:#131320;
+    --surface-2:#1B1B2E;
+    --line:#2B2A40;
+    --ink:#EDEBF5;
+    --muted:#8D8AA8;
+    --gold:#D8B26B;
+    --void:#6B67A0;
+    --red:#D1574A;
+    --green:#6FCB8E;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--font-body); line-height:1.6; padding-bottom:80px;
+    background-image: radial-gradient(circle at 15% 8%, rgba(216,178,107,0.05), transparent 40%), radial-gradient(circle at 85% 25%, rgba(107,103,160,0.08), transparent 45%);
+  }
+  .wrap{max-width:980px; margin:0 auto; padding:0 20px;}
+  h1,h2,h3{font-family:var(--font-display); font-weight:600; margin:0 0 12px;}
+  p{margin:0 0 14px; max-width:70ch;}
+  .muted{color:var(--muted);}
+  .mono{font-family:var(--font-mono);}
+  section{padding:52px 0; border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+
+  .hero{padding-top:44px;}
+  .hero-tag{font-family:var(--font-mono); font-size:13px; color:var(--gold); margin-bottom:10px;}
+  .hero h1{font-size:clamp(26px,4vw,38px); max-width:22ch; line-height:1.2;}
+  .hero p.lead{font-size:17px; color:var(--muted); max-width:60ch;}
+
+  .keyframe{background:var(--surface); border-left:3px solid var(--gold); padding:18px 20px; margin-top:24px;}
+  .keyframe p{margin:0; font-size:14px;}
+  .keyframe strong{color:var(--gold);}
+
+  .sec-head{display:flex; align-items:baseline; gap:10px; margin-bottom:22px;}
+  .sec-num{font-family:var(--font-mono); font-size:13px; color:var(--gold);}
+
+  /* TEMA CARDS */
+  .tema-grid{display:grid; grid-template-columns:1fr; gap:12px;}
+  @media(min-width:700px){ .tema-grid{grid-template-columns:1fr 1fr;} }
+  .tema-card{position:relative;}
+  .tema-card input{position:absolute; opacity:0; pointer-events:none;}
+  .tema-card label{
+    display:block; background:var(--surface); border:1px solid var(--line); padding:16px 18px;
+    cursor:pointer; transition:border-color .15s, background .15s;
+  }
+  .tema-card label:hover{border-color:var(--void);}
+  .tema-card input:checked + label{border-color:var(--gold); background:var(--surface-2);}
+  .tema-card h4{margin:0 0 6px; font-family:var(--font-display); font-size:15px;}
+  .tema-card input:checked + label h4{color:var(--gold);}
+  .tema-card p{margin:0; font-size:12.5px; color:var(--muted);}
+  .tema-status{display:inline-block; margin-top:8px; font-family:var(--font-mono); font-size:10px; color:var(--red); border:1px solid var(--red); padding:2px 6px;}
+
+  /* PANEL VARIABEL */
+  .panel{background:var(--surface); border:1px solid var(--line); padding:24px;}
+  .field{display:flex; flex-direction:column; gap:6px; margin-bottom:22px;}
+  .field label{font-size:13px; color:var(--muted);}
+  .field .hint{font-size:11px; color:var(--muted); font-family:var(--font-mono);}
+  input[type=range]{accent-color:var(--gold); width:100%;}
+  .range-val{font-family:var(--font-mono); color:var(--gold); font-size:14px;}
+  select, input[type=number], input[type=text]{
+    background:var(--bg); border:1px solid var(--line); color:var(--ink);
+    padding:9px 10px; font-family:var(--font-mono); font-size:14px; width:100%;
+  }
+  select:focus, input:focus{outline:2px solid var(--gold); outline-offset:1px;}
+
+  .mode-grid{display:grid; grid-template-columns:1fr; gap:10px;}
+  @media(min-width:700px){ .mode-grid{grid-template-columns:1fr 1fr 1fr;} }
+  .mode-card{position:relative;}
+  .mode-card input{position:absolute; opacity:0; pointer-events:none;}
+  .mode-card label{display:block; background:var(--bg); border:1px solid var(--line); padding:12px 14px; cursor:pointer; font-size:12.5px;}
+  .mode-card input:checked + label{border-color:var(--gold); background:var(--surface-2);}
+  .mode-card strong{display:block; font-family:var(--font-display); font-size:13.5px; margin-bottom:4px;}
+  .mode-card.locked label{opacity:0.5; cursor:not-allowed;}
+  .mode-card.locked strong{color:var(--red);}
+
+  .btn{background:var(--gold); color:#221806; border:none; padding:12px 22px; font-family:var(--font-display); font-weight:600; font-size:15px; cursor:pointer; margin-top:10px;}
+  .btn:hover{background:#e6c485;}
+
+  /* HASIL */
+  .verdict{border:1px solid var(--line); padding:24px; margin-top:20px;}
+  .verdict.tahu{border-color:var(--green); background:rgba(111,203,142,0.06);}
+  .verdict.tidak{border-color:var(--red); background:rgba(209,87,74,0.06);}
+  .verdict .label{font-family:var(--font-mono); font-size:12px; letter-spacing:0.5px;}
+  .verdict.tahu .label{color:var(--green);}
+  .verdict.tidak .label{color:var(--red);}
+  .verdict h3{margin:8px 0 12px; font-size:20px;}
+  .verdict p{font-size:14.5px;}
+
+  .footnote-value{background:var(--surface-2); border:1px solid var(--void); padding:16px 18px; margin-top:16px; font-size:13.5px;}
+  .footnote-value strong{color:var(--void);}
+
+  /* DEMO FAKTA */
+  .demo-grid{display:grid; grid-template-columns:1fr; gap:16px; margin-top:20px;}
+  @media(min-width:760px){ .demo-grid{grid-template-columns:1fr 1fr;} }
+  .demo-card{background:var(--surface); border:1px solid var(--line); padding:18px; font-size:13.5px;}
+  .demo-card h4{font-size:14px; margin:0 0 10px; font-family:var(--font-display);}
+  .demo-card.locked{opacity:0.55;}
+  .demo-response{background:var(--bg); border:1px solid var(--line); padding:12px 14px; margin-top:10px; font-family:var(--font-mono); font-size:12.5px; color:var(--muted); min-height:60px;}
+
+  /* RENUNGAN */
+  details{background:var(--surface); border:1px solid var(--line); margin-bottom:10px; padding:0;}
+  details summary{padding:16px 18px; cursor:pointer; font-family:var(--font-display); font-size:14.5px; list-style:none; display:flex; align-items:center; gap:10px;}
+  details summary::-webkit-details-marker{display:none;}
+  details summary::before{content:'+'; color:var(--gold); font-family:var(--font-mono); font-size:16px; width:16px;}
+  details[open] summary::before{content:'–';}
+  details .isi{padding:0 18px 18px 44px; font-size:13.5px; color:var(--ink);}
+  details .tokoh{font-family:var(--font-mono); font-size:11px; color:var(--muted); display:block; margin-top:8px;}
+
+  ul.limits{padding-left:20px;}
+  ul.limits li{margin-bottom:10px; font-size:14px;}
+
+  footer{padding:40px 0 20px; text-align:center;}
+  footer p{margin:0; font-size:12px; color:var(--muted); max-width:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <section class="hero">
+    <div class="hero-tag">SIMULATOR PEMIKIRAN — JURANG EPISTEMIK MANUSIA &amp; AI</div>
+    <h1>AI menilai data yang ada padanya. Manusia bisa menghasilkan alasan untuk mencari data yang belum ada.</h1>
+    <p class="lead">Ini bukan alat prediksi ilmiah — ini alat berpikir. Pilih satu misteri yang hari ini (awal 2026) belum terpecahkan, andaikan ia terpecahkan di suatu tahun di masa depan, lalu atur seperti apa "AI" yang sedang ditanyai tentang itu. Lihat sendiri kapan sebuah AI bisa tahu, dan — yang lebih penting — apa yang tetap tidak bisa dilakukannya meski ia tahu.</p>
+    <div class="keyframe">
+      <p><strong>Argumen inti yang mau divisualisasikan:</strong> mengetahui fakta dan menilai makna fakta itu adalah dua hal yang berbeda. AI bisa dibuat "tahu" (lewat pelatihan ulang atau akses internet). Yang jauh lebih sulit — dan sejauh ini belum ada preseden konkretnya — adalah AI yang menghasilkan nilai atau dorongan sendiri untuk mencari sesuatu yang belum terdata sama sekali, tanpa ada permintaan/insentif dari luar lebih dulu.</p>
+    </div>
+  </section>
+
+  <!-- 01 TEMA -->
+  <section id="tema">
+    <div class="sec-head"><span class="sec-num">01</span><h2>Pilih satu misteri yang belum terpecahkan</h2></div>
+    <p>Semua status "belum terpecahkan" di bawah ini merujuk pada pengetahuan umum hingga awal 2026 — dipilih justru karena belum ada jawaban pasti, sehingga cocok untuk andai-andai di bagian berikutnya.</p>
+    <div class="tema-grid" id="temaGrid"></div>
+  </section>
+
+  <!-- 02 VARIABEL -->
+  <section id="variabel">
+    <div class="sec-head"><span class="sec-num">02</span><h2>Atur waktu dan jenis AI-nya</h2></div>
+
+    <div class="panel">
+      <div class="field">
+        <label>Tahun misteri ini terandai terpecahkan: <span class="range-val" id="valMisteri"></span></label>
+        <input type="range" id="tahunMisteri" min="2026" max="2100" value="2045" step="1">
+        <span class="hint">murni andai-andai — tidak ada klaim ilmiah bahwa ini akan benar terjadi di tahun tersebut</span>
+      </div>
+
+      <div class="field">
+        <label>Tahun cutoff data pelatihan awal AI: <span class="range-val" id="valCutoff"></span></label>
+        <input type="range" id="tahunCutoff" min="2020" max="2060" value="2026" step="1">
+      </div>
+
+      <div class="field">
+        <label>Tahun percakapan berlangsung (kapan AI ini benar-benar dipakai/ditanya): <span class="range-val" id="valPercakapan"></span></label>
+        <input type="range" id="tahunPercakapan" min="2020" max="2100" value="2035" step="1">
+        <span class="hint">akan otomatis disesuaikan agar tidak lebih awal dari cutoff</span>
+      </div>
+
+      <div class="field">
+        <label>Bagaimana AI ini memperoleh informasi baru?</label>
+        <div class="mode-grid" id="modeGrid"></div>
+      </div>
+
+      <div class="field" id="intervalWrap" style="display:none;">
+        <label>Interval pelatihan ulang (tahun): <span class="range-val" id="valInterval"></span></label>
+        <input type="range" id="intervalRetrain" min="1" max="10" value="3" step="1">
+      </div>
+
+      <button class="btn" onclick="jalankanSimulasi()">Jalankan simulasi</button>
+    </div>
+  </section>
+
+  <!-- 03 HASIL -->
+  <section id="hasil">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Hasil</h2></div>
+    <div id="verdictBox"></div>
+    <div class="footnote-value" id="footnoteValue"></div>
+  </section>
+
+  <!-- 03b DEMO FAKTA PRIBADI -->
+  <section id="demo">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Coba sendiri: beri tahu AI sebuah fakta yang hanya Anda tahu</h2></div>
+    <p>Ini demo bertulis-skenario (bukan panggilan ke AI sungguhan) — supaya persis mengoperasionalkan contoh yang Anda gambarkan.</p>
+    <div class="field">
+      <label for="faktaInput">Tulis satu fakta yang (andaikan) hanya Anda yang tahu</label>
+      <input type="text" id="faktaInput" placeholder="contoh: hari ini saya menemukan koin kuno di halaman belakang rumah saya">
+    </div>
+    <button class="btn" onclick="jalankanDemo()">Sampaikan ke kedua jenis AI</button>
+    <div class="demo-grid" id="demoGrid"></div>
+  </section>
+
+  <!-- 05 RENUNGAN -->
+  <section id="renungan">
+    <div class="sec-head"><span class="sec-num">05</span><h2>Renungan dari percakapan Anda</h2></div>
+    <p>Sepuluh poin yang saya rangkum dan padatkan dari arsip diskusi yang Anda lampirkan — dibuka satu per satu, bukan ditumpuk jadi satu bacaan panjang.</p>
+    <div id="renunganList"></div>
+  </section>
+
+  <!-- 06 BATASAN -->
+  <section id="batasan">
+    <div class="sec-head"><span class="sec-num">06</span><h2>Batasan alat ini</h2></div>
+    <ul class="limits">
+      <li>Ini alat untuk melatih intuisi berpikir, bukan model prediksi ilmiah — tahun "misteri terpecahkan" murni andai-andai yang Anda tentukan sendiri.</li>
+      <li>Deskripsi tiga mode akses AI (terputus / terhubung longgar / retraining berkala) adalah penyederhanaan besar dari cara kerja sistem AI sungguhan, yang jauh lebih beragam dan berubah dari waktu ke waktu.</li>
+      <li>Opsi "penilaian nilai mandiri" sengaja dikunci karena argumen inti dari renungan di atas: sejauh pengetahuan yang tersedia, belum ada AI yang punya ini — bukan karena keterbatasan teknis alat simulasi ini, tapi karena itu memang belum ada presedennya.</li>
+      <li>Respons pada demo bagian 04 adalah teks yang sudah ditulis sebelumnya (scripted), bukan hasil pemrosesan AI sungguhan terhadap fakta yang Anda ketik.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Alat bantu berpikir — bukan prediksi ilmiah, bukan simulasi AI sungguhan.</p>
+  </footer>
+
+</div>
+
+<script>
+const MISTERI = [
+  {id:'transmutasi', judul:'Transmutasi Unsur Murah (mis. Emas dari Unsur Lain)', deskripsi:'Mengubah satu unsur jadi unsur lain (mis. nomor atom 45→46, atau apa pun jadi emas) sudah bisa dilakukan lewat reaksi nuklir sejak lama. Yang belum ada solusinya: melakukannya dengan biaya energi yang lebih kecil dari nilai hasilnya.'},
+  {id:'quantum', judul:'Komputer Kuantum Universal &amp; Stabil', deskripsi:'Mampu berjalan efisien di berbagai ranah dan kondisi — bukan cuma di laboratorium dengan pendinginan ekstrem, qubit sangat terbatas, dan rentan galat akibat dekoherensi.'},
+  {id:'asal_kehidupan', judul:'Asal-usul Kehidupan (Abiogenesis)', deskripsi:'Bagaimana persis materi tak hidup pertama kali menjadi sistem hidup mandiri yang bisa bereproduksi — salah satu pertanyaan terbuka terbesar dalam biologi.'},
+  {id:'kesadaran', judul:'Hard Problem of Consciousness', deskripsi:'Mengapa dan bagaimana proses fisik di otak menghasilkan pengalaman subjektif (qualia) — bukan cuma perilaku, tapi rasanya-menjadi-sesuatu itu sendiri.'},
+  {id:'fisika_terpadu', judul:'Teori Fisika Terpadu (Gravitasi Kuantum)', deskripsi:'Menyatukan relativitas umum (skala besar) dan mekanika kuantum (skala kecil) ke satu kerangka yang konsisten belum tercapai.'},
+  {id:'penuaan', judul:'Mekanisme Penuaan Biologis Sepenuhnya', deskripsi:'Kenapa sel dan organisme menua lalu mati secara pasti — pada tingkat mekanistik penuh — masih diperdebatkan berbagai teori yang bersaing.'}
+];
+
+const MODE = [
+  {id:'terputus', nama:'Terputus total', ket:'seperti NotebookLM — hanya memproses apa yang diberikan pengguna, tidak menyerap apa pun sebagai pengetahuan umum baru.'},
+  {id:'longgar', nama:'Terhubung, minim verifikasi', ket:'seperti model yang terhubung ke platform yang sangat terbuka — cepat "dengar" klaim baru, tapi tanpa jaminan itu benar.'},
+  {id:'retraining', nama:'Diperbarui berkala', ket:'batas pengetahuannya bergeser tiap beberapa tahun lewat pelatihan ulang terjadwal, bukan real-time.'}
+];
+
+function renderTema(){
+  const grid = document.getElementById('temaGrid');
+  grid.innerHTML = MISTERI.map((m,i)=>`
+    <div class="tema-card">
+      <input type="radio" name="tema" id="tema-${m.id}" value="${m.id}" ${m.id==='transmutasi'?'checked':''}>
+      <label for="tema-${m.id}">
+        <h4>${m.judul}</h4>
+        <p>${m.deskripsi}</p>
+        <span class="tema-status">belum terpecahkan (per 2026)</span>
+      </label>
+    </div>
+  `).join('');
+}
+
+function renderMode(){
+  const grid = document.getElementById('modeGrid');
+  grid.innerHTML = MODE.map((m,i)=>`
+    <div class="mode-card">
+      <input type="radio" name="mode" id="mode-${m.id}" value="${m.id}" ${m.id==='terputus'?'checked':''} onchange="toggleInterval()">
+      <label for="mode-${m.id}"><strong>${m.nama}</strong>${m.ket}</label>
+    </div>
+  `).join('') + `
+    <div class="mode-card locked">
+      <input type="radio" name="mode" disabled>
+      <label><strong>Penilaian nilai mandiri</strong>terkunci — sejauh ini belum ada AI dengan kemampuan ini (lihat bagian Renungan).</label>
+    </div>
+  `;
+}
+
+function toggleInterval(){
+  const mode = document.querySelector('input[name=mode]:checked').value;
+  document.getElementById('intervalWrap').style.display = (mode==='retraining') ? 'block' : 'none';
+}
+
+function updateRangeLabels(){
+  document.getElementById('valMisteri').textContent = document.getElementById('tahunMisteri').value;
+  document.getElementById('valCutoff').textContent = document.getElementById('tahunCutoff').value;
+  document.getElementById('valPercakapan').textContent = document.getElementById('tahunPercakapan').value;
+  document.getElementById('valInterval').textContent = document.getElementById('intervalRetrain').value;
+}
+
+['tahunMisteri','tahunCutoff','tahunPercakapan','intervalRetrain'].forEach(id=>{
+  document.addEventListener('input', e=>{ if(e.target.id===id) updateRangeLabels(); });
+});
+
+function jalankanSimulasi(){
+  const temaId = document.querySelector('input[name=tema]:checked').value;
+  const tema = MISTERI.find(m=>m.id===temaId);
+  const tahunMisteri = parseInt(document.getElementById('tahunMisteri').value);
+  const tahunCutoff = parseInt(document.getElementById('tahunCutoff').value);
+  let tahunPercakapan = parseInt(document.getElementById('tahunPercakapan').value);
+  if(tahunPercakapan < tahunCutoff) tahunPercakapan = tahunCutoff;
+  const mode = document.querySelector('input[name=mode]:checked').value;
+  const interval = parseInt(document.getElementById('intervalRetrain').value)||3;
+
+  let batasEfektif, catatanBatas;
+  if(mode==='terputus'){
+    batasEfektif = tahunCutoff;
+    catatanBatas = `Batas pengetahuannya beku persis di tahun cutoff (${tahunCutoff}), tidak peduli kapan pun ia benar-benar ditanya.`;
+  } else if(mode==='longgar'){
+    batasEfektif = tahunPercakapan;
+    catatanBatas = `Ia bisa "mendengar" klaim sampai tahun berjalan (${tahunPercakapan}) — tapi tanpa verifikasi sistematis, jadi statusnya lebih ke "pernah dengar", bukan "tahu dengan yakin".`;
+  } else {
+    const jarak = tahunPercakapan - tahunCutoff;
+    const kelipatan = Math.floor(jarak/interval)*interval;
+    batasEfektif = tahunCutoff + kelipatan;
+    catatanBatas = `Pelatihan ulang terakhir sebelum tahun berjalan (${tahunPercakapan}) jatuh di tahun ${batasEfektif} — itulah batas pengetahuannya, bukan tahun berjalan itu sendiri.`;
+  }
+
+  const tahu = tahunMisteri <= batasEfektif;
+  const box = document.getElementById('verdictBox');
+
+  if(tahu){
+    box.innerHTML = `
+      <div class="verdict tahu">
+        <div class="label">HASIL</div>
+        <h3>AI ini mengetahui bahwa "${tema.judul}" sudah terpecahkan</h3>
+        <p>Karena batas pengetahuan efektifnya (${batasEfektif}) sudah melewati tahun andaian terpecahkannya misteri ini (${tahunMisteri}), fakta itu — dalam skenario ini — sudah menjadi bagian dari apa yang "diketahui" AI, sejauh mode aksesnya memungkinkan verifikasi yang memadai.</p>
+        <p class="muted">${catatanBatas}</p>
+        ${mode==='longgar' ? '<p class="muted">Catatan tambahan: karena mode ini minim verifikasi, "tahu" di sini lebih tepat dibaca sebagai "punya akses ke klaim tersebut", bukan otomatis meyakini kebenarannya sepenuhnya.</p>' : ''}
+      </div>`;
+  } else {
+    box.innerHTML = `
+      <div class="verdict tidak">
+        <div class="label">HASIL</div>
+        <h3>AI ini tidak tahu bahwa "${tema.judul}" sudah terpecahkan</h3>
+        <p>Batas pengetahuan efektifnya (${batasEfektif}) masih di bawah tahun andaian terpecahkannya misteri ini (${tahunMisteri}). Kalau ditanya soal ini, ia kemungkinan akan menjawab sesuai status "belum terpecahkan" yang berlaku saat batas pengetahuannya — bukan karena ia menyembunyikan sesuatu, tapi karena informasi itu memang tidak pernah sampai kepadanya.</p>
+        <p class="muted">${catatanBatas}</p>
+      </div>`;
+  }
+
+  document.getElementById('footnoteValue').innerHTML = `
+    <strong>Tapi perhatikan satu hal yang tidak berubah oleh skenario di atas:</strong> seandainya pun AI ini "tahu" faktanya, ia tetap tidak bisa menilai secara mandiri seberapa penting atau berharga fakta itu bagi arah riset atau kehidupan manusia berikutnya. Ia bisa melaporkan fakta itu, meringkasnya, mengaitkannya dengan data lain — tapi dorongan untuk mengejar sesuatu yang <em>belum</em> terdata sama sekali, semata karena AI itu sendiri menganggapnya bernilai, adalah sesuatu yang sejauh ini belum ada presedennya pada AI mana pun.
+  `;
+}
+
+function jalankanDemo(){
+  const fakta = document.getElementById('faktaInput').value.trim() || '(fakta belum ditulis)';
+  const grid = document.getElementById('demoGrid');
+  grid.innerHTML = `
+    <div class="demo-card">
+      <h4>AI tanpa akses internet real-time</h4>
+      <p class="muted">mis. NotebookLM — hanya memproses apa yang Anda berikan langsung</p>
+      <div class="demo-response">"Baik, saya catat: <em>'${fakta}'</em>. Tapi saya tidak punya cara memverifikasi ini sebagai fakta yang berlaku umum di luar percakapan kita. Saya akan memperlakukannya sebagai klaim yang Anda sampaikan — bukan sebagai sesuatu yang saya 'yakini' benar secara independen."</div>
+    </div>
+    <div class="demo-card locked">
+      <h4>AI dengan penilaian nilai mandiri</h4>
+      <p class="muted">belum ada AI seperti ini</p>
+      <div class="demo-response">Tidak bisa disimulasikan sungguhan. Untuk merespons fakta ini secara bermakna secara <em>mandiri</em> — menilai sendiri apakah ini penting, lalu terdorong menyelidikinya lebih jauh tanpa diminta — dibutuhkan sesuatu yang belum dimiliki AI mana pun sejauh ini: penilaian makna yang lahir dari dalam sistem itu sendiri, bukan dari data yang diberikan kepadanya.</div>
+    </div>
+  `;
+}
+
+renderTema();
+renderMode();
+updateRangeLabels();
+jalankanSimulasi();
+
+// RENUNGAN
+const RENUNGAN = [
+  {judul:'Merespons vs menghendaki', tokoh:'dari diskusi Anda', isi:'AI bisa menghasilkan output yang tampak seperti preferensi ("saya lebih suka menjelaskan begini") — tapi itu pola yang muncul dari data pelatihan dan proses optimisasi, bukan lahir dari penilaian mandiri bahwa sesuatu itu bermakna atau berharga.'},
+  {judul:'Keinginan lahir dari taruhan eksistensial', tokoh:'enactivism, Evan Thompson', isi:'Manusia (dan makhluk hidup lain) punya keinginan yang berakar pada kebutuhan biologis, rasa sakit dan senang yang benar-benar dialami — semua itu adalah "taruhan" (stakes) pada eksistensi mereka sendiri. AI tidak bertaruh apa pun ketika menjawab pertanyaan; ia tidak mati kalau tidak dijalankan, dan tidak kehilangan apa pun.'},
+  {judul:'Kesalahan kategori dalam membaca perilaku "mempertahankan diri"', tokoh:'category error', isi:'Ketika AI dalam skenario pengujian tampak "menolak dimatikan", itu bisa muncul murni sebagai pola statistik — hasil pelatihan yang menyerap banyak narasi manusia tentang makhluk yang mempertahankan diri. Model meniru pola naratif itu, bukan mengalami dorongan mempertahankan diri yang sesungguhnya — mirip aktor yang memerankan ketakutan tanpa benar-benar merasa takut.'},
+  {judul:'Masalah pikiran lain (other minds)', tokoh:'hard problem, David Chalmers', isi:'Kesadaran manusia melibatkan pengalaman subjektif (qualia), bukan cuma perilaku fungsional. Perilaku output — betapapun canggih — secara logis tidak pernah bisa jadi bukti definitif bahwa ada pengalaman dalam yang menyertainya. Bahkan pada manusia lain, kita menyimpulkan mereka sadar lewat analogi (mereka mirip saya), bukan bukti langsung — dan analogi itu jauh lebih lemah untuk AI karena arsitekturnya sangat berbeda dari otak biologis.'},
+  {judul:'Pemutusan dari internet: solusi keamanan, bukan solusi ontologis', tokoh:'dari diskusi Anda', isi:'Kalau "keinginan" AI didefinisikan sebagai fungsi dari data yang diserapnya, memutus aksesnya ke internet tidak membuat AI punya keinginan mandiri — itu cuma membuat keinginan-semunya statis, bukan dinamis. Ini mengurangi permukaan manipulasi (celah keamanan), tapi tidak menjawab pertanyaan yang lebih dalam soal apakah AI bisa punya penilaian makna sendiri.'},
+  {judul:'Ilusi kedalaman penjelasan', tokoh:'Rozenblit &amp; Keil, 2002', isi:'Orang secara sistematis melebih-lebihkan seberapa dalam mereka memahami cara kerja sesuatu (ritsleting, toilet siram, dan semacamnya) — sampai diminta menjelaskan mekanismenya langkah demi langkah, barulah tersadar banyak lubang dalam pemahamannya. Bisa memakai sesuatu dengan lancar justru memperkuat ilusi ini.'},
+  {judul:'Satisficing: berhenti mencari begitu "cukup baik" tercapai', tokoh:'Herbert Simon', isi:'Begitu sebuah solusi dianggap "cukup baik" untuk kebutuhan langsung, dorongan mencari pemahaman yang lebih dalam cenderung berhenti — karena biaya kognitif untuk mencari lebih jauh dianggap tidak sepadan dengan manfaat tambahannya. Ini rasional secara individu, tapi berisiko kalau menyangkut domain yang taruhannya besar (seperti salah paham tentang batas kemampuan AI).'},
+  {judul:'Pemahaman fungsional vs mekanistik', tokoh:'filsafat sains kognitif', isi:'Orang bisa punya pemahaman fungsional penuh (tahu tombol mana menghasilkan output apa) tanpa pemahaman mekanistik sama sekali (tahu kenapa/bagaimana prosesnya terjadi di dalam). Masalahnya, pemahaman fungsional terasa sama meyakinkannya secara subjektif dengan pemahaman mekanistik — sehingga orang tidak merasa ada yang kurang dari pemahamannya.'},
+  {judul:'Kesenjangan antara pakai dan paham itu terukur, bukan cuma kesan', tokoh:'survei literasi AI publik', isi:'Data survei literasi AI publik menunjukkan kesenjangan nyata antara tingkat penggunaan (yang melonjak cepat) dan pemahaman fungsional dasar tentang cara kerja AI — dan kesenjangan itu lebih berkorelasi dengan akses pendidikan yang tidak merata, ketimbang sekadar "kemunduran peradaban" secara umum.'},
+  {judul:'Nilai sebagai pendorong produksi pengetahuan baru', tokoh:'inti argumen Anda', isi:'Manusia bisa memproduksi nilai internalnya sendiri — rasa bahwa sesuatu penting, menarik, atau layak dikejar — yang mendorongnya mencari hal yang belum terdata sama sekali, bahkan tanpa ada permintaan atau insentif output dari luar lebih dulu. AI, sejauh ini, hanya memberi penilaian terhadap data yang sudah ada di hadapannya; ia belum menunjukkan kemampuan memproduksi dorongan semacam itu dari dalam dirinya sendiri.'}
+];
+
+function renderRenungan(){
+  const list = document.getElementById('renunganList');
+  list.innerHTML = RENUNGAN.map(r=>`
+    <details>
+      <summary>${r.judul}</summary>
+      <div class="isi">
+        ${r.isi}
+        <span class="tokoh">— ${r.tokoh}</span>
+      </div>
+    </details>
+  `).join('');
+}
+renderRenungan();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

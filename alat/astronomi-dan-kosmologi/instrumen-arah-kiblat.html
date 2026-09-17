@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instrumen Arah Kiblat — Alat JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Karla:wght@400;500;600;700&family=Amiri&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#141922;
+    --panel:#1b2230;
+    --panel-line:#2c3547;
+    --paper:#f2ead9;
+    --paper-line:#d9cba9;
+    --brass:#c19a5b;
+    --brass-bright:#dab476;
+    --azure:#5f8fae;
+    --text:#e9e5da;
+    --text-dim:#8d94a3;
+    --ink-on-paper:#241d10;
+    --ink-on-paper-dim:#6b5f45;
+    --danger:#c47a5a;
+    --needle-exact:#c19a5b;
+    --needle-grid:#5f8fae;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    color:var(--text);
+    font-family:'Karla',sans-serif;
+    line-height:1.5;
+    padding:0 0 64px;
+  }
+  .wrap{ max-width:960px; margin:0 auto; padding:0 20px; }
+
+  header{
+    padding:48px 0 32px;
+    border-bottom:1px solid var(--panel-line);
+    margin-bottom:32px;
+  }
+  .eyebrow-row{
+    display:flex; align-items:baseline; gap:10px;
+    margin-bottom:14px; color:var(--brass); font-size:0.9rem;
+  }
+  .eyebrow-row .sep{ color:var(--text-dim); }
+  h1{
+    font-family:'Fraunces',serif; font-weight:600;
+    font-size:clamp(1.8rem,5vw,2.6rem);
+    line-height:1.15; margin:0 0 14px; color:#f5f1e8;
+  }
+  header p{ color:var(--text-dim); max-width:60ch; font-size:1.02rem; margin:0; }
+  header p em{ color:var(--text); font-style:normal; border-bottom:1px solid var(--brass); }
+
+  /* ---- Layout ---- */
+  .stage{
+    display:grid;
+    grid-template-columns:minmax(280px,420px) 1fr;
+    gap:28px;
+    align-items:start;
+  }
+  @media (max-width:820px){
+    .stage{ grid-template-columns:1fr; }
+  }
+
+  .dial-card{
+    background:var(--panel);
+    border:1px solid var(--panel-line);
+    border-radius:10px;
+    padding:20px;
+  }
+  #dial{ width:100%; height:auto; display:block; }
+
+  .legend{
+    display:flex; gap:18px; flex-wrap:wrap;
+    margin-top:14px; font-size:0.82rem; color:var(--text-dim);
+  }
+  .legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .swatch{ width:16px; height:3px; display:inline-block; border-radius:2px; }
+  .swatch.exact{ background:var(--needle-exact); }
+  .swatch.grid{ background:var(--needle-grid); border-top:2px dashed var(--needle-grid); height:0; }
+
+  /* ---- Controls ---- */
+  .controls{ display:flex; flex-direction:column; gap:18px; }
+  .field-card{
+    background:var(--panel);
+    border:1px solid var(--panel-line);
+    border-radius:10px;
+    padding:18px 18px 20px;
+  }
+  .field-card h2{
+    font-family:'Fraunces',serif; font-weight:600; font-size:1.05rem;
+    margin:0 0 14px; color:#f5f1e8;
+  }
+  .row{ display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+  .field{ flex:1; min-width:120px; display:flex; flex-direction:column; gap:5px; }
+  .field label{ font-size:0.78rem; color:var(--text-dim); }
+  select, input[type=number]{
+    background:var(--ink);
+    border:1px solid var(--panel-line);
+    color:var(--text);
+    border-radius:6px;
+    padding:8px 10px;
+    font-family:'Karla',sans-serif;
+    font-size:0.95rem;
+    width:100%;
+  }
+  select:focus, input:focus{ outline:1px solid var(--brass); border-color:var(--brass); }
+  input[type=range]{ width:100%; accent-color:var(--brass); }
+
+  .toggle-row{
+    display:flex; align-items:center; gap:8px;
+    font-size:0.88rem; color:var(--text);
+    margin-top:4px;
+  }
+  .toggle-row input{ accent-color:var(--brass); width:16px; height:16px; }
+
+  .hint{ font-size:0.78rem; color:var(--text-dim); margin-top:6px; }
+
+  button.btn-ghost{
+    font-family:'Karla',sans-serif; font-size:0.8rem; font-weight:600;
+    background:transparent; color:var(--text-dim);
+    border:1px solid var(--panel-line); border-radius:6px;
+    padding:6px 12px; cursor:pointer;
+  }
+  button.btn-ghost:hover{ color:var(--text); border-color:var(--brass); }
+
+  /* ---- Output ---- */
+  .output{
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+    color:var(--ink-on-paper);
+    border-radius:10px;
+    padding:20px;
+    margin-top:18px;
+  }
+  .output h2{
+    font-family:'Fraunces',serif; font-size:1.05rem; margin:0 0 14px;
+    color:var(--ink-on-paper);
+  }
+  .stat-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:14px;
+  }
+  .stat{ border-left:3px solid var(--brass); padding-left:12px; }
+  .stat .label{ font-size:0.76rem; color:var(--ink-on-paper-dim); margin-bottom:3px; }
+  .stat .value{ font-family:'Fraunces',serif; font-size:1.3rem; }
+  .stat .sub{ font-size:0.8rem; color:var(--ink-on-paper-dim); margin-top:2px; }
+
+  .compare-note{
+    margin-top:16px;
+    font-size:0.86rem;
+    padding:12px 14px;
+    border-radius:8px;
+    background:rgba(196,122,90,0.1);
+    color:var(--ink-on-paper);
+    display:none;
+  }
+  .compare-note.show{ display:block; }
+
+  /* ---- Reference / study section ---- */
+  .study{ margin-top:52px; }
+  details.section{ border-top:1px solid var(--panel-line); }
+  details.section summary{
+    cursor:pointer;
+    font-family:'Fraunces',serif; font-size:1.15rem; color:#f5f1e8;
+    padding:16px 0; list-style:none;
+  }
+  details.section summary::-webkit-details-marker{ display:none; }
+  details.section summary::before{
+    content:'+ '; color:var(--brass); font-family:'Karla',sans-serif; font-weight:700;
+  }
+  details.section[open] summary::before{ content:'– '; }
+  .section-body{ padding:0 0 26px; color:var(--text-dim); font-size:0.95rem; }
+  .section-body p{ margin:0 0 12px; max-width:70ch; }
+  .section-body strong{ color:var(--text); }
+  .formula{
+    font-family:'JetBrains Mono',monospace;
+    background:var(--panel);
+    border:1px solid var(--panel-line);
+    border-radius:8px;
+    padding:12px 14px;
+    color:var(--brass-bright);
+    font-size:0.88rem;
+    margin:10px 0 16px;
+    overflow-x:auto;
+  }
+  .section-body ul{ padding-left:20px; margin:0 0 12px; }
+  .section-body li{ margin-bottom:6px; }
+
+  .disclaimer{
+    margin-top:44px;
+    padding:16px 18px;
+    border:1px solid var(--panel-line);
+    border-radius:10px;
+    background:var(--panel);
+    font-size:0.86rem;
+    color:var(--text-dim);
+  }
+  .disclaimer strong{ color:var(--brass-bright); display:block; margin-bottom:6px; font-family:'Fraunces',serif; font-size:1rem; font-weight:600;}
+
+  footer{
+    margin-top:32px; padding-top:20px;
+    border-top:1px solid var(--panel-line);
+    color:var(--text-dim); font-size:0.82rem;
+  }
+
+  /* ---- Export ---- */
+  .export-row{
+    display:flex; gap:10px; flex-wrap:wrap;
+    margin-top:14px;
+  }
+  button.btn-brass{
+    font-family:'Karla',sans-serif; font-size:0.8rem; font-weight:600;
+    background:var(--brass); color:#241d10;
+    border:1px solid transparent; border-radius:6px;
+    padding:7px 14px; cursor:pointer;
+  }
+  button.btn-brass:hover{ background:var(--brass-bright); }
+  .print-only{ display:none; }
+
+  /* ---- Print layout ---- */
+  @media print{
+    body{ background:#fff; color:#1a1a1a; padding:0; }
+    .wrap{ max-width:100%; padding:0 12mm; }
+    header p em{ border-bottom-color:#8a6d42; }
+    header{ border-bottom-color:#ccc; }
+    .controls, .study, .disclaimer, footer, .legend, .export-row, .compare-note{ display:none !important; }
+    .print-only{ display:block; }
+    .stage{ display:block; }
+    .dial-card{ background:#fff; border:1px solid #999; break-inside:avoid; }
+    #dial text{ fill:#1a1a1a !important; }
+    #dial line, #dial circle{ stroke:#555; }
+    .output{ background:#fdf9ef; border-color:#c9b98a; margin-top:14px; break-inside:avoid; }
+    .stat .value, .stat .label, .stat .sub{ color:#241d10 !important; }
+    h1{ color:#1a1a1a; }
+    .eyebrow-row{ color:#8a6d42; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow-row">JAZMI <span class="sep">/</span> Bank Alat</div>
+    <h1>Instrumen Arah Kiblat</h1>
+    <p>Berangkat dari <em>da'irah samt al-qiblah</em> — instrumen lingkaran berskala derajat yang dipakai ahli falak untuk menentukan arah kiblat secara geometris. Di sini, lintang-bujur lokasi dan Ka'bah bisa Anda ubah sendiri, dan dua metode perhitungan bisa dibandingkan langsung di piringan yang sama.</p>
+  </header>
+
+  <div class="stage">
+    <div class="dial-card">
+      <svg id="dial" viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="legend">
+        <span><span class="swatch exact"></span>Trigonometri bola (presisi)</span>
+        <span><span class="swatch grid"></span>Da'irah grafis (klasik)</span>
+      </div>
+      <div class="export-row">
+        <button class="btn-brass" id="exportPngBtn" type="button">Unduh Gambar (PNG)</button>
+        <button class="btn-ghost" id="printPdfBtn" type="button">Cetak / Simpan sebagai PDF</button>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="field-card">
+        <h2>Lokasi Anda</h2>
+        <div class="row">
+          <div class="field">
+            <label for="cityPreset">Kota contoh</label>
+            <select id="cityPreset">
+              <option value="custom">— Kustom —</option>
+              <option value="jakarta" selected>Jakarta</option>
+              <option value="surabaya">Surabaya</option>
+              <option value="medan">Medan</option>
+              <option value="bandaaceh">Banda Aceh</option>
+              <option value="makassar">Makassar</option>
+              <option value="jayapura">Jayapura</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="lat">Lintang (derajat)</label>
+            <input type="number" id="lat" step="0.0001" value="6.1745">
+          </div>
+          <div class="field" style="max-width:110px;">
+            <label for="latDir">&nbsp;</label>
+            <select id="latDir">
+              <option value="S" selected>LS (Selatan)</option>
+              <option value="N">LU (Utara)</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="lon">Bujur (derajat)</label>
+            <input type="number" id="lon" step="0.0001" value="106.8227">
+          </div>
+          <div class="field" style="max-width:110px;">
+            <label for="lonDir">&nbsp;</label>
+            <select id="lonDir">
+              <option value="E" selected>BT (Timur)</option>
+              <option value="W">BB (Barat)</option>
+            </select>
+          </div>
+        </div>
+        <div class="hint">Ubah angka ini bebas — geser ke kota lain, atau coba titik di tengah laut untuk melihat bagaimana arah berubah.</div>
+      </div>
+
+      <div class="field-card">
+        <h2>Koordinat Ka'bah</h2>
+        <div class="row">
+          <div class="field">
+            <label for="kaabaPreset">Sumber koordinat</label>
+            <select id="kaabaPreset">
+              <option value="modern" selected>Modern (presisi GPS)</option>
+              <option value="naskah">Naskah lama (dibulatkan)</option>
+              <option value="custom">— Kustom —</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="kaabaLat">Lintang Ka'bah</label>
+            <input type="number" id="kaabaLat" step="0.0001" value="21.4225">
+          </div>
+          <div class="field">
+            <label for="kaabaLon">Bujur Ka'bah</label>
+            <input type="number" id="kaabaLon" step="0.0001" value="39.8262">
+          </div>
+        </div>
+        <div class="hint">Naskah instrumen aslinya memakai nilai lintang/bujur yang dibulatkan (bukan presisi GPS) — pilih "Naskah lama" untuk melihat seberapa besar itu menggeser hasilnya.</div>
+      </div>
+
+      <div class="field-card">
+        <h2>Metode ditampilkan</h2>
+        <label class="toggle-row"><input type="checkbox" id="showExact" checked> Trigonometri bola (rumus bearing lingkaran besar)</label>
+        <label class="toggle-row"><input type="checkbox" id="showGrid" checked> Da'irah grafis klasik (metode sudut segitiga siku-siku)</label>
+        <button class="btn-ghost" id="resetBtn" type="button" style="margin-top:12px;">Kembalikan ke Jakarta &amp; Ka'bah modern</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="output">
+    <h2>Hasil Perhitungan</h2>
+    <div class="print-only" id="printParamSummary" style="font-size:0.85rem; color:#4a3f2a; margin-bottom:14px;"></div>
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="compare-note" id="compareNote"></div>
+  </div>
+
+  <div class="study">
+    <details class="section" open>
+      <summary>Apa yang sedang dihitung</summary>
+      <div class="section-body">
+        <p><strong>Arah kiblat (samt al-qiblah)</strong> adalah sudut azimuth — diukur searah jarum jam dari Utara sejati — menuju Ka'bah, dihitung sepanjang lingkaran besar (great circle) yang menghubungkan lokasi Anda dan Mekkah di permukaan bumi yang melengkung. Karena Bumi bulat, arah ini <strong>bukan</strong> garis lurus di peta datar biasa.</p>
+      </div>
+    </details>
+
+    <details class="section">
+      <summary>Metode A — Trigonometri bola (presisi)</summary>
+      <div class="section-body">
+        <p>Rumus bearing lingkaran besar standar dalam navigasi dan astronomi bola:</p>
+        <div class="formula">θ = atan2( sin(Δλ)·cos(φ_K),  cos(φ)·sin(φ_K) − sin(φ)·cos(φ_K)·cos(Δλ) )</div>
+        <p>dengan φ = lintang lokasi Anda, φ_K = lintang Ka'bah, dan Δλ = selisih bujur (bujur Ka'bah dikurangi bujur Anda). Hasilnya dinormalkan ke rentang 0°–360° searah jarum jam dari Utara. Ini metode yang dipakai kompas kiblat digital dan aplikasi falak modern, dan akurat untuk jarak berapa pun di permukaan bumi.</p>
+      </div>
+    </details>
+
+    <details class="section">
+      <summary>Metode B — Da'irah grafis (klasik)</summary>
+      <div class="section-body">
+        <p>Inilah metode yang tergambar pada instrumen aslinya: lintang dan bujur diperlakukan sebagai <strong>sumbu grid datar</strong> (seperti kertas berpetak), lalu ditarik satu garis lurus dari titik lokasi ke titik Mekkah. Sudut garis itu terhadap sumbu Utara-Selatan dibaca langsung dari busur derajat di tepi lingkaran — tanpa perlu tabel trigonometri.</p>
+        <div class="formula">θ_grid = atan2( Δλ, Δφ )</div>
+        <p>Naskah instrumen ini sendiri menyebutkan keterbatasannya secara eksplisit: metode ini <strong>tidak diselidiki akurat</strong> kecuali untuk pasangan lintang/bujur yang selisihnya kira-kira satu hingga sepuluh derajat — karena grid datar mengabaikan lengkungan bumi. Untuk Mekkah–Jakarta yang selisih bujurnya puluhan derajat, penyusun naskah (Syeikh Abdur-Rahman al-Masri) sudah menghitung sendiri angka koreksinya secara khusus untuk Jakarta.</p>
+        <p>Geser toggle di atas untuk melihat langsung: makin jauh lokasi Anda dari Mekkah, makin besar celah antara jarum brass (presisi) dan jarum biru putus-putus (klasik).</p>
+      </div>
+    </details>
+
+    <details class="section">
+      <summary>Sumber &amp; batasan</summary>
+      <div class="section-body">
+        <p>Diagram instrumen asli diambil dari naskah <em>da'irah samt al-qiblah</em> susunan al-faqir al-haroqir al-hajj Muhammad Mansur bin Abdul Hamid Jakartawi, mengklarifikasi metode al-'Alamah Syeikh Abdur-Rahman al-Masri, merujuk pada kaidah Abi al-Banna' tentang keterbatasan metode dua-bujur-dua-lintang.</p>
+        <ul>
+          <li>Koordinat Ka'bah "modern" di atas adalah titik referensi GPS yang umum dipakai (21.4225° LU, 39.8262° BT) — bukan satu-satunya konvensi; beberapa sumber memakai titik tengah Masjidil Haram yang sedikit berbeda.</li>
+          <li>Hasil trigonometri bola tetap sebuah <strong>model matematis Bumi sebagai bola sempurna</strong> — cukup akurat untuk kebutuhan arah shalat, tapi bukan pemodelan geodesi elipsoid penuh.</li>
+          <li>Alat ini adalah bantu-hitung, bukan pengganti kompas kiblat fisik yang sudah dikalibrasi atau rukyat langsung di lapangan.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="disclaimer">
+    <strong>Catatan penggunaan</strong>
+    Alat ini membantu perhitungan arah kiblat berdasarkan dua metode di atas. Hasilnya bersifat bantu-hitung, bukan fatwa atau keputusan hukum final. Untuk kondisi khusus (lokasi terpencil, bangunan yang sudah berdiri, atau perbedaan pendapat metode), konsultasikan dengan ahli falak atau ulama setempat.
+  </div>
+
+  <footer>
+    Bagian dari kurikulum laboratorium alat JAZMI — model dua-metode ini dibangun dan diuji dengan data beberapa kota sebelum dibungkus menjadi instrumen interaktif ini.
+  </footer>
+</div>
+
+<script>
+/* ===================== MATH CORE ===================== */
+function toRad(d){ return d*Math.PI/180; }
+function toDeg(r){ return r*180/Math.PI; }
+function norm360(d){ return (d%360+360)%360; }
+
+function qiblaExact(lat, lon, kLat, kLon){
+  const phi1 = toRad(lat), phi2 = toRad(kLat);
+  const dLambda = toRad(kLon - lon);
+  const y = Math.sin(dLambda)*Math.cos(phi2);
+  const x = Math.cos(phi1)*Math.sin(phi2) - Math.sin(phi1)*Math.cos(phi2)*Math.cos(dLambda);
+  return norm360(toDeg(Math.atan2(y,x)));
+}
+
+function qiblaGrid(lat, lon, kLat, kLon){
+  const dLon = kLon - lon;
+  const dLat = kLat - lat;
+  return norm360(toDeg(Math.atan2(dLon, dLat)));
+}
+
+function greatCircleDistanceKm(lat1, lon1, lat2, lon2){
+  const R = 6371;
+  const phi1 = toRad(lat1), phi2 = toRad(lat2);
+  const dphi = toRad(lat2-lat1), dl = toRad(lon2-lon1);
+  const a = Math.sin(dphi/2)**2 + Math.cos(phi1)*Math.cos(phi2)*Math.sin(dl/2)**2;
+  const c = 2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R*c;
+}
+
+function bearingToCompass(deg){
+  const dirs = ['Utara','Timur Laut','Timur','Tenggara','Selatan','Barat Daya','Barat','Barat Laut'];
+  const ix = Math.round(deg/45) % 8;
+  return dirs[ix];
+}
+
+function bearingToNSWE(deg){
+  // e.g. "N 65.1° W" style reading
+  let quad, ref, comp;
+  if(deg <= 90){ ref='U'; comp='T'; quad=deg; }
+  else if(deg <= 180){ ref='S'; comp='T'; quad=180-deg; }
+  else if(deg <= 270){ ref='S'; comp='B'; quad=deg-180; }
+  else { ref='U'; comp='B'; quad=360-deg; }
+  return ref + ' ' + quad.toFixed(2) + '° ' + comp;
+}
+
+/* ===================== CITY PRESETS ===================== */
+const CITIES = {
+  jakarta:  {lat:6.1745,  latDir:'S', lon:106.8227, lonDir:'E'},
+  surabaya: {lat:7.2575,  latDir:'S', lon:112.7521, lonDir:'E'},
+  medan:    {lat:3.5952,  latDir:'N', lon:98.6722,  lonDir:'E'},
+  bandaaceh:{lat:5.5483,  latDir:'N', lon:95.3238,  lonDir:'E'},
+  makassar: {lat:5.1477,  latDir:'S', lon:119.4327, lonDir:'E'},
+  jayapura: {lat:2.5330,  latDir:'S', lon:140.7181, lonDir:'E'},
+};
+const KAABA_PRESETS = {
+  modern: {lat:21.4225, lon:39.8262},
+  naskah: {lat:21, lon:37},
+};
+
+/* ===================== DOM ===================== */
+const el = id => document.getElementById(id);
+const latEl=el('lat'), latDirEl=el('latDir'), lonEl=el('lon'), lonDirEl=el('lonDir');
+const kaabaLatEl=el('kaabaLat'), kaabaLonEl=el('kaabaLon');
+const cityPresetEl=el('cityPreset'), kaabaPresetEl=el('kaabaPreset');
+const showExactEl=el('showExact'), showGridEl=el('showGrid');
+const statGrid=el('statGrid'), compareNote=el('compareNote');
+const dial=el('dial');
+
+function signedLat(){
+  const v = parseFloat(latEl.value)||0;
+  return latDirEl.value === 'S' ? -v : v;
+}
+function signedLon(){
+  const v = parseFloat(lonEl.value)||0;
+  return lonDirEl.value === 'W' ? -v : v;
+}
+
+/* ===================== DIAL (SVG) ===================== */
+const CX=240, CY=240, R_OUTER=200, R_TICK_IN=182, R_LABEL=160, R_NEEDLE=170;
+const NS = 'http://www.w3.org/2000/svg';
+
+function svgEl(tag, attrs){
+  const e = document.createElementNS(NS, tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+function buildStaticDial(){
+  dial.innerHTML = '';
+  // outer ring
+  dial.appendChild(svgEl('circle',{cx:CX,cy:CY,r:R_OUTER,fill:'none',stroke:'#c19a5b','stroke-width':1.5}));
+  dial.appendChild(svgEl('circle',{cx:CX,cy:CY,r:R_TICK_IN,fill:'none',stroke:'#2c3547','stroke-width':1}));
+
+  // ticks
+  for(let d=0; d<360; d+=5){
+    const rad = toRad(d);
+    const isMajor = d % 30 === 0;
+    const r1 = R_TICK_IN;
+    const r2 = isMajor ? R_TICK_IN - 14 : R_TICK_IN - 7;
+    const x1 = CX + r1*Math.sin(rad), y1 = CY - r1*Math.cos(rad);
+    const x2 = CX + r2*Math.sin(rad), y2 = CY - r2*Math.cos(rad);
+    dial.appendChild(svgEl('line',{x1,y1,x2,y2,stroke: isMajor ? '#c19a5b':'#4a5468','stroke-width': isMajor?1.4:0.8}));
+  }
+
+  // cardinal labels (Indonesian + Arabic manuscript-style)
+  const cardinals = [
+    {d:0,   id:'Utara',   ar:'شمالي'},
+    {d:90,  id:'Timur',   ar:'شرقي'},
+    {d:180, id:'Selatan', ar:'جنوبي'},
+    {d:270, id:'Barat',   ar:'غربي'},
+  ];
+  cardinals.forEach(c=>{
+    const rad = toRad(c.d);
+    const x = CX + R_LABEL*Math.sin(rad), y = CY - R_LABEL*Math.cos(rad);
+    const t1 = svgEl('text',{x, y:y-4, 'text-anchor':'middle', 'font-family':'Karla,sans-serif','font-size':13,'font-weight':700, fill:'#e9e5da'});
+    t1.textContent = c.id;
+    dial.appendChild(t1);
+    const t2 = svgEl('text',{x, y:y+13, 'text-anchor':'middle', 'font-family':'Amiri,serif','font-size':12, fill:'#8d94a3'});
+    t2.textContent = c.ar;
+    dial.appendChild(t2);
+  });
+
+  // degree numerals every 30
+  for(let d=0; d<360; d+=30){
+    if(d % 90 === 0) continue;
+    const rad = toRad(d);
+    const r = R_TICK_IN - 26;
+    const x = CX + r*Math.sin(rad), y = CY - r*Math.cos(rad);
+    const t = svgEl('text',{x, y:y+4, 'text-anchor':'middle', 'font-family':'JetBrains Mono,monospace','font-size':9, fill:'#6b7280'});
+    t.textContent = d;
+    dial.appendChild(t);
+  }
+
+  // center hub
+  dial.appendChild(svgEl('circle',{cx:CX,cy:CY,r:4,fill:'#c19a5b'}));
+
+  // groups for dynamic needles + labels
+  dial.appendChild(svgEl('g',{id:'needleGridG'}));
+  dial.appendChild(svgEl('g',{id:'needleExactG'}));
+}
+
+function drawNeedle(groupId, angleDeg, color, dashed, label){
+  const g = el(groupId) || document.getElementById(groupId);
+  while(g.firstChild) g.removeChild(g.firstChild);
+  const rad = toRad(angleDeg);
+  const x2 = CX + R_NEEDLE*Math.sin(rad), y2 = CY - R_NEEDLE*Math.cos(rad);
+  const line = svgEl('line',{x1:CX,y1:CY,x2,y2,stroke:color,'stroke-width':2.4});
+  if(dashed) line.setAttribute('stroke-dasharray','7 5');
+  g.appendChild(line);
+
+  // arrowhead
+  const headLen=10, headAng=0.35;
+  const a1 = rad + Math.PI - headAng, a2 = rad + Math.PI + headAng;
+  const hx1 = x2 + headLen*Math.sin(a1), hy1 = y2 - headLen*Math.cos(a1);
+  const hx2 = x2 + headLen*Math.sin(a2), hy2 = y2 - headLen*Math.cos(a2);
+  const head = svgEl('polygon',{points:`${x2},${y2} ${hx1},${hy1} ${hx2},${hy2}`, fill:color});
+  g.appendChild(head);
+
+  // label near tip
+  const lr = R_NEEDLE + 16;
+  const lx = CX + lr*Math.sin(rad), ly = CY - lr*Math.cos(rad);
+  const t = svgEl('text',{x:lx, y:ly, 'text-anchor':'middle','font-family':"'Fraunces',serif",'font-size':11,'font-weight':600, fill:color});
+  t.textContent = label;
+  g.appendChild(t);
+}
+
+/* ===================== SYNC + COMPUTE ===================== */
+function applyCityPreset(){
+  const key = cityPresetEl.value;
+  if(key === 'custom') return;
+  const c = CITIES[key];
+  latEl.value = c.lat; latDirEl.value = c.latDir;
+  lonEl.value = c.lon; lonDirEl.value = c.lonDir;
+}
+function applyKaabaPreset(){
+  const key = kaabaPresetEl.value;
+  if(key === 'custom') return;
+  const k = KAABA_PRESETS[key];
+  kaabaLatEl.value = k.lat;
+  kaabaLonEl.value = k.lon;
+}
+
+function markCustomOnLocationEdit(){ cityPresetEl.value = 'custom'; }
+function markCustomOnKaabaEdit(){ kaabaPresetEl.value = 'custom'; }
+
+function render(){
+  const lat = signedLat(), lon = signedLon();
+  const kLat = parseFloat(kaabaLatEl.value)||0, kLon = parseFloat(kaabaLonEl.value)||0;
+
+  const exact = qiblaExact(lat, lon, kLat, kLon);
+  const grid = qiblaGrid(lat, lon, kLat, kLon);
+  const dist = greatCircleDistanceKm(lat, lon, kLat, kLon);
+  const diff = Math.abs(((exact-grid+540)%360)-180);
+
+  const showExact = showExactEl.checked, showGrid = showGridEl.checked;
+
+  document.getElementById('needleExactG').style.display = showExact ? '' : 'none';
+  document.getElementById('needleGridG').style.display = showGrid ? '' : 'none';
+  if(showExact) drawNeedle('needleExactG', exact, '#c19a5b', false, exact.toFixed(1)+'°');
+  if(showGrid)  drawNeedle('needleGridG', grid, '#5f8fae', true, grid.toFixed(1)+'°');
+
+  statGrid.innerHTML = '';
+  const stats = [];
+  if(showExact) stats.push(['Azimuth — trigonometri bola', exact.toFixed(2)+'°', bearingToNSWE(exact)+' · '+bearingToCompass(exact)]);
+  if(showGrid) stats.push(['Azimuth — da\'irah grafis', grid.toFixed(2)+'°', bearingToNSWE(grid)+' · '+bearingToCompass(grid)]);
+  stats.push(['Jarak lingkaran besar ke Ka\'bah', dist.toLocaleString('id-ID',{maximumFractionDigits:0})+' km', '']);
+  if(showExact && showGrid) stats.push(['Selisih dua metode', diff.toFixed(2)+'°', '']);
+
+  stats.forEach(([label,value,sub])=>{
+    const div = document.createElement('div');
+    div.className = 'stat';
+    div.innerHTML = `<div class="label">${label}</div><div class="value">${value}</div>${sub?`<div class="sub">${sub}</div>`:''}`;
+    statGrid.appendChild(div);
+  });
+
+  if(showExact && showGrid){
+    if(diff > 3){
+      compareNote.textContent = `Selisih ${diff.toFixed(1)}° antara kedua metode cukup besar — sesuai catatan naskah, metode da'irah grafis memang kehilangan akurasi ketika selisih bujur/lintang antara lokasi dan Mekkah jauh melampaui rentang beberapa derajat.`;
+      compareNote.classList.add('show');
+    } else {
+      compareNote.textContent = `Selisih ${diff.toFixed(1)}° antara kedua metode masih kecil untuk pasangan koordinat ini — dalam rentang yang menurut naskah memang dianggap cukup diselidiki secara grafis.`;
+      compareNote.classList.add('show');
+    }
+  } else {
+    compareNote.classList.remove('show');
+  }
+
+  // keep a snapshot of current computed state for export functions
+  window._qiblaState = {
+    lat, lon, kLat, kLon, exact, grid, dist, diff, showExact, showGrid,
+    cityLabel: cityPresetEl.options[cityPresetEl.selectedIndex].text,
+    kaabaLabel: kaabaPresetEl.options[kaabaPresetEl.selectedIndex].text,
+  };
+
+  const s = window._qiblaState;
+  const latTxt = (latDirEl.value==='S'?'-':'') + latEl.value + '° ' + (latDirEl.value==='S'?'LS':'LU');
+  const lonTxt = (lonDirEl.value==='W'?'-':'') + lonEl.value + '° ' + (lonDirEl.value==='W'?'BB':'BT');
+  document.getElementById('printParamSummary').innerHTML =
+    `<strong>Lokasi:</strong> ${s.cityLabel} (${latTxt}, ${lonTxt}) &nbsp;·&nbsp; ` +
+    `<strong>Ka'bah:</strong> ${s.kaabaLabel} (${kLat}°, ${kLon}°) &nbsp;·&nbsp; ` +
+    `<strong>Dicetak:</strong> ${new Date().toLocaleString('id-ID')}`;
+}
+
+/* ===================== WIRE UP ===================== */
+buildStaticDial();
+
+cityPresetEl.addEventListener('change', ()=>{ applyCityPreset(); render(); });
+kaabaPresetEl.addEventListener('change', ()=>{ applyKaabaPreset(); render(); });
+
+[latEl, latDirEl, lonEl, lonDirEl].forEach(inp=>{
+  inp.addEventListener('input', ()=>{ markCustomOnLocationEdit(); render(); });
+});
+[kaabaLatEl, kaabaLonEl].forEach(inp=>{
+  inp.addEventListener('input', ()=>{ markCustomOnKaabaEdit(); render(); });
+});
+[showExactEl, showGridEl].forEach(inp=>{
+  inp.addEventListener('change', render);
+});
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  cityPresetEl.value = 'jakarta'; applyCityPreset();
+  kaabaPresetEl.value = 'modern'; applyKaabaPreset();
+  showExactEl.checked = true; showGridEl.checked = true;
+  render();
+});
+
+/* ===================== EXPORT: PNG ===================== */
+function exportPng(){
+  const s = window._qiblaState;
+  if(!s) return;
+
+  const SCALE = 2;
+  const dialSize = 480;
+  const captionH = 190;
+  const W = dialSize*SCALE, H = (dialSize+captionH)*SCALE;
+
+  // clone the live SVG (already has current needles drawn) and force a background
+  const svgClone = dial.cloneNode(true);
+  svgClone.setAttribute('width', dialSize);
+  svgClone.setAttribute('height', dialSize);
+  const bg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  bg.setAttribute('x',0); bg.setAttribute('y',0);
+  bg.setAttribute('width',480); bg.setAttribute('height',480);
+  bg.setAttribute('fill', '#1b2230');
+  svgClone.insertBefore(bg, svgClone.firstChild);
+
+  const svgStr = new XMLSerializer().serializeToString(svgClone);
+  const svgBlob = new Blob([svgStr], {type:'image/svg+xml;charset=utf-8'});
+  const url = URL.createObjectURL(svgBlob);
+
+  const img = new Image();
+  img.onload = function(){
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    // full background
+    ctx.fillStyle = '#141922';
+    ctx.fillRect(0,0,W,H);
+
+    // dial
+    ctx.drawImage(img, 0, 0, dialSize*SCALE, dialSize*SCALE);
+    URL.revokeObjectURL(url);
+
+    // caption panel
+    const padX = 24*SCALE;
+    let y = (dialSize+34)*SCALE;
+    ctx.fillStyle = '#f5f1e8';
+    ctx.font = (15*SCALE)+'px Georgia, serif';
+    ctx.fillText('Instrumen Arah Kiblat — JAZMI', padX, y);
+
+    ctx.font = (11*SCALE)+'px monospace';
+    ctx.fillStyle = '#c19a5b';
+    y += 22*SCALE;
+    const latTxt = (latDirEl.value==='S'?'-':'') + latEl.value + '° ' + (latDirEl.value==='S'?'LS':'LU');
+    const lonTxt = (lonDirEl.value==='W'?'-':'') + lonEl.value + '° ' + (lonDirEl.value==='W'?'BB':'BT');
+    const lines = [
+      'Lokasi: ' + s.cityLabel + '  (' + latTxt + ', ' + lonTxt + ')',
+      "Ka'bah: " + s.kaabaLabel + '  (' + s.kLat + '°, ' + s.kLon + '°)',
+      '',
+    ];
+    if(s.showExact) lines.push('Trigonometri bola : ' + s.exact.toFixed(2) + '°  (' + bearingToNSWE(s.exact) + ')');
+    if(s.showGrid)  lines.push("Da'irah grafis    : " + s.grid.toFixed(2) + '°  (' + bearingToNSWE(s.grid) + ')');
+    if(s.showExact && s.showGrid) lines.push('Selisih metode    : ' + s.diff.toFixed(2) + '°');
+    lines.push("Jarak ke Ka'bah   : " + Math.round(s.dist).toLocaleString('id-ID') + ' km');
+    lines.push('');
+    lines.push('Dibuat: ' + new Date().toLocaleString('id-ID'));
+
+    ctx.fillStyle = '#e9e5da';
+    lines.forEach(line=>{
+      ctx.fillText(line, padX, y);
+      y += 17*SCALE;
+    });
+
+    canvas.toBlob(blob=>{
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'instrumen-arah-kiblat-' + s.cityLabel.toLowerCase().replace(/\s+/g,'-') + '.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }, 'image/png');
+  };
+  img.src = url;
+}
+
+/* ===================== EXPORT: PDF (native print) ===================== */
+function exportPdf(){
+  window.print();
+}
+
+document.getElementById('exportPngBtn').addEventListener('click', exportPng);
+document.getElementById('printPdfBtn').addEventListener('click', exportPdf);
+
+render();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

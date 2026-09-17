@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalender Cetak Masehi & Hijriah — JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Karla:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --emerald-deep:#0F3D2E;
+    --emerald-mid:#1D5C43;
+    --ivory:#FAF6ED;
+    --ivory-soft:#F1EADA;
+    --ink:#1C2B24;
+    --gold:#B8934A;
+    --gold-soft:#E7D2A0;
+    --line:rgba(15,61,46,0.14);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--ivory);color:var(--ink);font-family:'Karla',sans-serif;line-height:1.6;}
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;color:var(--emerald-deep);letter-spacing:-0.01em;}
+  .amiri{font-family:'Amiri',serif;}
+  .wrap{max-width:860px;margin:0 auto;padding:0 24px;}
+
+  .versi-awal{background:var(--emerald-deep);color:var(--ivory);padding:14px 24px;}
+  .versi-awal .wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap;max-width:860px;}
+  .versi-awal .badge{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;background:var(--gold);color:var(--emerald-deep);padding:4px 9px;border-radius:2px;flex-shrink:0;}
+  .versi-awal p{margin:0;font-size:14px;color:rgba(250,246,237,0.92);flex:1;min-width:220px;}
+  .versi-awal a.wa-inline{color:var(--gold-soft);font-weight:700;text-decoration:underline;white-space:nowrap;}
+
+  .crumb{padding:20px 24px 0;max-width:860px;margin:0 auto;font-size:13px;letter-spacing:0.04em;text-transform:uppercase;color:var(--emerald-mid);opacity:0.75;}
+  .crumb span{color:var(--ink);opacity:0.4;margin:0 6px;}
+
+  .hero{padding:32px 0 28px;}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:14px;}
+  .eyebrow::before{content:"";width:18px;height:1px;background:var(--gold);display:inline-block;}
+  .hero h1{font-size:clamp(26px,4.5vw,36px);margin:0 0 12px;line-height:1.15;}
+  .hero p.lede{font-size:16px;color:var(--emerald-deep);opacity:0.85;max-width:58ch;margin:0;}
+
+  /* Kontrol navigasi */
+  .kontrol{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    background:var(--emerald-deep);color:var(--ivory);padding:18px 22px;border-radius:4px;margin-bottom:0;
+  }
+  .kontrol .nav-bulan{display:flex;align-items:center;gap:14px;}
+  .kontrol button.panah{
+    background:rgba(250,246,237,0.1);border:1px solid rgba(231,210,160,0.3);color:var(--ivory);
+    width:34px;height:34px;border-radius:3px;cursor:pointer;font-size:16px;font-family:'Karla',sans-serif;
+  }
+  .kontrol button.panah:hover{background:rgba(250,246,237,0.2);}
+  .kontrol .judul-bulan{font-family:'Fraunces',serif;font-size:19px;min-width:170px;text-align:center;}
+  .kontrol select{
+    background:rgba(250,246,237,0.08);border:1px solid rgba(231,210,160,0.3);color:var(--ivory);
+    padding:8px 10px;border-radius:3px;font-family:'Karla',sans-serif;font-size:14px;
+  }
+  .kontrol button.cetak{
+    background:var(--gold);color:var(--emerald-deep);border:none;padding:10px 20px;border-radius:3px;
+    font-family:'Karla',sans-serif;font-weight:700;font-size:14px;cursor:pointer;
+  }
+  .kontrol button.cetak:hover{background:var(--gold-soft);}
+
+  /* Lembar kalender */
+  .lembar{
+    background:#FFFFFF;border:1px solid var(--line);border-radius:4px;margin-top:18px;padding:28px;
+  }
+  .lembar .kop{text-align:center;margin-bottom:20px;}
+  .lembar .kop .bulan-m{font-family:'Fraunces',serif;font-size:26px;color:var(--emerald-deep);}
+  .lembar .kop .rentang-h{font-size:14px;color:var(--gold);letter-spacing:0.03em;margin-top:4px;}
+  .lembar .kop .rentang-h .amiri{margin-left:6px;}
+
+  table.grid{width:100%;border-collapse:collapse;table-layout:fixed;}
+  table.grid th{
+    font-size:12px;letter-spacing:0.06em;text-transform:uppercase;color:var(--emerald-mid);
+    padding:8px 0;border-bottom:2px solid var(--emerald-deep);font-weight:700;
+  }
+  table.grid th.jumat{color:var(--gold);}
+  table.grid td{
+    height:64px;vertical-align:top;padding:6px 7px;border:1px solid var(--line);position:relative;
+  }
+  table.grid td.luar-bulan{background:#FAFAFA;opacity:0.4;}
+  table.grid td.hari-ini{background:rgba(184,147,74,0.1);border:1px solid var(--gold);}
+  .angka-m{font-family:'Fraunces',serif;font-size:16px;color:var(--ink);}
+  .angka-h{font-size:11px;color:var(--emerald-mid);margin-top:3px;line-height:1.3;}
+  .penanda{
+    display:inline-block;margin-top:3px;font-size:9.5px;letter-spacing:0.02em;
+    background:var(--gold-soft);color:var(--emerald-deep);padding:1px 5px;border-radius:2px;
+  }
+
+  section{max-width:860px;margin:0 auto;padding:34px 24px;border-top:1px solid var(--line);}
+  .label{font-size:12px;letter-spacing:0.09em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:10px;}
+  section h2{font-size:21px;margin:0 0 14px;}
+  section p{margin:0 0 12px;font-size:15px;}
+  .batasan-item{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start;}
+  .batasan-item .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:8px;flex-shrink:0;}
+  .disclaimer-box{background:var(--ivory-soft);border-left:3px solid var(--gold);padding:14px 16px;border-radius:2px;font-size:14px;margin-top:14px;}
+
+  .konsultasi{margin-top:8px;padding:20px;border:1px dashed var(--line);border-radius:4px;text-align:center;}
+  .konsultasi p{font-size:14px;margin-bottom:12px;color:var(--emerald-deep);}
+  .btn-konsul{display:inline-block;padding:10px 22px;border-radius:3px;background:var(--emerald-mid);color:var(--ivory);font-family:'Karla',sans-serif;font-weight:600;font-size:14px;cursor:pointer;text-decoration:none;}
+
+  footer{max-width:860px;margin:0 auto;padding:24px 24px 50px;font-size:13px;color:var(--emerald-mid);opacity:0.7;}
+
+  /* Cetak */
+  @media print{
+    .versi-awal, .crumb, .hero, .kontrol .nav-bulan, .kontrol select, .kontrol button.cetak, section, footer{display:none !important;}
+    .kontrol{background:none;color:var(--ink);padding:0;border-radius:0;justify-content:center;}
+    .kontrol .judul-bulan{display:none;}
+    body{background:#fff;}
+    .wrap{max-width:100%;padding:0;}
+    .lembar{border:none;padding:0;margin-top:0;}
+    table.grid td{height:90px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="versi-awal">
+  <div class="wrap">
+    <span class="badge">Versi Awal</span>
+    <p>Tanggal Hijriah pada kalender ini hasil hitungan tabular, bisa berbeda 1–3 hari dari rukyat resmi — terutama untuk Ramadan, Syawal, dan Dzulhijjah.</p>
+    <a class="wa-inline" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20validasi%20Kalender%20Cetak%20JAZMI." target="_blank" rel="noopener">Validasi via WhatsApp →</a>
+  </div>
+</div>
+
+<div class="crumb">JAZMI <span>/</span> Alat <span>/</span> Kalender Cetak</div>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">Alat — Sains Falak</div>
+    <h1>Kalender Cetak Masehi & Hijriah</h1>
+    <p class="lede">Lihat satu bulan penuh dengan tanggal Masehi dan padanan Hijriahnya berdampingan, lalu cetak langsung dari halaman ini.</p>
+  </div>
+
+  <div class="kontrol">
+    <div class="nav-bulan">
+      <button class="panah" onclick="ubahBulan(-1)" aria-label="Bulan sebelumnya">‹</button>
+      <span class="judul-bulan" id="judulBulan">—</span>
+      <button class="panah" onclick="ubahBulan(1)" aria-label="Bulan berikutnya">›</button>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <select id="pilihBulan" onchange="pilihLangsung()"></select>
+      <select id="pilihTahun" onchange="pilihLangsung()"></select>
+    </div>
+    <button class="cetak" onclick="window.print()">🖨 Cetak Kalender</button>
+  </div>
+
+  <div class="lembar" id="lembarCetak">
+    <div class="kop">
+      <div class="bulan-m" id="kopBulanMasehi">—</div>
+      <div class="rentang-h" id="kopRentangHijriah">—</div>
+    </div>
+    <table class="grid">
+      <thead>
+        <tr>
+          <th>Ahad</th><th>Senin</th><th>Selasa</th><th>Rabu</th><th>Kamis</th><th class="jumat">Jumat</th><th>Sabtu</th>
+        </tr>
+      </thead>
+      <tbody id="isiGrid"></tbody>
+    </table>
+  </div>
+</div>
+
+<section id="belajar">
+  <div class="label">Belajar</div>
+  <h2>Kenapa satu bulan Masehi bisa memuat dua bulan Hijriah?</h2>
+  <p>Bulan Hijriah (29–30 hari) lebih pendek dari bulan Masehi (30–31 hari), dan awalnya tidak pernah sejajar dengan tanggal 1 Masehi. Akibatnya, satu halaman kalender bulanan Masehi hampir selalu memuat <strong>ekor bulan Hijriah sebelumnya</strong> di awal, lalu <strong>awal bulan Hijriah berikutnya</strong> di akhir. Judul di atas grid menunjukkan rentang keduanya.</p>
+</section>
+
+<section id="batasan">
+  <div class="label">Batasan</div>
+  <h2>Yang perlu diperhatikan</h2>
+  <div class="batasan-item"><div class="dot"></div><p>Tanggal Hijriah di sini memakai perhitungan tabular yang sama dengan Alat Konversi Kalender JAZMI — bisa berbeda 1–3 hari dari kalender rukyat resmi.</p></div>
+  <div class="batasan-item"><div class="dot"></div><p>Jangan gunakan sebagai rujukan tunggal untuk menandai awal/akhir Ramadan, Syawal, atau Dzulhijjah pada versi cetak yang dibagikan ke jamaah/lembaga.</p></div>
+  <div class="disclaimer-box">Alat ini membantu perhitungan berdasarkan kalender Hijriah tabular. Untuk kalender cetak yang akan dipakai lembaga/masjid secara resmi, mohon validasi terlebih dahulu.</div>
+</section>
+
+<section id="konsultasi">
+  <div class="konsultasi">
+    <p>Butuh versi cetak dengan tanggal penting lembaga Anda ditandai, atau validasi sebelum dibagikan?</p>
+    <a class="btn-konsul" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20konsultasi%20terkait%20Kalender%20Cetak%20JAZMI." target="_blank" rel="noopener">Konsultasikan via WhatsApp</a>
+  </div>
+</section>
+
+<footer>
+  <p>Bagian dari Laboratorium Alat JAZMI. Prototipe berdiri sendiri — belum terhubung ke Beranda atau modul lain.</p>
+</footer>
+
+<script>
+const NAMA_BULAN_H = ['Muharram','Safar',"Rabi'ul Awal","Rabi'ul Akhir",'Jumadil Awal','Jumadil Akhir','Rajab',"Sya'ban",'Ramadan','Syawal',"Dzulqa'dah",'Dzulhijjah'];
+const NAMA_BULAN_H_ARAB = ['محرم','صفر','ربيع الأول','ربيع الآخر','جمادى الأولى','جمادى الآخرة','رجب','شعبان','رمضان','شوال','ذو القعدة','ذو الحجة'];
+const NAMA_BULAN_M = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+function gregorianToJD(y, m, d) {
+  return Math.floor((1461 * (y + 4800 + Math.floor((m - 14) / 12))) / 4)
+    + Math.floor((367 * (m - 2 - 12 * Math.floor((m - 14) / 12))) / 12)
+    - Math.floor((3 * Math.floor((y + 4900 + Math.floor((m - 14) / 12)) / 100)) / 4)
+    + d - 32075;
+}
+function jdToIslamic(jd) {
+  jd = jd - 1948440 + 10632;
+  const n = Math.floor((jd - 1) / 10631);
+  jd = jd - 10631 * n + 354;
+  const j = (Math.floor((10985 - jd) / 5316)) * (Math.floor((50 * jd) / 17719))
+    + (Math.floor(jd / 5670)) * (Math.floor((43 * jd) / 15238));
+  jd = jd - (Math.floor((30 - j) / 15)) * (Math.floor((17719 * j) / 50))
+    - (Math.floor(j / 16)) * (Math.floor((15238 * j) / 43)) + 29;
+  const month = Math.floor((24 * jd) / 709);
+  const day = jd - Math.floor((709 * month) / 24);
+  const year = n * 30 + j - 30;
+  return { year, month, day };
+}
+function hijriahDariTanggal(y, m, d){
+  return jdToIslamic(gregorianToJD(y, m, d));
+}
+
+let tampil = { year: new Date().getFullYear(), month: new Date().getMonth() + 1 };
+const hariIni = new Date();
+
+function isiSelect(){
+  const selBulan = document.getElementById('pilihBulan');
+  const selTahun = document.getElementById('pilihTahun');
+  NAMA_BULAN_M.forEach((nama, idx) => {
+    const opt = document.createElement('option');
+    opt.value = idx + 1; opt.textContent = nama;
+    selBulan.appendChild(opt);
+  });
+  const tahunSekarang = hariIni.getFullYear();
+  for (let y = tahunSekarang - 3; y <= tahunSekarang + 5; y++){
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = y;
+    selTahun.appendChild(opt);
+  }
+}
+isiSelect();
+
+function pilihLangsung(){
+  tampil.month = parseInt(document.getElementById('pilihBulan').value, 10);
+  tampil.year = parseInt(document.getElementById('pilihTahun').value, 10);
+  render();
+}
+
+function ubahBulan(delta){
+  tampil.month += delta;
+  if (tampil.month > 12){ tampil.month = 1; tampil.year++; }
+  if (tampil.month < 1){ tampil.month = 12; tampil.year--; }
+  render();
+}
+
+function render(){
+  document.getElementById('judulBulan').textContent = `${NAMA_BULAN_M[tampil.month-1]} ${tampil.year}`;
+  document.getElementById('pilihBulan').value = tampil.month;
+  document.getElementById('pilihTahun').value = tampil.year;
+  document.getElementById('kopBulanMasehi').textContent = `${NAMA_BULAN_M[tampil.month-1]} ${tampil.year} M`;
+
+  const jumlahHari = new Date(tampil.year, tampil.month, 0).getDate();
+  const hariPertama = new Date(tampil.year, tampil.month - 1, 1).getDay();
+  const totalSel = Math.ceil((hariPertama + jumlahHari) / 7) * 7;
+
+  let hijriahAwal = null, hijriahAkhir = null;
+  const tbody = document.getElementById('isiGrid');
+  tbody.innerHTML = '';
+  let baris = document.createElement('tr');
+
+  for (let i = 0; i < totalSel; i++){
+    if (i > 0 && i % 7 === 0){ tbody.appendChild(baris); baris = document.createElement('tr'); }
+
+    const tgl = new Date(tampil.year, tampil.month - 1, 1 - hariPertama + i);
+    const dalamBulanIni = tgl.getMonth() === tampil.month - 1 && tgl.getFullYear() === tampil.year;
+    const hij = hijriahDariTanggal(tgl.getFullYear(), tgl.getMonth() + 1, tgl.getDate());
+
+    if (dalamBulanIni){
+      if (!hijriahAwal) hijriahAwal = hij;
+      hijriahAkhir = hij;
+    }
+
+    const td = document.createElement('td');
+    if (!dalamBulanIni) td.classList.add('luar-bulan');
+    const isHariIni = tgl.toDateString() === hariIni.toDateString();
+    if (isHariIni) td.classList.add('hari-ini');
+
+    td.innerHTML = `
+      <div class="angka-m">${tgl.getDate()}</div>
+      <div class="angka-h">${hij.day} ${NAMA_BULAN_H[hij.month-1].slice(0,4)}.</div>
+      ${isHariIni ? '<span class="penanda">Hari ini</span>' : ''}
+    `;
+    baris.appendChild(td);
+  }
+  tbody.appendChild(baris);
+
+  if (hijriahAwal.month === hijriahAkhir.month && hijriahAwal.year === hijriahAkhir.year){
+    document.getElementById('kopRentangHijriah').innerHTML = `${NAMA_BULAN_H[hijriahAwal.month-1]} ${hijriahAwal.year} H <span class="amiri">${NAMA_BULAN_H_ARAB[hijriahAwal.month-1]} ${hijriahAwal.year}</span>`;
+  } else {
+    document.getElementById('kopRentangHijriah').innerHTML = `${NAMA_BULAN_H[hijriahAwal.month-1]}–${NAMA_BULAN_H[hijriahAkhir.month-1]} ${hijriahAkhir.year} H <span class="amiri">${NAMA_BULAN_H_ARAB[hijriahAwal.month-1]}–${NAMA_BULAN_H_ARAB[hijriahAkhir.month-1]}</span>`;
+  }
+}
+
+render();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

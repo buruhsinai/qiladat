@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detektor Argumen — Dari Predikat ke Nama Kekeliruannya | Laboratorium JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12141B;
+    --panel:#181B25;
+    --panel-2:#20242F;
+    --ink:#E9E7DE;
+    --ink-dim:#A6AAB8;
+    --ink-dimmer:#6B6F80;
+    --line:rgba(233,231,222,0.10);
+    --emerald:#3FAE7A;
+    --emerald-soft:rgba(63,174,122,0.14);
+    --emerald-line:rgba(63,174,122,0.35);
+    --amber:#CBA134;
+    /* pillar accents, dari tool peta 8 pilar */
+    --a:#E0704C; --b:#CBA134; --c:#4FB8A6; --d:#5B9BD5;
+    --e:#9B7FD4; --f:#D46B95; --g:#8C93A8; --h:#5FAE72;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse at 15% -10%, rgba(63,174,122,0.07), transparent 45%),
+      radial-gradient(ellipse at 90% 12%, rgba(224,112,76,0.07), transparent 42%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Karla',sans-serif;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:500;letter-spacing:-0.01em;color:var(--ink);}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:700px;margin:0 auto;padding:0 22px;}
+  .wide{max-width:780px;}
+
+  header.hero{padding:68px 0 32px;border-bottom:1px solid var(--line);}
+  .kicker{font-size:0.86rem;color:var(--emerald);font-weight:600;margin:0 0 18px;}
+  header.hero h1{font-size:clamp(1.7rem,4.6vw,2.35rem);line-height:1.22;margin:0 0 20px;max-width:20ch;}
+  header.hero p{color:var(--ink-dim);font-size:1.02rem;max-width:56ch;margin:0 0 10px;}
+  .lineage{
+    margin-top:22px;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    font-size:0.82rem;
+  }
+  .lineage a, .lineage span{
+    padding:6px 12px;
+    border-radius:100px;
+    border:1px solid var(--line);
+    color:var(--ink-dimmer);
+    text-decoration:none;
+  }
+  .lineage .current{border-color:var(--emerald-line);color:var(--emerald);background:var(--emerald-soft);}
+  .lineage a:hover{color:var(--ink);}
+
+  section{padding:48px 0;}
+  section + section{border-top:1px solid var(--line);}
+  .step-tag{display:inline-flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--ink-dimmer);margin-bottom:14px;}
+  .step-tag .dot{width:7px;height:7px;border-radius:50%;background:var(--emerald);display:inline-block;}
+  h2{font-size:1.4rem;margin:0 0 16px;}
+  p{margin:0 0 16px;}
+  .lede{color:var(--ink-dim);}
+
+  .lab{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:26px 24px 28px;
+    margin:22px 0;
+  }
+  .slider-row{margin:16px 0 6px;}
+  .slider-row label{display:flex;justify-content:space-between;font-size:0.86rem;color:var(--ink-dimmer);margin-bottom:10px;}
+  input[type=range]{
+    -webkit-appearance:none;width:100%;height:4px;border-radius:4px;background:var(--line);outline:none;margin:6px 0 4px;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+    background:var(--emerald);border:3px solid var(--bg);cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:20px;height:20px;border-radius:50%;background:var(--emerald);border:3px solid var(--bg);cursor:pointer;
+  }
+
+  .argumen-box{
+    margin-top:18px;
+    padding:20px 20px;
+    background:rgba(0,0,0,0.2);
+    border:1px solid var(--line);
+    border-radius:12px;
+    font-size:1rem;
+    color:var(--ink);
+  }
+  .argumen-box .baris{margin-bottom:6px;}
+  .argumen-box .baris:last-child{margin-bottom:0;}
+  .argumen-box .subjek{color:var(--emerald);font-weight:600;}
+
+  .toggle-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    cursor:pointer;
+    font-size:0.93rem;
+    color:var(--ink-dim);
+    margin-top:20px;
+  }
+  .toggle-row input[type=checkbox]{
+    width:38px;height:22px;
+    -webkit-appearance:none;appearance:none;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:100px;
+    position:relative;
+    cursor:pointer;
+    flex-shrink:0;
+    transition:background .2s ease;
+  }
+  .toggle-row input[type=checkbox]::before{
+    content:"";
+    position:absolute;top:2px;left:2px;
+    width:16px;height:16px;border-radius:50%;
+    background:var(--ink-dimmer);
+    transition:transform .2s ease, background .2s ease;
+  }
+  .toggle-row input[type=checkbox]:checked{
+    background:rgba(224,112,76,0.16);
+    border-color:rgba(224,112,76,0.4);
+  }
+  .toggle-row input[type=checkbox]:checked::before{
+    transform:translateX(16px);
+    background:#E0704C;
+  }
+
+  .result{
+    margin-top:20px;
+    border-radius:14px;
+    padding:20px 20px;
+    border:1px solid;
+  }
+  .result.ok{
+    background:var(--emerald-soft);
+    border-color:var(--emerald-line);
+  }
+  .result.bad{
+    border-color:var(--pillar-hex, #E0704C);
+    background:var(--pillar-soft, rgba(224,112,76,0.12));
+  }
+  .result-label{font-size:0.76rem;color:var(--ink-dimmer);margin-bottom:8px;}
+  .result-title{font-family:'Fraunces',serif;font-size:1.2rem;margin:0 0 8px;}
+  .result.ok .result-title{color:var(--emerald);}
+  .result-badge{
+    display:inline-block;
+    font-size:0.76rem;
+    padding:3px 10px;
+    border-radius:100px;
+    margin-bottom:10px;
+    color:#12141B;
+    font-weight:600;
+  }
+  .result-text{font-size:0.94rem;color:var(--ink-dim);}
+  .result-link{
+    display:inline-block;
+    margin-top:12px;
+    font-size:0.85rem;
+    color:var(--ink-dimmer);
+  }
+  .result-link a{color:inherit;}
+
+  .closing-note{font-size:0.95rem;color:var(--ink-dim);}
+  .closing-note b{color:var(--ink);}
+
+  footer{padding:46px 0 66px;color:var(--ink-dimmer);font-size:0.85rem;}
+  footer .divider{height:1px;background:var(--line);margin-bottom:28px;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="kicker">Laboratorium JAZMI — Sambungan Antar Alat</p>
+    <h1>Kapan predikat yang sama berubah jadi kekeliruan berpikir</h1>
+    <p>Dua alat sebelumnya berhenti di dua titik berbeda: satu menunjukkan bahwa predikat yang sama tidak otomatis berarti setara, satunya lagi memetakan ~130 kekeliruan berpikir ke 8 pilar dasar. Alat ini menyambungkan keduanya — bangun argumen kecil sendiri, lalu lihat persis kapan ia berubah dari "sekadar predikasi" menjadi kekeliruan bernama.</p>
+    <div class="lineage">
+      <span class="current">Alat ini: Detektor Argumen</span>
+      <a href="jazmi-makna-universal.html">← Predikat vs Kesetaraan</a>
+      <a href="jazmi-kombinator-fallacy.html">Peta 8 Pilar →</a>
+    </div>
+  </div>
+</header>
+
+<section id="detektor">
+  <div class="wrap wide">
+    <div class="step-tag"><span class="dot"></span> Bangun argumennya</div>
+    <h2>Geser skenario, lalu nyalakan premisnya</h2>
+    <p class="lede">Tiap skenario memakai satu predikat yang sama untuk dua hal yang berbeda. Awalnya itu cuma predikasi biasa. Nyalakan sakelarnya untuk melihat apa yang terjadi begitu ditambahkan satu premis tersembunyi.</p>
+
+    <div class="lab">
+      <div class="slider-row">
+        <label>Pilih skenario <span id="skenPos"></span></label>
+        <input type="range" id="skenSlider" min="0" max="4" step="1" value="0">
+      </div>
+
+      <div class="argumen-box" id="argumenBox"></div>
+
+      <label class="toggle-row">
+        <input type="checkbox" id="premisToggle">
+        <span id="premisLabel"></span>
+      </label>
+
+      <div id="resultArea"></div>
+    </div>
+  </div>
+</section>
+
+<section id="penutup">
+  <div class="wrap">
+    <div class="step-tag"><span class="dot"></span> Catatan penutup</div>
+    <h2>Bagaimana tiga alat ini saling menyambung</h2>
+    <p class="closing-note"><b>Predikat vs Kesetaraan</b> memberi fondasi: dua hal boleh berbagi kata sifat tanpa harus setara. <b>Latihan Berulang</b> melatih insting itu lewat pengulangan lintas wujud, sampai terasa alami. <b>Peta 8 Pilar</b> menunjukkan bahwa hampir semua kekeliruan berpikir bernama sebenarnya adalah versi rapi dari pola yang sama: menambahkan sesuatu yang belum tentu benar ke dalam kesamaan predikat. Alat ini adalah titik pertemuannya — bukti bahwa satu prinsip logika sederhana bisa menjelaskan kekeliruan yang kelihatannya sangat berbeda-beda bentuknya.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="divider"></div>
+    Bagian dari Laboratorium JAZMI — dibangun mengikuti metode "Belajar → Memodelkan → Menguji → Membuat Tool".
+  </div>
+</footer>
+
+<script>
+  const skenario = [
+    {
+      subjekA: "Awan di langit", subjekB: "Segumpal kapas",
+      predikat: "menyerupai satu sama lain dari kejauhan",
+      premisText: "Tambahkan premis: \"menyerupai dalam satu segi berarti menyerupai di segala segi\"",
+      okText: "Awan dan kapas sama-sama disebut menyerupai satu hal yang lain dari kejauhan. Tidak ada yang aneh — kemiripan itu sah, dan tidak menuntut apa pun lebih jauh.",
+      badName: "Analogi Keliru",
+      badEn: "False Analogy",
+      pillarCode: "B", pillar: "Asumsi",
+      badText: "Begitu premis itu ditambahkan, muncul tuntutan bahwa karena mirip di satu segi (bentuknya), keduanya juga harus sama di segi lain (misalnya beratnya, atau cara terbentuknya) — padahal itu tidak pernah dijamin oleh kemiripan awal. Ini pola klasik yang dikenal sebagai Analogi Keliru."
+    },
+    {
+      subjekA: "Kepala desa yang berpengalaman", subjekB: "Program chatbot sederhana",
+      predikat: "sama-sama disebut \"bijaksana\"",
+      premisText: "Tambahkan premis: \"kata yang sama pasti menunjuk makna yang sama persis\"",
+      okText: "Kata \"bijaksana\" dipakai untuk keduanya. Itu wajar — bahasa memang sering memakai satu kata untuk hal yang berbeda tingkatannya.",
+      badName: "Ekuivokasi",
+      badEn: "Equivocation",
+      pillarCode: "C", pillar: "Ambiguitas",
+      badText: "Begitu premis itu ditambahkan, argumen mulai memperlakukan \"bijaksana\" pada manusia dan pada program sebagai makna yang identik persis — padahal kata yang sama sedang dipakai untuk dua tingkat makna yang berbeda. Ini pola yang dikenal sebagai Ekuivokasi."
+    },
+    {
+      subjekA: "Ayam berkokok", subjekB: "Matahari terbit",
+      predikat: "terjadi berurutan setiap pagi",
+      premisText: "Tambahkan premis: \"terjadi berurutan berarti yang pertama menyebabkan yang kedua\"",
+      okText: "Keduanya memang sering terjadi berurutan. Itu baru pengamatan, belum klaim sebab-akibat apa pun.",
+      badName: "Post Hoc Ergo Propter Hoc",
+      badEn: "Post Hoc Ergo Propter Hoc",
+      pillarCode: "E", pillar: "Sebab-Akibat",
+      badText: "Begitu premis itu ditambahkan, urutan waktu diam-diam diperlakukan sebagai bukti sebab-akibat — seolah ayam berkokok yang membuat matahari terbit. Ini pola klasik yang dikenal sebagai Post Hoc Ergo Propter Hoc."
+    },
+    {
+      subjekA: "Klaim ilmiah yang baru diajukan", subjekB: "Klaim mistis yang sudah lama beredar",
+      predikat: "belum ada yang berhasil membuktikannya salah",
+      premisText: "Tambahkan premis: \"belum terbukti salah berarti sudah terbukti benar\"",
+      okText: "Keduanya sama-sama belum terbantahkan. Itu cuma menggambarkan status pembuktian saat ini, bukan menyimpulkan siapa yang benar.",
+      badName: "Rayuan pada Ketidaktahuan",
+      badEn: "Appeal to Ignorance",
+      pillarCode: "F", pillar: "Manipulasi Emosi",
+      badText: "Begitu premis itu ditambahkan, ketiadaan bantahan dijadikan seolah-olah itu sudah cukup sebagai bukti kebenaran — padahal \"belum terbantahkan\" dan \"terbukti benar\" adalah dua hal yang sama sekali berbeda. Ini pola yang dikenal sebagai Rayuan pada Ketidaktahuan."
+    },
+    {
+      subjekA: "Sebuah tren yang sedang viral", subjekB: "Sebuah klaim yang sudah teruji secara ilmiah",
+      predikat: "sama-sama dipercaya oleh sangat banyak orang",
+      premisText: "Tambahkan premis: \"dipercaya banyak orang berarti benar\"",
+      okText: "Keduanya memang sama-sama populer. Itu baru fakta sosial tentang seberapa banyak yang percaya, belum klaim tentang benar-salahnya.",
+      badName: "Rayuan pada Popularitas",
+      badEn: "Appeal to Popularity",
+      pillarCode: "A", pillar: "Relevansi",
+      badText: "Begitu premis itu ditambahkan, jumlah orang yang percaya diam-diam dijadikan pengganti bukti — padahal banyaknya orang yang percaya tidak pernah otomatis membuat sesuatu benar. Ini pola yang dikenal sebagai Rayuan pada Popularitas."
+    }
+  ];
+
+  const pillarHex = { A:'#E0704C', B:'#CBA134', C:'#4FB8A6', D:'#5B9BD5', E:'#9B7FD4', F:'#D46B95', G:'#8C93A8', H:'#5FAE72' };
+
+  const skenSlider = document.getElementById('skenSlider');
+  const skenPos = document.getElementById('skenPos');
+  const argumenBox = document.getElementById('argumenBox');
+  const premisToggle = document.getElementById('premisToggle');
+  const premisLabel = document.getElementById('premisLabel');
+  const resultArea = document.getElementById('resultArea');
+
+  function renderArgumen(){
+    const s = skenario[+skenSlider.value];
+    skenPos.textContent = `(${+skenSlider.value + 1} dari ${skenario.length})`;
+    argumenBox.innerHTML = `
+      <div class="baris"><span class="subjek">${s.subjekA}</span> — ${s.predikat}.</div>
+      <div class="baris"><span class="subjek">${s.subjekB}</span> — juga begitu.</div>
+    `;
+    premisLabel.textContent = s.premisText;
+    renderResult();
+  }
+
+  function renderResult(){
+    const s = skenario[+skenSlider.value];
+    if (!premisToggle.checked){
+      resultArea.innerHTML = `
+        <div class="result ok">
+          <div class="result-label">Status</div>
+          <div class="result-title">Belum ada kekeliruan</div>
+          <div class="result-text">${s.okText}</div>
+        </div>`;
+    } else {
+      const hex = pillarHex[s.pillarCode];
+      resultArea.innerHTML = `
+        <div class="result bad" style="--pillar-hex:${hex}; --pillar-soft:${hex}1F; border-color:${hex}66;">
+          <div class="result-label">Status</div>
+          <div class="result-badge" style="background:${hex};">Pilar ${s.pillarCode} — ${s.pillar}</div>
+          <div class="result-title" style="color:${hex};">${s.badName} <span class="mono" style="font-size:0.75rem;color:var(--ink-dimmer);">(${s.badEn})</span></div>
+          <div class="result-text">${s.badText}</div>
+          <div class="result-link">Lihat pilar "${s.pillar}" selengkapnya di <a href="jazmi-kombinator-fallacy.html#peta-pilar">Peta 8 Pilar →</a></div>
+        </div>`;
+    }
+  }
+
+  skenSlider.addEventListener('input', renderArgumen);
+  premisToggle.addEventListener('change', renderResult);
+  renderArgumen();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

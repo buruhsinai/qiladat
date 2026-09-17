@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulator Difusi Obat ke Massa Tumor 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B1614; --surface:#132420; --surface-2:#1A322B; --line:#274038;
+    --ink:#EAF2EF; --muted:#8FAFA3; --teal:#3FBF95; --blue:#5B9BD9;
+    --amber:#E5A439; --red:#E1614E;
+    --font-display:'Space Grotesk',sans-serif; --font-body:'IBM Plex Sans',sans-serif; --font-mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--font-body); line-height:1.55; padding-bottom:80px;}
+  .wrap{max-width:980px; margin:0 auto; padding:0 20px;}
+  h1,h2,h3{font-family:var(--font-display); font-weight:600; margin:0 0 12px;}
+  p{margin:0 0 14px; max-width:70ch;}
+  .muted{color:var(--muted);}
+  .mono{font-family:var(--font-mono);}
+  section{padding:52px 0; border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+
+  .hero{padding-top:44px;}
+  .hero-tag{font-family:var(--font-mono); font-size:13px; color:var(--teal); margin-bottom:10px;}
+  .hero h1{font-size:clamp(24px,4vw,36px); max-width:24ch; line-height:1.2;}
+  .hero p.lead{font-size:17px; color:var(--muted); max-width:60ch;}
+
+  .disclaimer{background:var(--surface); border:1px solid var(--amber); padding:16px 18px; margin-top:24px; font-size:13px;}
+  .disclaimer strong{color:var(--amber);}
+
+  .sec-head{display:flex; align-items:baseline; gap:10px; margin-bottom:22px;}
+  .sec-num{font-family:var(--font-mono); font-size:13px; color:var(--teal);}
+
+  .panel{background:var(--surface); border:1px solid var(--line); padding:24px;}
+  .grid-ctl{display:grid; grid-template-columns:1fr; gap:20px;}
+  @media(min-width:640px){ .grid-ctl{grid-template-columns:1fr 1fr;} }
+  .field{display:flex; flex-direction:column; gap:6px;}
+  .field label{font-size:13px; color:var(--muted);}
+  .field .hint{font-size:11px; color:var(--muted); font-family:var(--font-mono);}
+  input[type=range]{width:100%; accent-color:var(--teal);}
+  .range-val{font-family:var(--font-mono); color:var(--teal); font-size:13px;}
+
+  .preset-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;}
+  .preset-btn{background:var(--bg); border:1px solid var(--line); color:var(--muted); padding:6px 10px; font-family:var(--font-mono); font-size:11px; cursor:pointer;}
+  .preset-btn:hover{border-color:var(--teal); color:var(--teal);}
+
+  .kpis{display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--line); margin-top:22px; border:1px solid var(--line);}
+  @media(min-width:640px){ .kpis{grid-template-columns:repeat(4,1fr);} }
+  .kpi{background:var(--surface); padding:14px;}
+  .kpi .val{font-family:var(--font-mono); font-size:19px;}
+  .kpi .lbl{font-size:11.5px; color:var(--muted); margin-top:2px;}
+  .kpi.warn .val{color:var(--red);}
+  .kpi.good .val{color:var(--teal);}
+
+  .viz-grid{display:grid; grid-template-columns:1fr; gap:20px; margin-top:20px;}
+  @media(min-width:780px){ .viz-grid{grid-template-columns:1fr 1.3fr;} }
+  .chart-wrap{background:var(--surface); border:1px solid var(--line); padding:20px;}
+  svg text{font-family:var(--font-mono); fill:var(--muted);}
+  .legend{display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; font-size:11px; color:var(--muted);}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .dot{width:9px; height:9px; display:inline-block; border-radius:50%;}
+
+  .takeaway{background:var(--surface-2); border-left:3px solid var(--teal); padding:16px 18px; margin-top:20px; font-size:14px;}
+  .takeaway strong{color:var(--teal);}
+
+  .formula{background:var(--surface); border:1px solid var(--line); padding:16px 18px; font-family:var(--font-mono); font-size:12.5px; color:var(--teal); margin:14px 0; overflow-x:auto;}
+  ol.steps{padding-left:20px;}
+  ol.steps li{margin-bottom:8px; font-size:14px;}
+  ul.limits{padding-left:20px;}
+  ul.limits li{margin-bottom:10px; font-size:14px;}
+
+  .ref-list{list-style:none; padding:0; margin:0;}
+  .ref-list li{padding:12px 0; border-bottom:1px solid var(--line);}
+  .ref-list li:last-child{border-bottom:none;}
+  .ref-list .src{font-family:var(--font-mono); font-size:12px; color:var(--muted);}
+
+  footer{padding:40px 0 20px; text-align:center;}
+  footer p{margin:0; font-size:12px; color:var(--muted); max-width:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <section class="hero">
+    <div class="hero-tag">DARI ARSIP "MATAN WET LAB CAPABILITY" — KAPABILITAS NO. 8: ANALISIS PENETRASI OBAT KE SPHEROID</div>
+    <h1>Obat tidak "menyebar rata" ke seluruh tumor — ia harus berdifusi masuk, dan jalan itu ada batasnya</h1>
+    <p class="lead">Ini pertanyaan yang sering muncul tapi jarang dijawab secara intuitif: kenapa tumor yang lebih besar lebih sulit "ditembus" obat sampai ke bagian dalamnya? Jawabannya bukan soal obatnya lemah — ini soal geometri dan fisika difusi murni, yang bisa Anda lihat sendiri di sini.</p>
+    <div class="disclaimer">
+      <strong>Catatan penting:</strong> Ini alat edukasi tentang satu prinsip fisika (difusi-reaksi) dalam biologi kanker, dibangun dari model spheroid 3D laboratorium (kultur sel avaskular, tanpa pembuluh darah) — bukan alat diagnostik, bukan prediksi hasil pengobatan, dan bukan pengganti penjelasan dari dokter onkologi tentang kasus nyata. Tumor sungguhan jauh lebih rumit dari model ini (lihat bagian Batasan).
+    </div>
+  </section>
+
+  <section id="konteks">
+    <div class="sec-head"><span class="sec-num">00</span><h2>Kenapa ukuran tumor mengubah segalanya</h2></div>
+    <p>Obat yang masuk dari permukaan sebuah massa jaringan tidak hanya berdifusi ke dalam — ia juga terus-menerus "dipakai habis" sepanjang jalan: diikat reseptor, dimetabolisme, atau didegradasi sel-sel yang dilewatinya. Kombinasi difusi-masuk dan konsumsi-sepanjang-jalan ini menghasilkan satu angka penting: <strong>panjang penetrasi karakteristik</strong> — kira-kira seberapa dalam obat itu efektif menembus sebelum konsentrasinya habis.</p>
+    <p>Masalahnya, panjang penetrasi ini <strong>tidak berubah</strong> walau tumornya makin besar — sementara volume tumor bertambah pangkat tiga terhadap radiusnya. Jadi tumor kecil bisa "kebanjiran" obat sampai ke pusatnya, sementara tumor besar dengan panjang penetrasi yang sama persis bisa punya inti yang nyaris tidak tersentuh sama sekali.</p>
+  </section>
+
+  <section id="eksplorasi">
+    <div class="sec-head"><span class="sec-num">01</span><h2>Eksplorasi: geser ukuran tumor dan sifat obatnya</h2></div>
+
+    <div class="panel">
+      <div class="grid-ctl">
+        <div class="field">
+          <label>Radius massa tumor: <span class="range-val" id="valR"></span></label>
+          <input type="range" id="radius" min="100" max="20000" step="50" value="3000">
+          <div class="preset-row">
+            <button class="preset-btn" onclick="setPreset('radius',200)">mikrometastasis ~200µm</button>
+            <button class="preset-btn" onclick="setPreset('radius',3000)">nodul ~3mm</button>
+            <button class="preset-btn" onclick="setPreset('radius',15000)">massa besar ~1,5cm</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Koefisien difusi obat (D, µm²/s): <span class="range-val" id="valD"></span></label>
+          <input type="range" id="difusi" min="10" max="500" step="5" value="200">
+          <div class="preset-row">
+            <button class="preset-btn" onclick="setPreset('difusi',30)">mirip antibodi (molekul besar)</button>
+            <button class="preset-btn" onclick="setPreset('difusi',250)">mirip molekul kecil</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Laju konsumsi/pengikatan jaringan (k, ×10⁻⁴/s): <span class="range-val" id="valK"></span></label>
+          <input type="range" id="konsumsi" min="1" max="100" step="1" value="10">
+          <span class="hint">makin tinggi afinitas ikatan obat, makin cepat "habis dipakai" di permukaan — lihat catatan "binding site barrier" di Metode</span>
+        </div>
+        <div class="field">
+          <label>Ambang konsentrasi efektif secara terapi (% dari konsentrasi di permukaan): <span class="range-val" id="valThresh"></span></label>
+          <input type="range" id="threshold" min="5" max="90" step="5" value="50">
+        </div>
+      </div>
+    </div>
+
+    <div class="kpis" id="kpis"></div>
+
+    <div class="viz-grid">
+      <div class="chart-wrap">
+        <h3 style="font-size:14px; margin-bottom:10px;">Penampang tumor</h3>
+        <svg id="crossSection" viewBox="0 0 320 320" style="width:100%; height:auto;"></svg>
+        <div class="legend">
+          <span><span class="dot" style="background:var(--teal);"></span>Konsentrasi cukup (≥ambang)</span>
+          <span><span class="dot" style="background:var(--red);"></span>Konsentrasi tidak cukup</span>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <h3 style="font-size:14px; margin-bottom:10px;">Profil konsentrasi dari pusat ke permukaan</h3>
+        <svg id="chartProfil" viewBox="0 0 500 300" style="width:100%; height:auto;"></svg>
+      </div>
+    </div>
+
+    <div class="takeaway" id="takeaway"></div>
+  </section>
+
+  <section id="metode">
+    <div class="sec-head"><span class="sec-num">02</span><h2>Metode</h2></div>
+    <p>Model ini memakai penyelesaian tunak (steady-state) untuk difusi disertai konsumsi orde-satu dalam geometri bola — matematika yang sama persis dipakai untuk memodelkan difusi oksigen ke jaringan (model Krogh):</p>
+    <div class="formula">D · (1/r²) · d/dr( r² dC/dr ) = k · C</div>
+    <p>Dengan syarat batas C(R) = C₀ (konsentrasi di permukaan) dan C terhingga di r=0, solusinya:</p>
+    <div class="formula">C(r) = C₀ · (R/r) · sinh(r/L) / sinh(R/L),  dengan  L = √(D/k)</div>
+    <p><strong>L</strong> adalah panjang penetrasi karakteristik. Semakin besar rasio R/L, semakin dalam kesenjangan antara konsentrasi di permukaan dan di pusat.</p>
+    <p><strong>Catatan "binding site barrier":</strong> Obat dengan afinitas ikatan sangat tinggi (k besar) justru bisa berhenti di lapisan luar tumor karena "habis terpakai" sebelum sempat berdifusi lebih dalam — fenomena nyata yang pernah diamati pada sebagian antibodi terapeutik berafinitas tinggi. Afinitas tinggi tidak otomatis berarti penetrasi lebih baik.</p>
+  </section>
+
+  <section id="batasan">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Batasan — ini yang paling penting dibaca</h2></div>
+    <ul class="limits">
+      <li><strong>Model ini murni avaskular</strong> — mengasumsikan obat hanya masuk dari permukaan luar, seperti spheroid 3D di laboratorium (persis kapabilitas nomor 8 di arsip Anda). Tumor sungguhan pada pasien punya pembuluh darah yang menembus ke dalam jaringan, sehingga obat juga bisa masuk dari "dalam" lewat aliran darah — bukan cuma berdifusi dari luar. Ini membuat distribusi obat pada tumor nyata sering jauh lebih merata daripada yang digambarkan model ini.</li>
+      <li><strong>Justru karena itu</strong>, model ini paling relevan untuk memahami: mikrometastasis yang belum punya suplai darah sendiri, bagian tumor yang buruk vaskularisasinya (sering jadi daerah paling resisten terhadap pengobatan), dan eksperimen spheroid di laboratorium — bukan gambaran lengkap satu tumor pasien secara keseluruhan.</li>
+      <li><strong>Tidak memodelkan heterogenitas sel</strong> — resistensi obat, perbedaan jenis sel kanker, sistem imun, dan respons biologis lain di luar difusi murni.</li>
+      <li><strong>Nilai D dan k pada slider adalah orde besar ilustratif</strong> untuk menunjukkan pola umum, bukan angka farmakokinetik presisi dari obat tertentu — nilai sesungguhnya berbeda-beda untuk tiap senyawa dan jenis jaringan.</li>
+      <li>Alat ini untuk membangun intuisi tentang <em>kenapa</em> ukuran dan jenis obat memengaruhi penetrasi — <strong>bukan untuk menilai prognosis, memprediksi hasil pengobatan, atau menggantikan penjelasan dokter onkologi</strong> tentang kasus nyata siapa pun.</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Referensi</h2></div>
+    <ul class="ref-list">
+      <li>Prinsip keterbatasan penetrasi obat pada tumor padat sebagai bidang riset farmakologi kanker yang mapan, termasuk peran ukuran molekul dan afinitas ikatan.
+        <div class="src">Rujukan umum farmakologi kanker &amp; penghantaran obat (drug delivery)</div>
+      </li>
+      <li>Model difusi-reaksi bola dengan analogi model Krogh untuk difusi oksigen ke jaringan — kerangka matematis standar untuk penetrasi zat terlarut ke jaringan avaskular.
+        <div class="src">Rujukan umum fisiologi/biofisika jaringan</div>
+      </li>
+      <li>Kapabilitas wet-lab nomor 8: kultur sel 3D (spheroid, organoid) dan analisis penetrasi obat lewat pencitraan confocal z-stack.
+        <div class="src">Arsip "MATAN Wet Lab Capability (1–100)" milik pengguna</div>
+      </li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Alat edukasi tentang prinsip fisika difusi obat — bukan alat diagnostik atau pengganti konsultasi medis.</p>
+  </footer>
+
+</div>
+
+<script>
+function setPreset(id, val){
+  document.getElementById(id==='radius'?'radius':'difusi').value = val;
+  hitung();
+}
+
+function C_r(r, R, C0, L){
+  if(r < 1e-6){
+    return C0 * (R/L) / Math.sinh(R/L);
+  }
+  return C0 * (R/r) * Math.sinh(r/L) / Math.sinh(R/L);
+}
+
+function hitung(){
+  const R = parseFloat(document.getElementById('radius').value);
+  const D = parseFloat(document.getElementById('difusi').value);
+  const kRaw = parseFloat(document.getElementById('konsumsi').value);
+  const k = kRaw * 1e-4;
+  const thresholdPct = parseFloat(document.getElementById('threshold').value);
+  const C0 = 1;
+
+  document.getElementById('valR').textContent = R>=1000 ? (R/1000).toFixed(2)+' mm' : R.toFixed(0)+' µm';
+  document.getElementById('valD').textContent = D+' µm²/s';
+  document.getElementById('valK').textContent = kRaw+' (×10⁻⁴/s)';
+  document.getElementById('valThresh').textContent = thresholdPct+'%';
+
+  const L = Math.sqrt(D/k);
+  const threshold = thresholdPct/100;
+
+  // profil konsentrasi
+  const N = 200;
+  const profil = [];
+  for(let i=0;i<=N;i++){
+    const r = R*i/N;
+    profil.push({r, c: C_r(r, R, C0, L)});
+  }
+
+  // cari r_threshold (radius terbesar dari pusat yang masih di bawah ambang)
+  let rThresh = null;
+  for(let i=0;i<profil.length;i++){
+    if(profil[i].c >= threshold){ rThresh = profil[i].r; break; }
+  }
+  if(rThresh===null) rThresh = R; // seluruh tumor di bawah ambang
+  const fracUntouched = Math.pow(rThresh/R, 3);
+  const cPusat = C_r(0, R, C0, L);
+
+  const kpis = document.getElementById('kpis');
+  kpis.innerHTML = `
+    <div class="kpi"><div class="val">${L>=1000?(L/1000).toFixed(2)+' mm':L.toFixed(0)+' µm'}</div><div class="lbl">panjang penetrasi karakteristik (L)</div></div>
+    <div class="kpi ${cPusat<threshold?'warn':'good'}"><div class="val">${(cPusat*100).toFixed(1)}%</div><div class="lbl">konsentrasi relatif di pusat tumor</div></div>
+    <div class="kpi ${fracUntouched>0.3?'warn':'good'}"><div class="val">${(fracUntouched*100).toFixed(1)}%</div><div class="lbl">perkiraan volume di bawah ambang efektif</div></div>
+    <div class="kpi"><div class="val">${(R/L).toFixed(2)}</div><div class="lbl">rasio radius terhadap panjang penetrasi (R/L)</div></div>
+  `;
+
+  document.getElementById('takeaway').innerHTML = fracUntouched > 0.01
+    ? `<strong>Yang terjadi di sini:</strong> sekitar <strong>${(fracUntouched*100).toFixed(1)}%</strong> volume bagian dalam tumor ini diperkirakan berada di bawah ambang konsentrasi efektif — bukan karena obatnya gagal bekerja, tapi karena secara fisik belum sempat sampai ke sana dalam konsentrasi cukup. Coba perbesar radius atau naikkan laju konsumsi jaringan (k), dan lihat wilayah merah di penampang tumor melebar.`
+    : `<strong>Yang terjadi di sini:</strong> dengan pengaturan saat ini, hampir seluruh volume tumor berada di atas ambang konsentrasi efektif — panjang penetrasi obat (${L.toFixed(0)} µm) jauh lebih besar dari radius tumornya sendiri, jadi obat sempat "membanjiri" sampai ke pusat.`;
+
+  renderCrossSection(R, C0, L, threshold);
+  renderProfil(profil, R, threshold);
+}
+
+function warna(c, threshold){
+  // interpolasi dari merah (jauh di bawah ambang) ke teal (di atas ambang)
+  if(c>=threshold) return '#3FBF95';
+  const t = Math.max(0, c/threshold);
+  // campur merah->amber saat mendekati ambang
+  const r1=225,g1=97,b1=74; // red
+  const r2=232,g2=164,b2=57; // amber
+  const r = Math.round(r1+(r2-r1)*t);
+  const g = Math.round(g1+(g2-g1)*t);
+  const b = Math.round(b1+(b2-b1)*t);
+  return `rgb(${r},${g},${b})`;
+}
+
+function renderCrossSection(R, C0, L, threshold){
+  const svg = document.getElementById('crossSection');
+  const cx=160, cy=160, maxRadiusPx=140;
+  const rings = 60;
+  let parts=[];
+  for(let i=rings;i>=1;i--){
+    const rFrac = i/rings;
+    const r = R*rFrac;
+    const c = C_r(r, R, C0, L);
+    const px = maxRadiusPx*rFrac;
+    parts.push(`<circle cx="${cx}" cy="${cy}" r="${px.toFixed(1)}" fill="${warna(c,threshold)}"/>`);
+  }
+  // garis ambang
+  // cari radius (fraksi) di mana c=threshold
+  let rThreshFrac = 1;
+  for(let i=1;i<=rings;i++){
+    const rFrac = i/rings;
+    const c = C_r(R*rFrac, R, C0, L);
+    if(c>=threshold){ rThreshFrac = rFrac; break; }
+  }
+  const pxThresh = maxRadiusPx*rThreshFrac;
+  parts.push(`<circle cx="${cx}" cy="${cy}" r="${pxThresh.toFixed(1)}" fill="none" stroke="#EAF2EF" stroke-width="1.5" stroke-dasharray="4,3"/>`);
+  parts.push(`<text x="${cx}" y="${cy-maxRadiusPx-8}" font-size="11" text-anchor="middle" fill="#8FAFA3">permukaan tumor</text>`);
+  svg.innerHTML = parts.join('');
+}
+
+function renderProfil(profil, R, threshold){
+  const svg = document.getElementById('chartProfil');
+  const W=500,H=300,padL=45,padR=15,padT=16,padB=30;
+  const innerW=W-padL-padR, innerH=H-padT-padB;
+  const x = r => padL + innerW*(r/R);
+  const y = c => padT + innerH - c*innerH;
+
+  let parts=[];
+  [0,0.25,0.5,0.75,1].forEach(g=>{
+    const yy=y(g);
+    parts.push(`<line x1="${padL}" y1="${yy}" x2="${W-padR}" y2="${yy}" stroke="#274038" stroke-width="1"/>`);
+    parts.push(`<text x="${padL-6}" y="${yy+4}" font-size="9" text-anchor="end">${(g*100).toFixed(0)}%</text>`);
+  });
+
+  const yT = y(threshold);
+  parts.push(`<line x1="${padL}" y1="${yT}" x2="${W-padR}" y2="${yT}" stroke="#E5A439" stroke-width="1.5" stroke-dasharray="5,4"/>`);
+
+  let d = profil.map((p,i)=>(i===0?'M':'L')+x(p.r).toFixed(1)+' '+y(p.c).toFixed(1)).join(' ');
+  parts.push(`<path d="${d}" fill="none" stroke="#3FBF95" stroke-width="2.5"/>`);
+
+  parts.push(`<text x="${padL}" y="${H-8}" font-size="10">pusat (r=0)</text>`);
+  parts.push(`<text x="${W-padR}" y="${H-8}" font-size="10" text-anchor="end">permukaan (r=R)</text>`);
+
+  svg.innerHTML = parts.join('');
+}
+
+['radius','difusi','konsumsi','threshold'].forEach(id=>document.getElementById(id).addEventListener('input', hitung));
+hitung();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kecepatan Lepas (Escape Velocity)</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0B0F1E;--panel:#141A30;--ink:#E8E6F5;--soft:#9C9DC4;--electron:#4FD8E0;--plasma:#B26BFF;--line:#2A3158;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.6;padding:0 20px 50px;}
+  .wrap{max-width:560px;margin:0 auto;}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:1.4rem;margin:32px 0 8px;background:linear-gradient(90deg,var(--electron),var(--plasma));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  p.lede{color:var(--soft);margin:0 0 20px;font-size:0.92rem;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px;}
+  label{display:block;font-size:0.85rem;color:var(--soft);margin-bottom:8px;}
+  .value{font-family:'JetBrains Mono',monospace;color:var(--electron);font-weight:600;}
+  input[type=range]{width:100%;accent-color:var(--electron);}
+  .btn-row{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap;}
+  button{font-family:'Space Grotesk',sans-serif;background:transparent;border:1px solid var(--line);color:var(--ink);padding:7px 12px;border-radius:6px;font-size:0.78rem;cursor:pointer;}
+  button.active{background:var(--electron);color:#0B0F1E;border-color:var(--electron);}
+  .result{text-align:center;background:#1B2340;border-radius:8px;padding:18px;margin-top:14px;}
+  .result .n{font-family:'JetBrains Mono',monospace;font-size:1.8rem;font-weight:700;color:var(--electron);}
+  .result .l{font-size:0.72rem;color:var(--soft);margin-top:4px;}
+  a{color:var(--electron);}
+  footer{color:var(--soft);font-size:0.78rem;text-align:center;margin-top:20px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Kecepatan Lepas</h1>
+  <p class="lede">Di Gravity Laboratory, planet "lepas" dari orbitnya kalau kecepatannya melewati ambang tertentu. Inilah ambang itu — kecepatan minimum untuk benar-benar meninggalkan tarikan gravitasi suatu benda, tanpa perlu didorong lagi.</p>
+
+  <div class="panel">
+    <div class="btn-row">
+      <button class="active" data-m="5.97e24" data-r="6.37e6">🌍 Bumi</button>
+      <button data-m="7.35e22" data-r="1.74e6">🌕 Bulan</button>
+      <button data-m="6.42e23" data-r="3.39e6">🔴 Mars</button>
+      <button data-m="1.989e30" data-r="6.96e8">☀ Matahari</button>
+    </div>
+    <label>Massa benda — <span class="value" id="m-val"></span> kg</label>
+    <input type="range" id="m-slider" min="20" max="31" step="0.05" value="24.78">
+    <label style="margin-top:12px;">Radius benda — <span class="value" id="r-val"></span> m</label>
+    <input type="range" id="r-slider" min="4" max="9" step="0.02" value="6.8">
+
+    <div class="result">
+      <div class="n" id="v-result">—</div>
+      <div class="l">KECEPATAN LEPAS (v = √(2GM/r))</div>
+    </div>
+  </div>
+
+  <p style="font-size:0.82rem;color:var(--soft);margin-top:16px;">Lihat juga <a href="gravity-laboratory.html">Gravity Laboratory</a> — coba naikkan kecepatan tangensial planet melewati sekitar 1,4× kecepatan sirkular di mode Sistem Planet, dan bandingkan "rasanya" dengan angka kecepatan lepas yang dihitung di sini.</p>
+
+  <footer>JAZMI — Modul Sains · Pelengkap Gravity Laboratory</footer>
+</div>
+
+<script>
+(function(){
+  const G=6.674e-11;
+  const mSlider=document.getElementById('m-slider');
+  const rSlider=document.getElementById('r-slider');
+  const mVal=document.getElementById('m-val');
+  const rVal=document.getElementById('r-val');
+  const vResult=document.getElementById('v-result');
+
+  function fmtSci(x){
+    const exp=Math.floor(Math.log10(x));
+    return (x/Math.pow(10,exp)).toFixed(2)+'×10^'+exp;
+  }
+  function render(){
+    const m=Math.pow(10,parseFloat(mSlider.value));
+    const r=Math.pow(10,parseFloat(rSlider.value));
+    mVal.textContent=fmtSci(m);
+    rVal.textContent=fmtSci(r);
+    const v=Math.sqrt(2*G*m/r);
+    vResult.textContent = (v>1000? (v/1000).toFixed(2)+' km/s' : v.toFixed(1)+' m/s');
+  }
+  [mSlider,rSlider].forEach(el=>el.addEventListener('input', ()=>{
+    document.querySelectorAll('button[data-m]').forEach(b=>b.classList.remove('active'));
+    render();
+  }));
+  document.querySelectorAll('button[data-m]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('button[data-m]').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      mSlider.value=Math.log10(parseFloat(btn.dataset.m));
+      rSlider.value=Math.log10(parseFloat(btn.dataset.r));
+      render();
+    });
+  });
+  render();
+})();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

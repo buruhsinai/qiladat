@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Konverter Sistem Bilangan — JAZMI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --bg:#12141c; --bg-panel:#1b1f2b; --bg-panel-2:#20263a;
+  --line:#333a4f; --text:#eee7d6; --text-dim:#a9a6ac;
+  --gold:#c9a15a; --gold-soft:#8a713c; --teal:#5a9c92; --radius:10px;
+}
+*{box-sizing:border-box;}
+body{ margin:0; background:var(--bg); color:var(--text); font-family:'Karla',sans-serif; line-height:1.6; }
+h1,h2,h3{ font-family:'Fraunces',serif; font-weight:600; margin:0 0 0.5em; }
+.mono{ font-family:'JetBrains Mono', monospace; }
+.wrap{ max-width:820px; margin:0 auto; padding:0 20px; }
+.hero{ padding:48px 0 30px; border-bottom:1px solid var(--line); text-align:center; }
+.hero .eyebrow{ text-transform:uppercase; font-size:0.7rem; letter-spacing:2.5px; color:var(--gold); margin-bottom:12px; }
+.hero h1{ font-size:clamp(1.5rem,4.6vw,2.2rem); color:#fff; }
+.hero p.tag{ color:var(--text-dim); max-width:560px; margin:10px auto 0; font-size:0.94rem; }
+section{ padding:36px 0; border-bottom:1px solid var(--line); }
+section:last-of-type{ border-bottom:none; }
+.kicker{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+.kicker .num{ font-family:'Fraunces',serif; color:var(--gold); font-size:0.85rem; border:1px solid var(--gold-soft); border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.kicker h2{ font-size:1.2rem; margin:0; color:#fff; }
+p{ color:var(--text); } p.dim{ color:var(--text-dim); font-size:0.9rem; }
+.panel{ background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-top:16px; }
+
+.base-tabs{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+.base-tab{ background:var(--bg-panel-2); border:1px solid var(--line); color:var(--text-dim); padding:8px 14px; border-radius:8px; font-weight:700; font-size:0.85rem; cursor:pointer; }
+.base-tab.active{ background:var(--gold); color:#12141c; border-color:var(--gold); }
+input[type=text]{ width:100%; background:#0e1017; border:1px solid var(--line); color:var(--text); padding:12px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:1.1rem; }
+input[type=text]:focus{ outline:none; border-color:var(--gold); }
+.error{ color:#d97f6f; font-size:0.85rem; margin-top:8px; display:none; }
+.error.show{ display:block; }
+
+.result-grid{ display:grid; grid-template-columns:1fr; gap:10px; margin-top:18px; }
+.result-card{ background:var(--bg-panel-2); border:1px solid var(--line); border-radius:8px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; }
+.result-card .rlabel{ font-size:0.78rem; color:var(--text-dim); }
+.result-card .rval{ font-family:'JetBrains Mono',monospace; font-size:1.15rem; color:var(--gold); word-break:break-all; text-align:right; }
+
+.placevalue{ margin-top:20px; overflow-x:auto; }
+table.pv{ border-collapse:collapse; margin:0 auto; font-family:'JetBrains Mono',monospace; font-size:0.85rem; }
+table.pv td, table.pv th{ padding:8px 10px; text-align:center; border:1px solid var(--line); min-width:38px; }
+table.pv th{ color:var(--gold); font-size:0.75rem; }
+table.pv .bit-row td{ color:#fff; font-weight:700; }
+table.pv .val-row td{ color:var(--text-dim); font-size:0.72rem; }
+
+.formula{ font-family:'Fraunces',serif; font-style:italic; background:var(--bg-panel-2); border-radius:8px; padding:14px 18px; margin:14px 0; overflow-x:auto; color:#f4eede; }
+ul{ padding-left:20px; } ul.batas li{ margin-bottom:10px; }
+.refs li{ margin-bottom:10px; font-size:0.9rem; color:var(--text-dim); }
+.consult{ background:linear-gradient(135deg,var(--bg-panel-2),var(--bg-panel)); border:1px solid var(--gold-soft); border-radius:var(--radius); padding:22px; text-align:center; }
+.consult a.wa{ display:inline-block; margin-top:14px; background:var(--teal); color:#0e1017; text-decoration:none; font-weight:700; padding:12px 26px; border-radius:30px; }
+footer{ text-align:center; padding:26px 0; color:var(--text-dim); font-size:0.8rem; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">JAZMI · Sains Komputasi</div>
+    <h1>Konverter Sistem Bilangan</h1>
+    <p class="tag">Kenapa programmer sering menulis kode warna sebagai <span class="mono">#c9a15a</span>, bukan barisan 24 digit 0 dan 1? Jawabannya ada di sini.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section id="belajar">
+    <div class="kicker"><div class="num">1</div><h2>Belajar</h2></div>
+    <p>Manusia terbiasa berhitung berbasis 10 (desimal) — kemungkinan karena kita punya 10 jari. Komputer hanya mengenal 2 keadaan (biner). Tapi menulis angka besar dalam biner sangat panjang dan gampang salah baca: 26 dalam desimal menjadi <span class="mono">11010</span> dalam biner.</p>
+    <p><strong>Heksadesimal (basis 16)</strong> dipakai programmer sebagai jalan pintas manusiawi, bukan karena komputer butuh basis 16 — melainkan karena setiap <strong>4 digit biner tepat menjadi 1 digit heksadesimal</strong>, tanpa sisa. Ini membuat heksadesimal jadi cara ringkas menuliskan pola bit yang panjang: alamat memori, kode warna, dump data biner, semuanya memakai basis 16 karena alasan ini.</p>
+    <p class="dim"><strong>Oktal (basis 8)</strong> punya alasan serupa (3 digit biner = 1 digit oktal) dan dulu populer di era komputer awal, sebelum heksadesimal menjadi standar.</p>
+  </section>
+
+  <section id="konverter">
+    <div class="kicker"><div class="num">2</div><h2>Konverter</h2></div>
+    <div class="panel">
+      <p class="dim" style="margin-top:0;">Pilih basis angka yang Anda masukkan:</p>
+      <div class="base-tabs" id="base-tabs"></div>
+      <input type="text" id="input-angka" placeholder="Masukkan angka..." value="26">
+      <div class="error" id="error-msg"></div>
+
+      <div class="result-grid" id="result-grid"></div>
+
+      <div class="placevalue" id="placevalue-area"></div>
+    </div>
+  </section>
+
+  <section id="metode">
+    <div class="kicker"><div class="num">3</div><h2>Metode</h2></div>
+    <p>Setiap sistem bilangan posisi bekerja dengan rumus yang sama, hanya basisnya berbeda:</p>
+    <div class="formula">nilai = Σ (digit × basis<sup>posisi</sup>)</div>
+    <p class="dim">Contoh: biner 11010 = (1×2⁴)+(1×2³)+(0×2²)+(1×2¹)+(0×2⁰) = 16+8+0+2+0 = 26.</p>
+  </section>
+
+  <section id="batasan">
+    <div class="kicker"><div class="num">4</div><h2>Batasan</h2></div>
+    <ul class="batas">
+      <li>Hanya mendukung bilangan bulat positif (tanpa pecahan, tanpa tanda negatif).</li>
+      <li>Dibatasi hingga angka yang aman diproses JavaScript tanpa kehilangan presisi (± 9 kuadriliun dalam desimal).</li>
+    </ul>
+  </section>
+
+  <section id="referensi">
+    <div class="kicker"><div class="num">5</div><h2>Referensi</h2></div>
+    <ul class="refs">
+      <li>Konsep sistem bilangan posisi (positional numeral system) — dasar matematika yang berlaku sama untuk semua basis, sudah dipakai peradaban sejak sistem angka Babilonia (basis 60) dan Maya (basis 20).</li>
+      <li>Konvensi heksadesimal &amp; oktal dalam ilmu komputer — materi standar pengantar organisasi komputer (mis. Patterson &amp; Hennessy).</li>
+    </ul>
+  </section>
+
+  <section id="konsultasi">
+    <div class="consult">
+      <h3 style="color:#fff;">Ada basis lain yang ingin ditambahkan?</h3>
+      <p class="dim">Alat ini masih pengembangan versi awal. Silakan hubungi kami untuk usulan (mis. basis 60 ala Babilonia, atau basis 20 ala Maya).</p>
+      <a class="wa" href="https://wa.me/6281356572588?text=Assalamu%27alaikum%2C%20saya%20ingin%20bertanya%20seputar%20Konverter%20Sistem%20Bilangan%20JAZMI." target="_blank">Hubungi via WhatsApp</a>
+    </div>
+  </section>
+
+</div>
+<footer>JAZMI — Laboratorium Pengetahuan Digital · Prototipe, belum masuk struktur menu utama.</footer>
+
+<script>
+const BASIS = {
+  2:  {nama:'Biner',  digit:'01'},
+  8:  {nama:'Oktal',  digit:'01234567'},
+  10: {nama:'Desimal',digit:'0123456789'},
+  16: {nama:'Heksadesimal', digit:'0123456789ABCDEF'}
+};
+let basisAktif = 10;
+
+function bikinTab(){
+  const el = document.getElementById('base-tabs');
+  el.innerHTML = '';
+  Object.keys(BASIS).forEach(b=>{
+    const btn = document.createElement('button');
+    btn.className = 'base-tab' + (parseInt(b)===basisAktif ? ' active' : '');
+    btn.textContent = BASIS[b].nama + ' (basis ' + b + ')';
+    btn.onclick = ()=>{ basisAktif = parseInt(b); bikinTab(); prosesInput(); };
+    el.appendChild(btn);
+  });
+}
+
+function validasi(str, basis){
+  const digitValid = BASIS[basis].digit;
+  str = str.toUpperCase().trim();
+  if(str==='') return false;
+  for(const ch of str) if(digitValid.indexOf(ch)===-1) return false;
+  return true;
+}
+
+function prosesInput(){
+  const raw = document.getElementById('input-angka').value;
+  const err = document.getElementById('error-msg');
+  const grid = document.getElementById('result-grid');
+  const pv = document.getElementById('placevalue-area');
+
+  if(!validasi(raw, basisAktif)){
+    err.textContent = 'Angka tidak valid untuk basis ' + basisAktif + ' (digit yang diizinkan: ' + BASIS[basisAktif].digit + ')';
+    err.classList.add('show');
+    grid.innerHTML=''; pv.innerHTML='';
+    return;
+  }
+  err.classList.remove('show');
+
+  const desimal = parseInt(raw, basisAktif);
+  if(!Number.isSafeInteger(desimal)){
+    err.textContent = 'Angka terlalu besar untuk diproses dengan aman.';
+    err.classList.add('show');
+    return;
+  }
+
+  grid.innerHTML = '';
+  Object.keys(BASIS).forEach(b=>{
+    const val = desimal.toString(parseInt(b)).toUpperCase();
+    const card = document.createElement('div');
+    card.className = 'result-card';
+    card.innerHTML = '<div class="rlabel">'+BASIS[b].nama+' (basis '+b+')</div><div class="rval">'+val+'</div>';
+    grid.appendChild(card);
+  });
+
+  // place value table (base 2)
+  const biner = desimal.toString(2);
+  let bitRow = '<tr class="bit-row"><th>Bit</th>';
+  let valRow = '<tr class="val-row"><th>Nilai</th>';
+  const n = biner.length;
+  for(let i=0;i<n;i++){
+    const posisi = n-1-i;
+    bitRow += '<td>'+biner[i]+'</td>';
+    valRow += '<td>2<sup>'+posisi+'</sup></td>';
+  }
+  bitRow += '</tr>'; valRow += '</tr>';
+  pv.innerHTML = '<div class="dim" style="margin-bottom:8px; font-size:0.8rem;">Rincian nilai tempat (basis 2) untuk '+desimal+':</div><table class="pv">'+valRow+bitRow+'</table>';
+}
+
+document.getElementById('input-angka').addEventListener('input', prosesInput);
+bikinTab();
+prosesInput();
+</script>
+
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

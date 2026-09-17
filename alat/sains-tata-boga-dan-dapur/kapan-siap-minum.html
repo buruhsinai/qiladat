@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kapan Siap Minum & Berapa Porsi Amannya?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Karla:wght@400;600;700;800&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#141712; --panel:#1B1F19; --panel-2:#232821;
+    --border:rgba(232,236,224,0.1); --text:#EDEFE7; --muted:#93998A;
+    --tea:#C08A3E; --tea-dim:192,138,62;
+    --good:#7FB86A; --good-dim:127,184,106;
+    --warn:#D9677A; --warn-dim:217,103,122;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Karla',sans-serif;font-size:16px;line-height:1.6;}
+  h1,h2{font-family:'Fraunces',serif;font-weight:600;margin:0;}
+  .wrap{max-width:560px;margin:0 auto;padding:36px 20px 60px;}
+  header{margin-bottom:22px;}
+  header p.kicker{font-size:12.5px;color:var(--muted);margin:0 0 10px;}
+  h1{font-size:clamp(23px,6vw,28px);margin-bottom:8px;}
+  header p.lede{color:var(--muted);font-size:15px;margin:0;}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:22px 22px 20px;margin-top:20px;}
+
+  .chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+  .chip{flex:1;min-width:110px;text-align:center;padding:11px 8px;border-radius:10px;border:1.5px solid var(--border);background:var(--panel-2);color:var(--muted);font-weight:700;font-size:13.5px;cursor:pointer;}
+  .chip.active{border-color:var(--tea);color:var(--tea);background:rgba(var(--tea-dim),0.12);}
+
+  .slider-row{margin:18px 0 6px;}
+  .slider-row label{display:flex;justify-content:space-between;font-size:14px;font-weight:700;margin-bottom:8px;}
+  .slider-row label span{font-family:'JetBrains Mono',monospace;color:var(--tea);}
+  input[type=range]{width:100%;accent-color:var(--tea);height:6px;}
+
+  .toggle-row{display:flex;gap:8px;margin-top:16px;}
+  .toggle{flex:1;text-align:center;padding:9px 6px;border-radius:8px;border:1.5px solid var(--border);background:var(--panel-2);color:var(--muted);font-weight:700;font-size:12.5px;cursor:pointer;}
+  .toggle.active{border-color:var(--tea);color:var(--tea);background:rgba(var(--tea-dim),0.12);}
+
+  .result{margin-top:22px;padding:20px 20px;border-radius:10px;text-align:center;}
+  .result.young{background:rgba(var(--warn-dim),0.1);border:1.5px solid rgba(var(--warn-dim),0.4);}
+  .result.ready{background:rgba(var(--good-dim),0.1);border:1.5px solid rgba(var(--good-dim),0.4);}
+  .result.strong{background:rgba(var(--tea-dim),0.12);border:1.5px solid rgba(var(--tea-dim),0.45);}
+  .result .status{font-family:'Fraunces',serif;font-size:21px;margin-bottom:6px;}
+  .result.young .status{color:var(--warn);}
+  .result.ready .status{color:var(--good);}
+  .result.strong .status{color:var(--tea);}
+  .result .taste{font-size:14.5px;color:var(--text);margin-bottom:14px;}
+  .result .portion{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;color:var(--text);}
+  .result .portion-lbl{font-size:12px;color:var(--muted);margin-top:2px;}
+
+  footer{margin-top:26px;font-size:12.5px;color:var(--muted);text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="kicker">Laboratorium Qiladat / JAZMI — Panduan Cepat Harian</p>
+    <h1>Kapan Siap Minum, Berapa Porsi Amannya?</h1>
+    <p class="lede">Bukan pengukuran presisi — cuma perkiraan cepat sehari-hari, sengaja disederhanakan supaya gampang dipakai.</p>
+  </header>
+
+  <div class="card">
+    <div class="chip-row" id="drinkChips">
+      <div class="chip active" data-d="kombucha">🍵 Kombucha</div>
+      <div class="chip" data-d="milkkefir">🥛 Kefir Susu</div>
+      <div class="chip" data-d="waterkefir">💧 Water Kefir</div>
+      <div class="chip" data-d="tepache">🍍 Tepache</div>
+    </div>
+
+    <div class="slider-row">
+      <label>Sudah difermentasi <span id="timeVal">—</span></label>
+      <input type="range" id="timeSlider" min="0" max="100" value="50">
+    </div>
+
+    <p style="font-size:13px;font-weight:700;color:var(--muted);margin:14px 0 4px;">Terbiasa minum yang seperti ini?</p>
+    <div class="toggle-row" id="toleranceRow">
+      <div class="toggle" data-t="baru">Baru mulai</div>
+      <div class="toggle active" data-t="biasa">Sudah biasa</div>
+      <div class="toggle" data-t="terbiasa">Sering banget</div>
+    </div>
+
+    <div class="result" id="resultBox">
+      <div class="status" id="statusText">—</div>
+      <div class="taste" id="tasteText">—</div>
+      <div class="portion" id="portionText">—</div>
+      <div class="portion-lbl">perkiraan porsi aman hari ini</div>
+    </div>
+  </div>
+
+  <footer>Perkiraan kasar untuk panduan sehari-hari, bukan takaran medis. Kalau ragu atau sedang hamil/menyusui/imun lemah, tanya dokter dulu.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var DRINKS = {
+    kombucha:   { unit:'hari', max:16, young:4,  strong:11, portionBase:120 },
+    milkkefir:  { unit:'jam',  max:36, young:14, strong:28, portionBase:130 },
+    waterkefir: { unit:'jam',  max:60, young:20, strong:48, portionBase:150 },
+    tepache:    { unit:'jam',  max:72, young:18, strong:54, portionBase:150 }
+  };
+  var TOL_MULT = { baru:0.6, biasa:1, terbiasa:1.6 };
+
+  var current = 'kombucha';
+  var tolerance = 'biasa';
+
+  var timeSlider = document.getElementById('timeSlider');
+  var timeVal = document.getElementById('timeVal');
+  var resultBox = document.getElementById('resultBox');
+  var statusText = document.getElementById('statusText');
+  var tasteText = document.getElementById('tasteText');
+  var portionText = document.getElementById('portionText');
+
+  function update(){
+    var d = DRINKS[current];
+    timeSlider.max = d.max;
+    var t = parseFloat(timeSlider.value);
+    if(t > d.max){ t = d.max; timeSlider.value = t; }
+    timeVal.textContent = t + ' ' + d.unit;
+
+    var status, taste, cls, portionMult;
+    if(t < d.young){
+      status = 'Masih Muda'; cls = 'young';
+      taste = 'Manis masih dominan, asamnya belum kuat — aman-aman saja, tapi belum di titik "khas"-nya.';
+      portionMult = 1.0;
+    } else if(t <= d.strong){
+      status = 'Pas & Seimbang'; cls = 'ready';
+      taste = 'Titik paling umum disukai — manis dan asam seimbang.';
+      portionMult = 1.0;
+    } else {
+      status = 'Sudah Tua / Kuat'; cls = 'strong';
+      taste = 'Asam kuat, jejak alkohol lebih terasa — mulai dari porsi kecil dulu.';
+      portionMult = 0.7;
+    }
+
+    var portion = Math.round(d.portionBase * portionMult * TOL_MULT[tolerance] / 10) * 10;
+    statusText.textContent = status;
+    tasteText.textContent = taste;
+    portionText.textContent = '± ' + portion + ' ml';
+    resultBox.className = 'result ' + cls;
+  }
+
+  document.querySelectorAll('#drinkChips .chip').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      if(chip.classList.contains('active')) return;
+      document.querySelectorAll('#drinkChips .chip').forEach(function(c){ c.classList.remove('active'); });
+      chip.classList.add('active');
+      current = chip.getAttribute('data-d');
+      var d = DRINKS[current];
+      timeSlider.max = d.max;
+      timeSlider.value = Math.round(d.max*0.4);
+      update();
+    });
+  });
+  document.querySelectorAll('#toleranceRow .toggle').forEach(function(t){
+    t.addEventListener('click', function(){
+      document.querySelectorAll('#toleranceRow .toggle').forEach(function(c){ c.classList.remove('active'); });
+      t.classList.add('active');
+      tolerance = t.getAttribute('data-t');
+      update();
+    });
+  });
+  timeSlider.addEventListener('input', update);
+
+  timeSlider.value = Math.round(DRINKS[current].max*0.4);
+  update();
+})();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

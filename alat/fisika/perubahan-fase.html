@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perubahan Fase — JAZMI</title>
+<style>
+  :root{--bg:#0b1220;--panel:#121a2b;--panel2:#1a2438;--ice:#7ec8e3;--water:#3e8ac9;--steam:#e0e6ec;--gold:#d9b25a;--text:#e6ecf2;--text-soft:#8b96ab;--line:#232d42;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;line-height:1.6;}
+  .wrap{max-width:820px;margin:0 auto;padding:32px 20px 60px;}
+  h1{font-family:Georgia,serif;font-weight:normal;font-size:26px;margin:0 0 8px;}
+  h2{font-family:Georgia,serif;font-weight:normal;font-size:17px;color:var(--gold);margin:30px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px;}
+  p{color:var(--text-soft);font-size:14.5px;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px 22px;}
+  .field{margin:12px 0;}
+  .field label{display:block;font-size:12.5px;color:var(--text-soft);margin-bottom:6px;}
+  input[type=range]{width:100%;accent-color:var(--gold);}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;}
+  svg{display:block;width:100%;height:auto;margin-top:14px;}
+  .readout{background:#1a140c66;border:1px solid var(--gold);border-radius:8px;padding:14px 18px;margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;}
+  .readout .l{font-size:10.5px;color:var(--text-soft);text-transform:uppercase;}
+  .readout .v{font-size:16px;color:var(--gold);font-weight:600;}
+  .btnrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .btnrow button{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:6px 12px;border-radius:12px;font-size:11.5px;cursor:pointer;}
+  .note{font-size:12px;color:var(--text-soft);margin-top:14px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p style="color:var(--gold);font-size:11px;letter-spacing:1px;text-transform:uppercase;">JAZMI</p>
+    <h1>Perubahan fase: es → air → uap</h1>
+    <p>Beda dari gas ideal — di sini energi yang masuk kadang <strong>tidak</strong> menaikkan suhu sama sekali. Saat es melebur atau air mendidih, semua energi tambahan dipakai memutus ikatan antar-molekul, bukan mempercepat geraknya — makanya grafik suhu-vs-energi mendatar tepat di titik itu.</p>
+  </header>
+
+  <h2>Parameter</h2>
+  <div class="panel">
+    <div class="grid2">
+      <div class="field"><label>Massa (gram) — <span id="mLabel"></span></label><input type="range" id="mSlider" min="10" max="500" value="100" step="10"></div>
+      <div class="field"><label>Suhu awal (°C) — <span id="t0Label"></span></label><input type="range" id="t0Slider" min="-40" max="-1" value="-20" step="1"></div>
+      <div class="field"><label>Kalor jenis es (J/g°C) — <span id="ciLabel"></span></label><input type="range" id="ciSlider" min="1" max="4" value="2.09" step="0.01"></div>
+      <div class="field"><label>Kalor jenis air (J/g°C) — <span id="cwLabel"></span></label><input type="range" id="cwSlider" min="1" max="6" value="4.186" step="0.01"></div>
+      <div class="field"><label>Kalor jenis uap (J/g°C) — <span id="csLabel"></span></label><input type="range" id="csSlider" min="1" max="4" value="2.01" step="0.01"></div>
+      <div class="field"><label>Kalor lebur (J/g) — <span id="lfLabel"></span></label><input type="range" id="lfSlider" min="50" max="600" value="334" step="1"></div>
+      <div class="field"><label>Kalor uap (J/g) — <span id="lvLabel"></span></label><input type="range" id="lvSlider" min="500" max="3000" value="2260" step="10"></div>
+    </div>
+    <div class="btnrow">
+      <button id="resetBtn">Kembalikan ke nilai air asli</button>
+    </div>
+  </div>
+
+  <h2>Energi yang ditambahkan</h2>
+  <div class="panel">
+    <div class="field"><label>Energi (kJ) — <span id="eLabel"></span></label><input type="range" id="eSlider" min="0" max="400" value="0" step="1"></div>
+    <svg id="curveSvg" viewBox="0 0 760 320" role="img" aria-label="Grafik suhu vs energi"></svg>
+    <div class="readout">
+      <div><div class="l">Suhu saat ini</div><div class="v" id="tempOut"></div></div>
+      <div><div class="l">Fase</div><div class="v" id="phaseOut"></div></div>
+    </div>
+    <p class="note" id="segNote"></p>
+  </div>
+
+  <h2>Kenapa mendatar?</h2>
+  <div class="panel">
+    <p>Selama melebur/mendidih, energi masuk = energi yang dipakai memutus ikatan antar-molekul (kalor laten), bukan energi kinetik molekul — dan suhu itu sendiri adalah ukuran energi kinetik rata-rata, bukan energi ikatan. Karena kalor uap air (2260 J/g) jauh lebih besar dari kalor lebur (334 J/g), plateau mendidih jauh lebih panjang dari plateau melebur — coba lihat sendiri di grafik.</p>
+  </div>
+</div>
+
+<script>
+const NS='http://www.w3.org/2000/svg';
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+
+const ids=['mSlider','t0Slider','ciSlider','cwSlider','csSlider','lfSlider','lvSlider','eSlider'];
+function val(id){return parseFloat(document.getElementById(id).value);}
+
+function thresholds(m,T0,ci,cw,cs,Lf,Lv){
+  const Q1=m*ci*(0-T0);
+  const Q2=Q1+m*Lf;
+  const Q3=Q2+m*cw*100;
+  const Q4=Q3+m*Lv;
+  const Q5=Q4+m*cs*50;
+  return {Q1,Q2,Q3,Q4,Q5};
+}
+function tempAt(E,m,T0,ci,cw,cs,Lf,Lv,th){
+  if(E<=th.Q1) return {T:T0+E/(m*ci), phase:'Es', color:'var(--ice)'};
+  if(E<=th.Q2) return {T:0, phase:'Melebur (es+air, 0°C)', color:'var(--gold)'};
+  if(E<=th.Q3) return {T:(E-th.Q2)/(m*cw), phase:'Air cair', color:'var(--water)'};
+  if(E<=th.Q4) return {T:100, phase:'Mendidih (air+uap, 100°C)', color:'var(--gold)'};
+  return {T:100+(E-th.Q4)/(m*cs), phase:'Uap', color:'var(--steam)'};
+}
+
+function update(){
+  const m=val('mSlider'), T0=val('t0Slider'), ci=val('ciSlider'), cw=val('cwSlider'), cs=val('csSlider'), Lf=val('lfSlider'), Lv=val('lvSlider');
+  document.getElementById('mLabel').textContent=m+' g';
+  document.getElementById('t0Label').textContent=T0+' °C';
+  document.getElementById('ciLabel').textContent=ci.toFixed(2);
+  document.getElementById('cwLabel').textContent=cw.toFixed(2);
+  document.getElementById('csLabel').textContent=cs.toFixed(2);
+  document.getElementById('lfLabel').textContent=Lf;
+  document.getElementById('lvLabel').textContent=Lv;
+
+  const th = thresholds(m,T0,ci,cw,cs,Lf,Lv);
+  const maxKJ = th.Q5/1000;
+  const eSliderEl = document.getElementById('eSlider');
+  eSliderEl.max = Math.ceil(maxKJ);
+  const E = val('eSlider')*1000;
+  document.getElementById('eLabel').textContent = val('eSlider')+' kJ';
+
+  const r = tempAt(E,m,T0,ci,cw,cs,Lf,Lv,th);
+  document.getElementById('tempOut').textContent = r.T.toFixed(1)+' °C';
+  document.getElementById('phaseOut').textContent = r.phase;
+
+  drawCurve(m,T0,ci,cw,cs,Lf,Lv,th,E);
+}
+
+function drawCurve(m,T0,ci,cw,cs,Lf,Lv,th,Ecurrent){
+  const svg=document.getElementById('curveSvg');
+  svg.innerHTML='';
+  const W=760,H=320,padL=55,padR=20,padT=20,padB=35;
+  svg.appendChild(el('rect',{x:0,y:0,width:W,height:H,fill:'#121a2b'}));
+
+  const Tmax = 100+(th.Q5-th.Q4)/(m*cs);
+  const xScale=(E)=>padL+(E/th.Q5)*(W-padL-padR);
+  const yScale=(T)=>H-padB-((T-T0)/(Tmax-T0))*(H-padT-padB);
+
+  // sumbu
+  svg.appendChild(el('line',{x1:padL,y1:H-padB,x2:W-padR,y2:H-padB,stroke:'#232d42','stroke-width':1}));
+  svg.appendChild(el('line',{x1:padL,y1:padT,x2:padL,y2:H-padB,stroke:'#232d42','stroke-width':1}));
+  const xl=el('text',{x:W/2,y:H-8,'text-anchor':'middle','font-size':11,fill:'#8b96ab'}); xl.textContent='Energi (J)'; svg.appendChild(xl);
+  const yl=el('text',{x:14,y:H/2,'text-anchor':'middle','font-size':11,fill:'#8b96ab',transform:'rotate(-90 14 '+(H/2)+')'}); yl.textContent='Suhu (°C)'; svg.appendChild(yl);
+
+  // kurva bertahap
+  const pts=[[0,T0],[th.Q1,0],[th.Q2,0],[th.Q3,100],[th.Q4,100],[th.Q5,Tmax]];
+  let path='';
+  pts.forEach((p,i)=>{ path += (i===0?'M ':' L ')+xScale(p[0])+' '+yScale(p[1]); });
+  svg.appendChild(el('path',{d:path,fill:'none',stroke:'#d9b25a','stroke-width':3}));
+
+  // area plateau ditandai
+  [[th.Q1,th.Q2,0],[th.Q3,th.Q4,100]].forEach(([a,b,T])=>{
+    svg.appendChild(el('rect',{x:xScale(a),y:yScale(T)-3,width:xScale(b)-xScale(a),height:6,fill:'#eecc80',opacity:0.5}));
+  });
+
+  // titik posisi sekarang
+  const rNow = tempAt(Ecurrent,m,T0,ci,cw,cs,Lf,Lv,th);
+  svg.appendChild(el('circle',{cx:xScale(Ecurrent),cy:yScale(rNow.T),r:6,fill:'#fff',stroke:'#d9b25a','stroke-width':2}));
+
+  // label suhu kunci
+  [0,100].forEach(T=>{
+    const y=yScale(T);
+    svg.appendChild(el('line',{x1:padL,y1:y,x2:W-padR,y2:y,stroke:'#232d42','stroke-width':1,'stroke-dasharray':'3,3'}));
+    const t=el('text',{x:padL-8,y:y+4,'text-anchor':'end','font-size':10,fill:'#8b96ab'}); t.textContent=T+'°C'; svg.appendChild(t);
+  });
+}
+
+ids.forEach(id=>document.getElementById(id).addEventListener('input',update));
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  document.getElementById('mSlider').value=100;
+  document.getElementById('t0Slider').value=-20;
+  document.getElementById('ciSlider').value=2.09;
+  document.getElementById('cwSlider').value=4.186;
+  document.getElementById('csSlider').value=2.01;
+  document.getElementById('lfSlider').value=334;
+  document.getElementById('lvSlider').value=2260;
+  update();
+});
+update();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

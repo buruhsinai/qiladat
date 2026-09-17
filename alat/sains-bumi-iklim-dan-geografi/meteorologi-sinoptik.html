@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meteorologi Sinoptik — Membaca Peta Cuaca Serentak</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#10141A; --panel:#171D25; --panel-2:#1D2530;
+    --border:rgba(232,236,244,0.09); --border-strong:rgba(232,236,244,0.17);
+    --text:#ECEFF3; --muted:#8C97A6;
+    --gold:#E0A94D; --gold-dim:224,169,77;
+    --cyan:#4FC7D9; --cyan-dim:79,199,217;
+    --true:#4FBF8A; --true-dim:79,191,138;
+    --warn:#D9677A; --warn-dim:217,103,122;
+    --radius:4px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(79,199,217,0.06), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 0%, rgba(224,169,77,0.05), transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:'Karla',sans-serif;font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:'Fraunces',serif;font-weight:500;letter-spacing:-0.01em;margin:0;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 26px 80px;}
+  .rule{height:1px;background:var(--border);margin:44px 0;}
+  .eyebrow-num{font-family:'Fraunces',serif;font-style:italic;color:var(--cyan);font-size:15px;margin:0 0 10px;}
+  section h2{font-size:clamp(22px,3.4vw,28px);margin-bottom:10px;}
+  section > p.desc{color:var(--muted);max-width:66ch;margin:0 0 20px;font-size:15px;}
+
+  header.top{padding:44px 0 6px;}
+  header.top .kicker{font-size:13px;color:var(--muted);margin:0 0 14px;}
+  header.top h1{font-size:clamp(28px,5vw,40px);margin-bottom:12px;max-width:22ch;}
+  header.top p.lede{color:var(--muted);max-width:64ch;font-size:16px;margin:0;}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
+  .badge{font-size:12px;padding:4px 11px;border-radius:100px;border:1px solid var(--border-strong);color:var(--muted);}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  @media (max-width:720px){.grid-2{grid-template-columns:1fr;}}
+
+  .slider-row{ margin:14px 0; }
+  .slider-row label{ display:flex; justify-content:space-between; font-size:13.5px; font-weight:600; color:var(--text); margin-bottom:7px; }
+  .slider-row label span.val{ font-family:'JetBrains Mono',monospace; color:var(--gold); }
+  input[type=range]{ width:100%; accent-color:var(--gold); }
+  .toggle-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .toggle-chip{padding:7px 14px;border-radius:100px;border:1px solid var(--border-strong);background:var(--panel-2);color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer;}
+  .toggle-chip.active{border-color:var(--gold);color:var(--gold);}
+  .preset-row{ display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 4px; }
+  .preset-chip{ padding:7px 13px; border-radius:100px; border:1px solid var(--border-strong); background:var(--panel-2); color:var(--muted); font-size:12.5px; font-weight:600; cursor:pointer; }
+  .preset-chip:hover{border-color:var(--cyan);color:var(--cyan);}
+
+  .result-box{ margin-top:16px; background:var(--panel-2); border:1px solid var(--border); border-radius:3px; padding:16px 18px; display:flex; flex-wrap:wrap; gap:22px; }
+  .result-item .lbl{ font-size:12px; color:var(--muted); margin-bottom:3px; }
+  .result-item .num{ font-family:'JetBrains Mono',monospace; font-size:20px; color:var(--gold); }
+  .result-item .num.big{ font-size:26px; }
+  .formula-note{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted); margin-top:12px; line-height:1.7; }
+
+  .chart-svg-wrap{background:var(--panel-2);border:1px solid var(--border);border-radius:3px;padding:12px 14px;margin-top:14px;}
+  .chart-svg-wrap svg{width:100%;height:auto;display:block;}
+  .chart-caption{font-size:11.5px;color:var(--muted);margin-top:6px;}
+
+  .callout{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--cyan);border-radius:3px;padding:15px 18px;font-size:14px;color:var(--muted);margin-top:12px;}
+  .callout.warn-border{border-left-color:var(--warn);}
+  .callout p{margin:0 0 8px;} .callout p:last-child{margin-bottom:0;}
+  .callout b{color:var(--text);}
+
+  .ref-list{list-style:none;padding:0;margin:16px 0;}
+  .ref-list li{padding:12px 0;border-top:1px solid var(--border);font-size:14px;color:var(--muted);}
+  .ref-list li:last-child{border-bottom:1px solid var(--border);}
+  .ref-list .who{color:var(--text);}
+  .related-links{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted);margin-top:10px;}
+
+  footer{padding-top:40px;font-size:13px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <p class="kicker">Laboratorium Qiladat / JAZMI — Meteorologi Sinoptik</p>
+    <h1>Membaca Peta yang Mendahului Cuaca</h1>
+    <p class="lede">Cabang yang lahir langsung dari peristiwa 1854: kumpulkan data dari banyak tempat pada waktu yang (nyaris) sama, petakan jadi satu gambar, lalu baca polanya — bukan hitung rumus, tapi baca bentuk. Istilah "synoptic chart" sendiri diciptakan Robert FitzRoy setelah bencana kapal Royal Charter (1859), untuk peta yang seolah dilihat "satu mata dari atas, sekali pandang".</p>
+    <div class="badge-row">
+      <span class="badge">Meteorologi Sinoptik</span>
+      <span class="badge">Peta Isobar</span>
+      <span class="badge">Station Model</span>
+      <span class="badge">Simulator Interaktif</span>
+    </div>
+  </header>
+
+  <div class="rule"></div>
+
+  <!-- 1 -->
+  <section id="konsep">
+    <p class="eyebrow-num">1 — Konsep</p>
+    <h2>Satu Potret, Banyak Titik, Waktu yang Sama</h2>
+    <p class="desc">Meteorologi dinamik (halaman sebelumnya) bertanya "mengapa angin bergerak begitu" lewat hukum fisika di satu titik. Meteorologi sinoptik bertanya hal yang sama sekali berbeda: "apa bentuk keseluruhan atmosfer <em>saat ini</em>, dilihat dari banyak titik sekaligus?" Jawabannya bukan rumus, melainkan peta — dan peta itu hanya berguna kalau semua datanya diambil pada jam yang (nyaris) sama, lalu dikumpulkan lebih cepat daripada sistem cuacanya sendiri berpindah. Itu sebabnya cabang ini baru mungkin ada setelah telegraf: sebelumnya, tak ada cara membuat "potret serentak" lintas wilayah.</p>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 2 -->
+  <section id="kalkulator">
+    <p class="eyebrow-num">2 — Simulator Interaktif</p>
+    <h2>Simulator Peta Isobar &amp; Stasiun Cuaca</h2>
+    <p class="desc">Enam "stasiun" pada jarak berbeda dari pusat tekanan — geser kedalaman sistemnya, dan lihat bagaimana kerapatan isobar mengubah arah &amp; kekuatan angin di tiap stasiun sekaligus, bukan satu per satu.</p>
+    <div class="card">
+      <div class="grid-2">
+        <div>
+          <div class="toggle-row">
+            <span class="toggle-chip active" data-hemi="N">Belahan Bumi Utara</span>
+            <span class="toggle-chip" data-hemi="S">Belahan Bumi Selatan</span>
+          </div>
+          <div class="toggle-row">
+            <span class="toggle-chip active" data-sys="L">Sistem Tekanan Rendah (L)</span>
+            <span class="toggle-chip" data-sys="H">Sistem Tekanan Tinggi (H)</span>
+          </div>
+          <div class="slider-row">
+            <label>Selisih tekanan pusat–lingkungan (ΔP) <span class="val" id="v-dp">24 hPa</span></label>
+            <input type="range" id="in-dp" min="4" max="70" step="2" value="24">
+          </div>
+          <div class="result-box">
+            <div class="result-item"><div class="lbl">Tekanan pusat</div><div class="num big" id="out-pc">—</div></div>
+            <div class="result-item"><div class="lbl">Rasio kerapatan isobar (stasiun terdekat vs terjauh)</div><div class="num" id="out-ratio">—</div></div>
+          </div>
+          <p class="formula-note">P(r) = P_lingkungan ± ΔP·e^(−r/L) &nbsp;→&nbsp; gradien |dP/dr| paling besar dekat pusat, melandai ke luar — itu sebabnya stasiun dekat pusat selalu menunjukkan panah lebih panjang (angin lebih kencang) daripada stasiun jauh, pada sistem yang sama persis.</p>
+        </div>
+        <div class="chart-svg-wrap">
+          <svg id="svg-map" viewBox="0 0 500 500"></svg>
+          <div class="chart-caption">
+            <span style="color:var(--cyan)">■</span> Isobar &amp; pusat Rendah (L) &nbsp;
+            <span style="color:var(--warn)">■</span> Pusat Tinggi (H) &nbsp;
+            <span style="color:var(--gold)">■</span> Arah &amp; kekuatan angin per stasiun
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 3 -->
+  <section id="kasus">
+    <p class="eyebrow-num">3 — Kasus-Kasus</p>
+    <h2>Dari Depresi Lemah sampai Siklon yang Membalik Arah</h2>
+    <p class="desc">Klik untuk memuat tiap kasus ke simulator di atas.</p>
+    <div class="preset-row" id="presetRow">
+      <span class="preset-chip" data-sys="L" data-hemi="N" data-dp="8">Depresi lemah (Low, gradien landai)</span>
+      <span class="preset-chip" data-sys="L" data-hemi="N" data-dp="48">Siklon kuat (Low, gradien rapat)</span>
+      <span class="preset-chip" data-sys="H" data-hemi="N" data-dp="20">Antisiklon musim panas (High)</span>
+      <span class="preset-chip" data-sys="L" data-hemi="S" data-dp="40">Siklon di Belahan Selatan</span>
+    </div>
+    <div class="callout" id="kasusNote"></div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 4 -->
+  <section id="metode">
+    <p class="eyebrow-num">4 — Metode &amp; Rumus</p>
+    <div class="callout">
+      <p><strong>Model tekanan radial sederhana:</strong> P(r) = P<sub>lingkungan</sub> + ΔP·e^(−r/L) (ΔP bertanda negatif untuk sistem Rendah, positif untuk Tinggi), dengan L = skala jarak tetap. Isobar digambar tiap kelipatan tertentu (umumnya 4 hPa pada banyak lembaga cuaca, meski konvensinya bisa berbeda antar-institusi) — jarak antar-isobar pada peta asli itulah yang secara visual menunjukkan kerapatan gradien, tanpa perlu membaca satu pun angka.</p>
+      <p><strong>Arah angin per stasiun:</strong> mengikuti arah isobar (garis singgung lingkaran di titik itu), diputar sesuai Hukum Buys Ballot yang sama dipakai di halaman Meteorologi Dinamik — berlawanan jarum jam di sekitar Rendah (BBU), searah jarum jam di sekitar Tinggi (BBU), terbalik semua di Belahan Selatan. Kekuatan (panjang panah) sebanding dengan |dP/dr| lokal — rumus kecepatan aktual dalam satuan m/s ada di halaman Meteorologi Dinamik, di sini fokusnya membaca <em>pola relatif</em> dari peta, bukan menghitung ulang angkanya.</p>
+      <p><strong>Alur kerja sinoptik yang sesungguhnya:</strong> kumpulkan observasi dari banyak stasiun pada jam sinkron (konvensi WMO: 00/06/12/18 UTC) → plot tiap stasiun pakai simbol standar (station model: suhu, titik embun, tekanan, arah/kekuatan angin, tutupan awan) → analis (atau algoritma) menggambar isobar lewat interpolasi → identifikasi pusat tekanan, front, palung &amp; punggung → baru dari situ diturunkan pola angin dan potensi cuaca ke depan.</p>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 5 -->
+  <section id="batasan">
+    <p class="eyebrow-num">5 — Batasan</p>
+    <div class="callout warn-border">
+      <p>Simulator ini sengaja disederhanakan jadi sistem tekanan tunggal yang <b style="color:var(--text)">simetris melingkar sempurna</b> — dunia nyata jauh lebih berantakan: sistem tekanan biasanya lonjong, saling berdekatan, dan diselingi front (batas antar-massa udara) yang mematahkan bentuk isobar jadi sudut tajam, bukan lingkaran mulus.</p>
+      <p>Stasiun di sini hanya menunjukkan <b style="color:var(--text)">tekanan &amp; angin</b> — station model sungguhan pada peta operasional memplot jauh lebih banyak: suhu, titik embun, tutupan awan, cuaca yang sedang terjadi, dan kecenderungan tekanan 3 jam terakhir, semua dalam satu simbol padat di tiap titik stasiun.</p>
+      <p>Isobar pada peta asli juga tidak diinterpolasi dari rumus rapi seperti di atas — analis (atau algoritma interpolasi objektif seperti Cressman) harus menariknya dari titik-titik stasiun yang tersebar tidak merata di darat maupun laut, sering dengan kekosongan data besar di lautan dan wilayah terpencil.</p>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- 6 -->
+  <section id="referensi">
+    <p class="eyebrow-num">6 — Referensi &amp; Terkait</p>
+    <h2>Sumber</h2>
+    <ul class="ref-list">
+      <li><span class="who">FitzRoy, R. (1859–1861).</span> Pengembangan stasiun bertelegraf &amp; peta "synoptic chart" pasca-badai Royal Charter — asal-usul istilah yang dipakai cabang ini.</li>
+      <li><span class="who">Buys Ballot, C. H. D. (1857).</span> Hukum arah angin relatif terhadap tekanan — dasar aturan arah panah pada simulator di atas, sama seperti dipakai di halaman Meteorologi Dinamik.</li>
+      <li><span class="who">Ahrens, C. D.</span> <i>Meteorology Today.</i> — rujukan umum konvensi station model &amp; pembacaan peta sinoptik operasional.</li>
+    </ul>
+    <div class="related-links">
+      <span>→ Meteorologi Dinamik — Kenapa Angin Tak Mengalir Lurus ke Tekanan Rendah (rumus fisika di balik arah &amp; kecepatan angin yang dipakai di halaman ini)</span>
+      <span>→ Dari Klimatologi ke Meteorologi — Titik Balik Kecepatan Informasi (asal-usul historis cabang ini, termasuk peran FitzRoy &amp; Le Verrier)</span>
+    </div>
+  </section>
+
+  <footer>Disusun sebagai bagian dari laboratorium Qiladat/JAZMI — kalkulator interaktif untuk konsep inti Meteorologi Sinoptik: membaca pola dari peta isobar &amp; stasiun serentak.</footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var P_FAR = 1016;
+  var L = 70;
+  var MAXR = 235;
+  var hemi = 'N';
+  var sysType = 'L';
+
+  var STATIONS = [
+    {ang: -100, r: 45},
+    {ang: -20,  r: 90},
+    {ang: 55,   r: 140},
+    {ang: 130,  r: 100},
+    {ang: 200,  r: 185},
+    {ang: 265,  r: 225}
+  ];
+
+  function svgEl(tag, attrs){
+    var e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for(var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function fmt(n,d){ if(d===undefined) d=1; return (Math.round(n*Math.pow(10,d))/Math.pow(10,d)).toLocaleString('id-ID'); }
+
+  var inDp = document.getElementById('in-dp');
+  var vDp = document.getElementById('v-dp');
+  var outPc = document.getElementById('out-pc');
+  var outRatio = document.getElementById('out-ratio');
+
+  function pressureAt(r, delta){ return P_FAR + delta*Math.exp(-r/L); }
+  function gradAt(r, delta){ return Math.abs(delta)/L * Math.exp(-r/L); }
+
+  function update(){
+    var dp = parseFloat(inDp.value);
+    vDp.textContent = dp + ' hPa';
+    var delta = sysType==='L' ? -dp : dp;
+    var pc = P_FAR + delta;
+    outPc.textContent = fmt(pc,0) + ' hPa';
+
+    var radii = STATIONS.map(function(s){return s.r;});
+    var rMin = Math.min.apply(null, radii), rMax = Math.max.apply(null, radii);
+    var gMin = gradAt(rMax, delta), gMax = gradAt(rMin, delta);
+    outRatio.textContent = fmt(gMax/gMin, 1) + '×';
+
+    drawMap(delta);
+  }
+
+  function computeIsobarLevels(delta){
+    var levels = [];
+    var step = 4 * (delta<0 ? -1 : 1);
+    for(var i=1;i<=40;i++){
+      var P = P_FAR + step*i;
+      var frac = (P-P_FAR)/delta;
+      if(frac<=0 || frac>=1.02) break;
+      var r = -L*Math.log(Math.max(frac,1e-6));
+      levels.push({P:P, r:r});
+    }
+    return levels;
+  }
+
+  function drawMap(delta){
+    var svg = document.getElementById('svg-map');
+    svg.innerHTML = '';
+    var cx=250, cy=250;
+    var centerColor = sysType==='L' ? '#4FC7D9' : '#D9677A';
+
+    var levels = computeIsobarLevels(delta);
+    levels.forEach(function(lv, idx){
+      if(lv.r > MAXR || lv.r < 2) return;
+      svg.appendChild(svgEl('circle',{cx:cx,cy:cy,r:lv.r,fill:'none',stroke:centerColor,'stroke-width':1,'stroke-opacity':0.45}));
+      if(idx % 2 === 0){
+        var t = svgEl('text',{x:cx, y:cy-lv.r-4, 'text-anchor':'middle','font-size':9.5, fill:centerColor,'font-family':'JetBrains Mono, monospace'});
+        t.textContent = fmt(lv.P,0);
+        svg.appendChild(t);
+      }
+    });
+
+    // center marker
+    svg.appendChild(svgEl('circle',{cx:cx,cy:cy,r:5,fill:centerColor}));
+    var ctag = svgEl('text',{x:cx, y:cy+4, 'text-anchor':'middle','font-size':13,'font-weight':'700', fill:'#10141A', 'font-family':'Fraunces, serif'});
+    ctag.textContent = sysType;
+    // draw label background circle bigger for legibility
+    svg.insertBefore(svgEl('circle',{cx:cx,cy:cy,r:11,fill:centerColor}), svg.lastChild);
+    svg.appendChild(ctag);
+
+    var ccw = (hemi==='N') === (sysType==='L');
+
+    STATIONS.forEach(function(s){
+      var theta = s.ang * Math.PI/180;
+      var x = cx + s.r*Math.cos(theta), y = cy + s.r*Math.sin(theta);
+      var tang = ccw ? {x:Math.sin(theta), y:-Math.cos(theta)} : {x:-Math.sin(theta), y:Math.cos(theta)};
+      var g = gradAt(s.r, delta);
+      var len = Math.min(55, 14 + g*900);
+
+      svg.appendChild(svgEl('circle',{cx:x,cy:y,r:4,fill:'#ECEFF3'}));
+
+      var x2 = x+tang.x*len, y2 = y+tang.y*len;
+      svg.appendChild(svgEl('line',{x1:x,y1:y,x2:x2,y2:y2,stroke:'#E0A94D','stroke-width':2.4}));
+      var ang2 = Math.atan2(y2-y,x2-x);
+      var a1x = x2-8*Math.cos(ang2-0.4), a1y = y2-8*Math.sin(ang2-0.4);
+      var a2x = x2-8*Math.cos(ang2+0.4), a2y = y2-8*Math.sin(ang2+0.4);
+      svg.appendChild(svgEl('polygon',{points:x2+','+y2+' '+a1x+','+a1y+' '+a2x+','+a2y, fill:'#E0A94D'}));
+
+      var plabel = svgEl('text',{x:x, y: y - 12, 'text-anchor':'middle','font-size':10, fill:'#ECEFF3','font-family':'JetBrains Mono, monospace'});
+      plabel.textContent = fmt(pressureAt(s.r, delta),0);
+      svg.appendChild(plabel);
+    });
+  }
+
+  inDp.addEventListener('input', update);
+  document.querySelectorAll('.toggle-chip[data-hemi]').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      document.querySelectorAll('.toggle-chip[data-hemi]').forEach(function(c){c.classList.remove('active');});
+      chip.classList.add('active');
+      hemi = chip.getAttribute('data-hemi');
+      update();
+    });
+  });
+  document.querySelectorAll('.toggle-chip[data-sys]').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      document.querySelectorAll('.toggle-chip[data-sys]').forEach(function(c){c.classList.remove('active');});
+      chip.classList.add('active');
+      sysType = chip.getAttribute('data-sys');
+      update();
+    });
+  });
+
+  var kasusNotes = {
+    'L-N-8': 'Gradien landai (ΔP kecil) — panah angin di semua stasiun pendek dan hampir seragam. Ini tipikal depresi lemah yang membawa mendung &amp; gerimis ringan, bukan angin kencang.',
+    'L-N-48': 'ΔP besar membuat isobar dekat pusat sangat rapat — panah di stasiun terdekat jauh lebih panjang daripada stasiun terjauh, meski satu sistem yang sama. Ini pola khas siklon ekstratropis kuat di Belahan Utara: berlawanan jarum jam, dan makin ke tengah makin ganas.',
+    'H-N-20': 'Sistem Tinggi umumnya bergradien lebih landai daripada siklon kuat — cuaca cerah &amp; angin lemah, berputar searah jarum jam di Belahan Utara (kebalikan dari Rendah).',
+    'L-S-40': 'Sistem yang sama persis seperti "siklon kuat" di atas, hanya dipindah ke Belahan Selatan — perhatikan arah panah membalik jadi searah jarum jam. Inilah efek Coriolis yang berbalik tanda melewati ekuator.'
+  };
+  document.querySelectorAll('#presetRow .preset-chip').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      var sys = chip.getAttribute('data-sys');
+      var h = chip.getAttribute('data-hemi');
+      var dp = chip.getAttribute('data-dp');
+
+      document.querySelectorAll('.toggle-chip[data-sys]').forEach(function(c){c.classList.toggle('active', c.getAttribute('data-sys')===sys);});
+      document.querySelectorAll('.toggle-chip[data-hemi]').forEach(function(c){c.classList.toggle('active', c.getAttribute('data-hemi')===h);});
+      sysType = sys; hemi = h;
+      inDp.value = dp;
+      update();
+      document.getElementById('kasusNote').textContent = kasusNotes[sys+'-'+h+'-'+dp] || '';
+    });
+  });
+
+  update();
+})();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

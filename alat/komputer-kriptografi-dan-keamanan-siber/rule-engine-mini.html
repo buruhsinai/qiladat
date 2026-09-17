@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rule Engine Mini — Aturan Menjadi Fakta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#10141A; --panel:#171D25; --panel-2:#1D2530;
+    --border:rgba(232,236,244,0.09); --border-strong:rgba(232,236,244,0.17);
+    --text:#ECEFF3; --muted:#8C97A6;
+    --gold:#E0A94D;
+    --true:#4FBF8A; --true-dim: 79,191,138;
+    --false:#7C8798; --false-dim: 124,135,152;
+    --warn:#E0A94D; --warn-dim: 224,169,77;
+    --lose:#D9677A; --lose-dim: 217,103,122;
+    --num:#5FA8D3; --num-dim: 95,168,211;
+    --ident:#C792EA; --ident-dim: 199,146,234;
+    --radius:4px;
+  }
+  *{box-sizing:border-box;}
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'Karla',sans-serif; font-size:16px; line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{ font-family:'Fraunces',serif; font-weight:500; letter-spacing:-0.01em; margin:0; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+  .wrap{ max-width:960px; margin:0 auto; padding:0 22px 80px; }
+  .rule{ height:1px; background:var(--border); margin:48px 0; }
+
+  header.top{ padding:56px 0 8px; }
+  header.top .kicker{ font-size:13px; color:var(--muted); margin:0 0 14px; }
+  header.top h1{ font-size:clamp(30px,5vw,42px); margin-bottom:10px; }
+  header.top p.lede{ color:var(--muted); max-width:62ch; font-size:16px; margin:0; }
+
+  section .section-head{ margin-bottom:6px; }
+  section h2{ font-size:clamp(22px,3.4vw,28px); }
+  section > p.desc{ color:var(--muted); max-width:66ch; margin:8px 0 20px; font-size:15px; }
+  .eyebrow-num{ font-family:'Fraunces',serif; font-style:italic; color:var(--gold); font-size:15px; margin:0 0 10px; }
+
+  .card{ background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:22px 24px; }
+
+  /* ---- contrast table ---- */
+  .contrast{ display:grid; grid-template-columns:1fr 1fr; gap:0; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin:22px 0; }
+  @media (max-width:620px){ .contrast{ grid-template-columns:1fr; } }
+  .contrast > div{ padding:20px 22px; }
+  .contrast .calc{ background:rgba(124,135,152,0.06); border-right:1px solid var(--border); }
+  @media (max-width:620px){ .contrast .calc{ border-right:none; border-bottom:1px solid var(--border); } }
+  .contrast .rules{ background:rgba(79,191,138,0.06); }
+  .contrast h4{ font-family:'Karla',sans-serif; font-size:12.5px; font-weight:700; margin:0 0 10px; color:var(--muted); }
+  .contrast .calc h4{ color:#AAB3C0; }
+  .contrast .rules h4{ color:var(--true); }
+  .contrast .flowline{ font-family:'JetBrains Mono',monospace; font-size:14px; color:var(--text); margin:0 0 12px; }
+  .contrast p{ font-size:14.5px; color:var(--text); margin:0; }
+
+  .pseudo{
+    font-family:'JetBrains Mono',monospace; font-size:14px; line-height:1.9;
+    background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
+    padding:18px 20px; margin:18px 0; color:#D7DEE8; white-space:pre-wrap;
+  }
+  .pseudo .kw{ color: var(--gold); }
+  .pseudo .neg{ color: var(--lose); }
+
+  .flow{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:20px 0; }
+  .flow .step{ font-size:13px; font-weight:600; padding:8px 13px; background:var(--panel-2); border:1px solid var(--border); border-radius:3px; }
+  .flow .arrow{ color:var(--muted); font-size:14px; }
+
+  dl.term{ margin:0; }
+  dl.term > div{ margin:18px 0; padding-left:16px; border-left:2px solid var(--border-strong); }
+  dl.term dt{ font-family:'Fraunces',serif; font-size:16.5px; color:var(--text); margin-bottom:4px; }
+  dl.term dd{ margin:0; color:var(--muted); font-size:14.5px; }
+  .concept-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 32px; }
+  @media (max-width:680px){ .concept-grid{ grid-template-columns:1fr; } }
+
+  /* ---- lab layout ---- */
+  .lab{ display:flex; flex-direction:column; gap:18px; }
+  .stage{ background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  .stage-head{ padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .stage-head .stage-num{ font-family:'Fraunces',serif; font-style:italic; color:var(--gold); font-size:14px; margin-right:8px; }
+  .stage-head h3{ font-size:16px; display:inline; }
+  .stage-body{ padding:20px 22px; }
+  .stage-note{ font-size:13px; color:var(--muted); margin:0 0 8px; }
+  .stage-skipped{ font-size:13.5px; color:var(--muted); font-style:italic; padding:6px 0; }
+
+  /* source input */
+  .source-input{
+    width:100%; min-height:150px; background:var(--panel-2); border:1px solid var(--border-strong);
+    border-radius:3px; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:14px;
+    line-height:1.7; padding:14px 16px; resize:vertical;
+  }
+  .source-input:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  .source-actions{ display:flex; align-items:center; gap:14px; margin:12px 0 18px; flex-wrap:wrap; }
+  .run-btn{
+    font-family:'Karla',sans-serif; font-size:14px; font-weight:700; color:#10141A;
+    background:var(--gold); border:none; border-radius:3px; padding:10px 20px; cursor:pointer;
+  }
+  .run-btn:hover{ filter:brightness(1.08); }
+  .run-btn:focus-visible{ outline:2px solid var(--text); outline-offset:2px; }
+  .source-hint{ font-size:12.5px; color:var(--muted); }
+
+  button.reset{
+    font-family:'Karla',sans-serif; font-size:13.5px; font-weight:600; color:var(--text);
+    background:transparent; border:1px solid var(--border-strong); border-radius:3px;
+    padding:8px 14px; cursor:pointer;
+  }
+  button.reset:hover{ border-color:var(--gold); }
+
+  /* presets */
+  .preset-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:6px; }
+  @media (max-width:640px){ .preset-grid{ grid-template-columns:1fr; } }
+  .preset-btn{ text-align:left; padding:11px 14px; background:var(--panel-2); border:1px solid var(--border); border-radius:3px; cursor:pointer; font-size:13.5px; color:var(--text); }
+  .preset-btn:hover{ border-color:var(--gold); }
+  .preset-btn.active{ border-color:var(--gold); }
+  .preset-btn span{ display:block; font-size:12px; color:var(--muted); margin-top:2px; }
+
+  /* legend + code block (LEXER) */
+  .legend{ display:flex; flex-wrap:wrap; gap:14px; margin:0 0 14px; }
+  .legend-item{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--muted); }
+  .legend .dot{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+  .legend .dot.tok-keyword{ background:var(--gold); }
+  .legend .dot.tok-string{ background:var(--true); }
+  .legend .dot.tok-number{ background:var(--num); }
+  .legend .dot.tok-boolean{ background:var(--lose); }
+  .legend .dot.tok-ident{ background:var(--ident); }
+  .legend .dot.tok-op{ background:#AAB3C0; }
+  .legend .dot.tok-comment{ background:var(--muted); }
+
+  .codeblock{
+    font-family:'JetBrains Mono',monospace; font-size:13.5px; line-height:1.85; white-space:pre-wrap;
+    word-break:break-word; background:var(--panel-2); border:1px solid var(--border); border-radius:var(--radius);
+    padding:16px 18px; margin:0 0 10px; color:#D7DEE8;
+  }
+  .codeblock span.tok-keyword{ color:var(--gold); font-weight:600; }
+  .codeblock span.tok-string{ color:var(--true); }
+  .codeblock span.tok-number{ color:var(--num); }
+  .codeblock span.tok-boolean{ color:var(--lose); font-weight:600; }
+  .codeblock span.tok-ident{ color:var(--ident); }
+  .codeblock span.tok-op{ color:#AAB3C0; }
+  .codeblock span.tok-comment{ color:var(--muted); font-style:italic; }
+
+  .token-stream{ display:flex; flex-wrap:wrap; gap:2px; }
+  .token{ display:inline-block; font-family:'JetBrains Mono',monospace; font-size:12px; padding:4px 9px; margin:3px 4px 3px 0; border-radius:3px; }
+  .token.tok-keyword{ background:rgba(var(--warn-dim),0.16); color:var(--gold); }
+  .token.tok-string{ background:rgba(var(--true-dim),0.14); color:var(--true); }
+  .token.tok-number{ background:rgba(var(--num-dim),0.16); color:var(--num); }
+  .token.tok-boolean{ background:rgba(var(--lose-dim),0.14); color:var(--lose); }
+  .token.tok-ident{ background:rgba(var(--ident-dim),0.16); color:var(--ident); }
+  .token.tok-op{ background:rgba(124,135,152,0.14); color:#AAB3C0; }
+  .token.tok-newline{ background:transparent; color:var(--muted); opacity:.55; }
+
+  /* AST (PARSER) */
+  .ast-block{ margin:0 0 22px; }
+  .ast-block:last-child{ margin-bottom:0; }
+  .ast-caption{
+    font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text); background:var(--panel-2);
+    border:1px solid var(--border); border-radius:3px; padding:8px 12px; margin-bottom:10px;
+  }
+  .ast-caption .n{ color:var(--gold); font-weight:600; margin-right:10px; font-family:'Fraunces',serif; font-style:italic; }
+  .ast-node{ margin-left:16px; padding-left:14px; border-left:1px solid var(--border-strong); margin-top:2px; }
+  .ast-line{ font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text); padding:4px 0; }
+  .ast-type{ color:var(--text); }
+  .ast-detail{ color:var(--muted); font-size:12px; margin-left:8px; }
+
+  /* RULE ENGINE trace */
+  .exec-row{ padding:12px 0; border-top:1px solid var(--border); }
+  .exec-row:first-child{ border-top:none; }
+  .exec-head{ display:flex; flex-wrap:wrap; align-items:baseline; gap:10px; margin-bottom:6px; }
+  .exec-num{ font-family:'Fraunces',serif; font-style:italic; color:var(--gold); font-size:13px; }
+  .exec-desc{ font-family:'JetBrains Mono',monospace; font-size:13.5px; color:var(--text); }
+  .exec-desc b{ color:var(--gold); font-weight:600; }
+  .exec-cond{ font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--muted); margin:4px 0 6px; }
+  .exec-cond .t-true{ color:var(--true); font-weight:600; }
+  .exec-cond .t-false{ color:var(--false); font-weight:600; }
+  .badge{ display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:100px; margin-left:8px; font-family:'Karla',sans-serif; }
+  .badge.matched{ background:rgba(var(--true-dim),0.16); color:var(--true); }
+  .badge.unmatched{ background:rgba(var(--false-dim),0.18); color:var(--false); }
+  .scope-row{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-left:2px; }
+  .scope-label{ font-size:12px; color:var(--muted); }
+  .scope-chip{ font-family:'JetBrains Mono',monospace; font-size:12px; padding:3px 9px; border-radius:100px; background:rgba(var(--true-dim),0.12); color:var(--true); }
+
+  /* OUTPUT console */
+  .console{
+    background:#05070A; border:1px solid var(--border); border-radius:var(--radius);
+    padding:16px 18px; font-family:'JetBrains Mono',monospace; font-size:14px; color:#8FE3B0; line-height:1.75;
+  }
+  .console-line{ white-space:pre-wrap; }
+  .console-line::before{ content:'> '; color:var(--muted); }
+
+  /* error banner */
+  .error-box{ border:1px solid rgba(var(--lose-dim),0.5); background:rgba(var(--lose-dim),0.08); border-radius:var(--radius); padding:14px 16px; margin:0 0 6px; }
+  .error-stage{ font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:600; color:var(--lose); margin-bottom:6px; }
+  .error-msg{ font-size:14px; color:var(--text); }
+
+  ol.steps{ padding-left:20px; }
+  ol.steps li{ margin-bottom:10px; max-width:64ch; }
+  ol.steps li::marker{ color:var(--gold); font-family:'Fraunces',serif; }
+
+  table.semantics{ width:100%; border-collapse:collapse; margin:18px 0; font-size:14px; }
+  table.semantics th, table.semantics td{ text-align:left; padding:9px 12px; border-top:1px solid var(--border); }
+  table.semantics th{ color:var(--muted); font-size:12.5px; font-weight:700; }
+  table.semantics td.v{ font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--gold); }
+
+  .misconception{ display:grid; grid-template-columns:1fr 1fr; gap:0; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin:20px 0; }
+  @media (max-width:620px){ .misconception{ grid-template-columns:1fr; } }
+  .misconception > div{ padding:18px 20px; }
+  .misconception .lim{ background:rgba(var(--lose-dim),0.07); border-right:1px solid var(--border); }
+  @media (max-width:620px){ .misconception .lim{ border-right:none; border-bottom:1px solid var(--border); } }
+  .misconception h4{ font-size:12.5px; font-weight:700; color:var(--muted); margin:0 0 8px; }
+  .misconception p{ font-size:14.5px; margin:0; color:var(--text); }
+
+  .ref-list{ list-style:none; padding:0; margin:16px 0; }
+  .ref-list li{ padding:14px 0; border-top:1px solid var(--border); font-size:15px; color:var(--muted); }
+  .ref-list li:last-child{ border-bottom:1px solid var(--border); }
+  .ref-list .who{ color:var(--text); }
+
+  footer{ padding-top:46px; font-size:13px; color:var(--muted); max-width:66ch; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <p class="kicker">Laboratorium Qiladat / JAZMI — Proyek 2: Aturan &amp; Mesin Keputusan</p>
+    <h1>Rule Engine Mini (Aturan → Fakta)</h1>
+    <p class="lede">Belajar mengubah kumpulan aturan bersyarat menjadi mesin yang menyimpulkan fakta baru — satu langkah pembelajaran sebelum kalkulator waris (faraidh) sungguhan.</p>
+  </header>
+
+  <div class="rule"></div>
+
+  <!-- ============ 1. KONSEP ============ -->
+  <section id="konsep">
+    <p class="eyebrow-num">1 — Konsep</p>
+    <h2>Bukan interpreter biasa — mesin aturan</h2>
+    <p class="desc">Proyek sebelumnya (Interpreter Mini) menjalankan perintah berurutan: baris 1 selalu selesai sebelum baris 2 dimulai. Rule engine bekerja dengan satuan yang berbeda — bukan perintah, tapi <b style="color:var(--text)">aturan bersyarat</b>: "JIKA sesuatu benar, MAKA simpulkan fakta baru." Pertanyaannya jadi: kalau aturan tidak mengenal urutan eksekusi secara alami, bagaimana mesin ini tetap berperilaku bisa ditebak?</p>
+
+    <div class="contrast">
+      <div class="calc">
+        <h4>MESIN INFERENSI PENUH</h4>
+        <p class="flowline">aturan diperiksa berulang → sampai tidak ada yang berubah lagi</p>
+        <p>Rule engine produksi (mis. sistem pakar, Rete algorithm) mengulang seluruh aturan berkali-kali sampai mencapai kondisi stabil (fixpoint) — aturan yang tadinya tidak cocok bisa jadi cocok setelah aturan lain mengubah fakta, dan diperiksa ulang.</p>
+      </div>
+      <div class="rules">
+        <h4>RULE ENGINE MINI INI</h4>
+        <p class="flowline">aturan diperiksa satu kali → top ke bawah → tidak pernah mundur</p>
+        <p>Versi mini ini sengaja dibatasi: setiap aturan hanya diperiksa <b>satu kali</b>, sesuai urutan penulisan. Kalau aturan di bawah menghasilkan fakta yang seharusnya membuat aturan di atas jadi cocok, aturan di atas <b>tidak</b> diperiksa ulang. Batasan ini disengaja — supaya perilakunya sepenuhnya bisa ditebak sebelum kita menambah kerumitan mesin inferensi penuh.</p>
+      </div>
+    </div>
+
+    <p>Bahasa aturan kecil yang akan kita bangun mesinnya hanya mengenal tiga bentuk pernyataan:</p>
+    <div class="pseudo"><span class="kw">FACT</span> ahli_waris = "anak_laki_laki"
+<span class="kw">FACT</span> ada_anak_perempuan = false
+<span class="kw">RULE</span> <span class="kw">JIKA</span> ahli_waris = "anak_laki_laki" <span class="kw">DAN</span> ada_anak_perempuan = false
+     <span class="kw">MAKA</span> bagian = "ashabah"
+<span class="kw">TAMPILKAN</span> bagian</div>
+
+    <p>Dan setiap baris kode di atas melewati enam tahap, yang dibangun langsung di bagian eksplorasi berikutnya:</p>
+    <div class="flow">
+      <span class="step">SOURCE CODE</span><span class="arrow">→</span>
+      <span class="step">LEXER</span><span class="arrow">→</span>
+      <span class="step">TOKENS</span><span class="arrow">→</span>
+      <span class="step">PARSER</span><span class="arrow">→</span>
+      <span class="step">AST</span><span class="arrow">→</span>
+      <span class="step">RULE ENGINE</span><span class="arrow">→</span>
+      <span class="step">OUTPUT</span>
+    </div>
+
+    <p style="margin-top:26px;">Delapan hal yang dipelajari lewat membangun satu rule engine kecil:</p>
+    <div class="concept-grid">
+      <dl class="term">
+        <div><dt>Fact (fakta)</dt><dd>Pasangan nama-nilai yang disimpan mesin — bisa dibuat lewat FACT, atau lewat kesimpulan (MAKA) sebuah RULE yang cocok. Fakta bisa ditimpa nilainya oleh aturan berikutnya.</dd></div>
+        <div><dt>Rule (aturan)</dt><dd>Pernyataan JIKA...MAKA — bagian JIKA adalah kondisi yang diperiksa terhadap fakta yang ada, bagian MAKA adalah kesimpulan yang tersimpan sebagai fakta baru kalau kondisi terpenuhi.</dd></div>
+        <div><dt>Condition (kondisi)</dt><dd>Kombinasi perbandingan fakta lewat DAN, ATAU, TIDAK — dengan TIDAK mengikat paling erat, lalu DAN, baru ATAU, persis seperti presedensi operator di Proyek 1.</dd></div>
+        <div><dt>Forward chaining satu arah</dt><dd>Kesimpulan sebuah aturan langsung terlihat oleh aturan-aturan di bawahnya dalam satu kali proses baca — tapi tidak pernah memicu aturan yang sudah dilewati di atasnya.</dd></div>
+      </dl>
+      <dl class="term">
+        <div><dt>UNKNOWN vs FALSE</dt><dd>Fakta yang belum pernah dideklarasikan (UNKNOWN) adalah galat kalau dirujuk. Fakta yang ada tapi bernilai false tetap sah dan bukan galat — dua hal ini sengaja tidak dicampur.</dd></div>
+        <div><dt>Tipe fakta</dt><dd>Boolean, angka, dan teks — dan membandingkan dua tipe berbeda adalah galat eksplisit, bukan otomatis dianggap tidak cocok.</dd></div>
+        <div><dt>Single pass</dt><dd>Seluruh pernyataan (FACT, RULE, TAMPILKAN) diproses tepat satu kali, top ke bawah, tanpa iterasi ulang — batasan yang disengaja, dijelaskan di bagian Batasan.</dd></div>
+        <div><dt>Fondasi Faraidh</dt><dd>Pola JIKA ahli_waris=... DAN tidak_ada_penghalang=... MAKA bagian=... adalah bentuk mentah dari aturan fikih waris — mesin ini fondasi konsepnya, bukan implementasi fikihnya (lihat bagian Batasan).</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ 2. EKSPLORASI ============ -->
+  <section id="eksplorasi">
+    <p class="eyebrow-num">2 — Eksplorasi Interaktif</p>
+    <h2>Rule engine yang sungguh berjalan</h2>
+    <p class="desc">Bahasa mini di bawah ini mengenal tiga pernyataan: FACT untuk mendeklarasikan fakta awal, RULE JIKA...MAKA untuk menyimpulkan fakta baru, dan TAMPILKAN untuk mencetak nilai fakta. Kesembilan contoh di bawah adalah kasus uji yang sudah dirancang dan diverifikasi manual sebelum mesin ini dibangun — termasuk kasus paling penting: memastikan mesin tidak diam-diam mengevaluasi ulang aturan yang sudah dilewati.</p>
+
+    <div class="lab">
+
+      <!-- STAGE 1: SOURCE -->
+      <div class="stage">
+        <div class="stage-head">
+          <div><span class="stage-num">01</span><h3>SOURCE — kode aturan mini</h3></div>
+          <button class="reset" id="btnReset">Atur ulang</button>
+        </div>
+        <div class="stage-body">
+          <textarea id="sourceInput" class="source-input" spellcheck="false" aria-label="Kode aturan mini">FACT ahli_waris = "anak_laki_laki"
+FACT ada_anak_perempuan = false
+RULE JIKA ahli_waris = "anak_laki_laki" DAN ada_anak_perempuan = false MAKA bagian = "ashabah"
+TAMPILKAN bagian</textarea>
+          <div class="source-actions">
+            <button class="run-btn" id="btnRun">Jalankan ▸</button>
+            <span class="source-hint">atau tekan Ctrl+Enter di dalam kotak kode</span>
+          </div>
+          <div class="preset-grid">
+            <button class="preset-btn active" data-p="k1">Kasus 1 — Dasar<span>AND dasar &amp; kecocokan aturan</span></button>
+            <button class="preset-btn" data-p="k2">Kasus 2 — Rantai<span>Forward chaining ke bawah</span></button>
+            <button class="preset-btn" data-p="k3">Kasus 3 — Fakta tak dikenal<span>UNKNOWN → galat, berhenti total</span></button>
+            <button class="preset-btn" data-p="k3b">Kasus 3b — Golden test<span>Membuktikan mesin tidak mundur</span></button>
+            <button class="preset-btn" data-p="k4">Kasus 4 — Beda tipe<span>Angka dibanding teks → galat</span></button>
+            <button class="preset-btn" data-p="k5">Kasus 5 — Operator salah<span>"&gt;" pada teks → galat</span></button>
+            <button class="preset-btn" data-p="k6">Kasus 6 — OR &amp; NOT<span>Presedensi TIDAK vs ATAU</span></button>
+            <button class="preset-btn" data-p="k7">Kasus 7 — TAMPILKAN kosong<span>Menampilkan fakta tak dikenal</span></button>
+            <button class="preset-btn" data-p="k8">Kasus 8 — FALSE ≠ UNKNOWN<span>Fakta ada, nilainya false</span></button>
+            <button class="preset-btn" data-p="k9">Kasus 9 — Menimpa fakta<span>MAKA boleh mengubah fakta lama</span></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAGE 2: LEXER -->
+      <div class="stage">
+        <div class="stage-head"><div><span class="stage-num">02</span><h3>LEXER — kode dipecah jadi token</h3></div></div>
+        <div class="stage-body" id="lexerBody"></div>
+      </div>
+
+      <!-- STAGE 3: PARSER -->
+      <div class="stage">
+        <div class="stage-head"><div><span class="stage-num">03</span><h3>PARSER — token disusun jadi pohon (AST)</h3></div></div>
+        <div class="stage-body" id="parserBody"></div>
+      </div>
+
+      <!-- STAGE 4: RULE ENGINE -->
+      <div class="stage">
+        <div class="stage-head"><div><span class="stage-num">04</span><h3>RULE ENGINE — aturan diperiksa, fakta diperbarui</h3></div></div>
+        <div class="stage-body" id="engineBody"></div>
+      </div>
+
+      <!-- STAGE 5: OUTPUT -->
+      <div class="stage">
+        <div class="stage-head"><div><span class="stage-num">05</span><h3>OUTPUT</h3></div></div>
+        <div class="stage-body" id="outputBody"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ 3. METODE ============ -->
+  <section id="metode">
+    <p class="eyebrow-num">3 — Metode</p>
+    <h2>Bagaimana pipeline ini sungguh-sungguh berjalan</h2>
+    <p>Tiga fungsi murni menyusun seluruh mesin ini: <span class="mono">tokenize()</span> memecah teks, <span class="mono">parse()</span> menyusun token jadi pohon (fakta, aturan, kondisi bercabang), dan <span class="mono">runRuleEngine()</span> memproses pohon itu satu kali dari atas ke bawah sambil menjaga satu tabel fakta.</p>
+    <ol class="steps">
+      <li><b>Tahap LEXER — kata kunci vs identitas fakta.</b> Kata FACT/RULE/JIKA/DAN/ATAU/TIDAK/MAKA/TAMPILKAN dikenali sebagai kata kunci; true/false dikenali sebagai nilai boolean; sisanya (huruf kecil bergaya ular_seperti_ini) jadi nama fakta.</li>
+      <li><b>Tahap PARSER — kondisi berlapis.</b> Presedensi TIDAK &gt; DAN &gt; ATAU tertanam langsung di struktur fungsi: parseOr memanggil parseAnd, parseAnd memanggil parseNot — pola recursive descent yang sama dengan Proyek 1, hanya operatornya sekarang logika, bukan aritmatika.</li>
+      <li><b>Tahap RULE ENGINE — tabel fakta yang tumbuh, bukan menyusut.</b> Setiap FACT langsung menulis ke tabel. Setiap RULE memeriksa kondisinya terhadap tabel <i>saat itu juga</i> — kalau cocok, kesimpulannya langsung ditulis ke tabel yang sama, sehingga terlihat oleh RULE-RULE sesudahnya. Tabel ini tidak pernah "diputar ulang" dari awal.</li>
+      <li><b>UNKNOWN dicek dengan keberadaan kunci, bukan nilai.</b> Status "fakta belum ada" dicek lewat <span class="mono">"nama" in tabelFakta</span> — bukan lewat <span class="mono">!tabelFakta["nama"]</span>, yang keliru menyamakan fakta bernilai false dengan fakta yang tidak pernah ada.</li>
+      <li><b>Tiga gerbang kesalahan yang terpisah.</b> Karakter/angka aneh berhenti di LEXER, susunan kata yang tidak sah berhenti di PARSER, dan kesalahan yang baru ketahuan saat aturan diperiksa (fakta tidak ditemukan, tipe tidak cocok) berhenti di RULE ENGINE — satu galat menghentikan seluruh program, tidak ada aturan yang "dilewati lalu lanjut".</li>
+    </ol>
+    <div class="pseudo">fungsi <span class="kw">jalankan</span>(kodeAturan):
+  token = lexer(kodeAturan)        <span class="neg">// bisa gagal: karakter/angka tak sah</span>
+  pohon = parser(token)            <span class="neg">// bisa gagal: susunan FACT/RULE/TAMPILKAN tak sah</span>
+  fakta = {}
+  untuk setiap pernyataan pohon, dari atas ke bawah:
+      jika FACT: fakta[nama] = nilai
+      jika RULE: jika evaluasi(kondisi, fakta) benar:
+                     fakta[nama_kesimpulan] = nilai_kesimpulan   <span class="neg">// menimpa jika sudah ada</span>
+      jika TAMPILKAN: jika nama tidak ada di fakta: <span class="neg">gagal</span>
+                      selain itu: cetak fakta[nama]
+      <span class="neg">// tidak pernah kembali ke pernyataan sebelumnya</span>
+  kembalikan output</div>
+
+    <p style="margin-top:14px;">Perbedaan paling penting dari mesin aturan produksi (mis. algoritma Rete yang dipakai sistem pakar sungguhan): mesin itu mengindeks ulang dan mengevaluasi ulang aturan setiap kali fakta berubah, sampai tidak ada lagi yang berubah (mencapai <i>fixpoint</i>). Mesin mini ini sengaja berhenti di satu lintasan (<b style="color:var(--text)">single-pass forward chaining</b>) — paling mudah ditebak perilakunya, sehingga jadi titik awal yang tepat sebelum mempelajari resolusi konflik dan iterasi berulang.</p>
+
+    <table class="semantics">
+      <tr><th>Ketentuan</th><th>Keputusan versi mini ini</th></tr>
+      <tr><td>Urutan pemrosesan</td><td class="v">top → bottom, satu pass</td></tr>
+      <tr><td>Re-evaluasi aturan yang sudah dilewati</td><td class="v">tidak ada</td></tr>
+      <tr><td>Fakta yang sudah ada, ditimpa RULE lain</td><td class="v">boleh (overwrite)</td></tr>
+      <tr><td>Beberapa aturan cocok sekaligus</td><td class="v">semua dijalankan, sesuai urutan tertulis</td></tr>
+      <tr><td>Fakta UNKNOWN dirujuk kondisi/TAMPILKAN</td><td class="v">galat, program berhenti total</td></tr>
+      <tr><td>Fakta ada tapi bernilai false</td><td class="v">bukan galat</td></tr>
+      <tr><td>Membandingkan dua tipe berbeda</td><td class="v">galat eksplisit</td></tr>
+    </table>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ 4. BATASAN ============ -->
+  <section id="batasan">
+    <p class="eyebrow-num">4 — Batasan</p>
+    <h2>Apa yang belum dilakukan mesin ini</h2>
+    <div class="misconception">
+      <div class="lim">
+        <h4>BELUM ADA DI SINI</h4>
+        <p>Iterasi berulang sampai stabil (fixpoint), resolusi konflik saat aturan saling bertentangan, tipe data list/tabel, beberapa kesimpulan sekaligus dalam satu RULE, aturan bersarang atau sub-aturan, dan pemulihan dari galat (berhenti total begitu satu galat ditemukan).</p>
+      </div>
+      <div>
+        <h4>KENAPA ITU PENTING DIKETAHUI</h4>
+        <p>Faraidh sungguhan punya kasus di mana status satu ahli waris memengaruhi status ahli waris lain secara berlapis (hajb, 'aul, radd) — sebagian bisa dituliskan sebagai urutan top-to-bottom seperti di sini, tapi sebagian kasus lain kemungkinan butuh mesin yang boleh mengevaluasi ulang. Itu keputusan desain lanjutan, bukan sesuatu yang ditebak di sini.</p>
+      </div>
+    </div>
+    <p>Pipeline lexer → parser → rule engine yang sama akan diuji lagi untuk kebutuhan yang jauh lebih serius di laboratorium ini — misalnya kalkulator Faraidh sungguhan. Tapi mengikuti Level 1 "Studi Ilmiah" dan Level 3 "Verifikasi" yang sudah disepakati untuk proyek ini, struktur aturan fikih waris yang sesungguhnya (ahli waris, ashhabul furudh, hajb, 'aul, radd) harus dipelajari dan diverifikasi bersama rujukan fikih serta kasus manual — bukan ditebak dari pola bahasa mini di halaman ini.</p>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============ 5. REFERENSI ============ -->
+  <section id="referensi">
+    <p class="eyebrow-num">5 — Referensi</p>
+    <h2>Sumber &amp; bacaan lanjutan</h2>
+    <ul class="ref-list">
+      <li><span class="who">Russell, S. &amp; Norvig, P.</span> <i>Artificial Intelligence: A Modern Approach.</i> — rujukan akademik standar untuk forward chaining vs backward chaining, dan bagaimana sistem berbasis aturan (rule-based system) bekerja secara formal.</li>
+      <li><span class="who">Forgy, C. L. (1982).</span> <i>Rete: A Fast Algorithm for the Many Pattern/Many Object Pattern Match Problem.</i> — algoritma di balik mesin aturan produksi sungguhan, yang mengindeks ulang secara efisien alih-alih memeriksa semua aturan dari awal setiap kali fakta berubah; rujukan yang relevan begitu versi mini ini butuh naik kelas ke iterasi berulang.</li>
+      <li><span class="who">Newell, A. &amp; Simon, H. A.</span> — peletak dasar konsep "production system" (sistem produksi berbasis aturan JIKA-MAKA) dalam ilmu kognitif dan kecerdasan buatan simbolik, akar dari seluruh keluarga rule engine modern.</li>
+    </ul>
+    <p class="desc" style="margin-top:6px;">Halaman ini mengikuti struktur "Belajar → Eksplorasi → Metode → Batasan → Referensi" yang sama dengan Interpreter Mini sebelumnya di laboratorium Qiladat/JAZMI — keduanya sama-sama contoh bagaimana pengetahuan formal (tata bahasa, logika kondisional) bisa dimodelkan jadi kode yang bisa diuji dan dijelaskan, bukan sekadar dijalankan.</p>
+  </section>
+
+  <footer>
+    Alat edukasi — dibangun untuk memperlihatkan cara kerja rule engine sederhana (single-pass forward chaining), bukan mesin inferensi produksi maupun fatwa/keputusan fikih.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- error types ----------
+  function LexError(message, line){ this.message = message; this.line = line; this.stage = 'LEXER'; }
+  LexError.prototype = Object.create(Error.prototype);
+  function ParseError(message, line){ this.message = message; this.line = line; this.stage = 'PARSER'; }
+  ParseError.prototype = Object.create(Error.prototype);
+  function RuntimeError(message){ this.message = message; this.stage = 'RULE ENGINE'; }
+  RuntimeError.prototype = Object.create(Error.prototype);
+
+  // ---------- LEXER ----------
+  var KEYWORDS = ['FACT','RULE','JIKA','MAKA','DAN','ATAU','TIDAK','TAMPILKAN'];
+
+  function tokenize(source){
+    var tokens = [];
+    var comments = [];
+    var i = 0, n = source.length, line = 1;
+
+    function push(type, value, start, end, extra){
+      var tok = { type:type, value:value, start:start, end:end, line:line };
+      if(extra){ for(var k in extra){ tok[k] = extra[k]; } }
+      tokens.push(tok);
+    }
+
+    while(i < n){
+      var ch = source[i];
+
+      if(ch === '\n'){ push('NEWLINE','\n', i, i+1); line++; i++; continue; }
+      if(ch === ' ' || ch === '\t' || ch === '\r'){ i++; continue; }
+
+      if(ch === '#'){
+        var cstart = i;
+        while(i < n && source[i] !== '\n'){ i++; }
+        comments.push({ start:cstart, end:i });
+        continue;
+      }
+
+      if(/[0-9]/.test(ch)){
+        var nstart = i;
+        while(i < n && /[0-9.]/.test(source[i])){ i++; }
+        var raw = source.slice(nstart, i);
+        if(!/^[0-9]+(\.[0-9]+)?$/.test(raw)){
+          throw new LexError('Angka tidak sah: "' + raw + '" (titik desimal ganda, atau titik tanpa digit sesudahnya)', line);
+        }
+        push('NUMBER', parseFloat(raw), nstart, i, { raw: raw });
+        continue;
+      }
+
+      if(/[A-Za-z_]/.test(ch)){
+        var wstart = i;
+        while(i < n && /[A-Za-z0-9_]/.test(source[i])){ i++; }
+        var word = source.slice(wstart, i);
+        var upper = word.toUpperCase();
+        if(KEYWORDS.indexOf(upper) !== -1){ push('KEYWORD', upper, wstart, i); }
+        else if(upper === 'TRUE' || upper === 'FALSE'){ push('BOOLEAN', upper === 'TRUE', wstart, i); }
+        else{ push('IDENT', word, wstart, i); }
+        continue;
+      }
+
+      if(ch === '"'){
+        var qstart = i;
+        i++;
+        var strStart = i;
+        while(i < n && source[i] !== '"'){
+          if(source[i] === '\n'){ throw new LexError('String tidak ditutup sebelum baris berakhir (kutip penutup " hilang)', line); }
+          i++;
+        }
+        if(i >= n){ throw new LexError('String tidak ditutup — kutip penutup " tidak ditemukan sampai akhir kode', line); }
+        var str = source.slice(strStart, i);
+        i++;
+        push('STRING', str, qstart, i);
+        continue;
+      }
+
+      if(ch === '!'){
+        if(source[i+1] === '='){ push('OP', '!=', i, i+2); i += 2; continue; }
+        throw new LexError('Karakter tidak dikenal: "!" (mungkin maksudnya "!=" ?)', line);
+      }
+      if(ch === '>'){
+        if(source[i+1] === '='){ push('OP', '>=', i, i+2); i += 2; continue; }
+        push('OP', '>', i, i+1); i++; continue;
+      }
+      if(ch === '<'){
+        if(source[i+1] === '='){ push('OP', '<=', i, i+2); i += 2; continue; }
+        push('OP', '<', i, i+1); i++; continue;
+      }
+      if(ch === '='){ push('OP', '=', i, i+1); i++; continue; }
+
+      throw new LexError('Karakter tidak dikenal: "' + ch + '"', line);
+    }
+
+    push('NEWLINE', '\n', n, n);
+    push('EOF', null, n, n);
+    return { tokens: tokens, comments: comments };
+  }
+
+  // ---------- PARSER ----------
+  function describeToken(t){
+    if(t.type === 'EOF') return 'akhir program';
+    if(t.type === 'NEWLINE') return 'akhir baris';
+    if(t.type === 'STRING') return '"' + t.value + '"';
+    if(t.type === 'NUMBER') return String(t.raw !== undefined ? t.raw : t.value);
+    if(t.type === 'BOOLEAN') return String(t.value);
+    return '"' + t.value + '"';
+  }
+
+  var COMPARE_OPS = ['=','!=','>','<','>=','<='];
+
+  function parse(tokens){
+    var pos = 0;
+    function peek(){ return tokens[pos]; }
+    function next(){ return tokens[pos++]; }
+    function check(type, value){
+      var t = peek();
+      if(t.type !== type) return false;
+      if(value !== undefined && t.value !== value) return false;
+      return true;
+    }
+    function expect(type, value, message){
+      if(!check(type, value)){ var t = peek(); throw new ParseError(message, t.line); }
+      return next();
+    }
+    function skipNewlines(){ while(check('NEWLINE')){ next(); } }
+
+    function parseProgram(){
+      var body = [];
+      skipNewlines();
+      while(!check('EOF')){ body.push(parseStatement()); skipNewlines(); }
+      return { type:'Program', body: body };
+    }
+
+    function parseStatement(){
+      if(check('KEYWORD','FACT')) return parseFact();
+      if(check('KEYWORD','RULE')) return parseRule();
+      if(check('KEYWORD','TAMPILKAN')) return parseShow();
+      var t = peek();
+      throw new ParseError('Pernyataan harus dimulai dengan FACT, RULE, atau TAMPILKAN, tapi menemukan ' + describeToken(t), t.line);
+    }
+
+    function parseValue(){
+      var t = peek();
+      if(check('BOOLEAN')){ next(); return { type:'BooleanLiteral', value: t.value }; }
+      if(check('NUMBER')){ next(); return { type:'NumberLiteral', value: t.value }; }
+      if(check('STRING')){ next(); return { type:'StringLiteral', value: t.value }; }
+      throw new ParseError('Diharapkan nilai (angka, teks, atau true/false), tapi menemukan ' + describeToken(t), t.line);
+    }
+
+    function parseFact(){
+      var kw = next();
+      var nameTok = expect('IDENT', undefined, 'Setelah FACT harus ada nama fakta, tapi menemukan ' + describeToken(peek()));
+      expect('OP', '=', 'Setelah nama fakta pada FACT harus ada tanda "=", tapi menemukan ' + describeToken(peek()));
+      var val = parseValue();
+      return { type:'FactStatement', name: nameTok.value, value: val, line: kw.line };
+    }
+
+    function parseComparison(){
+      var nameTok = expect('IDENT', undefined, 'Diharapkan nama fakta dalam kondisi, tapi menemukan ' + describeToken(peek()));
+      var opTok = peek();
+      if(opTok.type !== 'OP' || COMPARE_OPS.indexOf(opTok.value) === -1){
+        throw new ParseError('Diharapkan operator pembanding (=, !=, >, <, >=, <=), tapi menemukan ' + describeToken(opTok), opTok.line);
+      }
+      next();
+      var val = parseValue();
+      return { type:'Comparison', name: nameTok.value, operator: opTok.value, value: val, line: nameTok.line };
+    }
+
+    function parseNot(){
+      if(check('KEYWORD','TIDAK')){ next(); var operand = parseNot(); return { type:'NotCondition', operand: operand }; }
+      return parseComparison();
+    }
+    function parseAnd(){
+      var node = parseNot();
+      while(check('KEYWORD','DAN')){ next(); var right = parseNot(); node = { type:'AndCondition', left: node, right: right }; }
+      return node;
+    }
+    function parseOr(){
+      var node = parseAnd();
+      while(check('KEYWORD','ATAU')){ next(); var right = parseAnd(); node = { type:'OrCondition', left: node, right: right }; }
+      return node;
+    }
+
+    function parseRule(){
+      var kw = next();
+      expect('KEYWORD','JIKA','Setelah RULE harus ada JIKA, tapi menemukan ' + describeToken(peek()));
+      var cond = parseOr();
+      expect('KEYWORD','MAKA','Kondisi RULE harus diikuti MAKA, tapi menemukan ' + describeToken(peek()));
+      var nameTok = expect('IDENT', undefined, 'Setelah MAKA harus ada nama fakta yang disimpulkan, tapi menemukan ' + describeToken(peek()));
+      expect('OP', '=', 'Setelah nama fakta pada MAKA harus ada tanda "=", tapi menemukan ' + describeToken(peek()));
+      var val = parseValue();
+      return { type:'RuleStatement', condition: cond, conclusion: { name: nameTok.value, value: val }, line: kw.line };
+    }
+
+    function parseShow(){
+      var kw = next();
+      var nameTok = expect('IDENT', undefined, 'Setelah TAMPILKAN harus ada nama fakta, tapi menemukan ' + describeToken(peek()));
+      return { type:'ShowStatement', name: nameTok.value, line: kw.line };
+    }
+
+    var program = parseProgram();
+    expect('EOF', undefined, 'Token tersisa padahal program seharusnya sudah selesai');
+    return program;
+  }
+
+  // ---------- RULE ENGINE ----------
+  function typeLabel(v){
+    if(typeof v === 'number') return 'angka';
+    if(typeof v === 'string') return 'teks';
+    if(typeof v === 'boolean') return 'boolean';
+    return 'tidak dikenal';
+  }
+  function literalValue(node){ return node.value; }
+
+  function runRuleEngine(ast){
+    var facts = {};
+    var output = [];
+    var trace = [];
+
+    function evalCondition(node){
+      switch(node.type){
+        case 'Comparison': {
+          if(!(node.name in facts)){
+            throw new RuntimeError('Fakta "' + node.name + '" tidak ditemukan (belum pernah dideklarasikan dengan FACT atau disimpulkan RULE lain)');
+          }
+          var factVal = facts[node.name];
+          var target = literalValue(node.value);
+          if(node.operator === '=' || node.operator === '!='){
+            if(typeof factVal !== typeof target){
+              throw new RuntimeError('Tidak bisa membandingkan ' + typeLabel(factVal) + ' ("' + node.name + '") dengan ' + typeLabel(target));
+            }
+            var eq = factVal === target;
+            return node.operator === '=' ? eq : !eq;
+          }
+          if(typeof factVal !== 'number' || typeof target !== 'number'){
+            throw new RuntimeError('Operator "' + node.operator + '" hanya berlaku untuk angka, tapi "' + node.name + '" bertipe ' + typeLabel(factVal));
+          }
+          if(node.operator === '>') return factVal > target;
+          if(node.operator === '<') return factVal < target;
+          if(node.operator === '>=') return factVal >= target;
+          if(node.operator === '<=') return factVal <= target;
+          throw new RuntimeError('Operator tidak dikenal: ' + node.operator);
+        }
+        case 'NotCondition': return !evalCondition(node.operand);
+        case 'AndCondition': { var l = evalCondition(node.left); var r = evalCondition(node.right); return l && r; }
+        case 'OrCondition': { var l2 = evalCondition(node.left); var r2 = evalCondition(node.right); return l2 || r2; }
+        default: throw new RuntimeError('Jenis kondisi tidak dikenal: ' + node.type);
+      }
+    }
+
+    for(var idx = 0; idx < ast.body.length; idx++){
+      var stmt = ast.body[idx];
+      try{
+        if(stmt.type === 'FactStatement'){
+          var v = literalValue(stmt.value);
+          facts[stmt.name] = v;
+          trace.push({ kind:'FACT', name: stmt.name, value: v, line: stmt.line, factsSnapshot: Object.assign({}, facts) });
+        } else if(stmt.type === 'RuleStatement'){
+          var matched = evalCondition(stmt.condition);
+          if(matched){
+            var cv = literalValue(stmt.conclusion.value);
+            facts[stmt.conclusion.name] = cv;
+            trace.push({ kind:'RULE', matched:true, name: stmt.conclusion.name, value: cv, line: stmt.line, factsSnapshot: Object.assign({}, facts) });
+          } else {
+            trace.push({ kind:'RULE', matched:false, line: stmt.line, factsSnapshot: Object.assign({}, facts) });
+          }
+        } else if(stmt.type === 'ShowStatement'){
+          if(!(stmt.name in facts)){
+            throw new RuntimeError('Fakta "' + stmt.name + '" tidak ditemukan (tidak bisa TAMPILKAN fakta yang belum pernah ada)');
+          }
+          var ov = facts[stmt.name];
+          output.push(ov);
+          trace.push({ kind:'TAMPILKAN', name: stmt.name, value: ov, line: stmt.line, factsSnapshot: Object.assign({}, facts) });
+        }
+      } catch(e){
+        e.line = e.line || stmt.line;
+        e.partial = { trace: trace, output: output, facts: facts };
+        throw e;
+      }
+    }
+
+    return { facts: facts, output: output, trace: trace };
+  }
+
+  function runPipeline(source){
+    var res = { source: source };
+    try{ var lex = tokenize(source); res.tokens = lex.tokens; res.comments = lex.comments; }
+    catch(e){ res.error = e; return res; }
+    try{ res.ast = parse(res.tokens); }
+    catch(e){ res.error = e; return res; }
+    try{ res.engineResult = runRuleEngine(res.ast); }
+    catch(e){ res.error = e; return res; }
+    return res;
+  }
+
+  // ---------- rendering helpers ----------
+  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function formatNumber(v){ var r = Math.round(v * 1e10) / 1e10; return String(r); }
+  function formatTyped(v){
+    if(typeof v === 'string') return '"' + v + '"';
+    if(typeof v === 'number') return formatNumber(v);
+    if(typeof v === 'boolean') return String(v);
+    return String(v);
+  }
+  function formatOutput(v){
+    if(typeof v === 'number') return formatNumber(v);
+    return String(v);
+  }
+
+  function renderErrorBanner(err){
+    var lineInfo = (err.line !== undefined && err.line !== null) ? (' — baris ' + err.line) : '';
+    return '<div class="error-box"><div class="error-stage">Gagal di tahap ' + err.stage + lineInfo + '</div>' +
+      '<div class="error-msg">' + escapeHtml(err.message) + '</div></div>';
+  }
+
+  function renderHighlightedSource(source, tokens, comments){
+    var spans = [];
+    tokens.forEach(function(t){
+      if(t.type === 'NEWLINE' || t.type === 'EOF') return;
+      spans.push({ start:t.start, end:t.end, cls:'tok-' + t.type.toLowerCase() });
+    });
+    comments.forEach(function(c){ spans.push({ start:c.start, end:c.end, cls:'tok-comment' }); });
+    spans.sort(function(a,b){ return a.start - b.start; });
+
+    var html = '';
+    var cursor = 0;
+    spans.forEach(function(sp){
+      if(sp.start > cursor){ html += escapeHtml(source.slice(cursor, sp.start)); }
+      html += '<span class="' + sp.cls + '">' + escapeHtml(source.slice(sp.start, sp.end)) + '</span>';
+      cursor = sp.end;
+    });
+    if(cursor < source.length){ html += escapeHtml(source.slice(cursor)); }
+    return html || '<span style="color:var(--muted);">(kosong)</span>';
+  }
+
+  // ---------- AST rendering ----------
+  function nodeLabel(node){
+    switch(node.type){
+      case 'FactStatement': return '<span class="ast-type">FactStatement</span><span class="ast-detail">nama fakta = "' + escapeHtml(node.name) + '"</span>';
+      case 'RuleStatement': return '<span class="ast-type">RuleStatement</span>';
+      case 'ShowStatement': return '<span class="ast-type">ShowStatement</span><span class="ast-detail">nama fakta = "' + escapeHtml(node.name) + '"</span>';
+      case 'Conclusion': return '<span class="ast-type">Conclusion (MAKA)</span><span class="ast-detail">' + escapeHtml(node.name) + ' = ' + formatTyped(node.value) + '</span>';
+      case 'OrCondition': return '<span class="ast-type">OrCondition</span><span class="ast-detail">ATAU</span>';
+      case 'AndCondition': return '<span class="ast-type">AndCondition</span><span class="ast-detail">DAN</span>';
+      case 'NotCondition': return '<span class="ast-type">NotCondition</span><span class="ast-detail">TIDAK</span>';
+      case 'Comparison': return '<span class="ast-type">Comparison</span><span class="ast-detail">' + escapeHtml(node.name) + ' ' + escapeHtml(node.operator) + ' ' + formatTyped(node.value) + '</span>';
+      default: return escapeHtml(node.type);
+    }
+  }
+  function childrenOf(node){
+    switch(node.type){
+      case 'FactStatement': return [];
+      case 'ShowStatement': return [];
+      case 'RuleStatement': return [node.condition, { type:'Conclusion', name: node.conclusion.name, value: literalValue(node.conclusion.value) }];
+      case 'OrCondition': return [node.left, node.right];
+      case 'AndCondition': return [node.left, node.right];
+      case 'NotCondition': return [node.operand];
+      case 'Comparison': return [];
+      default: return [];
+    }
+  }
+  function nodeLabelForComparison(node){
+    // Comparison node.value is a literal AST node ({type, value}); need raw value for display
+    return node;
+  }
+  function renderAstNode(node){
+    var display = node;
+    if(node.type === 'Comparison'){
+      display = { type:'Comparison', name: node.name, operator: node.operator, value: literalValue(node.value) };
+    }
+    var kids = childrenOf(node);
+    var html = '<div class="ast-line">' + nodeLabel(display) + '</div>';
+    if(kids.length){ html += '<div class="ast-node">' + kids.map(renderAstNode).join('') + '</div>'; }
+    return html;
+  }
+
+  // ---------- DOM refs ----------
+  var sourceInput = document.getElementById('sourceInput');
+  var lexerBody = document.getElementById('lexerBody');
+  var parserBody = document.getElementById('parserBody');
+  var engineBody = document.getElementById('engineBody');
+  var outputBody = document.getElementById('outputBody');
+
+  // ---------- stage renderers ----------
+  function renderLexerStage(res){
+    if(res.error && res.error.stage === 'LEXER'){
+      lexerBody.innerHTML = renderErrorBanner(res.error) +
+        '<p class="stage-note">Kode sumber sejauh ini (belum sempat ditandai token karena lexer berhenti):</p>' +
+        '<pre class="codeblock">' + escapeHtml(res.source) + '</pre>';
+      return;
+    }
+    var chips = res.tokens.filter(function(t){ return t.type !== 'EOF'; }).map(function(t){
+      var label = t.type === 'NEWLINE' ? '⏎' : (t.type === 'STRING' ? '"' + t.value + '"' : String(t.value));
+      return '<span class="token tok-' + t.type.toLowerCase() + '" title="' + t.type + '">' + escapeHtml(label) + '</span>';
+    }).join('');
+    lexerBody.innerHTML =
+      '<div class="legend">' +
+        '<span class="legend-item"><span class="dot tok-keyword"></span>kata kunci</span>' +
+        '<span class="legend-item"><span class="dot tok-string"></span>teks</span>' +
+        '<span class="legend-item"><span class="dot tok-number"></span>angka</span>' +
+        '<span class="legend-item"><span class="dot tok-boolean"></span>boolean</span>' +
+        '<span class="legend-item"><span class="dot tok-ident"></span>nama fakta</span>' +
+        '<span class="legend-item"><span class="dot tok-op"></span>operator</span>' +
+        '<span class="legend-item"><span class="dot tok-comment"></span>komentar (diabaikan)</span>' +
+      '</div>' +
+      '<p class="stage-note">Kode sumber ditandai per jenis token:</p>' +
+      '<pre class="codeblock">' + renderHighlightedSource(res.source, res.tokens, res.comments) + '</pre>' +
+      '<p class="stage-note" style="margin-top:18px;">Aliran token yang diteruskan ke parser:</p>' +
+      '<div class="token-stream">' + chips + '</div>';
+  }
+
+  function renderParserStage(res){
+    if(res.error && res.error.stage === 'LEXER'){
+      parserBody.innerHTML = '<div class="stage-skipped">Tidak tercapai — lexer belum berhasil menghasilkan token.</div>';
+      return;
+    }
+    if(res.error && res.error.stage === 'PARSER'){
+      parserBody.innerHTML = renderErrorBanner(res.error);
+      return;
+    }
+    if(!res.ast.body.length){
+      parserBody.innerHTML = '<p class="stage-note">Program kosong — tidak ada pernyataan untuk dibuatkan AST.</p>';
+      return;
+    }
+    var lines = res.source.split('\n');
+    parserBody.innerHTML = res.ast.body.map(function(stmt, i){
+      var srcLine = (lines[stmt.line - 1] || '').trim();
+      return '<div class="ast-block"><div class="ast-caption"><span class="n">Pernyataan ' + (i+1) + '</span>' + escapeHtml(srcLine) + '</div>' + renderAstNode(stmt) + '</div>';
+    }).join('');
+  }
+
+  function describeConditionShort(node){
+    switch(node.type){
+      case 'Comparison': return escapeHtml(node.name) + ' ' + escapeHtml(node.operator) + ' ' + formatTyped(literalValue(node.value));
+      case 'NotCondition': return 'TIDAK (' + describeConditionShort(node.operand) + ')';
+      case 'AndCondition': return '(' + describeConditionShort(node.left) + ') DAN (' + describeConditionShort(node.right) + ')';
+      case 'OrCondition': return '(' + describeConditionShort(node.left) + ') ATAU (' + describeConditionShort(node.right) + ')';
+      default: return '?';
+    }
+  }
+
+  function renderEngineStage(res){
+    if(res.error && (res.error.stage === 'LEXER' || res.error.stage === 'PARSER')){
+      engineBody.innerHTML = '<div class="stage-skipped">Tidak tercapai — program belum berhasil disusun jadi AST yang valid.</div>';
+      return;
+    }
+    var trace, errBanner = '';
+    if(res.error && res.error.stage === 'RULE ENGINE'){
+      trace = res.error.partial.trace;
+      errBanner = renderErrorBanner(res.error);
+    } else {
+      trace = res.engineResult.trace;
+    }
+    if(!trace.length){
+      engineBody.innerHTML = (trace.length === 0 && !errBanner ? '<p class="stage-note">Program kosong — tidak ada pernyataan untuk dijalankan.</p>' : '') + errBanner;
+      return;
+    }
+    var lines = res.source.split('\n');
+    var ast = res.ast;
+    var rows = trace.map(function(t, i){
+      var stmt = ast.body[i];
+      var desc, condLine = '';
+      if(t.kind === 'FACT'){
+        desc = 'FACT ' + escapeHtml(t.name) + ' = ' + formatTyped(t.value) + ' — ditulis ke tabel fakta';
+      } else if(t.kind === 'RULE'){
+        var condStr = describeConditionShort(stmt.condition);
+        var badge = t.matched ? '<span class="badge matched">COCOK</span>' : '<span class="badge unmatched">TIDAK COCOK</span>';
+        condLine = '<div class="exec-cond">kondisi: ' + condStr + ' → <span class="' + (t.matched ? 't-true' : 't-false') + '">' + (t.matched ? 'TRUE' : 'FALSE') + '</span></div>';
+        if(t.matched){
+          desc = 'RULE — ' + badge + ' MAKA <b>' + escapeHtml(t.name) + '</b> = ' + formatTyped(t.value);
+        } else {
+          desc = 'RULE — ' + badge + ' (MAKA tidak dijalankan)';
+        }
+      } else {
+        desc = 'TAMPILKAN ' + escapeHtml(t.name) + ' → mencetak ' + formatTyped(t.value);
+      }
+      var keys = Object.keys(t.factsSnapshot);
+      var scopeChips = keys.map(function(k){
+        return '<span class="scope-chip">' + escapeHtml(k) + ' = ' + formatTyped(t.factsSnapshot[k]) + '</span>';
+      }).join('');
+      var scopeRow = keys.length
+        ? '<div class="scope-row"><span class="scope-label">tabel fakta:</span>' + scopeChips + '</div>'
+        : '<div class="scope-row"><span class="scope-label">tabel fakta: masih kosong</span></div>';
+      return '<div class="exec-row"><div class="exec-head"><span class="exec-num">Langkah ' + (i+1) + '</span><span class="exec-desc">' + desc + '</span></div>' + condLine + scopeRow + '</div>';
+    }).join('');
+    engineBody.innerHTML = rows + errBanner;
+  }
+
+  function renderOutputStage(res){
+    if(res.error && (res.error.stage === 'LEXER' || res.error.stage === 'PARSER')){
+      outputBody.innerHTML = '<div class="stage-skipped">Tidak tercapai — program tidak sempat dijalankan.</div>';
+      return;
+    }
+    var output, note = '';
+    if(res.error && res.error.stage === 'RULE ENGINE'){
+      output = res.error.partial.output;
+      note = '<p class="stage-note" style="margin-top:10px;">Berhenti sebelum selesai — lihat tahap RULE ENGINE untuk rincian galat.</p>';
+    } else {
+      output = res.engineResult.output;
+    }
+    if(!output.length){
+      outputBody.innerHTML = '<div class="console">(tidak ada output — tidak ada perintah TAMPILKAN yang berhasil dijalankan)</div>' + note;
+      return;
+    }
+    var lines = output.map(function(v){ return '<div class="console-line">' + escapeHtml(formatOutput(v)) + '</div>'; }).join('');
+    outputBody.innerHTML = '<div class="console">' + lines + '</div>' + note;
+  }
+
+  function runAndRender(){
+    var res = runPipeline(sourceInput.value);
+    renderLexerStage(res);
+    renderParserStage(res);
+    renderEngineStage(res);
+    renderOutputStage(res);
+  }
+
+  // ---------- presets (Kasus 1-9, Level 3) ----------
+  var PRESETS = {
+    k1: 'FACT ahli_waris = "anak_laki_laki"\nFACT ada_anak_perempuan = false\nRULE JIKA ahli_waris = "anak_laki_laki" DAN ada_anak_perempuan = false MAKA bagian = "ashabah"\nTAMPILKAN bagian',
+    k2: 'FACT jumlah_anak_laki_laki = 2\nRULE JIKA jumlah_anak_laki_laki > 0 MAKA ada_anak_laki_laki = true\nRULE JIKA ada_anak_laki_laki = true MAKA saudara_laki_laki_terhalang = true\nTAMPILKAN saudara_laki_laki_terhalang',
+    k3: 'FACT x = 1\nRULE JIKA y = true MAKA x = 99\nRULE JIKA x = 1 MAKA y = true\nTAMPILKAN x',
+    k3b: 'FACT y = false\nFACT x = 1\nRULE JIKA y = true MAKA x = 99\nRULE JIKA x = 1 MAKA y = true\nTAMPILKAN x\nTAMPILKAN y',
+    k4: 'FACT umur = 10\nRULE JIKA umur = "sepuluh" MAKA cocok = true',
+    k5: 'FACT status = "menikah"\nRULE JIKA status > "lajang" MAKA hasil = true',
+    k6: 'FACT a = true\nFACT b = false\nRULE JIKA a = true ATAU TIDAK b = true MAKA hasil = "kena"\nTAMPILKAN hasil',
+    k7: 'FACT a = 1\nTAMPILKAN b',
+    k8: 'FACT y = false\nRULE JIKA y = true MAKA hasil = "kena"\nTAMPILKAN y',
+    k9: 'FACT x = 1\nRULE JIKA x = 1 MAKA x = 2\nRULE JIKA x = 2 MAKA x = 3\nTAMPILKAN x'
+  };
+
+  function clearPresetActive(){
+    document.querySelectorAll('.preset-btn').forEach(function(b){ b.classList.remove('active'); });
+  }
+
+  document.getElementById('btnRun').addEventListener('click', runAndRender);
+  sourceInput.addEventListener('keydown', function(e){
+    if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){ e.preventDefault(); runAndRender(); }
+  });
+  document.getElementById('btnReset').addEventListener('click', function(){
+    sourceInput.value = PRESETS.k1;
+    clearPresetActive();
+    document.querySelector('.preset-btn[data-p="k1"]').classList.add('active');
+    runAndRender();
+  });
+  document.querySelectorAll('.preset-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var key = btn.getAttribute('data-p');
+      sourceInput.value = PRESETS[key];
+      clearPresetActive();
+      btn.classList.add('active');
+      runAndRender();
+    });
+  });
+
+  // init
+  runAndRender();
+
+})();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>
