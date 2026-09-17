@@ -10,15 +10,20 @@
   "use strict";
 
   const PAGE_SIZE = 6;
-  // "Astronomi" sengaja dihapus dari daftar filter (bukan kategori
-  // resmi — kesalahan lama pada data demo, lihat data/articles.json;
-  // artikel dengan kategori itu tetap tampil di bawah "Semua",
-  // hanya tombol filternya yang tidak dimunculkan).
-  // "Syair" ditambahkan di akhir — sumbernya BUKAN data/articles.json,
-  // melainkan digabung saat memuat dari dien/data/penjelasan-syair.json
-  // (lihat muatArsipSyair()), karena Artikel Syair adalah model
-  // tersendiri yang tidak pernah masuk /dien/artikel/.
-  const KATEGORI_URUTAN = ["Semua", "Agama", "Kesehatan", "Sains", "Pendidikan", "Syair"];
+  // Daftar TETAP 5 kategori resmi Artikel — bukan hasil deteksi dinamis
+  // dari data yang sedang ada, supaya urutan tombol filter tidak berubah
+  // hanya karena satu kategori sedang kosong. "Astronomi" dan
+  // "Pendidikan" sengaja TIDAK dimasukkan (bukan kategori resmi —
+  // keduanya sisa kesalahan pada data demo lama; artikel semacam itu,
+  // jika masih ada, tetap tampil di bawah "Semua", hanya tombol
+  // filternya yang tidak dimunculkan).
+  // "Syair" sumbernya BUKAN data/articles.json, melainkan digabung saat
+  // memuat dari dien/data/penjelasan-syair.json (lihat muatArsipSyair()),
+  // karena Artikel Syair adalah model tersendiri yang tidak pernah masuk
+  // /dien/artikel/. Tombolnya tetap tampil sejak awal walau arsipnya
+  // masih kosong, karena entri baru pindah ke sana otomatis begitu
+  // tanggalnya berlalu (lihat catatan di penjelasan-syair.json).
+  const KATEGORI_URUTAN = ["Semua", "Agama", "Kesehatan", "Sains", "Syair"];
 
   let semuaArtikel = [];
   let kategoriAktif = "Semua";
@@ -93,8 +98,13 @@
      --------------------------------------------------------- */
 
   function kategoriTersedia() {
-    const set = new Set(semuaArtikel.map((a) => a.kategori).filter(Boolean));
-    return KATEGORI_URUTAN.filter((k) => k === "Semua" || set.has(k));
+    // KATEGORI_URUTAN adalah daftar tetap 5 kategori resmi — selalu
+    // ditampilkan apa adanya, terlepas dari apakah kategori itu sedang
+    // punya artikel atau belum (mis. "Syair" tetap tampil walau arsip
+    // Syair masih kosong). Kalau filter itu diklik dan tidak ada
+    // artikelnya, renderDaftarArtikel() sudah menangani pesan
+    // "Belum ada artikel pada kategori ini." dengan wajar.
+    return KATEGORI_URUTAN;
   }
 
   function renderFilterBar() {
