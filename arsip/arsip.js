@@ -118,6 +118,65 @@
   }
 
   /* ---------------------------------------------------------
+     3b. KOLEKSI ARSIP — isi baris "meta" (jumlah bahan) di
+     kartu Gambar & Label secara live dari data aslinya masing-
+     masing (bukan angka yang ditulis manual, supaya tidak perlu
+     diingat untuk diperbarui setiap kali menambah gambar/label).
+     Khutbah/Modul/Rangkuman tidak punya data untuk diambil, jadi
+     baris meta-nya sudah statis di index.html ("Segera hadir").
+     --------------------------------------------------------- */
+
+  async function muatMetaGambar() {
+    const el = document.getElementById("metaGambar");
+    if (!el) return;
+    try {
+      const res = await fetch("gambar/data/gambar.json", { cache: "no-store" });
+      if (!res.ok) throw new Error("Gagal memuat data gambar: " + res.status);
+      const data = await res.json();
+      const daftar = Array.isArray(data.gambar) ? data.gambar : [];
+      if (!daftar.length) {
+        el.textContent = "Belum ada gambar untuk ditampilkan.";
+        return;
+      }
+      const jumlahSeri = new Set(daftar.map((g) => g.seri)).size;
+      el.textContent = daftar.length + " gambar dari " + jumlahSeri + " seri";
+    } catch (err) {
+      el.textContent = "Jumlah gambar belum dapat dimuat.";
+    }
+  }
+
+  async function muatMetaLabel() {
+    const el = document.getElementById("metaLabel");
+    if (!el) return;
+    try {
+      const resLabel = await fetch("../data/labels.json", { cache: "no-store" });
+      if (!resLabel.ok) throw new Error("Gagal memuat data label: " + resLabel.status);
+      const dataLabel = await resLabel.json();
+      const daftarLabel = Array.isArray(dataLabel.label) ? dataLabel.label : [];
+      if (!daftarLabel.length) {
+        el.textContent = "Belum ada label yang terdaftar.";
+        return;
+      }
+
+      let teks = daftarLabel.length + " label";
+      try {
+        const resArtikel = await fetch("../data/articles.json", { cache: "no-store" });
+        if (resArtikel.ok) {
+          const dataArtikel = await resArtikel.json();
+          const jumlahArtikel = Array.isArray(dataArtikel.artikel) ? dataArtikel.artikel.length : 0;
+          if (jumlahArtikel) teks += ", mencakup " + jumlahArtikel + " artikel";
+        }
+      } catch (e) {
+        // Jumlah artikel bersifat pelengkap — kalau gagal dimuat,
+        // baris meta tetap tampil dengan jumlah label saja.
+      }
+      el.textContent = teks;
+    } catch (err) {
+      el.textContent = "Jumlah label belum dapat dimuat.";
+    }
+  }
+
+  /* ---------------------------------------------------------
      4. KARTU ARSIP
      --------------------------------------------------------- */
 
@@ -249,6 +308,8 @@
     initFilterRanah();
     initPencarian();
     muatArsip();
+    muatMetaGambar();
+    muatMetaLabel();
   }
 
   if (document.readyState === "loading") {
