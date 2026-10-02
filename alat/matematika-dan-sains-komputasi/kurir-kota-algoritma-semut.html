@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Kurir Kota — Uji Algoritma Semut vs Tanpa Algoritma | JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!--
+  STATUS PENGERJAAN (untuk AI / sesi lanjutan — baca ini dulu sebelum mengedit):
+  KONSEP
+  - Simulasi/permainan edukasi: satu kurir mengantar paket ke K rumah (dipilih acak tiap ronde) dari satu
+    gudang/depot, lalu kembali ke depot (rute tertutup, mirip TSP). Denah kota digambar BESAR & berskala KECIL
+    (kanvas logis 1000x700, ~180-200 rumah dekoratif digenerate lewat loop grid) sesuai permintaan pengguna
+    ("denah jauh lebih besar, skala lebih kecil, banyak rumah terlihat"). Hanya K rumah (dipilih acak dari
+    seluruh rumah) yang jadi "pesanan aktif" tiap ronde — ditandai pin merah; sisanya murni dekorasi kota.
+  - EMPAT MODE rute, bisa dipilih & dibandingkan langsung:
+    1) Acak — TANPA algoritma sama sekali: urutan kunjungan diacak (Fisher-Yates), murni baseline "apa yang
+       terjadi kalau kurir asal jalan". Ini jawaban langsung atas pertanyaan eksplisit pengguna.
+    2) Tetangga Terdekat (Nearest Neighbor) — heuristik paling sederhana yang REALISTIS dipakai kurir manusia
+       tanpa software optimasi ("ke rumah terdekat dulu"), bukan "tanpa algoritma" tapi juga bukan metaheuristik.
+    3) Algoritma Semut (ACO / Ant System, Dorigo 1992) — PERSIS keluarga algoritma yang sama dengan tab 🐜 di
+       /alat/matematika-dan-sains-komputasi/laboratorium-algoritma-alam, di sini diterapkan ke soal rute kurir
+       (bukan cuma jalur-terpendek antar kota abstrak). Semut membangun rute lewat roulette (feromon^α × 1/jarak^β),
+       feromon menguap & ditambah tiap iterasi.
+    4) Algoritma Genetika (GA) — SENGAJA ditambahkan sebagai "mode lain yang mirip semangatnya" seperti diminta
+       pengguna: populasi rute (permutasi), seleksi turnamen (k=3), order crossover (OX1), swap mutation, elitisme
+       1 individu. Sama-sama metaheuristik populasi, beda total mekanismenya dari ACO (tak ada feromon/jejak
+       bersama — variasi murni dari crossover+mutasi).
+  - "Uji Adil": tombol yang menjalankan KEEMPAT mode pada SET PESANAN YANG SAMA (tidak diacak ulang), lalu
+    menampilkan bar-chart total jarak tiap mode berdampingan — ini bagian "pengujian" yang diminta pengguna,
+    biar kelihatan jelas apa yang terjadi TANPA algoritma semut dibanding dengan.
+  - Verifikasi jujur ala Bank Alat: kalau jumlah pesanan (K) ≤ 8, "Uji Adil" juga menghitung rute OPTIMAL via
+    brute-force (permutasi penuh, K! rute) sebagai pembanding pasti — di atas K=8 brute-force tidak lagi
+    ditampilkan (pertumbuhan faktorial: 9!=362.880, sudah mulai berat untuk dijalankan berulang di browser tiap
+    klik, dan intinya toh sudah tersampaikan di K kecil).
+  - Fase "mencari rute" (khusus ACO & GA) direplay di kanvas: tiap kali algoritma menemukan rute yang LEBIH baik
+    dari sebelumnya (bukan tiap iterasi/generasi — supaya replay tidak terlalu panjang), rute itu digambar
+    sebentar sebagai preview putus-putus + angka "jarak terbaik sejauh ini" di HUD, baru lanjut ke kurir
+    sungguhan berjalan di rute terbaik final. Mode Acak & Tetangga Terdekat instan (tak ada fase mencari, sesuai
+    sifat aslinya: tak ada proses "belajar/membaik").
+  - Jarak & rute kurir MENGIKUTI JARINGAN JALAN grid (persis garis jalan yang digambar drawRoads(), lihat
+    buildRoadGraph()/attachToRoad()/dijkstra()/buildRouting() di script) via pencarian jalur terpendek
+    (Dijkstra), BUKAN garis lurus Euclidean lagi — tiap rumah/depot disambungkan ke jalan lewat "gang" pendek
+    tegak lurus ke sisi blok terdekat (attachToRoad), baru menyusuri jalan sampai tujuan. Matriks jarak D dan
+    animasi kurir (state.legs, tiap leg berisi array waypoint sepanjang jalan) sama-sama pakai jarak jalan ini,
+    jadi keempat mode rute tetap dibandingkan adil (semua pakai ukuran jarak yang sama), cuma sekarang jaraknya
+    realistis mengikuti jalan, bukan tembus rumah. Skala kanvas→meter & kecepatan kurir cuma untuk memberi rasa
+    "waktu tempuh", bukan klaim presisi dunia nyata.
+  - Referensi dunia nyata (di panel edukasi bawah) diambil dari riset akademik yang dicek lewat pencarian web
+    saat menyusun alat ini (Rizzoli dkk. 2004 — ACO utk VRP-Time-Windows sebuah jaringan swalayan di Swiss &
+    VRP-Pickup-Delivery perusahaan logistik Italia; Calabrò dkk. 2020 — ACO utk logistik masuk perusahaan
+    angkutan buah-sayur Italia Selatan, disimulasikan di NetLogo) — bukan klaim, tapi rujukan tercatat.
+  - Palet warna & font disamakan dengan Bank Alat JAZMI lain (Fredoka/Quicksand/JetBrains Mono, --bg krem)
+    supaya satu keluarga produk qiladat.com, TAPI aksen warna kota/kurir dibuat baru (biru-hijau jalan, oranye
+    kurir) karena temanya beda dari alat pesantren/ngengat-api.
+  - BELUM ADA: mode multi-kurir/armada (kapasitas kendaraan, VRP berkendala), dan penyimpanan riwayat
+    lintas-sesi (localStorage) — riwayat uji saat ini hilang kalau halaman di-refresh, sengaja dibiarkan
+    sederhana untuk v1. (Jaringan jalan sungguhan via Dijkstra SUDAH ADA — lihat poin di atas.)
+-->
+<style>
+  :root{
+    --bg:#faf3ea; --panel:#fffaf3; --panel-line:#e8dcc9;
+    --ink:#3a2f28; --dim:#8a7c6f;
+    --accent:#c1622d; --accent2:#e08a4f;
+    --road:#c7d6dc; --grass:#eef2e6;
+    --random:#9aa5b1; --greedy:#2f6690; --aco:#3f9a5c; --ga:#6a4c93;
+    --order:#e2472b; --delivered:#3f9a5c; --depot:#7a3a1f; --courier:#ffb703;
+    --line:#e8dcc9;
+    --display:'Fredoka',sans-serif; --sans:'Quicksand',sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;}
+  .wrap{max-width:760px;margin:0 auto;padding:0 0 40px;}
+
+  .hero{padding:16px 16px 6px;text-align:center;}
+  .hero h1{font-family:var(--display);font-weight:600;font-size:clamp(17px,4.4vw,21px);margin:0 0 4px;color:var(--accent);}
+  .hero p{color:var(--dim);font-size:11.5px;margin:0 auto;max-width:560px;}
+  .hero .src{font-size:9.5px;color:var(--dim);margin-top:5px;}
+  .hero .src a{color:var(--accent);}
+
+  .stage-wrap{position:relative;margin:10px 10px 0;border-radius:16px;overflow:hidden;border:2px solid var(--panel-line);
+    aspect-ratio:1000/700;background:var(--grass);}
+  canvas{display:block;width:100%;height:100%;}
+
+  .hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;
+    padding:7px 8px;pointer-events:none;font-family:var(--display);gap:6px;flex-wrap:wrap;}
+  .hud-chip{background:#fffaf3ee;border:1px solid var(--panel-line);border-radius:8px;padding:4px 8px;font-size:9.5px;color:var(--dim);}
+  .hud-chip b{font-family:var(--mono);font-size:11px;color:var(--ink);font-weight:500;}
+  .hud-mode{color:#fff;font-size:9.5px;padding:4px 9px;border-radius:999px;font-weight:600;}
+  .status-bar{margin:6px 10px 0;font-size:10.5px;color:var(--dim);text-align:center;min-height:14px;}
+  .status-bar b{color:var(--ink);}
+
+  .legend{display:flex;flex-wrap:wrap;gap:8px 14px;justify-content:center;margin:8px 14px 0;font-size:9.5px;color:var(--dim);}
+  .legend span{display:inline-flex;align-items:center;gap:4px;}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+
+  .panel{margin:14px 10px 0;background:var(--panel);border:1px solid var(--panel-line);border-radius:14px;padding:12px 14px;}
+  .panel h3{font-family:var(--display);font-weight:600;font-size:13px;margin:0 0 8px;color:var(--accent);}
+  .panel h3 span{font-size:10px;color:var(--dim);font-weight:500;font-family:var(--sans);}
+
+  .mode-row{display:flex;gap:6px;flex-wrap:wrap;}
+  .mode-btn{flex:1 1 0;min-width:74px;background:#fff;border:2px solid var(--panel-line);border-radius:10px;
+    padding:7px 4px;text-align:center;cursor:pointer;color:var(--dim);font-family:var(--sans);font-weight:600;font-size:10.5px;}
+  .mode-btn .micon{font-size:16px;display:block;margin-bottom:2px;}
+  .mode-btn.active{color:#fff;border-color:transparent;}
+  .mode-btn[data-mode="random"].active{background:var(--random);}
+  .mode-btn[data-mode="greedy"].active{background:var(--greedy);}
+  .mode-btn[data-mode="aco"].active{background:var(--aco);}
+  .mode-btn[data-mode="ga"].active{background:var(--ga);}
+
+  .slider-row{margin-top:10px;}
+  .slider-row label{display:flex;justify-content:space-between;font-size:10.5px;color:var(--dim);margin-bottom:2px;}
+  .slider-row label b{font-family:var(--mono);color:var(--ink);}
+  input[type=range]{width:100%;accent-color:var(--accent);}
+
+  .param-grid{display:none;grid-template-columns:1fr 1fr;gap:0 12px;margin-top:6px;padding-top:8px;border-top:1px dashed var(--panel-line);}
+  .param-grid.show{display:grid;}
+
+  .btn-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;}
+  .btn{flex:1 1 auto;font-family:var(--display);font-weight:600;font-size:11.5px;border:none;border-radius:10px;
+    padding:9px 10px;cursor:pointer;color:#fff;background:var(--accent);}
+  .btn.secondary{background:#fff;color:var(--accent);border:2px solid var(--accent);padding:7px 10px;}
+  .btn.wide{flex-basis:100%;}
+  .btn:active{transform:scale(.98);}
+
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;font-size:10.5px;color:var(--dim);}
+  .stat-grid b{display:block;font-family:var(--mono);font-size:13px;color:var(--ink);font-weight:500;}
+
+  #searchInfo{display:none;}
+  #searchInfo.show{display:block;}
+
+  .bar-row{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:10px;}
+  .bar-label{width:118px;flex-shrink:0;color:var(--dim);font-weight:600;}
+  .bar-track{flex:1;height:16px;background:#f1e8da;border-radius:5px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:5px;transition:width .5s ease;}
+  .bar-val{width:78px;flex-shrink:0;text-align:right;font-family:var(--mono);color:var(--ink);font-size:10px;}
+  #fairNote{font-size:10.5px;color:var(--dim);margin-top:8px;border-top:1px dashed var(--panel-line);padding-top:8px;}
+  #fairNote b{color:var(--accent);}
+
+  table{width:100%;border-collapse:collapse;font-size:10px;}
+  th,td{text-align:left;padding:4px 6px;border-bottom:1px solid var(--panel-line);}
+  th{color:var(--dim);font-weight:600;font-size:9.5px;}
+  td.mono, th.mono{font-family:var(--mono);}
+  #histEmpty{font-size:10.5px;color:var(--dim);text-align:center;padding:6px 0;}
+
+  .parallel-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  @media (max-width:480px){ .parallel-grid{grid-template-columns:1fr;} }
+  .mini-stage{position:relative;border-radius:10px;overflow:hidden;border:2px solid var(--panel-line);
+    aspect-ratio:1000/700;background:var(--grass);}
+  .mini-stage canvas{display:block;width:100%;height:100%;}
+  .mini-label{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;
+    padding:4px 5px;pointer-events:none;gap:4px;}
+  .mini-label .mtitle{font-family:var(--display);font-weight:600;color:#fff;font-size:9px;padding:2px 7px;border-radius:999px;white-space:nowrap;}
+  .mini-label .mstat{font-family:var(--mono);font-size:8.5px;color:#fff;background:#00000055;padding:2px 5px;border-radius:6px;white-space:nowrap;}
+  .mini-finish{position:absolute;left:0;right:0;bottom:0;background:#00000080;color:#fff;text-align:center;
+    font-family:var(--display);font-weight:600;font-size:10px;padding:4px;display:none;}
+  .mini-finish.show{display:block;}
+  #parallelSummary b{display:block;margin-bottom:3px;}
+
+  .info p{font-size:11.5px;color:#5b4d40;margin:0 0 8px;}
+  .info h4{font-family:var(--display);font-size:12px;margin:12px 0 4px;color:var(--ink);}
+  .info h4:first-child{margin-top:0;}
+  .info .note{font-size:10px;color:var(--dim);border-top:1px dashed var(--panel-line);padding-top:8px;margin-top:10px;}
+  .info a{color:var(--accent);}
+  .info ul{margin:4px 0 8px;padding-left:18px;font-size:11px;color:#5b4d40;}
+  .info li{margin-bottom:4px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <h1>🐜🚚 Kurir Kota — Uji Algoritma Semut vs Tanpa Algoritma</h1>
+    <p>Satu kurir, satu depot, banyak rumah. Coba bandingkan: kalau kurir cuma jalan asal-asalan, kalau ia
+      pintar sendiri (ke rumah terdekat dulu), atau kalau rutenya dicari lewat algoritma semut / genetika —
+      seberapa jauh bedanya?</p>
+    <p class="src">Algoritma semut di sini satu keluarga dengan tab 🐜 di <a href="https://qiladat.com/alat/matematika-dan-sains-komputasi/laboratorium-algoritma-alam" target="_blank" rel="noopener">Laboratorium Algoritma Alam</a>, diterapkan ke soal rute kurir.</p>
+  </div>
+
+  <div class="stage-wrap">
+    <canvas id="cv" width="1000" height="700"></canvas>
+    <div class="hud">
+      <div class="hud-mode" id="hudMode" style="background:var(--random);">Mode: Acak</div>
+      <div class="hud-chip">Pesanan <b id="hudDelivered">0/0</b></div>
+      <div class="hud-chip">Jarak <b id="hudDist">0</b> m</div>
+    </div>
+  </div>
+  <div class="status-bar" id="statusBar">Tekan <b>"Pesanan Baru"</b> lalu pilih mode & tekan <b>"Mulai Antar"</b>.</div>
+
+  <div class="legend">
+    <span><span class="dot" style="background:var(--depot);"></span>Depot/gudang kurir</span>
+    <span><span class="dot" style="background:var(--order);"></span>Pesanan menunggu</span>
+    <span><span class="dot" style="background:var(--delivered);"></span>Sudah diantar</span>
+    <span><span class="dot" style="background:var(--courier);"></span>Kurir</span>
+    <span><span class="dot" style="background:#b8c8b8;"></span>Rumah warga (dekorasi)</span>
+  </div>
+
+  <div class="panel">
+    <h3>Pilih mode rute <span>— tentukan bagaimana kurir memutuskan urutan kunjungan</span></h3>
+    <div class="mode-row" id="modeRow">
+      <div class="mode-btn active" data-mode="random"><span class="micon">🎲</span>Acak<br>(tanpa algoritma)</div>
+      <div class="mode-btn" data-mode="greedy"><span class="micon">📍</span>Tetangga<br>Terdekat</div>
+      <div class="mode-btn" data-mode="aco"><span class="micon">🐜</span>Algoritma<br>Semut</div>
+      <div class="mode-btn" data-mode="ga"><span class="micon">🧬</span>Algoritma<br>Genetika</div>
+    </div>
+
+    <div class="slider-row">
+      <label>Jumlah pesanan hari ini <b id="kVal">16</b></label>
+      <input type="range" id="kSlider" min="6" max="50" value="16" step="1">
+    </div>
+    <div class="slider-row">
+      <label>Kecepatan animasi <b id="speedVal">1×</b></label>
+      <input type="range" id="speedSlider" min="1" max="4" value="1" step="1">
+    </div>
+
+    <div class="param-grid" id="acoParams">
+      <div class="slider-row"><label>Jumlah semut <b id="antsVal">24</b></label><input type="range" id="antsSlider" min="8" max="50" value="24"></div>
+      <div class="slider-row"><label>Iterasi <b id="iterVal">80</b></label><input type="range" id="iterSlider" min="20" max="150" value="80"></div>
+      <div class="slider-row"><label>α (bobot feromon) <b id="alphaVal">1.0</b></label><input type="range" id="alphaSlider" min="0.2" max="3" value="1" step="0.1"></div>
+      <div class="slider-row"><label>β (bobot jarak) <b id="betaVal">3.0</b></label><input type="range" id="betaSlider" min="0.5" max="6" value="3" step="0.1"></div>
+      <div class="slider-row"><label>ρ (penguapan) <b id="evapVal">0.35</b></label><input type="range" id="evapSlider" min="0.05" max="0.8" value="0.35" step="0.05"></div>
+    </div>
+
+    <div class="param-grid" id="gaParams">
+      <div class="slider-row"><label>Ukuran populasi <b id="popVal">60</b></label><input type="range" id="popSlider" min="20" max="150" value="60"></div>
+      <div class="slider-row"><label>Generasi <b id="genVal">150</b></label><input type="range" id="genSlider" min="30" max="300" value="150"></div>
+      <div class="slider-row"><label>Peluang crossover <b id="crossVal">0.85</b></label><input type="range" id="crossSlider" min="0.3" max="1" value="0.85" step="0.05"></div>
+      <div class="slider-row"><label>Peluang mutasi <b id="mutVal">0.03</b></label><input type="range" id="mutSlider" min="0" max="0.3" value="0.03" step="0.01"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn secondary" id="newOrdersBtn">🎲 Pesanan Baru</button>
+      <button class="btn" id="startBtn">🚚 Mulai Antar</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn wide secondary" id="fairBtn">⚖ Uji Adil — bandingkan ke-4 mode pada pesanan yang sama</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>🔀 Bandingkan semua mode sekaligus <span>— lihat langsung siapa yang lebih dulu selesai</span></h3>
+    <p style="font-size:10.5px;color:var(--dim);margin:0 0 10px;">Keempat mode dijalankan <b>bersamaan</b>, di atas
+      pesanan yang persis sama (posisi & jumlah rumah sama seperti di panel utama) — jadi murni urutan
+      kunjungannya saja yang beda. Perhatikan kurir mana yang lebih dulu mengantar semua paket.</p>
+    <button class="btn wide" id="parallelBtn">🔀 Jalankan 4 Mode Sekaligus (Paralel)</button>
+    <div class="parallel-grid" id="parallelGrid" style="margin-top:10px;">
+      <div class="mini-stage" data-mode="random">
+        <canvas class="mini-cv" width="500" height="350"></canvas>
+        <div class="mini-label"><span class="mtitle" style="background:var(--random);">🎲 Acak</span><span class="mstat">0/0 · 0 m</span></div>
+        <div class="mini-finish"></div>
+      </div>
+      <div class="mini-stage" data-mode="greedy">
+        <canvas class="mini-cv" width="500" height="350"></canvas>
+        <div class="mini-label"><span class="mtitle" style="background:var(--greedy);">📍 Tetangga</span><span class="mstat">0/0 · 0 m</span></div>
+        <div class="mini-finish"></div>
+      </div>
+      <div class="mini-stage" data-mode="aco">
+        <canvas class="mini-cv" width="500" height="350"></canvas>
+        <div class="mini-label"><span class="mtitle" style="background:var(--aco);">🐜 Semut</span><span class="mstat">0/0 · 0 m</span></div>
+        <div class="mini-finish"></div>
+      </div>
+      <div class="mini-stage" data-mode="ga">
+        <canvas class="mini-cv" width="500" height="350"></canvas>
+        <div class="mini-label"><span class="mtitle" style="background:var(--ga);">🧬 Genetika</span><span class="mstat">0/0 · 0 m</span></div>
+        <div class="mini-finish"></div>
+      </div>
+    </div>
+    <div id="parallelSummary" style="font-size:10.5px;color:var(--dim);margin-top:10px;"></div>
+  </div>
+
+  <div class="panel" id="searchInfo">
+    <h3>🔎 Sedang mencari rute…</h3>
+    <div class="stat-grid">
+      <div>Langkah pencarian<b id="searchIter">—</b></div>
+      <div>Jarak terbaik sejauh ini<b id="searchBest">—</b></div>
+    </div>
+  </div>
+
+  <div class="panel" id="fairPanel" style="display:none;">
+    <h3>⚖ Hasil Uji Adil <span>— total jarak, pesanan &amp; posisi sama untuk keempatnya</span></h3>
+    <div id="fairBars"></div>
+    <div id="fairNote"></div>
+  </div>
+
+  <div class="panel">
+    <h3>📜 Riwayat percobaan</h3>
+    <div id="histEmpty">Belum ada percobaan. Tekan "Mulai Antar" untuk mencatat hasil pertama.</div>
+    <table id="historyTable" style="display:none;">
+      <thead><tr><th>Mode</th><th class="mono">Pesanan</th><th class="mono">Jarak</th><th class="mono">Waktu antar</th></tr></thead>
+      <tbody id="historyBody"></tbody>
+    </table>
+  </div>
+
+  <div class="panel info">
+    <h3>🧭 Kenapa urutan kunjungan bisa bikin beda jauh?</h3>
+    <p>Ini soal klasik ilmu komputer bernama <b>Travelling Salesman Problem (TSP)</b>: kalau kurir harus
+      mengunjungi K rumah lalu pulang ke depot, jumlah kemungkinan urutannya adalah (K−1)!/2 — untuk cuma 16
+      pesanan saja itu sudah lebih dari 653 miliar kemungkinan rute. Mustahil dicoba satu-satu (metode eksak)
+      dalam waktu wajar begitu K membesar, makanya dipakai <b>heuristik</b> (Tetangga Terdekat) atau
+      <b>metaheuristik</b> (Algoritma Semut, Genetika) — bukan mencari rute paling sempurna mutlak, tapi rute
+      yang <i>cukup baik</i> dalam waktu yang <i>bisa dijalani</i>. Prinsip yang sama dijelaskan lebih lengkap di
+      <a href="https://qiladat.com/alat/matematika-dan-sains-komputasi/laboratorium-algoritma-alam" target="_blank" rel="noopener">Laboratorium Algoritma Alam</a>.</p>
+
+    <h4>🎲 Acak — baseline "tanpa algoritma"</h4>
+    <p>Kurir mengunjungi rumah dalam urutan yang benar-benar diacak. Tak ada satu pun logika yang mengarahkannya
+      — ini murni untuk memperlihatkan seberapa buruk hasilnya kalau tak ada pertimbangan jarak sama sekali.
+      Dalam praktik sungguhan jarang ada kurir yang benar-benar mengantar seacak ini, tapi baseline ini penting
+      justru untuk mengukur seberapa besar "nilai" yang disumbangkan sebuah algoritma.</p>
+
+    <h4>📍 Tetangga Terdekat — akal sehat sederhana</h4>
+    <p>Dari posisi sekarang, selalu pilih rumah terdekat yang belum dikunjungi. Ini yang paling mendekati "akal
+      sehat manusia tanpa software" — hasilnya jauh lebih baik dari acak, tapi punya kelemahan terkenal: kadang
+      ia "menghabiskan" rumah-rumah dekat lebih dulu dan meninggalkan satu rumah jauh sendirian di ujung,
+      membuat perjalanan pulang jadi sangat panjang. Algoritma serakah (greedy) memang begitu — bagus di tiap
+      langkah kecil, tapi tidak melihat gambar besar.</p>
+
+    <h4>🐜 Algoritma Semut (Ant Colony Optimization)</h4>
+    <p>Sama seperti semut asli meninggalkan jejak feromon di jalur pendek yang sering dilewati, di sini banyak
+      "kurir virtual" mencoba rute secara paralel & acak-berbobot, lalu rute yang lebih pendek "ditandai" lebih
+      kuat (feromon bertambah), sementara jejak lama menguap sedikit demi sedikit. Setelah puluhan iterasi,
+      seluruh koloni cenderung sepakat pada rute yang jauh lebih pendek daripada tebakan acak maupun tetangga
+      terdekat. Riset akademik mencatat ACO/metaheuristik sejenis dipakai untuk masalah rute kendaraan nyata —
+      di antaranya rute kendaraan berjendela-waktu untuk sebuah jaringan swalayan di Swiss dan rute
+      jemput-antar sebuah perusahaan logistik di Italia (Rizzoli dkk., 2004), serta logistik masuk perusahaan
+      angkutan buah & sayur di Italia Selatan yang disimulasikan lewat model multi-agen (Calabrò dkk., 2020).</p>
+
+    <h4>🧬 Algoritma Genetika — "saudara jauh" algoritma semut</h4>
+    <p>Ditambahkan sebagai mode lain yang juga tergolong metaheuristik terinspirasi alam, tapi mekanismenya
+      beda total dari ACO: di sini yang berevolusi adalah <b>populasi rute</b> — rute-rute yang lebih pendek
+      punya peluang lebih besar terpilih jadi "induk" (seleksi turnamen), sepasang rute induk saling
+      menyilangkan sebagian urutan kunjungannya (crossover), dan sesekali dua rumah dalam satu rute ditukar
+      posisinya secara acak (mutasi). Tidak ada "feromon" atau jejak bersama sama sekali di sini — semua variasi
+      baru murni dari persilangan & mutasi antar-individu, kebalikan total dari cara kerja koloni semut yang
+      justru mengandalkan jejak bersama. Algoritma genetika juga tercatat luas dipakai untuk optimasi rute
+      kendaraan (Vehicle Routing Problem) di industri, sejajar dengan ACO sebagai dua pendekatan metaheuristik
+      yang paling umum diuji untuk soal ini.</p>
+
+    <div class="note">
+      <b>Batasan alat ini:</b>
+      <ul>
+        <li>Kurir sudah menyusuri jaringan jalan grid (lewat pencarian jalur terpendek/Dijkstra) alih-alih
+          garis lurus tembus rumah, tapi jaringannya tetap kisi (grid) sederhana — bukan peta jalan sungguhan
+          dengan jalan satu arah, kemacetan, atau bentuk blok yang tidak beraturan.</li>
+        <li>Hanya satu kurir tanpa batas kapasitas bawaan (bukan Capacitated VRP) — dunia nyata biasanya
+          punya banyak kendaraan sekaligus dengan kapasitas terbatas, yang tidak dimodelkan di sini.</li>
+        <li>ACO & GA bersifat acak (stokastik) — jalankan "Uji Adil" beberapa kali dan hasilnya akan sedikit
+          berbeda tiap kali, meski kecenderungannya tetap konsisten lebih baik dari Acak.</li>
+        <li>Rute optimal lewat brute-force hanya dihitung kalau pesanan ≤ 8 — di atas itu jumlah kemungkinan
+          rute tumbuh faktorial dan brute-force jadi tidak praktis dijalankan berulang di browser.</li>
+        <li>Skala meter & waktu tempuh kurir murni untuk memberi rasa realistis, bukan hasil pengukuran kota
+          sungguhan.</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ================= KONFIGURASI DUNIA ================= */
+const CV = document.getElementById('cv');
+const CTX = CV.getContext('2d');
+const W = 1000, H = 700;
+const DEPOT = {x:75, y:75};
+const METER_PER_UNIT = 2.6;
+const COURIER_MPS = 5.2;          // kecepatan kurir, meter/detik (motor dalam komplek)
+const BASE_PX_PER_SEC = 95;       // kecepatan animasi dasar di kanvas (px logis/detik)
+const COLORS = {random:'#9aa5b1', greedy:'#2f6690', aco:'#3f9a5c', ga:'#6a4c93'};
+const MODE_LABEL = {random:'Acak', greedy:'Tetangga Terdekat', aco:'Algoritma Semut', ga:'Algoritma Genetika'};
+
+let TIME_SCALE = 1;
+
+/* ================= KOTA: RUMAH & JALAN ================= */
+const GRID = { cols:17, rows:12, marginX:36, marginY:110 };
+GRID.spanX = W - GRID.marginX*2;
+GRID.spanY = H - GRID.marginY - 30;
+GRID.dx = GRID.spanX/GRID.cols;
+GRID.dy = GRID.spanY/GRID.rows;
+
+let houses = [];
+function buildCity(){
+  houses = [];
+  const cols = GRID.cols, rows = GRID.rows, marginX = GRID.marginX, marginY = GRID.marginY;
+  const spanX = GRID.spanX, spanY = GRID.spanY;
+  const roofPalette = ['#c1622d', '#2f6690', '#7fa87f', '#c9a03f'];
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const jx = (Math.sin(r*13.7+c*3.1)*0.5+0.5-0.5)*10;
+      const jy = (Math.cos(r*7.3+c*5.9)*0.5+0.5-0.5)*10;
+      const x = marginX + spanX*(c+0.5)/cols + jx;
+      const y = marginY + spanY*(r+0.5)/rows + jy;
+      if(Math.hypot(x-DEPOT.x, y-DEPOT.y) < 62) continue;
+      houses.push({x, y, roof: roofPalette[(r*cols+c) % roofPalette.length]});
+    }
+  }
+}
+function drawRoads(){
+  CTX.strokeStyle = '#c7d6dc';
+  CTX.lineWidth = 10;
+  const cols = GRID.cols, rows = GRID.rows, marginX = GRID.marginX, marginY = GRID.marginY;
+  const spanX = GRID.spanX, spanY = GRID.spanY;
+  for(let c=0;c<=cols;c++){
+    const x = marginX + spanX*c/cols;
+    CTX.beginPath(); CTX.moveTo(x, marginY-20); CTX.lineTo(x, H-20); CTX.stroke();
+  }
+  for(let r=0;r<=rows;r++){
+    const y = marginY + spanY*r/rows;
+    CTX.beginPath(); CTX.moveTo(marginX-20, y); CTX.lineTo(W-16, y); CTX.stroke();
+  }
+}
+
+/* ================= JARINGAN JALAN UNTUK RUTE (versi gabungan tersederhana) ================= */
+// Kota ini kisi jalan yang seragam & selalu tersambung penuh, jadi jarak jalan sesungguhnya antara
+// dua titik = jarak "gang kecil" dari titik ke perempatan terdekat, ditambah jarak Manhattan (siku,
+// horizontal+vertikal) antar perempatan itu, ditambah gang kecil di ujung satunya. Ini SELALU sama
+// dengan hasil pencarian-jalur-terpendek (mis. Dijkstra) di kisi seragam seperti ini, jadi dipakai
+// versi ringkas ini (lebih cepat, path yang digambar juga lebih rapi: cuma satu kali belok per ruas,
+// dari 2 pendekatan berbeda yang pernah dicoba untuk alat ini — dipilih yang lebih rapi & lebih ringan).
+function gridCoord(p){
+  let c = Math.round((p.x-GRID.marginX)/GRID.dx);
+  let r = Math.round((p.y-GRID.marginY)/GRID.dy);
+  c = Math.max(0, Math.min(GRID.cols, c));
+  r = Math.max(0, Math.min(GRID.rows, r));
+  return {c, r};
+}
+function intersectionPoint(c, r){ return {x: GRID.marginX + GRID.dx*c, y: GRID.marginY + GRID.dy*r}; }
+function roadDistanceValue(a, b){
+  const ga = gridCoord(a), gb = gridCoord(b);
+  const ia = intersectionPoint(ga.c, ga.r), ib = intersectionPoint(gb.c, gb.r);
+  const gangA = dist(a, ia), gangB = dist(b, ib);
+  const jalanRaya = Math.abs(gb.c-ga.c)*GRID.dx + Math.abs(gb.r-ga.r)*GRID.dy;
+  return gangA + jalanRaya + gangB;
+}
+function roadDistanceWaypoints(a, b){
+  const ga = gridCoord(a), gb = gridCoord(b);
+  const ia = intersectionPoint(ga.c, ga.r), ib = intersectionPoint(gb.c, gb.r);
+  const corner = {x: ib.x, y: ia.y}; // belok siku: mendatar dulu di baris ga.r, lalu tegak di kolom gb.c
+  const raw = [a, ia, corner, ib, b];
+  const out = [raw[0]];
+  for(let i=1;i<raw.length-1;i++){ if(dist(out[out.length-1], raw[i]) > 0.5) out.push(raw[i]); }
+  out.push(raw[raw.length-1]);
+  return out;
+}
+function buildRouting(specialPoints){
+  const n = specialPoints.length;
+  const D = Array.from({length:n}, () => new Array(n).fill(0));
+  for(let i=0;i<n;i++) for(let j=0;j<n;j++) D[i][j] = roadDistanceValue(specialPoints[i], specialPoints[j]);
+  function getPath(i,j){ return roadDistanceWaypoints(specialPoints[i], specialPoints[j]); }
+  return {D, getPath};
+}
+function pathLength(path){
+  let s=0; for(let k=0;k<path.length-1;k++) s += dist(path[k], path[k+1]);
+  return s;
+}
+function drawHouse(h){
+  CTX.fillStyle = '#fffaf3';
+  CTX.fillRect(h.x-4.2, h.y-3, 8.4, 6.4);
+  CTX.fillStyle = h.roof;
+  CTX.beginPath();
+  CTX.moveTo(h.x-5.2, h.y-3);
+  CTX.lineTo(h.x, h.y-8.5);
+  CTX.lineTo(h.x+5.2, h.y-3);
+  CTX.closePath();
+  CTX.fill();
+}
+function drawDepot(){
+  CTX.fillStyle = '#7a3a1f';
+  CTX.fillRect(DEPOT.x-22, DEPOT.y-14, 44, 28);
+  CTX.fillStyle = '#c1622d';
+  CTX.beginPath();
+  CTX.moveTo(DEPOT.x-26, DEPOT.y-14);
+  CTX.lineTo(DEPOT.x, DEPOT.y-30);
+  CTX.lineTo(DEPOT.x+26, DEPOT.y-14);
+  CTX.closePath();
+  CTX.fill();
+  CTX.font = '18px sans-serif';
+  CTX.textAlign = 'center';
+  CTX.fillText('🏢', DEPOT.x, DEPOT.y+7);
+  CTX.font = '600 11px Quicksand, sans-serif';
+  CTX.fillStyle = '#3a2f28';
+  CTX.fillText('Depot Kurir', DEPOT.x, DEPOT.y+26);
+}
+
+/* ================= PESANAN (TITIK PENGIRIMAN) ================= */
+let orderPoints = []; // {x,y,houseRef}
+function newOrders(){
+  const K = Number(document.getElementById('kSlider').value);
+  const pool = [...houses.keys()];
+  for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+  const chosen = pool.slice(0, Math.min(K, pool.length));
+  orderPoints = chosen.map(idx => ({x:houses[idx].x, y:houses[idx].y}));
+  resetRunState();
+  stopParallel();
+  setStatus('Pesanan baru siap — '+orderPoints.length+' rumah menunggu. Pilih mode & tekan "Mulai Antar".');
+  document.getElementById('fairPanel').style.display = 'none';
+  draw();
+}
+
+/* ================= UTIL MATEMATIKA RUTE ================= */
+function dist(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
+function routeLength(route, D){
+  let s=0; for(let k=0;k<route.length-1;k++) s += D[route[k]][route[k+1]];
+  return s;
+}
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+  return arr;
+}
+
+/* ================= MODE 1: ACAK ================= */
+function buildRandomRoute(K){
+  const order = shuffle([...Array(K).keys()].map(i=>i+1));
+  return [0, ...order, 0];
+}
+
+/* ================= MODE 2: TETANGGA TERDEKAT ================= */
+function buildGreedyRoute(nodes, D){
+  const n = nodes.length;
+  const visited = new Array(n).fill(false); visited[0]=true;
+  let route=[0], current=0;
+  for(let step=0; step<n-1; step++){
+    let best=-1, bestD=Infinity;
+    for(let j=1;j<n;j++){
+      if(visited[j]) continue;
+      const d = D[current][j];
+      if(d<bestD){ bestD=d; best=j; }
+    }
+    visited[best]=true; route.push(best); current=best;
+  }
+  route.push(0);
+  return route;
+}
+
+/* ================= MODE 3: ALGORITMA SEMUT (ACO) ================= */
+function runACO(nodes, D, K, p){
+  const n = nodes.length;
+  let pher = Array.from({length:n}, () => new Array(n).fill(1));
+  let bestRoute=null, bestLen=Infinity;
+  const history = [];
+  for(let it=0; it<p.iterations; it++){
+    const antRoutes = [];
+    for(let a=0; a<p.ants; a++){
+      const visited = new Array(n).fill(false); visited[0]=true;
+      let route=[0], current=0;
+      for(let step=0; step<K-1; step++){
+        let candidates=[], sum=0;
+        for(let j=1;j<n;j++){
+          if(visited[j]) continue;
+          const tau = Math.pow(pher[current][j], p.alpha);
+          const eta = Math.pow(1/Math.max(D[current][j], 0.0001), p.beta);
+          const val = tau*eta;
+          candidates.push({j, val}); sum += val;
+        }
+        let r = Math.random()*sum, chosen = candidates[candidates.length-1].j;
+        for(const c of candidates){ r -= c.val; if(r<=0){ chosen=c.j; break; } }
+        visited[chosen]=true; route.push(chosen); current=chosen;
+      }
+      for(let j=1;j<n;j++){ if(!visited[j]){ route.push(j); visited[j]=true; break; } }
+      route.push(0);
+      const len = routeLength(route, D);
+      antRoutes.push({route, len});
+      if(len < bestLen - 1e-9){
+        bestLen = len; bestRoute = route.slice();
+        history.push({route:bestRoute.slice(), length:bestLen});
+      }
+    }
+    for(let i=0;i<n;i++) for(let j=0;j<n;j++) pher[i][j] *= (1-p.evaporation);
+    for(const {route, len} of antRoutes){
+      const Q = 100;
+      for(let k=0;k<route.length-1;k++){
+        const a=route[k], b=route[k+1];
+        pher[a][b] += Q/len; pher[b][a] += Q/len;
+      }
+    }
+  }
+  if(!bestRoute){ bestRoute = antRoutesFallback(nodes, D, K); bestLen = routeLength(bestRoute, D); }
+  return {route:bestRoute, length:bestLen, history, pheromone:pher};
+}
+function antRoutesFallback(nodes, D, K){ return buildGreedyRoute(nodes); }
+
+/* ================= MODE 4: ALGORITMA GENETIKA (GA) ================= */
+function tournamentSelect(pop, lens, k){
+  let bestI=0, bestL=Infinity;
+  for(let t=0;t<k;t++){
+    const i = Math.floor(Math.random()*pop.length);
+    if(lens[i] < bestL){ bestL = lens[i]; bestI = i; }
+  }
+  return pop[bestI].slice();
+}
+function orderCrossover(p1, p2){
+  const n = p1.length;
+  let a = Math.floor(Math.random()*n), b = Math.floor(Math.random()*n);
+  const start = Math.min(a,b), end = Math.max(a,b);
+  const child = new Array(n).fill(null);
+  for(let i=start;i<=end;i++) child[i] = p1[i];
+  let pos = (end+1) % n;
+  for(let i=0;i<n;i++){
+    const gene = p2[(end+1+i) % n];
+    if(!child.includes(gene)){ child[pos] = gene; pos = (pos+1) % n; }
+  }
+  return child;
+}
+function swapMutate(arr){
+  const i = Math.floor(Math.random()*arr.length), j = Math.floor(Math.random()*arr.length);
+  const t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+}
+function runGA(nodes, D, K, p){
+  function randPerm(){ return shuffle([...Array(K).keys()].map(i=>i+1)); }
+  function len(perm){ return routeLength([0, ...perm, 0], D); }
+  let pop = Array.from({length:p.popSize}, randPerm);
+  let bestPerm = pop[0].slice(), bestLen = Infinity;
+  const history = [];
+  for(let g=0; g<p.generations; g++){
+    const lens = pop.map(len);
+    let improved = false;
+    for(let i=0;i<pop.length;i++){
+      if(lens[i] < bestLen - 1e-9){ bestLen = lens[i]; bestPerm = pop[i].slice(); improved = true; }
+    }
+    if(improved) history.push({route:[0, ...bestPerm, 0], length:bestLen});
+    const newPop = [bestPerm.slice()];
+    while(newPop.length < p.popSize){
+      const p1 = tournamentSelect(pop, lens, 3);
+      const p2 = tournamentSelect(pop, lens, 3);
+      let child = Math.random() < p.crossoverP ? orderCrossover(p1, p2) : p1.slice();
+      if(Math.random() < p.mutationP) swapMutate(child);
+      newPop.push(child);
+    }
+    pop = newPop;
+  }
+  return {route:[0, ...bestPerm, 0], length:bestLen, history};
+}
+
+/* ================= OPTIMAL (BRUTE-FORCE, K KECIL) ================= */
+function bruteForceOptimal(D, K){
+  const idx = [...Array(K).keys()].map(i=>i+1);
+  let best = Infinity;
+  function permute(arr, l){
+    if(l === arr.length-1){
+      const len = routeLength([0, ...arr, 0], D);
+      if(len < best) best = len;
+      return;
+    }
+    for(let i=l;i<arr.length;i++){
+      [arr[l], arr[i]] = [arr[i], arr[l]];
+      permute(arr, l+1);
+      [arr[l], arr[i]] = [arr[i], arr[l]];
+    }
+  }
+  permute(idx, 0);
+  return best;
+}
+
+/* ================= PARAMETER DARI UI ================= */
+function getACOParams(){
+  return {
+    ants: Number(document.getElementById('antsSlider').value),
+    iterations: Number(document.getElementById('iterSlider').value),
+    alpha: Number(document.getElementById('alphaSlider').value),
+    beta: Number(document.getElementById('betaSlider').value),
+    evaporation: Number(document.getElementById('evapSlider').value),
+  };
+}
+function getGAParams(){
+  return {
+    popSize: Number(document.getElementById('popSlider').value),
+    generations: Number(document.getElementById('genSlider').value),
+    crossoverP: Number(document.getElementById('crossSlider').value),
+    mutationP: Number(document.getElementById('mutSlider').value),
+  };
+}
+
+/* ================= STATE SIMULASI (ANIMASI) ================= */
+let currentMode = 'random';
+let rafId = null;
+const state = {
+  phase: 'idle', // idle | searching | delivering | done
+  mode: null, nodes: [], D: [], routing: null,
+  finalRoute: [], finalLength: 0, legs: [],
+  snapshots: [], snapIndex: -1, snapTimerMs: 0,
+  courier: {legIndex:0, wpIndex:0, wpT:0, distTraveled:0},
+  deliveredSet: new Set(),
+  lastTs: 0,
+};
+
+function resetRunState(){
+  if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
+  state.phase='idle'; state.mode=null; state.finalRoute=[]; state.finalLength=0; state.legs=[];
+  state.snapshots=[]; state.snapIndex=-1; state.snapTimerMs=0;
+  state.courier={legIndex:0, wpIndex:0, wpT:0, distTraveled:0};
+  state.deliveredSet = new Set();
+  document.getElementById('searchInfo').classList.remove('show');
+  updateHud();
+}
+
+function setStatus(t){ document.getElementById('statusBar').innerHTML = t; }
+
+function startRun(mode){
+  if(orderPoints.length === 0){ setStatus('Tekan "Pesanan Baru" dulu.'); return; }
+  if(state.phase==='searching' || state.phase==='delivering') return;
+  stopParallel();
+  resetRunState();
+  const nodes = [DEPOT, ...orderPoints];
+  const routing = buildRouting(nodes);
+  const D = routing.D;
+  const K = orderPoints.length;
+  let result;
+  if(mode==='random'){
+    const route = buildRandomRoute(K);
+    result = {route, length: routeLength(route, D), history: []};
+  } else if(mode==='greedy'){
+    const route = buildGreedyRoute(nodes, D);
+    result = {route, length: routeLength(route, D), history: []};
+  } else if(mode==='aco'){
+    result = runACO(nodes, D, K, getACOParams());
+  } else {
+    result = runGA(nodes, D, K, getGAParams());
+  }
+  state.mode = mode; state.nodes = nodes; state.D = D; state.routing = routing;
+  state.finalRoute = result.route; state.finalLength = result.length;
+  state.snapshots = result.history || [];
+  state.snapIndex = -1; state.snapTimerMs = 0;
+  state.legs = [];
+  for(let k=0;k<result.route.length-1;k++){
+    const path = routing.getPath(result.route[k], result.route[k+1]);
+    state.legs.push({path, length: pathLength(path)});
+  }
+  state.courier = {legIndex:0, wpIndex:0, wpT:0, distTraveled:0};
+  state.deliveredSet = new Set();
+  state.lastTs = 0;
+  if(state.snapshots.length > 0){
+    state.phase = 'searching';
+    document.getElementById('searchInfo').classList.add('show');
+    setStatus('Mode <b>'+MODE_LABEL[mode]+'</b> sedang mencari rute terbaik…');
+  } else {
+    state.phase = 'delivering';
+    setStatus('Mode <b>'+MODE_LABEL[mode]+'</b> mulai mengantar…');
+  }
+  updateHud();
+  rafId = requestAnimationFrame(loop);
+}
+
+function loop(ts){
+  rafId = requestAnimationFrame(loop);
+  const dt = state.lastTs ? (ts-state.lastTs)/1000 : 0;
+  state.lastTs = ts;
+  const sdt = dt*TIME_SCALE;
+
+  if(state.phase==='searching'){
+    state.snapTimerMs += sdt*1000;
+    if(state.snapTimerMs >= 180){
+      state.snapTimerMs = 0;
+      state.snapIndex++;
+      if(state.snapIndex < state.snapshots.length){
+        const snap = state.snapshots[state.snapIndex];
+        document.getElementById('searchIter').textContent = (state.snapIndex+1)+' / '+state.snapshots.length+' perbaikan';
+        document.getElementById('searchBest').textContent = fmtMeter(snap.length);
+      } else {
+        state.phase = 'delivering';
+        document.getElementById('searchInfo').classList.remove('show');
+        setStatus('Rute terbaik ditemukan — kurir mulai mengantar…');
+      }
+    }
+  } else if(state.phase==='delivering'){
+    stepCourier(sdt);
+  }
+  draw();
+}
+
+function stepCourier(dt){
+  const route = state.finalRoute, legs = state.legs;
+  if(state.courier.legIndex >= legs.length){ finishRun(); return; }
+  const path = legs[state.courier.legIndex].path;
+  const a = path[state.courier.wpIndex], b = path[Math.min(state.courier.wpIndex+1, path.length-1)];
+  const segLen = Math.max(dist(a,b), 0.001);
+  state.courier.wpT += (BASE_PX_PER_SEC*dt)/segLen;
+  if(state.courier.wpT >= 1){
+    state.courier.distTraveled += segLen;
+    state.courier.wpT = 0;
+    state.courier.wpIndex++;
+    if(state.courier.wpIndex >= path.length-1){
+      // sampai di ujung "gang" ini — tiba di titik pemberhentian berikutnya
+      state.courier.legIndex++;
+      state.courier.wpIndex = 0;
+      const arrivedIdx = route[state.courier.legIndex];
+      if(arrivedIdx !== undefined && arrivedIdx !== 0) state.deliveredSet.add(arrivedIdx);
+      updateHud();
+      if(state.courier.legIndex >= legs.length){ finishRun(); return; }
+    }
+  }
+  updateHud();
+}
+
+function finishRun(){
+  state.phase = 'done';
+  if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
+  logHistory(state.mode, orderPoints.length, state.finalLength);
+  setStatus('Selesai! Mode <b>'+MODE_LABEL[state.mode]+'</b> — total jarak <b>'+fmtMeter(state.finalLength)+'</b>, waktu antar ≈ <b>'+fmtTime(state.finalLength)+'</b>.');
+  draw();
+}
+
+function updateHud(){
+  document.getElementById('hudDelivered').textContent = state.deliveredSet.size+'/'+orderPoints.length;
+  const traveled = state.courier.distTraveled;
+  document.getElementById('hudDist').textContent = Math.round(traveled*METER_PER_UNIT).toLocaleString('id-ID');
+  const chip = document.getElementById('hudMode');
+  chip.textContent = 'Mode: '+MODE_LABEL[currentMode];
+  chip.style.background = COLORS[currentMode];
+}
+
+function fmtMeter(unitLen){ return Math.round(unitLen*METER_PER_UNIT).toLocaleString('id-ID')+' m'; }
+function fmtTime(unitLen){
+  const sec = (unitLen*METER_PER_UNIT)/COURIER_MPS;
+  if(sec < 60) return Math.round(sec)+' dtk';
+  return (sec/60).toFixed(1)+' mnt';
+}
+
+/* ================= GAMBAR KANVAS ================= */
+function draw(){
+  CTX.clearRect(0,0,W,H);
+  CTX.fillStyle = '#eef2e6';
+  CTX.fillRect(0,0,W,H);
+  drawRoads();
+  for(const h of houses) drawHouse(h);
+  drawDepot();
+
+  // pesanan
+  orderPoints.forEach((o, i) => {
+    const nodeIdx = i+1;
+    const delivered = state.deliveredSet.has(nodeIdx);
+    CTX.beginPath();
+    CTX.arc(o.x, o.y, 7, 0, Math.PI*2);
+    CTX.fillStyle = delivered ? '#3f9a5c' : '#e2472b';
+    CTX.fill();
+    CTX.font = '9px sans-serif';
+    CTX.textAlign = 'center';
+    CTX.fillStyle = '#fff';
+    CTX.fillText(delivered ? '✓' : '!', o.x, o.y+3.2);
+  });
+
+  // preview rute saat mencari (putus-putus, tipis) — juga menyusuri jalan
+  if(state.phase==='searching' && state.snapIndex>=0 && state.snapIndex<state.snapshots.length && state.routing){
+    const r = state.snapshots[state.snapIndex].route;
+    CTX.save();
+    CTX.setLineDash([5,5]);
+    CTX.strokeStyle = COLORS[state.mode];
+    CTX.globalAlpha = 0.55;
+    CTX.lineWidth = 2;
+    CTX.beginPath();
+    let started = false;
+    for(let k=0;k<r.length-1;k++){
+      const path = state.routing.getPath(r[k], r[k+1]);
+      path.forEach(p => {
+        if(!started){ CTX.moveTo(p.x,p.y); started = true; } else CTX.lineTo(p.x,p.y);
+      });
+    }
+    CTX.stroke();
+    CTX.restore();
+  }
+
+  // rute final + kurir saat mengantar/selesai — mengikuti jalur jalan sungguhan
+  if((state.phase==='delivering' || state.phase==='done') && state.legs.length>0){
+    CTX.save();
+    CTX.strokeStyle = COLORS[state.mode];
+    CTX.globalAlpha = 0.75;
+    CTX.lineWidth = 2.4;
+    CTX.beginPath();
+    let started = false;
+    state.legs.forEach(leg => {
+      leg.path.forEach(p => {
+        if(!started){ CTX.moveTo(p.x,p.y); started = true; } else CTX.lineTo(p.x,p.y);
+      });
+    });
+    CTX.stroke();
+    CTX.restore();
+
+    if(state.phase==='delivering'){
+      const leg = state.legs[state.courier.legIndex];
+      const path = leg.path;
+      const a = path[state.courier.wpIndex];
+      const b = path[Math.min(state.courier.wpIndex+1, path.length-1)];
+      const cx = a.x + (b.x-a.x)*state.courier.wpT;
+      const cy = a.y + (b.y-a.y)*state.courier.wpT;
+      CTX.font = '20px sans-serif';
+      CTX.textAlign = 'center';
+      CTX.fillText('🛵', cx, cy+7);
+    } else {
+      const depotP = state.nodes[0];
+      CTX.font = '20px sans-serif';
+      CTX.textAlign = 'center';
+      CTX.fillText('🛵', depotP.x+16, depotP.y+7);
+    }
+  }
+}
+
+/* ================= RIWAYAT ================= */
+function logHistory(mode, K, length){
+  const tbody = document.getElementById('historyBody');
+  document.getElementById('histEmpty').style.display = 'none';
+  document.getElementById('historyTable').style.display = 'table';
+  const tr = document.createElement('tr');
+  tr.innerHTML = '<td>'+MODE_LABEL[mode]+'</td><td class="mono">'+K+'</td><td class="mono">'+fmtMeter(length)+'</td><td class="mono">'+fmtTime(length)+'</td>';
+  tbody.prepend(tr);
+}
+
+/* ================= UJI ADIL ================= */
+function runFairTest(){
+  if(orderPoints.length===0){ setStatus('Tekan "Pesanan Baru" dulu.'); return; }
+  resetRunState();
+  const nodes = [DEPOT, ...orderPoints];
+  const routing = buildRouting(nodes);
+  const D = routing.D;
+  const K = orderPoints.length;
+  const results = [];
+
+  let sum=0; const trials=8;
+  for(let t=0;t<trials;t++){ sum += routeLength(buildRandomRoute(K), D); }
+  results.push({label:'Acak (rata² '+trials+'×)', value: sum/trials, color: COLORS.random});
+
+  results.push({label:'Tetangga Terdekat', value: routeLength(buildGreedyRoute(nodes, D), D), color: COLORS.greedy});
+
+  const acoRes = runACO(nodes, D, K, getACOParams());
+  results.push({label:'Algoritma Semut', value: acoRes.length, color: COLORS.aco});
+
+  const gaRes = runGA(nodes, D, K, getGAParams());
+  results.push({label:'Algoritma Genetika', value: gaRes.length, color: COLORS.ga});
+
+  let optimalVal = null;
+  if(K <= 8){
+    optimalVal = bruteForceOptimal(D, K);
+    results.push({label:'Optimal (Brute-Force)', value: optimalVal, color:'#3a2f28'});
+  }
+
+  renderFairChart(results, optimalVal);
+  draw();
+}
+
+function renderFairChart(results, optimalVal){
+  const panel = document.getElementById('fairPanel');
+  panel.style.display = 'block';
+  const maxVal = Math.max(...results.map(r=>r.value));
+  const sorted = [...results].sort((a,b)=>a.value-b.value);
+  const container = document.getElementById('fairBars');
+  container.innerHTML = '';
+  sorted.forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    const pct = Math.max(4, (r.value/maxVal)*100);
+    row.innerHTML = '<div class="bar-label">'+r.label+'</div>'+
+      '<div class="bar-track"><div class="bar-fill" style="width:'+pct.toFixed(1)+'%;background:'+r.color+';"></div></div>'+
+      '<div class="bar-val">'+fmtMeter(r.value)+'</div>';
+    container.appendChild(row);
+  });
+
+  const bestRandom = results.find(r=>r.label.startsWith('Acak')).value;
+  const aco = results.find(r=>r.label==='Algoritma Semut').value;
+  const ga = results.find(r=>r.label==='Algoritma Genetika').value;
+  const saveVsRandomACO = ((bestRandom-aco)/bestRandom*100).toFixed(0);
+  const saveVsRandomGA = ((bestRandom-ga)/bestRandom*100).toFixed(0);
+  let note = 'Pada pesanan &amp; posisi yang sama: Algoritma Semut menempuh <b>'+saveVsRandomACO+'% lebih pendek</b> dan Algoritma Genetika <b>'+saveVsRandomGA+'% lebih pendek</b> dibanding rata-rata rute Acak.';
+  if(optimalVal !== null){
+    const gapACO = ((aco-optimalVal)/optimalVal*100).toFixed(1);
+    const gapGA = ((ga-optimalVal)/optimalVal*100).toFixed(1);
+    note += ' Dibanding rute optimal sungguhan (brute-force, K≤8): Algoritma Semut cuma <b>'+gapACO+'%</b> lebih panjang, Algoritma Genetika <b>'+gapGA+'%</b> lebih panjang — keduanya sudah sangat dekat ke rute paling pendek yang mungkin ada, meski tidak menjaminnya mutlak.';
+  } else {
+    note += ' Pesanan &gt; 8 sehingga rute optimal sungguhan tidak dihitung (kombinasi rute sudah terlalu banyak untuk dicoba semua).';
+  }
+  note += ' Hasil ini stokastik — tekan lagi tombol "Uji Adil" untuk melihat variasinya.';
+  document.getElementById('fairNote').innerHTML = note;
+}
+
+/* ================= MODE PARALEL: KEEMPAT MODE BERSAMAAN ================= */
+let parallelStates = [];
+let parallelRafId = null;
+let parallelLastTs = 0;
+let parallelFinishCount = 0;
+let parallelCtxs = null;
+const PARALLEL_MODES = ['random','greedy','aco','ga'];
+const HOUSE_COLOR = '#b8c8b8', DEPOT_COLOR = '#7a3a1f', ORDER_COLOR = '#e2472b', DELIVERED_COLOR = '#3f9a5c';
+
+function getParallelCtxs(){
+  if(!parallelCtxs){
+    parallelCtxs = Array.from(document.querySelectorAll('#parallelGrid .mini-cv')).map(c => c.getContext('2d'));
+  }
+  return parallelCtxs;
+}
+
+function stopParallel(){
+  if(parallelRafId){ cancelAnimationFrame(parallelRafId); parallelRafId=null; }
+}
+
+function buildParallelRun(){
+  const nodes = [DEPOT, ...orderPoints];
+  const routing = buildRouting(nodes);
+  const D = routing.D;
+  const K = orderPoints.length;
+  parallelStates = PARALLEL_MODES.map(mode => {
+    let result;
+    if(mode==='random') result = {route: buildRandomRoute(K)};
+    else if(mode==='greedy') result = {route: buildGreedyRoute(nodes, D)};
+    else if(mode==='aco') result = runACO(nodes, D, K, getACOParams());
+    else result = runGA(nodes, D, K, getGAParams());
+    const length = routeLength(result.route, D);
+    const legs = [];
+    for(let k=0;k<result.route.length-1;k++){
+      const path = routing.getPath(result.route[k], result.route[k+1]);
+      legs.push({path, length: pathLength(path)});
+    }
+    return {
+      mode, route: result.route, length, legs,
+      courier: {legIndex:0, wpIndex:0, wpT:0, distTraveled:0},
+      deliveredSet: new Set(),
+      phase: 'delivering',
+      finishRank: 0,
+    };
+  });
+}
+
+function startParallel(){
+  if(orderPoints.length === 0){ setStatus('Tekan "Pesanan Baru" dulu.'); return; }
+  if(state.phase==='searching' || state.phase==='delivering') return;
+  if(parallelRafId) return; // sudah berjalan
+  buildParallelRun();
+  parallelFinishCount = 0;
+  document.getElementById('parallelSummary').innerHTML = '';
+  document.querySelectorAll('#parallelGrid .mini-finish').forEach(el => { el.classList.remove('show'); el.textContent=''; });
+  parallelLastTs = 0;
+  setStatus('Keempat mode berjalan bersamaan — perhatikan panel mana yang lebih dulu selesai.');
+  parallelRafId = requestAnimationFrame(parallelLoop);
+}
+
+function stepParallelCourier(ps, dt){
+  const legs = ps.legs;
+  if(ps.courier.legIndex >= legs.length){ finishParallel(ps); return; }
+  const path = legs[ps.courier.legIndex].path;
+  const a = path[ps.courier.wpIndex], b = path[Math.min(ps.courier.wpIndex+1, path.length-1)];
+  const segLen = Math.max(dist(a,b), 0.001);
+  ps.courier.wpT += (BASE_PX_PER_SEC*dt)/segLen;
+  if(ps.courier.wpT >= 1){
+    ps.courier.distTraveled += segLen;
+    ps.courier.wpT = 0;
+    ps.courier.wpIndex++;
+    if(ps.courier.wpIndex >= path.length-1){
+      ps.courier.legIndex++;
+      ps.courier.wpIndex = 0;
+      const arrivedIdx = ps.route[ps.courier.legIndex];
+      if(arrivedIdx !== undefined && arrivedIdx !== 0) ps.deliveredSet.add(arrivedIdx);
+      if(ps.courier.legIndex >= legs.length){ finishParallel(ps); return; }
+    }
+  }
+}
+
+function finishParallel(ps){
+  if(ps.phase==='done') return;
+  ps.phase = 'done';
+  parallelFinishCount++;
+  ps.finishRank = parallelFinishCount;
+  const stageEl = document.querySelector('#parallelGrid .mini-stage[data-mode="'+ps.mode+'"] .mini-finish');
+  if(stageEl){
+    stageEl.textContent = '🏁 Selesai ke-'+ps.finishRank+' — '+fmtMeter(ps.length);
+    stageEl.classList.add('show');
+  }
+  if(parallelFinishCount === parallelStates.length) renderParallelSummary();
+}
+
+function renderParallelSummary(){
+  const sorted = [...parallelStates].sort((a,b) => a.finishRank - b.finishRank);
+  let html = '<b>🏁 Urutan selesai mengantar:</b>';
+  sorted.forEach(ps => {
+    html += (ps.finishRank)+'. '+MODE_LABEL[ps.mode]+' — total jarak '+fmtMeter(ps.length)+'<br>';
+  });
+  document.getElementById('parallelSummary').innerHTML = html;
+}
+
+function updateMiniLabel(idx, ps){
+  const stageEl = document.querySelectorAll('#parallelGrid .mini-stage')[idx];
+  const statEl = stageEl.querySelector('.mstat');
+  statEl.textContent = ps.deliveredSet.size+'/'+orderPoints.length+' · '+Math.round(ps.courier.distTraveled*METER_PER_UNIT).toLocaleString('id-ID')+' m';
+}
+
+// Kanvas mini disederhanakan (tanpa dekorasi ~200 rumah) supaya tetap ringan × 4 panel sekaligus,
+// tapi tetap memakai jalur jalan sungguhan yang sama seperti panel utama (routing.getPath).
+function drawMini(idx, ps){
+  const ctx = getParallelCtxs()[idx];
+  const w = ctx.canvas.width, h = ctx.canvas.height;
+  ctx.save();
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle = '#eef2e6';
+  ctx.fillRect(0,0,w,h);
+  ctx.scale(w/W, h/H);
+
+  ctx.strokeStyle = '#c7d6dc'; ctx.lineWidth = 7;
+  for(let c=0;c<=GRID.cols;c++){ const x=GRID.marginX+GRID.spanX*c/GRID.cols; ctx.beginPath(); ctx.moveTo(x,GRID.marginY-20); ctx.lineTo(x,H-20); ctx.stroke(); }
+  for(let r=0;r<=GRID.rows;r++){ const y=GRID.marginY+GRID.spanY*r/GRID.rows; ctx.beginPath(); ctx.moveTo(GRID.marginX-20,y); ctx.lineTo(W-16,y); ctx.stroke(); }
+
+  ctx.fillStyle = DEPOT_COLOR;
+  ctx.fillRect(DEPOT.x-20, DEPOT.y-13, 40, 26);
+  ctx.font = '17px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('🏢', DEPOT.x, DEPOT.y+6);
+
+  orderPoints.forEach((o, i) => {
+    const nodeIdx = i+1;
+    const delivered = ps.deliveredSet.has(nodeIdx);
+    ctx.beginPath();
+    ctx.arc(o.x, o.y, 8, 0, Math.PI*2);
+    ctx.fillStyle = delivered ? DELIVERED_COLOR : ORDER_COLOR;
+    ctx.fill();
+  });
+
+  ctx.strokeStyle = COLORS[ps.mode];
+  ctx.globalAlpha = 0.8;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  let started = false;
+  ps.legs.forEach(leg => {
+    leg.path.forEach(p => {
+      if(!started){ ctx.moveTo(p.x,p.y); started = true; } else ctx.lineTo(p.x,p.y);
+    });
+  });
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  if(ps.phase==='delivering'){
+    const leg = ps.legs[ps.courier.legIndex];
+    const path = leg.path;
+    const a = path[ps.courier.wpIndex];
+    const b = path[Math.min(ps.courier.wpIndex+1, path.length-1)];
+    const cx = a.x + (b.x-a.x)*ps.courier.wpT;
+    const cy = a.y + (b.y-a.y)*ps.courier.wpT;
+    ctx.font = '26px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('🛵', cx, cy+9);
+  } else {
+    ctx.font = '26px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('🛵', DEPOT.x+18, DEPOT.y+9);
+  }
+  ctx.restore();
+}
+
+function parallelLoop(ts){
+  parallelRafId = requestAnimationFrame(parallelLoop);
+  const dtReal = parallelLastTs ? (ts-parallelLastTs)/1000 : 0;
+  parallelLastTs = ts;
+  const dt = dtReal*TIME_SCALE;
+  let anyActive = false;
+  parallelStates.forEach((ps, idx) => {
+    if(ps.phase==='delivering'){ stepParallelCourier(ps, dt); anyActive = true; }
+    drawMini(idx, ps);
+    updateMiniLabel(idx, ps);
+  });
+  if(!anyActive) stopParallel();
+}
+
+/* ================= KONTROL UI ================= */
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMode = btn.dataset.mode;
+    document.getElementById('acoParams').classList.toggle('show', currentMode==='aco');
+    document.getElementById('gaParams').classList.toggle('show', currentMode==='ga');
+    updateHud();
+  });
+});
+
+document.getElementById('kSlider').addEventListener('input', e => {
+  document.getElementById('kVal').textContent = e.target.value;
+});
+document.getElementById('speedSlider').addEventListener('input', e => {
+  TIME_SCALE = Number(e.target.value);
+  document.getElementById('speedVal').textContent = TIME_SCALE+'×';
+});
+[['antsSlider','antsVal',0],['iterSlider','iterVal',0],['alphaSlider','alphaVal',1],['betaSlider','betaVal',1],['evapSlider','evapVal',2],
+ ['popSlider','popVal',0],['genSlider','genVal',0],['crossSlider','crossVal',2],['mutSlider','mutVal',2]].forEach(([id,valId,dec]) => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => { document.getElementById(valId).textContent = Number(el.value).toFixed(dec); });
+});
+
+document.getElementById('newOrdersBtn').addEventListener('click', newOrders);
+document.getElementById('startBtn').addEventListener('click', () => startRun(currentMode));
+document.getElementById('fairBtn').addEventListener('click', runFairTest);
+document.getElementById('parallelBtn').addEventListener('click', startParallel);
+
+/* ================= INIT ================= */
+buildCity();
+newOrders();
+draw();
+PARALLEL_MODES.forEach((mode, idx) => {
+  drawMini(idx, {mode, legs:[], courier:{legIndex:0,wpIndex:0,wpT:0,distTraveled:0}, deliveredSet:new Set(), phase:'idle'});
+  updateMiniLabel(idx, {deliveredSet:new Set(), courier:{distTraveled:0}});
+});
+</script>
+</body>
+</html>
