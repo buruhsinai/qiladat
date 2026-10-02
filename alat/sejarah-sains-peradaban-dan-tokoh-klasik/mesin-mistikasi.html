@@ -1,0 +1,1921 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mesin Mistikasi — Bagaimana Sains yang Kehilangan Sebab-Akibat Berubah Jadi Mitos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!--
+  STATUS PENGERJAAN (baca sebelum mengedit):
+  Ini esai/eksplorasi interaktif berangkat dari ide pengguna: mitos sering berawal dari fenomena NYATA yang
+  hubungan sebab-akibatnya salah dikaitkan (mis. deteksi pergerakan sebelum gempa dikaitkan ke "tempat
+  keramat/penunggu" alih-alih ke mekanisme fisiknya), lalu karena narasi mitos TIDAK PUNYA mekanisme yang bisa
+  diuji-salahkan (unfalsifiable), ceritanya menumpuk generasi demi generasi menjadi makin besar (sakralisasi →
+  personifikasi sosok → sosok itu "naik pangkat" jadi penguasa domain lebih luas → tiap kelompok mengklaim
+  sosoknya paling berkuasa/asli → gesekan antar-kelompok).
+  KERANGKA AKADEMIK YANG DIPAKAI (bukan opini pribadi — ini pola pikir dari beberapa bidang riset nyata,
+  dicek ulang dari pengetahuan umum, bukan hasil web-search sesi ini karena semuanya konsep/sejarah stabil):
+  - Hyperactive Agency Detection Device / HADD (Justin Barrett, psikologi kognitif agama) — otak manusia
+    condong mendeteksi "ada agen/niat di balik pola" karena secara evolusi lebih aman over-detect daripada alpa.
+  - "Agenticity" (istilah Michael Shermer) — kecenderungan yang sama, dibungkus istilah populer.
+  - Narrative accretion / legend-tripping (folklore studies) — cerita lisan menumpuk detail tiap diceritakan
+    ulang, karena tak ada mekanisme koreksi.
+  - Kriteria falsifiabilitas Karl Popper — pembeda inti kenapa sains "berbatas & bisa dikoreksi" sementara
+    mitos "tak berbatas": teori ilmiah harus bisa disalahkan oleh pengamatan; klaim mistik biasanya dirancang
+    (sengaja atau tidak) supaya tak pernah bisa disalahkan, sehingga bebas tumbuh.
+  DESAIN SENGAJA:
+  - Tangga mistikasi 6 tahap memakai lokasi FIKTIF ("Tanjung Legenda") supaya jadi model generik yang bisa
+    dipetakan ke banyak budaya, BUKAN menyerang satu keyakinan hidup tertentu secara langsung — folklor Ratu
+    Pantai Selatan (konteks asli yang disebut pengguna) baru disinggung belakangan, di galeri lintas-budaya,
+    dengan nada menghormati ("dimaknai jauh lebih kaya oleh masyarakat setempat daripada sekadar kesalahan
+    logika") — supaya alat ini terasa sebagai kerangka berpikir kritis umum, bukan ejekan pada satu tradisi.
+  - Galeri lintas-budaya SENGAJA memuat contoh dari banyak benua (Mesir, Eropa abad tengah, Pasifik, Nusantara,
+    Atlantik) + SATU contoh di mana mistikasi kebetulan berkorelasi dengan fungsi ekologis nyata (hutan/mata
+    air keramat) — supaya tesisnya tidak timpang sebelah ("mitos = selalu buruk"), sesuai prinsip cover-both-
+    sides untuk topik yang menyentuh keyakinan spiritual banyak orang.
+  - Ada mini-cabang interaktif di Tahap 3 (pilih wujud sosok: baik hati / harus ditakuti) untuk menunjukkan
+    KONTINGENSI narasi (dibentuk kebutuhan sosial, bukan bukti) — bukan cuma slideshow satu jalur.
+  - Catatan penutup EKSPLISIT menyebut ini satu kerangka di antara beberapa (fungsionalisme antropologi/
+    traditional ecological knowledge punya pandangan berbeda: mitos sering menyimpan pengetahuan praktis
+    nyata) — supaya tidak terbaca sebagai klaim final "semua spiritualitas = kesalahan berpikir".
+  BELUM ADA: simulasi kuantitatif (mis. model penyebaran cerita ala epidemiologi/agent-based) — kandidat kuat
+  untuk v2 kalau pengguna tertarik mengeksekusi idenya lebih matematis alih-alih naratif.
+  PENINGKATAN PANEL 3D (dari daftar 6 opsi yang ditawarkan sebelumnya — dikerjakan satu per satu sesuai pilihan
+  pengguna, bukan sekaligus):
+  1. ✅ Pencahayaan dinamis mengikuti era — selesai (lihat update3DDiorama: dusk/tension -> warna langit & intensitas).
+  2. ✅ Penyembah benar-benar BERJALAN mendekat ke kuil (bukan muncul instan) — setiap sosok di crowdPool kini
+     punya userData.start (titik jauh, dari arah desa) & userData.target (posisi akhir di dekat kuil). Saat
+     crowdN bertambah (dibandingkan T.prevCrowdN vs v.crowdN di update3DDiorama), sosok baru mulai 'walking'
+     dari start dengan easing kubik + goyang langkah (bobbing Y & rotasi Z kecil), dianimasikan di dalam loop()
+     render three.js. Saat tab 3D dibuka pertama kali / lompat era via chip, ditampilkan langsung di posisi
+     akhir tanpa animasi (flag crowdFirstUpdate) — animasi jalan cuma untuk kedatangan yang "baru terjadi",
+     bukan tiap kali diorama di-render ulang. Mundur waktu (year berkurang) = sosok langsung hilang (tak
+     dianimasikan mundur, demi kesederhanaan).
+  3. ✅ Peta penyebaran "epidemi mitos" ke desa lain — tab toggle ketiga (🦠 Sebaran), TERHUBUNG ke garis-
+     tahun yang sama dengan panel 02 (bukan simulasi terpisah). 6 simpul desa tujuan (SPREAD_NODES) menyala
+     satu-satu saat currentYear melewati year masing-masing, dengan garis penghubung ke "induk" penularnya
+     (spanning tree, bukan graf penuh). SATU simpul (Tanjung Seberang) sengaja dibuat 'independen' (garis
+     putus-putus oranye, bukan menyala dari cerita yang menyebar) untuk menunjukkan HADD bersifat universal;
+     simpul terjauh ditandai 'drift' untuk menyorot penyimpangan cerita makin jauh makin besar. Dibangun
+     lazy (ensureSpreadBuilt) saat tab pertama dibuka, lalu diperbarui tiap fullUpdate() lewat updateSpreadMap().
+  5. ✅ Potret "garis keturunan" yang menua — badge kecil pojok-kanan-atas panel (muncul di ketiga mode
+     2D/3D/Sebaran karena posisinya sibling absolute di luar container tiap mode). 1 generasi ~22 tahun;
+     wajah SVG-nya menua (rambut gelap->beruban->putih, kerutan muncul, kepala sedikit menunduk) SELAMA
+     satu generasi berjalan, lalu meremaja total begitu masuk generasi berikutnya — dengan caption singkat
+     bergilir per generasi yang menegaskan tema akresi naratif dari bagian 01.
+  4 & 6. Belum dikerjakan: suara ambient bertahap, mode bandingkan dua cabang berdampingan — kandidat
+     lanjutan, tinggal pilih salah satu.
+  PERBAIKAN (dipicu laporan pengguna "tab 3D tidak berfungsi"): tab 🧊 3D sebelumnya bisa "diam saja" tanpa
+  pesan kalau three.js gagal dimuat dari CDN atau WebGL tak didukung perangkat/browser pengguna —
+  initThree3D() sekarang dibungkus try/catch + cek `typeof THREE==='undefined'`, dan kalau gagal,
+  container-nya diisi pesan jelas + saran pindah ke tampilan 2D, alih-alih blank. update3DDiorama() juga
+  di-guard supaya tak error lanjutan kalau three3d==='failed'. Sudah diuji headless (Playwright + stub
+  THREE lokal, karena sandbox ini tak ada akses internet ke CDN sungguhan): 0 error JS saat klik antar-tab
+  & geser slider, dan fallback pesan muncul benar saat THREE disimulasikan gagal dimuat. TIDAK bisa diuji
+  WebGL sungguhan di sandbox ini — kalau isu di device pengguna ternyata bukan soal loading tapi soal
+  WebGL context ditolak (jarang, tapi mungkin di sebagian browser mobile), minta pengguna cek console browser.
+  LANJUTAN (sesi berikutnya, melanjutkan pekerjaan yang terpotong karena batas pemakaian):
+  - ✅ Bug paramDamping() DIPERBAIKI — earlyBonus lama jenuh (plateau) begitu branchYear>=30, sehingga
+    branchYear=60/100/130 menghasilkan damping identik (dikonfirmasi lewat pengujian Node.js: 0.590 di
+    ketiganya). Diganti rootStrength yang terus naik mengikuti branchYear (skala ke YEAR_MAX=140, tak
+    plateau) yang menekan effectiveFirmness — sekarang makin telat pencegahan dimulai, makin sulit
+    ditekan meski ketegasannya sama. Detail & angka pengujian ada di komentar dalam fungsi paramDamping().
+  - ✅ Bagian 07 — REFERENSI ditambahkan (sebelum footer): mengutip sumber untuk 4 kerangka yang dipakai
+    di halaman ini (HADD - Barrett 2004, agenticity/patternicity - Shermer 2011, akresi narasi/ostension -
+    Dégh & Vázsonyi 1983, falsifiabilitas - Popper 1959), dicek via web search sesi ini untuk akurasi judul
+    & tahun (bukan cuma diandalkan dari ingatan), plus catatan posisi USGS soal prekursor gempa.
+  - ✅ Konflik/gesekan terbuka DIPERBESAR & dibuat nyata terlihat (permintaan pengguna: kalau pencegahan
+    telat & cuma pemerintah sendirian tanpa kesadaran akar rumput, harus ada gesekan kuat — tapi asumsi
+    pemerintahnya kuat, jadi akhirnya berhasil menegakkan & menjaga larangan). paramClash lama diganti
+    clashPhase(): puncak & lama gesekan sekarang naik mengikuti rootStrength (skala sama dgn paramDamping,
+    diuji Node: branchYear=10 -> peak 0.24/±20th, branchYear=110 -> peak 0.57/±53th), & ambang ketegasan yg
+    cukup memicu gesekan ikut turun kalau sudah telat. Ditambahkan VISUAL baru terpisah dari ikon huru-hara
+    lama (yang meredup): barisan 4 aparat (dioGovLine di 2D, aparatPool mesh emas di 3D) berbaris masuk dari
+    luar bingkai menuju garis barikade depan kuil begitu gesekan terpicu, lalu MENETAP permanen di situ
+    (computeClashVisual) — representasi visual pemerintah yang akhirnya menang & tetap berjaga, kontras
+    dengan ikon protes yang mereda.
+  - ✅ Tombol "Ikuti Bag. 06" DIPERBAIKI (laporan pengguna: bingung apakah sudah aktif/tertekan atau belum).
+    Sebelumnya: label teksnya BERGANTI total antar dua kondisi ("Ikuti Bag. 06" ↔ "Jalur Asli") & memakai
+    class .playing yang warnanya sama persis dengan tombol Putar/Suara — jadi warna ungu tak jelas menandakan
+    "toggle ini aktif" atau cuma kebetulan mirip elemen lain. Sekarang: label dasarnya TETAP SAMA di kedua
+    kondisi ("Ikuti Bag. 06"), cuma ikon (✅/⬜) & embel-embel "(aktif)/(nonaktif)" yang berubah, class CSS
+    sendiri (.follow-on/.follow-off, tak dicampur dgn .playing), aria-pressed buat aksesibilitas, PLUS baris
+    caption terpisah di bawah tombol (#followStatus) yang menyatakan eksplisit dalam kalimat penuh sumber mana
+    yang sedang dipakai panel & diorama — supaya statusnya tak perlu ditebak dari warna saja.
+-->
+<style>
+  :root{
+    --bg:#161225; --bg2:#1f1a35; --panel:#221d3a; --panel-line:#3a3160;
+    --ink:#eee9ff; --dim:#a99fd1;
+    --myth:#c9a4ff; --myth2:#8b5cf6; --sci:#5eead4; --sci2:#22b8a3;
+    --gold:#e8c468; --warn:#f4967a;
+    --serif:'Fraunces',Georgia,serif; --sans:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:radial-gradient(circle at 20% 0%, var(--bg2), var(--bg) 60%);color:var(--ink);font-family:var(--sans);line-height:1.65;}
+  .wrap{max-width:820px;margin:0 auto;padding:0 0 60px;}
+
+  .hero{padding:38px 20px 20px;text-align:center;}
+  .hero .kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--sci);font-weight:600;}
+  .hero h1{font-family:var(--serif);font-weight:600;font-size:clamp(24px,5.4vw,34px);margin:10px 0 14px;line-height:1.25;
+    background:linear-gradient(90deg,var(--myth),var(--sci));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .hero p{color:var(--dim);font-size:14.5px;max-width:600px;margin:0 auto;}
+
+  section{margin:34px 18px 0;}
+  .card{background:var(--panel);border:1px solid var(--panel-line);border-radius:18px;padding:22px 22px 24px;}
+  h2{font-family:var(--serif);font-weight:600;font-size:19px;margin:0 0 6px;color:var(--ink);}
+  h2 .num{color:var(--sci);font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:.08em;display:block;margin-bottom:4px;}
+  .lede{color:var(--dim);font-size:13.5px;margin:0 0 16px;}
+  p{font-size:14px;color:#dcd6f5;}
+  strong{color:var(--ink);}
+  .myth-word{color:var(--myth);font-weight:600;}
+  .sci-word{color:var(--sci);font-weight:600;}
+
+  /* Section 1: dua kolom kontras */
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:520px){.duo{grid-template-columns:1fr;}}
+  .duo-card{border-radius:14px;padding:16px;font-size:13px;}
+  .duo-card.sci{background:#12352f;border:1px solid #1f5c50;}
+  .duo-card.myth{background:#2e1f47;border:1px solid #4c3572;}
+  .duo-card b{font-family:var(--serif);font-size:15px;display:block;margin-bottom:6px;}
+  .duo-card.sci b{color:var(--sci);} .duo-card.myth b{color:var(--myth);}
+  .duo-card ul{margin:6px 0 0;padding-left:18px;color:var(--dim);}
+  .duo-card li{margin-bottom:4px;}
+
+  /* Section 2: tangga interaktif */
+  .year-controls{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap;}
+  .play-btn{background:var(--sci2);color:#062622;border:none;border-radius:999px;padding:9px 16px;font-family:var(--sans);
+    font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0;}
+  .play-btn.playing{background:var(--myth2);color:#fff;}
+  /* Tombol "Ikuti Bag. 06" sengaja TIDAK memakai .playing (warna sama dgn tombol Putar/Suara bikin bingung
+     mana yang lagi menyala) — dikasih gaya sendiri yang kontras tegas antara aktif vs nonaktif, plus label
+     teksnya sendiri tetap SAMA di kedua kondisi (cuma embel-embel status yang berubah), supaya orang tak perlu
+     menghafal dua frasa berbeda untuk tahu ini toggle yang sama. */
+  .follow-btn{border:2px solid transparent;}
+  .follow-btn.follow-on{background:var(--sci);color:#062622;border-color:#0000;box-shadow:0 0 0 2px var(--sci) inset;}
+  .follow-btn.follow-off{background:transparent;color:var(--dim);border-color:var(--panel-line);}
+  .follow-status{font-size:11px;color:var(--dim);margin-top:6px;line-height:1.5;}
+  .follow-status b{color:var(--gold);}
+  .year-controls input[type=range]{flex:1;min-width:120px;accent-color:var(--gold);}
+  .year-badge{font-family:var(--serif);font-size:13px;color:var(--gold);flex-shrink:0;min-width:88px;text-align:right;}
+  .era-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .era-chip{background:#1a1530;border:1px solid var(--panel-line);border-radius:999px;padding:5px 11px;font-size:10.5px;
+    color:var(--dim);cursor:pointer;font-family:var(--sans);}
+  .era-chip.active{border-color:var(--gold);color:var(--gold);}
+  .detail-toggle{display:block;margin-top:14px;background:none;border:none;color:var(--sci);font-size:12px;
+    font-family:var(--sans);font-weight:600;cursor:pointer;padding:0;}
+  .detail-panel{margin-top:10px;}
+
+  /* Panel 3D */
+  .diorama-stage{position:relative;}
+  .viewtoggle{position:absolute;top:8px;left:8px;z-index:5;display:flex;border:1px solid var(--panel-line);border-radius:8px;overflow:hidden;}
+  .viewtoggle button{background:#1a1530cc;color:var(--dim);border:none;font-family:var(--sans);font-size:11px;font-weight:600;
+    padding:6px 11px;cursor:pointer;border-right:1px solid var(--panel-line);}
+  .viewtoggle button:last-child{border-right:none;}
+  .viewtoggle button.active{background:var(--gold);color:#1a1530;}
+  .spread-wrap{padding:2px;}
+  .spread-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:10.5px;color:var(--dim);}
+  .spread-legend span{display:flex;align-items:center;gap:5px;}
+  .spread-legend i{width:9px;height:9px;border-radius:50%;display:inline-block;}
+  .lineage-portrait{position:absolute;top:8px;right:8px;z-index:5;background:#1a1530cc;border:1px solid var(--panel-line);
+    border-radius:10px;padding:8px 8px 6px;width:106px;pointer-events:none;}
+  .view3d-hint{position:absolute;bottom:6px;right:8px;font-size:9.5px;color:#8a8fb0;z-index:5;pointer-events:none;font-family:var(--sans);}
+  #three3d{width:100%;aspect-ratio:700/380;border-radius:14px;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;overflow:hidden;}
+  #three3d.grabbing{cursor:grabbing;}
+  #three3d canvas{display:block;width:100%;height:100%;}
+  .stage-box{background:#1a1530;border:1px solid var(--panel-line);border-radius:14px;padding:18px;min-height:150px;}
+  .stage-icon{font-size:30px;}
+  .stage-title{font-family:var(--serif);font-size:17px;color:var(--gold);margin:6px 0 8px;}
+  .stage-text{font-size:13.8px;color:#e4dffc;}
+  .mechanism{margin-top:12px;background:#2a2350;border-left:3px solid var(--sci);border-radius:0 8px 8px 0;padding:8px 12px;font-size:12px;color:var(--dim);}
+  .mechanism b{color:var(--sci);}
+
+  /* Simulasi peta+timeline prekursor (Tahap 0) */
+  .precursor-sim{margin:12px 0 4px;}
+  .sim-panels{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media(max-width:520px){.sim-panels{grid-template-columns:1fr;}}
+  .sim-panel{background:#100d20;border:1px solid var(--panel-line);border-radius:12px;padding:8px;}
+  .sim-panel h4{margin:0 0 6px;font-size:10.5px;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+  .sim-panel svg{width:100%;height:auto;display:block;}
+  @keyframes simPulse{0%{opacity:.55;r:6;}70%{opacity:0;}100%{opacity:0;}}
+  .pulse-ring{animation:simPulse 1.4s ease-out infinite;transform-origin:center;}
+  @keyframes simWiggle{0%,100%{transform:rotate(-6deg);}50%{transform:rotate(6deg);}}
+  .wiggle{animation:simWiggle 1s ease-in-out infinite;transform-box:fill-box;transform-origin:center;}
+  .sim-timeline{margin-top:12px;}
+  .sim-timeline input[type=range]{width:100%;accent-color:var(--gold);}
+  .sim-tlabels{display:flex;justify-content:space-between;font-size:10px;color:var(--dim);margin-top:2px;}
+  .sim-markers{position:relative;height:34px;margin-top:4px;}
+  .sim-marker{position:absolute;top:0;transform:translateX(-50%);font-size:9px;color:var(--sci);white-space:nowrap;
+    border-bottom:1px dotted var(--sci);cursor:help;max-width:90px;overflow:hidden;text-overflow:ellipsis;}
+  .sim-marker.behavior{color:var(--myth);border-color:var(--myth);}
+  .sim-marker.main{color:var(--warn);border-color:var(--warn);font-weight:700;}
+  .sim-readout{display:flex;justify-content:space-between;align-items:center;margin-top:14px;font-size:11.5px;color:var(--dim);gap:8px;}
+  .severity-bar-track{flex:1;height:10px;background:#2a2350;border-radius:6px;overflow:hidden;}
+  .severity-bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,#5eead4,#e8c468,#f4967a);width:0%;transition:width .15s;}
+  .sim-caveat{font-size:11px;color:var(--dim);margin-top:10px;border-top:1px dashed var(--panel-line);padding-top:8px;}
+  .sim-caveat b{color:var(--warn);}
+  .branch-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+  .branch-btn{flex:1;min-width:130px;background:#2a2350;border:1px solid var(--panel-line);border-radius:10px;padding:9px 10px;
+    color:var(--ink);font-size:12.5px;cursor:pointer;font-family:var(--sans);font-weight:600;}
+  .branch-btn:hover{border-color:var(--gold);}
+  .branch-btn.chosen{border-color:var(--gold);background:#3a2f1f;}
+
+  /* Section 06: pengandaian — model parametrik (slider + checklist) */
+  .param-panel{margin-top:14px;background:#1a1530;border:1px solid var(--panel-line);border-radius:14px;padding:14px 16px;}
+  .param-row{margin-bottom:14px;}
+  .param-row:last-child{margin-bottom:0;}
+  .param-row > label{display:block;font-size:12.5px;color:var(--ink);margin-bottom:6px;}
+  .param-row input[type="range"]{width:100%;}
+  .param-checks{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:#cfc9ef;}
+  .param-checks label{display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:400;}
+  .micro-track{position:relative;height:20px;margin:2px 4px 0;}
+  .micro-dot{position:absolute;top:0;width:16px;height:16px;transform:translateX(-50%);border-radius:50%;
+    background:#2a2350;border:1px solid var(--panel-line);font-size:9px;line-height:14px;text-align:center;
+    cursor:pointer;padding:0;color:var(--ink);}
+  .micro-dot:hover, .micro-dot.active{border-color:var(--gold);background:#3a2f1f;}
+  .micro-note{font-size:11px;color:var(--dim);min-height:15px;margin:5px 4px 0;font-style:italic;line-height:1.4;}
+  .compare-wrap{margin-top:20px;border-top:1px solid var(--panel-line);padding-top:16px;}
+  .compare-heading{font-family:var(--serif);font-size:14px;color:var(--gold);margin:0 0 4px;}
+  .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media(max-width:640px){.compare-grid{grid-template-columns:1fr;}}
+  .compare-col{background:#1a1530;border:1px solid var(--panel-line);border-radius:12px;padding:12px;}
+  .compare-col h4{margin:0 0 6px;font-family:var(--serif);font-size:13px;color:var(--gold);}
+  .cc-meter{height:6px;border-radius:3px;background:#2a2350;overflow:hidden;margin:8px 0 4px;}
+  .cc-meter-fill{height:100%;background:linear-gradient(90deg,#5eead4,#e8c468);}
+  .scenario-result{margin-top:16px;background:#1a1530;border:1px solid var(--panel-line);border-radius:14px;padding:16px;}
+  .sres-title{font-family:var(--serif);font-size:14.5px;color:var(--gold);margin:0 0 12px;}
+  .sres-step{display:flex;gap:10px;margin-bottom:12px;}
+  .sres-step:last-child{margin-bottom:0;}
+  .sres-when{flex-shrink:0;width:80px;font-size:11px;color:var(--sci);font-family:var(--serif);padding-top:1px;}
+  .sres-text{font-size:13px;color:#e4dffc;}
+  .scenario-empty{font-size:12.5px;color:var(--dim);font-style:italic;padding:6px 0;}
+
+  /* Section falsifiabilitas */
+  .fals-wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:520px){.fals-wrap{grid-template-columns:1fr;}}
+  .fals-wrap svg{width:100%;height:auto;}
+  .fals-cap{font-size:11.5px;color:var(--dim);text-align:center;margin-top:6px;}
+
+  /* Section galeri */
+  .gallery{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:560px){.gallery{grid-template-columns:1fr;}}
+  .g-card{background:#1a1530;border:1px solid var(--panel-line);border-radius:14px;padding:14px 15px;cursor:pointer;position:relative;}
+  .g-card .g-title{font-family:var(--serif);font-size:14.5px;color:var(--gold);margin-bottom:4px;}
+  .g-card .g-real{font-size:12px;color:var(--sci);margin-bottom:4px;}
+  .g-card .g-myth{font-size:12px;color:var(--myth);display:none;}
+  .g-card.flipped .g-real{display:none;}
+  .g-card.flipped .g-myth{display:block;}
+  .g-card .g-hint{font-size:10px;color:var(--dim);margin-top:8px;font-style:italic;}
+  .g-card.func{border-color:#2f6b3f;}
+  .g-note{font-size:11px;color:#8fd4a0;margin-top:6px;}
+
+  /* Dua sisi mata pisau */
+  .blade{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:520px){.blade{grid-template-columns:1fr;}}
+  .blade-card{border-radius:14px;padding:16px;font-size:13px;}
+  .blade-card.plus{background:#12352f;border:1px solid #1f5c50;}
+  .blade-card.minus{background:#3a1f28;border:1px solid #63313f;}
+  .blade-card b{font-family:var(--serif);font-size:14.5px;display:block;margin-bottom:6px;}
+  .blade-card.plus b{color:var(--sci);} .blade-card.minus b{color:var(--warn);}
+  .blade-card ul{margin:4px 0 0;padding-left:18px;color:var(--dim);}
+  .blade-card li{margin-bottom:6px;}
+
+  .closing{font-size:12.5px;color:var(--dim);border-top:1px dashed var(--panel-line);padding-top:14px;margin-top:18px;}
+  .closing b{color:var(--gold);}
+  footer{text-align:center;color:#6b6190;font-size:11px;margin:30px 18px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="kicker">Esai Interaktif</div>
+    <h1>Mesin Mistikasi: Bagaimana Sains yang Kehilangan Sebab-Akibat Berubah Jadi Mitos</h1>
+    <p>Banyak mitos besar berawal dari pengamatan yang sebenarnya benar. Yang berubah bukan datanya — tapi
+      penjelasannya. Dan begitu penjelasan itu lepas dari mekanisme yang bisa diuji, tidak ada lagi yang
+      menahannya untuk terus membesar.</p>
+  </div>
+
+  <section>
+    <div class="card">
+      <h2><span class="num">01 — TITIK PISAH</span>Sains berbatas, mitos tidak</h2>
+      <p class="lede">Bedanya bukan "mana yang benar" di titik awal — di titik awal, keduanya sama-sama berangkat
+        dari pengamatan nyata. Bedanya ada pada apa yang terjadi <em>setelah</em> pengamatan itu diberi penjelasan.</p>
+      <div class="duo">
+        <div class="duo-card sci">
+          <b>🔬 Jalur Sains</b>
+          <ul>
+            <li>Penjelasan harus bisa <strong>disalahkan</strong> oleh pengamatan lain (kriteria falsifiabilitas, Karl Popper).</li>
+            <li>Kalau ramalan meleset, teorinya direvisi atau dibuang.</li>
+            <li>Karena bisa dikoreksi, ia <strong>berhenti tumbuh</strong> begitu mendekati penjelasan yang cocok dengan data.</li>
+          </ul>
+        </div>
+        <div class="duo-card myth">
+          <b>🌫️ Jalur Mistikasi</b>
+          <ul>
+            <li>Penjelasan berupa niat/kehendak sosok gaib — klaim jenis ini <strong>hampir tak mungkin diuji-salahkan</strong>.</li>
+            <li>Kalau ramalan meleset, itu bukan bukti sosoknya tak ada — biasanya malah ditafsir "sedang murka" atau "diuji kesetiaan".</li>
+            <li>Karena tak pernah benar-benar disalahkan, ceritanya <strong>bebas menumpuk</strong> — detail baru ditambah tiap diceritakan ulang.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="card">
+      <h2><span class="num">02 — SIMULASI</span>Tanjung Legenda dari Masa ke Masa</h2>
+      <p class="lede">Satu adegan yang sama, berubah pelan-pelan seiring <b>waktu</b> — bukan kartu-kartu terpisah.
+        Tekan ▶ untuk melihatnya "hidup", atau geser sendiri garis tahunnya. Kasus ini <strong>fiktif</strong>
+        (Tanjung Legenda), model generik supaya polanya kelihatan jelas.</p>
+
+      <div class="diorama-stage" id="dioramaStage">
+        <div class="viewtoggle">
+          <button id="btn2d" class="active">🗺️ 2D</button>
+          <button id="btn3d">🧊 3D</button>
+          <button id="btnSpread">🦠 Sebaran</button>
+        </div>
+        <div class="view3d-hint" id="view3dHint" style="display:none;">drag = putar &middot; scroll/cubit = zoom</div>
+        <div class="lineage-portrait" id="lineagePortrait"></div>
+
+        <svg id="diorama" viewBox="0 0 700 380" xmlns="http://www.w3.org/2000/svg" style="width:100%;border-radius:14px;background:#0d2438;display:block;">
+        <rect width="700" height="380" fill="#0d2438"/>
+        <rect y="230" width="700" height="150" fill="#123a52"/>
+        <path d="M0,260 Q140,190 260,250 L260,380 L0,380 Z" fill="#2a5c3a"/>
+        <path d="M700,270 Q560,210 470,255 L470,380 L700,380 Z" fill="#274f34"/>
+
+        <text x="340" y="255" font-size="20" text-anchor="middle">🚣</text>
+        <circle id="dioRing1" class="pulse-ring" cx="230" cy="248" r="7" fill="none" stroke="#5eead4" stroke-width="2"/>
+        <circle id="dioRing2" class="pulse-ring" cx="230" cy="248" r="7" fill="none" stroke="#5eead4" stroke-width="2" style="animation-delay:.5s;"/>
+
+        <g id="dioMarker" opacity="0">
+          <rect x="215" y="215" width="10" height="26" fill="#8a7c6f" rx="2"/>
+          <text x="220" y="204" font-size="13" text-anchor="middle">🕯️</text>
+        </g>
+        <text id="dioSmoke" x="220" y="196" font-size="12" text-anchor="middle" opacity="0">💨</text>
+
+        <g id="dioFigure" opacity="0">
+          <ellipse cx="220" cy="185" rx="15" ry="25" fill="#c9a4ff"/>
+          <circle cx="220" cy="152" r="9" fill="#e4dffc"/>
+        </g>
+
+        <g id="dioShrine" opacity="0">
+          <g id="dioShrineInner" transform="translate(220,192) scale(0)">
+            <rect x="-38" y="-8" width="76" height="30" fill="#4c3572" rx="4"/>
+            <path d="M-44,-8 L0,-38 L44,-8 Z" fill="#6a4c72"/>
+          </g>
+        </g>
+        <g id="dioCrowd"></g>
+
+        <g id="dioRival" opacity="0">
+          <g id="dioRivalInner" transform="translate(560,235) scale(0)">
+            <rect x="-30" y="-8" width="60" height="28" fill="#5c2f3a" rx="4"/>
+            <path d="M-35,-8 L0,-32 L35,-8 Z" fill="#7a3a44"/>
+            <ellipse cx="0" cy="-14" rx="12" ry="19" fill="#ff9f9f"/>
+          </g>
+        </g>
+        <text id="dioTension" x="390" y="195" font-size="22" text-anchor="middle" opacity="0">⚡</text>
+
+        <rect id="dioClashFlash" x="0" y="0" width="700" height="380" fill="#ff2d2d" opacity="0"/>
+        <g id="dioClash" opacity="0">
+          <text x="150" y="80" font-size="20">🔥</text>
+          <text x="500" y="70" font-size="20">🔥</text>
+          <text x="220" y="300" font-size="20">✊</text>
+          <text x="420" y="310" font-size="20">✊</text>
+          <text x="330" y="55" font-size="20">🚨</text>
+          <text x="600" y="270" font-size="18">⚠️</text>
+          <text x="100" y="260" font-size="18">⚠️</text>
+        </g>
+
+        <!-- Barikade aparat: baris ini "berbaris masuk" dari luar bingkai bawah menuju garis di depan kuil
+             begitu gesekan (clashPhase) terpicu, lalu MENETAP di sana (lihat computeClashVisual) — representasi
+             visual konkret dari "pemerintah kuat, akhirnya berhasil menegakkan & menjaga larangan", terpisah dari
+             ikon huru-hara di atas yang justru meredup begitu gesekannya reda. -->
+        <g id="dioGovLine" opacity="0">
+          <text font-size="17" text-anchor="middle">🛡️</text>
+          <text font-size="17" text-anchor="middle">🛡️</text>
+          <text font-size="17" text-anchor="middle">🛡️</text>
+          <text font-size="17" text-anchor="middle">🛡️</text>
+        </g>
+        <text id="dioGovLabel" x="220" y="312" font-size="9" fill="#e8c468" font-family="Inter" text-anchor="middle" opacity="0">🚧 penjagaan bertahan di titik ini</text>
+
+        <g id="dioScenarioBadge" opacity="0">
+          <rect x="600" y="12" width="88" height="26" rx="13" fill="#1a1530cc" stroke="#3a3160"/>
+          <text id="dioScenarioIcon" x="616" y="30" font-size="15" text-anchor="middle">🔬</text>
+          <text id="dioScenarioLabel" x="652" y="29" font-size="9" fill="#e8c468" font-family="Inter" text-anchor="start">Pengandaian</text>
+        </g>
+        </svg>
+        <div id="three3d" style="display:none;"></div>
+        <div id="spreadMapWrap" style="display:none;"></div>
+      </div>
+
+      <div class="year-controls">
+        <button class="play-btn" id="playBtn">▶ Putar</button>
+        <input type="range" id="yearSlider" min="0" max="140" step="1" value="0">
+        <span class="year-badge" id="yearBadge">Tahun ke-0</span>
+        <button class="play-btn" id="soundBtn" style="margin-left:6px;">🔈 Suara</button>
+        <button class="play-btn follow-btn follow-on" id="followBtn" style="margin-left:6px;" aria-pressed="true">
+          <span id="followBtnIcon">✅</span> <span id="followBtnText">Ikuti Bag. 06</span>
+        </button>
+      </div>
+      <div class="follow-status" id="followStatus"></div>
+      <div class="micro-track" id="microTrack"></div>
+      <div class="micro-note" id="microNote">Titik-titik kecil di atas = detail sampingan sepanjang garis waktu yang sama — ketuk untuk lompat & baca.</div>
+      <div class="era-chips" id="eraChips"></div>
+
+      <div class="stage-box" id="capBox" style="margin-top:14px;"></div>
+
+      <button class="detail-toggle" id="detailToggle">🔬 Lihat data ilmiah di balik "fenomena asli" ini →</button>
+      <div class="detail-panel" id="detailPanel" style="display:none;"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="card">
+      <h2><span class="num">03 — MENGAPA TAK BERBATAS</span>Lingkaran vs Spiral Terbuka</h2>
+      <p class="lede">Sains punya jalur umpan-balik yang memangkas kesalahan. Mitos tidak — setiap generasi cuma
+        menambah lapisan baru di atas lapisan sebelumnya.</p>
+      <div class="fals-wrap">
+        <div>
+          <svg viewBox="0 0 260 220" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="130" cy="110" r="78" fill="none" stroke="#5eead4" stroke-width="3"/>
+            <text x="130" y="45" text-anchor="middle" fill="#5eead4" font-size="12" font-family="Inter">Amati</text>
+            <text x="215" y="115" text-anchor="middle" fill="#5eead4" font-size="12" font-family="Inter">Uji</text>
+            <text x="130" y="182" text-anchor="middle" fill="#f4967a" font-size="12" font-family="Inter">Jika salah:</text>
+            <text x="130" y="196" text-anchor="middle" fill="#f4967a" font-size="11" font-family="Inter">revisi/buang</text>
+            <text x="46" y="115" text-anchor="middle" fill="#5eead4" font-size="12" font-family="Inter">Ramal</text>
+            <path d="M175 55 A78 78 0 0 1 208 108" fill="none" stroke="#5eead4" stroke-width="2" marker-end="url(#arrS)"/>
+            <path d="M208 132 A78 78 0 0 1 172 172" fill="none" stroke="#5eead4" stroke-width="2" marker-end="url(#arrS)"/>
+            <path d="M92 172 A78 78 0 0 1 60 130" fill="none" stroke="#f4967a" stroke-width="2" marker-end="url(#arrW)"/>
+            <path d="M58 92 A78 78 0 0 1 88 56" fill="none" stroke="#5eead4" stroke-width="2" marker-end="url(#arrS)"/>
+            <defs>
+              <marker id="arrS" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5eead4"/></marker>
+              <marker id="arrW" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#f4967a"/></marker>
+            </defs>
+          </svg>
+          <div class="fals-cap">Sains: lingkaran tertutup — kesalahan memangkas balik ke titik amati.</div>
+        </div>
+        <div>
+          <svg viewBox="0 0 260 220" xmlns="http://www.w3.org/2000/svg">
+            <path d="M130 110 m0,-10 a10,10 0 1,1 -0.1,0 m5,-22 a32,32 0 1,1 -0.3,0 m8,-30 a54,54 0 1,1 -0.4,0 m10,-38 a76,76 0 1,1 -0.5,0"
+              fill="none" stroke="#c9a4ff" stroke-width="3" stroke-linecap="round"/>
+            <text x="130" y="113" text-anchor="middle" fill="#e8c468" font-size="9" font-family="Inter">fenomena</text>
+            <text x="150" y="80" text-anchor="middle" fill="#c9a4ff" font-size="9" font-family="Inter">+ sosok</text>
+            <text x="175" y="45" text-anchor="middle" fill="#c9a4ff" font-size="9" font-family="Inter">+ hierarki</text>
+            <text x="205" y="15" text-anchor="middle" fill="#c9a4ff" font-size="9" font-family="Inter">+ rivalitas...</text>
+          </svg>
+          <div class="fals-cap">Mitos: spiral terbuka — tiap generasi menambah lapisan, tak ada yang memangkas.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="card">
+      <h2><span class="num">04 — LINTAS BUDAYA</span>Pola yang sama, muncul di tempat yang sangat berbeda</h2>
+      <p class="lede">Ketuk kartu untuk melihat mistikasinya. Polanya konsisten: fenomena nyata → penjelasan yang
+        tak bisa diuji → dipercaya turun-temurun.</p>
+      <div class="gallery" id="gallery"></div>
+      <p class="g-note" style="margin-top:10px;">🌿 Kartu hijau di atas adalah pengecualian menarik: kadang mistikasi
+        justru <em>berkorelasi dengan hasil nyata yang baik</em> — bukan berarti mekanismenya benar, tapi larangan
+        sakral itu kebetulan menghasilkan efek konservasi yang beneran terukur (dibahas lebih jauh di bagian 05).</p>
+      <p style="margin-top:12px;font-size:12.5px;color:var(--dim);">Pola yang digambarkan pengguna sendiri di awal
+        percakapan ini — deteksi tanda-tanda alam sebelum gempa/tsunami di pesisir yang berkembang jadi legenda
+        penguasa laut — punya kemiripan dengan folklor <strong>Ratu Pantai Selatan</strong> di pesisir selatan
+        Jawa. Penting dicatat: bagi masyarakat yang menghayatinya, narasi itu dimaknai jauh lebih kaya secara
+        budaya dan spiritual daripada sekadar "kesalahan logika" — kerangka di halaman ini cuma menyorot satu
+        lapisan mekanisme kognitifnya, bukan mengklaim menghakimi kebenarannya.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="card">
+      <h2><span class="num">05 — DUA SISI MATA PISAU</span>Apakah ini selalu buruk?</h2>
+      <p class="lede">Ini bagian yang membuat pertanyaan pengguna menarik — jawabannya tidak hitam-putih.</p>
+      <div class="blade">
+        <div class="blade-card plus">
+          <b>+ Sisi yang membantu</b>
+          <ul>
+            <li>Larangan sakral bisa membuat orang menjaga perilaku baik (tidak mencemari laut, tidak menebang
+              hutan tertentu) tanpa perlu memahami sains di baliknya — ongkos penyampaiannya jauh lebih murah
+              daripada edukasi ilmiah panjang.</li>
+            <li>Memperkuat identitas & kohesi sosial suatu komunitas.</li>
+            <li>Beberapa larangan sakral, secara kebetulan atau tidak, memang berkorelasi dengan pelestarian
+              ekosistem nyata (riset etnobiologi tentang "hutan/mata air keramat" di berbagai negara).</li>
+          </ul>
+        </div>
+        <div class="blade-card minus">
+          <b>− Sisi yang berisiko</b>
+          <ul>
+            <li>Karena tak berbatas, sekali narasi mulai tumbuh ia sulit dihentikan — termasuk berkembang jadi
+              klaim yang makin sulit diverifikasi.</li>
+            <li>Bisa menghambat penelitian sungguhan: alat pemantau gempa/tsunami kadang ditolak dipasang di
+              situs yang dianggap keramat karena takut "mengganggu penunggu".</li>
+            <li>Begitu identitas kelompok melekat pada narasi sakral, mengkritik narasinya terasa seperti
+              menyerang kelompoknya sendiri — inilah akar rivalitas antar-kelompok yang disinggung di awal
+              percakapan ini: masing-masing meyakini sosoknya paling berkuasa/paling asli.</li>
+            <li>Rentan dimanfaatkan pihak yang mengklaim "punya akses" ke sosok tersebut demi kekuasaan atau
+              keuntungan pribadi.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="closing">
+        <b>Catatan jujur:</b> kerangka di halaman ini (deteksi-agen berlebih, akresi narasi, falsifiabilitas)
+        adalah satu lensa dari psikologi kognitif agama dan folklore studies — bukan kesimpulan final tentang
+        asal-usul semua spiritualitas. Antropologi fungsionalis (dari Malinowski hingga riset modern soal
+        pengetahuan ekologi tradisional) justru menyoroti bahwa banyak narasi semacam ini menyimpan pengetahuan
+        praktis nyata yang teruji lewat generasi, terlepas dari akurasi mekanistiknya. Dan bagi banyak orang,
+        makna spiritual sebuah narasi jauh melampaui pertanyaan "benar secara mekanistik atau tidak". Halaman
+        ini dimaksudkan sebagai alat berpikir kritis tentang <em>bagaimana</em> narasi tanpa mekanisme yang bisa
+        diuji cenderung tumbuh tanpa batas — bukan untuk menghakimi keyakinan siapa pun.
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="card">
+      <h2><span class="num">06 — PENGANDAIAN</span>Kalau Jalannya Beda, Apa yang Berubah?</h2>
+      <p class="lede">Bukan lagi pilih dari kartu tetap — geser & centang variabelnya sendiri: kapan mulai dicegah,
+        seberapa tegas caranya, siapa saja yang terlibat, dan lewat cara apa. Kombinasinya jauh lebih luas
+        daripada beberapa preset; hasilnya selalu tampil di mode banding di bawah, dan ikut tampil di panel
+        timeline pada bagian 02 selama tombol "🔀 Ikuti Bag. 06" di sana dinyalakan — jadi Anda bisa menata
+        parameternya dulu tanpa langsung mengubah tampilan di atas. Bukan ramalan pasti, cuma pola yang sering
+        berulang pada kasus-kasus serupa di dunia nyata.</p>
+
+      <div class="param-panel">
+        <div class="param-row">
+          <label>⏳ Kapan mulai dicegah — <span id="pBranchYearLabel">Tahun ke-20</span></label>
+          <input type="range" id="pBranchYear" min="0" max="140" step="1" value="20">
+        </div>
+        <div class="param-row">
+          <label>🎚️ Ketegasan pendekatan — <span id="pFirmnessLabel">Sedang</span></label>
+          <input type="range" id="pFirmness" min="0" max="100" step="1" value="50">
+        </div>
+        <div class="param-row">
+          <label>👥 Siapa yang mencegah (centang minimal satu)</label>
+          <div class="param-checks">
+            <label><input type="checkbox" id="pGov"> 🏛️ Pemerintah</label>
+            <label><input type="checkbox" id="pFamily" checked> 👪 Keluarga</label>
+            <label><input type="checkbox" id="pCommunity"> 🏘️ Masyarakat sekitar</label>
+          </div>
+        </div>
+        <div class="param-row" id="methodRow">
+          <label>🗣️ Cara pendekatannya (keluarga/masyarakat)</label>
+          <div class="param-checks">
+            <label><input type="radio" name="pMethod" value="empat-mata" checked> 🤝 Empat mata</label>
+            <label><input type="radio" name="pMethod" value="musyawarah"> 🗣️ Musyawarah/kajian</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="scenario-result" id="scenarioResult">
+        <div class="scenario-empty">Atur parameter di atas untuk melihat kemungkinan arah ceritanya.</div>
+      </div>
+      <div style="margin-top:14px;">
+        <button class="detail-toggle" id="exportBtn">⬇ Unduh ringkasan jalur ini (.txt)</button>
+        <span id="exportStatus" style="font-size:11px;color:var(--dim);margin-left:8px;"></span>
+        <textarea id="exportTextarea" readonly style="display:none;width:100%;min-height:140px;margin-top:10px;
+          background:#140f24;border:1px solid var(--panel-line);border-radius:10px;color:var(--ink);
+          font-family:var(--sans);font-size:11.5px;padding:10px;"></textarea>
+      </div>
+
+      <div class="compare-wrap">
+        <h3 class="compare-heading">🆚 Mode Banding: Jalur Asli vs Hasil Parameter</h3>
+        <p style="font-size:12px;color:var(--dim);margin:0 0 10px;">Kolom kanan otomatis memakai parameter yang diatur di atas — geser slider tahun ini untuk menelusuri kedua jalur berdampingan.</p>
+        <input type="range" id="compareYear" min="0" max="140" step="1" value="70" style="width:100%;">
+        <div class="micro-note" id="compareYearBadge" style="margin:4px 0 12px;">Tahun ke-70</div>
+        <div class="compare-grid" id="compareGrid"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="card">
+      <h2><span class="num">07 — REFERENSI</span>Kerangka ini bukan opini pribadi</h2>
+      <p class="lede">Empat gagasan dipakai berulang kali di halaman ini (deteksi-agen berlebih, akresi narasi lewat
+        pengulangan/ostension, & falsifiabilitas sebagai pembeda sains vs mitos). Berikut sumbernya, supaya bisa
+        ditelusuri & dicek sendiri alih-alih diterima begitu saja.</p>
+      <ol style="font-size:13px;color:var(--dim);padding-left:20px;margin:14px 0 0;">
+        <li style="margin-bottom:10px;"><b style="color:var(--ink);">Deteksi-agen berlebih (HADD)</b> — Barrett,
+          J. L. (2004). <i>Why Would Anyone Believe in God?</i> AltaMira Press. Istilah "Hyperactive Agency
+          Detection Device" dari buku ini: otak manusia condong mendeteksi "ada agen/niat di balik pola" karena
+          secara evolusi lebih aman over-detect (mengira gerisik semak adalah predator) daripada alpa.</li>
+        <li style="margin-bottom:10px;"><b style="color:var(--ink);">"Agenticity" & "patternicity"</b> — Shermer,
+          M. (2011). <i>The Believing Brain.</i> Times Books/Henry Holt. Istilah populer untuk kecenderungan yang
+          sama: otak dulu mencari pola (patternicity), lalu menyisipkan niat/agen ke pola itu (agenticity).</li>
+        <li style="margin-bottom:10px;"><b style="color:var(--ink);">Akresi narasi lewat pengulangan (ostension)</b>
+          — Dégh, L., & Vázsonyi, A. (1983). "Does the Word 'Dog' Bite? Ostensive Action: A Means of
+          Legend-Telling." <i>Journal of Folklore Research</i>, 20, 5–34. Dasar akademik untuk pola "cerita lisan
+          menumpuk detail tiap diceritakan ulang" yang dipakai di bagian 03 — folklorist menyebutnya ostension:
+          narasi & tindakan nyata saling membentuk, tanpa mekanisme koreksi baku.</li>
+        <li style="margin-bottom:10px;"><b style="color:var(--ink);">Falsifiabilitas</b> — Popper, K. (1959).
+          <i>The Logic of Scientific Discovery.</i> Hutchinson & Co. (terjemahan Inggris dari <i>Logik der
+          Forschung</i>, 1934). Kriteria inti bagian 01: teori ilmiah harus bisa disalahkan oleh pengamatan,
+          sedangkan klaim mistik biasanya dirancang (sengaja atau tidak) supaya tak pernah bisa disalahkan.</li>
+        <li style="margin-bottom:0;"><b style="color:var(--ink);">Prekursor gempa (bagian 03, simulasi)</b> — posisi
+          resmi <i>United States Geological Survey</i> (USGS): belum ada bukti ilmiah kuat bahwa perilaku hewan
+          bisa dipakai memprediksi gempa secara andal — dipakai sebagai catatan jujur di penutup simulasi, bukan
+          klaim bahwa semua laporan prekursor pasti keliru.</li>
+      </ol>
+      <p style="font-size:12px;color:var(--dim);margin-top:14px;">Catatan: antropologi fungsionalis/traditional
+        ecological knowledge yang disinggung di bagian 05 sebagai kerangka pembanding bukan diringkas dari satu
+        rujukan tunggal di sini — itu tradisi riset luas (titik awalnya sering ditelusuri ke Bronisław Malinowski,
+        awal abad ke-20), disebut sebagai penyeimbang, bukan sebagai sumber yang dikutip persis.</p>
+    </div>
+  </section>
+
+  <footer>Dibuat sebagai eksplorasi ide, bukan makalah akademik — silakan dikembangkan lebih jauh.</footer>
+</div>
+
+<script>
+/* ================= TANGGA MISTIKASI ================= */
+const STAGES = [
+  {
+    icon:'🌊', title:'Tahap 0 — Fenomena Asli', yearStart:0,
+    text:'Nelayan di Tanjung Legenda memperhatikan air laut surut secara aneh dan kawanan ikan mendadak menghindar dari perairan dangkal menjelang gempa besar. Pola ini terulang beberapa kali — dan akan terus terulang di sepanjang garis waktu ini, apa pun cerita yang nanti dilekatkan padanya.',
+    mech:'Ini murni <b>korelasi yang bisa diverifikasi berulang</b> — hewan & tanah memang bisa bereaksi pada perubahan fisik sebelum gempa besar. Belum ada mistikasi di titik ini.'
+  },
+  {
+    icon:'🧭', title:'Tahap 1 — Kesalahan Atribusi Sebab-Akibat', yearStart:8,
+    text:'Alih-alih meneliti mekanisme fisiknya, warga menyimpulkan: "tanjung inilah yang tahu duluan." Bukan proses getaran & tekanan yang jadi sebab — melainkan tempatnya sendiri yang dianggap punya kekuatan.',
+    mech:'<b>Post hoc ergo propter hoc</b> — korelasi disalahartikan sebagai kausalitas. Ini bentuk mistikasi paling sederhana: menyandarkan akibat pada sesuatu yang bukan sebabnya.'
+  },
+  {
+    icon:'🚫', title:'Tahap 2 — Sakralisasi', yearStart:20,
+    text:'Karena "ramalannya" selalu benar, tempat itu mulai dijaga. Orang tak boleh sembarangan mendekat, dan sebelum melaut warga mulai membuat sesaji kecil di sana.',
+    mech:'<b>Hyperactive Agency Detection / HADD</b> (Justin Barrett) — otak manusia cenderung mendeteksi "ada agen/niat" di balik pola yang sebenarnya netral, karena secara evolusi lebih aman over-detect ketimbang alpa terhadap ancaman/predator.'
+  },
+  {
+    icon:'👤', title:'Tahap 3 — Personifikasi', yearStart:35,
+    text:'Muncul cerita: ada yang pernah melihat sosok di tanjung itu. Mula-mula samar — bayangan, suara — lalu makin detail tiap diceritakan ulang, dari satu generasi nelayan ke generasi berikutnya.',
+    mech:'<b>Akresi naratif</b> (folklore studies) — cerita lisan menumpuk detail baru tiap diceritakan ulang, karena tak ada mekanisme yang mengoreksi tambahan itu.',
+    branch:true
+  },
+  {
+    icon:'👑', title:'Tahap 4 — Ekspansi Domain & Hierarki', yearStart:55,
+    text:'Karena penting bagi seluruh desa, sosok itu "naik pangkat" — bukan lagi sekadar penjaga tanjung, tapi penguasa seluruh pesisir, pemberi rezeki melaut, pengatur nasib nelayan satu wilayah. Kuilnya pun ikut membesar, dan makin banyak orang datang bersembah.',
+    mech:'Elaborasi budaya mengikuti kebutuhan sosial: makin penting domainnya bagi kehidupan komunitas, makin besar "kuasa" yang dilekatkan — dan karena tak ada tes yang bisa mengoreksi klaim ini, tak ada batas alami tempat elaborasi ini berhenti.'
+  },
+  {
+    icon:'⚔️', title:'Tahap 5 — Rivalitas Antar-Narasi', yearStart:90,
+    text:'Beberapa generasi kemudian, desa tetangga di tanjung seberang punya kisah serupa dengan sosok berbeda. Masing-masing meyakini sosoknya yang paling berkuasa, paling asli — muncul gesekan sosial tiap kali satu pihak merasa keyakinannya "diremehkan".',
+    mech:'Bias in-group/out-group terhadap simbol sakral — begitu identitas kelompok melekat pada sebuah narasi, mempertanyakannya terasa seperti menyerang kelompok itu sendiri, bukan lagi sekadar beda pendapat.'
+  },
+];
+const YEAR_MAX = 140;
+let currentYear = 0;
+let branchChoice = null;
+let playing = false, rafId2 = null, lastTs2 = 0;
+let followParams = true; // sakelar panel 02: ikuti parameter pengandaian bagian 06, atau tetap di jalur asli
+
+/* ================= 06: PENGANDAIAN (MODEL PARAMETRIK) =================
+   Sebelumnya 5 kartu skenario tetap — sekarang dirapikan jadi variabel yang bisa digeser/dicentang bebas,
+   supaya kombinasinya jauh lebih luas daripada 5 preset: kapan (slider tahun), ketegasan (slider 0-100),
+   siapa yang mencegah (checklist: pemerintah/keluarga/masyarakat), & cara pendekatannya (empat mata vs
+   musyawarah/kajian — relevan kalau bukan pemerintah sendirian). Semua fungsi damping/huru-hara/narasi di
+   bawah ini murni fungsi dari parameter tsb, jadi panel utama (capBox), diorama 2D/3D, mode banding, & ekspor
+   ringkasan semuanya otomatis ikut berubah begitu parameternya digeser — tak perlu didaftar satu-satu lagi. */
+const BRANCH_YEAR = 20; // dipakai sebagai default titik cabang saat pengandaian belum/nonaktif
+function currentParams(){
+  return {
+    branchYear: Number(document.getElementById('pBranchYear').value),
+    firmness: Number(document.getElementById('pFirmness').value)/100,
+    gov: document.getElementById('pGov').checked,
+    family: document.getElementById('pFamily').checked,
+    community: document.getElementById('pCommunity').checked,
+    method: (document.querySelector('input[name="pMethod"]:checked') || {value:'empat-mata'}).value
+  };
+}
+function paramsActive(p){ return p.gov || p.family || p.community; }
+function describeWho(p){
+  const parts = [];
+  if(p.gov) parts.push('pemerintah');
+  if(p.family) parts.push('keluarga');
+  if(p.community) parts.push('masyarakat sekitar');
+  if(parts.length===0) return 'tak ada pihak';
+  if(parts.length===1) return parts[0];
+  if(parts.length===2) return parts[0]+' bersama '+parts[1];
+  return parts[0]+', '+parts[1]+', & '+parts[2]+' bersama-sama';
+}
+function describeMethod(p){
+  if(p.gov && !p.family && !p.community) return '';
+  return p.method==='musyawarah' ? ' lewat musyawarah/kajian terbuka' : ' empat mata, dari hati ke hati';
+}
+function firmnessLabel(v100){
+  if(v100<20) return 'Sangat lembut & persuasif';
+  if(v100<40) return 'Lembut, ajakan halus';
+  if(v100<60) return 'Sedang — tegas tapi dialogis';
+  if(v100<80) return 'Tegas, ada konsekuensi jelas';
+  return 'Sangat tegas & memaksa';
+}
+function firmnessClause(v){
+  if(v<0.2) return 'dengan cara paling lembut & persuasif, tanpa ancaman sama sekali';
+  if(v<0.4) return 'dengan ajakan yang masih cukup halus';
+  if(v<0.6) return 'dengan cukup tegas, tapi masih membuka ruang dialog';
+  if(v<0.8) return 'dengan tegas & ada konsekuensi jelas bagi yang tak mengikuti';
+  return 'dengan sangat tegas & memaksa, lengkap ancaman sanksi';
+}
+/* Risiko efek bumerang (reactance): makin tegas, makin besar — tapi diredam banyak kalau bukan cuma
+   pemerintah sendirian, & diredam lagi kalau caranya musyawarah/kajian (lebih legitimate & terbuka
+   ketimbang empat mata yang bisa terasa personal/diam-diam). */
+function backlashRisk(p){
+  const govOnly = p.gov && !p.family && !p.community;
+  let risk = p.firmness;
+  risk *= govOnly ? 1 : (p.gov ? 0.55 : 0.15);
+  if(p.method === 'musyawarah') risk *= 0.7;
+  return clamp01(risk);
+}
+function paramDamping(year, p){
+  /* PERBAIKAN (dipicu pengecekan pengguna): model lama pakai earlyBonus = clamp01((30-branchYear)/30)*0.45,
+     yang JENUH (plateau) ke 0 begitu branchYear >= 30 — akibatnya branchYear=60, 100, & 130 menghasilkan
+     damping yang PERSIS IDENTIK, padahal secara logika mencegah makin telat (mitos sudah makin "mengakar")
+     seharusnya makin sulit, bukan berhenti bertambah sulit setelah tahun ke-30. Diuji ulang di sandbox
+     Node sebelum diterapkan (bukan cuma ikut asumsi pengguna): dikonfirmasi base+earlyBonus lama identik
+     untuk branchYear=60/100/130 pada year yang sama (0.590 di ketiganya).
+     Model baru: rootStrength naik TERUS mengikuti branchYear (tanpa plateau, diskalakan ke YEAR_MAX=140)
+     dan mengurangi efektivitas ketegasan (effectiveFirmness) makin besar makin telat pencegahan dimulai.
+     Hasil pengujian sandbox: branchYear=0 & firmness=0.3 -> damping turun cukup jauh (~0.75), sedangkan
+     branchYear=130 (sudah sangat mengakar) & firmness=0.5 nyaris tak mengubah apa-apa (~0.95) — sesuai pola
+     yang diharapkan: "dicegah sejak awal jauh lebih mudah daripada setelah mengakar", bukan sekadar berhenti
+     bertambah sulit di satu titik. */
+  if(!paramsActive(p) || year < p.branchYear) return 1;
+  const rootStrength = clamp01(p.branchYear/120);            // 0 di tahun ke-0 -> ~1 di tahun ke-120 (tak plateau)
+  const effectiveFirmness = p.firmness * (1 - rootStrength*0.88); // makin mengakar, makin kebal thd ketegasan
+  const base = 1 - effectiveFirmness*0.82;                   // makin tegas (efektif), makin tertekan tampilannya
+  const risk = backlashRisk(p);
+  const rebound = risk * clamp01((year-p.branchYear-45)/95) * 0.55; // bangkit lagi kalau risikonya tinggi
+  return Math.max(0.03, Math.min(1, base + rebound));
+}
+/* PERBAIKAN & PERLUASAN (permintaan pengguna): model paramClash lama TIDAK terpengaruh sama sekali oleh
+   seberapa telat pencegahan dimulai (branchYear) — intensitas & durasi gesekannya sama saja entah dicegah
+   di tahun ke-10 atau tahun ke-130, selama kondisi govOnly & firmness>=0.5 terpenuhi. Ini tak sesuai logika:
+   makin telat (mitos makin "mengakar", sama seperti rootStrength di paramDamping) & makin tanpa dukungan
+   akar rumput (cuma pemerintah, tanpa keluarga/masyarakat), harusnya gesekannya makin keras & makin lama
+   diredam — bukan konstan. clashPhase() menggantikan logika lama: puncak (peakMag) & lama eskalasi/peredaman
+   (rise/fall) sekarang naik mengikuti rootStrength yang sama seperti di paramDamping (skala ke YEAR_MAX=140,
+   tak plateau), & ambang ketegasan yang cukup memicu gesekan (firmnessGate) ikut turun kalau sudah telat —
+   sebab memaksakan larangan pada mitos yang sudah sangat mengakar bisa memicu gesekan meski ketegasannya tak
+   setinggi biasanya. */
+function clashPhase(year, p){
+  const govOnly = p.gov && !p.family && !p.community;
+  const rootStrength = clamp01(p.branchYear/120);
+  const firmnessGate = 0.5 - rootStrength*0.25;
+  const inactive = {intensity:0, phase:'none', peakMag:0, rise:0, fall:0, t:year-p.branchYear, rootStrength};
+  if(!paramsActive(p) || !govOnly || p.firmness < firmnessGate) return inactive;
+  const t = year - p.branchYear;
+  if(t < 0) return inactive;
+  const rise = 5 + rootStrength*11;                                  // makin telat, makin lama menuju puncak gesekan
+  const fall = 12 + rootStrength*28;                                 // & makin lama pula redanya
+  const peakMag = clamp01(p.firmness) * (0.35 + rootStrength*0.65);  // makin telat, makin keras puncaknya
+  let intensity, phase;
+  if(t <= rise){ intensity = clamp01(t/rise)*peakMag; phase = 'rising'; }
+  else if(t <= rise+fall){ intensity = clamp01(1-(t-rise)/fall)*peakMag; phase = 'falling'; }
+  else { intensity = 0; phase = 'resolved'; }
+  return {intensity, phase, peakMag, rise, fall, t, rootStrength};
+}
+function paramClash(year, p){ return clashPhase(year, p).intensity; }
+/* Visual barikade aparat (2D & 3D): dibangun terpisah dari clashPhase() karena maknanya beda — clashPhase
+   cuma soal intensitas huru-hara sesaat (naik lalu turun), sedangkan kehadiran aparat di lapangan bersifat
+   MENETAP begitu gesekan pernah terjadi (asumsi pengguna: pemerintahnya kuat, jadi larangan berhasil
+   ditegakkan & dijaga terus, meski proses menuju ke sana sempat penuh gesekan). phase!=='none' mencakup
+   rising/falling/resolved — jadi begitu terpicu, aparat tetap "berjaga" selamanya sesudahnya. */
+function computeClashVisual(year){
+  if(!followParams) return {active:false, riseProgress:0, intensity:0, phase:'none'};
+  const ph = clashPhase(year, currentParams());
+  const active = ph.phase !== 'none';
+  const riseProgress = active ? clamp01(ph.t/Math.max(ph.rise,0.0001)) : 0;
+  return {active, riseProgress, intensity:ph.intensity, phase:ph.phase};
+}
+function paramNarrative(p){
+  const who = describeWho(p), method = describeMethod(p), risk = backlashRisk(p);
+  const y1 = p.branchYear, y2 = p.branchYear+15, y3 = p.branchYear+60;
+  const midText = risk>0.5
+    ? 'Karena tekanannya cukup keras & terasa datang dari atas, sebagian warga mulai diam-diam menyimpan rasa tak suka — larangannya dipatuhi di depan umum, tapi belum tentu di hati.'
+    : (risk>0.2
+        ? 'Perubahannya berjalan campuran: sebagian menerima dengan cukup terbuka, sebagian lain masih ragu tapi tak sampai melawan terang-terangan.'
+        : 'Karena tak ada pihak yang terasa "memaksa", perubahannya berjalan cukup organik & jarang memicu penolakan terbuka.');
+  const longText = risk>0.5
+    ? 'Efek bumerang mulai terasa — sebagian keyakinan lama justru bangkit lagi sebagai bentuk identitas, karena caranya dulu terasa dipaksakan sepihak.'
+    : (risk>0.2
+        ? 'Perubahannya bertahan cukup baik, meski di beberapa tempat sisa-sisa keyakinan lama masih muncul sesekali.'
+        : 'Perubahannya cenderung bertahan lama & genuinely, karena dari awal tak ada pihak yang merasa dilawan atau dipaksa.');
+  return [
+    {yearStart:y1, when:'± Tahun '+y1+'–'+y2, text:(who.charAt(0).toUpperCase()+who.slice(1))+' mulai bergerak mencegah sejak tahun ke-'+y1+', '+firmnessClause(p.firmness)+method+'.'},
+    {yearStart:y2, when:'± Tahun '+y2+'–'+y3, text:midText},
+    {yearStart:y3, when:'± Tahun '+y3+'+', text:longText}
+  ];
+}
+function paramCaveat(p){
+  const risk = backlashRisk(p);
+  if(risk>0.5) return 'Kombinasi ini rawan efek bumerang: makin tegas & makin terasa datang sepihak dari atas (apalagi kalau cuma pemerintah, tanpa keluarga/masyarakat ikut terlibat), makin besar peluang keyakinan lama justru bangkit lagi sebagai bentuk perlawanan identitas.';
+  if(risk>0.2) return 'Risiko efek bumerangnya sedang — ada campuran pihak yang terlibat, jadi tekanannya tak terlalu terasa datang dari satu arah saja, tapi tetap ada peluang sebagian orang diam-diam menyimpan ketidaksetujuan.';
+  return 'Risiko efek bumerangnya kecil — karena tak ada pihak yang terasa "memaksa" dari atas, perubahan macam ini biasanya lebih genuinely bertahan, meski prosesnya bisa makan waktu lebih lama.';
+}
+function activeParamStep(p, year){
+  const steps = paramNarrative(p);
+  let step = steps[0];
+  steps.forEach(st => { if(year >= st.yearStart) step = st; });
+  return step;
+}
+function renderParamPanel(){
+  const p = currentParams();
+  document.getElementById('pBranchYearLabel').textContent = 'Tahun ke-'+p.branchYear;
+  document.getElementById('pFirmnessLabel').textContent = firmnessLabel(p.firmness*100);
+  document.getElementById('methodRow').style.opacity = (p.gov && !p.family && !p.community) ? 0.4 : 1;
+}
+function renderScenarioResult(){
+  const box = document.getElementById('scenarioResult');
+  if(!box) return;
+  const p = currentParams();
+  if(!paramsActive(p)){
+    box.innerHTML = '<div class="scenario-empty">Centang minimal satu pihak (pemerintah/keluarga/masyarakat) di atas untuk mengaktifkan pengandaian — perubahannya akan tampil di panel timeline pada bagian 02, selama tombol "🔀 Ikuti Bag. 06" di sana masih menyala.</div>';
+    return;
+  }
+  const steps = paramNarrative(p);
+  box.innerHTML = '<div class="sres-title">🎛️ '+(describeWho(p).charAt(0).toUpperCase()+describeWho(p).slice(1))+' mencegah — kemungkinan arahnya</div>' +
+    steps.map(st => '<div class="sres-step"><div class="sres-when">'+st.when+'</div><div class="sres-text">'+st.text+'</div></div>').join('') +
+    '<div class="mechanism" style="margin-top:6px;">Catatan jujur: '+paramCaveat(p)+'</div>';
+}
+function onParamsChanged(){
+  renderParamPanel();
+  renderScenarioResult();
+  fullUpdate(currentYear); // sinkron: panel utama (02) & diorama ikut berubah, bukan cuma kotak ini
+  if(typeof renderCompare === 'function') renderCompare();
+}
+
+/* ================= MIKRO-DETAIL DI SEPANJANG GARIS WAKTU YANG SAMA =================
+   Bukan menambah durasi (tetap 0-140 sesuai kisaran yang dipakai), cuma menambah tekstur/detail sampingan
+   yang tersebar di rentang yang sudah ada — supaya perjalanan waktunya terasa lebih padat & hidup. */
+const MICRO_EVENTS = [
+  {year:3, icon:'🎣', text:'Seorang nelayan pertama kali bilang ke tetangganya: "tanjung ini yang kasih tahu duluan."'},
+  {year:12, icon:'👶', text:'Anak-anak kampung mulai dengar versi pendeknya sebagai dongeng sebelum tidur.'},
+  {year:22, icon:'📖', text:'Seorang guru desa pertama kali menulis ceritanya di buku catatan pribadinya.'},
+  {year:33, icon:'🗣️', text:'Orang-orang mulai menyebut nama sosoknya tanpa ragu, seolah memang sudah lama ada.'},
+  {year:47, icon:'🧳', text:'Wisatawan pertama datang khusus untuk mendengar & melihat sendiri tempat legenda ini.'},
+  {year:58, icon:'📰', text:'Sesajinya difoto & masuk koran daerah, diberi label "tradisi unik" oleh wartawan.'},
+  {year:70, icon:'🛰️', text:'Peneliti geologi memasang alat pemantau di tanjung — tanpa berusaha membantah legendanya.'},
+  {year:85, icon:'📚', text:'Legenda ini akhirnya dibukukan dalam sebuah antologi cerita rakyat daerah.'},
+  {year:95, icon:'⚖️', text:'Rivalitas dengan sosok tanjung sebelah mulai jadi bahan obrolan hangat warga.'},
+  {year:118, icon:'📱', text:'Generasi muda mulai membuat konten pendek soal legenda ini di media sosial.'},
+  {year:135, icon:'🤔', text:'Sebagian warga mulai bertanya-tanya sendiri: ini beneran, atau cuma cerita turun-temurun?'}
+];
+function renderMicroTrack(){
+  const track = document.getElementById('microTrack');
+  if(!track) return;
+  track.innerHTML = MICRO_EVENTS.map((ev,i) =>
+    '<button class="micro-dot" style="left:'+(ev.year/YEAR_MAX*100).toFixed(1)+'%;" data-i="'+i+'" title="Tahun '+ev.year+'">'+ev.icon+'</button>'
+  ).join('');
+  track.querySelectorAll('.micro-dot').forEach(dot => {
+    dot.addEventListener('click', () => {
+      const ev = MICRO_EVENTS[Number(dot.dataset.i)];
+      stopPlaying();
+      fullUpdate(ev.year);
+      document.getElementById('microNote').textContent = ev.icon+' Tahun '+ev.year+' — '+ev.text;
+      track.querySelectorAll('.micro-dot').forEach(d => d.classList.remove('active'));
+      dot.classList.add('active');
+    });
+  });
+}
+
+/* ================= EKSPOR RINGKASAN JALUR CERITA =================
+   Merangkai histori bersama (STAGES sebelum titik cabang) + entah lanjutan jalur asli, atau seluruh langkah
+   narasi hasil parameter pengandaian yang sedang diatur — jadi teks polos yang bisa diunduh/dibagikan. */
+function buildStorySummary(){
+  const lines = ['MESIN MISTIKASI — Ringkasan Jalur Cerita', '='.repeat(40), ''];
+  const p = currentParams();
+  const active = followParams && paramsActive(p);
+  const by = active ? p.branchYear : Infinity;
+  STAGES.forEach(s => {
+    if(s.yearStart >= by) return; // sudah masuk wilayah pengandaian, dilanjutkan di bagian bawah
+    lines.push(s.icon+' Tahun ke-'+s.yearStart+' — '+s.title);
+    lines.push(s.text);
+    if(s.branch && branchChoice){
+      lines.push(branchChoice==='baik'
+        ? '(Cabang yang dipilih: sosoknya digambarkan baik hati & pelindung.)'
+        : '(Cabang yang dipilih: sosoknya digambarkan harus ditakuti & pemurka.)');
+    }
+    lines.push('');
+  });
+  if(active){
+    lines.push('--- PENGANDAIAN: '+describeWho(p)+' mencegah sejak tahun ke-'+p.branchYear+' ---', '');
+    lines.push('Ketegasan: '+firmnessLabel(p.firmness*100)+(describeMethod(p) ? ' —'+describeMethod(p) : ''), '');
+    paramNarrative(p).forEach(st => { lines.push(st.when+':', st.text, ''); });
+    lines.push('Catatan: '+paramCaveat(p));
+  } else {
+    lines.push('(Jalur asli — tanpa pengandaian apa pun diaktifkan.)');
+  }
+  lines.push('', 'Dibuat lewat "Mesin Mistikasi" — eksplorasi interaktif, bukan makalah akademik.');
+  return lines.join('\n');
+}
+async function trySaveDownload(filename, text){
+  try{
+    if(typeof claude === 'undefined' || !claude.use) return false;
+    const downloads = await claude.use('downloads');
+    if(!downloads) return false;
+    await downloads.save({filename, data:text});
+    return true;
+  } catch(err){ return false; }
+}
+document.getElementById('exportBtn').addEventListener('click', async () => {
+  const status = document.getElementById('exportStatus');
+  status.textContent = 'Memproses…';
+  const text = buildStorySummary();
+  const ok = await trySaveDownload('jalur-mesin-mistikasi.txt', text);
+  if(ok){
+    status.textContent = '✓ Tersimpan.';
+  } else {
+    status.textContent = 'Unduh otomatis tak tersedia — salin manual dari kotak di bawah.';
+    const box = document.getElementById('exportTextarea');
+    box.style.display = 'block';
+    box.value = text;
+    box.focus(); box.select();
+  }
+});
+
+/* ================= AMBIENCE AUDIO RINGAN (opsional, mati secara default) =================
+   Drone rendah yang nada & kekeruhannya (filter lowpass) mengikuti intensitas mistikasi tahun berjalan
+   (figureOp+shrineOp) — makin "penuh" mitosnya, makin pekat suaranya. Sesekali muncul "blip" pendek yang
+   frekuensinya makin sering saat huru-hara (skenario 'paksa') memuncak. Butuh gestur klik utk mulai (kebijakan
+   browser), makanya diaktifkan lewat tombol, bukan otomatis. */
+let audioCtx = null, soundOn = false, droneOsc = null, droneGain = null, filterNode = null, lastBlipTime = -99;
+function ensureAudio(){
+  if(audioCtx) return audioCtx;
+  try{
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    droneOsc = audioCtx.createOscillator();
+    droneOsc.type = 'sine';
+    droneOsc.frequency.value = 70;
+    filterNode = audioCtx.createBiquadFilter();
+    filterNode.type = 'lowpass';
+    filterNode.frequency.value = 300;
+    droneGain = audioCtx.createGain();
+    droneGain.gain.value = 0;
+    droneOsc.connect(filterNode).connect(droneGain).connect(audioCtx.destination);
+    droneOsc.start();
+  } catch(err){ audioCtx = null; }
+  return audioCtx;
+}
+function playBlip(){
+  if(!audioCtx) return;
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = 'square'; o.frequency.value = 180 + Math.random()*260;
+  g.gain.value = 0.0001;
+  o.connect(g).connect(audioCtx.destination);
+  const t = audioCtx.currentTime;
+  g.gain.exponentialRampToValueAtTime(0.06, t+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t+0.18);
+  o.start(t); o.stop(t+0.2);
+}
+function updateAudio(year){
+  if(!soundOn || !audioCtx) return;
+  const v = computeDioramaValues(year);
+  const intensity = clamp01(v.figureOp*0.5 + v.shrineOp*0.5);
+  const t = audioCtx.currentTime;
+  droneGain.gain.setTargetAtTime(0.015 + intensity*0.05, t, 0.6);
+  filterNode.frequency.setTargetAtTime(260 + intensity*900, t, 0.6);
+  droneOsc.frequency.setTargetAtTime(65 + intensity*35, t, 0.6);
+  const clash = clashIntensity(year);
+  if(clash > 0.15 && (t - lastBlipTime) > (0.4 + Math.random()*0.6)/Math.max(clash,0.2)){
+    playBlip();
+    lastBlipTime = t;
+  }
+}
+document.getElementById('soundBtn').addEventListener('click', () => {
+  const btn = document.getElementById('soundBtn');
+  if(!soundOn){
+    const ctx = ensureAudio();
+    if(!ctx){ btn.textContent = '🔇 Tak didukung'; return; }
+    if(ctx.state === 'suspended') ctx.resume();
+    soundOn = true;
+    btn.textContent = '🔊 Suara';
+    btn.classList.add('playing');
+    updateAudio(currentYear);
+  } else {
+    soundOn = false;
+    btn.textContent = '🔈 Suara';
+    btn.classList.remove('playing');
+    if(droneGain) droneGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.3);
+  }
+});
+
+/* ================= MODE BANDING: JALUR ASLI vs HASIL PARAMETER =================
+   Panel independen dari panel utama 02 (slider tahunnya sendiri) — kolom kanan otomatis memakai parameter
+   yang sedang diatur di atas (bukan dropdown terpisah lagi), jadi langsung ikut berubah begitu digeser. */
+function renderCompareColumn(useParams, year){
+  const p = useParams ? currentParams() : null;
+  const active = p && paramsActive(p);
+  const by = active ? p.branchYear : BRANCH_YEAR;
+  const damp = active ? paramDamping(year, p) : 1;
+  const pct = Math.round((1-damp)*100);
+  let body;
+  if(!useParams){
+    const st = STAGES[currentPhaseIndex(year)];
+    body = '<div style="font-size:20px;">'+st.icon+'</div><div style="font-weight:600;margin:4px 0;">'+st.title+'</div>' +
+      '<div style="font-size:12px;color:#cfc9ef;">'+st.text+'</div>';
+  } else if(!active){
+    body = '<div style="font-size:20px;">🎛️</div><div style="font-size:12px;color:var(--dim);margin-top:4px;">Centang minimal satu pihak di atas dulu.</div>';
+  } else if(year < by){
+    body = '<div style="font-size:20px;">⏳</div><div style="font-size:12px;color:var(--dim);margin-top:4px;">Belum sampai titik cabang yang diatur (tahun '+by+').</div>';
+  } else {
+    const step = activeParamStep(p, year);
+    body = '<div style="font-size:20px;">🎛️</div>' +
+      '<div style="font-size:11px;color:var(--dim);margin:2px 0 4px;">'+step.when+'</div>' +
+      '<div style="font-size:12px;color:#cfc9ef;">'+step.text+'</div>';
+  }
+  return '<div class="compare-col"><h4>'+(useParams ? 'Hasil parameter' : '🕯️ Jalur asli')+'</h4>'+body+
+    '<div class="cc-meter"><div class="cc-meter-fill" style="width:'+pct+'%;"></div></div>' +
+    '<div style="font-size:10px;color:var(--dim);">Mistikasi tersisa dari jalur penuh: ~'+pct+'%</div></div>';
+}
+function renderCompare(){
+  const year = Number(document.getElementById('compareYear').value);
+  document.getElementById('compareYearBadge').textContent = 'Tahun ke-'+year;
+  document.getElementById('compareGrid').innerHTML =
+    renderCompareColumn(false, year) + renderCompareColumn(true, year);
+}
+document.getElementById('compareYear').addEventListener('input', renderCompare);
+renderCompare();
+
+function currentPhaseIndex(year){
+  let idx = 0;
+  STAGES.forEach((s,i) => { if(year >= s.yearStart) idx = i; });
+  return idx;
+}
+function clamp01(v){ return Math.max(0, Math.min(1, v)); }
+
+function scenarioDamping(year){
+  if(!followParams) return 1;
+  return paramDamping(year, currentParams());
+}
+function clashIntensity(year){
+  if(!followParams) return 0;
+  return paramClash(year, currentParams());
+}
+function computeDioramaValues(year){
+  const damp = scenarioDamping(year);
+  const markerOp = clamp01((year-6)/14);
+  const smokeOp = clamp01((year-14)/10) * (0.4+0.6*Math.abs(Math.sin(year*0.4)));
+  const figureOp = clamp01((year-28)/16) * damp;
+  const shrineOp = clamp01((year-48)/8) * damp;
+  const shrineScale = clamp01((year-50)/30) * damp;
+  const crowdN = Math.floor(clamp01((year-55)/60)*6*damp);
+  const rivalOp = clamp01((year-88)/14) * damp;
+  const rivalScale = clamp01((year-90)/28) * damp;
+  const tensionOp = (figureOp>0.6 && rivalOp>0.4) ? clamp01((year-100)/25)*damp : 0;
+  return {markerOp,smokeOp,figureOp,shrineOp,shrineScale,crowdN,rivalOp,rivalScale,tensionOp};
+}
+
+function updateDiorama(year){
+  const v = computeDioramaValues(year);
+  document.getElementById('dioMarker').setAttribute('opacity', v.markerOp);
+  document.getElementById('dioSmoke').setAttribute('opacity', v.smokeOp);
+  document.getElementById('dioFigure').setAttribute('opacity', v.figureOp);
+  document.getElementById('dioShrine').setAttribute('opacity', v.shrineOp);
+  document.getElementById('dioShrineInner').setAttribute('transform', 'translate(220,192) scale('+v.shrineScale.toFixed(2)+')');
+  document.getElementById('dioRival').setAttribute('opacity', v.rivalOp);
+  document.getElementById('dioRivalInner').setAttribute('transform', 'translate(560,235) scale('+v.rivalScale.toFixed(2)+')');
+  document.getElementById('dioTension').setAttribute('opacity', v.tensionOp);
+
+  const figureColor = branchChoice==='takut' ? '#e0708f' : '#c9a4ff';
+  document.getElementById('dioFigure').querySelector('ellipse').setAttribute('fill', figureColor);
+
+  const crowd = document.getElementById('dioCrowd');
+  crowd.innerHTML = '';
+  for(let i=0;i<v.crowdN;i++){
+    const angle = (i/6)*Math.PI*1.3 + 0.9;
+    const cx = 220 + Math.cos(angle)*50, cy = 226 + Math.sin(angle)*14;
+    crowd.innerHTML += '<text x="'+cx.toFixed(1)+'" y="'+cy.toFixed(1)+'" font-size="13" text-anchor="middle">🙇</text>';
+  }
+
+  const badge = document.getElementById('dioScenarioBadge');
+  const p = currentParams();
+  if(followParams && paramsActive(p) && year >= p.branchYear){
+    badge.setAttribute('opacity', 1);
+    document.getElementById('dioScenarioIcon').textContent = '🎛️';
+    document.getElementById('dioScenarioLabel').textContent = 'Pengandaian';
+  } else {
+    badge.setAttribute('opacity', 0);
+  }
+
+  const clash = clashIntensity(year);
+  document.getElementById('dioClash').setAttribute('opacity', clash);
+  document.getElementById('dioClashFlash').setAttribute('opacity', clash*0.14);
+
+  // Barikade aparat: baris 4 ikon berbaris masuk dari luar bingkai (y jauh di bawah) menuju garis di depan
+  // kuil begitu gesekan terpicu (riseProgress 0->1), lalu MENETAP di posisi itu selama gesekan masih aktif
+  // (rising/falling/resolved) — beda dari ikon huru-hara di atas yang meredup, baris ini justru tak pernah
+  // mundur, menggambarkan "pemerintah kuat" yang berhasil menegakkan & menjaga larangan sampai akhir.
+  const cv = computeClashVisual(year);
+  const govLine = document.getElementById('dioGovLine');
+  govLine.setAttribute('opacity', cv.active ? 1 : 0);
+  const govBarrier = [{x:168,y:293},{x:203,y:287},{x:238,y:287},{x:273,y:293}];
+  const govSpawnY = 410;
+  const govIcons = govLine.querySelectorAll('text');
+  govBarrier.forEach((pt,i) => {
+    const y = govSpawnY + (pt.y - govSpawnY) * Math.min(1, cv.riseProgress);
+    govIcons[i].setAttribute('x', pt.x);
+    govIcons[i].setAttribute('y', y.toFixed(1));
+  });
+  document.getElementById('dioGovLabel').setAttribute('opacity', (cv.active && cv.phase !== 'rising') ? 0.9 : 0);
+}
+
+/* ================= MODE 3D (three.js) — panel sama, cuma cara pandang berbeda =================
+   Peningkatan yang dipilih & dikerjakan bersamaan dengan tab 3D ini: PENCAHAYAAN DINAMIS mengikuti
+   tahun — langit cerah siang di era fenomena-asli, meredup & muncul cahaya obor/lilin hangat begitu
+   masuk era sakralisasi-personifikasi, lalu langit memerah tegang saat rivalitas antar-narasi memuncak.
+   Ini sengaja dipasangkan dengan mode 3D karena pencahayaan cuma benar-benar terasa hidup dalam ruang
+   3D (bayangan, gradasi arah cahaya) — di SVG 2D efeknya jauh lebih datar. */
+let three3d = null; // {scene,camera,renderer,...} — null sebelum tab 3D pernah dibuka (lazy init)
+const WORLD = { sx:10, ox:350, oz:190 }; // skala & offset konversi koordinat SVG -> dunia 3D
+function toWorld(svgX, svgY){ return { x:(svgX-WORLD.ox)/WORLD.sx, z:(svgY-WORLD.oz)/WORLD.sx }; }
+
+function show3DFallback(container, msg){
+  container.innerHTML = '<div style="padding:26px 18px;text-align:center;color:var(--dim);font-size:12.5px;line-height:1.6;">⚠️ '+msg+'<br>Silakan pakai tampilan 🗺️ 2D sebagai gantinya — datanya sama persis, cuma cara pandangnya beda.</div>';
+}
+function initThree3D(){
+  if(three3d) return; // sudah pernah dicoba (berhasil ATAU gagal — three3d bisa berisi objek scene atau string 'failed')
+  const container = document.getElementById('three3d');
+
+  if(typeof THREE === 'undefined'){
+    // skrip three.js dari CDN gagal termuat (mis. koneksi lambat/diblokir) — beri tahu, jangan diam saja.
+    show3DFallback(container, 'Pustaka 3D (three.js) gagal dimuat dari internet.');
+    three3d = 'failed';
+    return;
+  }
+
+  try {
+  const w = container.clientWidth || 640, h = container.clientHeight || (w*380/700);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, w/h, 0.1, 500);
+  const renderer = new THREE.WebGLRenderer({antialias:true});
+  renderer.setSize(w,h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+  container.appendChild(renderer.domElement);
+
+  const ambLight = new THREE.AmbientLight(0xffffff, 0.55);
+  scene.add(ambLight);
+  const sunLight = new THREE.DirectionalLight(0xffffff, 0.9);
+  sunLight.position.set(30,40,10);
+  scene.add(sunLight);
+  const torchLight = new THREE.PointLight(0xffb066, 0, 22);
+  scene.add(torchLight);
+  const clashLight = new THREE.PointLight(0xff2d2d, 0, 34);
+  scene.add(clashLight);
+
+  // laut + dua daratan (posisi dikonversi dari koordinat SVG yang sama persis dengan mode 2D)
+  const sea = new THREE.Mesh(new THREE.PlaneGeometry(70,38), new THREE.MeshStandardMaterial({color:0x123a52}));
+  sea.rotation.x = -Math.PI/2; sea.position.y = -0.05;
+  scene.add(sea);
+  function landBox(x1,x2,y1,y2,color){
+    const p1=toWorld(x1,y1), p2=toWorld(x2,y2);
+    const geo = new THREE.BoxGeometry(Math.abs(p2.x-p1.x), 1.4, Math.abs(p2.z-p1.z));
+    const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color}));
+    mesh.position.set((p1.x+p2.x)/2, -0.7, (p1.z+p2.z)/2);
+    scene.add(mesh);
+  }
+  landBox(0,260,190,380,0x2a5c3a);
+  landBox(470,700,190,380,0x274f34);
+
+  const pTitik = toWorld(230,248), pFigure = toWorld(220,190), pRival = toWorld(560,235);
+
+  // perahu
+  const boat = new THREE.Mesh(new THREE.ConeGeometry(0.9,2.2,4), new THREE.MeshStandardMaterial({color:0x6b4a2f}));
+  boat.rotation.x = Math.PI/2; boat.position.set(toWorld(340,255).x, 0.2, toWorld(340,255).z);
+  scene.add(boat);
+
+  // riak (dua ring datar, berdenyut lewat waktu jam)
+  const ringMat = new THREE.MeshBasicMaterial({color:0x5eead4, transparent:true, opacity:0.5, side:THREE.DoubleSide});
+  const ring1 = new THREE.Mesh(new THREE.RingGeometry(0.6,0.8,32), ringMat.clone());
+  const ring2 = new THREE.Mesh(new THREE.RingGeometry(0.6,0.8,32), ringMat.clone());
+  [ring1,ring2].forEach(r=>{ r.rotation.x=-Math.PI/2; r.position.set(pTitik.x,0.05,pTitik.z); scene.add(r); });
+
+  // tanda sakral (batu + lilin)
+  const marker = new THREE.Group();
+  const markerMat = new THREE.MeshStandardMaterial({color:0x8a7c6f, transparent:true, opacity:0});
+  const markerStone = new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.45,1.6,8), markerMat);
+  markerStone.position.y = 0.8;
+  marker.add(markerStone);
+  marker.position.set(pTitik.x-1.2, 0, pTitik.z-1);
+  scene.add(marker);
+  torchLight.position.set(marker.position.x, 1.8, marker.position.z);
+  clashLight.position.set(pTitik.x, 6, pTitik.z);
+
+  // asap dupa
+  const smokeMat = new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0});
+  const smoke = new THREE.Mesh(new THREE.SphereGeometry(0.35,8,8), smokeMat);
+  smoke.position.set(marker.position.x, 2.1, marker.position.z);
+  scene.add(smoke);
+
+  // sosok
+  const figureMat = new THREE.MeshStandardMaterial({color:0xc9a4ff, transparent:true, opacity:0});
+  const figureBody = new THREE.Mesh(new THREE.ConeGeometry(1.1,3.2,10), figureMat);
+  const figureHead = new THREE.Mesh(new THREE.SphereGeometry(0.65,10,10), new THREE.MeshStandardMaterial({color:0xe4dffc, transparent:true, opacity:0}));
+  figureBody.position.set(pFigure.x, 1.6, pFigure.z);
+  figureHead.position.set(pFigure.x, 3.5, pFigure.z);
+  scene.add(figureBody); scene.add(figureHead);
+
+  // kuil (grup dalam discale, grup luar untuk opacity — sama pola dgn 2D)
+  const shrineInner = new THREE.Group();
+  const shrineMat = new THREE.MeshStandardMaterial({color:0x4c3572, transparent:true, opacity:0});
+  const roofMat = new THREE.MeshStandardMaterial({color:0x6a4c72, transparent:true, opacity:0});
+  const shrineBase = new THREE.Mesh(new THREE.BoxGeometry(5.6,2.2,4.2), shrineMat);
+  shrineBase.position.y = 1.1;
+  const shrineRoof = new THREE.Mesh(new THREE.ConeGeometry(4.2,2.6,4), roofMat);
+  shrineRoof.position.y = 3.5; shrineRoof.rotation.y = Math.PI/4;
+  shrineInner.add(shrineBase); shrineInner.add(shrineRoof);
+  shrineInner.position.set(pFigure.x, 0, pFigure.z);
+  shrineInner.scale.set(0.001,0.001,0.001);
+  scene.add(shrineInner);
+
+  // kerumunan (pool tetap, tinggal disembunyikan/dimunculkan)
+  // Kerumunan penyembah: tiap sosok punya titik-mula (jauh, dari arah desa) dan titik-tujuan (dekat kuil) —
+  // begitu seorang "lahir" ke adegan (crowdN bertambah), ia BERJALAN dari titik-mula ke titik-tujuan,
+  // bukan cuma muncul instan — memberi rasa kedatangan lintas generasi menuju tempat yang sama.
+  const crowdPool = [];
+  for(let i=0;i<6;i++){
+    const m = new THREE.Mesh(new THREE.ConeGeometry(0.35,1,6), new THREE.MeshStandardMaterial({color:0x8fd4a0, transparent:true, opacity:1}));
+    const angle = (i/6)*Math.PI*1.3 + 0.9;
+    const tx = pFigure.x + Math.cos(angle)*5.4, tz = pFigure.z + Math.sin(angle)*3.6;
+    const sx = pFigure.x + Math.cos(angle)*13.5, sz = pFigure.z + Math.sin(angle)*9.2;
+    m.position.set(tx, 0.5, tz);
+    m.visible = false;
+    m.userData = {
+      target: new THREE.Vector3(tx, 0.5, tz),
+      start: new THREE.Vector3(sx, 0.5, sz),
+      walking: false, t0: 0, dur: 2.1 + i*0.18
+    };
+    scene.add(m); crowdPool.push(m);
+  }
+
+  // barikade aparat 3D — padanan dari dioGovLine di mode 2D: 4 mesh berbaris masuk dari luar bingkai (bawah)
+  // menuju garis barikade di depan kuil begitu clashPhase terpicu, lalu MENETAP di sana (lihat
+  // computeClashVisual & update3DDiorama) — representasi visual "pemerintah kuat" yang berhasil menegakkan &
+  // menjaga larangan, dibedakan warnanya (emas/otoritas) dari kerumunan penyembah (hijau) & sosok (ungu).
+  const GOV_BARRIER_SVG = [{x:168,y:293},{x:203,y:287},{x:238,y:287},{x:273,y:293}];
+  const aparatMat = new THREE.MeshStandardMaterial({color:0xe8c468, transparent:true, opacity:0});
+  const aparatPool = GOV_BARRIER_SVG.map(pt => {
+    const m = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.7,1.3,0.5), aparatMat);
+    body.position.y = 0.65;
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.32,8,8), aparatMat);
+    head.position.y = 1.5;
+    m.add(body); m.add(head);
+    const target = new THREE.Vector3(toWorld(pt.x,pt.y).x, 0, toWorld(pt.x,pt.y).z);
+    const start = new THREE.Vector3(toWorld(pt.x,410).x, 0, toWorld(pt.x,410).z);
+    m.position.copy(start);
+    m.userData = {target, start, body, head};
+    scene.add(m);
+    return m;
+  });
+
+  // kuil rival
+  const rivalInner = new THREE.Group();
+  const rivalMat = new THREE.MeshStandardMaterial({color:0x5c2f3a, transparent:true, opacity:0});
+  const rivalRoofMat = new THREE.MeshStandardMaterial({color:0x7a3a44, transparent:true, opacity:0});
+  const rivalFigureMat = new THREE.MeshStandardMaterial({color:0xff9f9f, transparent:true, opacity:0});
+  const rivalBase = new THREE.Mesh(new THREE.BoxGeometry(4.4,2,3.6), rivalMat);
+  rivalBase.position.y = 1;
+  const rivalRoof = new THREE.Mesh(new THREE.ConeGeometry(3.4,2.2,4), rivalRoofMat);
+  rivalRoof.position.y = 3; rivalRoof.rotation.y = Math.PI/4;
+  const rivalFigure = new THREE.Mesh(new THREE.ConeGeometry(0.8,2.4,10), rivalFigureMat);
+  rivalFigure.position.y = 2.6;
+  rivalInner.add(rivalBase); rivalInner.add(rivalRoof); rivalInner.add(rivalFigure);
+  rivalInner.position.set(pRival.x, 0, pRival.z);
+  rivalInner.scale.set(0.001,0.001,0.001);
+  scene.add(rivalInner);
+
+  // tegangan antar-narasi: garis petir tipis di antara dua kuil
+  const tensionMat = new THREE.MeshBasicMaterial({color:0xf4967a, transparent:true, opacity:0});
+  const tensionGeo = new THREE.BoxGeometry(Math.hypot(pRival.x-pFigure.x, pRival.z-pFigure.z), 0.15, 0.15);
+  const tension = new THREE.Mesh(tensionGeo, tensionMat);
+  tension.position.set((pFigure.x+pRival.x)/2, 3.2, (pFigure.z+pRival.z)/2);
+  tension.rotation.y = -Math.atan2(pRival.z-pFigure.z, pRival.x-pFigure.x);
+  scene.add(tension);
+
+  // kontrol orbit manual (drag = putar, wheel/pinch = zoom) — pola sama seperti contoh yang diberikan pengguna
+  let theta = 0.7, phi = 0.95, radius = 42;
+  const target = new THREE.Vector3(0,0,2);
+  function updateCam(){
+    camera.position.x = target.x + radius*Math.sin(phi)*Math.sin(theta);
+    camera.position.z = target.z + radius*Math.sin(phi)*Math.cos(theta);
+    camera.position.y = target.y + radius*Math.cos(phi);
+    camera.lookAt(target);
+  }
+  updateCam();
+  let dragging=false, lastX=0, lastY=0;
+  renderer.domElement.addEventListener('pointerdown', e=>{ dragging=true; lastX=e.clientX; lastY=e.clientY; container.classList.add('grabbing'); });
+  window.addEventListener('pointerup', ()=>{ dragging=false; container.classList.remove('grabbing'); });
+  window.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    theta -= (e.clientX-lastX)*0.006;
+    phi = Math.max(0.3, Math.min(1.4, phi-(e.clientY-lastY)*0.006));
+    lastX=e.clientX; lastY=e.clientY;
+    updateCam();
+  });
+  renderer.domElement.addEventListener('wheel', e=>{
+    e.preventDefault();
+    radius = Math.max(14, Math.min(90, radius + e.deltaY*0.04));
+    updateCam();
+  }, {passive:false});
+  let pinchDist = null;
+  function touchDist(t0,t1){ return Math.hypot(t1.clientX-t0.clientX, t1.clientY-t0.clientY); }
+  renderer.domElement.addEventListener('touchstart', e=>{ if(e.touches.length===2){ pinchDist=touchDist(e.touches[0],e.touches[1]); dragging=false; } }, {passive:true});
+  renderer.domElement.addEventListener('touchmove', e=>{
+    if(e.touches.length===2 && pinchDist!==null){
+      e.preventDefault();
+      const d = touchDist(e.touches[0], e.touches[1]);
+      radius = Math.max(14, Math.min(90, radius - (d-pinchDist)*0.08));
+      pinchDist = d;
+      updateCam();
+    }
+  }, {passive:false});
+  renderer.domElement.addEventListener('touchend', e=>{ if(e.touches.length<2) pinchDist=null; }, {passive:true});
+
+  function onResize(){
+    const w2 = container.clientWidth, h2 = container.clientHeight || (w2*380/700);
+    camera.aspect = w2/h2; camera.updateProjectionMatrix();
+    renderer.setSize(w2,h2);
+  }
+  window.addEventListener('resize', onResize);
+
+  const clock = new THREE.Clock();
+  function loop(){
+    requestAnimationFrame(loop);
+    const t = clock.getElapsedTime();
+
+    // Huru-hara/bentrokan (skenario 'paksa'): lampu merah berkedip acak + kamera bergetar halus —
+    // memuncak tak lama sesudah larangan dijatuhkan, sesuai clashIntensity() yang dipakai bareng mode 2D.
+    const clash = clashIntensity(currentYear);
+    clashLight.intensity = clash>0.02 ? clash*(2.2+Math.random()*1.6) : 0;
+    sunLight.intensity = 0.9 - clash*0.25;
+    updateCam();
+    if(clash>0.05){
+      camera.position.x += (Math.random()-0.5)*clash*1.1;
+      camera.position.y += (Math.random()-0.5)*clash*0.5;
+      camera.position.z += (Math.random()-0.5)*clash*1.1;
+      camera.lookAt(target);
+    }
+
+    // riak berdenyut terus-menerus (dekoratif, sama seperti versi 2D)
+    const p1 = (t*1.4)%1.4, p2 = ((t*1.4)+0.7)%1.4;
+    ring1.scale.setScalar(1+p1*3); ring1.material.opacity = Math.max(0,0.5-p1*0.4);
+    ring2.scale.setScalar(1+p2*3); ring2.material.opacity = Math.max(0,0.5-p2*0.4);
+    if(tension.material.opacity>0.05){
+      tension.material.opacity = tension.userData.baseOp * (0.6+0.4*Math.abs(Math.sin(t*6)));
+    }
+
+    // penyembah yang sedang berjalan mendekat ke kuil: lerp titik-mula -> titik-tujuan (ease-out),
+    // ditambah goyang langkah kecil (naik-turun + oleng kiri-kanan) supaya terasa "berjalan", bukan meluncur.
+    crowdPool.forEach(m => {
+      if(!m.userData || !m.userData.walking) return;
+      const prog = Math.min(1, (t - m.userData.t0) / m.userData.dur);
+      const ease = 1 - Math.pow(1-prog, 3);
+      m.position.lerpVectors(m.userData.start, m.userData.target, ease);
+      m.position.y = 0.5 + Math.abs(Math.sin(prog*Math.PI*7)) * 0.14 * (1-prog*0.5);
+      m.rotation.z = Math.sin(prog*Math.PI*9) * 0.14 * (1-prog*0.3);
+      if(prog >= 1){
+        m.userData.walking = false;
+        m.position.copy(m.userData.target);
+        m.position.y = 0.5;
+        m.rotation.z = 0;
+      }
+    });
+
+    renderer.render(scene, camera);
+  }
+  loop();
+
+  three3d = { scene, camera, renderer, container, ambLight, sunLight, torchLight, clock,
+    marker: markerStone, smoke, figureBody, figureHead, shrineInner, shrineBase, shrineRoof,
+    crowdPool, prevCrowdN: 0, crowdFirstUpdate: true, aparatPool,
+    rivalInner, rivalBase, rivalRoof, rivalFigure, tension };
+  } catch(err){
+    // gagal di titik mana pun (mis. browser/perangkat tak mendukung WebGL, konteks GPU ditolak, dsb.) —
+    // tampilkan pesan yang jelas alih-alih panel kosong yang "terlihat tidak berfungsi".
+    console.warn('Mode 3D gagal diinisialisasi:', err);
+    show3DFallback(container, 'Mode 3D tidak bisa dijalankan di perangkat/browser ini (butuh dukungan WebGL).');
+    three3d = 'failed';
+  }
+}
+
+function update3DDiorama(year){
+  if(!three3d || three3d==='failed') return;
+  const v = computeDioramaValues(year);
+  const T = three3d;
+
+  T.marker.material.opacity = v.markerOp;
+  T.smoke.material.opacity = v.smokeOp;
+  T.figureBody.material.opacity = v.figureOp;
+  T.figureHead.material.opacity = v.figureOp;
+  const figureColor = branchChoice==='takut' ? 0xe0708f : 0xc9a4ff;
+  T.figureBody.material.color.setHex(figureColor);
+
+  T.shrineBase.material.opacity = v.shrineOp;
+  T.shrineRoof.material.opacity = v.shrineOp;
+  T.shrineInner.scale.set(v.shrineScale, v.shrineScale, v.shrineScale);
+
+  T.rivalBase.material.opacity = v.rivalOp;
+  T.rivalRoof.material.opacity = v.rivalOp;
+  T.rivalFigure.material.opacity = v.rivalOp;
+  T.rivalInner.scale.set(v.rivalScale, v.rivalScale, v.rivalScale);
+
+  T.tension.material.opacity = v.tensionOp;
+  T.tension.userData.baseOp = v.tensionOp;
+
+  // barikade aparat 3D: sama seperti dioGovLine di 2D — berbaris masuk (lerp start->target mengikuti
+  // riseProgress) begitu gesekan terpicu, lalu MENETAP (opacity & posisi tak mundur) selama masih aktif.
+  {
+    const cv = computeClashVisual(year);
+    T.aparatPool.forEach(m => {
+      const rp = cv.active ? Math.min(1, cv.riseProgress) : 0;
+      m.position.lerpVectors(m.userData.start, m.userData.target, rp);
+      const op = cv.active ? clamp01(rp*3) : 0;
+      m.userData.body.material.opacity = op;
+      m.userData.head.material.opacity = op;
+    });
+  }
+
+  {
+    const crowd = T.crowdPool, newN = v.crowdN, nowT = T.clock.getElapsedTime();
+    if(T.crowdFirstUpdate){
+      // pembukaan tab 3D pertama kali (atau lompat era via chip): tampilkan langsung di posisi akhir,
+      // tanpa animasi jalan — animasi jalan hanya untuk kedatangan yang "baru saja terjadi".
+      crowd.forEach((m,i) => {
+        m.visible = i < newN;
+        m.userData.walking = false;
+        if(m.visible){ m.position.copy(m.userData.target); m.position.y = 0.5; m.rotation.z = 0; }
+      });
+      T.crowdFirstUpdate = false;
+    } else if(newN > T.prevCrowdN){
+      for(let i=T.prevCrowdN; i<newN; i++){
+        const m = crowd[i];
+        m.visible = true;
+        m.position.copy(m.userData.start);
+        m.userData.walking = true;
+        m.userData.t0 = nowT;
+      }
+    } else if(newN < T.prevCrowdN){
+      for(let i=newN; i<T.prevCrowdN; i++){
+        crowd[i].visible = false;
+        crowd[i].userData.walking = false;
+      }
+    }
+    T.prevCrowdN = newN;
+  }
+
+  // pencahayaan dinamis mengikuti era: siang cerah -> temaram + obor -> langit memerah saat rivalitas
+  const dusk = clamp01((year-14)/40);           // 0 siang -> 1 mulai temaram sejak era sakral/personifikasi
+  const tension2 = v.tensionOp;                  // memerah saat rivalitas memuncak
+  T.sunLight.intensity = 0.9 - dusk*0.55;
+  T.ambLight.intensity = 0.55 - dusk*0.25 + tension2*0.1;
+  const skyDay = new THREE.Color(0x0d2438), skyDusk = new THREE.Color(0x1a1030), skyTense = new THREE.Color(0x3a1018);
+  const sky = skyDay.clone().lerp(skyDusk, dusk).lerp(skyTense, tension2*0.7);
+  T.renderer.setClearColor(sky);
+  T.torchLight.intensity = v.markerOp * 1.4;
+}
+
+function setActiveView(view){
+  document.getElementById('btn2d').classList.toggle('active', view==='2d');
+  document.getElementById('btn3d').classList.toggle('active', view==='3d');
+  document.getElementById('btnSpread').classList.toggle('active', view==='spread');
+  document.getElementById('diorama').style.display = view==='2d' ? 'block' : 'none';
+  document.getElementById('three3d').style.display = view==='3d' ? 'block' : 'none';
+  document.getElementById('spreadMapWrap').style.display = view==='spread' ? 'block' : 'none';
+  document.getElementById('view3dHint').style.display = view==='3d' ? 'block' : 'none';
+  if(view==='3d'){ initThree3D(); update3DDiorama(currentYear); }
+  if(view==='spread'){ ensureSpreadBuilt(); updateSpreadMap(currentYear); }
+}
+document.getElementById('btn2d').addEventListener('click', () => setActiveView('2d'));
+document.getElementById('btn3d').addEventListener('click', () => setActiveView('3d'));
+document.getElementById('btnSpread').addEventListener('click', () => setActiveView('spread'));
+
+function renderScenarioCaption(year){
+  const p = currentParams();
+  const step = activeParamStep(p, year);
+  const box = document.getElementById('capBox');
+  box.innerHTML = '<div class="stage-icon">🎛️</div>' +
+    '<div class="stage-title">Pengandaian: '+(describeWho(p).charAt(0).toUpperCase()+describeWho(p).slice(1))+' mencegah' +
+      ' <span style="font-family:var(--sans);font-weight:600;font-size:11px;color:var(--dim);">('+step.when+')</span></div>' +
+    '<div class="stage-text">'+step.text+'</div>' +
+    '<div class="mechanism">'+paramCaveat(p)+'</div>' +
+    '<button class="detail-toggle" id="scenarioExitBtn" style="margin-top:12px;">↺ Kembali ke jalur mistikasi asli (parameternya tetap tersimpan)</button>';
+  document.getElementById('scenarioExitBtn').addEventListener('click', () => {
+    setFollowParams(false);
+    fullUpdate(currentYear);
+  });
+}
+function setFollowParams(on){
+  followParams = on;
+  const btn = document.getElementById('followBtn');
+  btn.classList.toggle('follow-on', on);
+  btn.classList.toggle('follow-off', !on);
+  btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  document.getElementById('followBtnIcon').textContent = on ? '✅' : '⬜';
+  document.getElementById('followBtnText').textContent = on ? 'Ikuti Bag. 06 (aktif)' : 'Ikuti Bag. 06 (nonaktif)';
+  document.getElementById('followStatus').innerHTML = on
+    ? '📍 Status: <b>AKTIF</b> — panel & diorama di atas mengikuti parameter pengandaian dari Bagian 06.'
+    : '📍 Status: <b>NONAKTIF</b> — panel & diorama di atas menampilkan jalur mistikasi asli. Pengaturan Bagian 06 tetap tersimpan, tinggal ketuk tombolnya lagi untuk mengaktifkan.';
+}
+document.getElementById('followBtn').addEventListener('click', () => {
+  setFollowParams(!followParams);
+  fullUpdate(currentYear);
+});
+function renderCaption(year){
+  const p = currentParams();
+  if(followParams && paramsActive(p) && year >= p.branchYear){ renderScenarioCaption(year); return; }
+  const idx = currentPhaseIndex(year);
+  const s = STAGES[idx];
+  const box = document.getElementById('capBox');
+  let branchHtml = '';
+  if(s.branch){
+    branchHtml = '<div class="branch-row">' +
+      '<button class="branch-btn'+(branchChoice==="baik"?" chosen":"")+'" data-choice="baik">🕊️ Sosoknya digambarkan baik hati, pelindung</button>' +
+      '<button class="branch-btn'+(branchChoice==="takut"?" chosen":"")+'" data-choice="takut">👹 Sosoknya digambarkan harus ditakuti, pemurka</button>' +
+      '</div>';
+    if(branchChoice){
+      const followUp = branchChoice==='baik'
+        ? 'Warga mulai membawa hasil laut terbaik sebagai persembahan terima kasih — sosok ini diyakini akan terus melindungi selama dihormati.'
+        : 'Warga mulai menghindari aktivitas tertentu karena takut murka — sosok ini diyakini bisa menimbulkan celaka kalau pantangannya dilanggar.';
+      branchHtml += '<p class="stage-text" style="margin-top:10px;font-style:italic;">'+followUp+'</p>';
+      branchHtml += '<div class="mechanism">Perhatikan: <b>tak ada bukti baru</b> yang menentukan sosoknya baik atau jahat — pilihan itu murni mengikuti apa yang paling dibutuhkan komunitas saat itu (rasa aman lewat harapan, atau kepatuhan lewat rasa takut). Inilah maksud "kontingen, bukan berbasis bukti".</div>';
+    }
+  }
+  box.innerHTML = '<div class="stage-icon">'+s.icon+'</div>' +
+    '<div class="stage-title">'+s.title+'</div>' +
+    '<div class="stage-text">'+s.text+'</div>' +
+    branchHtml +
+    '<div class="mechanism">'+s.mech+'</div>';
+  if(s.branch){
+    box.querySelectorAll('.branch-btn').forEach(btn => {
+      btn.addEventListener('click', () => { branchChoice = btn.dataset.choice; fullUpdate(currentYear); });
+    });
+  }
+}
+
+/* ================= PETA SEBARAN "EPIDEMI MITOS" =================
+   Terhubung ke garis-tahun yang SAMA dengan diorama 02 (bukan simulasi terpisah) — geser tahun di sana,
+   peta ini ikut berubah. Tanjung Legenda (asal) mulai "menular" begitu ritual sakralnya mapan (~Tahap 2).
+   Kerangka: EPIDEMIOLOGY OF REPRESENTATIONS (Dan Sperber, antropologi kognitif) — ide budaya menyebar
+   mengikuti pola mirip wabah: representasi paling "menular" (dramatis, cocok intuisi bawaan seperti HADD)
+   bertahan & menyebar paling jauh; versi yang kurang menarik punah di tengah jalan sebelum sempat dicatat.
+   DESAIN SENGAJA: dari 6 simpul tujuan, LIMA menyebar lewat jalur cerita (garis padat ungu, dari simpul
+   yang sudah lebih dulu "tertular" — spanning tree, bukan graf penuh, meniru rantai penularan sungguhan).
+   SATU simpul (Tanjung Seberang — sengaja dipakai ulang dari narasi Tahap 5 "desa tetangga di tanjung
+   seberang") dibuat MUNCUL INDEPENDEN (garis putus-putus oranye) untuk menunjukkan: HADD bersifat
+   universal pada otak manusia, jadi mitos serupa kadang muncul sendiri-sendiri di tempat berbeda TANPA
+   penularan cerita — bukan berarti semua kemiripan mitos lintas budaya berarti satu menyalin yang lain.
+   Simpul terjauh (Kota Pelabuhan Jauh) ditandai "drift" untuk menyorot penyimpangan cerita yang makin
+   besar makin jauh jaraknya — analogi "bisik berantai" tapi lintas-desa, bukan cuma lintas-generasi. */
+const SPREAD_ORIGIN = {id:'origin', name:'Tanjung Legenda', x:150, y:190};
+const SPREAD_NODES = [
+  {id:'muara',     name:'Muara Ombak',         x:255, y:100, year:58,  parent:'origin',   mode:'spread'},
+  {id:'batu',      name:'Kp. Batu Layar',      x:365, y:68,  year:76,  parent:'muara',    mode:'spread'},
+  {id:'seberang',  name:'Tanjung Seberang',    x:555, y:232, year:90,  parent:'origin',   mode:'independen'},
+  {id:'pasir',     name:'Ds. Pasir Kuning',    x:478, y:308, year:109, parent:'seberang', mode:'spread'},
+  {id:'karang',    name:'Dsn. Karang Hilir',   x:612, y:338, year:126, parent:'pasir',    mode:'spread'},
+  {id:'pelabuhan', name:'Kota Pelabuhan Jauh', x:658, y:128, year:139, parent:'batu',     mode:'spread', drift:true},
+];
+function spreadNodeById(id){ return id==='origin' ? SPREAD_ORIGIN : SPREAD_NODES.find(n => n.id===id); }
+
+let spreadBuilt = false;
+function buildSpreadMapHtml(){
+  let svg = '<svg id="spreadSvg" viewBox="0 0 700 380" xmlns="http://www.w3.org/2000/svg" style="width:100%;border-radius:14px;background:#0d1f2e;display:block;">';
+  svg += '<rect width="700" height="380" fill="#0d1f2e"/>';
+  svg += '<path d="M0,60 Q120,15 260,52 T520,36 T700,66 L700,0 L0,0 Z" fill="#132a3d"/>';
+  svg += '<path d="M0,332 Q160,300 320,340 T700,308 L700,380 L0,380 Z" fill="#132a3d"/>';
+
+  SPREAD_NODES.forEach(n => {
+    const p = spreadNodeById(n.parent);
+    const col = n.mode==='independen' ? '#f4967a' : '#8b5cf6';
+    const dash = n.mode==='independen' ? ' stroke-dasharray="4,4"' : '';
+    svg += '<line id="line-'+n.id+'" x1="'+p.x+'" y1="'+p.y+'" x2="'+n.x+'" y2="'+n.y+'" stroke="'+col+'" stroke-width="1.6" opacity="0"'+dash+'/>';
+  });
+
+  svg += '<g id="node-origin">' +
+    '<circle cx="'+SPREAD_ORIGIN.x+'" cy="'+SPREAD_ORIGIN.y+'" r="6" fill="#e8c468"/>' +
+    '<circle class="pulse-ring" cx="'+SPREAD_ORIGIN.x+'" cy="'+SPREAD_ORIGIN.y+'" r="6" fill="none" stroke="#e8c468" stroke-width="1.6"/>' +
+    '<text x="'+SPREAD_ORIGIN.x+'" y="'+(SPREAD_ORIGIN.y-12)+'" font-size="10" text-anchor="middle" fill="#e8c468" font-family="Inter" font-weight="700">'+SPREAD_ORIGIN.name+'</text>' +
+  '</g>';
+
+  SPREAD_NODES.forEach(n => {
+    const col = n.mode==='independen' ? '#f4967a' : '#c9a4ff';
+    svg += '<g id="node-'+n.id+'" opacity="0">' +
+      '<circle cx="'+n.x+'" cy="'+n.y+'" r="5" fill="'+col+'"/>' +
+      '<circle id="ring-'+n.id+'" class="pulse-ring" cx="'+n.x+'" cy="'+n.y+'" r="5" fill="none" stroke="'+col+'" stroke-width="1.6"/>' +
+      '<text x="'+n.x+'" y="'+(n.y-11)+'" font-size="9" text-anchor="middle" fill="'+col+'" font-family="Inter">'+n.name+(n.drift?' 🌀':'')+'</text>' +
+    '</g>';
+  });
+  svg += '</svg>';
+
+  return '<div class="spread-wrap">' + svg +
+    '<div class="spread-legend">' +
+      '<span><i style="background:#c9a4ff"></i> disebarkan lewat cerita</span>' +
+      '<span><i style="background:#f4967a"></i> muncul independen (bukan ditularkan)</span>' +
+      '<span><i style="background:#e8c468"></i> asal cerita</span>' +
+    '</div>' +
+    '<div class="sim-readout" style="margin-top:12px;">' +
+      '<span>Desa yang sudah punya<br>versi ceritanya sendiri</span>' +
+      '<div class="severity-bar-track"><div class="severity-bar-fill" id="spreadFill"></div></div>' +
+      '<b id="spreadPct" style="font-family:var(--serif);color:var(--gold);font-size:14px;white-space:nowrap;">0/'+SPREAD_NODES.length+'</b>' +
+    '</div>' +
+    '<div class="mechanism" id="spreadNote" style="margin-top:10px;"></div>' +
+  '</div>';
+}
+function ensureSpreadBuilt(){
+  if(spreadBuilt) return;
+  document.getElementById('spreadMapWrap').innerHTML = buildSpreadMapHtml();
+  spreadBuilt = true;
+}
+function updateSpreadMap(year){
+  if(!spreadBuilt) return;
+  let infectedCount = 0, latest = null, latestYear = -1;
+  SPREAD_NODES.forEach(n => {
+    const active = year >= n.year;
+    document.getElementById('node-'+n.id).setAttribute('opacity', active ? 1 : 0);
+    document.getElementById('line-'+n.id).setAttribute('opacity', active ? 0.85 : 0);
+    if(active){ infectedCount++; if(n.year > latestYear){ latestYear = n.year; latest = n; } }
+  });
+  const pct = Math.round((infectedCount/SPREAD_NODES.length)*100);
+  document.getElementById('spreadFill').style.width = pct+'%';
+  document.getElementById('spreadPct').textContent = infectedCount+'/'+SPREAD_NODES.length;
+
+  let note;
+  if(infectedCount===0){
+    note = 'Belum ada desa lain yang "tertular" — cerita ini masih murni lokal di Tanjung Legenda.';
+  } else if(latest.mode==='independen'){
+    note = '<b>Kemunculan independen:</b> '+latest.name+' punya kisah serupa TANPA pernah menerima cerita dari Tanjung Legenda — bukti bahwa bias kognitif (HADD) di balik mitos ini bersifat universal pada otak manusia, bukan cuma hasil satu cerita disalin ke mana-mana.';
+  } else if(latest.drift){
+    note = '<b>Penyimpangan jarak-jauh:</b> di '+latest.name+' — titik paling jauh dari sumber — versi ceritanya sudah berubah paling banyak, sosoknya bahkan berganti nama & sifat dari aslinya. Persis akresi naratif di bagian 01, tapi kali ini menumpuk lintas-desa sekaligus lintas-generasi.';
+  } else {
+    note = '<b>Epidemiologi representasi</b> (Dan Sperber) — ide budaya menyebar mengikuti pola mirip wabah: versi yang paling "menular" (dramatis, cocok intuisi bawaan) bertahan & menyebar paling jauh; versi yang kurang menarik punah di tengah jalan sebelum sempat dicatat turun-temurun.';
+  }
+  document.getElementById('spreadNote').innerHTML = note;
+}
+
+/* ================= POTRET GARIS KETURUNAN YANG MENUA =================
+   Badge kecil di pojok panel (muncul di ketiga mode: 2D/3D/Sebaran, karena posisinya sebagai sibling
+   absolute di luar container tiap mode) — memperlihatkan SIAPA yang sedang "memegang" cerita ini di
+   titik waktu tsb. Satu generasi diasumsikan ~22 tahun: wajahnya menua (rambut menggelap->beruban->
+   putih, kerutan muncul, kepala sedikit menunduk) SELAMA satu generasi berjalan, lalu "meremaja" total
+   begitu masuk generasi berikutnya — memperkuat kesan pewarisan lisan turun-temurun yang jadi salah
+   satu mekanisme inti akresi naratif di bagian 01 (cerita menumpuk detail tiap kali dipindahkan ke
+   penutur baru, bukan cuma tiap tahun berjalan).
+*/
+const LINEAGE_GEN_YEARS = 22;
+const LINEAGE_LINES = [
+  'Mendengar cerita ini pertama kali dari orang tuanya sendiri.',
+  'Menambahkan detail yang ia yakini betul dilihatnya sendiri.',
+  'Mewariskan cerita ke cucu-cucunya — sedikit lebih dramatis dari yang ia dengar.',
+  'Tak pernah mempertanyakan asal-usulnya — toh selama ini "terbukti benar".',
+  'Menjadi sesepuh yang paling dipercaya soal kisah ini di desanya.',
+  'Nyaris tak ingat lagi versi paling awal cerita ini.',
+  'Baginya, cerita ini terasa seolah selalu ada, sejak dulu kala.',
+];
+let lineageBuilt = false;
+function buildLineagePortraitHtml(){
+  return '<svg id="lineageFace" viewBox="0 0 70 70" xmlns="http://www.w3.org/2000/svg" style="width:44px;height:44px;display:block;margin:0 auto;">' +
+      '<path id="lfBody" d="M12,68 Q35,42 58,68 Z" fill="#4c3572"/>' +
+      '<circle id="lfHead" cx="35" cy="30" r="16" fill="#e4c9a8"/>' +
+      '<path id="lfHair" d="M19,27 a16,16 0 0,1 32,0 q-4,-11 -16,-11 t-16,11z" fill="#2a2350"/>' +
+      '<g id="lfWrinkles" opacity="0">' +
+        '<path d="M22,33 q13,4 26,0" stroke="#a9866b" stroke-width="1" fill="none"/>' +
+        '<path d="M24,38 q11,3 22,0" stroke="#a9866b" stroke-width="1" fill="none"/>' +
+      '</g>' +
+      '<circle cx="29" cy="29" r="1.6" fill="#3a2f1f"/><circle cx="41" cy="29" r="1.6" fill="#3a2f1f"/>' +
+      '<path d="M30,38 q5,3 10,0" stroke="#7a5c44" stroke-width="1.4" fill="none" stroke-linecap="round"/>' +
+    '</svg>' +
+    '<div style="text-align:center;margin-top:3px;">' +
+      '<div id="lineageGenLabel" style="font-family:var(--serif);font-size:11px;color:var(--gold);">Generasi ke-1</div>' +
+      '<div id="lineageLine" style="font-size:8.5px;color:var(--dim);margin-top:2px;line-height:1.35;">—</div>' +
+    '</div>';
+}
+function updateLineagePortrait(year){
+  if(!lineageBuilt){
+    document.getElementById('lineagePortrait').innerHTML = buildLineagePortraitHtml();
+    lineageBuilt = true;
+  }
+  const gen = Math.floor(year/LINEAGE_GEN_YEARS) + 1;
+  const ageProg = (year % LINEAGE_GEN_YEARS) / LINEAGE_GEN_YEARS; // 0 baru mewarisi -> ~1 lanjut usia
+  const hairCol = ageProg<0.4 ? '#2a2350' : ageProg<0.72 ? '#6a6284' : '#d8d4e8';
+  document.getElementById('lfHair').setAttribute('fill', hairCol);
+  document.getElementById('lfWrinkles').setAttribute('opacity', ageProg>0.55 ? Math.min(1,(ageProg-0.55)/0.3).toFixed(2) : 0);
+  document.getElementById('lfHead').setAttribute('cy', (30 + ageProg*2.2).toFixed(1)); // sedikit menunduk seiring usia
+  document.getElementById('lineageGenLabel').textContent = 'Generasi ke-'+gen;
+  document.getElementById('lineageLine').textContent = LINEAGE_LINES[(gen-1) % LINEAGE_LINES.length];
+}
+
+function buildEraChips(){
+  const wrap = document.getElementById('eraChips');
+  wrap.innerHTML = '';
+  STAGES.forEach(s => {
+    const chip = document.createElement('button');
+    chip.className = 'era-chip';
+    chip.textContent = s.icon+' Th.'+s.yearStart;
+    chip.addEventListener('click', () => { stopPlaying(); fullUpdate(s.yearStart); });
+    wrap.appendChild(chip);
+  });
+}
+function updateEraChips(year){
+  const idx = currentPhaseIndex(year);
+  document.querySelectorAll('.era-chip').forEach((chip,i) => chip.classList.toggle('active', i===idx));
+}
+
+function fullUpdate(year){
+  currentYear = Math.max(0, Math.min(YEAR_MAX, year));
+  document.getElementById('yearSlider').value = currentYear;
+  document.getElementById('yearBadge').textContent = 'Tahun ke-'+Math.round(currentYear);
+  updateDiorama(currentYear);
+  if(three3d) update3DDiorama(currentYear);
+  updateSpreadMap(currentYear);
+  updateLineagePortrait(currentYear);
+  renderCaption(currentYear);
+  updateEraChips(currentYear);
+  updateAudio(currentYear);
+}
+
+function stopPlaying(){
+  playing = false;
+  if(rafId2){ cancelAnimationFrame(rafId2); rafId2=null; }
+  document.getElementById('playBtn').textContent = '▶ Putar';
+  document.getElementById('playBtn').classList.remove('playing');
+}
+function playLoop(ts){
+  rafId2 = requestAnimationFrame(playLoop);
+  const dt = lastTs2 ? (ts-lastTs2)/1000 : 0; lastTs2 = ts;
+  const yearsPerSec = YEAR_MAX/13;
+  let next = currentYear + dt*yearsPerSec;
+  if(next >= YEAR_MAX){ next = YEAR_MAX; fullUpdate(next); stopPlaying(); return; }
+  fullUpdate(next);
+}
+document.getElementById('playBtn').addEventListener('click', () => {
+  if(playing){ stopPlaying(); return; }
+  if(currentYear >= YEAR_MAX) fullUpdate(0);
+  playing = true; lastTs2 = 0;
+  document.getElementById('playBtn').textContent = '⏸ Jeda';
+  document.getElementById('playBtn').classList.add('playing');
+  rafId2 = requestAnimationFrame(playLoop);
+});
+document.getElementById('yearSlider').addEventListener('input', (e) => {
+  stopPlaying();
+  fullUpdate(Number(e.target.value));
+});
+
+let detailBuilt = false;
+document.getElementById('detailToggle').addEventListener('click', () => {
+  const panel = document.getElementById('detailPanel');
+  const showing = panel.style.display !== 'none';
+  if(showing){
+    panel.style.display = 'none';
+    document.getElementById('detailToggle').textContent = '🔬 Lihat data ilmiah di balik "fenomena asli" ini →';
+  } else {
+    if(!detailBuilt){
+      panel.innerHTML = buildPrecursorSimHtml();
+      document.getElementById('simSlider').addEventListener('input', updatePrecursorSim);
+      updatePrecursorSim();
+      detailBuilt = true;
+    }
+    panel.style.display = 'block';
+    document.getElementById('detailToggle').textContent = '🔬 Sembunyikan data ilmiah ←';
+  }
+});
+
+buildEraChips();
+['pBranchYear','pFirmness'].forEach(id => document.getElementById(id).addEventListener('input', onParamsChanged));
+['pGov','pFamily','pCommunity'].forEach(id => document.getElementById(id).addEventListener('change', onParamsChanged));
+document.querySelectorAll('input[name="pMethod"]').forEach(r => r.addEventListener('change', onParamsChanged));
+renderParamPanel();
+renderScenarioResult();
+renderMicroTrack();
+setFollowParams(true); // isi caption status followBtn sejak awal (bukan cuma setelah tombol pernah diklik)
+fullUpdate(0);
+
+/* ================= DATA PREKURSOR GEMPA (BERBASIS PENELITIAN NYATA) ================= */
+// Sumbu waktu simulasi dibatasi T-20 hari s/d T-0 supaya tetap terbaca di layar kecil.
+// Titik data & rentang di bawah diambil dari literatur ilmiah sungguhan (lihat catatan di tiap label) —
+// BUKAN klaim bahwa gempa bisa diprediksi andal: justru rentang yang saling tak sepakat inilah intinya.
+const SIM_MAX_DAYS = 20;
+const SIM_MARKERS = [
+  {t:20, type:'physical', label:'Jendela anomali radon umum: 2 hari–3 minggu sebelum gempa (kajian meta radon, & bahkan pernah tercatat sampai ~100 hari untuk gempa M>6)'},
+  {t:5,  type:'behavior', label:'96% kodok jantan tinggalkan lokasi kawin, 5 hari sebelum gempa L\'Aquila M6.3 2009 (Grant & Halliday, 2010)'},
+  {t:3,  type:'behavior', label:'Kodok berpasangan turun jadi nol, 3 hari sebelum gempa yang sama (studi sama)'},
+  {t:1,  type:'physical', label:'Aktivitas gempa pembuka (foreshock) umumnya baru meningkat dalam 30 hari terakhir, sering cuma jam-hari terakhir'},
+  {t:0,  type:'main', label:'Gempa utama terjadi'},
+];
+function simIntensity(daysBefore){
+  const e = SIM_MAX_DAYS - daysBefore; // hari yang sudah berlalu sejak T-20
+  let v = (e/SIM_MAX_DAYS)*0.5;
+  if(daysBefore<=5) v += 0.2*(1-daysBefore/5);
+  if(daysBefore<=3) v += 0.15*(1-daysBefore/3);
+  if(daysBefore<=1) v += 0.35*(1-daysBefore/1);
+  v += 0.06*Math.sin(e*1.3); // gambaran noise radon yang tak konsisten
+  return Math.max(0, Math.min(1, v));
+}
+function buildPrecursorSimHtml(){
+  const markersHtml = SIM_MARKERS.map(m => {
+    const pct = ((SIM_MAX_DAYS - m.t)/SIM_MAX_DAYS)*100;
+    const chip = m.type==='main' ? '⚡ T-0' : (m.type==='behavior' ? '🐸' : '📡')+' T-'+m.t+'h';
+    return '<div class="sim-marker '+m.type+'" style="left:'+pct+'%;" title="'+m.label.replace(/"/g,'&quot;')+'">'+chip+'</div>';
+  }).join('');
+  return '<div class="precursor-sim">' +
+    '<div class="sim-panels">' +
+      '<div class="sim-panel"><h4>🗺️ Peta Wilayah</h4><svg id="simMap" viewBox="0 0 220 140" xmlns="http://www.w3.org/2000/svg">' +
+        '<rect width="220" height="140" fill="#0d2b3a"/>' +
+        '<path d="M0,90 Q60,60 110,85 T220,70 V140 H0 Z" fill="#2a5c3a"/>' +
+        '<circle id="mapRing1" class="pulse-ring" cx="130" cy="88" r="6" fill="none" stroke="#5eead4" stroke-width="2"/>' +
+        '<circle id="mapRing2" class="pulse-ring" cx="130" cy="88" r="6" fill="none" stroke="#5eead4" stroke-width="2" style="animation-delay:.4s;"/>' +
+        '<circle cx="130" cy="88" r="4" fill="#e8c468"/>' +
+        '<text x="130" y="112" text-anchor="middle" fill="#a99fd1" font-size="8" font-family="Inter">Tanjung Legenda</text>' +
+      '</svg></div>' +
+      '<div class="sim-panel"><h4>🔍 Zoom: Titik Amatan</h4><svg id="simZoom" viewBox="0 0 220 140" xmlns="http://www.w3.org/2000/svg">' +
+        '<rect width="220" height="140" fill="#0d2b3a"/>' +
+        '<path id="zoomGaugeArc" d="M30,80 A50,50 0 0,1 130,80" fill="none" stroke="#3a3160" stroke-width="10"/>' +
+        '<line id="zoomNeedle" x1="80" y1="80" x2="80" y2="34" stroke="#f4967a" stroke-width="3" stroke-linecap="round" transform="rotate(0,80,80)"/>' +
+        '<circle cx="80" cy="80" r="4" fill="#f4967a"/>' +
+        '<text x="80" y="98" text-anchor="middle" fill="#a99fd1" font-size="7" font-family="Inter">gas radon (ilustrasi)</text>' +
+        '<text id="zoomFrog" x="165" y="60" font-size="22" text-anchor="middle">🐸</text>' +
+        '<text id="zoomFish" x="195" y="80" font-size="18" text-anchor="middle">🐟</text>' +
+        '<polyline id="zoomSeismo" points="20,125 220,125" fill="none" stroke="#5eead4" stroke-width="1.5"/>' +
+      '</svg></div>' +
+    '</div>' +
+    '<div class="sim-timeline">' +
+      '<input type="range" id="simSlider" min="0" max="'+SIM_MAX_DAYS+'" step="1" value="0">' +
+      '<div class="sim-markers">'+markersHtml+'</div>' +
+      '<div class="sim-tlabels"><span>T-'+SIM_MAX_DAYS+' hari</span><span>T-0 (gempa)</span></div>' +
+    '</div>' +
+    '<div class="sim-readout">' +
+      '<span>Tingkat keparahan sinyal<br>(ilustrasi gabungan)</span>' +
+      '<div class="severity-bar-track"><div class="severity-bar-fill" id="severityFill"></div></div>' +
+      '<b id="severityPct" style="font-family:var(--serif);color:var(--gold);font-size:14px;">0%</b>' +
+    '</div>' +
+    '<div class="sim-caveat" id="simCaveat"></div>' +
+  '</div>';
+}
+function updatePrecursorSim(){
+  const slider = document.getElementById('simSlider');
+  if(!slider) return;
+  const elapsed = Number(slider.value);
+  const daysBefore = SIM_MAX_DAYS - elapsed;
+  const intensity = simIntensity(daysBefore);
+  const pct = Math.round(intensity*100);
+
+  document.getElementById('severityFill').style.width = pct+'%';
+  document.getElementById('severityPct').textContent = pct+'%';
+
+  const ringR1 = 6 + intensity*16, ringR2 = 6 + intensity*26;
+  const pulseSpeed = Math.max(0.4, 1.6 - intensity*1.2);
+  ['mapRing1','mapRing2'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    el.setAttribute('r', i===0?ringR1:ringR2);
+    el.style.animationDuration = pulseSpeed+'s';
+  });
+
+  const angle = intensity*170 - 5; // -5..165 derajat pada gauge semicircle
+  document.getElementById('zoomNeedle').setAttribute('transform', 'rotate('+angle+',80,80)');
+
+  const wiggleSpeed = Math.max(0.25, 1.1 - intensity*0.85);
+  ['zoomFrog','zoomFish'].forEach(id => { document.getElementById(id).style.animationDuration = wiggleSpeed+'s'; document.getElementById(id).classList.add('wiggle'); });
+
+  const pts = [];
+  const w=220, baseY=125, amp = 2 + intensity*22;
+  for(let x=20; x<=220; x+=8){
+    const y = baseY - Math.sin((x+elapsed*37)*0.35)*amp*Math.random()*0.6 - Math.sin(x*0.15)*amp*0.4;
+    pts.push(x.toFixed(1)+','+y.toFixed(1));
+  }
+  document.getElementById('zoomSeismo').setAttribute('points', pts.join(' '));
+
+  document.getElementById('simCaveat').innerHTML =
+    '<b>Catatan jujur:</b> tiap jenis sinyal di atas punya rentang waktu yang saling tak sepakat antar penelitian '+
+    '— anomali radon pernah dilaporkan dari 2 hari sampai (pada klaim yang diperdebatkan) puluhan tahun sebelum '+
+    'gempa yang sama. USGS sendiri menyatakan belum ada bukti ilmiah kuat bahwa perilaku hewan bisa dipakai '+
+    'memprediksi gempa secara andal. Kurva "keparahan" di atas cuma gabungan ilustratif dari titik-titik data ini, '+
+    '<b>bukan model prediksi</b> — justru karena kenyataannya seberantakan &amp; seambigu inilah, cerita mistik yang '+
+    'menyederhanakannya jadi "tempat ini yang tahu" terasa jauh lebih memuaskan secara naratif.';
+}
+
+/* ================= GALERI LINTAS BUDAYA ================= */
+const GALLERY = [
+  {title:'Kutukan Firaun', real:'🔬 Fenomena asli: spora jamur Aspergillus flavus yang bertahan ribuan tahun di ruang makam tertutup bisa memicu infeksi paru pada orang berimun lemah.', myth:'🌫️ Mistikasi: kematian beberapa anggota ekspedisi penggali makam Tutankhamun (1923) dikaitkan dengan "kutukan firaun yang murka" karena makamnya dibuka.'},
+  {title:'Api St. Elmo', real:'🔬 Fenomena asli: pelepasan muatan listrik statis (korona) di ujung benda runcing seperti tiang kapal, saat medan listrik atmosfer tinggi menjelang badai.', myth:'🌫️ Mistikasi: pelaut Eropa abad pertengahan menganggapnya pertanda atau kehadiran roh penjaga kapal.'},
+  {title:'Cahaya Rawa (Will-o\'-the-wisp)', real:'🔬 Fenomena asli: gas metana & fosfin dari pembusukan bahan organik di rawa yang bisa menyala sendiri di udara terbuka.', myth:'🌫️ Mistikasi: dianggap arwah penyesat jalan di banyak folklor Eropa, atau makhluk halus pembawa cahaya di sebagian cerita rakyat Nusantara.'},
+  {title:'Cargo Cult di Pasifik', real:'🔬 Fenomena asli: pesawat Sekutu menjatuhkan pasokan logistik ke pulau-pulau terpencil selama Perang Dunia II.', myth:'🌫️ Mistikasi: setelah perang usai dan pasokan berhenti, sejumlah komunitas membangun ritual dan landasan pesawat tiruan, berharap "kiriman dari leluhur" akan datang lagi.'},
+  {title:'Segitiga Bermuda', real:'🔬 Fenomena asli: rute pelayaran & penerbangan yang sangat padat, cuaca tropis yang berubah mendadak, dan human error — secara statistik tidak lebih tinggi dari rute sibuk lain di dunia.', myth:'🌫️ Mistikasi: dianggap wilayah dengan kekuatan supranatural yang "menelan" kapal dan pesawat tanpa jejak.'},
+  {title:'Hutan & Mata Air Keramat', real:'🔬 Fenomena asli: kawasan tertentu kebetulan tak pernah ditebang/dijamah, sehingga sumber air & keanekaragaman hayatinya tetap terjaga.', myth:'🌫️ Mistikasi: dikeramatkan sebagai tempat bersemayam roh penjaga hutan/mata air — larangan masuk sembarangan ditegakkan secara turun-temurun.', func:true},
+];
+const gal = document.getElementById('gallery');
+GALLERY.forEach(g => {
+  const card = document.createElement('div');
+  card.className = 'g-card' + (g.func ? ' func' : '');
+  card.innerHTML = '<div class="g-title">'+g.title+'</div>' +
+    '<div class="g-real">'+g.real+'</div>' +
+    '<div class="g-myth">'+g.myth+'</div>' +
+    '<div class="g-hint">Ketuk untuk lihat mistikasinya →</div>';
+  card.addEventListener('click', () => card.classList.toggle('flipped'));
+  gal.appendChild(card);
+});
+</script>
+</body>
+</html>
