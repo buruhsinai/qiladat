@@ -204,6 +204,101 @@
   }
 
   /* ---------------------------------------------------------
+     4b. PENCARIAN ALAT (hanya di /alat/)
+     Mencari sepotong kata pada judul alat di manifest. Tidak peka
+     huruf besar/kecil, tanda hubung dianggap spasi, dan jika
+     kata kunci lebih dari satu, SEMUA kata harus ada di judul.
+     --------------------------------------------------------- */
+
+  function normalisasiCari(str) {
+    return String(str || "")
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[-_]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function sorotKata(teks, tokens) {
+    const aman = escapeHTML(teks);
+    const pola = tokens
+      .filter(Boolean)
+      .sort((a, b) => b.length - a.length)
+      .map((t) => escapeHTML(t).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    if (!pola.length) return aman;
+    return aman.replace(new RegExp("(" + pola.join("|") + ")", "gi"), "<mark>$1</mark>");
+  }
+
+  function initPencarianAlat(manifest) {
+    const input = document.getElementById("cariInput");
+    const hasil = document.getElementById("cariHasil");
+    const status = document.getElementById("cariStatus");
+    const clearBtn = document.getElementById("cariClear");
+    if (!input || !hasil || !status) return; // bukan halaman utama Alat
+
+    const namaKategori = {};
+    (manifest.kategori_meta || []).forEach((m) => { namaKategori[m.slug] = m.nama; });
+
+    const indeks = (manifest.tools || []).map((t) => ({
+      judul: t.judul || t.file,
+      file: t.file,
+      kategori: t.kategori,
+      kunci: normalisasiCari(t.judul || t.file)
+    }));
+
+    function cari() {
+      const mentah = input.value;
+      if (clearBtn) clearBtn.hidden = mentah.length === 0;
+
+      const tokens = normalisasiCari(mentah).split(" ").filter(Boolean);
+      if (tokens.length === 0) {
+        hasil.hidden = true;
+        hasil.innerHTML = "";
+        status.textContent = "";
+        return;
+      }
+
+      const cocok = indeks.filter((t) => tokens.every((k) => t.kunci.indexOf(k) !== -1));
+
+      // Urutan: yang judulnya diawali kata pertama lebih dulu, lalu abjad.
+      cocok.sort((a, b) => {
+        const aw = a.kunci.indexOf(tokens[0]) === 0 ? 0 : 1;
+        const bw = b.kunci.indexOf(tokens[0]) === 0 ? 0 : 1;
+        return aw - bw || a.judul.localeCompare(b.judul, "id");
+      });
+
+      if (cocok.length === 0) {
+        hasil.innerHTML = "";
+        hasil.hidden = true;
+        status.textContent = "Tidak ada alat yang namanya memuat \u201c" + mentah.trim() + "\u201d.";
+        return;
+      }
+
+      status.textContent = cocok.length + " alat ditemukan.";
+      hasil.innerHTML = cocok.map((t) => (
+        '<li class="cari-item"><a href="/alat/' + encodeURIComponent(t.kategori) + '/' + encodeURI(t.file) + '">' +
+          '<span class="cari-item-judul">' + sorotKata(t.judul, tokens) + '</span>' +
+          '<span class="cari-item-kategori">' + escapeHTML(namaKategori[t.kategori] || titleCaseDariSlug(t.kategori)) + '</span>' +
+        '</a></li>'
+      )).join("");
+      hasil.hidden = false;
+    }
+
+    input.disabled = false;
+    input.addEventListener("input", cari);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && input.value) { input.value = ""; cari(); }
+    });
+    if (clearBtn) {
+      clearBtn.addEventListener("click", () => { input.value = ""; cari(); input.focus(); });
+    }
+
+    // Mendukung tautan langsung, mis. /alat/?cari=kurir
+    const q = new URLSearchParams(window.location.search).get("cari");
+    if (q) { input.value = q; cari(); }
+  }
+
+  /* ---------------------------------------------------------
      5. RENDER HALAMAN KATEGORI (/alat/<slug>/index.html)
      --------------------------------------------------------- */
 
@@ -263,6 +358,7 @@
           renderHalamanKategori(manifest, slug);
         } else {
           renderHalamanUtamaAlat(manifest);
+          initPencarianAlat(manifest);
         }
       })
       .catch(() => {
