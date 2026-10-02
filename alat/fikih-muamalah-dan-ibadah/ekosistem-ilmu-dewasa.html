@@ -1,0 +1,2036 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ekosistem Ilmu — Alat JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!--
+  STATUS PENGERJAAN (untuk AI / sesi lanjutan — baca ini dulu sebelum mengedit):
+  - Prototipe v1: SELESAI. Dua panel: (1) Peta Desa — simulasi agen bergerak yang
+    meniru siklus tertutup "lulusan hanya bisa mengajar di lingkungan yang sama,
+    kalau tidak dapat slot ya dianggap menganggur tanpa kontribusi lain" (instruksi
+    eksplisit pengguna); (2) Kuis Dasar — soal matematika dasar (dominan perkalian)
+    untuk anak, tiap jawaban benar = 1 Poin Pembangunan, tiap beberapa poin
+    membangun 1 lahan kosong jadi pondok baru & menyerap sebagian lulusan dari
+    Zona Menunggu.
+  - Revisi v2 (SELESAI): peta diperluas & skalanya diperkecil ("kerdil") atas
+    permintaan pengguna — viewBox 900x660 (dari 600x400), rumah & ikon institusi/
+    lahan digambar lebih kecil, dan jumlah elemen jauh ditambah: rumah rakyat
+    (HOUSE_ROWS, ~48 rumah dua baris) serta grid institusi/lahan 4 baris x 6 kolom
+    (24 slot; hanya 4 terisi institusi awal, 20 sisanya lahan kosong menunggu
+    dibangun masjid/pondok/rumah tahfidz). Semua posisi kini digenerate via loop
+    (bukan array hardcode) supaya jumlah baris/kolom mudah diubah lagi nanti.
+  - Belum ada: Tipe 2 (Tempel-Tempel) & Tipe 3 (Terpadu & Berurutan) dari alat
+    "pesantren-siklus" — prototipe ini SENGAJA baru memodelkan Tipe 1 (siklus
+    tertutup) saja, karena itu inti kritik yang diangkat pengguna. Sekolah umum
+    juga belum disimulasikan (baru elemen dekoratif rumah & jalan). Panel kedua
+    (soal keduniaan) sudah diselingi soal renungan sains sejak v2.2 (lihat di
+    bawah) — tapi masih satu panel yang sama, belum dipisah jadi panel visual
+    tersendiri seukuran lebih kecil seperti yang sempat dibayangkan pengguna
+    (lihat proyek-simulator-edukasi-qiladat.md untuk rencana itu).
+  - Revisi v2.1 (SELESAI): ditambah kontrol kecepatan (Lambat/Sedang/Cepat, via
+    `TIME_SCALE`) supaya orang yang cuma mau lihat HASIL AKHIR tidak perlu
+    menunggu lama — ini mempercepat waktu NYATA pemain, bukan menambah "tahun"
+    di dalam simulasi (spawn/gerak agen di-scale lewat `dt` di `animate()`, jeda
+    "belajar" & jeda antar-soal kuis di-scale lewat setTimeout/TIME_SCALE). Juga
+    ditambah "Mode Tonton" (`autoPlay`) yang menjawab kuis otomatis dengan benar
+    pada interval `AUTO_ANSWER_BASE_MS/TIME_SCALE`, lewat `autoAnswerTick()` —
+    dipanggil dari `animate()`. Perkiraan kasarnya: Lambat ≈10 menit, Sedang ≈3
+    menit, Cepat ≈1 menit untuk melihat seluruh 20 lahan terbangun jika Mode
+    Tonton aktif terus; angka ini hanya perkiraan, bukan hasil pengukuran presisi.
+  - Revisi v2.2 (SELESAI): panel kuis direvisi supaya memuat poin substantif
+    pengguna soal sains — bahwa gambaran sains yang "sudah final dan tahu
+    segalanya" itu BUKAN wajah sains sebenarnya, dan mengaku "belum tahu" adalah
+    bagian normal dari sains, bukan kegagalan. Implementasinya: ~22% soal kini
+    tipe 'sains' (Benar/Salah, bank di `SCIENCE_STATEMENTS`) yang diselingi di
+    antara soal hitungan dominan-perkalian seperti semula; beberapa butir sengaja
+    menjadikan "belum ada yang tahu pasti / masih terus diteliti" sebagai jawaban
+    BENAR. Tiap jawaban (benar maupun salah) memunculkan catatan singkat di
+    `quizFeedback` yang menjelaskan kenapa. `generateQuestion()`/`answerQuiz()`
+    sudah digeneralisasi supaya mendukung dua tipe jawaban (angka & teks
+    Benar/Salah) sekaligus — termasuk kompatibel dengan `autoAnswerTick()` dari
+    Mode Tonton.
+  - Revisi v2.3 (SELESAI, dikerjakan ulang di sesi baru setelah sesi sebelumnya
+    terputus karena limit & baterai HP habis — kalau ada kejanggalan kecil vs
+    yang sempat dibicarakan, itu sebabnya): menambahkan JALUR GANDA institusi —
+    'pesantren' dan 'sekolah' berjalan berdampingan, masing-masing siklus
+    tertutup sendiri (BUKAN Tipe 2/Tempel-Tempel atau Tipe 3/Terpadu dari alat
+    pesantren-siklus — itu dua model berbeda yang punya keterkaitan ANTAR jalur;
+    di sini dua jalur berjalan PARALEL & independen, cuma berbagi lahan kosong
+    & poin kuis yang sama). Detail implementasi:
+      • Setiap slot grid & lahan kosong (`plots`) punya properti `type`
+        ('pesantren'/'sekolah'), ditentukan checkerboard (r+c)%2 di
+        `buildSlotGrid()` — efeknya urutan `plots` (dipakai `tryBuildFromPoints`)
+        otomatis berselang-seling antar jalur tanpa perlu logika tambahan.
+      • Setiap agen (`agents`) punya properti `path`, diwarisi dari `type`
+        institusi/lahan tempat ia belajar (`spawnSantri`/`tryBuildFromPoints`).
+      • `seekSlot()` hanya mencari institusi dengan `inst.type === a.path`;
+        kalau tak ada slot kosong di jalurnya sendiri ya dianggap menganggur
+        (TIDAK lintas jalur — sengaja, supaya tetap merepresentasikan siklus
+        tertutup per jalur, bukan gabungan).
+      • `tryBuildFromPoints()`: institusi baru mewarisi `plot.type`, dan hanya
+        menyerap `idleQueue` yang `path`-nya cocok (di-scan, bukan sekadar
+        shift-depan, supaya agen jalur lain yang lebih dulu antre tidak
+        "dilewati salah jalur").
+      • `updateStatsUI()` sekarang juga menghitung & menampilkan rincian
+        per jalur (lihat `#statTeachPesantren` dkk. di HTML) selain angka
+        total lama.
+      • CSS var baru `--school` (biru) untuk membedakan visual institusi
+        sekolah dari pesantren (`--accent`, terracotta+kubah). Bentuk SVG
+        `institutionSVG()` juga beda: pesantren = kubah+bulan sabit, sekolah =
+        atap datar+jendela. Legenda kedua ditambahkan di bawah legenda lama.
+  - Revisi v2.4 (SELESAI): memisahkan panel "Renungan Sains" jadi panel visual
+    tersendiri yang lebih kecil (`#panelSains`), terpisah dari panel "Kuis
+    Dasar" (`#panelHitung`) — sesuai item "belum ada" di v2.2/v2.3. Cuma
+    soal panel yang mana yang ditampilkan (`generateQuestion()` toggle
+    `style.display` salah satu, sembunyikan yang lain), poin & pool
+    `buildPoints` TETAP satu/bersama seperti sebelumnya (belum dipisah per
+    jalur — itu tugas terpisah yang sengaja belum dikerjakan di revisi ini
+    biar ringan). Bar "Poin Pembangunan" dipindah keluar dari kedua panel
+    supaya selalu terlihat berapa pun panel kuis yang sedang aktif.
+    `renderOptions()`/`answerQuiz()`/`autoAnswerTick()` digeneralisasi lagi
+    supaya menerima id target (answers/feedback) sesuai panel aktif.
+  - Revisi v2.5 (SELESAI): poin kuis dipisah per jalur — `buildPoints` sekarang
+    objek `{pesantren, sekolah}`, bukan satu angka bersama. Tiap soal (baik
+    'hitung' maupun 'sains') dikaitkan acak 50/50 ke salah satu jalur via
+    `currentPath`, ditandai badge kecil (`.quiz-path-tag`) di atas pertanyaan
+    supaya pemain tahu jawabannya menyumbang ke jalur mana. Jawaban benar
+    hanya menambah `buildPoints[currentPath]`, dan `tryBuildFromPoints(type)`
+    kini menerima parameter jalur — ia HANYA memakan pool jalur itu dan HANYA
+    mencari lahan (`plots`) dengan `type` yang sama (pakai `findIndex`, bukan
+    `shift()` array penuh, karena urutan campuran checkerboard tidak lagi bisa
+    diasumsikan match dengan jalur yang lagi dibangun). Panel "Poin
+    Pembangunan" di UI juga dipecah jadi dua bar terpisah (`buildBarFillPesantren`/
+    `buildBarFillSekolah`). Implikasi main: kalau satu jalur kehabisan lahan
+    kosong duluan, poin di jalur itu akan terus menumpuk tak terpakai (sengaja
+    dibiarkan begitu — bukan bug, itu representasi natural dari "lahan
+    pesantren habis tapi santri pesantren masih terus lulus").
+  - Palet warna & font sengaja disamakan dengan Bank Alat lain di brand JAZMI
+    (Fredoka/Quicksand/JetBrains Mono, --bg krem, --accent terracotta) supaya
+    konsisten satu keluarga produk qiladat.com.
+  - Revisi v2.6 (SELESAI): Tipe 2 (Tempel-Tempel) & Tipe 3 (Terpadu &
+    Berurutan) dari alat "pesantren-siklus" akhirnya diimplementasikan —
+    TAPI setelah cek ulang ke sumber asli (qiladat.com/alat/fikih-muamalah-
+    dan-ibadah/pesantren-siklus), definisinya BUKAN soal lulusan pindah
+    jalur/lintas-institusi seperti dugaan di catatan v2.5 sebelumnya. Definisi
+    aslinya murni soal DESAIN KURIKULUM per institusi:
+      • Tipe 1 Murni Ilmu Agama — siklus tertutup, cuma ilmu agama (ini =
+        pesantren, sudah dimodelkan sejak v2.3, TIDAK berubah).
+      • Tipe 2 Tempel-Tempel — kurikulum umum & agama DIJALANKAN BERBARENGAN
+        TANPA DIURUTKAN/DIROMBAK/DIRINGANKAN, masing-masing diambil utuh dari
+        sumber asli lalu ditumpuk. Efeknya di sini: waktu belajar lebih LAMA
+        (STUDY_MULTIPLIER[2] = 1.7×) — merepresentasikan beban ganda mentah.
+      • Tipe 3 Terpadu & Berurutan — dua ilmu dipadukan dengan prioritas &
+        urutan yang DIROMBAK jadi kurikulum baru yang harmonis. Efeknya di
+        sini: waktu belajar lebih CEPAT/efisien (STUDY_MULTIPLIER[3] = 0.75×)
+        — sumber sendiri menyebut tipe ini "ideal, tapi langka".
+    Implementasi: field `curriculum` (1/2/3) ditambahkan ke institusi &
+    diwariskan ke agen saat spawn. HANYA institusi jalur 'sekolah' yang bisa
+    Tipe 2/3 (dipilih acak lewat `pickCurriculum()`, bobot 70% Tipe2 : 30%
+    Tipe3, meniru rasio slider bawaan alat sumber 35:15 yang dinormalisasi);
+    institusi 'pesantren' tetap selalu Tipe 1 (curriculum=1), sesuai makna
+    "murni ilmu agama" yang sudah pas dengan definisi pesantren siklus
+    tertutup yang sudah ada. `onArrive()` mengalikan STUDY_MS dengan
+    `STUDY_MULTIPLIER[a.curriculum]` saat state 'belajar'. Visual
+    `institutionSVG()`: Tipe 2 digambar sebagai dua warna terpisah tegas
+    (agama|umum, batas keras — merepresentasikan "ditempel" tanpa
+    integrasi), Tipe 3 digambar sebagai gradasi menyatu antara warna
+    pesantren & sekolah plus aksen bintang kecil (merepresentasikan
+    "dipadukan harmonis" & "ideal, tapi langka"). Rincian jumlah Tipe2/Tipe3
+    sekolah ditambahkan ke panel statistik jalur sekolah.
+    CATATAN JUJUR soal batasan: ini TETAP bukan model lintas-jalur
+    (pesantren & sekolah masih dua siklus penyerapan terpisah seperti v2.3 —
+    itu memang fitur yang sudah SENGAJA ada, bukan bagian dari Tipe 2/3 yang
+    sesungguhnya). Kalau nanti pengguna memang mau menambah mekanisme lulusan
+    lintas-institusi, itu perluasan BARU di luar definisi asli Tipe 2/3, dan
+    perlu didiskusikan terpisah sebagai ide baru, bukan "menyelesaikan Tipe
+    2/3" yang sudah tuntas di revisi ini.
+  - Revisi v2.9 (SELESAI): grafik riwayat rasio penyerapan per tahun simulasi
+    (`history`, `recordHistory()`, `renderHistory()`), rincian arah lintas-
+    institusi (`crossDir`), dan penyimpanan pengaturan kecepatan + toggle
+    lintas-institusi di localStorage (dibungkus try/catch).
+  - Revisi v3.0 (SELESAI): mekanisme JALUR MANDIRI — akar masalah yang
+    diperbaiki: sebelum revisi ini, agen cuma punya dua ujung nasib (dapat
+    slot mengajar ATAU menganggur), yang secara implisit menyamakan
+    "sukses" dengan "jadi pengajar" semata, padahal semangat proyek ini
+    adalah soal kesenjangan lulusan vs slot mengajar, bukan klaim mengajar
+    itu satu-satunya jalan hidup yang layak. Lulusan yang menganggur cukup
+    lama (`MANDIRI_WAIT_MS`, dicek tiap frame lewat `a.mandiriTimer`) kini
+    otomatis mencoba jalur mandiri (usaha/keterampilan lain di luar
+    mengajar) lewat `tryMandiriAgent()` — SELALU aktif, BUKAN toggle
+    opsional seperti lintas-institusi (v2.8), supaya jadi bagian baku
+    model. Begitu masuk (`mandiriQueue`), agen dianggap "berperan" secara
+    permanen untuk simulasi ini, digambar di zona baru "ZONA JALUR MANDIRI"
+    di peta (warna teal `--mandiri`). Kapasitasnya TERBATAS & tumbuh
+    perlahan (`mandiriCapacity`, +1 tiap `MANDIRI_CAPACITY_GROWTH_EVERY_YEARS`
+    tahun dari basis `MANDIRI_CAPACITY_BASE`) — bukan solusi ajaib tanpa
+    batas, tetap merepresentasikan bahwa kapasitas ekonomi/keterampilan
+    mandiri masyarakat itu nyata tapi terbatas. Rasio utama di hero-stat
+    serta `computeRatios()` (grafik riwayat) diperbaiki jadi "berperan" =
+    mengajar + jalur mandiri, dibagi total lulusan — TIDAK LAGI menyamakan
+    sukses dengan mengajar semata. Rincian per jalur (pesantren/sekolah)
+    juga menampilkan hitungan mandiri terpisah.
+    CATATAN JUJUR soal batasan: jalur mandiri di sini masih SATU kategori
+    generik ("usaha/keterampilan lain"), belum dipecah jadi jenis-jenis
+    usaha spesifik; dan (lihat Revisi v3.1) status "berperan permanen" di
+    atas SUDAH DIPERBAIKI — kalau nanti mau dibuat lebih realistis lagi
+    (jenis usaha beragam, atau jalur mandiri yang juga bisa "naik kelas"
+    jadi institusi baru), itu perluasan lanjutan yang perlu didiskusikan
+    terpisah, bukan bagian dari revisi v3.0/v3.1 ini.
+  - Revisi v3.1 (SELESAI): CHURN jalur mandiri — akar masalah yang
+    diperbaiki: v3.0 menganggap begitu lulusan masuk jalur mandiri, ia
+    "berperan" secara permanen sepanjang simulasi, padahal usaha/
+    keterampilan mandiri di dunia nyata punya risiko gagal/bangkrut yang
+    nyata, terutama di masa-masa awal. Ditambahkan `tryMandiriFail()`,
+    dicek berkala tiap `MANDIRI_FAIL_CHECK_MS` lewat `a.mandiriFailTimer`
+    untuk tiap agen berstatus 'mandiri' (bukan yang masih dalam animasi
+    'menuju-mandiri'). Peluang gagal (`MANDIRI_FAIL_BASE_PROB`, basis 18%)
+    MENURUN tiap kali usaha itu lolos pemeriksaan (`a.mandiriChecks`,
+    dibagi `1 + checks*MANDIRI_FAIL_DECAY`) — meniru pola umum bahwa usaha
+    baru paling rawan gagal, yang sudah lama bertahan makin stabil. Kalau
+    gagal, agen dikirim balik ke zona menunggu lewat state transisi
+    'menuju-menganggur' yang SUDAH ADA sejak v2.x (bukan status baru),
+    supaya animasi & `onArrive()` tetap konsisten tanpa duplikasi logika.
+    Ditambahkan `mandiriFailCount` (kumulatif) & baris badge baru di UI
+    ("Usaha pernah gagal & kembali menunggu: N"). CATATAN JUJUR: begitu
+    gagal, `a.mandiriChecks` di-reset ke 0 — artinya kalau lulusan itu
+    kembali menganggur lalu kelak masuk jalur mandiri LAGI, ia dianggap
+    usaha "baru" lagi (paling rawan), bukan melanjutkan skor
+    kematangan sebelumnya; itu penyederhanaan sengaja, bukan bug.
+  - Revisi v3.2 (SELESAI): jalur mandiri bisa "NAIK KELAS" jadi pemberi
+    kerja — akar masalah yang diperbaiki: sebelum revisi ini, jalur mandiri
+    cuma bisa menyerap SATU lulusan per usaha (pemiliknya sendiri), padahal
+    di dunia nyata usaha yang sudah mapan biasanya mulai mempekerjakan
+    orang lain. ANGKA-ANGKA di bawah ini TIDAK diminta spesifik oleh
+    pengguna ("saya tidak tahu berapa hitung-hitungannya... silakan anda
+    yang lakukan sendiri") — jadi ini keputusan desain penulis, sengaja
+    dibuat SEKECIL & SESEDERHANA mungkin sesuai instruksi "level jumlah
+    pekerja paling minimal": usaha yang lolos `MANDIRI_LEVELUP_CHECKS`
+    (3x) pemeriksaan churn (lewat `tryLevelUpMandiri()`, dipanggil dari
+    cabang "lolos" di `tryMandiriFail()`) naik kelas (`a.mandiriLevel=1`)
+    dan membuka TEPAT `MANDIRI_BIZ_JOB_CAPACITY` (=1) lowongan lewat objek
+    `mandiriJobs`. Lowongan itu SELALU dicoba diisi tiap frame lewat
+    `tryFillMandiriJobs()` — FIFO dari `idleQueue`, LINTAS jalur pesantren/
+    sekolah (jalur mandiri memang di luar siklus tertutup dua jalur itu).
+    Pekerja yang mengisi lowongan (`a.mandiriRole='pekerja'`) TIDAK punya
+    risiko gagal sendiri — nasibnya terikat ke pemiliknya: kalau usaha
+    pemiliknya bangkrut, `releaseMandiriJob(jobId, true)` ikut merumahkan
+    pekerjanya balik ke zona menunggu. Usaha yang naik kelas digambar
+    dengan kontur emas (`stroke: var(--yellow)`) di peta, ditambah badge
+    baru "Usaha naik kelas" (jumlah usaha & rasio lowongan terisi).
+    CATATAN JUJUR soal batasan: masih TEPAT 1 lowongan per usaha (tidak
+    bertumbuh lagi meski usahanya makin lama bertahan) — kalau nanti mau
+    dibuat berjenjang (level 2, 3, dst dengan lowongan makin banyak), atau
+    jenis usaha dibuat beragam, itu perluasan lanjutan yang perlu
+    didiskusikan terpisah, bukan bagian dari revisi v3.2 ini.
+  - Revisi v3.3 (SELESAI): lowongan BERJENJANG — akar masalah yang
+    diperbaiki: v3.2 mengunci tiap usaha ke TEPAT 1 lowongan selamanya,
+    padahal permintaan lanjutan pengguna eksplisit "lowongan berjenjang
+    lebih dari 1". Angka jenjangnya lagi-lagi TIDAK dirujuk spesifik oleh
+    pengguna, jadi keputusan desain penulis: `MANDIRI_LEVELUP_TIERS =
+    [3,7,12]` (ambang jumlah checks-churn yang harus dilalui utk naik ke
+    level 1/2/3), `MANDIRI_MAX_LEVEL = 3` (maksimal 3 lowongan per usaha —
+    tetap kecil-menengah, bukan tumbuh tanpa batas jadi institusi
+    raksasa). `tryLevelUpMandiri()` diubah dari `if` jadi `while` supaya
+    kalau ada lompatan checks, usaha tetap naik level demi level berurutan
+    (bukan meloncat ke level tertinggi sekaligus). Field
+    `a.mandiriJobId` (tunggal, dipakai PEKERJA — satu pekerja cuma
+    mengisi satu lowongan) dan `a.mandiriJobIds` (array, dipakai PEMILIK
+    usaha — bisa punya sampai 3 lowongan) kini dipisah jelas. Saat usaha
+    bangkrut, SEMUA lowongan miliknya (`a.mandiriJobIds`) ditutup &
+    SEMUA pekerjanya ikut dirumahkan (bukan cuma satu). Kontur emas di
+    peta kini makin TEBAL seiring level makin tinggi (`stroke-width =
+    1.2 + level*0.5`), dan badge UI diubah dari "buka lapangan kerja,
+    level minimal" jadi "berjenjang, maks. 3 lowongan/usaha"; hitungan
+    jumlah usaha (`statMandiriBiz`) diperbaiki jadi menghitung PEMILIK
+    unik (bukan `mandiriJobs.length` — yang sekarang bisa lebih dari
+    jumlah usaha kalau ada yang sudah level 2/3).
+    CATATAN JUJUR soal batasan: jenis usaha masih SATU kategori generik
+    di semua level (level cuma menambah jumlah lowongan, bukan jenis
+    usaha baru); dan begitu bangkrut, usaha kembali ke level 0 sepenuhnya
+    (tidak ada "separuh bangkrut" yang cuma menutup sebagian lowongan) —
+    kalau nanti mau dibuat lebih halus dari itu, itu perluasan lanjutan
+    yang perlu didiskusikan terpisah.
+  - Revisi v3.4 (SELESAI): jenis usaha mandiri dibuat BERAGAM — akar
+    masalah yang diperbaiki: v3.0–v3.3 memperlakukan jalur mandiri sebagai
+    SATU kategori generik "usaha/keterampilan lain" tanpa rincian. Daftar
+    jenisnya (`MANDIRI_BIZ_TYPES`: Dagang/Warung, Kerajinan Tangan, Jasa
+    Keterampilan, Tani/Ternak) TIDAK dirujuk spesifik oleh pengguna —
+    keputusan desain penulis, dipilih 4 jenis mata pencaharian yang lazim
+    & realistis di lingkungan pesantren/desa. Jenis usaha diundi acak
+    (`a.mandiriBizType`) saat lulusan mulai usaha sendiri lewat
+    `tryMandiriAgent()`; PEKERJA yang mengisi lowongan (`tryFillMandiriJobs()`)
+    ikut memakai jenis usaha PEMILIKNYA (`job.type`) — satu usaha = satu
+    jenis, konsisten dgn dunia nyata. Ditambahkan `setMandiriTooltip()`:
+    memasang elemen `<title>` di dalam lingkaran SVG agen (tooltip native
+    saat kursor diarahkan) + atribut `data-mandiri-tipe` (supaya gampang
+    diperiksa/diuji tanpa perlu render visual). Ditambahkan badge baru
+    "Rincian jenis usaha mandiri" yang menghitung breakdown per jenis dari
+    SEMUA agen berstatus 'mandiri' (pemilik + pekerja). Warna & bentuk
+    lingkaran di peta SENGAJA TIDAK diubah per jenis (tetap satu warna
+    teal) — supaya tidak menambah kompleksitas visual/skema warna yang
+    sudah dipakai untuk makna lain (status, lintas-institusi, level usaha).
+    CATATAN JUJUR soal batasan: jenis usaha diundi acak murni, tidak ada
+    logika yang menghubungkan jenis usaha dengan latar/jalur asal lulusan
+    (pesantren vs sekolah) atau dengan kurikulum yang ia pelajari — kalau
+    nanti mau dibuat lebih bermakna (mis. lulusan tahfizh lebih condong ke
+    "Jasa Keterampilan" mengajar ngaji privat), itu perluasan lanjutan yang
+    perlu didiskusikan terpisah, bukan bagian dari revisi v3.4 ini.
+  - Revisi v3.5 (SELESAI): latar jalur asal MEMENGARUHI jenis usaha — akar
+    masalah yang diperbaiki: v3.4 mengundi jenis usaha benar-benar acak
+    rata (25% tiap jenis) tanpa mempertimbangkan latar lulusan, padahal
+    intuitifnya lulusan pesantren & lulusan sekolah umum biasanya condong
+    ke jenis mata pencaharian yang agak berbeda. Ditambahkan
+    `MANDIRI_BIZ_WEIGHTS` (tabel bobot per `a.path`, TIDAK dirujuk
+    spesifik oleh pengguna — keputusan desain penulis) & fungsi
+    `pickMandiriBizType(path)` yang mengundi berbobot (bukan aturan kaku —
+    lulusan pesantren MASIH BISA dapat jenis usaha apa saja, cuma
+    peluangnya beda). Lulusan pesantren dibobotkan lebih condong ke "Jasa
+    Keterampilan" & "Kerajinan Tangan" (mis. mengajar ngaji privat),
+    lulusan sekolah lebih condong ke "Dagang/Warung" & "Tani/Ternak".
+    Hanya mengganti SATU baris pemanggilan di `tryMandiriAgent()` (dari
+    undian rata jadi `pickMandiriBizType(a.path)`) — pekerja tetap
+    mewarisi jenis usaha pemiliknya seperti v3.4, tidak berubah.
+    CATATAN JUJUR soal batasan: bobotnya tetap KONSTAN sepanjang simulasi
+    (tidak menyesuaikan diri dgn kurikulum spesifik yang dipelajari
+    lulusan, hanya level jalur pesantren-vs-sekolah secara umum) — kalau
+    nanti mau lebih detail per kurikulum, itu perluasan lanjutan terpisah.
+  - Revisi v3.6 (SELESAI): EKSPOR RIWAYAT ke CSV — dipilih sbg lanjutan
+    paling ringan (murni fitur ekspor data, TIDAK menyentuh mekanisme
+    simulasi/state machine sama sekali, jadi risiko regresi minimal).
+    `recordHistory()` diperluas mencatat snapshot tahunan jalur mandiri
+    juga (`mandiri`, `mandiriBiz`, `mandiriJobsFilled`, `mandiriJobsTotal`,
+    `mandiriFailCum`) — sebelumnya cuma ratio pesantren/sekolah/total.
+    Ditambahkan `buildHistoryCSV()` (fungsi MURNI, cuma mengolah `history`
+    jadi string CSV, gampang diuji tanpa API browser) dan
+    `exportHistoryCSV()` (pembungkus yang urus Blob + unduhan lewat tombol
+    baru "⬇️ Ekspor riwayat (.csv)" di bawah grafik riwayat). File CSV
+    diberi nama otomatis memuat tahun terakhir simulasi berjalan.
+    CATATAN JUJUR soal batasan: histori dibatasi maksimal 200 entri
+    terakhir (baris lama dibuang otomatis, `if(history.length > 200)
+    history.shift()` — sudah ada sejak v2.9), jadi CSV yang diekspor
+    ikut terbatas 200 tahun terakhir juga, bukan seluruh riwayat sejak
+    awal simulasi kalau sudah berjalan sangat lama.
+  - Revisi v2.8 (SELESAI): mekanisme lulusan LINTAS-INSTITUSI (perluasan baru,
+    BUKAN bagian definisi asli Tipe 2/3). Toggle `crossEnabled` (default MATI).
+    Kalau aktif, agen yang menganggur >= CROSS_WAIT_MS (waktu simulasi)
+    memeriksa institusi jalur LAIN yang masih punya kursi (`tryCrossAgent()`);
+    bila ada, ia pindah & mengajar di sana (a.crossed=true, kontur ungu,
+    `crossCount`++). Timer `a.crossTimer` di-reset di seekSlot & tiap gagal.
+  - Revisi v2.7 (SELESAI): Mode Banding — kalkulator kumulatif 2 skenario
+    berdampingan ("⚖️ Seimbang" vs "⚠️ Timpang"), TERPISAH SEPENUHNYA dari
+    simulasi peta agen di atas (tidak berbagi state/variabel apa pun dengan
+    `institutions`/`agents`/dst). Rumusnya persis pendekatan bagian "Simulasi
+    Penyerapan Lulusan" di alat sumber qiladat.com/alat/fikih-muamalah-dan-
+    ibadah/pesantren-siklus: jumlah pondok tumbuh %/tahun (compound growth),
+    tiap tahun menyumbang lulusan & kapasitas serap baru sesuai rate per-
+    pondok yang bisa diatur pengguna, dijumlahkan kumulatif dari tahun 0
+    (`computeScenario()`). Dirender sebagai grafik garis SVG manual
+    (`renderBandingChart()`, 4 garis: lulusan/kapasitas × Skenario A/B) +
+    rasio penyerapan akhir tiap skenario + catatan interpretasi otomatis
+    (`recomputeBanding()`, dipanggil ulang tiap input berubah via event
+    listener `input`). Skenario "Timpang" default punya kapasitas-serap/
+    pondok/tahun jauh lebih rendah (1.5 vs 5) & pertumbuhan pondok lebih
+    lambat (3% vs 5%) dibanding "Seimbang" — merepresentasikan dominasi Tipe
+    1 tanpa penyeimbang yang jadi kekhawatiran inti proyek ini.
+  - Cara lanjutkan: lihat blok <script> — arsitektur agen ada di objek `agents`
+    (state: belajar → cari-slot → mengajar ATAU menganggur; field `path`
+    menentukan jalurnya), institusi di `institutions` (field `type`), lahan
+    kosong di `plots` (field `type`), unemployment queue di `idleQueue`.
+    Fungsi `animate()` adalah loop utama (requestAnimationFrame), `onArrive()`
+    menangani transisi state saat agen sampai tujuan, `tryBuildFromPoints()`
+    mengubah lahan kosong jadi institusi baru begitu poin kuis cukup. Grid
+    slot & rumah kini dibuat oleh `buildHouseRow()` dan `buildSlotGrid()` di
+    bagian DATA STATIS PETA — ubah konstanta ROWS/COLS di situ untuk mengatur
+    kepadatan, bukan menambah baris array manual.
+  - REPACKAGING DEWASA (dikerjakan dari sesi/utas lain, terpisah dari v1→v3.6
+    di atas): pengguna mengunggah file v3.6 ini ke utas lain yang sedang
+    mengerjakan VERSI ANAK dari proyek yang sama (lihat file kid-version
+    terpisah, judulnya sama "Ekosistem Ilmu" tapi dgn maskot burung hantu,
+    confetti, wajah emosi — file itu TIDAK ADA hubungan kode dgn file ini,
+    cabang berbeda). Pengguna minta file INI (v3.6) dikemas ulang supaya
+    headernya TIDAK terasa "identik anak-anak": emoji 🕌 di judul dihapus,
+    identitas diganti memakai identitas JAZMI yang SEBENARNYA dari
+    qiladat.com/alat (wordmark "ز JAZMI — Jalinan Zamrud Islamiah",
+    breadcrumb "Alat / Ekosistem Ilmu", eyebrow bernomor "01 —"/"02 —" dst
+    persis konvensi qiladat.com/alat & tool pesantren-siklus), footer diganti
+    nav situs asli + copyright. Emoji di heading tiap panel (🗺️🧮🔭🏗️🔬)
+    DIHAPUS, diganti judul polos + eyebrow. TIDAK ditambahkan maskot apa pun
+    ke file ini (sengaja, sesuai permintaan). Mekanisme/JS/kalkulasi TIDAK
+    disentuh sama sekali — murni ganti chrome/branding tingkat atas. Kalau
+    mau melanjutkan restyle lebih dalam (radius sudut, palet warna, dsb agar
+    lebih terasa "dashboard serius"), itu belum dikerjakan — baru header,
+    breadcrumb, eyebrow section, dan footer yang diubah.
+  - v4.0 — NARASI SUARA & STATUS RINGKAS (SELESAI): permintaan pengguna —
+    teks di alat ini sudah padat sehingga hal penting kadang terlewat.
+    Ditambahkan: (1) `#statusLine`/`buildStatusLine()` — satu baris ringkas
+    & efisien (tahun, rasio, jumlah pondok/sekolah aktif, antrean menunggu,
+    jalur mandiri) yang selalu ter-update lewat `updateStatusLine()`
+    (dipanggil dari akhir `updateStatsUI()`); (2) `speak()`/`narrate()` via
+    Web Speech API (speechSynthesis, bahasa id-ID, TANPA file audio
+    eksternal) — dipanggil OTOMATIS hanya pada kejadian penting: pondok/
+    sekolah baru berdiri (`tryBuildFromPoints`), usaha mandiri naik kelas
+    (`tryLevelUpMandiri`), usaha mandiri bangkrut (`tryMandiriFail`) — bukan
+    tiap tick, supaya tidak berisik; (3) tombol `#voiceBtn` aktif/nonaktifkan
+    narasi otomatis (default AKTIF), tersimpan di localStorage key
+    `ekosistem-ilmu-voice`; (4) tombol `#readNowBtn` "🗣️ Bacakan" untuk
+    membacakan status ringkas kapan saja on-demand, terlepas dari toggle
+    narasi otomatis mati/hidup — tapi tetap dibungkam total kalau voice OFF.
+    Cara lanjutkan: kalau mau tambah titik narasi baru (mis. saat rasio
+    melewati ambang krisis tertentu), panggil `narrate('kalimat singkat')`
+    di titik kejadian yang relevan — JANGAN taruh di dalam `animate()` tiap
+    frame, cukup di titik event diskret spt yang sudah ada.
+-->
+<style>
+  :root{
+    --bg:#F5F1E4; --card:#ffffff; --line:#e7dcbd;
+    --ink:#2b2b28; --dim:#847a63;
+    --accent:#E4572E; --accent-soft:#FBE2D6;
+    --yellow:#F2B705; --steel:#35505F;
+    --teach:#2c7a4b; --idle:#9a8f78; --study:#5b7fb5; --school:#3E7CB1; --cross:#7B4FB3; --mandiri:#1F9C8A;
+    --display:'Fredoka',sans-serif; --sans:'Quicksand',sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;}
+  .wrap{max-width:680px;margin:0 auto;padding:0 18px 60px;}
+
+  .hero{padding:30px 4px 6px;text-align:center;}
+  .hero h1{font-family:var(--display);font-weight:700;font-size:26px;margin:0 0 8px;color:var(--steel);}
+  .hero p{font-size:13.5px;color:var(--dim);margin:0;max-width:440px;margin-inline:auto;}
+
+  .hero-stat{background:var(--steel);color:#fff;border-radius:18px;padding:20px 16px;text-align:center;margin:20px 0;}
+  .hero-stat-num{font-family:var(--display);font-weight:700;font-size:42px;line-height:1;}
+  .hero-stat-label{font-size:12.5px;opacity:.85;margin-top:6px;}
+  .hero-stat-sub{font-size:12px;font-family:var(--mono);opacity:.7;margin-top:8px;}
+
+  .panel{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:16px;margin-bottom:20px;}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+  .panel-head h2{font-family:var(--display);font-weight:600;font-size:17px;margin:0;color:var(--ink);}
+  .panel-controls{display:flex;gap:8px;}
+  .ctrl-btn{font-family:var(--display);font-weight:600;font-size:12.5px;background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:9px;cursor:pointer;}
+  .ctrl-btn.ghost{background:none;color:var(--steel);border:2px solid var(--line);}
+  .ctrl-btn:disabled{opacity:.5;cursor:default;}
+
+  svg#mapSvg{width:100%;height:auto;display:block;background:#fbf8ef;border-radius:12px;border:2px dashed var(--line);}
+
+  .speed-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:10px;}
+  .speed-group{display:flex;background:#fbf8ef;border:2px solid var(--line);border-radius:10px;padding:3px;gap:2px;}
+  .speed-btn{font-family:var(--display);font-weight:600;font-size:11.5px;background:none;color:var(--dim);border:none;padding:6px 9px;border-radius:7px;cursor:pointer;}
+  .speed-btn.active{background:var(--steel);color:#fff;}
+  .auto-btn{font-family:var(--display);font-weight:600;font-size:11.5px;background:none;color:var(--steel);border:2px solid var(--line);border-radius:10px;padding:7px 11px;cursor:pointer;}
+  .auto-btn.active{background:var(--yellow);border-color:var(--yellow);color:#4a3a05;}
+  /* v2.8: toggle & badge lulusan lintas-institusi (warna ungu) */
+  .auto-btn.cross-active{background:var(--cross);border-color:var(--cross);color:#fff;}
+  .cross-badge{margin-top:8px;padding:8px 12px;border:2px dashed var(--cross);border-radius:12px;font-family:var(--mono);font-size:12px;color:var(--cross);}
+  .cross-badge b{font-family:var(--display);}
+  /* v3.0: badge jalur mandiri (selalu aktif, bukan toggle) */
+  .mandiri-badge{margin-top:8px;padding:8px 12px;border:2px dashed var(--mandiri);border-radius:12px;font-family:var(--mono);font-size:12px;color:var(--mandiri);}
+  .mandiri-badge b{font-family:var(--display);}
+  /* v2.9: grafik riwayat rasio penyerapan */
+  .history-box{margin-top:10px;padding:10px 12px;border:2px solid var(--line);border-radius:12px;background:#fffdf7;}
+  .history-box b{font-family:var(--display);font-size:13px;}
+  .history-box svg{width:100%;height:auto;display:block;margin-top:6px;}
+  .history-legend{display:flex;gap:12px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;margin-top:4px;}
+  .history-legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:4px;}
+  .speed-hint{font-size:11px;color:var(--dim);margin:0 0 12px;line-height:1.5;}
+
+  .legend{display:flex;flex-wrap:wrap;gap:10px 14px;font-size:11.5px;color:var(--dim);margin-top:10px;font-family:var(--mono);}
+  .legend span{display:inline-flex;align-items:center;gap:5px;}
+  .legend i{width:9px;height:9px;border-radius:50%;display:inline-block;}
+
+  .map-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px;}
+  .map-stat{background:#fbf8ef;border-radius:10px;padding:8px 10px;}
+  .map-stat b{display:block;font-family:var(--display);font-size:16px;color:var(--steel);}
+  .map-stat span{font-size:11px;color:var(--dim);}
+
+  .jalur-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+  .jalur-stat{border-radius:10px;padding:8px 10px;font-size:11px;color:var(--dim);}
+  .jalur-stat.pesantren{background:var(--accent-soft);}
+  .jalur-stat.sekolah{background:#e2ecf4;}
+  .jalur-stat b.jalur-title{display:block;font-family:var(--display);font-size:12.5px;margin-bottom:3px;}
+  .jalur-stat.pesantren b.jalur-title{color:var(--accent);}
+  .jalur-stat.sekolah b.jalur-title{color:var(--school);}
+
+  .quiz-intro{font-size:12.5px;color:var(--dim);margin:0 0 12px;}
+  .panel-sains-mini{padding:12px 14px;background:#f3f7fa;border-color:#d3e2ec;}
+  .panel-sains-mini .panel-head h2{font-size:14.5px;color:var(--school);}
+  .build-progress-panel{padding:12px 16px;}
+
+  .quiz-path-tag{display:inline-block;font-family:var(--display);font-weight:600;font-size:11px;padding:4px 10px;border-radius:20px;margin-bottom:10px;}
+  .quiz-path-tag.pesantren{background:var(--accent-soft);color:var(--accent);}
+  .quiz-path-tag.sekolah{background:#e2ecf4;color:var(--school);}
+
+  .build-progress-dual{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .build-progress-label{display:block;font-family:var(--display);font-weight:600;font-size:12px;margin-bottom:5px;}
+  .build-progress-col.pesantren .build-progress-label{color:var(--accent);}
+  .build-progress-col.sekolah .build-progress-label{color:var(--school);}
+  .build-bar-fill.school{background:var(--school);}
+  .build-progress-col p{font-size:11px;color:var(--dim);text-align:center;margin:6px 0 0;font-family:var(--mono);}
+  .quiz-question{font-family:var(--display);font-weight:700;font-size:30px;text-align:center;color:var(--ink);background:#fbf8ef;border-radius:14px;padding:18px;margin-bottom:12px;}
+  .quiz-question.sains{font-size:15.5px;font-weight:600;text-align:left;line-height:1.5;padding:16px 18px;}
+  .quiz-answers{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .quiz-answer-btn{font-family:var(--display);font-weight:600;font-size:16px;background:var(--accent-soft);color:var(--accent);border:2px solid transparent;border-radius:12px;padding:14px;cursor:pointer;}
+  .quiz-answer-btn:hover{border-color:var(--accent);}
+  .quiz-answer-btn:disabled{opacity:.5;cursor:default;}
+  .quiz-answer-btn.correct{background:var(--teach);color:#fff;}
+  .quiz-answer-btn.wrong{background:#c0392b;color:#fff;}
+  .quiz-feedback{min-height:18px;text-align:center;font-size:13px;font-weight:600;margin:10px 0 0;color:var(--steel);}
+
+  .build-progress{margin-top:14px;}
+  .build-bar-outline{background:#fbf8ef;border:1.5px solid var(--line);border-radius:20px;height:14px;overflow:hidden;}
+  .build-bar-fill{background:var(--yellow);height:100%;width:0%;transition:width .3s;}
+  #buildProgressText{font-size:11.5px;color:var(--dim);text-align:center;margin:6px 0 0;font-family:var(--mono);}
+
+  /* v2.7: Mode Banding — panel kalkulator 2 skenario berdampingan */
+  .banding-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+  .banding-col{border-radius:14px;padding:12px 12px 6px;}
+  .banding-col.seimbang{background:#eef2ed;}
+  .banding-col.timpang{background:var(--accent-soft);}
+  .banding-title{display:block;font-family:var(--display);font-weight:600;font-size:12.5px;margin-bottom:8px;}
+  .banding-col.seimbang .banding-title{color:var(--steel);}
+  .banding-col.timpang .banding-title{color:var(--accent);}
+  .banding-col label{display:block;font-size:10.5px;color:var(--dim);margin-bottom:8px;}
+  .banding-col input[type=number]{width:100%;margin-top:3px;font-family:var(--mono);font-size:12.5px;padding:5px 7px;border-radius:7px;border:1.5px solid var(--line);background:#fff;box-sizing:border-box;}
+  .banding-range-label{display:block;font-size:11.5px;color:var(--dim);margin-bottom:4px;font-family:var(--mono);}
+  .banding-range{width:100%;margin-bottom:12px;accent-color:var(--steel);}
+  svg#bandingChart{width:100%;height:auto;display:block;background:#fbf8ef;border-radius:12px;border:2px dashed var(--line);margin-bottom:10px;}
+  .banding-legend{display:flex;flex-wrap:wrap;gap:10px 14px;font-size:10.5px;color:var(--dim);margin-bottom:12px;font-family:var(--mono);}
+  .banding-legend span{display:inline-flex;align-items:center;gap:5px;}
+  .banding-legend i{width:16px;height:0;border-top:2.5px solid; display:inline-block;}
+  .banding-legend i.dashed{border-top-style:dashed;}
+  .banding-result{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .banding-result-col{border-radius:10px;padding:8px 10px;text-align:center;}
+  .banding-result-col.seimbang{background:#eef2ed;}
+  .banding-result-col.timpang{background:var(--accent-soft);}
+  .banding-result-col b{display:block;font-size:10px;color:var(--dim);font-weight:600;margin-bottom:2px;}
+  .banding-result-col span{font-family:var(--display);font-weight:700;font-size:19px;color:var(--ink);}
+  .banding-note{font-size:11.5px;color:var(--dim);text-align:center;margin:10px 0 0;}
+
+  .batasan{background:var(--accent-soft);border-radius:14px;padding:14px 16px;font-size:12px;color:#7a3821;margin-top:6px;}
+  .batasan h3{font-family:var(--display);font-size:13px;margin:0 0 6px;color:#7a3821;}
+  .batasan p{margin:0 0 6px;}
+  .batasan p:last-child{margin-bottom:0;}
+  .batasan a{color:#7a3821;}
+
+  footer.credit{text-align:center;padding-top:18px;color:#b9ad94;font-size:11px;font-family:var(--mono);}
+
+  /* Repackaging dewasa: identitas JAZMI asli (qiladat.com/alat), bukan "Bank Alat" versi anak */
+  .jazmi-brand{display:flex;align-items:center;justify-content:center;gap:7px;font-family:var(--display);font-weight:600;font-size:13px;color:var(--dim);margin-bottom:6px;}
+  .jazmi-brand .mark{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:5px;background:var(--steel);color:#fff;font-size:12px;font-family:var(--sans);}
+  .breadcrumb{text-align:center;font-size:11.5px;color:var(--dim);margin-bottom:14px;font-family:var(--mono);}
+  .breadcrumb a{color:var(--dim);text-decoration:underline;}
+  .eyebrow{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.02em;color:var(--dim);margin-bottom:4px;}
+
+  footer.site-footer{border-top:2px solid var(--line);margin-top:26px;padding-top:18px;text-align:center;}
+  footer.site-footer .mark-row{display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--display);font-weight:600;font-size:14px;color:var(--steel);margin-bottom:4px;}
+  footer.site-footer .mark-row .mark{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:var(--steel);color:#fff;font-size:13px;font-family:var(--sans);}
+  footer.site-footer .tagline{font-size:11.5px;color:var(--dim);margin-bottom:10px;}
+  footer.site-footer nav{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;font-size:11.5px;margin-bottom:10px;}
+  footer.site-footer nav a{color:var(--dim);text-decoration:none;border-bottom:1px solid transparent;}
+  footer.site-footer nav a:hover{border-color:var(--dim);}
+  footer.site-footer .copyright{font-size:10.5px;color:#b9ad94;font-family:var(--mono);}
+
+  /* v4.0: status-bar ringkas + narasi suara */
+  .status-bar{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid var(--line);border-radius:14px;padding:10px 14px;margin:14px 0;flex-wrap:wrap;}
+  .status-bar-text{flex:1 1 220px;font-family:var(--mono);font-size:12px;color:var(--ink);min-width:0;}
+  .status-bar-controls{display:flex;gap:8px;flex:0 0 auto;}
+  .status-btn{font-family:var(--display);font-weight:600;font-size:12px;background:#fbf8ef;color:var(--steel);border:2px solid var(--line);padding:7px 10px;border-radius:9px;cursor:pointer;white-space:nowrap;}
+  .status-btn.voice-off{color:var(--dim);opacity:.7;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="jazmi-brand"><span class="mark">ز</span> JAZMI — Jalinan Zamrud Islamiah</div>
+  <div class="breadcrumb"><a href="https://qiladat.com/alat/">Alat</a> / Ekosistem Ilmu</div>
+
+  <header class="hero">
+    <h1>Ekosistem Ilmu</h1>
+    <p>Model ilustratif: bagaimana pertumbuhan lulusan pendidikan agama bisa lebih cepat daripada pertumbuhan tempat mengajar — dan bagaimana ilmu dunia (matematika, sains, logika) ikut menentukan seberapa cepat masyarakat bisa membangun kapasitas baru.</p>
+  </header>
+
+  <div class="hero-stat">
+    <div class="hero-stat-num" id="ratioNum">—</div>
+    <div class="hero-stat-label">Rasio "Berperan" Lulusan Saat Ini (mengajar + jalur mandiri)</div>
+    <div class="hero-stat-sub" id="ratioSub">Tekan "Mulai Simulasi" di bawah</div>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-bar-text" id="statusLine">Tahun 0 · rasio 100% · simulasi belum dimulai.</div>
+    <div class="status-bar-controls">
+      <button class="status-btn" id="readNowBtn" title="Bacakan kondisi saat ini">🗣️ Bacakan</button>
+      <button class="status-btn" id="voiceBtn" title="Aktif/nonaktifkan narasi otomatis untuk perubahan penting">🔊 Suara: Aktif</button>
+    </div>
+  </div>
+
+  <section class="panel panel-map">
+    <div class="panel-head">
+      <div><span class="eyebrow">01 — Simulasi Agen</span><h2>Peta Populasi</h2></div>
+      <div class="panel-controls">
+        <button id="startBtn" class="ctrl-btn">▶ Mulai Simulasi</button>
+        <button id="resetBtn" class="ctrl-btn ghost">↺ Ulangi</button>
+      </div>
+    </div>
+
+    <div class="speed-row">
+      <div class="speed-group" id="speedGroup">
+        <button class="speed-btn" data-scale="1">🐢 Lambat</button>
+        <button class="speed-btn active" data-scale="3">🚶 Sedang</button>
+        <button class="speed-btn" data-scale="10">⚡ Cepat</button>
+      </div>
+      <button class="auto-btn" id="autoBtn">🤖 Mode tonton (jawab otomatis)</button>
+      <button class="auto-btn" id="crossBtn">🔀 Lintas-institusi: MATI</button>
+    </div>
+    <p class="speed-hint">Kecepatan ini cuma mempercepat waktu <em>nyata</em> kamu menunggu — bukan mengubah jumlah "tahun" di dalam simulasi. Lambat ≈ 10 menit buat lihat hasil akhir, Sedang ≈ 3 menit, Cepat ≈ 1 menit (perkiraan kasar, tergantung seberapa cepat kamu/otomatis menjawab kuis).</p>
+
+    <svg id="mapSvg" viewBox="0 0 900 660" preserveAspectRatio="xMidYMid meet">
+      <!-- jalan -->
+      <line x1="10" y1="50" x2="890" y2="50" stroke="#d8cba0" stroke-width="4" stroke-linecap="round"/>
+      <line x1="10" y1="420" x2="890" y2="420" stroke="#d8cba0" stroke-width="4" stroke-linecap="round"/>
+      <!-- rumah rakyat (dekoratif, statis, dua baris) -->
+      <g id="housesGroup" fill="#847a63"></g>
+
+      <!-- zona lahan & institusi (statis posisinya, isi dinamis) -->
+      <g id="plotsGroup"></g>
+      <g id="institutionsGroup"></g>
+
+      <!-- zona menunggu (lulusan menganggur) -->
+      <rect x="16" y="466" width="520" height="184" rx="10" fill="#efe8d3" stroke="var(--line)"/>
+      <text x="26" y="460" font-family="JetBrains Mono" font-size="10.5" fill="#847a63">ZONA MENUNGGU PERAN (belum dapat slot mengajar)</text>
+      <g id="idleGroup"></g>
+
+      <!-- v3.0: zona jalur mandiri (usaha/keterampilan lain di luar mengajar, SELALU aktif) -->
+      <rect x="546" y="466" width="338" height="184" rx="10" fill="#e4f3f0" stroke="var(--mandiri)"/>
+      <text x="556" y="460" font-family="JetBrains Mono" font-size="10.5" fill="#1F9C8A">ZONA JALUR MANDIRI (usaha &amp; keterampilan sendiri)</text>
+      <g id="mandiriGroup"></g>
+
+      <!-- agen bergerak -->
+      <g id="agentsGroup"></g>
+    </svg>
+
+    <div class="legend">
+      <span><i style="background:#5b7fb5"></i>Santri belajar</span>
+      <span><i style="background:#F2B705"></i>Lulus, cari slot</span>
+      <span><i style="background:#2c7a4b"></i>Berhasil mengajar</span>
+      <span><i style="background:var(--mandiri)"></i>Jalur mandiri (usaha/keterampilan lain)</span>
+      <span><i style="background:#9a8f78"></i>Menganggur (masih menunggu)</span>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--accent)"></i>Pesantren (Tipe 1, murni agama)</span>
+      <span><i style="background:linear-gradient(90deg,var(--accent) 50%,var(--school) 50%)"></i>Sekolah Tipe 2 (Tempel-Tempel)</span>
+      <span><i style="background:linear-gradient(90deg,var(--accent),var(--school))"></i>Sekolah Tipe 3 ✦ (Terpadu)</span>
+      <span><i style="background:#fff;border:2px solid var(--cross)"></i>Lulusan lintas-institusi (kontur ungu)</span>
+      <span><i style="background:var(--mandiri);border:2px solid var(--yellow)"></i>Usaha naik kelas, buka lapangan kerja berjenjang (kontur emas, makin tebal = makin banyak lowongan)</span>
+    </div>
+
+    <div class="map-stats">
+      <div class="map-stat"><b id="statYear">0</b><span>Tahun berjalan</span></div>
+      <div class="map-stat"><b id="statTeach">0</b><span>Lulusan mengajar</span></div>
+      <div class="map-stat"><b id="statMandiri">0</b><span>Jalur mandiri</span></div>
+      <div class="map-stat"><b id="statIdle">0</b><span>Lulusan menganggur</span></div>
+      <div class="map-stat"><b id="statPlots">20</b><span>Lahan kosong tersisa</span></div>
+    </div>
+
+    <div class="jalur-stats">
+      <div class="jalur-stat pesantren">
+        <b class="jalur-title">🕌 Jalur Pesantren</b>
+        <span id="statJalurPesantren">0 mengajar · 0 menganggur · 0 lahan kosong</span>
+      </div>
+      <div class="jalur-stat sekolah">
+        <b class="jalur-title">🏫 Jalur Sekolah</b>
+        <span id="statJalurSekolah">0 mengajar · 0 menganggur · 0 lahan kosong</span>
+        <span id="statJalurSekolahKurikulum" style="display:block;margin-top:4px;font-family:var(--mono);">—</span>
+      </div>
+    </div>
+    <div class="cross-badge" id="crossBadge">🔀 Lintas-institusi: <b id="statCross">0</b> lulusan pindah jalur &amp; berhasil mengajar · <span id="statCrossMode">mekanisme MATI</span><br><span id="statCrossDir" style="font-size:11px;">→ Sekolah: 0 · → Pesantren: 0</span></div>
+    <div class="mandiri-badge" id="mandiriBadge">🧭 Jalur mandiri (selalu aktif, risiko usaha nyata): <b id="statMandiriBadge">0</b> lulusan sedang menjalankan usaha/keterampilan sendiri · kapasitas terpakai <span id="statMandiriPool">0/0</span><br><span id="statMandiriFail" style="font-size:11px;">Usaha pernah gagal &amp; kembali menunggu: 0</span></div>
+    <div class="mandiri-badge" id="mandiriJobBadge" style="border-color:var(--yellow);color:#7a5c00;">🏗️ Usaha naik kelas (berjenjang, maks. 3 lowongan/usaha): <b id="statMandiriBiz">0</b> usaha · <span id="statMandiriJobs">0/0 lowongan terisi</span></div>
+    <div class="mandiri-badge" id="mandiriTypeBadge">📋 Rincian jenis usaha mandiri (arahkan kursor ke lulusan di zona jalur mandiri utk lihat jenisnya): <span id="statMandiriTypes">—</span></div>
+    <div class="history-box">
+      <b>📈 Riwayat rasio penyerapan (peta agen)</b>
+      <svg id="historySvg" viewBox="0 0 400 120" preserveAspectRatio="none" role="img" aria-label="Grafik riwayat rasio penyerapan per tahun simulasi"></svg>
+      <div class="history-legend">
+        <span><i style="background:var(--teach)"></i>Total</span>
+        <span><i style="background:var(--accent)"></i>Pesantren</span>
+        <span><i style="background:var(--school)"></i>Sekolah</span>
+        <span id="historyInfo">belum ada data</span>
+      </div>
+      <button class="auto-btn" id="exportCsvBtn" style="margin-top:8px;">⬇️ Ekspor riwayat (.csv)</button>
+    </div>
+  </section>
+
+  <section class="panel panel-quiz" id="panelHitung">
+    <div class="panel-head"><div><span class="eyebrow">02 — Soal Latihan</span><h2>Kuis Dasar</h2></div></div>
+    <p class="quiz-intro">Soal hitungan dasar (dominan perkalian) — tiap jawaban benar menyumbang 1 Poin Pembangunan ke jalur yang tertera di bawah.</p>
+    <div class="quiz-path-tag" id="quizPathTag">—</div>
+    <div class="quiz-question" id="quizQ">—</div>
+    <div class="quiz-answers" id="quizAnswers"></div>
+    <p class="quiz-feedback" id="quizFeedback">&nbsp;</p>
+  </section>
+
+  <section class="panel panel-sains-mini" id="panelSains" style="display:none;">
+    <div class="panel-head"><div><span class="eyebrow">02 — Soal Latihan</span><h2>Renungan Sains</h2></div></div>
+    <p class="quiz-intro">Sesekali giliran soal ini muncul: Benar/Salah tentang sains. Bukan buat mempersulit, tapi pengingat kecil bahwa sains itu terus berkembang, bukan sesuatu yang sudah "selesai" dan tahu segalanya. Poinnya menyumbang ke jalur yang tertera di bawah.</p>
+    <div class="quiz-path-tag" id="sainsPathTag">—</div>
+    <div class="quiz-question sains" id="sainsQ">—</div>
+    <div class="quiz-answers" id="sainsAnswers"></div>
+    <p class="quiz-feedback" id="sainsFeedback">&nbsp;</p>
+  </section>
+
+  <div class="panel build-progress-panel">
+    <div class="panel-head"><div><span class="eyebrow">03 — Progres Pembangunan</span><h2>Poin Pembangunan per Jalur</h2></div></div>
+    <div class="build-progress-dual">
+      <div class="build-progress-col pesantren">
+        <span class="build-progress-label">🕌 Pesantren</span>
+        <div class="build-bar-outline"><div class="build-bar-fill" id="buildBarFillPesantren"></div></div>
+        <p id="buildProgressTextPesantren">0/4</p>
+      </div>
+      <div class="build-progress-col sekolah">
+        <span class="build-progress-label">🏫 Sekolah</span>
+        <div class="build-bar-outline"><div class="build-bar-fill school" id="buildBarFillSekolah"></div></div>
+        <p id="buildProgressTextSekolah">0/4</p>
+      </div>
+    </div>
+  </div>
+
+  <section class="panel" id="panelBanding">
+    <div class="panel-head"><div><span class="eyebrow">04 — Perbandingan Skenario</span><h2>Mode Banding: 2 Skenario</h2></div></div>
+    <p class="quiz-intro">Terinspirasi langsung dari bagian "Simulasi Penyerapan Lulusan" di alat <em>Siklus Pendidikan Pondok Pesantren</em> — tapi dua skenario berdampingan. Geser angkanya untuk lihat efeknya pada rasio penyerapan.</p>
+
+    <div class="banding-grid">
+      <div class="banding-col seimbang">
+        <b class="banding-title">⚖️ Skenario A — Jalur Seimbang</b>
+        <label>Jumlah pondok awal
+          <input type="number" id="bA-n0" value="500" min="1" step="10">
+        </label>
+        <label>Lulusan siap-mengajar / pondok / tahun
+          <input type="number" id="bA-lulusan" value="5" min="0" step="0.5">
+        </label>
+        <label>Kapasitas serap baru / pondok / tahun
+          <input type="number" id="bA-kapasitas" value="5" min="0" step="0.5">
+        </label>
+        <label>Pertumbuhan jumlah pondok / tahun (%)
+          <input type="number" id="bA-growth" value="5" min="0" step="0.5">
+        </label>
+      </div>
+      <div class="banding-col timpang">
+        <b class="banding-title">⚠️ Skenario B — Jalur Timpang</b>
+        <label>Jumlah pondok awal
+          <input type="number" id="bB-n0" value="500" min="1" step="10">
+        </label>
+        <label>Lulusan siap-mengajar / pondok / tahun
+          <input type="number" id="bB-lulusan" value="5" min="0" step="0.5">
+        </label>
+        <label>Kapasitas serap baru / pondok / tahun
+          <input type="number" id="bB-kapasitas" value="1.5" min="0" step="0.5">
+        </label>
+        <label>Pertumbuhan jumlah pondok / tahun (%)
+          <input type="number" id="bB-growth" value="3" min="0" step="0.5">
+        </label>
+      </div>
+    </div>
+
+    <label class="banding-range-label">Rentang simulasi: <span id="bandingYearsVal">15</span> tahun</label>
+    <input type="range" id="bandingYears" min="5" max="30" value="15" class="banding-range">
+
+    <svg id="bandingChart" viewBox="0 0 900 340" preserveAspectRatio="xMidYMid meet"></svg>
+
+    <div class="banding-legend">
+      <span><i style="border-color:var(--steel)"></i>Skenario A — kumulatif lulusan</span>
+      <span><i class="dashed" style="border-color:var(--steel)"></i>Skenario A — kumulatif kapasitas serap</span>
+      <span><i style="border-color:var(--accent)"></i>Skenario B — kumulatif lulusan</span>
+      <span><i class="dashed" style="border-color:var(--accent)"></i>Skenario B — kumulatif kapasitas serap</span>
+    </div>
+
+    <div class="banding-result">
+      <div class="banding-result-col seimbang"><b>Rasio akhir — Skenario A</b><span id="bandingRatioA">—</span></div>
+      <div class="banding-result-col timpang"><b>Rasio akhir — Skenario B</b><span id="bandingRatioB">—</span></div>
+    </div>
+    <p class="banding-note" id="bandingNote"></p>
+  </section>
+
+  <div class="batasan">
+    <h3>Batasan</h3>
+    <p>Ini model ilustratif sangat disederhanakan untuk memvisualisasikan satu dinamika sosial (siklus tertutup pendidikan agama Tipe 1), bukan data riil. Terinspirasi dari alat <em>Siklus Pendidikan Pondok Pesantren</em> (konsep rasio penyerapan lulusan) dan gaya interaksi <em>Laboratorium Algoritma Alam</em> di qiladat.com.</p>
+    <p>Jalur pesantren & sekolah di sini tetap berjalan sebagai <em>dua siklus penyerapan lulusan yang terpisah</em> (fitur sengaja dari v2.3). Yang baru: institusi sekolah kini bisa Tipe 2 (Tempel-Tempel, kurikulum ditumpuk mentah → belajar lebih lama) atau Tipe 3 (Terpadu & Berurutan, dipadukan harmonis → belajar lebih efisien), sesuai definisi asli di alat <em>Siklus Pendidikan Pondok Pesantren</em>. Rasio 70:30 antara keduanya, ambang bangun, kecepatan, kapasitas, dan jumlah lahan semuanya angka rekaan untuk kebutuhan demo, bukan hasil pengukuran lapangan.</p>
+    <p>Panel Mode Banding di atas TIDAK terhubung dengan simulasi peta agen — ia kalkulator kumulatif terpisah (rumus linier sederhana: jumlah pondok tumbuh %/tahun, dikalikan lulusan/kapasitas per pondok per tahun, dijumlahkan tahun demi tahun), persis pendekatan bagian "Simulasi Penyerapan Lulusan" di alat sumber. Angka default "Seimbang" vs "Timpang" cuma ilustrasi untuk mikir bersama, bukan proyeksi nyata.</p>
+  </div>
+
+  <footer class="site-footer">
+    <div class="mark-row"><span class="mark">ز</span> JAZMI</div>
+    <div class="tagline">Jalinan Zamrud Islamiah</div>
+    <nav>
+      <a href="https://qiladat.com/alat/">Alat</a>
+      <a href="https://qiladat.com/dien/">Dien</a>
+      <a href="https://qiladat.com/sains/">Sains</a>
+      <a href="https://qiladat.com/produk/">Produk</a>
+      <a href="https://qiladat.com/">Beranda</a>
+    </nav>
+    <div class="copyright">© 2026 JAZMI — Jalinan Zamrud Islamiah · Prototipe v3.6</div>
+  </footer>
+</div>
+
+<script>
+/* ================= HELPER ================= */
+function lerp(a,b,t){ return a+(b-a)*t; }
+function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function dist(x1,y1,x2,y2){ return Math.hypot(x2-x1,y2-y1); }
+const SVGNS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs){
+  const el = document.createElementNS(SVGNS, tag);
+  for(const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+/* ================= DATA STATIS PETA (v2: digenerate via loop, bukan array manual) ================= */
+// Rumah rakyat: dua baris rapat di atas & di bawah grid institusi — skala kecil ("kerdil")
+// supaya jumlahnya bisa banyak dan menyisakan ruang untuk lahan kosong di tengah.
+function buildHouseRow(y, count){
+  const houses = [];
+  const margin = 30, span = 900 - margin*2;
+  for(let i=0;i<count;i++){
+    houses.push({x: margin + (span/(count-1))*i, y});
+  }
+  return houses;
+}
+const HOUSES = [...buildHouseRow(28, 24), ...buildHouseRow(436, 24)];
+
+// Grid institusi/lahan: 4 baris x 6 kolom = 24 slot. Hanya 4 diisi institusi awal
+// (satu di kolom pertama tiap baris), 20 sisanya lahan kosong menunggu pembangunan
+// masjid/pondok/rumah tahfidz — inilah "lahan-lahan kosong" yang diminta pengguna.
+// v2.3: tiap slot juga diberi `type` ('pesantren'/'sekolah') pola checkerboard
+// (r+c)%2 — efeknya urutan array `slots`/`plots` otomatis berselang-seling
+// antar jalur, jadi tryBuildFromPoints() membangun sekolah/pesantren bergantian
+// tanpa perlu logika urutan tambahan.
+function buildSlotGrid(rows, cols){
+  const slots = [];
+  const xMargin = 90, xSpan = 900 - xMargin*2;
+  const yTop = 120, ySpan = 270;
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const type = (r+c) % 2 === 0 ? 'pesantren' : 'sekolah';
+      slots.push({x: xMargin + (xSpan/(cols-1))*c, y: yTop + (ySpan/(rows-1))*r, type});
+    }
+  }
+  return slots;
+}
+const SLOT_ROWS = 4, SLOT_COLS = 6;
+const SLOTS = buildSlotGrid(SLOT_ROWS, SLOT_COLS);
+// slot pertama tiap baris (indeks 0,6,12,18) mulai sebagai institusi terisi sebagian
+const INIT_INSTITUTION_SLOTS = [0,6,12,18];
+const CAPACITY_PER_INSTITUTION = 3;
+const PREFILLED_PER_INSTITUTION = 2;
+
+// v2.6: Tipe kurikulum — HANYA berlaku untuk institusi jalur 'sekolah'.
+// Pesantren selalu Tipe 1 (curriculum=1, murni agama, tidak berubah sejak v2.3).
+// Bobot 70% Tipe2 : 30% Tipe3 meniru rasio slider bawaan alat sumber (35:15).
+const CURRICULUM_POOL = [2,2,2,2,2,2,2,3,3,3];
+function pickCurriculum(){ return pick(CURRICULUM_POOL); }
+const STUDY_MULTIPLIER = { 1: 1, 2: 1.7, 3: 0.75 };
+
+const IDLE_ZONE = {x:26, y:480, cols:20, cellW:24.5, cellH:34, rows:4};
+// v3.0: zona visual jalur mandiri (usaha/keterampilan lain di luar mengajar)
+const MANDIRI_ZONE = {x:556, y:480, cols:12, cellW:24.5, cellH:34, rows:4};
+
+/* ================= STATE SIMULASI ================= */
+let institutions = [];   // {id,x,y,capacity,filled,el,barFillEl}
+let plots = [];          // {id,x,y,slotIndex,el}
+let agents = [];         // agen bergerak
+let idleQueue = [];      // id agen yang sedang menganggur, urutan FIFO utk diserap duluan
+let year = 0;
+let teacherCount = 0;
+let idleCount = 0;
+// v2.5: poin pembangunan kini dipisah per jalur — pesantren & sekolah punya
+// pool sendiri-sendiri, tidak lagi saling menyumbang. Ambang bangun (per
+// jalur) tetap sama seperti sebelumnya (BUILD_THRESHOLD).
+let buildPoints = { pesantren: 0, sekolah: 0 };
+const BUILD_THRESHOLD = 4;
+// v2.8: mekanisme lulusan lintas-institusi
+let crossEnabled = false;
+let crossCount = 0;
+let crossDir = { toSekolah: 0, toPesantren: 0 };
+let history = []; // v2.9: {year,total,pesantren,sekolah} per tahun simulasi
+const CROSS_WAIT_MS = 12000; // lama menganggur (waktu simulasi) sebelum mau lintas jalur
+
+// v3.0: jalur mandiri — lulusan yang tak dapat slot mengajar & sudah lama
+// menunggu, otomatis mencoba membangun usaha/keterampilan sendiri di luar
+// mengajar. SELALU aktif (bukan toggle opsional), berbeda dari mekanisme
+// lintas-institusi (v2.8) yang masih tetap toggle. Begitu masuk jalur
+// mandiri, agen dianggap "berperan" secara permanen (tidak kembali
+// menganggur di simulasi ini) — tapi kapasitasnya TERBATAS & tumbuh
+// perlahan seiring tahun berjalan, merepresentasikan bahwa kapasitas
+// ekonomi/keterampilan mandiri masyarakat itu nyata tapi tidak tanpa batas.
+let mandiriQueue = [];      // id agen yang sedang menjalankan jalur mandiri
+const MANDIRI_WAIT_MS = 9000; // lebih cepat dari CROSS_WAIT_MS — jalur mandiri jadi "jaring pengaman" utama
+const MANDIRI_CAPACITY_BASE = 6;
+const MANDIRI_CAPACITY_GROWTH_EVERY_YEARS = 6; // tiap N tahun, kapasitas mandiri +1
+let mandiriCapacity = MANDIRI_CAPACITY_BASE;
+// v3.1: churn — usaha/keterampilan mandiri punya risiko gagal/bangkrut NYATA,
+// terutama di masa-masa awal (mengikuti pola umum: usaha baru paling rawan
+// gagal, yang sudah lama bertahan makin stabil). Kalau gagal, lulusan
+// kembali ke zona menunggu (bukan lagi status "berperan permanen" seperti
+// asumsi longgar di v3.0).
+const MANDIRI_FAIL_CHECK_MS = 10000; // tiap berapa lama (waktu simulasi) risiko gagal dicek ulang
+const MANDIRI_FAIL_BASE_PROB = 0.18; // risiko gagal di pemeriksaan pertama (usaha paling baru)
+const MANDIRI_FAIL_DECAY = 0.5; // tiap kali lolos, risiko berikutnya makin kecil (usaha makin mapan)
+let mandiriFailCount = 0; // kumulatif: berapa kali usaha mandiri gagal/bangkrut sepanjang simulasi
+
+// v3.2: "naik kelas" — usaha mandiri yang sudah cukup lama bertahan (lolos
+// beberapa kali pemeriksaan churn) boleh berkembang jadi PEMBERI KERJA:
+// membuka satu lowongan untuk lulusan lain yang masih menganggur. Angka
+// persisnya (ambang "cukup mapan" & jumlah lowongan) TIDAK ada rujukan
+// baku dari pengguna — ini keputusan desain penulis, dibuat SEKECIL &
+// SESEDERHANA mungkin ("level jumlah pekerja paling minimal", sesuai
+// permintaan eksplisit): satu usaha yang naik kelas cuma membuka TEPAT 1
+// lowongan (bukan tumbuh jadi institusi besar dgn banyak kursi seperti
+// pesantren/sekolah) — merepresentasikan usaha kecil-menengah nyata yang
+// baru sanggup mempekerjakan satu orang lain di luar pemiliknya sendiri.
+const MANDIRI_LEVELUP_TIERS = [3, 7, 12]; // ambang jumlah checks utk naik ke level 1/2/3 — makin tinggi level, makin lama & mapan usahanya harus bertahan dulu
+const MANDIRI_MAX_LEVEL = MANDIRI_LEVELUP_TIERS.length; // level maksimum = 3, jadi maksimal 3 lowongan per usaha (masih kecil-menengah, bukan pabrik besar)
+// v3.4: jenis usaha mandiri dibuat BERAGAM (tidak lagi satu kategori
+// generik "usaha/keterampilan lain"). Daftar & jumlah jenisnya TIDAK
+// dirujuk spesifik oleh pengguna — keputusan desain penulis: dipilih 4
+// jenis mata pencaharian yang lazim & realistis di lingkungan pesantren/
+// desa, supaya cukup beragam tapi tidak berlebihan jadi rumit. Pekerja yg
+// mengisi lowongan usaha ikut memakai jenis usaha PEMILIKNYA (satu usaha
+// = satu jenis, konsisten dgn dunia nyata: pekerja warung ya jualan di
+// warung yang sama, bukan jenis usaha acak sendiri).
+const MANDIRI_BIZ_TYPES = ['Dagang/Warung', 'Kerajinan Tangan', 'Jasa Keterampilan', 'Tani/Ternak'];
+// v3.5: latar jalur asal lulusan (pesantren vs sekolah) memengaruhi
+// KECENDERUNGAN jenis usaha — bukan aturan kaku (masih bisa jadi jenis
+// apa saja), cuma bobot undiannya beda. Angkanya lagi-lagi keputusan
+// desain penulis (tidak dirujuk spesifik pengguna): lulusan pesantren
+// diandaikan lebih condong ke usaha yang memakai ilmu agama/keterampilan
+// personal (mis. mengajar ngaji privat, kerajinan), sedangkan lulusan
+// sekolah umum diandaikan lebih condong ke usaha dagang/pertanian yang
+// lazim di lingkungan sekitar. Total tiap baris = 1 (100%).
+const MANDIRI_BIZ_WEIGHTS = {
+  pesantren: { 'Jasa Keterampilan': 0.40, 'Kerajinan Tangan': 0.30, 'Dagang/Warung': 0.20, 'Tani/Ternak': 0.10 },
+  sekolah:   { 'Dagang/Warung': 0.35, 'Tani/Ternak': 0.30, 'Kerajinan Tangan': 0.20, 'Jasa Keterampilan': 0.15 }
+};
+function pickMandiriBizType(path){
+  const weights = MANDIRI_BIZ_WEIGHTS[path];
+  if(!weights) return MANDIRI_BIZ_TYPES[Math.floor(Math.random()*MANDIRI_BIZ_TYPES.length)];
+  let r = Math.random(), acc = 0;
+  for(const ty of MANDIRI_BIZ_TYPES){
+    acc += weights[ty] || 0;
+    if(r < acc) return ty;
+  }
+  return MANDIRI_BIZ_TYPES[MANDIRI_BIZ_TYPES.length-1]; // jaga-jaga pembulatan floating point
+}
+let mandiriJobs = []; // {id, ownerAgentId, filled: agentId|null} — satu entri per usaha yg sudah naik kelas
+let running = false;
+let lastTs = 0;
+let spawnTimer = 0;
+const SPAWN_INTERVAL = 6000;
+const STUDY_MS = 3500;
+const AGENT_SPEED = 55; // px/detik
+const MAX_AGENTS = 130;
+
+/* Kecepatan (v2.1): TIME_SCALE cuma mempercepat waktu NYATA yang dialami pemain
+   (animasi, jeda kuis berikutnya, jeda "belajar"), bukan menambah jumlah tahun
+   simulasi. autoPlay = mode tonton: kuis dijawab benar otomatis pada interval
+   yang juga mengikuti TIME_SCALE, buat orang yang cuma mau lihat hasil akhirnya. */
+let TIME_SCALE = 3; // default: Sedang
+let autoPlay = false;
+let autoTimer = 0;
+const AUTO_ANSWER_BASE_MS = 7500; // di skala 1 (Lambat): 1 jawaban tiap 7.5 detik
+
+let idCounter = 1;
+function nextId(){ return idCounter++; }
+
+/* ================= RENDER STATIS ================= */
+function renderHouses(){
+  const g = document.getElementById('housesGroup');
+  g.innerHTML = HOUSES.map(h => `
+    <g transform="translate(${h.x} ${h.y})">
+      <path d="M-6,3 L0,-6 L6,3 Z" fill="#c98b4a"/>
+      <rect x="-4.5" y="3" width="9" height="7" fill="#847a63"/>
+    </g>`).join('');
+}
+
+// v2.3: pesantren = kubah + bulan sabit (Tipe 1, murni agama, tidak berubah).
+// v2.6: sekolah kini bercabang Tipe 2/Tipe 3 (lihat CURRICULUM_POOL) —
+//   Tipe 2 Tempel-Tempel: agama & umum DITUMPUK MENTAH tanpa diintegrasi ->
+//     digambar sebagai DUA WARNA TERPISAH TEGAS (batas keras di tengah).
+//   Tipe 3 Terpadu & Berurutan: dipadukan harmonis -> digambar sebagai
+//     GRADASI MENYATU antara warna pesantren & sekolah, plus aksen bintang
+//     kecil (sumber menyebut tipe ini "ideal, tapi langka").
+function institutionSVG(inst){
+  const pct = inst.filled/inst.capacity;
+  const isSekolah = inst.type === 'sekolah';
+  const curriculum = inst.curriculum || 1;
+  let roof, bodyRect, extraDefs = '', star = '';
+
+  if(!isSekolah){
+    roof = `<path d="M-10,-4 Q0,-17 10,-4 Z" fill="var(--yellow)"/><circle cx="0" cy="-16" r="3" fill="var(--yellow)"/>`;
+    bodyRect = `<rect x="-19" y="-4" width="38" height="22" rx="4" fill="var(--accent)"/>`;
+  } else if(curriculum === 2){
+    roof = `<rect x="-12" y="-14" width="12" height="5" rx="1" fill="var(--yellow)"/><rect x="0" y="-14" width="12" height="5" rx="1" fill="var(--school)"/>`;
+    bodyRect = `<rect x="-19" y="-4" width="19" height="22" fill="var(--accent)"/><rect x="0" y="-4" width="19" height="22" fill="var(--school)"/><rect x="-19" y="-4" width="38" height="22" rx="4" fill="none" stroke="#fff8ec" stroke-width="0.7"/>`;
+  } else {
+    extraDefs = `<defs><linearGradient id="terpadu-${inst.id}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--school)"/></linearGradient></defs>`;
+    roof = `<rect x="-12" y="-14" width="24" height="5" rx="2.5" fill="url(#terpadu-${inst.id})"/>`;
+    bodyRect = `<rect x="-19" y="-4" width="38" height="22" rx="4" fill="url(#terpadu-${inst.id})"/>`;
+    star = `<text x="0" y="-18" text-anchor="middle" font-size="9" fill="var(--yellow)">✦</text>`;
+  }
+
+  return `
+    <g id="inst-${inst.id}" transform="translate(${inst.x} ${inst.y})">
+      ${extraDefs}
+      ${bodyRect}
+      ${roof}
+      ${star}
+      <rect x="-6" y="3" width="12" height="10" rx="1.5" fill="#fff8ec"/>
+      <rect x="-17" y="19" width="34" height="5.5" rx="2.75" fill="#efe8d3" stroke="#e7dcbd"/>
+      <rect id="inst-${inst.id}-bar" x="-17" y="19" width="${34*pct}" height="5.5" rx="2.75" fill="var(--teach)"/>
+      <text x="0" y="34" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#5b5340">${inst.filled}/${inst.capacity}</text>
+    </g>`;
+}
+
+function plotSVG(p){
+  const label = p.type === 'sekolah' ? 'lahan (sekolah)' : 'lahan (pesantren)';
+  const strokeColor = p.type === 'sekolah' ? '#8fb2cc' : '#c9bd9c';
+  return `
+    <g id="plot-${p.id}">
+      <rect x="${p.x-19}" y="${p.y-11}" width="38" height="26" rx="5" fill="none" stroke="${strokeColor}" stroke-width="1.6" stroke-dasharray="4 3.5"/>
+      <text x="${p.x}" y="${p.y+3.5}" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#a99a72">${label}</text>
+    </g>`;
+}
+
+function agentSVG(a){
+  return `<circle id="agent-${a.id}" cx="${a.x}" cy="${a.y}" r="3.3" fill="${stateColor(a.state)}" stroke="${a.crossed?'#7B4FB3':'#fff'}" stroke-width="${a.crossed?1.8:0.8}"/>`;
+}
+
+function stateColor(state){
+  if(state==='belajar') return '#5b7fb5';
+  if(state==='cari-slot' || state==='menuju-mengajar') return '#F2B705';
+  if(state==='mengajar') return '#2c7a4b';
+  if(state==='menuju-mandiri' || state==='mandiri') return '#1F9C8A';
+  if(state==='menganggur') return '#9a8f78';
+  return '#847a63';
+}
+
+/* ================= SETUP / RESET ================= */
+function setupWorld(){
+  institutions = [];
+  plots = [];
+  agents = [];
+  idleQueue = [];
+  year = 0; teacherCount = 0; idleCount = 0; buildPoints = { pesantren: 0, sekolah: 0 };
+  crossCount = 0; crossDir = { toSekolah: 0, toPesantren: 0 }; history = [];
+  mandiriQueue = []; mandiriCapacity = MANDIRI_CAPACITY_BASE; mandiriFailCount = 0; mandiriJobs = [];
+  spawnTimer = 0;
+
+  SLOTS.forEach((s, i) => {
+    if(INIT_INSTITUTION_SLOTS.includes(i)){
+      const curriculum = s.type === 'sekolah' ? pickCurriculum() : 1;
+      const inst = {id:nextId(), x:s.x, y:s.y, type:s.type, curriculum, capacity:CAPACITY_PER_INSTITUTION, filled:PREFILLED_PER_INSTITUTION};
+      institutions.push(inst);
+      teacherCount += inst.filled;
+    } else {
+      plots.push({id:nextId(), x:s.x, y:s.y, type:s.type});
+    }
+  });
+
+  renderHouses();
+  renderInstitutions();
+  renderPlots();
+  document.getElementById('agentsGroup').innerHTML = '';
+  document.getElementById('idleGroup').innerHTML = '';
+  document.getElementById('mandiriGroup').innerHTML = '';
+  updateStatsUI();
+  updateBuildUI();
+}
+
+function renderInstitutions(){
+  document.getElementById('institutionsGroup').innerHTML = institutions.map(institutionSVG).join('');
+}
+function renderPlots(){
+  document.getElementById('plotsGroup').innerHTML = plots.map(plotSVG).join('');
+}
+
+/* ================= IDLE ZONE LAYOUT ================= */
+function idleSlotPosition(indexInQueue){
+  const col = indexInQueue % IDLE_ZONE.cols;
+  const row = Math.floor(indexInQueue / IDLE_ZONE.cols) % IDLE_ZONE.rows;
+  return { x: IDLE_ZONE.x + 10 + col*IDLE_ZONE.cellW, y: IDLE_ZONE.y + 14 + row*IDLE_ZONE.cellH };
+}
+function relayoutIdleQueue(){
+  idleQueue.forEach((id, idx) => {
+    const a = agents.find(ag => ag.id === id);
+    if(!a) return;
+    const pos = idleSlotPosition(idx);
+    a.tx = pos.x; a.ty = pos.y;
+    a.settled = false; // biarkan animasi menggeser ke slot barunya
+  });
+}
+
+/* v3.0: posisi & relayout untuk zona jalur mandiri (mirip idle zone, terpisah) */
+function mandiriSlotPosition(indexInQueue){
+  const col = indexInQueue % MANDIRI_ZONE.cols;
+  const row = Math.floor(indexInQueue / MANDIRI_ZONE.cols) % MANDIRI_ZONE.rows;
+  return { x: MANDIRI_ZONE.x + 10 + col*MANDIRI_ZONE.cellW, y: MANDIRI_ZONE.y + 14 + row*MANDIRI_ZONE.cellH };
+}
+function relayoutMandiriQueue(){
+  mandiriQueue.forEach((id, idx) => {
+    const a = agents.find(ag => ag.id === id);
+    if(!a) return;
+    const pos = mandiriSlotPosition(idx);
+    a.tx = pos.x; a.ty = pos.y;
+    a.settled = false;
+  });
+}
+
+/* ================= SPAWN & LIFECYCLE AGEN ================= */
+function spawnSantri(){
+  if(agents.length >= MAX_AGENTS) return;
+  if(institutions.length === 0) return;
+  const house = pick(HOUSES);
+  const studyTarget = pick(institutions);
+  const a = {
+    id: nextId(), x: house.x, y: house.y+8, tx: studyTarget.x, ty: studyTarget.y+11,
+    state: 'belajar', settled:false, studyInstId: studyTarget.id, path: studyTarget.type,
+    curriculum: studyTarget.curriculum || 1,
+    crossed: false, crossTimer: 0, mandiriTimer: 0, mandiriFailTimer: 0, mandiriChecks: 0,
+    mandiriLevel: 0, mandiriRole: null, mandiriJobId: null, mandiriJobIds: [], mandiriBizType: null
+  };
+  agents.push(a);
+  const g = document.getElementById('agentsGroup');
+  g.insertAdjacentHTML('beforeend', agentSVG(a));
+}
+
+function onArrive(a){
+  if(a.state === 'belajar'){
+    a.settled = true;
+    // v2.6: Tipe 2 (tempel-tempel) belajar lebih lama, Tipe 3 (terpadu) lebih cepat
+    const mult = STUDY_MULTIPLIER[a.curriculum] || 1;
+    setTimeout(() => { if(running) seekSlot(a); }, (STUDY_MS*mult)/TIME_SCALE);
+  } else if(a.state === 'menuju-mengajar'){
+    a.settled = true;
+    a.state = 'mengajar';
+    document.getElementById(`agent-${a.id}`).setAttribute('fill', stateColor('mengajar'));
+    updateStatsUI();
+  } else if(a.state === 'menuju-menganggur'){
+    a.settled = true;
+    a.state = 'menganggur';
+    document.getElementById(`agent-${a.id}`).setAttribute('fill', stateColor('menganggur'));
+  } else if(a.state === 'menuju-mandiri'){
+    a.settled = true;
+    a.state = 'mandiri';
+    const el = document.getElementById(`agent-${a.id}`);
+    if(el) el.setAttribute('fill', stateColor('mandiri'));
+    updateStatsUI();
+  }
+}
+
+function seekSlot(a){
+  // v2.3: dicari HANYA di jalur yang sama dengan a.path (pesantren tidak
+  // menyerap lulusan sekolah, atau sebaliknya) — siklus tertutup tetap per jalur.
+  const openInst = institutions.find(inst => inst.type === a.path && inst.filled < inst.capacity);
+  if(openInst){
+    openInst.filled++;
+    updateInstitutionBar(openInst);
+    a.state = 'menuju-mengajar';
+    a.settled = false;
+    a.tx = openInst.x; a.ty = openInst.y + 11;
+  } else {
+    a.state = 'menuju-menganggur';
+    a.settled = false;
+    a.crossTimer = 0;
+    idleQueue.push(a.id);
+    idleCount++;
+    const pos = idleSlotPosition(idleQueue.length-1);
+    a.tx = pos.x; a.ty = pos.y;
+    updateStatsUI();
+  }
+}
+
+/* v2.8: lulusan yang menganggur cukup lama boleh mencoba institusi jalur LAIN */
+function tryCrossAgent(a){
+  const otherType = a.path === 'pesantren' ? 'sekolah' : 'pesantren';
+  const openInst = institutions.find(inst => inst.type === otherType && inst.filled < inst.capacity);
+  if(!openInst) return false;
+  const qi = idleQueue.indexOf(a.id);
+  if(qi >= 0) idleQueue.splice(qi, 1);
+  openInst.filled++;
+  updateInstitutionBar(openInst);
+  a.crossed = true;
+  a.crossTimer = 0;
+  a.state = 'menuju-mengajar';
+  a.settled = false;
+  a.tx = openInst.x; a.ty = openInst.y + 11;
+  const el = document.getElementById(`agent-${a.id}`);
+  if(el){ el.setAttribute('stroke', '#7B4FB3'); el.setAttribute('stroke-width', '1.8'); }
+  crossCount++;
+  if(otherType === 'sekolah') crossDir.toSekolah++; else crossDir.toPesantren++;
+  relayoutIdleQueue();
+  updateStatsUI();
+  return true;
+}
+
+/* v3.4: tooltip jenis usaha — dipasang lewat elemen <title> di dalam
+   lingkaran SVG agen (didukung native oleh SVG utk tooltip saat kursor
+   diarahkan), plus atribut data- utk gampang diperiksa/diuji. */
+function setMandiriTooltip(agentId, type){
+  const el = document.getElementById(`agent-${agentId}`);
+  if(!el) return;
+  el.setAttribute('data-mandiri-tipe', type);
+  if(typeof el.insertAdjacentHTML === 'function'){
+    el.insertAdjacentHTML('beforeend', `<title>Usaha mandiri: ${type}</title>`);
+  }
+}
+
+/* v3.0: jalur mandiri — SELALU aktif (bukan toggle). Lulusan yang menganggur
+   cukup lama mencoba membangun usaha/keterampilan sendiri di luar mengajar,
+   selama kapasitas mandiri (mandiriCapacity) masih ada. Begitu masuk, agen
+   dianggap "berperan" secara permanen untuk simulasi ini. */
+function tryMandiriAgent(a){
+  if(mandiriQueue.length >= mandiriCapacity) return false; // kapasitas mandiri penuh, coba lagi nanti
+  const qi = idleQueue.indexOf(a.id);
+  if(qi >= 0) idleQueue.splice(qi, 1);
+  idleCount = Math.max(0, idleCount-1);
+  a.mandiriTimer = 0;
+  a.mandiriFailTimer = 0;
+  a.mandiriChecks = 0;
+  a.mandiriLevel = 0;
+  a.mandiriRole = 'usaha';
+  a.mandiriJobId = null;
+  a.mandiriJobIds = [];
+  a.mandiriBizType = pickMandiriBizType(a.path);
+  a.state = 'menuju-mandiri';
+  a.settled = false;
+  mandiriQueue.push(a.id);
+  const pos = mandiriSlotPosition(mandiriQueue.length-1);
+  a.tx = pos.x; a.ty = pos.y;
+  setMandiriTooltip(a.id, a.mandiriBizType);
+  relayoutIdleQueue();
+  updateStatsUI();
+  return true;
+}
+
+/* v3.1: churn jalur mandiri — dicek berkala HANYA untuk agen yang statusnya
+   sudah 'mandiri' (sudah settle, bukan yang masih dalam animasi menuju
+   ke sana). Risiko gagal makin kecil tiap kali usaha itu lolos pemeriksaan
+   (usaha yang sudah lama bertahan makin stabil). Kalau gagal, agen dikirim
+   balik ke zona menunggu lewat state transisi 'menuju-menganggur' yang
+   sudah ada (bukan status baru) — supaya animasinya konsisten dgn onArrive(). */
+function tryMandiriFail(a){
+  const prob = MANDIRI_FAIL_BASE_PROB / (1 + a.mandiriChecks*MANDIRI_FAIL_DECAY);
+  a.mandiriChecks++;
+  if(Math.random() >= prob){
+    tryLevelUpMandiri(a); // lolos pemeriksaan: usaha makin mapan, cek apakah sudah waktunya naik kelas
+    return false;
+  }
+  // gagal/bangkrut: kalau usaha ini sudah naik kelas & punya pekerja, SEMUA pekerjanya ikut dirumahkan
+  const workersAffected = a.mandiriLevel >= 1 ? a.mandiriJobIds.length : 0;
+  if(a.mandiriLevel >= 1) a.mandiriJobIds.slice().forEach(jid => releaseMandiriJob(jid, true));
+  const qi = mandiriQueue.indexOf(a.id);
+  if(qi >= 0) mandiriQueue.splice(qi, 1);
+  mandiriFailCount++;
+  a.mandiriTimer = 0;
+  a.mandiriChecks = 0;
+  a.mandiriFailTimer = 0;
+  a.mandiriLevel = 0;
+  a.mandiriRole = null;
+  a.mandiriJobId = null;
+  a.mandiriJobIds = [];
+  a.mandiriBizType = null;
+  a.state = 'menuju-menganggur';
+  a.settled = false;
+  const elA = document.getElementById(`agent-${a.id}`);
+  if(elA && !a.crossed){ elA.setAttribute('stroke', '#fff'); elA.setAttribute('stroke-width', '0.8'); elA.setAttribute('data-mandiri-tipe', ''); }
+  idleQueue.push(a.id);
+  idleCount++;
+  const pos = idleSlotPosition(idleQueue.length-1);
+  a.tx = pos.x; a.ty = pos.y;
+  relayoutMandiriQueue();
+  narrate(workersAffected > 0
+    ? `Usaha mandiri di jalur ${a.path} bangkrut, ${workersAffected} pekerja ikut kembali menunggu.`
+    : `Sebuah usaha mandiri di jalur ${a.path} bangkrut, kembali ke zona menunggu.`);
+  updateStatsUI();
+  return true;
+}
+
+/* v3.3: usaha bisa naik kelas BERJENJANG (lebih dari 1 lowongan) — makin
+   lama & mapan usahanya bertahan (a.mandiriChecks, dari mekanisme churn
+   v3.1), makin banyak lowongan yang sanggup dibukanya, mengikuti tahapan
+   di MANDIRI_LEVELUP_TIERS. Dipakai `while`, bukan `if`, supaya kalau ada
+   lompatan checks (jarang, tapi mungkin) usaha tetap naik level demi level
+   secara berurutan, bukan meloncat langsung ke level tertinggi. Maksimal
+   MANDIRI_MAX_LEVEL supaya tetap usaha kecil-menengah, bukan tumbuh tanpa
+   batas jadi institusi raksasa. Hanya usaha milik sendiri (bukan pekerja
+   usaha orang lain) yang bisa naik kelas jadi pemberi kerja. */
+function tryLevelUpMandiri(a){
+  if(a.mandiriRole !== 'usaha') return false;
+  let leveledUp = false;
+  let gained = 0;
+  while(a.mandiriLevel < MANDIRI_MAX_LEVEL && a.mandiriChecks >= MANDIRI_LEVELUP_TIERS[a.mandiriLevel]){
+    const job = {id: nextId(), ownerAgentId: a.id, filled: null, type: a.mandiriBizType};
+    mandiriJobs.push(job);
+    a.mandiriJobIds.push(job.id);
+    a.mandiriLevel++;
+    leveledUp = true;
+    gained++;
+  }
+  if(leveledUp){
+    const el = document.getElementById(`agent-${a.id}`);
+    if(el && !a.crossed){ el.setAttribute('stroke', 'var(--yellow)'); el.setAttribute('stroke-width', String(1.2 + a.mandiriLevel*0.5)); }
+    narrate(gained === 1
+      ? `Usaha mandiri di jalur ${a.path} naik kelas, membuka satu lowongan kerja.`
+      : `Usaha mandiri di jalur ${a.path} naik kelas, membuka ${gained} lowongan kerja sekaligus.`);
+    updateStatsUI();
+  }
+  return leveledUp;
+}
+
+/* v3.2: tutup satu lowongan (dipanggil saat usaha pemiliknya bangkrut).
+   releaseEmployee=true berarti pekerja yang mengisi lowongan ini juga
+   ikut dirumahkan (dikembalikan ke zona menunggu), bukan sekadar
+   lowongannya yang dihapus. */
+function releaseMandiriJob(jobId, releaseEmployee){
+  const ji = mandiriJobs.findIndex(j => j.id === jobId);
+  if(ji === -1) return;
+  const job = mandiriJobs[ji];
+  if(releaseEmployee && job.filled){
+    const emp = agents.find(ag => ag.id === job.filled);
+    if(emp){
+      const qi = mandiriQueue.indexOf(emp.id);
+      if(qi >= 0) mandiriQueue.splice(qi, 1);
+      emp.mandiriRole = null; emp.mandiriJobId = null; emp.mandiriTimer = 0; emp.mandiriBizType = null;
+      emp.state = 'menuju-menganggur';
+      emp.settled = false;
+      idleQueue.push(emp.id);
+      idleCount++;
+      const pos = idleSlotPosition(idleQueue.length-1);
+      emp.tx = pos.x; emp.ty = pos.y;
+      const elEmp = document.getElementById(`agent-${emp.id}`);
+      if(elEmp) elEmp.setAttribute('data-mandiri-tipe', '');
+    }
+  }
+  mandiriJobs.splice(ji, 1);
+  relayoutMandiriQueue();
+}
+
+/* v3.2: SELALU aktif — lowongan kerja terbuka dari usaha yang naik kelas
+   diisi dari zona menunggu (FIFO, siapa yang paling lama menunggu duluan),
+   lintas jalur pesantren/sekolah (jalur mandiri memang di luar siklus
+   tertutup pesantren-vs-sekolah). */
+function tryFillMandiriJobs(){
+  mandiriJobs.forEach(job => {
+    if(job.filled || idleQueue.length === 0) return;
+    const empId = idleQueue.shift();
+    const emp = agents.find(ag => ag.id === empId);
+    if(!emp) return;
+    idleCount = Math.max(0, idleCount-1);
+    job.filled = emp.id;
+    emp.mandiriRole = 'pekerja';
+    emp.mandiriJobId = job.id;
+    emp.mandiriTimer = 0; emp.mandiriFailTimer = 0; emp.mandiriChecks = 0; emp.mandiriLevel = 0;
+    emp.mandiriBizType = job.type; // pekerja ikut jenis usaha pemiliknya
+    emp.state = 'menuju-mandiri';
+    emp.settled = false;
+    mandiriQueue.push(emp.id);
+    const pos = mandiriSlotPosition(mandiriQueue.length-1);
+    emp.tx = pos.x; emp.ty = pos.y;
+    setMandiriTooltip(emp.id, emp.mandiriBizType);
+    relayoutIdleQueue();
+  });
+  updateStatsUI();
+}
+
+function updateInstitutionBar(inst){
+  const bar = document.getElementById(`inst-${inst.id}-bar`);
+  if(bar) bar.setAttribute('width', 34*(inst.filled/inst.capacity));
+  const txt = document.querySelector(`#inst-${inst.id} text`);
+  if(txt) txt.textContent = `${inst.filled}/${inst.capacity}`;
+}
+
+/* ================= PEMBANGUNAN DARI POIN KUIS ================= */
+// v2.5: dipanggil per jalur (type = 'pesantren'|'sekolah'). Hanya memakan
+// buildPoints[type] dan hanya mencari lahan (plots) yang type-nya sama —
+// tidak lagi menggilir array plots dari depan tanpa peduli tipe.
+function tryBuildFromPoints(type){
+  let builtCount = 0;
+  while(buildPoints[type] >= BUILD_THRESHOLD){
+    const idx = plots.findIndex(p => p.type === type);
+    if(idx === -1) break; // sudah tak ada lahan kosong tersisa di jalur ini
+    buildPoints[type] -= BUILD_THRESHOLD;
+    builtCount++;
+    const plot = plots.splice(idx, 1)[0];
+    const curriculum = plot.type === 'sekolah' ? pickCurriculum() : 1;
+    const inst = {id: nextId(), x: plot.x, y: plot.y, type: plot.type, curriculum, capacity: CAPACITY_PER_INSTITUTION, filled: 0};
+    institutions.push(inst);
+    renderPlots();
+    renderInstitutions();
+
+    // v2.3: serap dari idleQueue HANYA yang path-nya cocok dengan jalur lahan
+    // baru ini. Di-scan (bukan shift-depan) supaya agen jalur lain yang lebih
+    // dulu antre tidak "menghalangi" giliran jalur yang cocok.
+    let seats = inst.capacity;
+    let scanIdx = 0;
+    while(seats > 0 && scanIdx < idleQueue.length){
+      const id = idleQueue[scanIdx];
+      const a = agents.find(ag => ag.id === id);
+      if(a && a.path === inst.type){
+        idleQueue.splice(scanIdx, 1);
+        inst.filled++;
+        idleCount = Math.max(0, idleCount-1);
+        a.state = 'menuju-mengajar';
+        a.settled = false;
+        a.tx = inst.x; a.ty = inst.y + 11;
+        seats--;
+      } else {
+        scanIdx++;
+      }
+    }
+    updateInstitutionBar(inst);
+    relayoutIdleQueue();
+  }
+  if(builtCount > 0){
+    const label = type === 'pesantren' ? 'pondok' : 'sekolah';
+    narrate(builtCount === 1
+      ? `${label.charAt(0).toUpperCase()+label.slice(1)} baru berdiri di jalur ${type}.`
+      : `${builtCount} ${label} baru berdiri sekaligus di jalur ${type}.`);
+  }
+  updateBuildUI();
+  updateStatsUI();
+}
+
+/* ================= LOOP ANIMASI ================= */
+function animate(ts){
+  if(!running) return;
+  if(!lastTs) lastTs = ts;
+  const rawDt = Math.min(0.05, (ts-lastTs)/1000); // detik nyata yang lewat
+  const dt = rawDt*TIME_SCALE; // detik "simulasi" setelah dipercepat
+  lastTs = ts;
+
+  spawnTimer += dt*1000;
+  if(spawnTimer >= SPAWN_INTERVAL){
+    spawnTimer = 0;
+    year++;
+    document.getElementById('statYear').textContent = year;
+    mandiriCapacity = MANDIRI_CAPACITY_BASE + Math.floor(year/MANDIRI_CAPACITY_GROWTH_EVERY_YEARS);
+    spawnSantri();
+    recordHistory();
+  }
+
+  if(autoPlay){
+    autoTimer += rawDt*1000;
+    const autoInterval = AUTO_ANSWER_BASE_MS/TIME_SCALE;
+    if(autoTimer >= autoInterval){
+      autoTimer = 0;
+      autoAnswerTick();
+    }
+  }
+
+  // v3.0: jalur mandiri SELALU dicek, tidak bergantung pada toggle apa pun
+  agents.forEach(a => {
+    if(a.state !== 'menganggur') return;
+    a.mandiriTimer += dt*1000;
+    if(a.mandiriTimer >= MANDIRI_WAIT_MS){
+      a.mandiriTimer = 0;
+      tryMandiriAgent(a);
+    }
+  });
+
+  // v3.1: churn — usaha mandiri yang sudah berjalan (state 'mandiri', bukan
+  // yang masih dalam animasi 'menuju-mandiri') dicek berkala risiko gagalnya.
+  // v3.2: HANYA pemilik usaha sendiri ('usaha') yang punya risiko sendiri —
+  // pekerja ('pekerja') nasibnya ikut pemiliknya (lihat releaseMandiriJob).
+  agents.forEach(a => {
+    if(a.state !== 'mandiri' || a.mandiriRole === 'pekerja') return;
+    a.mandiriFailTimer += dt*1000;
+    if(a.mandiriFailTimer >= MANDIRI_FAIL_CHECK_MS){
+      a.mandiriFailTimer = 0;
+      tryMandiriFail(a);
+    }
+  });
+
+  // v3.2: lowongan kerja dari usaha yang naik kelas SELALU dicoba diisi
+  if(mandiriJobs.length > 0) tryFillMandiriJobs();
+
+  if(crossEnabled){
+    agents.forEach(a => {
+      if(a.state !== 'menganggur' || a.crossed) return;
+      a.crossTimer += dt*1000;
+      if(a.crossTimer >= CROSS_WAIT_MS){
+        a.crossTimer = 0;
+        tryCrossAgent(a);
+      }
+    });
+  }
+
+  agents.forEach(a => {
+    if(a.settled) return;
+    const d = dist(a.x,a.y,a.tx,a.ty);
+    if(d < 1.5){
+      a.x = a.tx; a.y = a.ty;
+      onArrive(a);
+    } else {
+      const step = AGENT_SPEED*dt;
+      a.x += (a.tx-a.x)/d*step;
+      a.y += (a.ty-a.y)/d*step;
+    }
+    const el = document.getElementById(`agent-${a.id}`);
+    if(el){ el.setAttribute('cx', a.x); el.setAttribute('cy', a.y); }
+  });
+
+  requestAnimationFrame(animate);
+}
+
+/* ================= RIWAYAT RASIO (v2.9) ================= */
+function computeRatios(){
+  const out = {};
+  let tT = 0, iT = 0;
+  ['pesantren','sekolah'].forEach(type => {
+    const prefilled = INIT_INSTITUTION_SLOTS.filter(i => SLOTS[i].type === type).length * PREFILLED_PER_INSTITUTION;
+    const teach = agents.filter(a=>a.state==='mengajar' && a.path===type).length + prefilled;
+    const mandiri = agents.filter(a=>a.state==='mandiri' && a.path===type).length;
+    const idle = agents.filter(a=>a.state==='menganggur' && a.path===type).length;
+    const berperan = teach + mandiri;
+    out[type] = (berperan+idle) > 0 ? (berperan/(berperan+idle))*100 : 100;
+    tT += berperan; iT += idle;
+  });
+  out.total = (tT+iT) > 0 ? (tT/(tT+iT))*100 : 100;
+  return out;
+}
+function recordHistory(){
+  const r = computeRatios();
+  const mandiriNow = agents.filter(a=>a.state==='mandiri').length;
+  const mandiriBizNow = agents.filter(a=>a.mandiriRole==='usaha' && a.mandiriLevel>=1).length;
+  const mandiriJobsFilledNow = mandiriJobs.filter(j=>j.filled).length;
+  history.push({
+    year, total: r.total, pesantren: r.pesantren, sekolah: r.sekolah,
+    mandiri: mandiriNow, mandiriBiz: mandiriBizNow,
+    mandiriJobsFilled: mandiriJobsFilledNow, mandiriJobsTotal: mandiriJobs.length,
+    mandiriFailCum: mandiriFailCount
+  });
+  if(history.length > 200) history.shift();
+  renderHistory();
+}
+function renderHistory(){
+  const svg = document.getElementById('historySvg');
+  if(!svg) return;
+  const W = 400, H = 120, padX = 8, padY = 8;
+  const n = history.length;
+  let html = '';
+  [0,50,100].forEach(v => {
+    const y = H - padY - (v/100)*(H-2*padY);
+    html += `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="#d9cfb8" stroke-width="0.6" stroke-dasharray="3 3"/>`;
+  });
+  if(n >= 2){
+    const line = (key, color, w) => {
+      const pts = history.map((h,i) => {
+        const x = padX + (i/(n-1))*(W-2*padX);
+        const y = H - padY - (h[key]/100)*(H-2*padY);
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(' ');
+      return `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="${w}" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
+    };
+    html += line('pesantren','#C8553D',1.5) + line('sekolah','#3E7CB1',1.5) + line('total','#2c7a4b',2.4);
+  }
+  svg.innerHTML = html;
+  const info = document.getElementById('historyInfo');
+  if(info && n){
+    const last = history[n-1];
+    info.textContent = `tahun ${last.year}: ${Math.round(last.total)}% total`;
+  }
+}
+
+/* v3.6: ekspor riwayat ke CSV — dipisah jadi fungsi "murni" (buildHistoryCSV,
+   cuma mengolah data jadi string, gampang diuji tanpa browser) dan fungsi
+   pembungkus (exportHistoryCSV, yang urus Blob/unduhan lewat API browser). */
+function buildHistoryCSV(){
+  const cols = ['year','total','pesantren','sekolah','mandiri','mandiriBiz','mandiriJobsFilled','mandiriJobsTotal','mandiriFailCum'];
+  const header = cols.join(',');
+  const rows = history.map(h => cols.map(c => {
+    const v = h[c];
+    return typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(2)) : (v===undefined?'':v);
+  }).join(','));
+  return [header, ...rows].join('\n');
+}
+function exportHistoryCSV(){
+  if(history.length === 0) return false;
+  const csv = buildHistoryCSV();
+  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ekosistem-ilmu-riwayat-tahun-${history[history.length-1].year}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  return true;
+}
+
+/* ================= UI STATS ================= */
+/* ================= v4.0: NARASI SUARA & STATUS RINGKAS =================
+   Tujuan (permintaan pengguna): teks di alat ini sudah cukup padat sehingga
+   hal penting kadang terlewat saat dibaca. Solusinya dua lapis:
+   1) `buildStatusLine()` — satu baris ringkas & efisien yang selalu
+      mencerminkan kondisi saat ini (tahun, rasio, jumlah institusi,
+      antrean menunggu, jalur mandiri). Ditampilkan di `#statusLine` dan
+      bisa dibacakan kapan saja lewat tombol "🗣️ Bacakan".
+   2) `narrate(text)` — dipanggil otomatis HANYA pada kejadian penting/
+      perubahan berarti (pondok/sekolah baru berdiri, usaha mandiri naik
+      kelas, usaha mandiri bangkrut) — bukan tiap tick, supaya tidak
+      berisik. Toggle `#voiceBtn` mengaktif/nonaktifkan narasi otomatis
+      (dan menonaktifkan speechSynthesis sepenuhnya bila mati), tersimpan
+      di localStorage supaya preferensi bertahan antar kunjungan.
+   Pakai Web Speech API (speechSynthesis) — tanpa file audio eksternal.
+   Kalau browser tak mendukung, semua fungsi ini diam-diam tidak melakukan
+   apa-apa (tidak melempar error). */
+let voiceEnabled = true;
+try{
+  const savedVoice = localStorage.getItem('ekosistem-ilmu-voice');
+  if(savedVoice !== null) voiceEnabled = savedVoice === '1';
+}catch(e){ /* localStorage tak tersedia, pakai default aktif */ }
+
+function speak(text){
+  if(!voiceEnabled) return;
+  try{
+    if(!('speechSynthesis' in window)) return;
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'id-ID';
+    u.rate = 1.02;
+    window.speechSynthesis.speak(u);
+  }catch(e){ /* TTS tak tersedia di browser ini, abaikan diam-diam */ }
+}
+function narrate(text){ speak(text); }
+
+function updateVoiceBtn(){
+  const btn = document.getElementById('voiceBtn');
+  if(!btn) return;
+  btn.textContent = voiceEnabled ? '🔊 Suara: Aktif' : '🔇 Suara: Nonaktif';
+  btn.classList.toggle('voice-off', !voiceEnabled);
+}
+function setVoiceEnabled(v){
+  voiceEnabled = v;
+  try{ localStorage.setItem('ekosistem-ilmu-voice', v ? '1' : '0'); }catch(e){}
+  updateVoiceBtn();
+  if(v) speak('Suara narasi diaktifkan.');
+  else { try{ window.speechSynthesis.cancel(); }catch(e){} }
+}
+document.getElementById('voiceBtn').addEventListener('click', () => setVoiceEnabled(!voiceEnabled));
+document.getElementById('readNowBtn').addEventListener('click', () => speak(buildStatusLine()));
+
+function buildStatusLine(){
+  const r = computeRatios();
+  const pesantrenCount = institutions.filter(i=>i.type==='pesantren').length;
+  const sekolahCount = institutions.filter(i=>i.type==='sekolah').length;
+  const mandiriNow = agents.filter(a=>a.state==='mandiri').length;
+  const bizNow = agents.filter(a=>a.mandiriRole==='usaha' && a.mandiriLevel>=1).length;
+  return running
+    ? `Tahun ${year} · rasio ${Math.round(r.total)}% · ${pesantrenCount} pondok & ${sekolahCount} sekolah aktif · ${idleCount} menunggu · ${mandiriNow} di jalur mandiri (${bizNow} sudah naik kelas).`
+    : `Tahun ${year} · rasio ${Math.round(r.total)}% · simulasi belum/sudah berhenti — tekan "Mulai Simulasi" untuk melanjutkan.`;
+}
+function updateStatusLine(){
+  const el = document.getElementById('statusLine');
+  if(el) el.textContent = buildStatusLine();
+}
+
+
+function updateStatsUI(){
+  // dihitung langsung dari agen + guru awal yang sudah prefilled, supaya selalu akurat
+  const teach = agents.filter(a=>a.state==='mengajar').length + PREFILLED_PER_INSTITUTION*INIT_INSTITUTION_SLOTS.length;
+  const mandiri = agents.filter(a=>a.state==='mandiri').length;
+  const idle = agents.filter(a=>a.state==='menganggur').length;
+  document.getElementById('statTeach').textContent = teach;
+  document.getElementById('statMandiri').textContent = mandiri;
+  document.getElementById('statIdle').textContent = idle;
+  document.getElementById('statPlots').textContent = plots.length;
+
+  // v3.0: "berperan" = mengajar ATAU jalur mandiri — sukses tidak lagi disamakan dengan mengajar semata
+  const berperan = teach + mandiri;
+  const total = berperan + idle;
+  const pct = total > 0 ? Math.round((berperan/total)*100) : 100;
+  document.getElementById('ratioNum').textContent = pct + '%';
+  document.getElementById('ratioSub').textContent = `${teach} mengajar · ${mandiri} jalur mandiri · ${idle} menganggur dari total ${total} lulusan`;
+
+  updateJalurStatsUI();
+  const cEl = document.getElementById('statCross');
+  if(cEl) cEl.textContent = crossCount;
+  const cd = document.getElementById('statCrossDir');
+  if(cd) cd.textContent = `→ Sekolah: ${crossDir.toSekolah} · → Pesantren: ${crossDir.toPesantren}`;
+  const cm = document.getElementById('statCrossMode');
+  if(cm) cm.textContent = crossEnabled ? 'mekanisme AKTIF' : 'mekanisme MATI';
+  const mbEl = document.getElementById('statMandiriBadge');
+  if(mbEl) mbEl.textContent = mandiriQueue.length;
+  const mpEl = document.getElementById('statMandiriPool');
+  if(mpEl) mpEl.textContent = `${mandiriQueue.length}/${mandiriCapacity}`;
+  const mfEl = document.getElementById('statMandiriFail');
+  if(mfEl) mfEl.textContent = `Usaha pernah gagal & kembali menunggu: ${mandiriFailCount}`;
+  const mbizEl = document.getElementById('statMandiriBiz');
+  if(mbizEl) mbizEl.textContent = agents.filter(a=>a.mandiriRole==='usaha' && a.mandiriLevel>=1).length;
+  const mjEl = document.getElementById('statMandiriJobs');
+  if(mjEl){
+    const filled = mandiriJobs.filter(j=>j.filled).length;
+    mjEl.textContent = `${filled}/${mandiriJobs.length} lowongan terisi`;
+  }
+  const mtEl = document.getElementById('statMandiriTypes');
+  if(mtEl){
+    const counts = {};
+    agents.filter(a=>a.state==='mandiri' && a.mandiriBizType).forEach(a => {
+      counts[a.mandiriBizType] = (counts[a.mandiriBizType]||0) + 1;
+    });
+    const parts = MANDIRI_BIZ_TYPES.map(ty => `${ty}: ${counts[ty]||0}`);
+    mtEl.textContent = parts.join(' · ');
+  }
+  updateStatusLine();
+}
+
+// v2.3: rincian per jalur. Prefilled awal (guru dummy di slot institusi awal)
+// dihitung dari INIT_INSTITUTION_SLOTS via SLOTS[i].type supaya tetap akurat
+// per jalur (2 pesantren + 2 sekolah pada grid 4x6 checkerboard saat ini).
+function updateJalurStatsUI(){
+  ['pesantren','sekolah'].forEach(type => {
+    const prefilled = INIT_INSTITUTION_SLOTS.filter(i => SLOTS[i].type === type).length * PREFILLED_PER_INSTITUTION;
+    const teach = agents.filter(a=>a.state==='mengajar' && a.path===type).length + prefilled;
+    const mandiri = agents.filter(a=>a.state==='mandiri' && a.path===type).length;
+    const idle = agents.filter(a=>a.state==='menganggur' && a.path===type).length;
+    const plotsLeft = plots.filter(p=>p.type===type).length;
+    const elId = type === 'pesantren' ? 'statJalurPesantren' : 'statJalurSekolah';
+    const el = document.getElementById(elId);
+    if(el) el.textContent = `${teach} mengajar · ${mandiri} mandiri · ${idle} menganggur · ${plotsLeft} lahan kosong`;
+
+    // v2.6: rincian kurikulum khusus jalur sekolah (Tipe 2 vs Tipe 3)
+    if(type === 'sekolah'){
+      const t2 = institutions.filter(i=>i.type==='sekolah' && i.curriculum===2).length;
+      const t3 = institutions.filter(i=>i.type==='sekolah' && i.curriculum===3).length;
+      const kEl = document.getElementById('statJalurSekolahKurikulum');
+      if(kEl) kEl.textContent = `Tipe 2 Tempel-Tempel: ${t2} · Tipe 3 ✦ Terpadu: ${t3}`;
+    }
+  });
+}
+function teacherAgentsCount(){ return agents.filter(a=>a.state==='mengajar').length; }
+
+function updateBuildUI(){
+  ['pesantren','sekolah'].forEach(type => {
+    const plotsLeft = plots.filter(p=>p.type===type).length;
+    const pct = Math.min(100, Math.round((buildPoints[type]/BUILD_THRESHOLD)*100));
+    const barId = type === 'pesantren' ? 'buildBarFillPesantren' : 'buildBarFillSekolah';
+    const txtId = type === 'pesantren' ? 'buildProgressTextPesantren' : 'buildProgressTextSekolah';
+    const bar = document.getElementById(barId);
+    if(bar) bar.style.width = pct + '%';
+    const txt = document.getElementById(txtId);
+    if(txt) txt.textContent = plotsLeft > 0
+      ? `${buildPoints[type]}/${BUILD_THRESHOLD}`
+      : `Lahan habis (${institutions.filter(i=>i.type===type).length} aktif)`;
+  });
+}
+
+/* ================= KUIS ================= */
+let currentAnswer = null;
+let currentQType = 'hitung'; // 'hitung' | 'sains'
+let currentNote = '';
+let currentPath = 'pesantren'; // v2.5: 'pesantren' | 'sekolah' — jalur penerima poin soal ini
+
+// Bank soal Benar/Salah tentang sains & logika dasar untuk anak-anak. Beberapa di
+// antaranya sengaja menjadikan "belum ada yang tahu pasti / masih terus diteliti"
+// sebagai jawaban BENAR — supaya anak-anak terbiasa bahwa sains itu belum "selesai",
+// dan mengaku belum tahu itu bagian normal dari sains, bukan kegagalan sains.
+const SCIENCE_STATEMENTS = [
+  {text:'Bumi ini bentuknya datar seperti meja.', correct:false, note:'Bumi itu bulat seperti bola raksasa — ini sudah dibuktikan dengan banyak cara berbeda.'},
+  {text:'Matahari yang mengelilingi Bumi, bukan sebaliknya.', correct:false, note:'Sebaliknya: Bumi yang mengelilingi Matahari, bukan Matahari yang mengelilingi Bumi.'},
+  {text:'Sampai sekarang, ilmuwan sudah tahu SEMUA jenis hewan yang hidup di laut dalam.', correct:false, note:'Belum! Ilmuwan masih terus menemukan hewan laut dalam yang baru tiap tahun — sains itu belum "selesai".'},
+  {text:'Sampai sekarang, belum ada yang tahu pasti apakah ada kehidupan di planet lain.', correct:true, note:'Betul, ini salah satu misteri besar yang masih terus diteliti sampai hari ini.'},
+  {text:'Semua yang tertulis di buku pelajaran sains dijamin tidak akan pernah berubah lagi.', correct:false, note:'Sains bisa berubah kalau ada penemuan baru — itu bukan kelemahan, itu justru cara sains bekerja.'},
+  {text:'Es lebih ringan daripada air pada ukuran yang sama, makanya es bisa terapung.', correct:true, note:'Betul, itu sebabnya es batu mengapung di air.'},
+  {text:'Manusia bernapas menggunakan paru-paru.', correct:true, note:'Betul, paru-paru menyerap oksigen dari udara yang kita hirup.'},
+  {text:'Masih banyak pertanyaan besar tentang alam semesta yang jawabannya belum diketahui siapa pun.', correct:true, note:'Betul — masih banyak misteri alam semesta yang para ilmuwan sendiri belum tahu jawabannya.'},
+  {text:'Air selalu mendidih di suhu yang persis sama di mana pun, di gunung maupun di pantai.', correct:false, note:'Air mendidih lebih cepat di tempat tinggi karena tekanan udaranya lebih rendah — makin ditelusuri, sains makin detail.'},
+  {text:'1 tambah 1 sama dengan 2 dalam hitungan biasa.', correct:true, note:'Betul, itu aturan dasar matematika yang sudah pasti.'}
+];
+
+function generateQuestion(){
+  // v2.4: dua panel terpisah — sembunyikan dulu keduanya, baru tampilkan yang aktif
+  document.getElementById('panelHitung').style.display = 'none';
+  document.getElementById('panelSains').style.display = 'none';
+
+  // v2.5: tiap soal (apapun tipenya) dikaitkan acak ke salah satu jalur —
+  // jawaban benar menyumbang poin HANYA ke jalur itu, bukan ke pool bersama.
+  currentPath = pick(['pesantren','sekolah']);
+  const tagText = currentPath === 'sekolah' ? '🏫 Untuk jalur Sekolah' : '🕌 Untuk jalur Pesantren';
+  const tagClass = 'quiz-path-tag ' + currentPath;
+
+  // ~22% soal renungan sains, sisanya hitungan dasar (dominan perkalian, seperti semula)
+  if(Math.random() < 0.22){
+    currentQType = 'sains';
+    const s = pick(SCIENCE_STATEMENTS);
+    currentAnswer = s.correct ? 'Benar' : 'Salah';
+    currentNote = s.note;
+    const tagEl = document.getElementById('sainsPathTag');
+    tagEl.textContent = tagText; tagEl.className = tagClass;
+    document.getElementById('sainsQ').textContent = s.text;
+    renderOptions(['Benar','Salah'], 'sainsAnswers', 'sainsFeedback');
+    document.getElementById('panelSains').style.display = '';
+    return;
+  }
+
+  currentQType = 'hitung';
+  currentNote = '';
+  const roll = Math.random();
+  let a,b,answer,text;
+  if(roll < 0.6){ // dominan perkalian
+    a = randInt(1,10); b = randInt(1,10); answer = a*b; text = `${a} × ${b}`;
+  } else if(roll < 0.8){
+    a = randInt(1,20); b = randInt(1,20); answer = a+b; text = `${a} + ${b}`;
+  } else {
+    a = randInt(5,20); b = randInt(1,a); answer = a-b; text = `${a} − ${b}`;
+  }
+  currentAnswer = answer;
+  const tagEl2 = document.getElementById('quizPathTag');
+  tagEl2.textContent = tagText; tagEl2.className = tagClass;
+  document.getElementById('quizQ').textContent = text + ' = ?';
+
+  const options = new Set([answer]);
+  while(options.size < 4){
+    const delta = randInt(-5,5);
+    const candidate = answer + delta + (delta===0?1:0);
+    if(candidate >= 0) options.add(candidate);
+  }
+  renderOptions(Array.from(options).sort(()=>Math.random()-0.5), 'quizAnswers', 'quizFeedback');
+  document.getElementById('panelHitung').style.display = '';
+}
+
+function renderOptions(optionsArr, answersId, feedbackId){
+  const box = document.getElementById(answersId);
+  box.innerHTML = '';
+  optionsArr.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'quiz-answer-btn';
+    btn.textContent = opt;
+    btn.onclick = () => answerQuiz(String(opt), btn, feedbackId);
+    box.appendChild(btn);
+  });
+  document.getElementById(feedbackId).innerHTML = '&nbsp;';
+}
+
+function answerQuiz(opt, btn, feedbackId){
+  const activeAnswersId = feedbackId === 'sainsFeedback' ? 'sainsAnswers' : 'quizAnswers';
+  const buttons = document.querySelectorAll(`#${activeAnswersId} .quiz-answer-btn`);
+  buttons.forEach(b => b.disabled = true);
+  const feedback = document.getElementById(feedbackId);
+  const correct = (opt === String(currentAnswer));
+  if(correct){
+    btn.classList.add('correct');
+    const jalurLabel = currentPath === 'sekolah' ? 'Sekolah' : 'Pesantren';
+    feedback.textContent = currentQType === 'sains'
+      ? `Benar! ${currentNote} (+1 Poin ${jalurLabel})`
+      : `Benar! +1 Poin ${jalurLabel} 🎉`;
+    feedback.style.color = 'var(--teach)';
+    buildPoints[currentPath]++;
+    if(running) tryBuildFromPoints(currentPath); else updateBuildUI();
+  } else {
+    btn.classList.add('wrong');
+    buttons.forEach(b => { if(b.textContent === String(currentAnswer)) b.classList.add('correct'); });
+    feedback.textContent = currentQType === 'sains'
+      ? `Belum tepat — jawabannya ${currentAnswer}. ${currentNote}`
+      : `Belum tepat — jawabannya ${currentAnswer}.`;
+    feedback.style.color = '#c0392b';
+  }
+  const baseDelay = currentQType === 'sains' ? 2600 : 1100; // soal sains butuh waktu lebih buat baca catatannya
+  setTimeout(generateQuestion, Math.max(300, baseDelay/TIME_SCALE));
+}
+
+/* ================= MODE TONTON (jawab otomatis) ================= */
+function autoAnswerTick(){
+  if(!autoPlay || !running) return;
+  const feedbackId = currentQType === 'sains' ? 'sainsFeedback' : 'quizFeedback';
+  const answersId = currentQType === 'sains' ? 'sainsAnswers' : 'quizAnswers';
+  const buttons = document.querySelectorAll(`#${answersId} .quiz-answer-btn`);
+  if(!buttons.length) return;
+  const stillEnabled = Array.from(buttons).some(b => !b.disabled);
+  if(!stillEnabled) return; // masih di jeda feedback soal sebelumnya, tunggu giliran berikutnya
+  const target = Array.from(buttons).find(b => b.textContent === String(currentAnswer));
+  if(target) answerQuiz(String(currentAnswer), target, feedbackId);
+}
+
+
+/* ================= KONTROL KECEPATAN & MODE TONTON ================= */
+document.getElementById('speedGroup').addEventListener('click', (e) => {
+  const btn = e.target.closest('.speed-btn');
+  if(!btn) return;
+  TIME_SCALE = Number(btn.dataset.scale);
+  saveSettings();
+  document.querySelectorAll('.speed-btn').forEach(b => b.classList.toggle('active', b === btn));
+});
+
+/* v2.9: ingat pengaturan (kecepatan & toggle lintas-institusi) — localStorage
+   tersedia di halaman terpublikasi, tapi selalu dibungkus try/catch. */
+const SETTINGS_KEY = 'ekosistem-ilmu-settings-v29';
+function saveSettings(){
+  try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify({ scale: TIME_SCALE, cross: crossEnabled })); }catch(e){}
+}
+function loadSettings(){
+  try{
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if(!raw) return;
+    const st = JSON.parse(raw);
+    if([1,3,10].includes(st.scale)){
+      TIME_SCALE = st.scale;
+      document.querySelectorAll('.speed-btn').forEach(b => b.classList.toggle('active', Number(b.dataset.scale) === TIME_SCALE));
+    }
+    if(st.cross === true){
+      crossEnabled = true;
+      const cb = document.getElementById('crossBtn');
+      cb.classList.add('cross-active');
+      cb.textContent = '🔀 Lintas-institusi: AKTIF';
+    }
+  }catch(e){}
+}
+
+document.getElementById('crossBtn').addEventListener('click', () => {
+  crossEnabled = !crossEnabled;
+  const btn = document.getElementById('crossBtn');
+  btn.classList.toggle('cross-active', crossEnabled);
+  btn.textContent = crossEnabled ? '🔀 Lintas-institusi: AKTIF' : '🔀 Lintas-institusi: MATI';
+  saveSettings();
+  updateStatsUI();
+});
+
+document.getElementById('exportCsvBtn').addEventListener('click', () => {
+  const ok = exportHistoryCSV();
+  if(!ok) alert('Belum ada data riwayat utk diekspor — jalankan simulasi dulu setidaknya 1 tahun.');
+});
+
+document.getElementById('autoBtn').addEventListener('click', () => {
+  autoPlay = !autoPlay;
+  autoTimer = 0;
+  const btn = document.getElementById('autoBtn');
+  btn.classList.toggle('active', autoPlay);
+  btn.textContent = autoPlay ? '🤖 Mode tonton: AKTIF' : '🤖 Mode tonton (jawab otomatis)';
+  if(autoPlay && !running){
+    document.getElementById('startBtn').click();
+  }
+});
+
+/* ================= KONTROL START / RESET ================= */
+document.getElementById('startBtn').addEventListener('click', () => {
+  if(running) return;
+  running = true;
+  lastTs = 0;
+  document.getElementById('startBtn').disabled = true;
+  document.getElementById('ratioSub').textContent = 'Simulasi berjalan...';
+  requestAnimationFrame(animate);
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  running = false;
+  autoTimer = 0;
+  document.getElementById('startBtn').disabled = false;
+  document.getElementById('ratioSub').textContent = 'Tekan "Mulai Simulasi" di bawah';
+  setupWorld();
+  renderHistory();
+  generateQuestion();
+});
+
+/* ================= MODE BANDING (v2.7) ================= */
+// Kalkulator kumulatif 2 skenario berdampingan — TERPISAH dari simulasi peta
+// agen di atas (tidak berbagi state apa pun). Rumusnya persis pendekatan
+// bagian "Simulasi Penyerapan Lulusan" di alat sumber qiladat.com/alat/
+// fikih-muamalah-dan-ibadah/pesantren-siklus: jumlah pondok tumbuh %/tahun
+// (compound), lalu tiap tahun menyumbang lulusan & kapasitas serap baru
+// sesuai rate per-pondok, dijumlahkan kumulatif dari tahun 0.
+function computeScenario(n0, lulusanRate, kapasitasRate, growthPct, years){
+  const growth = growthPct/100;
+  let n = n0;
+  let cumLulusan = 0, cumKapasitas = 0;
+  const series = [];
+  for(let y=0; y<=years; y++){
+    if(y>0) n = n*(1+growth);
+    cumLulusan += n*lulusanRate;
+    cumKapasitas += n*kapasitasRate;
+    series.push({year:y, cumLulusan, cumKapasitas});
+  }
+  return series;
+}
+
+function renderBandingChart(seriesA, seriesB){
+  const allVals = [...seriesA, ...seriesB].flatMap(p => [p.cumLulusan, p.cumKapasitas]);
+  const maxY = Math.max(...allVals, 1);
+  const years = seriesA.length-1;
+  const W=900, H=340, padL=58, padR=16, padT=16, padB=30;
+  const xScale = y => padL + (W-padL-padR)*(years===0?0:y/years);
+  const yScale = v => (H-padB) - (H-padT-padB)*(v/maxY);
+  const pathFor = (series, key) => series.map((p,i) => `${i===0?'M':'L'}${xScale(p.year).toFixed(1)},${yScale(p[key]).toFixed(1)}`).join(' ');
+
+  // gridline horizontal + label sumbu-Y (4 pembagian)
+  let gridSvg = '';
+  for(let g=0; g<=4; g++){
+    const v = maxY*g/4;
+    const y = yScale(v);
+    gridSvg += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="var(--line)" stroke-width="1"/>`;
+    gridSvg += `<text x="${padL-8}" y="${(y+3).toFixed(1)}" text-anchor="end" font-family="JetBrains Mono" font-size="9" fill="var(--dim)">${Math.round(v).toLocaleString('id-ID')}</text>`;
+  }
+  // label sumbu-X (tahun), beberapa titik saja biar tidak padat
+  let xLabelSvg = '';
+  const xStep = Math.max(1, Math.round(years/6));
+  for(let y=0; y<=years; y+=xStep){
+    xLabelSvg += `<text x="${xScale(y).toFixed(1)}" y="${H-padB+16}" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="var(--dim)">${y}</text>`;
+  }
+
+  const svg = document.getElementById('bandingChart');
+  svg.innerHTML = `
+    ${gridSvg}
+    <line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="var(--steel)" stroke-width="1.5"/>
+    <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-padB}" stroke="var(--steel)" stroke-width="1.5"/>
+    ${xLabelSvg}
+    <text x="${(padL+(W-padR))/2}" y="${H-4}" text-anchor="middle" font-family="JetBrains Mono" font-size="9.5" fill="var(--dim)">Tahun</text>
+    <path d="${pathFor(seriesA,'cumLulusan')}" fill="none" stroke="var(--steel)" stroke-width="2.6"/>
+    <path d="${pathFor(seriesA,'cumKapasitas')}" fill="none" stroke="var(--steel)" stroke-width="2.6" stroke-dasharray="6 4" opacity="0.6"/>
+    <path d="${pathFor(seriesB,'cumLulusan')}" fill="none" stroke="var(--accent)" stroke-width="2.6"/>
+    <path d="${pathFor(seriesB,'cumKapasitas')}" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-dasharray="6 4" opacity="0.6"/>
+  `;
+}
+
+function bandingNum(id){ return Math.max(0, Number(document.getElementById(id).value) || 0); }
+
+function recomputeBanding(){
+  const years = Number(document.getElementById('bandingYears').value);
+  document.getElementById('bandingYearsVal').textContent = years;
+
+  const seriesA = computeScenario(bandingNum('bA-n0'), bandingNum('bA-lulusan'), bandingNum('bA-kapasitas'), bandingNum('bA-growth'), years);
+  const seriesB = computeScenario(bandingNum('bB-n0'), bandingNum('bB-lulusan'), bandingNum('bB-kapasitas'), bandingNum('bB-growth'), years);
+  renderBandingChart(seriesA, seriesB);
+
+  const lastA = seriesA[seriesA.length-1];
+  const lastB = seriesB[seriesB.length-1];
+  const ratioA = lastA.cumLulusan > 0 ? Math.min(100, (lastA.cumKapasitas/lastA.cumLulusan)*100) : 100;
+  const ratioB = lastB.cumLulusan > 0 ? Math.min(100, (lastB.cumKapasitas/lastB.cumLulusan)*100) : 100;
+  document.getElementById('bandingRatioA').textContent = ratioA.toFixed(1)+'%';
+  document.getElementById('bandingRatioB').textContent = ratioB.toFixed(1)+'%';
+
+  const diff = ratioA - ratioB;
+  let note;
+  if(diff > 8){
+    note = `Skenario A (Seimbang) menyerap lulusan ${diff.toFixed(0)} poin persen lebih baik daripada Skenario B (Timpang) pada rentang ${years} tahun ini.`;
+  } else if(diff < -8){
+    note = `Menariknya, Skenario B justru menyerap ${Math.abs(diff).toFixed(0)} poin persen lebih baik pada rentang ini — coba geser angkanya lagi.`;
+  } else {
+    note = `Kedua skenario menghasilkan rasio penyerapan yang mirip (selisih ${Math.abs(diff).toFixed(1)} poin persen) pada rentang ${years} tahun ini.`;
+  }
+  document.getElementById('bandingNote').textContent = note;
+}
+
+['bA-n0','bA-lulusan','bA-kapasitas','bA-growth','bB-n0','bB-lulusan','bB-kapasitas','bB-growth'].forEach(id => {
+  document.getElementById(id).addEventListener('input', recomputeBanding);
+});
+document.getElementById('bandingYears').addEventListener('input', recomputeBanding);
+
+/* ================= INIT ================= */
+setupWorld();
+loadSettings();
+renderHistory();
+generateQuestion();
+recomputeBanding();
+updateVoiceBtn();
+updateStatusLine();
+</script>
+</body>
+</html>
