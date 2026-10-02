@@ -1,0 +1,1966 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regu Damkar: Air atau Gas? — Permainan Edukasi Api | JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<!--
+  STATUS PENGERJAAN (untuk AI / sesi lanjutan — baca ini dulu sebelum mengedit):
+
+  KONSEP
+  - Game edukasi pemadam kebakaran, tampak dari atas (top-down), kota malam hari 15x10 petak (1 petak = 40 satuan logis,
+    kanvas logis 600x400, discale lewat CSS). Petugas sengaja digambar hanya sebagai titik/"biji" kecil tanpa wajah.
+  - Keputusan inti anak: memilih AIR atau GAS CO2 untuk tiap kebakaran. Alat dipilih SETIAP KALI (setelah dispatch,
+    pilihan alat dikosongkan lagi) supaya anak selalu berpikir, bukan menekan tombol yang sama terus-menerus.
+  - Lima kelas api (disederhanakan): A = padat (rumah/gudang/kios) -> air; B = cairan/bahan bakar (warung minyak,
+    bengkel) -> CO2; C = listrik (gardu) -> CO2; D = logam (mulai level 6) -> pasir; K = minyak dapur (mulai
+    level 6) -> CO2. Lihat objek CLS untuk definisi lengkap tiap kelas dan alasan fisiknya.
+  - Akibat salah alat SENGAJA nyata, bukan sekadar teks: air pada B = api berkobar & memercik ke tetangga + kesiapan
+    regu turun; air pada C = petugas tersengat (kesiapan turun); CO2 pada A = nyala hilang tapi bara panas menyala
+    lagi setelah ~4 detik kecuali disiram air (CO2 tidak mendinginkan); air pada D/K = reaksi/letupan hebat, api
+    tambah besar; CO2 pada D = tak selalu menembus logam yang terbakar.
+  - Alat bisa DIGANTI di tengah tugas: pilih api yang sedang ditangani lalu ketuk alat lain.
+  - CO2 stoknya terbatas (S.co2, maks 8, pulih pelan); air dianggap tak terbatas (hidran + tangki); pasir (alat
+    ketiga, khusus kelas D) muncul sebagai baris tombol penuh hanya di level yang punya bangunan kelas D.
+  - Kegagalan: kesiapan regu (S.safety) <= 0, ATAU bangunan hangus >= cfg.maxLoss.
+  - Enam level, kesulitan bertahap. Level 1-5 punya target (semua kejadian selesai & api padam); level 6 tanpa
+    akhir (skor tertinggi, ujian gabungan semua kelas api + angin + bara).
+  - Tingkat petunjuk (cfg.hint): 2 = tanda + saran alat, 1 = tanda saja, 0 = tanpa petunjuk.
+
+  ALGORITMA (sengaja jujur soal mana yang "algoritma alam" dan mana bukan)
+  - Api menjalar = AUTOMATA SELULER (caStep): tiap petak hanya menimbang tetangga radius 2 (Chebyshev); peluang
+    tertular = spread * f^2 * kernel jarak * pengaruh angin * kemudahan terbakar * (0.12 bila basah).
+    Bukan algoritma optimasi — model emergen; cocok untuk penjalaran api.
+  - Bara terbang = LEVY FLIGHT (fungsi levy(), Mantegna beta=1.5, sigma_u=0.6966) — lompatan berekor gemuk: kebanyakan
+    jatuh dekat, sesekali sangat jauh. Arah dibiaskan angin. Aktif mulai level 4 (cfg.ember > 0).
+  - Rute mobil = BFS pada graf jalan (roadBFS). BUKAN algoritma alam — disengaja: graf kecil, BFS eksak & cepat;
+    ACO/PSO di sini hanya menambah kerumitan tanpa manfaat.
+  - Angin = jalan acak lambat (arah & kekuatan) di updateWind().
+
+  SUARA: efek (sirine, semprotan, dsb.) disintesis Web Audio (tanpa berkas). AudioContext WAJIB dibuat dari gestur
+  pengguna (initAudio dipanggil dari klik tombol). Sirine = osilator gergaji + LFO segitiga (wail). Kunci
+  localStorage: damkarMuted, damkarProgress. NARATOR (v3): suara operator terpisah, memakai Web Speech API bawaan
+  peramban (SpeechSynthesisUtterance, lang id-ID), diinisialisasi dari gestur yang sama (initNarrator dipanggil di
+  dalam initAudio) dan tunduk pada tombol mute yang sama (tidak ada tombol baru). Berbicara saat: awal kejadian
+  ('awal' saja, bukan 'menjalar'/'percik'/'bara' — supaya tak berisik di level ramai), narasi tujuan tiap level
+  dimulai (startLevel), salah alat (applyToolEffect — tiga baris berbeda per kelas B/C/A, memakai opts.urgent
+  untuk menyela ucapan sebelumnya karena ini koreksi penting), bara nyala lagi (updateCells), api padam & bangunan
+  hangus (resolveCell/destroyCell), kartu "Pelajaran" (dibacakan sama seperti teksnya, di tick()), dan ringkasan
+  menang/kalah (endRun). NARR_LINES menampung variasi kalimat per kejadian, dipilih acak lewat pick() supaya tidak
+  monoton. Tanpa opts.urgent, speak() dilewati begitu saja bila narator masih bicara (tak menumpuk antrean).
+
+  PANEL DEKAT: dua panel dalam satu kanvas-grup — #cv (peta atas, tak berubah) dan #cv2 (closeup) di bawahnya.
+  S.focus menyimpan sel bangunan yang sedang "disorot"; diisi otomatis saat kejadian baru menyala (igniteCell) dan
+  saat pemain mengetuk bangunan (onMapTap), dikosongkan ~0.9 detik setelah padam/hangus (resolveCell/destroyCell).
+  drawCloseup() menggambar fasad sesuai FACADE[cell.type] (enam jenis: rumah, gudang, kios, warung, bengkel, gardu —
+  masing-masing bentuk berbeda), nyala di atasnya, dan truk dari drawTruckSide() yang meluncur masuk saat 'enroute'
+  lalu parkir & menyemprot saat 'work'. Saat S.focus kosong, tampil adegan pos damkar "menunggu panggilan". Bila
+  lebih dari satu kejadian menyala bersamaan, panel dekat hanya menyorot SATU bangunan (S.focus) — pemain ganti
+  sorotan dengan mengetuk bangunan lain di peta; ini pilihan desain sengaja, bukan bug.
+
+  WARGA EVAKUASI (S.folk): saat igniteCell() menyala karena 'awal' atau 'menjalar' (bukan 'percik'/'bara', supaya
+  tidak membanjiri kota kecil ini dengan warga), spawnFolk(cell) punya peluang memunculkan 1 warga di petak itu.
+  Warga berjalan dari petak bangunan ke jalan terdekat (nearestRoadCell) lalu mengikuti roadBFS menuju petak jalan
+  terjauh di salah satu dari empat tepi peta (menjauhi sumber api, bukan menuju pos damkar — warga bukan petugas).
+  updateFolk(dt) menggerakkan tiap warga sepanjang path.pts dengan kecepatan folk.spd; warga dihapus dari S.folk
+  begitu mencapai ujung path atau setelah folk.life detik (jaga-jaga agar tak pernah macet selamanya). Maks
+  MAX_FOLK warga hidup sekaligus (folk baru tidak muncul bila sudah penuh, supaya kanvas tak sesak). drawFolkTop()
+  menggambar warga sebagai kapsul kecil tanpa wajah (konsisten dengan gaya petugas) yang berjalan dengan ayunan
+  langkah sederhana (Math.sin pada offset kaki). Ini murni animasi latar/kesadaran situasi — warga TIDAK mengubah
+  aturan menang/kalah, tidak bisa disentuh/dipilih pemain.
+
+  TUTORIAL INTERAKTIF (S.tutorial/S.tutStep/S.tutCell): dipicu lewat tombol "▶ Tutorial: Cara Bermain" di menu
+  utama (startTutorial(), memakai world Level 1 tapi menandai S.tutorial=true). ALUR NYATA (menunggu aksi asli
+  pemain, bukan animasi terpisah — memakai kejadian permainan sungguhan):
+    tutStep 0 -> menunggu igniteCell() pertama menyala -> set S.tutCell, tutStep=1, showCoach(1) (bubble
+      #coach + cincin nadi kuning di kanvas atas mengelilingi S.tutCell, digambar di drawDynamic).
+    tutStep 1 -> menunggu onMapTap memilih S.tutCell (pemain benar-benar mengetuknya) -> tutStep=2, showCoach(2)
+      (bubble menunjuk alat yang benar via CLS[cell.cls].right; tombol alat itu diberi kelas CSS .tut-hl yang
+      berdenyut, diatur di updateHUD()). Bila pemain sempat mengetuk alat yang SALAH saat tutStep===2, coachmark
+      diperbarui jadi teks koreksi lembut (tidak menghukum ganda — efek salah-alat normal game tetap berlaku).
+    tutStep 2 -> menunggu dispatchTo() berhasil dengan alat yang benar pada S.tutCell -> tutStep=3, showCoach(3)
+      ("regu menuju lokasi, amati sampai padam").
+    tutStep 3 -> menunggu resolveCell() pada S.tutCell (api padam) -> tutStep=4, showCoach(4) (pesan selesai),
+      lalu setelah beberapa detik endTutorial() mengembalikan ke menu dan menyalakan localStorage damkarTutSeen.
+  Tombol "Lewati" di #coach memanggil endTutorial() kapan saja. Highlight cincin & tombol memakai warna --vest
+  (kuning) supaya konsisten dengan seluruh sistem tanda visual game (bukan warna baru).
+
+  KECEPATAN PERMAINAN (SPEED/gameSpeed): tiga pengali terpisah dari 6 level kesulitan konten — Lambat/Sedang/Cepat —
+  dipilih lewat tab di menu utama (openMenu), tersimpan di localStorage damkarSpeed. newRun() mengalikan cfg.gap
+  (jeda antar kejadian), cfg.first (jeda sebelum kejadian pertama), cfg.spread (laju automata seluler), dan
+  cfg.ember (frekuensi Lévy flight) dari LEVELS[li] dengan SPEED[gameSpeed] sebelum dipakai — LEVELS[] sendiri
+  tidak diubah (sengaja, supaya definisi 6 level tetap sebagai "kurva kesulitan konten" yang murni, terpisah dari
+  preferensi pemain soal seberapa cepat kejadian datang). Chip #chSpeed di HUD menampilkan kecepatan aktif.
+
+  PERBAIKAN SESI INI (v2)
+  - BUG TOMBOL: tombol Air/CO2 dulu di-disable bila S.sel kosong, dan S.sel dihapus oleh (a) ketukan di jalan/lahan,
+    (b) awal geseran layar yang kebetulan dimulai dari peta (pointerdown), (c) dispatch gagal karena semua mobil sibuk.
+    Sekarang: ketukan dihitung di pointerup dengan ambang geser 12 px; pilihan hanya diganti oleh bangunan menyala lain,
+    dilepas bila api padam/hangus, atau setelah dispatch BERHASIL; tombol tak lagi di-disable (CO2 hanya bila stok <1);
+    menekan alat tanpa pilihan memberi pesan jelas; baris #hintLine menunjukkan langkah 1/2 secara dinamis.
+  - BUG STOK CO2: S.co2 tak pernah pulih (catatan lama menyebut "pulih pelan" tapi kodenya tak ada) -> kini +0.14/detik.
+  - Tombol alat + hint + coach dipindah ke #dock (position:sticky bawah layar) supaya selalu terjangkau di ponsel.
+  - RUTE MOBIL: hanya lewat petak jalan (roadBFS) di lajur kiri (lanePts, LANE=9), berhenti di petak jalan terdekat dari
+    bangunan (approachRoad) — TIDAK lagi masuk ke pusat bangunan. Pulang juga lewat jalan (sendHome), bukan garis lurus.
+    advance() menggerakkan mobil tepat di tiap titik belok; badan mobil berputar halus (angT). roadBFS tak lagi menggandakan
+    titik awal. Panel dekat: truk masuk dari kanan berdasarkan sisa panjang rute (pathRemain) lalu parkir tanpa 'teleport'.
+  - Teruji: Playwright Chromium headless (viewport ponsel, sentuhan) — lihat uji rute & tombol.
+
+  BELUM ADA: mode "regu mandiri" berbasis model ambang respons ala koloni serangga (pembagian tugas antar mobil
+  tanpa komandan), alat ketiga "sekat api"/buang bahan bakar (di luar pasir kelas D yang sudah ada), memutus
+  listrik sebelum memadamkan, warga yang bisa terluka/butuh diselamatkan (saat ini murni evakuasi mandiri tanpa
+  interaksi pemain), dan pengujian di banyak ukuran layar sentuh nyata (sudah diuji Playwright
+  Chromium headless, BELUM di perangkat sentuh nyata).
+  Parameter (spread, burn, ember, dst.) disetel untuk keseruan bermain, BUKAN dikalibrasi terhadap fisika kebakaran.
+
+  MODE PRATINJAU ("Intip", v-preview): tombol kecil di kartu level yang masih terkunci, dipanggil lewat
+  startPreview(li). Berbeda dari startLevel(): memakai cfg override sementara (lihat PREVIEW_OVR di dekat
+  definisi LEVELS) — jumlah kejadian dipangkas sangat kecil dan, bila level itu memperkenalkan kelas api baru,
+  urutan kelas kejadian DIPAKSA lewat cfg.previewSeq (dibaca updateSpawner() via S.preview) supaya pemain pasti
+  menemui kelas barunya, bukan menunggu giliran acak. S.preview=true membuat endRun() TIDAK menulis
+  progress.unlocked/progress.stars/saveProgress() — sekadar melihat, bukan cara memotong jalur progresi asli.
+  Kartu akhir pratinjau (openPreviewEndCard, terpisah dari openEndCard) memakai pesan berbeda dan tombol
+  "Lanjutkan" yang HANYA mengarah ke progress.unlocked-1 (level terakhir yang sah terbuka) — tak pernah ke level
+  terkunci yang barusan diintip. HUD menampilkan chip "Intip · L<n>" (bukan "Level n" biasa) selama mode ini
+  aktif supaya tak tertukar dengan permainan sungguhan.
+
+  INTRO LEVEL & SEGITIGA API: mengetuk level di menu kini membuka openLevelIntro(li) dulu (goal + field learn[]
+  per level — sebelumnya sudah ditulis di data LEVELS tapi TAK PERNAH ditampilkan di mana pun, jadi ini sekaligus
+  memakai data yang tadinya mati) sebelum tombol "Mulai" memanggil startLevel() sungguhan. Khusus li===0 (Level 1),
+  intro menyisipkan widget segitiga api interaktif (triangleHTML/wireTriangle): tiga sudut Panas/Bahan
+  Bakar/Oksigen bisa diketuk untuk "menghilangkan" salah satunya, nyala di tengah mengecil/meredup, dan keterangan
+  di bawahnya berubah menjelaskan sebabnya — murni widget statis di layar menu, tidak menyentuh S (state
+  permainan) sama sekali. Alur "Lanjut" otomatis dari openEndCard/openPreviewEndCard sengaja TETAP langsung ke
+  startLevel() (skip intro) supaya momentum tak terputus; hanya pemilihan lewat menu yang melalui intro.
+-->
+<style>
+  :root{
+    --night:#090b12; --night2:#111521; --asphalt:#1b1f2b; --ink:#f2efe8; --dim:#9aa1b2;
+    --siren:#ea3a2d; --vest:#ffc61a; --water:#58b8ff; --gas:#cfeee6; --sand:#d8b56a; --ok:#5fd08a; --line:#272c3d;
+    --display:'Barlow Condensed','Arial Narrow',Impact,sans-serif;
+    --body:'Atkinson Hyperlegible','Segoe UI',system-ui,-apple-system,sans-serif;
+    --hazard:repeating-linear-gradient(-45deg,#ffc61a 0 9px,#14161f 9px 18px);
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);line-height:1.55;}
+  .wrap{max-width:720px;margin:0 auto;padding:0 0 44px;}
+  button{font-family:inherit;}
+  :focus-visible{outline:3px solid var(--vest);outline-offset:2px;}
+
+  .hero{padding:16px 14px 10px;}
+  .hero h1{font-family:var(--display);font-weight:700;font-size:clamp(26px,7vw,36px);line-height:1.05;margin:0 0 8px;}
+  .hero .tape{height:6px;border-radius:3px;background:var(--hazard);margin-bottom:10px;max-width:140px;}
+  .hero p{color:var(--dim);font-size:13.5px;margin:0;max-width:560px;}
+
+  .stage{margin:6px 8px 0;border:2px solid var(--line);border-radius:14px;overflow:hidden;background:#0c0f18;}
+  .hudbar{display:grid;grid-template-columns:1fr auto;gap:6px 8px;padding:7px 8px;align-items:center;background:#0c0f18;}
+  .hud-a{display:flex;flex-wrap:wrap;gap:5px;align-items:center;}
+  .hud-b{display:flex;gap:5px;justify-content:flex-end;}
+  .chip{background:#141827;border:1px solid var(--line);border-radius:8px;padding:2px 8px;font-family:var(--display);font-size:14px;font-weight:600;white-space:nowrap;}
+  .chip b{color:var(--vest);font-weight:700;}
+  .chip.peek{border-color:var(--vest);color:var(--vest);}
+  .ib{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:#141827;color:var(--ink);font-size:15px;cursor:pointer;display:grid;place-items:center;padding:0;}
+  .ib:active{transform:scale(.95);}
+  .meters{grid-column:1 / -1;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .meter{background:#141827;border:1px solid var(--line);border-radius:8px;padding:3px 8px 5px;}
+  .meter span{display:flex;justify-content:space-between;font-size:11px;color:var(--dim);}
+  .meter span b{color:var(--ink);font-family:var(--display);font-size:13px;font-weight:600;}
+  .bar{height:6px;background:#1d2335;border-radius:3px;overflow:hidden;margin-top:2px;}
+  .bar i{display:block;height:100%;width:100%;background:var(--ok);transition:width .25s,background .25s;}
+
+  .cwrap{position:relative;line-height:0;background:#06080e;}
+  canvas{display:block;width:100%;height:auto;aspect-ratio:3/2;touch-action:manipulation;cursor:pointer;}
+  .viewTabs{display:flex;gap:0;margin:8px 8px 0;}
+  .vtab{flex:1;font-family:var(--display);font-weight:700;font-size:15px;padding:8px 0;border-radius:10px 10px 0 0;
+    border:1px solid var(--line);border-bottom:none;background:#171c2c;color:var(--dim);cursor:pointer;}
+  .vtab.on{background:#06080e;color:var(--vest);}
+  .cwrap3d{position:relative;background:#06080e;aspect-ratio:3/2;touch-action:none;overflow:hidden;}
+  #three3d{position:absolute;inset:0;cursor:grab;}
+  #three3d.grabbing{cursor:grabbing;}
+  #three3d canvas{width:100%!important;height:100%!important;display:block;}
+  .hint3d{position:absolute;left:8px;bottom:6px;background:rgba(9,11,18,.72);border:1px solid var(--line);border-radius:7px;
+    padding:3px 9px;font-size:11.5px;color:var(--dim);pointer-events:none;}
+  .cwrap2{position:relative;line-height:0;background:#0a0d15;border-top:2px solid var(--line);}
+  #cv2{width:100%;height:auto;aspect-ratio:16/7;}
+  .cuTag{position:absolute;left:8px;top:6px;background:rgba(9,11,18,.72);border:1px solid var(--line);border-radius:7px;
+    padding:2px 9px;font-family:var(--display);font-weight:600;font-size:13px;color:var(--vest);pointer-events:none;}
+  .radio{position:absolute;left:50%;top:8px;transform:translate(-50%,-10px);opacity:0;pointer-events:none;
+    background:rgba(180,28,22,.94);color:#fff;font-family:var(--display);font-weight:600;font-size:15px;line-height:1.2;
+    padding:5px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.25);transition:opacity .25s,transform .25s;max-width:92%;text-align:center;}
+  .radio.show{opacity:1;transform:translate(-50%,0);}
+  .stage.alarm{animation:alarm .55s ease-in-out 2;}
+  @keyframes alarm{0%,100%{box-shadow:inset 0 0 0 0 rgba(234,58,45,0);}50%{box-shadow:inset 0 0 50px 5px rgba(234,58,45,.6);}}
+
+  .panel{padding:9px 12px 10px;min-height:66px;font-size:13.5px;background:#0e121d;border-top:1px solid var(--line);border-left:5px solid var(--line);line-height:1.5;}
+  .panel .who{font-family:var(--display);font-weight:700;font-size:17px;color:var(--ink);}
+  .panel .sub{color:var(--dim);font-size:12.5px;}
+  .panel.k-inspect{border-left-color:var(--vest);}
+  .panel.k-good{border-left-color:var(--ok);}
+  .panel.k-bad{border-left-color:var(--siren);}
+  .panel.k-info{border-left-color:var(--water);}
+
+  .toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 8px 0;}
+  .tool.pasir{grid-column:1 / -1;} /* alat ke-3 (pasir/bubuk kering) hanya muncul di level dengan api kelas D — baris penuh di bawah Air/CO2, bukan kolom ke-3 yang sempit di ponsel */
+  #toolPasir{display:none;}
+  .tool{display:flex;align-items:center;gap:10px;text-align:left;background:var(--night2);border:2px solid var(--line);
+    border-radius:12px;padding:8px 10px;color:var(--ink);cursor:pointer;min-height:62px;}
+  .tool svg{flex:none;width:36px;height:36px;}
+  .tool .tn{font-family:var(--display);font-weight:700;font-size:20px;line-height:1;}
+  .tool .ts{font-size:11.5px;color:var(--dim);line-height:1.3;margin-top:3px;}
+  .tool.air .tn{color:var(--water);} .tool.gas .tn{color:var(--gas);} .tool.sand .tn{color:var(--sand);}
+  .tool.armed{border-color:var(--vest);box-shadow:0 0 0 3px rgba(255,198,26,.28);}
+  .tool[disabled]{opacity:.42;cursor:not-allowed;}
+  .tool.tut-hl{border-color:var(--vest);animation:tutpulse 1.1s ease-in-out infinite;}
+  .tool.tut-hl[disabled]{opacity:.72;}
+  @keyframes tutpulse{0%,100%{box-shadow:0 0 0 3px rgba(255,198,26,.3);}50%{box-shadow:0 0 0 8px rgba(255,198,26,.05);}}
+  .dock{position:sticky;bottom:0;z-index:40;padding:8px 0 max(8px,env(safe-area-inset-bottom));
+    background:linear-gradient(to top,var(--night) 86%,rgba(9,11,18,0));}
+  .dock .toolbar{margin:0 8px;}
+  .dock .hint{margin:6px 14px 0;}
+  .coach{display:none;margin:0 8px 8px;background:#171c2c;border:2px solid var(--vest);
+    border-radius:12px;padding:9px 12px 10px;box-shadow:0 -6px 22px rgba(0,0,0,.4);}
+  .coach.on{display:block;}
+  .coach .ct{font-family:var(--display);font-weight:700;font-size:14px;color:var(--vest);margin:0 0 3px;}
+  .coach .cb{font-size:13px;color:var(--ink);margin:0;}
+  .coach .cx{margin-top:7px;background:none;border:1px solid var(--line);color:var(--dim);font-size:12px;
+    border-radius:7px;padding:4px 10px;cursor:pointer;}
+  .stock{display:flex;gap:2px;margin-top:5px;}
+  .stock i{width:10px;height:6px;border-radius:2px;background:#2a3838;}
+  .stock i.on{background:var(--gas);}
+  .stock i.half{background:linear-gradient(90deg,var(--gas) 50%,#2a3838 50%);}
+
+  .ov{position:fixed;inset:0;z-index:60;background:rgba(5,7,12,.95);overflow-y:auto;display:none;padding:14px 12px 30px;}
+  .ov.on{display:block;}
+  .card{max-width:560px;margin:0 auto;background:#111623;border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+  .card .top{height:8px;background:var(--hazard);}
+  .card .in{padding:16px 16px 18px;}
+  .card h2{font-family:var(--display);font-weight:700;font-size:28px;line-height:1.05;margin:0 0 4px;}
+  .card h3{font-family:var(--display);font-weight:700;font-size:19px;margin:16px 0 4px;color:var(--vest);}
+  .card p{margin:0 0 9px;font-size:14px;color:#d4d8e3;}
+  .card ul{margin:0 0 10px;padding-left:19px;font-size:14px;color:#d4d8e3;}
+  .card li{margin-bottom:5px;}
+  .card .layer{font-family:var(--display);font-size:15px;color:var(--dim);margin:0 0 10px;}
+  .triWrap{position:relative;height:190px;margin:6px 0 4px;}
+  .triNode{position:absolute;transform:translateX(-50%);background:#171c2c;border:1px solid var(--line);border-radius:10px;
+    padding:7px 10px;font-size:12px;line-height:1.25;color:var(--ink);text-align:center;cursor:pointer;font-family:var(--display);}
+  .triNode:active{transform:translateX(-50%) scale(.95);}
+  .triNode.off{opacity:.4;border-color:var(--siren);text-decoration:line-through;}
+  .tn-oksigen{top:0;left:50%;}
+  .tn-panas{bottom:0;left:14%;}
+  .tn-bahan{bottom:0;left:86%;}
+  .triFlame{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(1);font-size:42px;
+    transition:opacity .3s,transform .3s;opacity:1;}
+  .triCaption{font-size:13px;color:var(--dim);text-align:center;min-height:34px;margin:2px 0 8px;}
+  .btn{display:inline-block;font-family:var(--display);font-weight:700;font-size:19px;border:none;border-radius:10px;padding:10px 20px;cursor:pointer;background:var(--siren);color:#fff;margin:6px 8px 0 0;}
+  .btn.alt{background:#232a3f;color:var(--ink);border:1px solid var(--line);}
+  .btn:active{transform:scale(.97);}
+  .lvlRow{display:flex;gap:6px;margin-bottom:7px;}
+  .lvl{display:flex;align-items:center;justify-content:space-between;gap:10px;flex:1;min-width:0;text-align:left;background:#171c2c;color:var(--ink);
+    border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;}
+  .lvl[disabled]{opacity:.4;cursor:not-allowed;}
+  .lvl .ln{font-family:var(--display);font-size:18px;font-weight:700;line-height:1.1;}
+  .lvl .ld{font-size:12px;color:var(--dim);}
+  .lvl .st{font-size:16px;color:var(--vest);letter-spacing:2px;white-space:nowrap;}
+  .peekBtn{flex:0 0 auto;background:#1b2233;border:1px solid var(--vest);color:var(--vest);border-radius:10px;
+    padding:0 14px;font-family:var(--display);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
+  .peekBtn:active{transform:scale(.97);}
+  .tabs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 8px;}
+  .tab{font-family:var(--display);font-size:15px;font-weight:600;padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:#171c2c;color:var(--dim);cursor:pointer;}
+  .tab.on{background:var(--vest);color:#1a1400;border-color:var(--vest);}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0;}
+  .stat{background:#171c2c;border-radius:8px;padding:6px 10px;}
+  .stat b{display:block;font-family:var(--display);font-size:22px;color:var(--vest);line-height:1.1;}
+  .stat span{font-size:11.5px;color:var(--dim);}
+  .stars{font-size:30px;color:var(--vest);letter-spacing:4px;}
+  .tri{display:block;margin:6px auto 10px;max-width:260px;}
+
+  .hint{margin:8px 14px 0;font-size:12px;color:var(--dim);}
+  .info{margin:16px 8px 0;background:#0e121d;border:1px solid var(--line);border-radius:12px;padding:12px 14px;}
+  .info h3{font-family:var(--display);font-weight:700;font-size:19px;margin:0 0 6px;color:var(--vest);}
+  .info p,.info li{font-size:13.5px;color:#c9cedb;margin:0 0 7px;}
+  .info ul{margin:0 0 6px;padding-left:19px;}
+  .info a{color:var(--vest);}
+  .info .note{font-size:12px;color:var(--dim);border-top:1px dashed var(--line);padding-top:8px;margin-top:8px;}
+  @media (prefers-reduced-motion:reduce){.stage.alarm{animation:none;} .radio{transition:none;}}
+  @media (min-width:560px){.meters{grid-column:auto;}.hudbar{grid-template-columns:1fr 240px auto;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <div class="tape"></div>
+    <h1>Regu Damkar: Air atau Gas?</h1>
+    <p>Kota malam, api menjalar dari bangunan ke bangunan. Kamu memimpin regu pemadam: pilih alat yang tepat untuk tiap jenis api, atau akibatnya nyata.</p>
+  </header>
+
+  <div class="stage" id="stage">
+    <div class="hudbar">
+      <div class="hud-a">
+        <div class="chip" id="chLevel">Level 1</div>
+        <div class="chip" id="chSpeed">Sedang</div>
+        <div class="chip">Kejadian <b id="vInc">0/4</b></div>
+        <div class="chip">Api menyala <b id="vFire">0</b></div>
+        <div class="chip">Skor <b id="vScore">0</b></div>
+      </div>
+      <div class="hud-b">
+        <button class="ib" id="btnBook" type="button" aria-label="Buka Buku Petugas" title="Buku Petugas">&#128214;</button>
+        <button class="ib" id="btnMute" type="button" aria-label="Suara" title="Suara">&#128266;</button>
+        <button class="ib" id="btnPause" type="button" aria-label="Jeda" title="Jeda">&#10074;&#10074;</button>
+      </div>
+      <div class="meters">
+        <div class="meter"><span>Kesiapan regu <b id="vSafe">100%</b></span><div class="bar"><i id="barSafe"></i></div></div>
+        <div class="meter"><span>Bangunan hangus <b id="vLoss">0/4</b></span><div class="bar"><i id="barLoss" style="width:0%;background:var(--siren)"></i></div></div>
+      </div>
+    </div>
+    <div class="viewTabs" id="viewTabs">
+      <button class="vtab on" id="vTab2D" type="button">&#128506;&#65039; Peta 2D</button>
+      <button class="vtab" id="vTab3D" type="button">&#129680; Mode 3D</button>
+    </div>
+    <div class="cwrap" id="cwrap">
+      <canvas id="cv" aria-label="Peta kota. Ketuk bangunan yang terbakar untuk memilihnya."></canvas>
+      <div class="radio" id="radio" role="status"></div>
+    </div>
+    <div class="cwrap3d" id="cwrap3d" style="display:none;">
+      <div id="three3d"></div>
+      <div class="hint3d">Seret untuk putar &middot; cubit/gulir untuk zoom &middot; ketuk bangunan menyala</div>
+    </div>
+    <div class="cwrap2" id="cwrap2">
+      <canvas id="cv2" aria-label="Tampilan dekat bangunan yang sedang ditangani."></canvas>
+      <div class="cuTag" id="cuTag">Pos Damkar</div>
+    </div>
+    <div class="panel k-info" id="panel" role="status" aria-live="polite"></div>
+  </div>
+
+  <div class="dock" id="dock">
+  <div class="coach" id="coach" role="status">
+    <p class="ct" id="coachTitle"></p>
+    <p class="cb" id="coachBody"></p>
+    <button class="cx" id="coachSkip" type="button">Lewati tutorial</button>
+  </div>
+  <div class="toolbar" id="toolbar">
+    <button class="tool air" id="toolAir" type="button">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 4 C20 4 8 18 8 26 a12 12 0 0 0 24 0 C32 18 20 4 20 4Z" fill="#58b8ff"/><path d="M14 27 a6 6 0 0 0 6 6" stroke="#dff2ff" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
+      <div><div class="tn">Air</div><div class="ts">Mendinginkan. Tak terbatas.</div></div>
+    </button>
+    <button class="tool gas" id="toolCo2" type="button">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><rect x="13" y="12" width="14" height="24" rx="5" fill="#cfeee6"/><rect x="17" y="6" width="6" height="7" rx="1.5" fill="#8fb8ae"/><path d="M27 8 h7" stroke="#cfeee6" stroke-width="3" stroke-linecap="round"/><circle cx="35" cy="14" r="2.6" fill="#cfeee6" opacity=".7"/><circle cx="33" cy="20" r="2" fill="#cfeee6" opacity=".5"/></svg>
+      <div><div class="tn">Gas CO₂</div><div class="ts">Menyelimuti. Stok terbatas.</div><div class="stock" id="stock"></div></div>
+    </button>
+    <button class="tool pasir" id="toolPasir" type="button">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 32 Q20 10 34 32 Z" fill="#d8b56a"/><circle cx="14" cy="27" r="1.6" fill="#4a3d20"/><circle cx="22" cy="23" r="1.6" fill="#4a3d20"/><circle cx="27" cy="28" r="1.6" fill="#4a3d20"/><circle cx="18" cy="30" r="1.6" fill="#4a3d20"/></svg>
+      <div><div class="tn">Pasir</div><div class="ts">Menimbun. Tak terbatas, hanya untuk api logam.</div></div>
+    </button>
+  </div>
+  <p class="hint" id="hintLine">Langkah 1: ketuk bangunan yang menyala di peta. Langkah 2: ketuk alatnya.</p>
+  </div>
+
+  <section class="info">
+    <h3>Cara bermain</h3>
+    <ul>
+      <li>Ketuk bangunan yang terbakar untuk memeriksanya, lalu ketuk <b>Air</b> atau <b>Gas CO₂</b>. Mobil pemadam berangkat lewat jalan raya tercepat, berhenti di tepi jalan terdekat, lalu selangnya menjangkau bangunan.</li>
+      <li>Salah alat? Ketuk api yang sedang ditangani, lalu ketuk alat lain untuk mengganti di tengah tugas.</li>
+      <li>Api menjalar sendiri ke bangunan di dekatnya. Bangunan basah lebih sulit terbakar; lahan kosong dan jalan memperlambat api.</li>
+    </ul>
+  </section>
+
+  <section class="info">
+    <h3>Algoritma di balik layar</h3>
+    <p><b>Api menjalar</b> memakai <i>automata seluler</i>: tiap petak hanya melihat tetangganya. Pola kebakaran besar muncul dari aturan kecil itu. <b>Bara terbang</b> memakai <i>Lévy flight</i> (lompatan berekor gemuk, seperti pada Cuckoo Search dan Penyerbukan Bunga): kebanyakan jatuh dekat, sesekali sangat jauh.</p>
+    <p><b>Rute mobil</b> memakai BFS biasa, bukan algoritma alam. Graf jalannya kecil, jadi cara eksak lebih cepat dan lebih tepat. Algoritma alam bukan satu-satunya pilihan.</p>
+    <p>Lihat rumpun algoritma serupa di <a href="https://qiladat.com/alat/matematika-dan-sains-komputasi/laboratorium-algoritma-alam">Laboratorium Algoritma Alam</a>, termasuk Automata Seluler, Cuckoo Search, dan Ngengat-Api.</p>
+    <p class="note"><b>Batasan.</b> Kelas api dan akibat salah alat disederhanakan untuk belajar. Parameter penjalaran api disetel untuk keseruan bermain dan belum dikalibrasi terhadap fisika kebakaran sungguhan. Di dunia nyata, regu juga memutus listrik lebih dulu dan mengutamakan keselamatan warga.</p>
+  </section>
+</div>
+
+<div class="ov" id="ov" role="dialog" aria-modal="true"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ================= MODE 3D (Three.js) — tab di atas peta, dibangun sekali (init3D), diisi ulang tiap kejadian
+   (build3DCity) dari data kota yang sama (S.G/S.blds/S.units) yang dipakai kanvas 2D. Lazy: kelas Three.js dan
+   WebGL baru dibuat saat pemain pertama kali membuka tabnya, bukan di awal, supaya beban awal tidak bertambah. ================= */
+let viewMode='2d', three3=null;
+const ROOF_H={rumah:16,gudang:22,kios:14,warung:14,bengkel:15,gardu:11,logam:20,dapur:13}; // tinggi bangunan (unit dunia) per jenis
+function setViewMode(v){
+  if(viewMode===v)return; viewMode=v;
+  document.getElementById('vTab2D').classList.toggle('on',v==='2d');
+  document.getElementById('vTab3D').classList.toggle('on',v==='3d');
+  document.getElementById('cwrap').style.display=v==='2d'?'':'none';
+  document.getElementById('cwrap2').style.display=v==='2d'?'':'none';
+  document.getElementById('cwrap3d').style.display=v==='3d'?'':'none';
+  if(v==='3d'){
+    if(typeof THREE==='undefined'){ setViewMode('2d'); setPanel('Mode 3D belum bisa dimuat (pustaka three.js belum terunduh, cek koneksi internet).','k-bad'); return; }
+    init3D(); if(S) build3DCity();
+  }
+}
+function init3D(){
+  if(three3)return;
+  const box=document.getElementById('three3d');
+  const w=()=>box.clientWidth||300, h=()=>box.clientHeight||200;
+  const scene=new THREE.Scene(); scene.background=new THREE.Color(0x090b12); scene.fog=new THREE.Fog(0x090b12,W*1.4,W*3.2);
+  const camera=new THREE.PerspectiveCamera(46,w()/h(),1,4000);
+  const target=new THREE.Vector3(W/2,0,H/2);
+  let radius=Math.max(W,H)*1.25, theta=0.9, phi=0.95;
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2)); renderer.setSize(w(),h());
+  box.appendChild(renderer.domElement);
+  scene.add(new THREE.AmbientLight(0xbfc8ff,0.62));
+  const moon=new THREE.DirectionalLight(0xcfe0ff,0.85); moon.position.set(W*0.3,W*0.9,H*1.1); scene.add(moon);
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(W,H),new THREE.MeshStandardMaterial({color:0x161d1b}));
+  ground.rotation.x=-Math.PI/2; ground.position.set(W/2,0,H/2); scene.add(ground);
+  const grp=new THREE.Group(); scene.add(grp);
+  function updateCam(){
+    camera.position.x=target.x+radius*Math.sin(phi)*Math.sin(theta);
+    camera.position.z=target.z+radius*Math.sin(phi)*Math.cos(theta);
+    camera.position.y=Math.max(6,radius*Math.cos(phi));
+    camera.lookAt(target);
+  }
+  updateCam();
+  let dragging=false,lastX=0,lastY=0,downPos=null;
+  const dom=renderer.domElement;
+  dom.addEventListener('pointerdown',e=>{ initAudio(); dragging=true; lastX=e.clientX; lastY=e.clientY; downPos={x:e.clientX,y:e.clientY}; box.classList.add('grabbing'); });
+  window.addEventListener('pointerup',e=>{
+    box.classList.remove('grabbing'); const wasDrag=dragging; dragging=false;
+    if(!wasDrag||!downPos)return; if(Math.hypot(e.clientX-downPos.x,e.clientY-downPos.y)>6)return;
+    const r=dom.getBoundingClientRect(); const mouse=new THREE.Vector2(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);
+    const ray=new THREE.Raycaster(); ray.setFromCamera(mouse,camera);
+    const hit=ray.intersectObjects(grp.children,true).filter(x=>x.object.userData.cell);
+    if(hit.length) tapBuildingCell(hit[0].object.userData.cell);
+  });
+  window.addEventListener('pointermove',e=>{
+    if(!dragging)return; theta-=(e.clientX-lastX)*0.006; phi-=(e.clientY-lastY)*0.006;
+    phi=Math.max(0.25,Math.min(1.5,phi)); lastX=e.clientX; lastY=e.clientY; updateCam();
+  });
+  dom.addEventListener('wheel',e=>{ e.preventDefault(); radius=Math.max(W*0.35,Math.min(W*3,radius+e.deltaY*(W*0.0016))); updateCam(); },{passive:false});
+  let pinch=null; const td=(a,b)=>Math.hypot(b.clientX-a.clientX,b.clientY-a.clientY);
+  dom.addEventListener('touchstart',e=>{ if(e.touches.length===2){pinch=td(e.touches[0],e.touches[1]); dragging=false;} },{passive:true});
+  dom.addEventListener('touchmove',e=>{
+    if(e.touches.length===2&&pinch!==null){ e.preventDefault(); const d=td(e.touches[0],e.touches[1]);
+      radius=Math.max(W*0.35,Math.min(W*3,radius-(d-pinch)*(W*0.003))); pinch=d; updateCam(); }
+  },{passive:false});
+  dom.addEventListener('touchend',e=>{ if(e.touches.length<2)pinch=null; });
+  window.addEventListener('resize',()=>{ camera.aspect=w()/h(); camera.updateProjectionMatrix(); renderer.setSize(w(),h()); });
+  three3={scene,camera,renderer,grp,ground,updateCam,blds:new Map(),units:[],ring:null,folkPool:[],emberPool:[]};
+}
+function makeFolkMesh(){
+  const g=new THREE.Group();
+  const body=new THREE.Mesh(new THREE.BoxGeometry(4.5,7,4.5),new THREE.MeshStandardMaterial({color:0x2c3140}));
+  body.position.y=3.5; g.add(body);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(2.6,10,8),new THREE.MeshStandardMaterial({color:0xc98a5c}));
+  head.position.y=8.6; g.add(head); g.userData.head=head;
+  return g;
+}
+function makeEmberMesh(){
+  return new THREE.Mesh(new THREE.SphereGeometry(2,8,6),new THREE.MeshBasicMaterial({color:0xffb23c}));
+}
+function buildRoadTiles(){
+  const t=three3; const roadMat=new THREE.MeshStandardMaterial({color:0x1c202b});
+  const geo=new THREE.BoxGeometry(CS*0.98,1,CS*0.98);
+  for(const row of S.G)for(const cell of row){
+    if(cell.kind!=='road')continue;
+    const m=new THREE.Mesh(geo,roadMat); m.position.set(cell.c*CS+CS/2,0.5,cell.r*CS+CS/2); t.grp.add(m);
+  }
+  // sungai: ubin biru sedikit LEBIH RENDAH dari jalan, supaya baris jalan yang memotongnya tampak seperti jembatan
+  const riverMat=new THREE.MeshStandardMaterial({color:0x123a52,roughness:0.35,metalness:0.15});
+  const rgeo=new THREE.BoxGeometry(CS,1,CS);
+  for(const row of S.G)for(const cell of row){
+    if(cell.kind!=='river')continue;
+    const m=new THREE.Mesh(rgeo,riverMat); m.position.set(cell.c*CS+CS/2,0.15,cell.r*CS+CS/2); t.grp.add(m);
+  }
+}
+/* Bangun ulang seluruh kota 3D dari S.G/S.blds/S.units — dipanggil tiap level baru dan tiap kali tab 3D dibuka. */
+function build3DCity(){
+  const t=three3; if(!t||!S)return;
+  while(t.grp.children.length) t.grp.remove(t.grp.children[0]);
+  t.blds.clear(); t.units=[]; t.folkPool=[]; t.emberPool=[];
+  buildRoadTiles();
+  // pos pemadam: satu balok sederhana di petak stasiun
+  const sx=(ST.c0+ST.c1+1)/2*CS, sz=(ST.r0+ST.r1+1)/2*CS, sw=(ST.c1-ST.c0+1)*CS*0.86, sd=(ST.r1-ST.r0+1)*CS*0.86;
+  const station=new THREE.Mesh(new THREE.BoxGeometry(sw,20,sd),new THREE.MeshStandardMaterial({color:0x2a2f3b}));
+  station.position.set(sx,10,sz); t.grp.add(station);
+  const roofS=new THREE.Mesh(new THREE.BoxGeometry(sw*1.02,3,sd*1.02),new THREE.MeshStandardMaterial({color:0xc9302a}));
+  roofS.position.set(sx,21.5,sz); t.grp.add(roofS);
+  for(const cell of S.blds){
+    const cx=cell.c*CS+CS/2, cz=cell.r*CS+CS/2, bh=ROOF_H[cell.type]||16, bw=CS*0.72;
+    const mat=new THREE.MeshStandardMaterial({color:ROOF[cell.type]||'#555',emissive:0x000000});
+    const body=new THREE.Mesh(new THREE.BoxGeometry(bw,bh,bw),mat);
+    body.position.set(cx,bh/2,cz); body.userData.cell=cell; t.grp.add(body);
+    const roof=new THREE.Mesh(new THREE.ConeGeometry(bw*0.78,bh*0.42,4),new THREE.MeshStandardMaterial({color:0x2c2318}));
+    roof.position.set(cx,bh+bh*0.21,cz); roof.rotation.y=Math.PI/4; roof.userData.cell=cell; t.grp.add(roof);
+    const flame=new THREE.Mesh(new THREE.ConeGeometry(bw*0.32,bh*0.6,8),new THREE.MeshBasicMaterial({color:0xffb23c,transparent:true,opacity:0}));
+    flame.position.set(cx,bh+bh*0.6,cz); t.grp.add(flame);
+    t.blds.set(cell,{body,mat,roof,flame,bh});
+  }
+  const ring=new THREE.Mesh(new THREE.RingGeometry(CS*0.5,CS*0.62,24),new THREE.MeshBasicMaterial({color:0xffc61a,side:THREE.DoubleSide,transparent:true,opacity:0.9}));
+  ring.rotation.x=-Math.PI/2; ring.visible=false; t.grp.add(ring); t.ring=ring;
+  for(const u of S.units){
+    const grp=new THREE.Group();
+    const body=new THREE.Mesh(new THREE.BoxGeometry(20,9,11),new THREE.MeshStandardMaterial({color:u.color}));
+    body.position.y=6.5; grp.add(body);
+    const cab=new THREE.Mesh(new THREE.BoxGeometry(8,7,10.5),new THREE.MeshStandardMaterial({color:0x1c1f2a}));
+    cab.position.set(7,7.5,0); grp.add(cab);
+    t.grp.add(grp); t.units.push({u,grp,beam:null,body});
+  }
+}
+/* Dipanggil tiap frame saat viewMode==='3d': sinkron posisi/warna mesh dengan S, lalu render. */
+function render3D(){
+  const t=three3; if(!t||!S)return;
+  for(const[cell,m]of t.blds){
+    if(cell.destroyed){ m.mat.color.set(0x14161a); m.mat.emissive.set(0x000000); m.body.scale.y=0.35; m.body.position.y=m.bh*0.35/2; m.flame.material.opacity=0; continue; }
+    m.body.scale.y=1; m.body.position.y=m.bh/2;
+    if(cell.f>0){
+      const g=Math.min(1,0.35+cell.f*0.5);
+      m.mat.emissive.set(0xff7a1a); m.mat.emissiveIntensity=g;
+      m.flame.material.opacity=Math.min(0.85,0.3+cell.f*0.5); m.flame.scale.set(1,1+Math.sin(S.time*14+cell.seed)*0.18,1);
+    } else { m.mat.emissiveIntensity=0; m.mat.emissive.set(0x000000); m.flame.material.opacity=0; }
+  }
+  if(t.ring){ if(S.sel||S.focus){ const c=S.sel||S.focus; t.ring.visible=!!(c&&c.live&&!c.destroyed);
+      if(t.ring.visible) t.ring.position.set(c.c*CS+CS/2,0.4,c.r*CS+CS/2); } else t.ring.visible=false; }
+  for(const rec of t.units){
+    const u=rec.u; rec.grp.position.set(u.x,0,u.y); rec.grp.rotation.y=-u.ang;
+    rec.body.material.emissive.set(u.refilling?0x554400:0x000000); rec.body.material.emissiveIntensity=u.refilling?0.7:0;
+    if(u.spraying&&u.target&&!u.target.destroyed){
+      if(!rec.beam){ rec.beam=new THREE.Mesh(new THREE.CylinderGeometry(1.6,1.6,1,6),new THREE.MeshBasicMaterial({color:(TOOLS[u.tool]||TOOLS.air).hex3d,transparent:true,opacity:0.75})); three3.grp.add(rec.beam); }
+      const bx=u.target.c*CS+CS/2, bz=u.target.r*CS+CS/2, dx=bx-u.x, dz=bz-u.y, len=Math.max(1,Math.hypot(dx,dz));
+      rec.beam.visible=true; rec.beam.scale.set(1,len,1); rec.beam.position.set(u.x+dx/2,8,u.y+dz/2);
+      rec.beam.rotation.set(Math.PI/2,0,0); rec.beam.rotation.z=Math.atan2(dx,dz);
+    } else if(rec.beam) rec.beam.visible=false;
+  }
+  for(let i=0;i<S.folk.length;i++){
+    const p=S.folk[i]; let f=t.folkPool[i];
+    if(!f){ f=makeFolkMesh(); t.grp.add(f); t.folkPool[i]=f; }
+    f.visible=true; f.position.set(p.x,0,p.y); f.userData.head.material.color.set(p.skin);
+    const tgt=p.path[p.pi+1]; if(tgt){ const dx=tgt.x-p.x, dy=tgt.y-p.y; if(Math.hypot(dx,dy)>0.5) f.rotation.y=-Math.atan2(dy,dx); }
+  }
+  for(let i=S.folk.length;i<t.folkPool.length;i++) t.folkPool[i].visible=false;
+  for(let i=0;i<S.embers.length;i++){
+    const e=S.embers[i]; let m=t.emberPool[i];
+    if(!m){ m=makeEmberMesh(); t.grp.add(m); t.emberPool[i]=m; }
+    const p=e.t/e.dur, ex=lerp(e.x,e.tx,p), ez=lerp(e.y,e.ty,p), eh=6+Math.sin(p*3.14159)*26;
+    m.visible=true; m.position.set(ex,eh,ez);
+  }
+  for(let i=S.embers.length;i<t.emberPool.length;i++) t.emberPool[i].visible=false;
+  t.renderer.render(t.scene,t.camera);
+}
+function tapBuildingCell(cell){
+  if(!S||S.ended||mode!=='play')return;
+  if(cell&&cell.kind==='bld'&&cell.live&&!cell.destroyed){
+    S.sel=cell; S.focus=cell; SFX.click();
+    const cls=CLS[cell.cls];
+    let msg='<span class="who">'+(cell.name)+'</span><div class="sub">'+cls.title+' &middot; '+cls.clue+'</div>';
+    if(S.cfg.hint>=1) msg+='<div class="sub">'+(S.cfg.hint>=2?cls.hint:'Perhatikan warna nyala dan asapnya.')+'</div>';
+    setPanel(msg,'k-inspect');
+    if(S.tutorial&&S.tutStep===1&&cell===S.tutCell){ S.tutStep=2; showCoach(2); }
+  } else if(cell&&cell.kind==='bld'&&!cell.destroyed&&!S.sel){
+    setPanel('<span class="who">'+cell.name+'</span><div class="sub">Bangunan ini tidak terbakar. Ketuk bangunan yang menyala.</div>','k-info');
+  }
+  updateHUD();
+}
+</script>
+<script>
+'use strict';
+/* ================= KONSTANTA DUNIA ================= */
+const COLS=15, ROWS=10, CS=40, W=COLS*CS, H=ROWS*CS;
+const MAX_FOLK=6;
+const ROAD_COLS=[4,10], ROAD_ROWS=[3,7];
+const RIVER_C0=COLS-2;                      // sungai: 2 kolom di sisi timur kota (jembatan otomatis di baris jalan)
+const ST={c0:0,c1:2,r0:8,r1:9};            // pos pemadam (3x2 petak)
+const TANK_MAX=2;                          // satu kali isi tangki = 2 kali berangkat memadamkan, baru wajib isi ulang
+const DPR=Math.min(2,window.devicePixelRatio||1);
+const REDUCED=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+cv.width=W*DPR; cv.height=H*DPR;
+const lcv=document.createElement('canvas'); lcv.width=W; lcv.height=H; const lctx=lcv.getContext('2d');   // lapisan cahaya
+const scv=document.createElement('canvas'); scv.width=W*DPR; scv.height=H*DPR; const sctx=scv.getContext('2d'); // lapisan statis
+
+const rand=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
+const lerp=(a,b,t)=>a+(b-a)*t;
+const pick=a=>a[(Math.random()*a.length)|0];
+function gauss(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185307*v);}
+function wpick(o){let t=0;for(const k in o)t+=o[k];let r=Math.random()*t;for(const k in o){r-=o[k];if(r<=0)return k;}return Object.keys(o)[0];}
+function angDiff(a,b){let d=b-a;while(d>Math.PI)d-=6.283185307;while(d<-Math.PI)d+=6.283185307;return d;}
+/* Lévy flight — algoritma Mantegna, beta=1.5 (sigma_u baku untuk beta=1.5) */
+function levy(){const beta=1.5,sig=0.6966;const u=gauss()*sig,v=gauss();return Math.abs(u)/Math.pow(Math.max(1e-6,Math.abs(v)),1/beta);}
+
+/* ================= AUDIO (Web Audio, tanpa berkas) ================= */
+const AU={ctx:null,master:null,noise:null,muted:false,fireG:null,waterG:null,gasG:null,sirenG:null,droneG:null,engineG:null,engRumbleG:null,idleG:null};
+try{AU.muted=localStorage.getItem('damkarMuted')==='1';}catch(e){}
+function initAudio(){
+  initNarrator();
+  if(AU.ctx){ if(AU.ctx.state==='suspended') AU.ctx.resume(); return; }
+  const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+  let c; try{c=new AC();}catch(e){return;}
+  AU.ctx=c;
+  const comp=c.createDynamicsCompressor(); comp.connect(c.destination);
+  AU.master=c.createGain(); AU.master.gain.value=AU.muted?0:0.6; AU.master.connect(comp);
+  const nb=c.createBuffer(1,c.sampleRate*2,c.sampleRate), d=nb.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  AU.noise=nb;
+  const loop=(type,freq,q)=>{const s=c.createBufferSource(); s.buffer=nb; s.loop=true;
+    const f=c.createBiquadFilter(); f.type=type; f.frequency.value=freq; f.Q.value=q;
+    const g=c.createGain(); g.gain.value=0; s.connect(f); f.connect(g); g.connect(AU.master); s.start(); return g;};
+  AU.fireG=loop('bandpass',850,0.6);      // gemericik api
+  AU.waterG=loop('highpass',1900,0.5);    // desis semprotan air
+  AU.gasG=loop('bandpass',5200,0.9);      // "pssh" gas CO2 (lebih tinggi & tipis)
+  // mesin diesel truk melaju: gergaji rendah + desah noise band-rendah, menyala saat truk berangkat/pulang
+  const eo=c.createOscillator(); eo.type='sawtooth'; eo.frequency.value=54;
+  const ef=c.createBiquadFilter(); ef.type='lowpass'; ef.frequency.value=210;
+  AU.engineG=c.createGain(); AU.engineG.gain.value=0; eo.connect(ef); ef.connect(AU.engineG); AU.engineG.connect(AU.master);
+  eo.start(); AU.engineOsc=eo;
+  AU.engRumbleG=loop('lowpass',160,0.7);
+  // getaran pompa saat truk bekerja di lokasi (idle diesel, lebih pelan & datar daripada mesin melaju)
+  AU.idleG=c.createGain(); AU.idleG.gain.value=0; AU.idleG.connect(AU.master);
+  const io=c.createOscillator(); io.type='sawtooth'; io.frequency.value=46;
+  const iff=c.createBiquadFilter(); iff.type='lowpass'; iff.frequency.value=140;
+  io.connect(iff); iff.connect(AU.idleG); io.start();
+  // sirine: gergaji + LFO segitiga (wail 570–1130 Hz)
+  const so=c.createOscillator(); so.type='sawtooth'; so.frequency.value=850;
+  const lfo=c.createOscillator(); lfo.type='triangle'; lfo.frequency.value=0.55;
+  const lg=c.createGain(); lg.gain.value=280; lfo.connect(lg); lg.connect(so.frequency);
+  const sf=c.createBiquadFilter(); sf.type='lowpass'; sf.frequency.value=2100;
+  AU.sirenG=c.createGain(); AU.sirenG.gain.value=0; so.connect(sf); sf.connect(AU.sirenG); AU.sirenG.connect(AU.master);
+  so.start(); lfo.start();
+  // dengung mencekam (dua sinus berlayar rapat) — menguat saat bahaya naik
+  AU.droneG=c.createGain(); AU.droneG.gain.value=0; AU.droneG.connect(AU.master);
+  [55,58.4,110.7].forEach((fq,i)=>{const o=c.createOscillator(); o.type=i===2?'triangle':'sine'; o.frequency.value=fq;
+    const g=c.createGain(); g.gain.value=i===2?0.25:1; o.connect(g); g.connect(AU.droneG); o.start();});
+}
+function setMuted(m){
+  AU.muted=m; try{localStorage.setItem('damkarMuted',m?'1':'0');}catch(e){}
+  if(AU.master) AU.master.gain.setTargetAtTime(m?0:0.6,AU.ctx.currentTime,0.05);
+  if(m&&NARR.synth) NARR.synth.cancel();
+  document.getElementById('btnMute').innerHTML=m?'&#128263;':'&#128266;';
+}
+function tone(freq,dur,type,vol,delay,slideTo){
+  if(!AU.ctx||AU.muted) return; const c=AU.ctx,t=c.currentTime+(delay||0);
+  const o=c.createOscillator(),g=c.createGain(); o.type=type||'sine'; o.frequency.setValueAtTime(freq,t);
+  if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo,t+dur);
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol||0.15,t+0.008); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g); g.connect(AU.master); o.start(t); o.stop(t+dur+0.05);
+}
+function noiseBurst(dur,vol,ftype,f0,f1,delay,q){
+  if(!AU.ctx||AU.muted||!AU.noise) return; const c=AU.ctx,t=c.currentTime+(delay||0);
+  const s=c.createBufferSource(); s.buffer=AU.noise;
+  const f=c.createBiquadFilter(); f.type=ftype; f.Q.value=q||0.8; f.frequency.setValueAtTime(f0,t);
+  if(f1) f.frequency.exponentialRampToValueAtTime(f1,t+dur);
+  const g=c.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  s.connect(f); f.connect(g); g.connect(AU.master); s.start(t,Math.random()*1.4); s.stop(t+dur+0.05);
+}
+const SFX={
+  alarm(){for(let i=0;i<3;i++){tone(880,0.16,'square',0.09,i*0.4);tone(660,0.16,'square',0.09,i*0.4+0.2);}},
+  dispatch(){tone(1500,0.06,'square',0.05);tone(1900,0.06,'square',0.05,0.09);noiseBurst(0.14,0.05,'bandpass',2200,null,0,1);},
+  done(){[523,659,784].forEach((f,i)=>tone(f,0.3,'sine',0.13,i*0.11));},
+  wrong(){tone(150,0.35,'sawtooth',0.12,0,70);},
+  zap(){noiseBurst(0.25,0.2,'highpass',3000,6000);tone(1800,0.12,'square',0.07,0,300);tone(90,0.3,'sawtooth',0.09);},
+  flare(){noiseBurst(0.6,0.22,'lowpass',400,2400);tone(70,0.5,'sine',0.18,0,40);},
+  collapse(){noiseBurst(0.9,0.26,'lowpass',900,120);tone(60,0.8,'sine',0.22,0,30);},
+  ember(){tone(1200,0.5,'sine',0.03,0,2600);},
+  rekindle(){noiseBurst(0.4,0.14,'bandpass',600,1800);tone(200,0.3,'sawtooth',0.07,0,120);},
+  win(){[523,659,784,1047].forEach((f,i)=>tone(f,0.4,'triangle',0.14,i*0.14));},
+  lose(){[392,330,262,196].forEach((f,i)=>tone(f,0.5,'sawtooth',0.09,i*0.22));},
+  click(){tone(700,0.04,'square',0.04);}
+};
+function crackle(intensity){ // letupan kecil api
+  if(!AU.ctx||AU.muted) return;
+  noiseBurst(0.03+Math.random()*0.04,0.05+0.06*intensity,'bandpass',600+Math.random()*2200,null,0,1.2);
+}
+/* ================= NARATOR (Web Speech API) =================
+   Suara operator/narator, terpisah dari efek Web Audio di atas. Dipasangkan ke mute yang sama (tombol #btnMute)
+   supaya satu tombol mengatur semuanya — tidak ada tombol baru. Dibuat lazy & dipicu dari gestur pengguna yang
+   sama dengan initAudio() (beberapa peramban ponsel menahan suara sintesis sebelum ada sentuhan, sama seperti
+   AudioContext). 'urgent' menyela ucapan yang sedang berjalan (dipakai untuk peringatan alat salah / bara nyala
+   lagi); tanpa itu, ucapan baru dilewati saja bila narator masih bicara (tidak menumpuk antrean panjang).
+   NARR_LINES dikelompokkan per kejadian dan dipilih acak (pick()) supaya tidak monoton di kejadian berulang. */
+const NARR={synth:(window.speechSynthesis||null),voice:null,ready:false};
+function pickIdVoice(){
+  if(!NARR.synth)return;
+  const vs=NARR.synth.getVoices();
+  NARR.voice=vs.find(v=>v.lang==='id-ID')||vs.find(v=>v.lang&&v.lang.toLowerCase().startsWith('id'))||null;
+}
+function initNarrator(){
+  if(!NARR.synth||NARR.ready)return; NARR.ready=true;
+  pickIdVoice();
+  if('onvoiceschanged' in NARR.synth) NARR.synth.onvoiceschanged=pickIdVoice;
+}
+function speak(text,opts){
+  if(!NARR.synth||AU.muted||!text)return;
+  opts=opts||{};
+  if(!NARR.voice) pickIdVoice();
+  if(opts.urgent) NARR.synth.cancel();
+  else if(NARR.synth.speaking) return;
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='id-ID'; if(NARR.voice)u.voice=NARR.voice; u.rate=opts.rate||0.98; u.pitch=opts.pitch||1;
+  try{NARR.synth.speak(u);}catch(e){}
+}
+const NARR_LINES={
+  wrongB:['Jangan air, itu minyak — nanti malah menyebar!','Bukan air untuk minyak, pakai gas CO dua!','Awas, air pada minyak bisa memercik ke mana-mana!'],
+  wrongC:['Itu listrik, jangan disiram air — bisa menyetrum petugas!','Awas, air pada listrik berbahaya, pakai gas!','Bukan air, itu gardu listrik!'],
+  wrongA:['Gas saja belum cukup, kayu itu perlu didinginkan dengan air.','Baranya masih panas, nanti menyala lagi kalau hanya digas.'],
+  wrongD:['Jangan air! Logam yang terbakar bisa meledak kalau disiram!','Awas, itu logam — pakai pasir, bukan air!'],
+  wrongK:['Jangan air di minyak panas, bisa meletup jadi bola api!','Awas, minyak dapur itu — air membuatnya meletus!'],
+  rekindle:['Awas, nyala lagi! Baranya masih panas.','Belum benar-benar padam, apinya menyala lagi!'],
+  resolve:['Bagus, api padam.','Aman terkendali.','Kerja bagus, apinya berhasil dipadamkan.'],
+  destroy:['Sayang sekali, bangunan itu tak terselamatkan.','Terlambat, sudah hangus duluan.']
+};
+/* ================= SUARA AMBIEN BERKELANJUTAN =================
+   Menghidup-matikan (bukan memicu sekali) lapisan suara sesuai status truk & api saat ini: sirine + mesin melaju
+   selagi ada truk enroute/pulang, desis air/gas selagi ada yang menyemprot, gemericik api mengikuti jumlah api
+   menyala, idle pompa selagi truk bekerja tapi belum menyemprot (mis. sedang parkir menunggu kelasnya diputuskan). */
+function ramp(g,target,tc){ if(!g)return; g.gain.setTargetAtTime(target,AU.ctx.currentTime,tc==null?0.25:tc); }
+function updateAmbientAudio(){
+  if(!AU.ctx||AU.muted){ return; }
+  if(!S||mode!=='play'||paused){
+    ramp(AU.sirenG,0);ramp(AU.engineG,0);ramp(AU.engRumbleG,0);ramp(AU.idleG,0);ramp(AU.waterG,0);ramp(AU.gasG,0);ramp(AU.fireG,0);
+    return;
+  }
+  let enroute=false,driving=false,working=false,sprayAir=false,sprayGas=false;
+  for(const u of S.units){
+    if(u.state==='enroute'){enroute=true;driving=true;}
+    else if(u.state==='return'){driving=true;}
+    else if(u.state==='work'){ working=true; if(u.spraying&&!u.dry){ if(u.tool==='air')sprayAir=true; else if(u.tool==='co2')sprayGas=true; } } // pasir tak berdesis, tak menyalakan lapisan suara semprot
+  }
+  ramp(AU.sirenG,enroute?0.15:0,0.3);           // sirine hanya saat menuju kejadian (bukan saat pulang)
+  ramp(AU.engineG,driving?0.05:0,0.4);          // deru mesin melaju
+  ramp(AU.engRumbleG,driving?0.045:0,0.4);
+  ramp(AU.idleG,(working&&!sprayAir&&!sprayGas)?0.03:0,0.5); // idle pompa saat parkir belum menyemprot
+  ramp(AU.waterG,sprayAir?0.11:0,0.2);
+  ramp(AU.gasG,sprayGas?0.09:0,0.2);
+  ramp(AU.fireG,S.liveCount>0?Math.min(0.16,0.035+S.liveCount*0.03):0,0.4);
+}
+
+/* ================= DATA: BANGUNAN, KELAS API, LEVEL ================= */
+const BT={
+  rumah:  {cls:'A',flam:1.0,fuel:1.0,burn:1.0,name:['Rumah Pak Budi','Rumah Bu Sari','Rumah Kayu Pak Dodi','Rumah Bu Wati']},
+  gudang: {cls:'A',flam:1.3,fuel:1.3,burn:1.1,name:['Gudang Jerami','Gudang Kayu','Gudang Kardus']},
+  kios:   {cls:'A',flam:1.2,fuel:0.9,burn:1.0,name:['Kios Kain','Kios Buku','Toko Kertas']},
+  warung: {cls:'B',flam:1.4,fuel:0.9,burn:1.3,name:['Warung Gorengan','Dapur Minyak Goreng','Warung Sate']},
+  bengkel:{cls:'B',flam:1.6,fuel:0.9,burn:1.4,name:['Bengkel Motor','Pom Bensin Mini','Kios Bensin Eceran']},
+  gardu:  {cls:'C',flam:0.6,fuel:0.8,burn:1.0,name:['Gardu Listrik','Trafo Kampung','Panel Listrik Pasar']},
+  logam:  {cls:'D',flam:0.5,fuel:1.1,burn:0.9,name:['Gudang Besi Tua','Bengkel Las','Gudang Logam']},
+  dapur:  {cls:'K',flam:1.5,fuel:0.8,burn:1.3,name:['Dapur Restoran','Dapur Katering','Dapur Umum']}
+};
+const GROW={A:0.10,B:0.15,C:0.12,D:0.08,K:0.16}, BURN={A:0.035,B:0.05,C:0.04,D:0.03,K:0.05}, SRC={A:1,B:1.5,C:0.5,D:0.8,K:1.5};
+// Warna per alat, dipakai di semprotan 2D, sinar 3D, dan label radio — satu tempat, bukan ternary tool==='co2'?x:y berulang di banyak titik.
+const TOOLS={
+  air: {label:'AIR',      stroke:'rgba(130,200,255,.9)', fill:'rgba(130,200,255,.55)', hex3d:0x58b8ff},
+  co2: {label:'GAS CO₂',  stroke:'rgba(220,240,235,.9)', fill:'rgba(220,240,235,.5)',  hex3d:0xcfeee6},
+  pasir:{label:'PASIR',   stroke:'rgba(216,181,106,.9)', fill:'rgba(216,181,106,.55)', hex3d:0xd8b56a}
+};
+const CLS={
+  A:{title:'Api biasa',right:'air',clue:'Nyala oranye-kuning, asap kelabu. Bahan padat: kayu, kain, kertas.',
+     hint:'Bahan padat seperti kayu dan kain: dinginkan dengan air.'},
+  B:{title:'Api minyak',right:'co2',clue:'Nyala merah tua, asap hitam pekat, bau minyak atau bensin.',
+     hint:'Cairan mudah terbakar: air justru memercikkan dan menyebarkannya. Selimuti dengan gas CO₂.'},
+  C:{title:'Api listrik',right:'co2',clue:'Percikan biru-putih dan dengung listrik.',
+     hint:'Peralatan listrik: air menghantarkan setrum. Selimuti dengan gas CO₂.'},
+  D:{title:'Api logam',right:'pasir',clue:'Nyala putih menyilaukan, percikan logam meleleh, nyaris tanpa asap.',
+     hint:'Logam yang terbakar: jangan disiram air (bisa bereaksi hebat) dan gas CO₂ tak selalu menembusnya. Timbun dengan pasir atau bubuk kering.'},
+  K:{title:'Api minyak dapur',right:'co2',clue:'Nyala tinggi kebiruan dari wajan panas, asap minyak goreng gosong.',
+     hint:'Minyak dapur yang sangat panas: air membuatnya meletup jadi bola api. Selimuti dengan gas CO₂.'}
+};
+const LEVELS=[
+ {id:1,title:'Api Biasa',layer:'Lapisan 1 · Segitiga api',
+  types:{rumah:6,gudang:2,kios:2},density:0.68,hint:2,incidents:4,gap:[15,20],first:2,firstCls:'A',
+  spread:0.02,burn:0.7,wind:0,ember:0,trucks:1,maxLoss:4,
+  goal:'Padamkan 4 kebakaran. Semua api di level ini adalah api biasa.',
+  learn:['Api butuh tiga hal: panas, bahan bakar, dan oksigen. Hilangkan salah satunya, api padam.','Air mendinginkan, jadi cocok untuk kayu, kain, dan kertas.','Coba gas CO₂ sekali saja pada api biasa, lalu perhatikan apa yang terjadi beberapa detik setelah nyalanya hilang.']},
+ {id:2,title:'Regu Bertambah',layer:'Lapisan 2 · Dua truk',
+  types:{rumah:6,gudang:2,kios:2},density:0.7,hint:2,incidents:5,gap:[15,20],first:2,firstCls:'A',
+  spread:0.02,burn:0.72,wind:0,ember:0,trucks:2,maxLoss:4,
+  goal:'Padamkan 5 kebakaran. Sekarang regumu punya dua truk — bagi tugas dengan baik.',
+  learn:['Sekarang ada dua truk. Keduanya bisa dikirim ke kebakaran yang berbeda sekaligus.','Truk yang sudah selesai bisa langsung menuju kebakaran berikutnya tanpa mampir pangkalan dulu, asal tangkinya masih ada sisa.']},
+ {id:3,title:'Dua Jenis Api',layer:'Lapisan 3 · Kelas api',
+  types:{rumah:3,gudang:1,kios:1,warung:2,bengkel:2,gardu:2},density:0.7,hint:2,incidents:6,gap:[14,19],first:2,firstCls:'B',
+  spread:0.035,burn:0.85,wind:0,ember:0,trucks:2,maxLoss:5,
+  goal:'Padamkan 6 kebakaran. Sekarang ada api minyak dan api listrik.',
+  learn:['Tidak semua api sama. Kelas api menentukan alat yang aman.','Air pada api minyak membuatnya memercik dan meluas. Air pada api listrik menyengat petugas.','Gas CO₂ menyingkirkan oksigen dan tidak menghantarkan listrik, tapi stoknya terbatas.']},
+ {id:4,title:'Tanpa Petunjuk',layer:'Lapisan 4 · Membaca tanda',
+  types:{rumah:3,gudang:1,kios:1,warung:2,bengkel:2,gardu:2},density:0.72,hint:1,incidents:7,gap:[10,15],first:2,firstCls:'C',
+  spread:0.045,burn:0.9,wind:0,ember:0,trucks:2,maxLoss:5,
+  goal:'Padamkan 7 kebakaran. Saran alat tidak ditampilkan lagi.',
+  learn:['Saran alat dihilangkan. Kamu hanya diberi tanda yang terlihat: warna nyala, warna asap, dan jenis bangunan.','Bacalah tandanya dulu, baru pilih alat.']},
+ {id:5,title:'Api Menjalar',layer:'Lapisan 5 · Angin dan bara',
+  types:{rumah:3,gudang:2,kios:1,warung:2,bengkel:1,gardu:1},density:0.78,hint:0,incidents:8,gap:[9,13],first:2,firstCls:null,
+  spread:0.075,burn:1.0,wind:0.7,ember:0.05,trucks:2,maxLoss:6,
+  goal:'Padamkan 8 kebakaran. Angin mendorong api, dan bara bisa terbang jauh.',
+  learn:['Api menjalar mengikuti aturan sederhana antar petak: makin besar nyala tetangga, makin mungkin ikut terbakar.','Angin mendorong api searah embusannya. Bara terbang mendarat tidak terduga: kebanyakan dekat, sesekali sangat jauh.','Bangunan yang basah lebih sulit terbakar. Menyemprot air ke api juga membasahi bangunan di sekitarnya.']},
+ {id:6,title:'Malam Tanpa Akhir',layer:'Lapisan 6 · Ujian regu',
+  types:{rumah:2,gudang:2,kios:1,warung:1,bengkel:2,gardu:2,logam:2,dapur:2},density:0.82,hint:0,incidents:Infinity,endless:true,gap:[8,11],first:2,firstCls:null,
+  spread:0.09,burn:1.05,wind:0.8,ember:0.07,trucks:3,maxLoss:8,
+  goal:'Tanpa akhir. Sekarang ada api logam (pakai pasir, bukan air atau gas) dan api minyak dapur. Bertahan selama mungkin dan kumpulkan skor setinggi-tingginya.',
+  learn:['Semua yang sudah kamu pelajari, tanpa petunjuk.','Api logam butuh alat ketiga: pasir. Air pada logam yang terbakar bisa bereaksi hebat — jangan pernah disiram.','Kejadian datang makin rapat. Tentukan urutan: api mana yang harus ditangani lebih dulu?']}
+];
+/* PRATINJAU ("Intip") level terkunci — lihat catatan "MODE PRATINJAU" di komentar atas file.
+   incidents: jumlah kejadian singkat untuk sesi intip (jauh lebih sedikit dari cfg.incidents asli).
+   previewSeq: bila ada, memaksa urutan KELAS api tiap kejadian (indeks ke-n dipakai untuk kejadian ke-n) supaya
+   kelas yang baru diperkenalkan level itu pasti muncul, bukan menunggu giliran acak. Level yang tidak
+   memperkenalkan kelas baru (2, 4, 5 — mekanik barunya adalah dua truk / tanpa petunjuk / angin&bara) dibiarkan
+   acak seperti biasa, cukup dipersingkat. */
+const PREVIEW_OVR={
+  1:{incidents:3},                       // Level 2: dua truk menangani beberapa kejadian sekaligus
+  2:{incidents:2,previewSeq:['B','C']},  // Level 3: api minyak lalu api listrik
+  3:{incidents:3},                       // Level 4: sama seperti asli tapi tanpa saran alat (cfg.hint sudah 0)
+  4:{incidents:3},                       // Level 5: cukup kejadian untuk melihat angin & bara sekali dua kali
+  5:{incidents:2,previewSeq:['D','K']}   // Level 6: api logam (pasir) lalu api minyak dapur
+};
+const LESSON={
+  'A-air':'Air mendinginkan: ia menyingkirkan panas dari segitiga api. Cocok untuk kayu, kain, dan kertas.',
+  'A-co2':'Gas CO₂ hanya menyingkirkan oksigen. Bara masih panas, jadi api bisa menyala lagi. Untuk api kayu dan kain, air lebih tepat.',
+  'B-co2':'Gas CO₂ menyelimuti api minyak tanpa memercikkannya.',
+  'B-air':'Air lebih berat dari minyak dan menyebar bersama minyak yang menyala, sehingga api ikut meluas.',
+  'C-co2':'Gas CO₂ tidak menghantarkan listrik dan tidak merusak peralatan.',
+  'C-air':'Air menghantarkan listrik. Menyemprot peralatan listrik yang menyala bisa menyengat petugas.',
+  'wind':'Angin mendorong api searah embusannya. Perhatikan arah panah angin.',
+  'ember':'Bara terbang bisa menyalakan api jauh dari sumbernya. Lompatannya sesekali sangat jauh (Lévy flight).',
+  'loss':'Makin lama api dibiarkan, makin habis bahan bakarnya. Bangunan yang sudah hangus tidak bisa diselamatkan.',
+  'spread':'Api menjalar ke bangunan di dekatnya. Padamkan yang paling mengancam lebih dulu.',
+  'wet':'Bangunan yang basah lebih sulit terbakar. Semprotan air ikut membasahi bangunan di sekitar api.',
+  'D-pasir':'Pasir atau bubuk kering menimbun logam yang terbakar tanpa bereaksi dengannya.',
+  'D-air':'Air pada beberapa logam yang terbakar bisa bereaksi hebat, bahkan meledak. Jangan pernah menyiram logam yang menyala dengan air.',
+  'D-co2':'Gas CO₂ tidak selalu menembus logam yang sedang terbakar — sebagian logam bisa terus menyala walau oksigen di sekitarnya disingkirkan.',
+  'K-co2':'Gas CO₂ menyelimuti minyak dapur yang menyala dan memutus pasokan oksigennya.',
+  'K-air':'Minyak dapur yang sangat panas akan meletup dahsyat kalau disiram air — air langsung menguap dan menyemburkan minyak panas ke udara.',
+  'K-pasir':'Pasir tidak menutup rata cairan minyak yang menyala, jadi apinya tetap bisa menyala di sela-selanya.'
+};
+
+/* ================= STATE ================= */
+let S=null, mode='menu', menuLevel=0, lastRunLevel=0, prevOverlay='menu';
+let progress={unlocked:1,stars:{},best5:0};
+try{const p=JSON.parse(localStorage.getItem('damkarProgress')||'null'); if(p&&p.unlocked) progress=Object.assign(progress,p);}catch(e){}
+function saveProgress(){try{localStorage.setItem('damkarProgress',JSON.stringify(progress));}catch(e){}}
+
+/* ================= KECEPATAN PERMAINAN (dipilih pemain, terpisah dari 6 level kesulitan konten) =================
+   Mengalikan jeda antar kejadian, waktu sebelum kejadian pertama, laju penjalaran api, dan frekuensi bara —
+   supaya "terlalu cepat muncul kebakaran di sana-sini" bisa disetel pemain sendiri tanpa mengubah rancangan level. */
+const SPEED={
+  lambat:{label:'Lambat',gap:1.55,first:1.4,spread:0.65,ember:0.6},
+  sedang:{label:'Sedang',gap:1,first:1,spread:1,ember:1},
+  cepat: {label:'Cepat', gap:0.62,first:0.7,spread:1.35,ember:1.4}
+};
+let gameSpeed='sedang';
+try{const gs=localStorage.getItem('damkarSpeed'); if(gs&&SPEED[gs])gameSpeed=gs;}catch(e){}
+function setSpeed(s){
+  if(!SPEED[s])return; gameSpeed=s;
+  try{localStorage.setItem('damkarSpeed',s);}catch(e){}
+  if(mode==='menu')openMenu();
+}
+
+/* ================= PEMBUATAN KOTA ================= */
+function buildWorld(cfg){
+  const G=[];
+  for(let r=0;r<ROWS;r++){const row=[];
+    for(let c=0;c<COLS;c++){
+      const cell={c,r,kind:'lot',seed:Math.random()*1000,f:0,wet:0,rekindle:0,rekN:0,destroyed:false,live:false,fuel:0,fuel0:1,hz:0,burnT:0,usedRight:false,usedWrong:false,cause:''};
+      if(ROAD_ROWS.includes(r)||ROAD_COLS.includes(c)) cell.kind='road';
+      else if(c>=ST.c0&&c<=ST.c1&&r>=ST.r0&&r<=ST.r1) cell.kind='station';
+      else if(c>=RIVER_C0) cell.kind='river';
+      else if(Math.random()<cfg.density){const t=wpick(cfg.types),bt=BT[t];
+        Object.assign(cell,{kind:'bld',type:t,cls:bt.cls,name:pick(bt.name),fuel:bt.fuel,fuel0:bt.fuel});}
+      row.push(cell);}
+    G.push(row);}
+  // pastikan tiap kelas yang ada di level punya cukup bangunan
+  const clsTypes={};for(const t in cfg.types){(clsTypes[BT[t].cls]=clsTypes[BT[t].cls]||[]).push(t);}
+  const blds=()=>G.flat().filter(x=>x.kind==='bld');
+  for(const k in clsTypes){
+    let n=blds().filter(x=>x.cls===k).length;
+    const others=blds().filter(x=>x.cls!==k);
+    while(n<4&&others.length){const cell=others.splice((Math.random()*others.length)|0,1)[0];
+      const t=pick(clsTypes[k]),bt=BT[t];Object.assign(cell,{type:t,cls:bt.cls,name:pick(bt.name),fuel:bt.fuel,fuel0:bt.fuel});n++;}
+  }
+  return G;
+}
+function newRun(li){
+  const base=LEVELS[li], sp=SPEED[gameSpeed]||SPEED.sedang;
+  const cfg={...base,gap:[base.gap[0]*sp.gap,base.gap[1]*sp.gap],first:base.first*sp.first,
+    spread:base.spread*sp.spread,ember:base.ember*sp.ember};
+  S={li,cfg,G:buildWorld(cfg),time:0,units:[],parts:[],embers:[],folk:[],marks:[],streaks:[],
+     incidentsSpawned:0,nextIgn:cfg.first,firstDone:false,destroyed:0,safety:100,score:0,co2:8,
+     wind:{a:rand(0,6.28),s:cfg.wind*0.6},sel:null,armed:null,caT:0,danger:0,shake:0,flash:0,alarmT:0,liveCount:0,
+     seen:{},learned:{},stats:{resolved:0,firstRight:0,mistakes:0},tools:{air:0,co2:0,pasir:0},lessonT:0,endReason:'',ended:false,sirenWant:0,sprayAir:false,sprayGas:false,lightT:0,
+     tutorial:false,tutStep:0,tutCell:null,queue:[],preview:false};
+  S.blds=S.G.flat().filter(x=>x.kind==='bld');
+  for(let i=0;i<cfg.trucks;i++){
+    S.units.push({id:i,x:i*CS+CS/2,y:7*CS+CS/2,ang:0,home:{c:i,r:7},state:'idle',path:[],pi:0,target:null,tool:null,
+      deployP:0,deployDur:1,noz:{x:0,y:0},switchT:0,shockT:0,idleT:0,anim:Math.random()*5,dry:false,spraying:false,
+      color:['#d9332b','#cf3a24','#c22d44'][i],crew:[0.3,0.55,0.8,1.0],angT:0,stop:null,tank:TANK_MAX,refilling:false});
+  }
+  for(let i=0;i<14;i++) S.streaks.push({x:rand(0,W),y:rand(0,H),l:rand(14,34),v:rand(0.6,1.4)});
+  drawStatic();
+  if(three3) build3DCity();
+  return S;
+}
+
+/* ================= LAPISAN STATIS (jalan, lahan, pos pemadam) ================= */
+function drawStatic(){
+  const c=sctx; c.setTransform(DPR,0,0,DPR,0,0); c.clearRect(0,0,W,H);
+  c.fillStyle='#141a1c'; c.fillRect(0,0,W,H);
+  for(const row of S.G)for(const cell of row){
+    const x=cell.c*CS,y=cell.r*CS;
+    if(cell.kind==='road'){
+      c.fillStyle='#1c202b'; c.fillRect(x,y,CS,CS);
+      c.fillStyle='rgba(255,255,255,0.035)'; for(let i=0;i<4;i++)c.fillRect(x+((cell.seed*13+i*11)%36),y+((cell.seed*7+i*17)%36),2,1);
+    } else if(cell.kind==='river'){
+      c.fillStyle='#0f2a3d'; c.fillRect(x,y,CS,CS);
+      c.fillStyle='rgba(160,220,255,0.16)';
+      for(let i=0;i<3;i++)c.fillRect(x+((cell.seed*9+i*13)%(CS-10)),y+6+((cell.seed*5+i*15)%(CS-14)),9,2);
+    } else {
+      c.fillStyle='#161d1b'; c.fillRect(x,y,CS,CS);
+      if(cell.kind==='lot'){
+        c.fillStyle='#1b2a1e'; c.fillRect(x+2,y+2,CS-4,CS-4);
+        for(let i=0;i<3;i++){const tx=x+8+((cell.seed*(i+3))%24),ty=y+8+((cell.seed*(i+5))%24);
+          c.fillStyle='#22391f'; c.beginPath(); c.arc(tx,ty,5+((cell.seed+i)%4),0,6.283); c.fill();
+          c.fillStyle='#2b4a27'; c.beginPath(); c.arc(tx-1,ty-1,3,0,6.283); c.fill();}
+      }
+    }
+  }
+  // marka jalan putus-putus
+  c.strokeStyle='rgba(235,220,150,0.35)'; c.lineWidth=1.5; c.setLineDash([9,9]);
+  for(const r of ROAD_ROWS){c.beginPath(); c.moveTo(0,r*CS+CS/2); c.lineTo(W,r*CS+CS/2); c.stroke();}
+  for(const cc of ROAD_COLS){c.beginPath(); c.moveTo(cc*CS+CS/2,0); c.lineTo(cc*CS+CS/2,H); c.stroke();}
+  c.setLineDash([]);
+  // persimpangan: hapus marka & beri zebra cross tipis
+  for(const r of ROAD_ROWS)for(const cc of ROAD_COLS){
+    c.fillStyle='#1c202b'; c.fillRect(cc*CS,r*CS,CS,CS);
+    c.fillStyle='rgba(230,230,230,0.16)';
+    for(let i=0;i<5;i++){c.fillRect(cc*CS+4+i*7,r*CS-3,4,3);c.fillRect(cc*CS+4+i*7,r*CS+CS,4,3);
+      c.fillRect(cc*CS-3,r*CS+4+i*7,3,4);c.fillRect(cc*CS+CS,r*CS+4+i*7,3,4);}
+  }
+  // pos pemadam
+  const sx=ST.c0*CS,sy=ST.r0*CS,sw=(ST.c1-ST.c0+1)*CS,sh=(ST.r1-ST.r0+1)*CS;
+  c.fillStyle='#2a2f3b'; c.fillRect(sx+2,sy+2,sw-4,sh-4);
+  c.fillStyle='#3a2426'; c.fillRect(sx+6,sy+8,sw-12,sh-12);
+  c.strokeStyle='#c9302a'; c.lineWidth=2; c.strokeRect(sx+6,sy+8,sw-12,sh-12);
+  c.fillStyle='#14161d'; for(let i=0;i<3;i++)c.fillRect(sx+12+i*38,sy+10,30,6);   // pintu garasi
+  c.fillStyle='rgba(255,198,26,0.9)'; c.font="700 13px 'Barlow Condensed',Arial Narrow,sans-serif"; c.textAlign='center';
+  c.fillText('DAMKAR',sx+sw/2,sy+sh/2+14); c.textAlign='start';
+  // tiang lampu jalan
+  S.lamps=[];
+  for(const r of ROAD_ROWS)for(const cc of ROAD_COLS){S.lamps.push({x:cc*CS+2,y:r*CS+2},{x:cc*CS+CS-2,y:r*CS+CS-2});}
+  S.lamps.push({x:7*CS+CS/2,y:3*CS+2},{x:7*CS+CS/2,y:7*CS+CS-2},{x:12*CS+CS/2,y:3*CS+2},{x:2*CS+CS/2,y:3*CS+CS-2});
+  for(const l of S.lamps){c.fillStyle='#e9d7a0'; c.beginPath(); c.arc(l.x,l.y,2.2,0,6.283); c.fill();}
+}
+/* ================= JALAN & RUTE (BFS, bukan algoritma alam) ================= */
+function isRoad(c,r){return c>=0&&c<COLS&&r>=0&&r<ROWS&&S.G[r][c].kind==='road';}
+function roadNeighbors(c,r){
+  const out=[];
+  if(isRoad(c+1,r))out.push([c+1,r]); if(isRoad(c-1,r))out.push([c-1,r]);
+  if(isRoad(c,r+1))out.push([c,r+1]); if(isRoad(c,r-1))out.push([c,r-1]);
+  return out;
+}
+function nearestRoadCell(c,r){
+  if(isRoad(c,r))return{c,r};
+  let best=null,bd=1e9;
+  for(let rr=0;rr<ROWS;rr++)for(let cc=0;cc<COLS;cc++){
+    if(S.G[rr][cc].kind!=='road')continue;
+    const d=Math.abs(cc-c)+Math.abs(rr-r);
+    if(d<bd){bd=d;best={c:cc,r:rr};}
+  }
+  return best;
+}
+function roadBFS(a,b){
+  if(a.c===b.c&&a.r===b.r)return[a];
+  const key=(c,r)=>r*COLS+c;
+  const seen=new Set([key(a.c,a.r)]); const prev=new Map(); const q=[a]; let qi=0;
+  while(qi<q.length){
+    const cur=q[qi++];
+    if(cur.c===b.c&&cur.r===b.r)break;
+    for(const[nc,nr]of roadNeighbors(cur.c,cur.r)){
+      const k=key(nc,nr); if(seen.has(k))continue; seen.add(k); prev.set(k,cur); q.push({c:nc,r:nr});
+    }
+  }
+  const bk=key(b.c,b.r); if(!seen.has(bk))return[a];
+  const path=[b]; let ck=bk;
+  while(ck!==key(a.c,a.r)){ const p=prev.get(ck); if(!p)break; path.push(p); ck=key(p.c,p.r); }
+  path.reverse(); return path;
+}
+function unitHomeRoad(u){ return nearestRoadCell(u.home.c,u.home.r); }
+function roadCellAt(x,y){
+  const c=clamp(Math.floor(x/CS),0,COLS-1), r=clamp(Math.floor(y/CS),0,ROWS-1);
+  return isRoad(c,r)?{c,r}:nearestRoadCell(c,r);
+}
+/* jarak BFS (jumlah petak) dari petak jalan a ke semua petak jalan lain */
+function roadDistFrom(a){
+  const key=(c,r)=>r*COLS+c, dist=new Map([[key(a.c,a.r),0]]), q=[a]; let qi=0;
+  while(qi<q.length){ const cur=q[qi++], dc=dist.get(key(cur.c,cur.r));
+    for(const[nc,nr]of roadNeighbors(cur.c,cur.r)){ const k=key(nc,nr); if(dist.has(k))continue; dist.set(k,dc+1); q.push({c:nc,r:nr}); } }
+  return dist;
+}
+/* petak jalan tempat mobil berhenti: yang paling dekat dengan bangunan (jarak lurus), lalu yang rutenya paling pendek.
+   Mobil lain yang sedang bertugas dihindari supaya dua mobil tidak menumpuk di satu titik. */
+function approachRoad(cell,from,unit){
+  const dist=roadDistFrom(from), key=(c,r)=>r*COLS+c;
+  const taken=S.units.filter(o=>o!==unit&&o.stop).map(o=>o.stop);
+  let best=from,bs=1e9;
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    if(!isRoad(c,r))continue; const dd=dist.get(key(c,r)); if(dd===undefined)continue;
+    const busy=taken.some(t=>t.c===c&&t.r===r)?4:0;
+    const score=Math.hypot(c-cell.c,r-cell.r)*10+dd*0.05+busy;
+    if(score<bs){bs=score;best={c,r};}
+  }
+  return best;
+}
+/* Ubah deret petak jalan menjadi titik jalur di LAJUR KIRI (lalu lintas Indonesia): tiap titik digeser LANE ke kiri arah
+   jalan. Geseran < setengah lebar jalan, jadi mobil tak pernah keluar dari aspal. Di tikungan siku, titik sudutnya
+   = jumlah dua geseran. */
+const LANE=9;
+function lanePts(cells){
+  const cl=[]; for(const p of cells){ const l=cl[cl.length-1]; if(!l||l.c!==p.c||l.r!==p.r)cl.push(p); }
+  const P=cl.map(p=>({x:p.c*CS+CS/2,y:p.r*CS+CS/2}));
+  if(P.length<2)return P;
+  const dirs=[]; for(let i=0;i<P.length-1;i++) dirs.push({dx:Math.sign(P[i+1].x-P[i].x),dy:Math.sign(P[i+1].y-P[i].y)});
+  const nrm=d=>({x:d.dy*LANE,y:-d.dx*LANE});
+  return P.map((p,i)=>{
+    const a=dirs[i-1], b=dirs[i];
+    if(!a){ const n=nrm(b); return {x:p.x+n.x,y:p.y+n.y}; }
+    if(!b){ const n=nrm(a); return {x:p.x+n.x,y:p.y+n.y}; }
+    const n1=nrm(a);
+    if(a.dx===b.dx&&a.dy===b.dy) return {x:p.x+n1.x,y:p.y+n1.y};
+    const n2=nrm(b); return {x:p.x+n1.x+n2.x,y:p.y+n1.y+n2.y};
+  });
+}
+/* Rute berangkat: HANYA lewat petak jalan, berhenti di tepi jalan (tidak masuk ke bangunan). */
+function buildRoute(u,cell){
+  const start=roadCellAt(u.x,u.y), end=approachRoad(cell,start,u);
+  u.stop={c:end.c,r:end.r};
+  return [{x:u.x,y:u.y},...lanePts(roadBFS(start,end))];
+}
+/* Rute pulang: dari posisi sekarang, kembali LEWAT JALAN (bukan garis lurus menembus bangunan). Kalau tangki air
+   sudah habis (u.tank<=0), truk WAJIB isi ulang dulu — dibandingkan rute-jalan ke pangkalan vs ke titik jalan
+   terdekat yang bersinggungan dengan sungai, yang mana pun lebih pendek itu yang dituju. Kalau tangki masih ada
+   sisa, truk tetap menuju pangkalan seperti biasa (tryServeQueue tetap bisa mengalihkannya di tengah jalan). */
+function riverAccessPoints(){
+  if(S._riverAccess)return S._riverAccess;
+  const pts=[];
+  for(const row of S.G)for(const cell of row){
+    if(cell.kind!=='road')continue;
+    if([[1,0],[-1,0],[0,1],[0,-1]].some(([dc,dr])=>{const n=S.G[cell.r+dr]&&S.G[cell.r+dr][cell.c+dc]; return n&&n.kind==='river';}))
+      pts.push({c:cell.c,r:cell.r});
+  }
+  S._riverAccess=pts; return pts;
+}
+function nearestOf(dist,points){
+  let best=null,bd=1e9;
+  for(const p of points){ const d=dist.get(p.r*COLS+p.c); if(d!==undefined&&d<bd){bd=d;best=p;} }
+  return {point:best,dist:bd};
+}
+function sendHome(u){
+  const here=roadCellAt(u.x,u.y), home=unitHomeRoad(u);
+  let dest=home, viaRiver=false;
+  if(u.tank<=0){
+    const dist=roadDistFrom(here);
+    const hd=dist.get(home.r*COLS+home.c); const hDist=hd===undefined?1e9:hd;
+    const riv=nearestOf(dist,riverAccessPoints());
+    if(riv.point&&riv.dist<hDist){ dest=riv.point; viaRiver=true; }
+    showRadio('Unit '+(u.id+1)+' tangki kosong — menuju '+(viaRiver?'sungai':'pangkalan')+' untuk isi ulang.');
+  }
+  const dc={x:dest.c*CS+CS/2,y:dest.r*CS+CS/2};
+  u.path=[{x:u.x,y:u.y},...lanePts(roadBFS(here,dest)),dc]; u.pi=0;
+  u.state='return'; u.target=null; u.spraying=false; u.tool=null; u.stop=null; u.dry=false; u.refilling=u.tank<=0;
+}
+/* Gerakkan mobil menyusuri u.path sejauh kecepatan*dt. Berhenti tepat di tiap titik belok (tanpa memotong sudut).
+   Mengembalikan true bila sudah sampai ujung jalur. */
+function advance(u,dt){
+  let step=CS*2.6*dt;
+  while(step>0){
+    const t=u.path[u.pi+1]; if(!t)break;
+    const dx=t.x-u.x, dy=t.y-u.y, d=Math.hypot(dx,dy);
+    if(d>0.001) u.angT=Math.atan2(dy,dx);
+    if(d<=step){ u.x=t.x; u.y=t.y; step-=d; u.pi++; }
+    else { u.x+=dx/d*step; u.y+=dy/d*step; step=0; }
+  }
+  u.ang+=clamp(angDiff(u.ang,u.angT),-9*dt,9*dt);   // putar badan mobil halus di tikungan
+  return !u.path[u.pi+1];
+}
+function pathRemain(u){
+  let d=0,px=u.x,py=u.y;
+  for(let i=u.pi+1;i<u.path.length;i++){ d+=Math.hypot(u.path[i].x-px,u.path[i].y-py); px=u.path[i].x; py=u.path[i].y; }
+  return d;
+}
+
+/* ================= WARGA: EVAKUASI (bukan algoritma alam, cuma BFS jalan menjauhi api) ================= */
+function spawnFolk(cell){
+  if(!S||S.folk.length>=MAX_FOLK)return;
+  const rd=nearestRoadCell(cell.c,cell.r); if(!rd)return;
+  const edges=[{c:0,r:rd.r},{c:COLS-1,r:rd.r},{c:rd.c,r:0},{c:rd.c,r:ROWS-1}];
+  let best=null,bd=-1;
+  for(const t of edges){ const rc=nearestRoadCell(t.c,t.r); if(!rc)continue;
+    const d=Math.abs(rc.c-rd.c)+Math.abs(rc.r-rd.r); if(d>bd){bd=d;best=rc;} }
+  if(!best)return;
+  const cells=roadBFS(rd,best);
+  const pts=cells.map(p=>({x:p.c*CS+CS/2,y:p.r*CS+CS/2}));
+  pts.unshift({x:cell.c*CS+CS/2,y:cell.r*CS+CS/2});
+  S.folk.push({x:pts[0].x,y:pts[0].y,path:pts,pi:0,spd:CS*(1.0+Math.random()*0.35),anim:Math.random()*6,
+    life:14,skin:pick(['#e8b98a','#c98a5c','#8a5a3c'])});
+}
+function updateFolk(dt){
+  for(let i=S.folk.length-1;i>=0;i--){
+    const p=S.folk[i]; p.anim+=dt; p.life-=dt;
+    const tgt=p.path[p.pi+1];
+    if(!tgt||p.life<=0){ S.folk.splice(i,1); continue; }
+    const dx=tgt.x-p.x, dy=tgt.y-p.y, d=Math.hypot(dx,dy);
+    if(d<4){ p.pi++; if(p.pi>=p.path.length-1){ S.folk.splice(i,1); continue; } }
+    else { p.ang=Math.atan2(dy,dx); p.x+=dx/d*p.spd*dt; p.y+=dy/d*p.spd*dt; }
+  }
+}
+function drawFolkTop(){
+  for(const p of S.folk){
+    const step=Math.sin(p.anim*9)*2.2;
+    ctx.save(); ctx.translate(p.x,p.y);
+    ctx.fillStyle='rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(0,4,4.5,2,0,0,6.283); ctx.fill();
+    ctx.fillStyle='#20242e'; ctx.fillRect(-2.4,-2+Math.abs(step)*0.3,1.8,6); ctx.fillRect(0.6,-2+Math.abs(step)*0.3,1.8,6);
+    ctx.fillStyle=p.skin||'#c98a5c'; ctx.beginPath(); ctx.arc(0,-7,3.1,0,6.283); ctx.fill();
+    ctx.fillStyle='#4a5568'; ctx.fillRect(-2.6,-6,5.2,4.5);
+    ctx.restore();
+  }
+}
+
+/* ================= CUACA ================= */
+function updateWind(dt){
+  S.wind.a+=rand(-0.35,0.35)*dt;
+  const target=S.cfg.wind*rand(0.5,1);
+  S.wind.s=lerp(S.wind.s,target,0.15*dt);
+}
+
+/* ================= PENYALAAN KEJADIAN ================= */
+function igniteCell(cell,cause){
+  if(!cell||cell.kind!=='bld'||cell.destroyed||cell.f>0)return false;
+  cell.f=0.32; cell.live=true; cell.burnT=0; cell.cause=cause||'awal';
+  S.liveCount++; S.incidentsSpawned++;
+  if(!S.focus||!S.focus.live) S.focus=cell;
+  S.alarmT=1.4; S.sirenWant=Math.min(3,S.sirenWant+1);
+  SFX.alarm(); document.getElementById('stage').classList.remove('alarm'); void document.getElementById('stage').offsetWidth; document.getElementById('stage').classList.add('alarm');
+  const bt=BT[cell.type];
+  showRadio((cell.name||bt.name[0])+' — kebakaran dilaporkan!');
+  if(cause==='awal') speak((cell.name||bt.name[0])+' terbakar. Segera pilih alat yang tepat.');
+  if((cause==='awal'||cause==='menjalar')&&Math.random()<0.7) spawnFolk(cell);
+  if(S.tutorial&&S.tutStep===0){ S.tutCell=cell; S.tutStep=1; showCoach(1); }
+  return true;
+}
+function pickIgnitionCandidate(clsWant){
+  const cand=S.blds.filter(b=>!b.destroyed&&b.f<=0&&(!clsWant||b.cls===clsWant));
+  if(!cand.length)return null;
+  return pick(cand);
+}
+function updateSpawner(dt){
+  const cfg=S.cfg;
+  if(S.incidentsSpawned>=cfg.incidents)return;
+  S.nextIgn-=dt;
+  if(S.nextIgn<=0){
+    let wantCls=(!S.firstDone&&cfg.firstCls)?cfg.firstCls:null;
+    if(S.preview&&cfg.previewSeq) wantCls=cfg.previewSeq[S.incidentsSpawned]||null;
+    const cell=pickIgnitionCandidate(wantCls)||pickIgnitionCandidate(null);
+    if(cell){ igniteCell(cell,'awal'); S.firstDone=true; }
+    S.nextIgn=rand(cfg.gap[0],cfg.gap[1]);
+  }
+}
+
+/* ================= AUTOMATA SELULER: PENJALARAN API ================= */
+function caStep(){
+  const cfg=S.cfg;
+  const wx=Math.cos(S.wind.a), wy=Math.sin(S.wind.a);
+  const live=S.blds.filter(b=>b.f>0&&!b.destroyed);
+  for(const src of live){
+    const bt=BT[src.type];
+    for(let dr=-2;dr<=2;dr++)for(let dc=-2;dc<=2;dc++){
+      if(!dr&&!dc)continue;
+      const nc=src.c+dc,nr=src.r+dr; if(nc<0||nc>=COLS||nr<0||nr>=ROWS)continue;
+      const t=S.G[nr][nc]; if(t.kind!=='bld'||t.destroyed||t.f>0)continue;
+      const dist=Math.max(Math.abs(dc),Math.abs(dr));
+      const kernel=1/(dist*dist);
+      const dirx=dc/(Math.hypot(dc,dr)||1), diry=dr/(Math.hypot(dc,dr)||1);
+      const wdot=Math.max(0,dirx*wx+diry*wy);
+      const windFac=1+S.wind.s*2.2*wdot;
+      const wet=t.wet>0.15?0.12:1;
+      const p=cfg.spread*src.f*src.f*kernel*windFac*BT[t.type].flam*wet;
+      if(Math.random()<p*(1/6)) igniteCell(t,'menjalar');
+    }
+  }
+}
+
+/* ================= EMBER: LÉVY FLIGHT ================= */
+function spawnEmbers(dt){
+  const cfg=S.cfg; if(!cfg.ember)return;
+  for(const src of S.blds){
+    if(src.f<=0||src.destroyed)continue;
+    if(Math.random()>cfg.ember*dt*1.4)continue;
+    const wx=Math.cos(S.wind.a),wy=Math.sin(S.wind.a);
+    const baseAng=Math.atan2(wy,wx)+rand(-0.9,0.9);
+    const dist=clamp(levy()*CS*2.2,CS*0.6,CS*9);
+    const tx=src.c*CS+CS/2+Math.cos(baseAng)*dist, ty=src.r*CS+CS/2+Math.sin(baseAng)*dist;
+    S.embers.push({x:src.c*CS+CS/2,y:src.r*CS+CS/2,tx,ty,t:0,dur:rand(0.9,1.6),land:{c:clamp(Math.round(tx/CS),0,COLS-1),r:clamp(Math.round(ty/CS),0,ROWS-1)}});
+    SFX.ember();
+  }
+}
+function updateEmbers(dt){
+  for(let i=S.embers.length-1;i>=0;i--){
+    const e=S.embers[i]; e.t+=dt;
+    if(e.t>=e.dur){
+      const cell=S.G[e.land.r]&&S.G[e.land.r][e.land.c];
+      if(cell&&cell.kind==='bld'&&!cell.destroyed&&cell.f<=0){
+        const wet=cell.wet>0.15?0.15:1;
+        if(Math.random()<0.55*wet) igniteCell(cell,'bara');
+      }
+      S.parts.push({x:e.tx,y:e.ty,t:0,dur:0.4,type:'emberhit'});
+      S.embers.splice(i,1);
+    }
+  }
+}
+
+/* ================= PEMBARUAN SEL BANGUNAN (bakar, hangus, basah, bara ulang) ================= */
+function updateCells(dt){
+  for(const cell of S.blds){
+    if(cell.wet>0) cell.wet=Math.max(0,cell.wet-dt*0.05);
+    if(cell.rekindlePending){
+      cell.rekindle-=dt;
+      if(cell.rekindle<=0){
+        cell.rekindlePending=false; cell.f=0.4; SFX.rekindle();
+        showRadio((cell.name)+' — nyala lagi! Bara masih panas.');
+        speak(pick(NARR_LINES.rekindle),{urgent:true});
+        S.marks.push('rekindle');
+      }
+    }
+    if(cell.f<=0)continue;
+    cell.burnT+=dt;
+    const cls=cell.cls;
+    if(!cell.rekindlePending){
+      cell.f=clamp(cell.f+GROW[cls]*dt*(1+S.wind.s*0.4),0,2.2);
+    }
+    if(cell.suppressing){
+      const rate=cell.suppressRight?1.15:0.12;
+      cell.f=Math.max(0,cell.f-rate*dt);
+      if(cell.tool==='air') cell.wet=Math.min(1,cell.wet+dt*0.9);
+      if(cell.cls==='A'&&cell.tool==='co2'&&cell.f>0.02&&!cell.rekindlePending){
+        // gas hanya menutup nyala; bara masih ada -> siap menyala lagi
+      }
+      if(cell.f<=0.02){
+        cell.f=0;
+        if(cell.cls==='A'&&cell.tool==='co2'&&cell.wet<0.3&&!cell.rekindled){
+          cell.rekindlePending=true; cell.rekindle=rand(3.2,4.6); cell.rekindled=true;
+        } else {
+          resolveCell(cell,true);
+        }
+      }
+    } else {
+      cell.fuel-=BURN[cls]*S.cfg.burn*dt*(0.5+0.5*cell.f);
+      if(cell.fuel<=0){ destroyCell(cell); continue; }
+    }
+  }
+}
+function resolveCell(cell,good){
+  cell.f=0; cell.live=false; cell.suppressing=false; S.liveCount=Math.max(0,S.liveCount-1);
+  S.stats.resolved++;
+  const u=S.units.find(x=>x.target===cell);
+  if(u) sendHome(u);
+  const bonus=cell.usedWrong?40:100;
+  S.score+=bonus;
+  SFX.done();
+  showRadio((cell.name)+' — api padam.');
+  speak(pick(NARR_LINES.resolve));
+  if(S.focus===cell) setTimeout(()=>{ if(S.focus===cell) S.focus=null; },900);
+  if(S.tutorial&&S.tutStep===3&&cell===S.tutCell){ S.tutStep=4; showCoach(4); setTimeout(endTutorial,3200); }
+  checkEnd();
+}
+function destroyCell(cell){
+  cell.destroyed=true; cell.f=0; cell.live=false; cell.suppressing=false; S.liveCount=Math.max(0,S.liveCount-1);
+  S.destroyed++;
+  const u=S.units.find(x=>x.target===cell);
+  if(u) sendHome(u);
+  S.safety=clamp(S.safety-6,0,100);
+  SFX.collapse();
+  showRadio((cell.name)+' — bangunan tidak terselamatkan.');
+  speak(pick(NARR_LINES.destroy),{urgent:true});
+  if(S.focus===cell) setTimeout(()=>{ if(S.focus===cell) S.focus=null; },900);
+  if(S.tutorial&&cell===S.tutCell){ endTutorial(); return; }
+  checkEnd();
+}
+/* ================= UNIT PEMADAM: DISPATCH & PERGERAKAN ================= */
+function idleUnit(){ return S.units.find(u=>u.state==='idle'&&u.tank>0); }
+function applyToolEffect(cell,tool){
+  const right=CLS[cell.cls].right===tool;
+  cell.tool=tool; cell.suppressing=true; cell.suppressRight=right;
+  if(right){ cell.usedRight=true; if(!S.seen[cell.cls+'-'+tool]) teachLesson(cell.cls,tool); }
+  else {
+    cell.usedWrong=true; S.stats.mistakes++;
+    if(!S.seen[cell.cls+'-'+tool]) teachLesson(cell.cls,tool);
+    if(cell.cls==='B'&&tool==='air'){
+      cell.f=clamp(cell.f+0.5,0,2.2); S.safety=clamp(S.safety-8,0,100); SFX.flare();
+      showRadio('Air pada api minyak — nyala memercik!');
+      speak(pick(NARR_LINES.wrongB),{urgent:true});
+      const nb=[[1,0],[-1,0],[0,1],[0,-1]].map(([dc,dr])=>S.G[cell.r+dr]&&S.G[cell.r+dr][cell.c+dc]).filter(Boolean);
+      const t=pick(nb.filter(x=>x.kind==='bld'&&!x.destroyed&&x.f<=0))||null;
+      if(t) igniteCell(t,'percik');
+    } else if(cell.cls==='C'&&tool==='air'){
+      S.safety=clamp(S.safety-14,0,100); SFX.zap();
+      showRadio('Air pada listrik — petugas tersengat!');
+      speak(pick(NARR_LINES.wrongC),{urgent:true});
+    } else if(cell.cls==='A'&&tool==='co2'){
+      showRadio('Gas menutup nyala, tapi bara masih panas...');
+      speak(pick(NARR_LINES.wrongA),{urgent:true});
+    } else if(cell.cls==='D'&&tool==='air'){
+      cell.f=clamp(cell.f+0.6,0,2.2); S.safety=clamp(S.safety-16,0,100); SFX.zap();
+      showRadio('Air pada logam terbakar — reaksi hebat!');
+      speak(pick(NARR_LINES.wrongD),{urgent:true});
+    } else if(cell.cls==='K'&&tool==='air'){
+      cell.f=clamp(cell.f+0.6,0,2.2); S.safety=clamp(S.safety-10,0,100); SFX.flare();
+      showRadio('Air pada minyak panas — meletup jadi bola api!');
+      speak(pick(NARR_LINES.wrongK),{urgent:true});
+      const nb=[[1,0],[-1,0],[0,1],[0,-1]].map(([dc,dr])=>S.G[cell.r+dr]&&S.G[cell.r+dr][cell.c+dc]).filter(Boolean);
+      const t=pick(nb.filter(x=>x.kind==='bld'&&!x.destroyed&&x.f<=0))||null;
+      if(t) igniteCell(t,'percik');
+    }
+  }
+}
+function teachLesson(cls,tool){
+  S.seen[cls+'-'+tool]=true; const key=cls+'-'+tool; const txt=LESSON[key];
+  if(txt&&S.cfg.hint>0){ S.lessonQueue=S.lessonQueue||[]; S.lessonQueue.push(txt); }
+}
+function dispatchUnitTo(u,cell,tool){
+  u.path=buildRoute(u,cell); u.pi=0; u.state='enroute'; u.target=cell; u.tool=tool; u.dry=false;
+  u.tank=Math.max(0,u.tank-1);
+  cell.assignedUnit=u.id; S.armed=null; if(S.sel===cell)S.sel=null;
+  S.tools[tool]++;
+  if(tool==='co2') S.co2=Math.max(0,S.co2-1);
+  SFX.dispatch();
+  S.focus=cell;
+  showRadio('Unit '+(u.id+1)+' berangkat membawa '+(TOOLS[tool]||TOOLS.air).label+'.');
+  if(S.tutorial&&S.tutStep===2&&cell===S.tutCell){
+    if(CLS[cell.cls].right===tool){ S.tutStep=3; showCoach(3); }
+    else { showCoach(2,true); }
+  }
+  return true;
+}
+function dispatchTo(cell,tool){
+  const u=idleUnit(); if(!u)return false;
+  return dispatchUnitTo(u,cell,tool);
+}
+/* Antrian kejadian: dipanggil tiap frame. Truk yang SEDANG PULANG boleh dialihkan langsung dari posisinya sekarang
+   (tak perlu mampir pangkalan dulu) — rutenya (buildRoute/roadBFS) otomatis dihitung ulang dari posisi truk saat
+   ini, jadi kalau lewat jembatan sungai memang lebih pendek, itu yang otomatis dipakai tanpa aturan khusus. */
+function tryServeQueue(){
+  if(!S.queue.length)return;
+  S.queue=S.queue.filter(q=>q.cell&&q.cell.live&&!q.cell.destroyed&&!S.units.some(u=>u.target===q.cell));
+  if(!S.queue.length)return;
+  const item=S.queue[0];
+  if(item.tool==='co2'&&S.co2<1)return; // tunggu stok CO2 pulih dulu, jangan buang dari antrian
+  const u=S.units.find(x=>x.state==='idle'&&x.tank>0)||S.units.find(x=>x.state==='return'&&!x.refilling&&x.tank>0);
+  if(u){ S.queue.shift(); dispatchUnitTo(u,item.cell,item.tool); }
+}
+function switchTool(cell,tool){
+  const u=S.units.find(x=>x.target===cell);
+  if(!u)return dispatchTo(cell,tool);
+  if(u.tool===tool){ showRadio('Unit sudah memakai alat itu.'); return; }
+  if(tool==='co2'&&S.co2<1){ showRadio('Stok CO₂ habis!'); SFX.wrong(); return; }
+  if(tool==='co2') S.co2=Math.max(0,S.co2-1);
+  u.tool=tool; S.tools[tool]++; SFX.click();
+  if(u.state==='work') applyToolEffect(cell,tool);
+  S.armed=null;
+  if(S.tutorial&&S.tutStep===2&&cell===S.tutCell){
+    if(CLS[cell.cls].right===tool){ S.tutStep=3; showCoach(3); }
+    else { showCoach(2,true); }
+  }
+}
+function updateUnits(dt){
+  for(const u of S.units){
+    u.anim+=dt;
+    if(u.state==='enroute'){
+      if(advance(u,dt)){ u.state='work'; u.deployP=0; applyToolEffect(u.target,u.tool); }
+    } else if(u.state==='work'){
+      u.deployP=Math.min(1,u.deployP+dt/0.5);
+      u.spraying=u.target&&u.target.f>0;
+      if(u.target&&!u.target.live&&u.target.f<=0&&!u.target.suppressing){ sendHome(u); }
+      else if(u.tool==='co2'&&S.co2<=0&&u.target){ u.dry=true; }
+    } else if(u.state==='return'){
+      if(advance(u,dt)){ u.state='idle'; u.spraying=false; u.dry=false; u.stop=null;
+        if(u.refilling) showRadio('Unit '+(u.id+1)+' selesai isi ulang, siap bertugas.');
+        u.tank=TANK_MAX; u.refilling=false; }
+    }
+  }
+}
+/* ================= AKHIR PERMAINAN ================= */
+function checkEnd(){
+  if(S.ended||S.tutorial)return;
+  if(!S.preview){
+    if(S.safety<=0){ endRun(false,'safety'); return; }
+    if(S.destroyed>=S.cfg.maxLoss){ endRun(false,'loss'); return; }
+  }
+  if(!S.cfg.endless&&S.incidentsSpawned>=S.cfg.incidents&&S.liveCount===0){ endRun(true,'clear'); return; }
+}
+function endRun(win,reason){
+  S.ended=true; S.endReason=reason;
+  if(S.preview){
+    // Pratinjau: tak pernah dianggap kalah (lihat checkEnd — maxLoss/safety dilonggarkan), dan selesai/gagal
+    // TIDAK menyentuh progress.unlocked/stars sama sekali. Cuma kartu penutup berbeda yang tampil.
+    SFX.win();
+    speak('Begitu cuplikan levelnya. Selesaikan level sebelumnya untuk main penuh.',{urgent:true});
+    setTimeout(()=>openPreviewEndCard(),700);
+    return;
+  }
+  if(win){
+    SFX.win();
+    const stars=S.stats.mistakes===0?3:(S.stats.mistakes<=2?2:1);
+    progress.unlocked=Math.max(progress.unlocked,S.li+2);
+    progress.stars[S.li]=Math.max(progress.stars[S.li]||0,stars);
+    saveProgress();
+    speak(S.stats.mistakes===0?'Api padam, tanpa satu pun salah alat. Regu terbaik!':'Api padam. Kerja bagus, regu.',{urgent:true});
+    setTimeout(()=>openEndCard(true,stars),700);
+  } else {
+    SFX.lose();
+    speak(reason==='safety'?'Kesiapan regu habis. Malam yang berat.':'Terlalu banyak bangunan hangus. Coba lagi.',{urgent:true});
+    setTimeout(()=>openEndCard(false,0),700);
+  }
+}
+
+/* ================= RADIO & TOAST ================= */
+let radioT=null;
+function showRadio(msg){
+  const el=document.getElementById('radio'); el.textContent=msg; el.classList.add('show');
+  clearTimeout(radioT); radioT=setTimeout(()=>el.classList.remove('show'),2600);
+  setPanel(msg,'k-info');
+}
+function setPanel(html,kind){
+  const p=document.getElementById('panel'); p.className='panel '+(kind||'k-info'); p.innerHTML=html;
+}
+
+/* ================= TUTORIAL: COACHMARK ================= */
+const TUT_TXT={
+  1:{t:'Ada kebakaran!',b:'Bangunan yang berkedip dengan cincin kuning berdenyut di peta atas sedang terbakar. Ketuk bangunan itu.'},
+  2:{t:'Kenali, lalu pilih alat',b:'Baca petunjuknya di panel bawah peta, lalu ketuk tombol alat yang berdenyut kuning di bawah.'},
+  3:{t:'Regu berangkat',b:'Mobil pemadam menuju lokasi lewat jalan tercepat. Amati sampai apinya padam.'},
+  4:{t:'Selesai!',b:'Begitu cara memadamkan api: kenali bangunan, pilih alat yang tepat, lalu tunggu regu bekerja. Lanjutkan levelnya sendiri sekarang.'}
+};
+function showCoach(step,wrong){
+  S.tutStep=step;
+  const d=TUT_TXT[step]; if(!d)return;
+  document.getElementById('coach').classList.add('on');
+  document.getElementById('coachTitle').textContent=wrong?'Bukan itu — coba lagi':d.t;
+  document.getElementById('coachBody').textContent=wrong?'Lihat lagi petunjuk di panel, lalu ketuk tombol alat yang berdenyut kuning.':d.b;
+  updateHUD();
+}
+function hideCoach(){ const c=document.getElementById('coach'); if(c)c.classList.remove('on'); }
+function startPreview(li){
+  const ovr=PREVIEW_OVR[li]; if(!ovr)return; // hanya level dengan entri di PREVIEW_OVR yang bisa diintip
+  mode='play'; newRun(li); S.preview=true;
+  S.cfg={...S.cfg,incidents:ovr.incidents,endless:false,previewSeq:ovr.previewSeq||null};
+  hideCoach(); ovClose(); updateHUD();
+  setPanel('<span class="who">Pratinjau</span><div class="sub">Cuplikan singkat level ini. Awasi kota — radio akan berbunyi.</div>','k-info');
+  setTimeout(()=>{ if(mode==='play'&&S&&S.preview) speak('Pratinjau '+LEVELS[li].title+'. '+LEVELS[li].goal); },500);
+}
+function startTutorial(){
+  mode='play'; newRun(0); S.tutorial=true; S.tutStep=0; S.tutCell=null;
+  S.cfg={...S.cfg,incidents:1,maxLoss:99}; // tutorial hanya menunggu 1 kejadian, tak pernah kalah karena bangunan hangus
+  ovClose(); updateHUD();
+  setPanel('<span class="who">Tutorial</span><div class="sub">Awasi kota. Radio akan berbunyi begitu ada kebakaran.</div>','k-info');
+  document.getElementById('coach').classList.add('on');
+  document.getElementById('coachTitle').textContent='Selamat datang, petugas';
+  document.getElementById('coachBody').textContent='Tunggu radio berbunyi — akan ada kebakaran pertama sebentar lagi.';
+}
+function endTutorial(){
+  hideCoach();
+  if(!S)return; S.tutorial=false; S.tutCell=null;
+  try{localStorage.setItem('damkarTutSeen','1');}catch(e){}
+  if(mode==='play') openMenu();
+}
+
+/* ================= HUD ================= */
+function updateHUD(){
+  if(!S)return;
+  document.getElementById('chLevel').textContent=S.preview?('Intip · L'+(S.li+1)):('Level '+(S.li+1));
+  document.getElementById('chLevel').classList.toggle('peek',!!S.preview);
+  document.getElementById('chSpeed').textContent=(SPEED[gameSpeed]||SPEED.sedang).label;
+  document.getElementById('vInc').textContent=(S.cfg.endless?S.stats.resolved:Math.min(S.stats.resolved,S.cfg.incidents))+(S.cfg.endless?'':'/'+S.cfg.incidents);
+  document.getElementById('vFire').textContent=S.liveCount;
+  document.getElementById('vScore').textContent=S.score;
+  document.getElementById('vSafe').textContent=Math.round(S.safety)+'%';
+  document.getElementById('barSafe').style.width=S.safety+'%';
+  document.getElementById('barSafe').style.background=S.safety<30?'var(--siren)':(S.safety<60?'var(--vest)':'var(--ok)');
+  document.getElementById('vLoss').textContent=S.destroyed+'/'+S.cfg.maxLoss;
+  document.getElementById('barLoss').style.width=(100*S.destroyed/S.cfg.maxLoss)+'%';
+  const sk=Math.floor(S.co2*2);
+  if(sk!==updateHUD._sk){   // gambar ulang deretan stok hanya saat berubah (bukan tiap frame)
+    updateHUD._sk=sk; const stockEl=document.getElementById('stock'); stockEl.innerHTML='';
+    for(let i=0;i<8;i++){ const it=document.createElement('i'); if(i<Math.floor(S.co2))it.className='on'; else if(i===Math.floor(S.co2)&&S.co2%1>=0.5)it.className='half'; stockEl.appendChild(it); }
+  }
+  document.getElementById('toolAir').classList.toggle('armed',S.armed==='air');
+  document.getElementById('toolCo2').classList.toggle('armed',S.armed==='co2');
+  document.getElementById('toolPasir').classList.toggle('armed',S.armed==='pasir');
+  // Tombol pasir hanya relevan bila kotanya punya bangunan kelas D (logam) — disembunyikan di level 1-5 supaya tak membingungkan.
+  document.getElementById('toolPasir').style.display=S.blds.some(b=>b.cls==='D')?'':'none';
+  // Tombol alat TIDAK lagi dimatikan saat belum ada bangunan terpilih (dulu itu yang membuatnya "tak bisa ditekan");
+  // hanya CO2 yang mati bila stok habis. Petunjuk langkah ada di baris hint.
+  document.getElementById('toolAir').disabled=false;
+  document.getElementById('toolCo2').disabled=S.co2<1;
+  document.getElementById('toolPasir').disabled=false;
+  const hl=document.getElementById('hintLine');
+  const qsuf=S.queue.length?(' &middot; '+S.queue.length+' menunggu truk kosong'):'';
+  const htxt=(S.sel?'Langkah 2: ketuk <b>Air</b>, <b>Gas CO₂</b>'+(S.sel.cls==='D'?' atau <b>Pasir</b>':'')+' untuk '+S.sel.name+'.':
+    (S.liveCount>0?'Langkah 1: ketuk bangunan yang menyala di peta.':'Awasi kota. Radio akan berbunyi bila ada kebakaran.'))+qsuf;
+  if(hl._t!==htxt){ hl._t=htxt; hl.innerHTML=htxt; }
+  const tutTool=(S.tutorial&&S.tutStep===2&&S.tutCell)?CLS[S.tutCell.cls].right:null;
+  document.getElementById('toolAir').classList.toggle('tut-hl',tutTool==='air');
+  document.getElementById('toolCo2').classList.toggle('tut-hl',tutTool==='co2');
+  document.getElementById('toolPasir').classList.toggle('tut-hl',tutTool==='pasir');
+}
+/* ================= PANEL DEKAT: FASAD BANGUNAN ================= */
+const cv2=document.getElementById('cv2'), ctx2=cv2.getContext('2d');
+const W2=480,H2=210; cv2.width=W2*DPR; cv2.height=H2*DPR;
+function skyBG(g,t){
+  const grad=g.createLinearGradient(0,0,0,H2); grad.addColorStop(0,'#0a0d1c'); grad.addColorStop(1,'#171a22');
+  g.fillStyle=grad; g.fillRect(0,0,W2,H2);
+  g.fillStyle='rgba(255,255,255,.55)';
+  for(let i=0;i<26;i++){ const x=(i*53+37)%W2, y=(i*31)%120; const tw=0.5+0.5*Math.sin(t*2+i);
+    g.globalAlpha=0.25+0.4*tw; g.fillRect(x,y,1.6,1.6); }
+  g.globalAlpha=1;
+  g.fillStyle='#05070c'; g.fillRect(0,H2-34,W2,34);
+  g.strokeStyle='rgba(235,220,150,0.28)'; g.lineWidth=2; g.setLineDash([10,10]);
+  g.beginPath(); g.moveTo(0,H2-17); g.lineTo(W2,H2-17); g.stroke(); g.setLineDash([]);
+}
+function flames(g,cx,by,scale,inten){
+  if(inten<=0)return;
+  const n=3+Math.round(inten*3);
+  for(let i=0;i<n;i++){
+    const fx=cx+(i-n/2)*8*scale, fh=(18+14*Math.sin(S.time*9+i*2)+10*inten)*scale;
+    const grad=g.createLinearGradient(0,by,0,by-fh);
+    grad.addColorStop(0,'rgba(255,90,20,.95)'); grad.addColorStop(.55,'rgba(255,170,40,.9)'); grad.addColorStop(1,'rgba(255,235,140,0)');
+    g.fillStyle=grad;
+    g.beginPath(); g.moveTo(fx-7*scale,by); g.quadraticCurveTo(fx-10*scale,by-fh*0.5,fx,by-fh);
+    g.quadraticCurveTo(fx+10*scale,by-fh*0.5,fx+7*scale,by); g.closePath(); g.fill();
+  }
+}
+function smokeAt(g,cx,cy,inten,t){
+  if(inten<=0)return; g.save(); g.globalAlpha=Math.min(.5,0.12+0.28*inten);
+  for(let i=0;i<4;i++){ const p=(t*0.25+i/4)%1; const y=cy-p*70, x=cx+Math.sin(t*1.3+i*2)*10*p;
+    g.fillStyle='#8a8f9c'; g.beginPath(); g.arc(x,y,8+18*p,0,6.283); g.fill(); }
+  g.restore();
+}
+const FACADE={
+  rumah(g,cx,gy,f){
+    g.fillStyle='#2a2f3d'; g.fillRect(cx-58,gy-70,116,70);
+    g.fillStyle='#20242f'; for(let i=0;i<4;i++)g.fillRect(cx-58,gy-70+i*17,116,2);
+    g.fillStyle='#3a2e22'; g.beginPath(); g.moveTo(cx-66,gy-70); g.lineTo(cx,gy-112); g.lineTo(cx+66,gy-70); g.closePath(); g.fill();
+    const glow=f>0.05; g.fillStyle=glow?'rgba(255,150,50,.85)':'#12141c'; g.fillRect(cx-42,gy-56,22,26);
+    g.fillStyle=glow?'rgba(255,150,50,.85)':'#12141c'; g.fillRect(cx+20,gy-56,22,26);
+    g.fillStyle='#151821'; g.fillRect(cx-9,gy-40,18,40);
+    flames(g,cx-6,gy-70,1,f); flames(g,cx+34,gy-64,0.7,f*0.8);
+    smokeAt(g,cx,gy-95,f,S.time);
+  },
+  gudang(g,cx,gy,f){
+    g.fillStyle='#333a44'; g.fillRect(cx-90,gy-96,180,96);
+    g.fillStyle='#272d37'; for(let i=0;i<10;i++)g.fillRect(cx-90+i*18,gy-96,2,96);
+    g.fillStyle='#20242e'; g.beginPath(); g.moveTo(cx-96,gy-96); g.lineTo(cx,gy-118); g.lineTo(cx+96,gy-96); g.closePath(); g.fill();
+    g.fillStyle=f>0.05?'rgba(255,140,40,.85)':'#14161d'; g.fillRect(cx-34,gy-70,68,58);
+    g.strokeStyle='#454e5b'; g.lineWidth=3; g.strokeRect(cx-34,gy-70,68,58);
+    flames(g,cx,gy-70,1.3,f); flames(g,cx-60,gy-96,0.6,f*0.7); flames(g,cx+60,gy-96,0.6,f*0.6);
+    smokeAt(g,cx,gy-118,f*1.2,S.time);
+  },
+  kios(g,cx,gy,f){
+    g.fillStyle='#38455a'; g.fillRect(cx-70,gy-90,140,90);
+    g.fillStyle='#c94b3a'; for(let i=0;i<8;i++){ g.fillStyle=i%2?'#c94b3a':'#e8e3d6'; g.beginPath();
+      g.moveTo(cx-70+i*17.5,gy-90); g.lineTo(cx-70+(i+1)*17.5,gy-90); g.lineTo(cx-70+(i+1)*17.5-6,gy-74); g.lineTo(cx-70+i*17.5+6,gy-74); g.closePath(); g.fill(); }
+    g.fillStyle=f>0.05?'rgba(255,150,50,.85)':'#12141c'; g.fillRect(cx-52,gy-58,42,40);
+    g.fillStyle='#1b1f28'; g.fillRect(cx+8,gy-58,44,40);
+    g.fillStyle='#161a22'; g.fillRect(cx+22,gy-40,16,40);
+    flames(g,cx-30,gy-58,0.9,f); smokeAt(g,cx-20,gy-90,f,S.time);
+  },
+  warung(g,cx,gy,f){
+    g.fillStyle='#4a4033'; g.fillRect(cx-56,gy-40,8,40); g.fillRect(cx+48,gy-40,8,40);
+    g.fillStyle='#2f6b52'; g.beginPath(); g.moveTo(cx-66,gy-40); g.lineTo(cx-40,gy-78); g.lineTo(cx+40,gy-78); g.lineTo(cx+66,gy-40); g.closePath(); g.fill();
+    g.fillStyle='#20241a'; g.fillRect(cx-58,gy-40,116,10);
+    g.fillStyle=f>0.05?'rgba(255,140,40,.75)':'#171a22'; g.fillRect(cx-40,gy-30,80,30);
+    flames(g,cx,gy-30,1,f); smokeAt(g,cx,gy-60,f,S.time);
+  },
+  bengkel(g,cx,gy,f){
+    g.fillStyle='#3a3f36'; g.fillRect(cx-84,gy-84,168,84);
+    g.fillStyle='#20241d'; g.beginPath(); g.moveTo(cx-90,gy-84); g.lineTo(cx,gy-104); g.lineTo(cx+90,gy-84); g.closePath(); g.fill();
+    g.fillStyle=f>0.05?'rgba(255,140,40,.85)':'#14161c'; g.fillRect(cx-40,gy-64,80,52);
+    g.strokeStyle='#54594c'; g.lineWidth=3; for(let i=0;i<4;i++){ g.beginPath(); g.moveTo(cx-40,gy-64+i*13); g.lineTo(cx+40,gy-64+i*13); g.stroke(); }
+    g.fillStyle='#20222a'; g.beginPath(); g.arc(cx-64,gy-14,10,0,6.283); g.fill();
+    g.fillStyle='#2a2c34'; g.beginPath(); g.arc(cx-64,gy-14,5,0,6.283); g.fill();
+    flames(g,cx,gy-64,1.1,f); smokeAt(g,cx,gy-95,f,S.time);
+  },
+  gardu(g,cx,gy,f){
+    g.strokeStyle='#5b5f6b'; g.lineWidth=6; g.beginPath(); g.moveTo(cx,gy); g.lineTo(cx,gy-118); g.stroke();
+    g.beginPath(); g.moveTo(cx-38,gy-100); g.lineTo(cx+38,gy-100); g.stroke();
+    g.strokeStyle='rgba(200,210,230,.5)'; g.lineWidth=1.4;
+    for(const dx of[-38,38]){ g.beginPath(); g.moveTo(cx+dx,gy-100); g.quadraticCurveTo(cx+dx*0.4,gy-86,cx,gy-92); g.stroke(); }
+    g.fillStyle=f>0.05?'rgba(120,190,255,.9)':'#2a2f3b'; g.fillRect(cx-30,gy-58,60,48);
+    g.strokeStyle='#4a5060'; g.lineWidth=2; g.strokeRect(cx-30,gy-58,60,48);
+    g.fillStyle='#ffd23a'; g.beginPath(); g.moveTo(cx,gy-96); g.lineTo(cx-6,gy-86); g.lineTo(cx,gy-86); g.lineTo(cx-4,gy-78); g.lineTo(cx+8,gy-90); g.lineTo(cx+2,gy-90); g.closePath(); g.fill();
+    if(f>0.05){ for(let i=0;i<3;i++){ if(Math.random()<0.5){ g.strokeStyle='rgba(150,220,255,.9)'; g.lineWidth=1.5;
+      g.beginPath(); g.moveTo(cx-20+Math.random()*40,gy-58); g.lineTo(cx-20+Math.random()*40,gy-30); g.stroke(); } } }
+    smokeAt(g,cx,gy-96,f*0.7,S.time);
+  },
+  logam(g,cx,gy,f){
+    g.fillStyle='#3d4148'; g.fillRect(cx-80,gy-88,160,88);
+    g.fillStyle='#2b2e34'; for(let i=0;i<9;i++)g.fillRect(cx-80+i*18,gy-88,2,88);
+    g.fillStyle='#23262c'; g.fillRect(cx-86,gy-88,172,8);
+    g.fillStyle=f>0.05?'rgba(230,240,255,.9)':'#16181d'; g.fillRect(cx-36,gy-64,72,56);
+    g.strokeStyle='#585d66'; g.lineWidth=3; g.strokeRect(cx-36,gy-64,72,56);
+    if(f>0.05){
+      // nyala putih menyilaukan (bukan oranye) — ciri khas api logam, ditulis manual karena flames() selalu oranye
+      const n=3+Math.round(f*3);
+      for(let i=0;i<n;i++){
+        const fx=cx+(i-n/2)*9, fh=16+12*Math.sin(S.time*11+i*2)+8*f;
+        const grad=g.createLinearGradient(0,gy-64,0,gy-64-fh);
+        grad.addColorStop(0,'rgba(255,255,255,.95)'); grad.addColorStop(.5,'rgba(210,230,255,.85)'); grad.addColorStop(1,'rgba(190,210,255,0)');
+        g.fillStyle=grad;
+        g.beginPath(); g.moveTo(fx-6,gy-64); g.quadraticCurveTo(fx-8,gy-64-fh*0.5,fx,gy-64-fh);
+        g.quadraticCurveTo(fx+8,gy-64-fh*0.5,fx+6,gy-64); g.closePath(); g.fill();
+      }
+      for(let i=0;i<4;i++){ if(Math.random()<0.6){ g.fillStyle='rgba(255,225,150,.9)';
+        g.beginPath(); g.arc(cx-30+Math.random()*60,gy-70-Math.random()*30,1.6,0,6.283); g.fill(); } } // percikan logam meleleh
+    }
+  },
+  dapur(g,cx,gy,f){
+    g.fillStyle='#3a3530'; g.fillRect(cx-64,gy-72,128,72);
+    g.fillStyle='#241f1c'; g.beginPath(); g.moveTo(cx-70,gy-72); g.lineTo(cx,gy-92); g.lineTo(cx+70,gy-72); g.closePath(); g.fill();
+    g.fillStyle=f>0.05?'rgba(255,150,60,.85)':'#15130f'; g.fillRect(cx-46,gy-52,36,36);
+    g.fillStyle='#20211f'; g.fillRect(cx+12,gy-52,34,36);
+    g.strokeStyle='#4a4038'; g.lineWidth=2; g.strokeRect(cx-46,gy-52,36,36);
+    if(f>0.05){
+      // nyala tinggi kebiruan dari wajan minyak panas
+      const n=2+Math.round(f*2);
+      for(let i=0;i<n;i++){
+        const fx=cx-28+(i-n/2)*8, fh=24+16*Math.sin(S.time*10+i*2)+10*f;
+        const grad=g.createLinearGradient(0,gy-52,0,gy-52-fh);
+        grad.addColorStop(0,'rgba(120,170,255,.9)'); grad.addColorStop(.5,'rgba(255,170,60,.85)'); grad.addColorStop(1,'rgba(255,220,140,0)');
+        g.fillStyle=grad;
+        g.beginPath(); g.moveTo(fx-6,gy-52); g.quadraticCurveTo(fx-8,gy-52-fh*0.5,fx,gy-52-fh);
+        g.quadraticCurveTo(fx+8,gy-52-fh*0.5,fx+6,gy-52); g.closePath(); g.fill();
+      }
+    }
+    smokeAt(g,cx-28,gy-80,f*0.8,S.time);
+  }
+};
+function drawTruckSide(g,x,y,facing,spraying,tool,color){
+  g.save(); g.translate(x,y); if(facing<0)g.scale(-1,1);
+  g.fillStyle='#20232c'; g.fillRect(-30,4,60,4);
+  g.fillStyle='#1a1d24'; g.beginPath(); g.arc(-18,10,7,0,6.283); g.fill(); g.beginPath(); g.arc(18,10,7,0,6.283); g.fill();
+  g.fillStyle='#2a2d34'; g.beginPath(); g.arc(-18,10,3.2,0,6.283); g.fill(); g.beginPath(); g.arc(18,10,3.2,0,6.283); g.fill();
+  g.fillStyle=color||'#cf3a24'; g.fillRect(-34,-22,68,26); g.fillRect(-34,-34,26,14);
+  g.fillStyle='#bfe6ff'; g.fillRect(-30,-32,18,10);
+  g.fillStyle='#ffe27a'; g.fillRect(30,-14,5,6);
+  g.strokeStyle='#eee'; g.lineWidth=1; g.strokeRect(-34,-22,68,26);
+  if(spraying){
+    const tc=TOOLS[tool]||TOOLS.air;
+    g.strokeStyle=tc.stroke; g.lineWidth=2.4; g.lineCap='round';
+    g.beginPath(); g.moveTo(34,-8);
+    const jitter=Math.sin(S.time*30)*3;
+    g.quadraticCurveTo(70,-20+jitter,96,-2+jitter*1.4); g.stroke();
+    g.fillStyle=tc.fill;
+    for(let i=0;i<7;i++){ const p=i/7; g.beginPath(); g.arc(34+p*62,-8-14*Math.sin(p*3.1)+p*p*20,2+2*Math.random(),0,6.283); g.fill(); }
+  }
+  g.restore();
+}
+function drawCloseup(){
+  ctx2.setTransform(DPR,0,0,DPR,0,0); ctx2.clearRect(0,0,W2,H2);
+  skyBG(ctx2,S.time);
+  const cell=S.focus&&S.focus.live?S.focus:null;
+  document.getElementById('cuTag').textContent=cell?(cell.name||'Kebakaran'):'Pos Damkar';
+  const gy=H2-17, cx=W2/2;
+  if(!cell){
+    ctx2.fillStyle='#232833'; ctx2.fillRect(cx-110,gy-70,220,70);
+    ctx2.fillStyle='#c9302a'; for(let i=0;i<3;i++) ctx2.fillRect(cx-92+i*72,gy-56,56,50);
+    ctx2.fillStyle='#14161d'; for(let i=0;i<3;i++) ctx2.fillRect(cx-88+i*72,gy-50,48,44);
+    ctx2.fillStyle='rgba(255,198,26,.85)'; ctx2.font="700 15px 'Barlow Condensed',Arial Narrow,sans-serif"; ctx2.textAlign='center';
+    ctx2.fillText('MENUNGGU PANGGILAN…',cx,gy-84); ctx2.textAlign='start';
+    return;
+  }
+  const fac=FACADE[cell.type]||FACADE.rumah;
+  fac(ctx2,cx,gy,cell.destroyed?0:cell.f);
+  const u=S.units.find(x=>x.target===cell);
+  if(u){
+    if(u.state==='enroute'){
+      const p=1-clamp(pathRemain(u)/(CS*4),0,1);   // meluncur masuk selama 4 petak terakhir perjalanan
+      drawTruckSide(ctx2,lerp(W2+50,cx+96,p),gy-2,-1,false,null,u.color);
+    } else {
+      drawTruckSide(ctx2,cx+96,gy-2,-1,u.spraying,u.tool,u.color);
+    }
+  }
+  if(cell.destroyed){
+    ctx2.fillStyle='rgba(30,30,30,.55)'; ctx2.fillRect(0,0,W2,H2);
+    ctx2.fillStyle='#c9302a'; ctx2.font="700 17px 'Barlow Condensed',sans-serif"; ctx2.textAlign='center';
+    ctx2.fillText('BANGUNAN HANGUS',cx,H2/2); ctx2.textAlign='start';
+  }
+}
+/* ================= WARNA BANGUNAN (peta atas) ================= */
+const ROOF={rumah:'#7a5a3a',gudang:'#5a6270',kios:'#8a4a44',warung:'#3f7a5c',bengkel:'#565a48',gardu:'#4a5568'};
+function drawUnitsTop(){
+  for(const u of S.units){
+    ctx.save(); ctx.translate(u.x,u.y); ctx.rotate(u.ang);
+    ctx.fillStyle='rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(0,4,11,5,0,0,6.283); ctx.fill();
+    ctx.fillStyle=u.color; ctx.fillRect(-11,-7,22,14);
+    ctx.fillStyle='#bfe6ff'; ctx.fillRect(4,-5,6,4);
+    ctx.fillStyle='#ffe27a'; ctx.beginPath(); ctx.arc(11,0,1.6,0,6.283); ctx.fill();
+    if(u.state!=='idle'){ ctx.fillStyle=Math.sin(S.time*14)>0?'rgba(230,40,40,.95)':'rgba(70,130,255,.95)';
+      ctx.beginPath(); ctx.arc(0,-8,2,0,6.283); ctx.fill(); }
+    ctx.restore();
+    // dua titik kecil di atas truk = sisa tangki air (2 penuh = siap 2x berangkat; kosong = wajib isi ulang)
+    for(let k=0;k<TANK_MAX;k++){
+      ctx.fillStyle=k<u.tank?'rgba(120,190,255,.95)':'rgba(255,255,255,.18)';
+      ctx.beginPath(); ctx.arc(u.x-5+k*10,u.y-13,2.4,0,6.283); ctx.fill();
+    }
+    if(u.refilling){ ctx.fillStyle='rgba(255,201,26,.9)'; ctx.font="700 9px 'Barlow Condensed',Arial Narrow,sans-serif";
+      ctx.textAlign='center'; ctx.fillText('ISI ULANG',u.x,u.y-18); }
+    if(u.spraying&&u.target){
+      const tx=u.target.c*CS+CS/2, ty=u.target.r*CS+CS/2;
+      ctx.strokeStyle=(TOOLS[u.tool]||TOOLS.air).stroke; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(u.x,u.y); ctx.lineTo(tx,ty); ctx.stroke();
+    }
+  }
+}
+function drawDynamic(){
+  ctx.setTransform(DPR,0,0,DPR,0,0); ctx.clearRect(0,0,W,H);
+  ctx.drawImage(scv,0,0,W,H);
+  for(const cell of S.blds){
+    const x=cell.c*CS,y=cell.r*CS;
+    if(cell.destroyed){ ctx.fillStyle='#0c0d10'; ctx.fillRect(x+3,y+3,CS-6,CS-6);
+      ctx.strokeStyle='#1c1d22'; ctx.strokeRect(x+3,y+3,CS-6,CS-6); continue; }
+    ctx.fillStyle=ROOF[cell.type]||'#555'; ctx.fillRect(x+4,y+4,CS-8,CS-8);
+    if(cell.wet>0.1){ ctx.fillStyle='rgba(90,150,220,'+(cell.wet*0.28)+')'; ctx.fillRect(x+4,y+4,CS-8,CS-8); }
+    if(cell.f>0){
+      const glow=ctx.createRadialGradient(x+CS/2,y+CS/2,2,x+CS/2,y+CS/2,CS*0.9*Math.min(1.3,cell.f+0.3));
+      glow.addColorStop(0,'rgba(255,170,50,'+Math.min(.9,0.5+cell.f*0.3)+')'); glow.addColorStop(1,'rgba(255,120,30,0)');
+      ctx.fillStyle=glow; ctx.beginPath(); ctx.arc(x+CS/2,y+CS/2,CS*1.3,0,6.283); ctx.fill();
+      ctx.fillStyle='#ffcf6b'; const jig=Math.sin(S.time*20+cell.seed)*2;
+      ctx.beginPath(); ctx.moveTo(x+CS/2-6,y+CS-6); ctx.quadraticCurveTo(x+CS/2+jig,y+CS/2,x+CS/2,y+6); ctx.quadraticCurveTo(x+CS/2-jig,y+CS/2,x+CS/2+6,y+CS-6); ctx.closePath(); ctx.fill();
+    }
+    if(cell===S.sel||cell===S.focus){
+      ctx.strokeStyle='rgba(255,198,26,.9)'; ctx.lineWidth=2.4; ctx.setLineDash([5,4]);
+      ctx.strokeRect(x+2,y+2,CS-4,CS-4); ctx.setLineDash([]);
+    }
+  }
+  for(const e of S.embers){
+    const p=e.t/e.dur, ex=lerp(e.x,e.tx,p), ey=lerp(e.y,e.ty,p)-Math.sin(p*3.14159)*26;
+    ctx.fillStyle='rgba(255,180,60,.9)'; ctx.beginPath(); ctx.arc(ex,ey,2.4,0,6.283); ctx.fill();
+  }
+  for(let i=S.parts.length-1;i>=0;i--){ const pt=S.parts[i]; pt.t+=1/60;
+    if(pt.t>pt.dur){ S.parts.splice(i,1); continue; }
+    ctx.fillStyle='rgba(255,200,90,'+(1-pt.t/pt.dur)+')'; ctx.beginPath(); ctx.arc(pt.x,pt.y,4,0,6.283); ctx.fill(); }
+  drawFolkTop();
+  drawUnitsTop();
+  if(S.tutorial&&S.tutStep===1&&S.tutCell&&S.tutCell.live){
+    const tx=S.tutCell.c*CS+CS/2, ty=S.tutCell.r*CS+CS/2, pulse=6+Math.sin(S.time*5)*3;
+    ctx.strokeStyle='rgba(255,198,26,.95)'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.arc(tx,ty,CS*0.75+pulse,0,6.283); ctx.stroke();
+  }
+  if(S.shake>0) S.shake=Math.max(0,S.shake-1/60);
+}
+/* ================= INPUT ================= */
+function cellFromEvent(ev){
+  const r=cv.getBoundingClientRect(); const p=ev.touches?ev.touches[0]:ev;
+  const x=(p.clientX-r.left)/r.width*W, y=(p.clientY-r.top)/r.height*H;
+  const c=clamp(Math.floor(x/CS),0,COLS-1), rr=clamp(Math.floor(y/CS),0,ROWS-1);
+  return S.G[rr][c];
+}
+function onMapTap(ev){
+  if(ev.cancelable)ev.preventDefault(); if(!S||S.ended||mode!=='play')return;
+  initAudio();
+  const cell=cellFromEvent(ev);
+  tapBuildingCell(cell);
+}
+function onToolTap(tool){
+  return function(){
+    initAudio();
+    if(!S||S.ended||mode!=='play')return;
+    const sel=S.sel;
+    if(!sel||!sel.live||sel.destroyed){
+      S.sel=null; SFX.wrong();
+      setPanel('<span class="who">Pilih apinya dulu</span><div class="sub">Ketuk bangunan yang menyala di peta, baru ketuk alat.</div>','k-bad');
+      updateHUD(); return;
+    }
+    if(tool==='co2'&&S.co2<1){ SFX.wrong(); showRadio('Stok CO₂ habis, tunggu pulih.'); return; }
+    const assigned=S.units.find(u=>u.target===sel);
+    if(assigned){ switchTool(sel,tool); S.sel=null; }
+    else if(!dispatchTo(sel,tool)){
+      // Semua truk sedang bertugas: bukan diabaikan — masuk antrian. tryServeQueue() akan mengirimnya begitu ada
+      // truk kosong, ATAU segera mengalihkan truk yang kebetulan sedang dalam perjalanan pulang.
+      const already=S.queue.some(q=>q.cell===sel);
+      if(already){ showRadio(sel.name+' sudah dalam antrian.'); }
+      else {
+        S.queue.push({cell:sel,tool}); const wasQueued=S.queue.length; tryServeQueue();
+        if(S.queue.length<wasQueued) showRadio('Truk yang sedang pulang dialihkan ke '+sel.name+'.');
+        else { showRadio(sel.name+' masuk antrian — dikirim otomatis begitu ada truk kosong.'); SFX.click(); }
+      }
+      S.sel=null;
+    }
+    updateHUD();
+  };
+}
+
+/* ================= OVERLAY ================= */
+function ovOpen(html){ const ov=document.getElementById('ov'); ov.innerHTML=html; ov.classList.add('on'); }
+function ovClose(){ document.getElementById('ov').classList.remove('on'); }
+function starStr(n){ let s=''; for(let i=0;i<3;i++) s+= i<n?'&#9733;':'&#9734;'; return s; }
+function openMenu(){
+  mode='menu';
+  let rows='';
+  for(let i=0;i<LEVELS.length;i++){
+    const lv=LEVELS[i], locked=i+1>progress.unlocked, st=progress.stars[i]||0;
+    const canPeek=locked&&PREVIEW_OVR[i];
+    rows+='<div class="lvlRow"><button class="lvl" data-lv="'+i+'" '+(locked?'disabled':'')+'><span><span class="ln">'+lv.title+'</span><br><span class="ld">'+lv.layer+'</span></span><span class="st">'+(locked?'&#128274;':starStr(st))+'</span></button>'+
+      (canPeek?'<button class="peekBtn" data-peek="'+i+'" type="button">Intip</button>':'')+'</div>';
+  }
+  let tutSeen=false; try{tutSeen=localStorage.getItem('damkarTutSeen')==='1';}catch(e){}
+  let speedTabs='<div class="tabs" id="speedTabs">';
+  for(const k in SPEED) speedTabs+='<button class="tab'+(gameSpeed===k?' on':'')+'" data-sp="'+k+'" type="button">'+SPEED[k].label+'</button>';
+  speedTabs+='</div>';
+  ovOpen('<div class="card"><div class="top"></div><div class="in">'+
+    '<h2>Regu Damkar</h2><p class="layer">Pilih tugas malam ini</p>'+
+    '<button class="btn alt" id="mTut" type="button" style="width:100%;text-align:left;margin-bottom:9px;">&#9654; Tutorial: Cara Bermain'+(tutSeen?'':' &middot; <span style="color:var(--vest)">baru</span>')+'</button>'+
+    '<p class="layer" style="margin:12px 0 2px;">Kecepatan kejadian</p>'+speedTabs+
+    rows+
+    '<button class="btn alt" id="mBook" type="button">Buku Petugas</button></div></div>');
+  document.querySelectorAll('.lvl').forEach(b=>b.addEventListener('click',()=>{ openLevelIntro(+b.dataset.lv); }));
+  document.querySelectorAll('.peekBtn').forEach(b=>b.addEventListener('click',(e)=>{ e.stopPropagation(); initAudio(); startPreview(+b.dataset.peek); }));
+  const mb=document.getElementById('mBook'); if(mb)mb.addEventListener('click',openBook);
+  const mt=document.getElementById('mTut'); if(mt)mt.addEventListener('click',()=>{ initAudio(); startTutorial(); });
+  document.querySelectorAll('#speedTabs .tab').forEach(b=>b.addEventListener('click',()=>{ initAudio(); SFX.click(); setSpeed(b.dataset.sp); }));
+}
+function openBook(){
+  prevOverlay=mode;
+  ovOpen('<div class="card"><div class="top"></div><div class="in">'+
+    '<h2>Buku Petugas</h2>'+
+    '<h3>Cara bermain</h3><ul>'+
+    '<li>Ketuk bangunan yang terbakar, lalu ketuk <b>Air</b> atau <b>Gas CO₂</b>.</li>'+
+    '<li>Salah alat? Ketuk api itu lagi, lalu ketuk alat lain untuk mengganti.</li>'+
+    '<li>Api menjalar sendiri ke bangunan sekitarnya — dahulukan yang paling mengancam.</li></ul>'+
+    '<h3>Lima jenis api</h3><ul>'+
+    '<li><b>A — Api biasa</b> (kayu, kain, kertas): padamkan dengan AIR.</li>'+
+    '<li><b>B — Api minyak</b> (bahan bakar): selimuti dengan GAS CO₂, jangan disiram air.</li>'+
+    '<li><b>C — Api listrik</b>: selimuti dengan GAS CO₂, air bisa menyengat.</li>'+
+    '<li><b>D — Api logam</b> (mulai level 6): timbun dengan PASIR, jangan air ataupun gas CO₂.</li>'+
+    '<li><b>K — Api minyak dapur</b> (mulai level 6): selimuti dengan GAS CO₂, jangan disiram air.</li></ul>'+
+    '<button class="btn" id="bClose" type="button">Kembali</button></div></div>');
+  document.getElementById('bClose').addEventListener('click',()=>{ if(prevOverlay==='menu')openMenu(); else ovClose(); });
+}
+function openEndCard(win,stars){
+  const s=S;
+  ovOpen('<div class="card"><div class="top"></div><div class="in">'+
+    '<h2>'+(win?'Api Padam!':'Malam yang Berat')+'</h2>'+
+    '<p class="layer">'+s.cfg.title+'</p>'+
+    (win?'<div class="stars">'+starStr(stars)+'</div>':'<p>'+(s.endReason==='safety'?'Kesiapan regu habis.':'Terlalu banyak bangunan hangus.')+'</p>')+
+    '<div class="stats"><div class="stat"><b>'+s.score+'</b><span>Skor</span></div>'+
+    '<div class="stat"><b>'+s.stats.resolved+'</b><span>Kebakaran dipadamkan</span></div>'+
+    '<div class="stat"><b>'+s.destroyed+'</b><span>Bangunan hangus</span></div>'+
+    '<div class="stat"><b>'+s.stats.mistakes+'</b><span>Salah alat</span></div></div>'+
+    '<button class="btn" id="eAgain" type="button">'+(win?'Lanjut':'Ulangi')+'</button>'+
+    '<button class="btn alt" id="eMenu" type="button">Menu</button></div></div>');
+  document.getElementById('eAgain').addEventListener('click',()=>{ startLevel(win?Math.min(LEVELS.length-1,s.li+1):s.li); });
+  document.getElementById('eMenu').addEventListener('click',openMenu);
+}
+function openPreviewEndCard(){
+  // continueAt = level TERAKHIR yang sudah terbuka secara sah (bukan level terkunci yang barusan diintip) —
+  // supaya tombol ini tidak pernah jadi jalan pintas melewati kunci progresi.
+  const s=S, continueAt=Math.max(0,Math.min(LEVELS.length-1,progress.unlocked-1));
+  ovOpen('<div class="card"><div class="top"></div><div class="in">'+
+    '<h2>Itu Baru Cuplikan</h2>'+
+    '<p class="layer">'+s.cfg.title+' · Pratinjau</p>'+
+    '<p>Kamu baru melihat sebagian kecil dari level ini. Levelnya sendiri jauh lebih menantang: lebih banyak kejadian sekaligus, dan semua kelas api tercampur tanpa jeda.</p>'+
+    '<p>Pratinjau tidak dihitung sebagai selesai — tidak ada bintang, dan level ini tetap terkunci sampai kamu menuntaskan level sebelumnya lewat jalur biasa.</p>'+
+    '<button class="btn" id="eBack" type="button">Lanjutkan dari Level '+(continueAt+1)+'</button>'+
+    '<button class="btn alt" id="eMenu2" type="button">Menu</button></div></div>');
+  document.getElementById('eBack').addEventListener('click',()=>{ startLevel(continueAt); });
+  document.getElementById('eMenu2').addEventListener('click',openMenu);
+}
+/* ================= INTRO LEVEL (goal + learn[] — sebelumnya tak pernah ditampilkan di mana pun) ================= */
+function openLevelIntro(li){
+  const lv=LEVELS[li];
+  const learnLi=(lv.learn||[]).map(t=>'<li>'+t+'</li>').join('');
+  ovOpen('<div class="card"><div class="top"></div><div class="in">'+
+    '<h2>'+lv.title+'</h2><p class="layer">'+lv.layer+'</p>'+
+    '<p>'+lv.goal+'</p>'+
+    (li===0?triangleHTML():'')+
+    (learnLi?'<h3>Yang perlu diketahui</h3><ul>'+learnLi+'</ul>':'')+
+    '<button class="btn" id="iStart" type="button">Mulai</button>'+
+    '<button class="btn alt" id="iBack" type="button">Menu</button></div></div>');
+  document.getElementById('iStart').addEventListener('click',()=>{ initAudio(); startLevel(li); });
+  document.getElementById('iBack').addEventListener('click',openMenu);
+  if(li===0) wireTriangle();
+}
+/* Segitiga api interaktif: ketuk salah satu sudut (Panas/Bahan Bakar/Oksigen) untuk "menghilangkannya" dan
+   melihat efeknya pada nyala di tengah — ketuk lagi untuk mengembalikannya. Widget statis/edukatif, terpisah
+   total dari S (state permainan) — aman dipakai di layar menu sebelum newRun() dipanggil. */
+function triangleHTML(){
+  return '<div class="triWrap" id="triWrap">'+
+    '<button class="triNode tn-oksigen" data-node="oksigen" type="button">&#128168;<br>Oksigen</button>'+
+    '<button class="triNode tn-panas" data-node="panas" type="button">&#128293;<br>Panas</button>'+
+    '<button class="triNode tn-bahan" data-node="bahan" type="button">&#129717;<br>Bahan Bakar</button>'+
+    '<div class="triFlame" id="triFlame">&#128293;</div></div>'+
+    '<p class="triCaption" id="triCaption">Api butuh ketiganya sekaligus — ketuk salah satu sudut untuk melihat apa yang terjadi bila hilang.</p>';
+}
+function wireTriangle(){
+  const st={panas:true,bahan:true,oksigen:true};
+  const CAP={panas:'Panas dihilangkan (didinginkan, mis. oleh air) → api padam.',
+    bahan:'Bahan bakar dihilangkan (habis, atau disingkirkan) → api padam.',
+    oksigen:'Oksigen dihilangkan (diselimuti, mis. oleh gas CO₂) → api padam.'};
+  function render(){
+    const wrap=document.getElementById('triWrap'); if(!wrap)return;
+    for(const k in st) { const el=wrap.querySelector('.tn-'+k); if(el) el.classList.toggle('off',!st[k]); }
+    const missing=Object.keys(st).filter(k=>!st[k]);
+    const count=3-missing.length;
+    const flame=document.getElementById('triFlame');
+    if(flame){ flame.style.opacity=(count===3?1:(0.15+count*0.25)); flame.style.transform='translate(-50%,-50%) scale('+(0.55+count*0.15)+')'; }
+    const cap=document.getElementById('triCaption');
+    if(cap) cap.textContent = missing.length===0?'Panas, bahan bakar, dan oksigen — ketiganya ada. Inilah "segitiga api".'
+      : missing.length===1?CAP[missing[0]]:'Beberapa syarat hilang sekaligus — api padam total.';
+  }
+  document.querySelectorAll('#triWrap .triNode').forEach(b=>b.addEventListener('click',()=>{
+    st[b.dataset.node]=!st[b.dataset.node]; SFX.click(); render();
+  }));
+  render();
+}
+function startLevel(i){ mode='play'; newRun(i); hideCoach(); ovClose(); updateHUD(); setPanel('Awasi kota. Radio akan berbunyi bila ada kebakaran.','k-info');
+  setTimeout(()=>{ if(mode==='play'&&S&&!S.tutorial) speak(S.cfg.title+'. '+S.cfg.goal); },500); }
+
+/* ================= LOOP UTAMA ================= */
+let lastT=0,paused=false;
+function tick(ts){
+  requestAnimationFrame(tick);
+  if(!lastT)lastT=ts; let dt=(ts-lastT)/1000; lastT=ts; dt=Math.min(dt,0.05);
+  updateAmbientAudio();
+  if(mode!=='play'||paused||!S)return;
+  if(!S.ended){
+    S.time+=dt;
+    updateWind(dt); updateSpawner(dt);
+    S.caT=(S.caT||0)+dt; if(S.caT>1/6){ caStep(); S.caT=0; }
+    spawnEmbers(dt); updateEmbers(dt);
+    updateCells(dt); updateUnits(dt); updateFolk(dt); tryServeQueue();
+    S.co2=Math.min(8,S.co2+dt*0.14);                         // stok CO2 pulih pelan (~1 tabung / 7 detik)
+    if(S.sel&&(!S.sel.live||S.sel.destroyed)) S.sel=null;   // api sudah padam/hangus -> pilihan usang dilepas
+    if(S.alarmT>0)S.alarmT-=dt;
+    if(S.lessonQueue&&S.lessonQueue.length&&!S._lessonBusy){ S._lessonBusy=true; const t=S.lessonQueue.shift();
+      setTimeout(()=>{ setPanel('<span class="who">Pelajaran</span><div class="sub">'+t+'</div>','k-good'); speak(t); S._lessonBusy=false; },1400); }
+  }
+  drawDynamic(); drawCloseup(); if(viewMode==='3d'&&three3) render3D(); updateHUD();
+}
+
+/* ================= INIT ================= */
+function init(){
+  // Ketukan dihitung saat jari/kursor DILEPAS dan hanya bila nyaris tak bergeser; geseran layar (scroll) tidak dianggap ketukan.
+  let tapDown=null;
+  cv.addEventListener('pointerdown',e=>{ initAudio(); tapDown={x:e.clientX,y:e.clientY,id:e.pointerId}; });
+  cv.addEventListener('pointerup',e=>{ if(!tapDown||tapDown.id!==e.pointerId)return;
+    const mv=Math.hypot(e.clientX-tapDown.x,e.clientY-tapDown.y); tapDown=null; if(mv<12)onMapTap(e); });
+  cv.addEventListener('pointercancel',()=>{ tapDown=null; });
+  document.getElementById('toolAir').addEventListener('click',onToolTap('air'));
+  document.getElementById('toolCo2').addEventListener('click',onToolTap('co2'));
+  document.getElementById('toolPasir').addEventListener('click',onToolTap('pasir'));
+  document.getElementById('btnMute').addEventListener('click',()=>{ initAudio(); setMuted(!AU.muted); });
+  document.getElementById('btnBook').addEventListener('click',()=>{ prevOverlay=mode==='play'?'play':'menu'; openBook(); });
+  document.getElementById('coachSkip').addEventListener('click',endTutorial);
+  document.getElementById('btnPause').addEventListener('click',()=>{ if(mode!=='play')return; paused=!paused;
+    document.getElementById('btnPause').innerHTML=paused?'&#9654;':'&#10074;&#10074;';
+    if(paused) setPanel('Dijeda.','k-info'); });
+  document.getElementById('vTab2D').addEventListener('click',()=>{ initAudio(); SFX.click(); setViewMode('2d'); });
+  document.getElementById('vTab3D').addEventListener('click',()=>{ initAudio(); SFX.click(); setViewMode('3d'); });
+  setMuted(AU.muted);
+  openMenu();
+  requestAnimationFrame(tick);
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+</script>
+</body></html>

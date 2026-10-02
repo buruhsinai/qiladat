@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ekosistem Ilmu — JAZMI Bank Alat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!--
+  STATUS PENGERJAAN (untuk AI / sesi lanjutan — baca ini dulu sebelum mengedit):
+  - Prototipe v1: SELESAI. Dua panel: (1) Peta Desa — simulasi agen bergerak yang
+    meniru siklus tertutup "lulusan hanya bisa mengajar di lingkungan yang sama,
+    kalau tidak dapat slot ya dianggap menganggur tanpa kontribusi lain" (instruksi
+    eksplisit pengguna); (2) Kuis Dasar — soal matematika dasar (dominan perkalian)
+    untuk anak, tiap jawaban benar = 1 Poin Pembangunan, tiap beberapa poin
+    membangun 1 lahan kosong jadi pondok baru & menyerap sebagian lulusan dari
+    Zona Menunggu.
+  - PENTING — PERCABANGAN SENGAJA (baca sebelum menambah fitur baru): pengguna
+    juga melanjutkan proyek ini di sesi LAIN yang berkembang jadi versi jauh
+    lebih kompleks (kontrol kecepatan, Mode Tonton otomatis, jalur pesantren+
+    sekolah paralel, Tipe 2/3 kurikulum, jalur mandiri dgn tingkat kegagalan
+    usaha, grafik riwayat, ekspor CSV, Mode Banding 2 skenario dgn input angka
+    manual — sampai v3.6). File DI UTAS INI SENGAJA TIDAK mengikuti arah itu.
+    Pengguna eksplisit minta versi di utas ini dibuat SANGAT ideal untuk
+    ANAK-ANAK KECIL, dan kompleksitas di atas dinilai kontraproduktif untuk itu
+    (input angka manual, istilah teknis, dashboard padat = bukan untuk anak).
+    Jadi arah revisi v2 di bawah ini adalah PENYEDERHANAAN & KEHANGATAN untuk
+    anak kecil, BUKAN penambahan fitur analitis. Kalau mau menambah fitur baru,
+    tanyakan dulu: "apakah ini bikin pengalaman anak kecil lebih enak, atau
+    cuma menambah kerumitan?" — kalau jawabannya yang kedua, jangan ditambah
+    di file ini (bisa disarankan sebagai fitur di file v3.6 yang terpisah itu).
+  - Revisi v2 (SELESAI) — fokus "kid-ideal":
+      • Maskot elang bertudung helm pemburu (`#mascotFace` + `#mascotBubble`,
+        dikendalikan oleh `setMascot(text)`) berkomentar tiap kejadian: jawaban
+        benar/salah, pondok baru berdiri, saat mulai ada yang menunggu giliran.
+        Digambar sbg SVG kustom (bukan emoji burung), kepala TERTUTUP PENUH
+        oleh tudung/helm pemburu (falconry hood) — tanpa mata/wajah sama
+        sekali. Ini permintaan eksplisit pengguna (muslim puritan, condong ke
+        pendapat menjauhi penggambaran jelas wajah/kepala makhluk hidup).
+        JANGAN kembalikan ke emoji burung apa pun (🦉🦅 dst) atau tambahkan
+        mata/wajah pada SVG-nya kalau melanjutkan revisi ini.
+      • Reward instan: `chimeCorrect()`/`chimeBuild()` (nada lewat Web Audio
+        API, tanpa file eksternal) + `burstConfetti()` (partikel DOM sederhana,
+        dibersihkan otomatis via setTimeout) dipanggil dari `answerQuiz()` dan
+        `tryBuildFromPoints()`.
+      • Indikator fase bulan (`ratioFace()`) di sebelah angka rasio besar —
+        BUKAN wajah tersenyum (permintaan eksplisit: tanpa mata/wajah sama
+        sekali). Bulan makin purnama (🌑→🌒→🌓→🌔→🌕) seiring rasio membaik,
+        supaya anak yang belum lancar baca persen tetap paham baik/kurangnya
+        keadaan tanpa lewat ekspresi wajah.
+      • Pilihan level "🌱 Mudah" / "🌟 Sedang" (`difficulty`, tombol
+        `.diff-btn`) menggantikan rentang soal tetap — memengaruhi rentang
+        angka di `generateQuestion()`. Default MUDAH (bukan sedang) karena
+        target utamanya anak kecil.
+      • Font & tombol jawaban diperbesar, label mono kecil (statistik, lahan
+        kosong) diperbesar & dipindah ke font Quicksand supaya tidak terasa
+        "dashboard teknis".
+      • Bagian "Batasan" lama dipindah jadi <details> "Info untuk Orang Tua &
+        Pendamping" di paling bawah (collapsed by default) — makna kritik
+        sosialnya TETAP ada untuk pendamping dewasa yang penasaran, tapi tidak
+        membebani tampilan utama yang dilihat anak.
+      • Mekanisme inti (agents/institutions/plots/idleQueue, lifecycle
+        belajar→cari-slot→mengajar/menganggur, tryBuildFromPoints) TIDAK
+        diubah sama sekali dari v1 — hanya dibungkus presentasi baru di atas.
+  - Palet warna & font sengaja disamakan dengan Bank Alat lain di brand JAZMI
+    (Fredoka/Quicksand/JetBrains Mono, --bg krem, --accent terracotta) supaya
+    konsisten satu keluarga produk qiladat.com.
+  - Cara lanjutkan: lihat blok <script> — arsitektur agen ada di objek `agents`
+    (state: belajar → cari-slot → mengajar ATAU menganggur), institusi di
+    `institutions`, lahan kosong di `plots`, unemployment queue di `idleQueue`.
+    Fungsi `animate()` adalah loop utama (requestAnimationFrame), `onArrive()`
+    menangani transisi state saat agen sampai tujuan, `tryBuildFromPoints()`
+    mengubah lahan kosong jadi institusi baru begitu poin kuis cukup.
+-->
+<style>
+  :root{
+    --bg:#F5F1E4; --card:#ffffff; --line:#e7dcbd;
+    --ink:#2b2b28; --dim:#847a63;
+    --accent:#E4572E; --accent-soft:#FBE2D6;
+    --yellow:#F2B705; --steel:#35505F;
+    --teach:#2c7a4b; --idle:#9a8f78; --study:#5b7fb5;
+    --display:'Fredoka',sans-serif; --sans:'Quicksand',sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;}
+  .wrap{max-width:560px;margin:0 auto;padding:0 18px 60px;}
+
+  .hero{padding:30px 4px 6px;text-align:center;}
+  .hero h1{font-family:var(--display);font-weight:700;font-size:28px;margin:0 0 8px;color:var(--steel);}
+  .hero p{font-size:14.5px;color:var(--dim);margin:0;max-width:440px;margin-inline:auto;}
+
+  .hero-stat{background:var(--steel);color:#fff;border-radius:18px;padding:20px 16px;text-align:center;margin:20px 0;}
+  .hero-stat-row{display:flex;align-items:center;justify-content:center;gap:12px;}
+  .hero-stat-face{font-size:38px;line-height:1;}
+  .hero-stat-num{font-family:var(--display);font-weight:700;font-size:42px;line-height:1;}
+  .hero-stat-label{font-size:13px;opacity:.9;margin-top:8px;}
+  .hero-stat-sub{font-size:12.5px;font-family:var(--sans);opacity:.75;margin-top:8px;}
+
+  /* maskot */
+  .mascot-row{display:flex;align-items:center;gap:12px;margin:0 0 18px;}
+  .mascot-face{flex:0 0 auto;width:56px;height:56px;border-radius:50%;background:#fff;border:3px solid var(--yellow);display:flex;align-items:center;justify-content:center;font-size:30px;}
+  .mascot-bubble{position:relative;flex:1;background:#fff;border:2px solid var(--line);border-radius:14px;padding:10px 14px;font-size:13.5px;font-weight:600;color:var(--steel);}
+  .mascot-bubble::before{content:'';position:absolute;left:-8px;top:18px;border:8px solid transparent;border-right-color:var(--line);}
+  .mascot-bubble::after{content:'';position:absolute;left:-6px;top:18px;border:7px solid transparent;border-right-color:#fff;}
+
+  .panel{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:16px;margin-bottom:20px;}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+  .panel-head h2{font-family:var(--display);font-weight:600;font-size:18px;margin:0;color:var(--ink);}
+  .panel-controls{display:flex;gap:8px;}
+  .ctrl-btn{font-family:var(--display);font-weight:600;font-size:13.5px;background:var(--accent);color:#fff;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;}
+  .ctrl-btn.ghost{background:none;color:var(--steel);border:2px solid var(--line);}
+  .ctrl-btn:disabled{opacity:.5;cursor:default;}
+
+  svg#mapSvg{width:100%;height:auto;display:block;background:#fbf8ef;border-radius:12px;border:2px dashed var(--line);}
+
+  .legend{display:flex;flex-wrap:wrap;gap:10px 14px;font-size:12.5px;color:var(--dim);margin-top:10px;font-family:var(--sans);font-weight:600;}
+  .legend span{display:inline-flex;align-items:center;gap:5px;}
+  .legend i{width:10px;height:10px;border-radius:50%;display:inline-block;}
+
+  .map-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px;}
+  .map-stat{background:#fbf8ef;border-radius:10px;padding:9px 10px;display:flex;align-items:center;gap:8px;}
+  .map-stat .ic{font-size:20px;}
+  .map-stat b{display:block;font-family:var(--display);font-size:17px;color:var(--steel);}
+  .map-stat span{font-size:11.5px;color:var(--dim);}
+
+  .diff-row{display:flex;gap:10px;margin-bottom:14px;}
+  .diff-btn{flex:1;font-family:var(--display);font-weight:600;font-size:14px;background:#fbf8ef;color:var(--dim);border:2px solid var(--line);padding:10px;border-radius:12px;cursor:pointer;}
+  .diff-btn.active{background:var(--yellow);border-color:var(--yellow);color:#4a3a05;}
+
+  .quiz-intro{font-size:13.5px;color:var(--dim);margin:0 0 12px;}
+  .quiz-question{font-family:var(--display);font-weight:700;font-size:32px;text-align:center;color:var(--ink);background:#fbf8ef;border-radius:14px;padding:20px;margin-bottom:12px;}
+  .quiz-answers{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .quiz-answer-btn{font-family:var(--display);font-weight:600;font-size:20px;background:var(--accent-soft);color:var(--accent);border:2px solid transparent;border-radius:14px;padding:18px;cursor:pointer;}
+  .quiz-answer-btn:hover{border-color:var(--accent);}
+  .quiz-answer-btn:disabled{opacity:.5;cursor:default;}
+  .quiz-answer-btn.correct{background:var(--teach);color:#fff;}
+  .quiz-answer-btn.wrong{background:#c0392b;color:#fff;}
+  .quiz-feedback{min-height:18px;text-align:center;font-size:14px;font-weight:700;margin:10px 0 0;color:var(--steel);}
+
+  .build-progress{margin-top:14px;}
+  .build-bar-outline{background:#fbf8ef;border:1.5px solid var(--line);border-radius:20px;height:16px;overflow:hidden;}
+  .build-bar-fill{background:var(--yellow);height:100%;width:0%;transition:width .3s;}
+  #buildProgressText{font-size:12.5px;color:var(--dim);text-align:center;margin:6px 0 0;font-weight:600;}
+
+  details.parent-info{background:var(--accent-soft);border-radius:14px;padding:6px 16px;font-size:12.5px;color:#7a3821;margin-top:6px;}
+  details.parent-info summary{cursor:pointer;font-family:var(--display);font-weight:600;font-size:13.5px;padding:10px 0;color:#7a3821;list-style:none;}
+  details.parent-info summary::-webkit-details-marker{display:none;}
+  details.parent-info summary::before{content:'🔎 ';}
+  details.parent-info[open] summary{margin-bottom:2px;}
+  .parent-info-body p{margin:0 0 8px;}
+  .parent-info-body p:last-child{margin-bottom:10px;}
+
+  footer.credit{text-align:center;padding-top:18px;color:#b9ad94;font-size:11px;font-family:var(--mono);}
+
+  /* confetti */
+  #confettiLayer{position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden;}
+  .confetti-piece{position:absolute;width:9px;height:9px;border-radius:2px;animation:confettiPop .85s ease-out forwards;}
+  @keyframes confettiPop{
+    0%{transform:translate(0,0) rotate(0deg);opacity:1;}
+    100%{transform:translate(var(--dx),var(--dy)) rotate(360deg);opacity:0;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <h1>🕌 Ekosistem Ilmu</h1>
+    <p>Ayo bantu anak-anak di desa ini belajar dan menemukan tempat mengajar! Setiap soal yang kamu jawab benar bikin desa ini makin ramai dan makin banyak tempat belajar baru. 🏡📚</p>
+  </header>
+
+  <div class="hero-stat">
+    <div class="hero-stat-row">
+      <div class="hero-stat-face" id="ratioFace">🌓</div>
+      <div class="hero-stat-num" id="ratioNum">—</div>
+    </div>
+    <div class="hero-stat-label">Berapa banyak lulusan yang sudah dapat peran mengajar</div>
+    <div class="hero-stat-sub" id="ratioSub">Tekan "Mulai!" di bawah, yuk!</div>
+  </div>
+
+  <div class="mascot-row">
+    <div class="mascot-face" id="mascotFace" aria-label="Maskot elang bertudung">
+      <svg viewBox="0 0 64 64" width="38" height="38" xmlns="http://www.w3.org/2000/svg">
+        <path d="M32 58c-9 0-16-6-16-15 0-9 4-16 8-21l1-2h14l1 2c4 5 8 12 8 21 0 9-7 15-16 15z" fill="#35505F"/>
+        <path d="M19 28c-3 6-5 12-5 16 0 5 2 9 5 12-3-6-4-14-3-20 1-4 2-8 3-8z" fill="#283944" opacity="0.35"/>
+        <path d="M45 28c3 6 5 12 5 16 0 5-2 9-5 12 3-6 4-14 3-20-1-4-2-8-3-8z" fill="#283944" opacity="0.35"/>
+        <path d="M32 58c-5 0-9-3-11-7 3 2 7 3 11 3s8-1 11-3c-2 4-6 7-11 7z" fill="#4a6577"/>
+        <path d="M20 21c0-8 5-15 12-15s12 7 12 15c0 5-2 8-4 10H24c-2-2-4-5-4-10z" fill="#8a5a34"/>
+        <path d="M20 21c0-8 5-15 12-15s12 7 12 15" stroke="#6b4526" stroke-width="1.3" fill="none"/>
+        <path d="M22 14c3-2 6-3 10-3s7 1 10 3" stroke="#6b4526" stroke-width="1" fill="none" opacity="0.6"/>
+        <path d="M21 29h22" stroke="#6b4526" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="24" cy="29" r="1.4" fill="#4a341f"/>
+        <circle cx="40" cy="29" r="1.4" fill="#4a341f"/>
+        <path d="M32 6c-1-3-1-5 0-6M29 7c-2-2-3-4-2-6M35 7c2-2 3-4 2-6" stroke="#F2B705" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    <div class="mascot-bubble" id="mascotBubble">Halo! Aku akan bantu ceritain apa yang terjadi di desa ini. Yuk kita mulai!</div>
+  </div>
+
+  <section class="panel panel-map">
+    <div class="panel-head">
+      <h2>🗺️ Peta Desa</h2>
+      <div class="panel-controls">
+        <button id="startBtn" class="ctrl-btn">▶ Mulai!</button>
+        <button id="resetBtn" class="ctrl-btn ghost">↺ Ulangi</button>
+      </div>
+    </div>
+
+    <svg id="mapSvg" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet">
+      <!-- jalan -->
+      <line x1="10" y1="58" x2="590" y2="58" stroke="#d8cba0" stroke-width="4" stroke-linecap="round"/>
+      <!-- rumah (dekoratif, statis) -->
+      <g id="housesGroup" fill="#847a63"></g>
+
+      <!-- zona lahan & institusi (statis posisinya, isi dinamis) -->
+      <g id="plotsGroup"></g>
+      <g id="institutionsGroup"></g>
+
+      <!-- zona menunggu (lulusan menganggur) -->
+      <rect x="20" y="332" width="560" height="56" rx="10" fill="#efe8d3" stroke="var(--line)"/>
+      <text x="30" y="326" font-family="Quicksand" font-weight="700" font-size="11.5" fill="#847a63">⏳ YANG MASIH MENUNGGU GILIRAN MENGAJAR</text>
+      <g id="idleGroup"></g>
+
+      <!-- agen bergerak -->
+      <g id="agentsGroup"></g>
+    </svg>
+
+    <div class="legend">
+      <span><i style="background:#5b7fb5"></i>📘 Lagi belajar</span>
+      <span><i style="background:#F2B705"></i>🎓 Baru lulus, cari tempat</span>
+      <span><i style="background:#2c7a4b"></i>🌟 Berhasil mengajar</span>
+      <span><i style="background:#9a8f78"></i>⏳ Masih menunggu</span>
+    </div>
+
+    <div class="map-stats">
+      <div class="map-stat"><span class="ic">📅</span><div><b id="statYear">0</b><span>Tahun berjalan</span></div></div>
+      <div class="map-stat"><span class="ic">🌟</span><div><b id="statTeach">0</b><span>Lulusan mengajar</span></div></div>
+      <div class="map-stat"><span class="ic">⏳</span><div><b id="statIdle">0</b><span>Masih menunggu</span></div></div>
+      <div class="map-stat"><span class="ic">🌱</span><div><b id="statPlots">4</b><span>Lahan kosong tersisa</span></div></div>
+    </div>
+  </section>
+
+  <section class="panel panel-quiz">
+    <div class="panel-head"><h2>🧮 Ayo Berhitung!</h2></div>
+    <p class="quiz-intro">Jawab soalnya, bantu desa ini makin ramai belajar! Tiap benar = 1 Poin Pembangunan. ✨</p>
+
+    <div class="diff-row">
+      <button class="diff-btn active" id="diffMudah" data-diff="mudah">🌱 Mudah</button>
+      <button class="diff-btn" id="diffSedang" data-diff="sedang">🌟 Sedang</button>
+    </div>
+
+    <div class="quiz-question" id="quizQ">—</div>
+    <div class="quiz-answers" id="quizAnswers"></div>
+    <p class="quiz-feedback" id="quizFeedback">&nbsp;</p>
+    <div class="build-progress">
+      <div class="build-bar-outline"><div class="build-bar-fill" id="buildBarFill"></div></div>
+      <p id="buildProgressText">Poin pembangunan: 0/4</p>
+    </div>
+  </section>
+
+  <details class="parent-info">
+    <summary>Info untuk Orang Tua &amp; Pendamping</summary>
+    <div class="parent-info-body">
+      <p>Peta ini model ilustratif sangat disederhanakan tentang satu dinamika sosial: lulusan pendidikan agama yang hanya bisa berperan sebagai pengajar di lingkungan sejenis. Kalau tempat mengajarnya penuh, lulusan itu digambarkan "menunggu" — bukan data riil, tapi cara memvisualisasikan bagaimana pertumbuhan lulusan bisa lebih cepat daripada pertumbuhan tempat mengajar.</p>
+      <p>Setiap soal berhitung yang dijawab anak Anda menyumbang "Poin Pembangunan" yang membangun tempat belajar baru di peta — analoginya: kemampuan berhitung/ilmu dunia ikut membantu masyarakat membangun kapasitas baru, bukan sesuatu yang terpisah dari ilmu agama.</p>
+      <p>Terinspirasi dari alat <em>Siklus Pendidikan Pondok Pesantren</em> (konsep rasio penyerapan lulusan) dan gaya interaksi <em>Laboratorium Algoritma Alam</em>, keduanya di qiladat.com. Versi ini sengaja dibuat sesederhana mungkin — level "Sedang" pun masih dasar — karena ditujukan untuk anak kecil, bukan untuk analisis mendalam.</p>
+    </div>
+  </details>
+
+  <footer class="credit">JAZMI Bank Alat · Prototipe v2 (versi anak-anak)</footer>
+</div>
+
+<div id="confettiLayer"></div>
+
+<script>
+/* ================= HELPER ================= */
+function lerp(a,b,t){ return a+(b-a)*t; }
+function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function dist(x1,y1,x2,y2){ return Math.hypot(x2-x1,y2-y1); }
+const SVGNS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs){
+  const el = document.createElementNS(SVGNS, tag);
+  for(const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+/* ================= MASKOT ================= */
+function setMascot(text){
+  document.getElementById('mascotBubble').textContent = text;
+}
+const MASCOT_CORRECT = ['Pintar sekali! 🎉','Betul! Hebat kamu!','Yeay, tepat sekali!','Mantap, lanjutkan!'];
+const MASCOT_WRONG = ['Hampir! Coba lagi ya.','Yuk dicoba sekali lagi!','Sedikit lagi benar, semangat!'];
+
+/* ================= SUARA (Web Audio, tanpa file eksternal) ================= */
+function playTone(freq, dur, delay){
+  dur = dur || 0.15; delay = delay || 0;
+  try{
+    const ctx = playTone._ctx || (playTone._ctx = new (window.AudioContext||window.webkitAudioContext)());
+    const t0 = ctx.currentTime + delay;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine'; osc.frequency.setValueAtTime(freq, t0);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(0.22, t0+0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t0); osc.stop(t0+dur+0.02);
+  }catch(e){ /* audio tak tersedia di browser ini, abaikan diam-diam */ }
+}
+function chimeCorrect(){ playTone(660,0.12,0); playTone(880,0.16,0.09); }
+function chimeBuild(){ playTone(523,0.14,0); playTone(659,0.14,0.11); playTone(784,0.24,0.22); }
+
+/* ================= CONFETTI ================= */
+function burstConfetti(count){
+  count = count || 16;
+  const layer = document.getElementById('confettiLayer');
+  const colors = ['#E4572E','#F2B705','#2c7a4b','#5b7fb5','#9a8f78'];
+  const cx = window.innerWidth/2, cy = window.innerHeight*0.32;
+  for(let i=0;i<count;i++){
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    const angle = Math.random()*Math.PI*2;
+    const d = 40+Math.random()*90;
+    el.style.setProperty('--dx', (Math.cos(angle)*d)+'px');
+    el.style.setProperty('--dy', (Math.sin(angle)*d-30)+'px');
+    el.style.left = cx+'px'; el.style.top = cy+'px';
+    el.style.background = colors[i%colors.length];
+    layer.appendChild(el);
+    setTimeout(()=>el.remove(), 900);
+  }
+}
+
+/* ================= DATA STATIS PETA ================= */
+const HOUSES = [40,100,160,220,280,320,380,440,500,560].map(x=>({x, y:40}));
+
+const SLOTS = [
+  {x:110,y:150},{x:300,y:150},{x:490,y:150},
+  {x:110,y:260},{x:300,y:260},{x:490,y:260}
+];
+// slot 0 & 4 mulai sebagai institusi terisi sebagian; sisanya lahan kosong
+const INIT_INSTITUTION_SLOTS = [0,4];
+const CAPACITY_PER_INSTITUTION = 3;
+const PREFILLED_PER_INSTITUTION = 2;
+
+const IDLE_ZONE = {x:30, y:340, cols:22, cellW:24, cellH:22, rows:2};
+
+/* ================= STATE SIMULASI ================= */
+let institutions = [];   // {id,x,y,capacity,filled,el,barFillEl}
+let plots = [];          // {id,x,y,slotIndex,el}
+let agents = [];         // agen bergerak
+let idleQueue = [];      // id agen yang sedang menganggur, urutan FIFO utk diserap duluan
+let year = 0;
+let teacherCount = 0;
+let idleCount = 0;
+let buildPoints = 0;
+const BUILD_THRESHOLD = 4;
+let running = false;
+let lastTs = 0;
+let spawnTimer = 0;
+const SPAWN_INTERVAL = 6000;
+const STUDY_MS = 3500;
+const AGENT_SPEED = 55; // px/detik
+const MAX_AGENTS = 70;
+let hadIdleBefore = false; // buat trigger komentar maskot sekali saja saat pertama kali ada yg menunggu
+
+let idCounter = 1;
+function nextId(){ return idCounter++; }
+
+/* ================= RENDER STATIS ================= */
+function renderHouses(){
+  const g = document.getElementById('housesGroup');
+  g.innerHTML = HOUSES.map(h => `
+    <g transform="translate(${h.x} ${h.y})">
+      <path d="M-9,4 L0,-8 L9,4 Z" fill="#c98b4a"/>
+      <rect x="-7" y="4" width="14" height="10" fill="#847a63"/>
+    </g>`).join('');
+}
+
+function institutionSVG(inst){
+  const pct = inst.filled/inst.capacity;
+  return `
+    <g id="inst-${inst.id}" transform="translate(${inst.x} ${inst.y})">
+      <rect x="-26" y="-6" width="52" height="30" rx="5" fill="var(--accent)"/>
+      <path d="M-14,-6 Q0,-24 14,-6 Z" fill="var(--yellow)"/>
+      <circle cx="0" cy="-22" r="4" fill="var(--yellow)"/>
+      <rect x="-8" y="4" width="16" height="14" rx="2" fill="#fff8ec"/>
+      <rect x="-24" y="26" width="48" height="7" rx="3.5" fill="#efe8d3" stroke="#e7dcbd"/>
+      <rect id="inst-${inst.id}-bar" x="-24" y="26" width="${48*pct}" height="7" rx="3.5" fill="var(--teach)"/>
+      <text x="0" y="45" text-anchor="middle" font-family="Quicksand" font-weight="700" font-size="10.5" fill="#5b5340">${inst.filled}/${inst.capacity}</text>
+    </g>`;
+}
+
+function plotSVG(p){
+  return `
+    <g id="plot-${p.id}">
+      <rect x="${p.x-24}" y="${p.y-14}" width="48" height="34" rx="8" fill="none" stroke="#c9bd9c" stroke-width="2" stroke-dasharray="5 4"/>
+      <text x="${p.x}" y="${p.y+2}" text-anchor="middle" font-size="14">🌱</text>
+      <text x="${p.x}" y="${p.y+15}" text-anchor="middle" font-family="Quicksand" font-weight="700" font-size="8.5" fill="#a99a72">lahan kosong</text>
+    </g>`;
+}
+
+function agentSVG(a){
+  return `<circle id="agent-${a.id}" cx="${a.x}" cy="${a.y}" r="5" fill="${stateColor(a.state)}" stroke="#fff" stroke-width="1.2"/>`;
+}
+
+function stateColor(state){
+  if(state==='belajar') return '#5b7fb5';
+  if(state==='cari-slot' || state==='menuju-mengajar') return '#F2B705';
+  if(state==='mengajar') return '#2c7a4b';
+  if(state==='menganggur') return '#9a8f78';
+  return '#847a63';
+}
+
+/* ================= SETUP / RESET ================= */
+function setupWorld(){
+  institutions = [];
+  plots = [];
+  agents = [];
+  idleQueue = [];
+  year = 0; teacherCount = 0; idleCount = 0; buildPoints = 0;
+  spawnTimer = 0;
+  hadIdleBefore = false;
+
+  SLOTS.forEach((s, i) => {
+    if(INIT_INSTITUTION_SLOTS.includes(i)){
+      const inst = {id:nextId(), x:s.x, y:s.y, capacity:CAPACITY_PER_INSTITUTION, filled:PREFILLED_PER_INSTITUTION};
+      institutions.push(inst);
+      teacherCount += inst.filled;
+    } else {
+      plots.push({id:nextId(), x:s.x, y:s.y});
+    }
+  });
+
+  renderHouses();
+  renderInstitutions();
+  renderPlots();
+  document.getElementById('agentsGroup').innerHTML = '';
+  document.getElementById('idleGroup').innerHTML = '';
+  updateStatsUI();
+  updateBuildUI();
+}
+
+function renderInstitutions(){
+  document.getElementById('institutionsGroup').innerHTML = institutions.map(institutionSVG).join('');
+}
+function renderPlots(){
+  document.getElementById('plotsGroup').innerHTML = plots.map(plotSVG).join('');
+}
+
+/* ================= IDLE ZONE LAYOUT ================= */
+function idleSlotPosition(indexInQueue){
+  const col = indexInQueue % IDLE_ZONE.cols;
+  const row = Math.floor(indexInQueue / IDLE_ZONE.cols) % IDLE_ZONE.rows;
+  return { x: IDLE_ZONE.x + 10 + col*IDLE_ZONE.cellW, y: IDLE_ZONE.y + 14 + row*IDLE_ZONE.cellH };
+}
+function relayoutIdleQueue(){
+  idleQueue.forEach((id, idx) => {
+    const a = agents.find(ag => ag.id === id);
+    if(!a) return;
+    const pos = idleSlotPosition(idx);
+    a.tx = pos.x; a.ty = pos.y;
+    a.settled = false; // biarkan animasi menggeser ke slot barunya
+  });
+}
+
+/* ================= SPAWN & LIFECYCLE AGEN ================= */
+function spawnSantri(){
+  if(agents.length >= MAX_AGENTS) return;
+  if(institutions.length === 0) return;
+  const house = pick(HOUSES);
+  const studyTarget = pick(institutions);
+  const a = {
+    id: nextId(), x: house.x, y: house.y+8, tx: studyTarget.x, ty: studyTarget.y+18,
+    state: 'belajar', settled:false, studyInstId: studyTarget.id
+  };
+  agents.push(a);
+  const g = document.getElementById('agentsGroup');
+  g.insertAdjacentHTML('beforeend', agentSVG(a));
+}
+
+function onArrive(a){
+  if(a.state === 'belajar'){
+    a.settled = true;
+    setTimeout(() => { if(running) seekSlot(a); }, STUDY_MS);
+  } else if(a.state === 'menuju-mengajar'){
+    a.settled = true;
+    a.state = 'mengajar';
+    document.getElementById(`agent-${a.id}`).setAttribute('fill', stateColor('mengajar'));
+    updateStatsUI();
+  } else if(a.state === 'menuju-menganggur'){
+    a.settled = true;
+    a.state = 'menganggur';
+    document.getElementById(`agent-${a.id}`).setAttribute('fill', stateColor('menganggur'));
+    updateStatsUI();
+  }
+}
+
+function seekSlot(a){
+  const openInst = institutions.find(inst => inst.filled < inst.capacity);
+  if(openInst){
+    openInst.filled++;
+    updateInstitutionBar(openInst);
+    a.state = 'menuju-mengajar';
+    a.settled = false;
+    a.tx = openInst.x; a.ty = openInst.y + 18;
+  } else {
+    a.state = 'menuju-menganggur';
+    a.settled = false;
+    idleQueue.push(a.id);
+    idleCount++;
+    const pos = idleSlotPosition(idleQueue.length-1);
+    a.tx = pos.x; a.ty = pos.y;
+    if(!hadIdleBefore){
+      hadIdleBefore = true;
+      setMascot('Wah, ada yang masih menunggu giliran mengajar. Yuk jawab soal buat bantu mereka! 💪');
+    }
+    updateStatsUI();
+  }
+}
+
+function updateInstitutionBar(inst){
+  const bar = document.getElementById(`inst-${inst.id}-bar`);
+  if(bar) bar.setAttribute('width', 48*(inst.filled/inst.capacity));
+  const txt = document.querySelector(`#inst-${inst.id} text`);
+  if(txt) txt.textContent = `${inst.filled}/${inst.capacity}`;
+}
+
+/* ================= PEMBANGUNAN DARI POIN KUIS ================= */
+function tryBuildFromPoints(){
+  let builtCount = 0;
+  while(buildPoints >= BUILD_THRESHOLD && plots.length > 0){
+    buildPoints -= BUILD_THRESHOLD;
+    builtCount++;
+    const plot = plots.shift();
+    const inst = {id: nextId(), x: plot.x, y: plot.y, capacity: CAPACITY_PER_INSTITUTION, filled: 0};
+    institutions.push(inst);
+    renderPlots();
+    renderInstitutions();
+
+    // serap lulusan dari idleQueue sebanyak kapasitas baru
+    let seats = inst.capacity;
+    while(seats > 0 && idleQueue.length > 0){
+      const id = idleQueue.shift();
+      const a = agents.find(ag => ag.id === id);
+      if(a){
+        inst.filled++;
+        idleCount = Math.max(0, idleCount-1);
+        a.state = 'menuju-mengajar';
+        a.settled = false;
+        a.tx = inst.x; a.ty = inst.y + 18;
+      }
+      seats--;
+    }
+    updateInstitutionBar(inst);
+    relayoutIdleQueue();
+  }
+  if(builtCount > 0){
+    setMascot('Horeee! Ada tempat belajar baru berdiri di desa! 🏗️✨');
+    chimeBuild();
+    burstConfetti(28);
+  }
+  updateBuildUI();
+  updateStatsUI();
+}
+
+/* ================= LOOP ANIMASI ================= */
+function animate(ts){
+  if(!running) return;
+  if(!lastTs) lastTs = ts;
+  const dt = Math.min(0.05, (ts-lastTs)/1000);
+  lastTs = ts;
+
+  spawnTimer += dt*1000;
+  if(spawnTimer >= SPAWN_INTERVAL){
+    spawnTimer = 0;
+    year++;
+    document.getElementById('statYear').textContent = year;
+    spawnSantri();
+  }
+
+  agents.forEach(a => {
+    if(a.settled) return;
+    const d = dist(a.x,a.y,a.tx,a.ty);
+    if(d < 1.5){
+      a.x = a.tx; a.y = a.ty;
+      onArrive(a);
+    } else {
+      const step = AGENT_SPEED*dt;
+      a.x += (a.tx-a.x)/d*step;
+      a.y += (a.ty-a.y)/d*step;
+    }
+    const el = document.getElementById(`agent-${a.id}`);
+    if(el){ el.setAttribute('cx', a.x); el.setAttribute('cy', a.y); }
+  });
+
+  requestAnimationFrame(animate);
+}
+
+/* ================= UI STATS ================= */
+function ratioFace(pct){
+  if(pct>=80) return '🌕';
+  if(pct>=60) return '🌔';
+  if(pct>=40) return '🌓';
+  if(pct>=20) return '🌒';
+  return '🌑';
+}
+
+function updateStatsUI(){
+  // dihitung langsung dari agen + guru awal yang sudah prefilled, supaya selalu akurat
+  const teach = agents.filter(a=>a.state==='mengajar').length + PREFILLED_PER_INSTITUTION*INIT_INSTITUTION_SLOTS.length;
+  const idle = agents.filter(a=>a.state==='menganggur').length;
+  document.getElementById('statTeach').textContent = teach;
+  document.getElementById('statIdle').textContent = idle;
+  document.getElementById('statPlots').textContent = plots.length;
+
+  const total = teach + idle;
+  const pct = total > 0 ? Math.round((teach/total)*100) : 100;
+  document.getElementById('ratioNum').textContent = pct + '%';
+  document.getElementById('ratioFace').textContent = ratioFace(pct);
+  document.getElementById('ratioSub').textContent = `${teach} sudah mengajar · ${idle} masih menunggu dari ${total} lulusan`;
+}
+
+function updateBuildUI(){
+  const pct = Math.min(100, Math.round((buildPoints/BUILD_THRESHOLD)*100));
+  document.getElementById('buildBarFill').style.width = pct + '%';
+  document.getElementById('buildProgressText').textContent =
+    plots.length > 0
+      ? `Poin pembangunan: ${buildPoints}/${BUILD_THRESHOLD}`
+      : `Semua lahan sudah terbangun (${institutions.length} pondok aktif)`;
+}
+
+/* ================= KUIS ================= */
+let currentAnswer = null;
+let difficulty = 'mudah';
+
+document.getElementById('diffMudah').addEventListener('click', () => setDifficulty('mudah'));
+document.getElementById('diffSedang').addEventListener('click', () => setDifficulty('sedang'));
+function setDifficulty(d){
+  difficulty = d;
+  document.getElementById('diffMudah').classList.toggle('active', d==='mudah');
+  document.getElementById('diffSedang').classList.toggle('active', d==='sedang');
+  generateQuestion();
+}
+
+function generateQuestion(){
+  const roll = Math.random();
+  const easy = difficulty === 'mudah';
+  let a,b,answer,text;
+  if(roll < 0.6){ // dominan perkalian
+    a = randInt(1, easy?5:10); b = randInt(1, easy?5:10); answer = a*b; text = `${a} × ${b}`;
+  } else if(roll < 0.8){
+    a = randInt(1, easy?10:20); b = randInt(1, easy?10:20); answer = a+b; text = `${a} + ${b}`;
+  } else {
+    a = randInt(easy?3:5, easy?10:20); b = randInt(1,a); answer = a-b; text = `${a} − ${b}`;
+  }
+  currentAnswer = answer;
+  document.getElementById('quizQ').textContent = text + ' = ?';
+
+  const options = new Set([answer]);
+  while(options.size < 4){
+    const delta = randInt(-5,5);
+    const candidate = answer + delta + (delta===0?1:0);
+    if(candidate >= 0) options.add(candidate);
+  }
+  const optionsArr = Array.from(options).sort(()=>Math.random()-0.5);
+  const box = document.getElementById('quizAnswers');
+  box.innerHTML = '';
+  optionsArr.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'quiz-answer-btn';
+    btn.textContent = opt;
+    btn.onclick = () => answerQuiz(opt, btn);
+    box.appendChild(btn);
+  });
+  document.getElementById('quizFeedback').innerHTML = '&nbsp;';
+}
+
+function answerQuiz(opt, btn){
+  const buttons = document.querySelectorAll('.quiz-answer-btn');
+  buttons.forEach(b => b.disabled = true);
+  const feedback = document.getElementById('quizFeedback');
+  if(opt === currentAnswer){
+    btn.classList.add('correct');
+    feedback.textContent = 'Benar! +1 Poin Pembangunan 🎉';
+    feedback.style.color = 'var(--teach)';
+    setMascot(pick(MASCOT_CORRECT));
+    chimeCorrect();
+    burstConfetti(10);
+    buildPoints++;
+    if(running) tryBuildFromPoints(); else updateBuildUI();
+  } else {
+    btn.classList.add('wrong');
+    buttons.forEach(b => { if(Number(b.textContent) === currentAnswer) b.classList.add('correct'); });
+    feedback.textContent = `Belum tepat — jawabannya ${currentAnswer}.`;
+    feedback.style.color = '#c0392b';
+    setMascot(pick(MASCOT_WRONG));
+  }
+  setTimeout(generateQuestion, 1100);
+}
+
+/* ================= KONTROL START / RESET ================= */
+document.getElementById('startBtn').addEventListener('click', () => {
+  if(running) return;
+  running = true;
+  lastTs = 0;
+  document.getElementById('startBtn').disabled = true;
+  document.getElementById('ratioSub').textContent = 'Simulasi berjalan...';
+  setMascot('Simulasi jalan! Ayo terus jawab soal supaya desanya makin ramai. 🚶');
+  requestAnimationFrame(animate);
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  running = false;
+  document.getElementById('startBtn').disabled = false;
+  document.getElementById('ratioSub').textContent = 'Tekan "Mulai!" di bawah, yuk!';
+  setMascot('Yuk kita mulai ulang dari awal! 🔄');
+  setupWorld();
+  generateQuestion();
+});
+
+/* ================= INIT ================= */
+setupWorld();
+generateQuestion();
+</script>
+</body>
+</html>

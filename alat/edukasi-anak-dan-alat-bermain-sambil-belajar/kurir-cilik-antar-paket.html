@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Kurir Cilik — Ayo Antar Paket! | JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<!--
+  STATUS PENGERJAAN (baca sebelum mengedit):
+  Ini VERSI ANAK dari kurir-kota-algoritma-semut.html (versi analitis/dewasa dengan 4 mode & panel uji).
+  Mesin jalan-raya (gridCoord/roadDistanceValue/roadDistanceWaypoints, ACO ringkas) DIPINJAM konsepnya dari
+  file itu tapi ditulis ulang lebih sederhana & khusus untuk grid kecil (6x5) di sini — supaya file ini
+  berdiri sendiri (tidak saling mengimpor).
+  PERBEDAAN SENGAJA DARI VERSI DEWASA (semua demi anak usia dini, sesuai permintaan pengguna):
+  - EMPAT mode, dengan nama yang terasa seperti kepribadian bukan istilah teknis:
+    "🐜 Semut Pintar" (ACO ringkas), "🔎 Cari Terdekat" (greedy nearest-neighbor — pembanding
+    paling gampang dijelaskan: "rumah mana yang PALING DEKAT? Ke situ dulu."), "🌀 Acak Bingung"
+    (random), dan "🧭 Kamu Pilih Jalan" (bukan otomatis — anak sendiri yang ketuk salah satu dari
+    dua jalur berkelap-kelip di tiap persimpangan). Tiga mode pertama otomatis (anak cuma ketuk
+    rumah); skor petak-jalan tiap mode yang sudah dicoba di sesi ini disimpan supaya di layar akhir
+    anak bisa lihat perbandingan SEMUA cara yang sudah dicoba sekaligus, bukan cuma dua.
+    Param ACO tetap disembunyikan, tak ada slider apa pun. Tak ada Algoritma Genetika di sini —
+    kontras beberapa cara sederhana lebih mudah dicerna anak kecil daripada param Yunani (α β ρ)
+    di versi dewasa.
+  - Saat animasi jalan, ada "badge" ikon+nama algoritma yang aktif di pojok kiri-atas peta
+    (fungsi showAlgoBadge/hideAlgoBadge) supaya anak selalu sadar "sekarang giliran cara yang
+    mana". Semua ikon badge SILUET HITAM PEKAT tanpa detail wajah/kepala (semutnya juga dipakai
+    ulang persis dari ikon kartu mode, tanpa mata/muka sama sekali), konsisten dengan aturan
+    "tanpa wajah" yang berlaku di seluruh file ini.
+  - FITUR UTAMA yang diminta pengguna: begitu kurir SAMPAI di sebuah rumah, animasi BERHENTI dan memunculkan
+    "Panel Rumah" — anak MENGETUK pintu (aksi aktif, bukan cuma nonton), pintu bergetar, paket meletup keluar
+    dengan ISI ACAK (bukan selalu sama — supaya ada rasa penasaran/kejutan tiap pengiriman, meniru antusiasme
+    anak pengguna saat paket datang di dunia nyata), disusul confetti + karakter melambai + bunyi bel (Web Audio,
+    tanpa file suara eksternal, dibunyikan HANYA setelah ketukan/tap pengguna supaya tidak kena blokir autoplay
+    browser).
+  - Rumah TAMPIL BEDA-BEDA per nomor via seededStyle(nomor) — fungsi pseudo-acak deterministik dari nomor rumah
+    (bukan Math.random, supaya rumah #7 SELALU warna/aksesori yang sama tiap dilihat dalam sesi yang sama,
+    memberi rasa "identitas" tiap rumah) — dipakai baik untuk ikon kecil di peta maupun kartu besar di panel.
+  - Metrik yang ditunjukkan ke anak BUKAN meter/detik (terlalu abstrak) tapi "petak jalan" — hitungan langkah
+    grid utuh (|Δkolom|+|Δbaris|), supaya bisa dihitung dengan jari & dibandingkan sebagai angka bulat kecil.
+    Skor sesi sebelumnya (mode lain) disimpan di variabel JS biasa (bukan localStorage) supaya di akhir ronde
+    kedua bisa muncul perbandingan "tadi Bingung: 42 petak, sekarang Semut Pintar: 19 petak" — murni sesi
+    berjalan, hilang kalau halaman di-refresh (sengaja, sama seperti riwayat di versi dewasa).
+  - TIDAK ADA tombol "Uji Adil"/bar-chart — perbandingan dibuat implisit lewat pengalaman bermain dua kali,
+    bukan tabel angka, karena itu yang cocok untuk anak (belajar lewat rasakan-sendiri, bukan baca laporan).
+  - Sasaran edukasi yang disengaja (ditulis juga di panel "Untuk Orang Tua" di footer): berpikir berurutan
+    (urutan mana dulu), berhitung & membandingkan jumlah (paket & petak jalan), intuisi paling awal tentang
+    "rencana yang lebih pintar = usaha lebih sedikit", dan pengenalan lembut kata "algoritma" (resep langkah
+    demi langkah) lewat kata-kata semut, bukan definisi formal.
+  v2 SUDAH ADA: mode "🧭 Kamu Pilih Jalan" (anak memilih sendiri jalur lewat ketuk-jalur-berkelap-
+  kelip di persimpangan) dan mode "🔎 Cari Terdekat" (greedy) sebagai pembanding tambahan untuk
+  Semut Pintar — keduanya ditambahkan atas permintaan pengguna setelah v1.
+-->
+<style>
+  :root{
+    --sky1:#bfe4ff; --sky2:#eaf7ff; --panel:#fffdf7; --panel-line:#ffe1ae;
+    --ink:#3a2f28; --dim:#8a7c6f;
+    --sun:#ffd166; --grass:#d9f2c4; --road:#cfd8dc;
+    --pink:#ff6f91; --purple:#8d6fff; --green:#3fb95f; --blue:#3d8bfd; --orange:#ff9f45;
+    --display:'Fredoka',sans-serif; --sans:'Quicksand',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;min-height:100vh;background:linear-gradient(180deg,var(--sky1),var(--sky2) 55%,#f3fbe9);color:var(--ink);font-family:var(--sans);}
+  .wrap{max-width:760px;margin:0 auto;padding:0 0 40px;position:relative;}
+
+  .hero{padding:18px 58px 12px 20px;text-align:center;position:relative;}
+  .hero h1{font-family:var(--display);font-weight:700;font-size:clamp(18px,4.6vw,24px);margin:0 0 6px;color:var(--pink);text-shadow:1px 1px 0 #fff;line-height:1.28;letter-spacing:.2px;}
+  .hero p{color:#6b5a48;font-size:12.5px;margin:0 auto;max-width:480px;font-weight:600;line-height:1.45;}
+  .hero::after{content:'';display:block;width:56px;height:4px;background:var(--panel-line);border-radius:999px;margin:12px auto 0;}
+  .mute-btn{position:absolute;top:16px;right:16px;background:#fff;border:2px solid var(--panel-line);border-radius:999px;width:38px;height:38px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 0 var(--panel-line);}
+  .mute-btn:active{transform:translateY(2px);box-shadow:none;}
+
+  .stepper-row{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0 2px;}
+  .stepper-row span{font-family:var(--display);font-weight:600;font-size:13px;color:var(--ink);}
+  .stepper-btn{width:34px;height:34px;border-radius:50%;border:none;background:var(--purple);color:#fff;font-size:18px;font-weight:700;cursor:pointer;}
+  .stepper-val{font-family:var(--display);font-size:20px;min-width:28px;text-align:center;color:var(--pink);}
+
+  .mode-panel{display:flex;gap:10px;justify-content:center;margin:12px 12px 0;flex-wrap:wrap;}
+  .mode-card{flex:1 1 160px;max-width:220px;background:#fff;border:3px solid var(--panel-line);border-radius:20px;
+    padding:14px 10px;text-align:center;cursor:pointer;transition:transform .15s;}
+  .mode-card:active{transform:scale(.96);}
+  .mode-card.selected{border-color:var(--pink);background:#fff0f5;}
+  .mode-card .icon{font-size:34px;display:block;}
+  .mode-card .icon svg{display:block;margin:0 auto;}
+  .mode-card b{font-family:var(--display);font-size:14px;display:block;margin:4px 0 2px;}
+  .mode-card small{font-size:10.5px;color:var(--dim);}
+
+  .algo-badge{position:absolute;top:10px;left:10px;background:#fff;border:2px solid var(--panel-line);
+    border-radius:999px;padding:5px 12px 5px 7px;display:none;align-items:center;gap:6px;
+    font-family:var(--display);font-weight:600;font-size:12px;color:var(--ink);
+    box-shadow:0 3px 0 var(--panel-line);z-index:5;}
+  .algo-badge.show{display:flex;}
+  .algo-badge span{display:block;width:22px;height:22px;}
+  .algo-badge span svg{display:block;width:100%;height:100%;}
+
+  .big-btn{display:block;margin:14px auto 0;font-family:var(--display);font-weight:700;font-size:16px;color:#fff;
+    background:linear-gradient(180deg,var(--pink),#e0507a);border:none;border-radius:999px;padding:13px 34px;
+    cursor:pointer;box-shadow:0 5px 0 #c23f63;}
+  .big-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #c23f63;}
+  .big-btn.blue{background:linear-gradient(180deg,var(--blue),#2b6fd8);box-shadow:0 5px 0 #1f52a3;}
+  .big-btn.blue:active{box-shadow:0 2px 0 #1f52a3;}
+  .big-btn.green{background:linear-gradient(180deg,var(--green),#2c9448);box-shadow:0 5px 0 #1f6e34;}
+  .big-btn.green:active{box-shadow:0 2px 0 #1f6e34;}
+  .big-btn.purple{background:linear-gradient(180deg,var(--purple),#6a4fd8);box-shadow:0 5px 0 #4e3aa8;}
+  .big-btn.purple:active{box-shadow:0 2px 0 #4e3aa8;}
+  .big-btn:disabled{opacity:.4;box-shadow:none;}
+
+  .race-toggle{display:block;margin:12px auto 0;background:none;border:none;color:var(--purple);
+    font-family:var(--display);font-weight:600;font-size:12.5px;text-decoration:underline;cursor:pointer;}
+  .race-setup{display:none;margin:12px 14px 0;background:#fff;border:3px dashed var(--purple);border-radius:18px;padding:14px;text-align:center;}
+  .race-setup.show{display:block;}
+  .race-setup-row{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+  .race-pick{display:flex;flex-direction:column;gap:4px;}
+  .race-pick label{font-family:var(--display);font-size:11px;color:var(--dim);}
+  .race-pick select{font-family:var(--sans);font-weight:700;font-size:13px;padding:8px 10px;border-radius:12px;
+    border:2px solid var(--panel-line);background:#fff;color:var(--ink);}
+  .race-vs{font-family:var(--display);font-weight:700;color:var(--purple);font-size:14px;}
+
+  .race-view{display:none;margin:14px 12px 0;}
+  .race-view.show{display:block;}
+  .race-banner{text-align:center;font-family:var(--display);font-weight:700;font-size:14px;color:var(--pink);
+    min-height:20px;margin-bottom:8px;}
+  .race-lanes{display:flex;gap:10px;flex-wrap:wrap;}
+  .race-lane{flex:1 1 260px;min-width:0;position:relative;background:var(--grass);border-radius:18px;
+    overflow:hidden;border:4px solid #fff;box-shadow:0 5px 14px #0002;}
+  .race-lane canvas{display:block;width:100%;height:auto;aspect-ratio:880/620;}
+  .lane-label{position:absolute;top:8px;left:8px;background:#fff;border:2px solid var(--panel-line);
+    border-radius:999px;padding:4px 10px 4px 6px;display:flex;align-items:center;gap:5px;
+    font-family:var(--display);font-weight:600;font-size:11px;color:var(--ink);z-index:5;}
+  .lane-label span{display:block;width:18px;height:18px;}
+  .lane-label span svg{display:block;width:100%;height:100%;}
+  .lane-petak{text-align:center;font-family:var(--display);font-weight:600;font-size:13px;color:var(--dim);
+    padding:6px 0;background:#fff;}
+  .race-btn-row{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap;}
+  .race-btn-row .big-btn{margin:0;}
+
+  .stage-wrap{position:relative;margin:16px 12px 0;border-radius:22px;overflow:hidden;border:4px solid #fff;
+    box-shadow:0 6px 18px #0002;aspect-ratio:880/620;background:var(--grass);}
+  canvas{display:block;width:100%;height:100%;}
+
+  .status{margin:12px 14px 0;text-align:center;font-family:var(--display);font-weight:600;font-size:14.5px;color:var(--ink);min-height:20px;}
+
+  .stop-fab{position:fixed;top:14px;right:14px;z-index:60;background:#fff;border:2px solid var(--panel-line);
+    border-radius:999px;padding:8px 14px;font-family:var(--display);font-weight:700;font-size:12.5px;
+    color:#c23f63;cursor:pointer;box-shadow:0 3px 0 var(--panel-line);display:none;}
+  .stop-fab.show{display:block;}
+  .stop-fab:active{transform:translateY(2px);box-shadow:none;}
+  .counter-row{display:flex;justify-content:center;gap:16px;margin-top:8px;font-family:var(--display);font-size:13px;color:var(--dim);}
+  .counter-row b{color:var(--pink);font-size:15px;}
+
+  /* Overlay panel rumah */
+  .overlay{position:fixed;inset:0;background:#3a2f2899;display:none;align-items:center;justify-content:center;z-index:50;padding:16px;}
+  .overlay.show{display:flex;}
+  .house-modal{background:#fffdf7;border-radius:26px;padding:20px 18px 22px;max-width:340px;width:100%;text-align:center;
+    box-shadow:0 10px 30px #0004;position:relative;overflow:hidden;}
+  .house-modal h2{font-family:var(--display);font-size:16px;margin:0 0 10px;color:var(--pink);}
+  .house-stage{position:relative;height:170px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:8px;}
+  .house-big{position:relative;width:150px;height:130px;}
+  .roof-big{position:absolute;top:0;left:-8px;width:0;height:0;border-left:83px solid transparent;border-right:83px solid transparent;border-bottom:52px solid var(--roofc,#ef4444);}
+  .wall-big{position:absolute;top:48px;left:0;width:150px;height:82px;background:var(--wallc,#fef3c7);border-radius:6px 6px 0 0;}
+  .door-big{position:absolute;bottom:0;left:60px;width:32px;height:58px;background:var(--doorc,#7c3aed);border-radius:6px 6px 0 0;
+    transform-origin:bottom left;transition:transform .25s;cursor:pointer;}
+  .door-big.shake{animation:doorShake .35s;}
+  .door-big.open{transform:perspective(200px) rotateY(-72deg);}
+  .win-big{position:absolute;top:14px;width:22px;height:22px;background:#eaf6ff;border:3px solid #fff;border-radius:4px;}
+  .win-big.l{left:14px;} .win-big.r{right:14px;}
+  .accessory-big{position:absolute;bottom:-2px;font-size:26px;}
+  .accessory-big.left{left:-14px;} .accessory-big.right{right:-14px;}
+  .num-badge{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:#fff;border:2px solid var(--panel-line);
+    border-radius:999px;padding:1px 9px;font-family:var(--display);font-size:11px;font-weight:700;color:var(--ink);}
+  .package-pop{position:absolute;bottom:50px;left:50%;transform:translateX(-50%) scale(0);opacity:0;width:64px;height:64px;}
+  .package-pop svg{display:block;width:100%;height:100%;filter:drop-shadow(0 5px 5px #00000030);}
+  .package-pop.show{animation:popPackage .5s forwards;}
+  .kid-pop{position:absolute;bottom:6px;left:16px;opacity:0;}
+  .kid-pop svg{display:block;width:34px;height:58px;}
+  .kid-pop.show{animation:popKid .5s .25s forwards;}
+  @keyframes doorShake{0%,100%{transform:rotate(0);}25%{transform:rotate(-6deg);}75%{transform:rotate(6deg);}}
+  @keyframes popPackage{0%{transform:translateX(-50%) translateY(20px) scale(0);opacity:0;}60%{transform:translateX(-50%) translateY(-8px) scale(1.15);opacity:1;}100%{transform:translateX(-50%) translateY(0) scale(1);opacity:1;}}
+  @keyframes popKid{from{transform:translateY(20px) scale(0);opacity:0;}to{transform:translateY(0) scale(1);opacity:1;}}
+
+  .flavor-text{font-family:var(--display);font-size:14px;color:var(--ink);margin:4px 0 2px;min-height:20px;}
+  .flavor-sub{font-size:11px;color:var(--dim);margin-bottom:10px;}
+  .confetti{position:absolute;width:8px;height:12px;top:-14px;border-radius:2px;pointer-events:none;animation:fall linear forwards;}
+  @keyframes fall{to{transform:translateY(240px) rotate(360deg);opacity:0;}}
+
+  .finale{display:none;margin:18px 14px 0;background:#fff;border:3px solid var(--panel-line);border-radius:22px;padding:18px;text-align:center;}
+  .finale.show{display:block;}
+  .finale h2{font-family:var(--display);color:var(--pink);margin:0 0 6px;font-size:18px;}
+  .finale .stars{font-size:26px;margin:6px 0;}
+  .finale .stat{font-family:var(--display);font-size:14px;margin:4px 0;}
+  .finale .compare{font-size:11.5px;color:var(--dim);margin-top:8px;border-top:1px dashed var(--panel-line);padding-top:8px;}
+
+  details.parents{margin:18px 14px 0;background:#fff;border:2px dashed var(--panel-line);border-radius:16px;padding:10px 14px;font-size:11.5px;color:#5b4d40;}
+  details.parents summary{font-family:var(--display);font-weight:600;color:var(--ink);cursor:pointer;font-size:12.5px;}
+  details.parents ul{margin:8px 0 0;padding-left:18px;}
+  details.parents li{margin-bottom:5px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <h1>🚚📦 Kurir Cilik — Ayo Antar Paket!</h1>
+    <p>Bantu kurir mengantar semua paket ke rumah-rumah di kompleks. Coba beberapa cara — mana yang paling hemat jalan?</p>
+    <button class="mute-btn" id="muteBtn" title="Suara">🔊</button>
+  </div>
+
+  <div id="setupArea">
+    <div class="stepper-row">
+      <span>Berapa paket hari ini?</span>
+      <button class="stepper-btn" id="minusBtn">−</button>
+      <span class="stepper-val" id="orderVal">5</span>
+      <button class="stepper-btn" id="plusBtn">+</button>
+    </div>
+
+    <div class="mode-panel" id="modePanel">
+      <div class="mode-card selected" data-mode="ants">
+        <span class="icon">
+          <svg viewBox="0 0 130 100" width="42" height="32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+            <g stroke="#000" stroke-width="5" stroke-linecap="round" fill="none">
+              <path d="M20,24 Q10,10 4,6"/>
+              <path d="M32,23 Q34,8 44,4"/>
+              <path d="M42,40 Q26,52 12,50"/>
+              <path d="M42,44 Q28,62 16,74"/>
+              <path d="M54,46 Q50,62 36,70"/>
+              <path d="M56,50 Q58,68 46,84"/>
+              <path d="M70,50 Q74,66 62,78"/>
+              <path d="M72,54 Q86,68 78,90"/>
+            </g>
+            <g fill="#000">
+              <ellipse cx="92" cy="52" rx="24" ry="18" transform="rotate(-15 92 52)"/>
+              <ellipse cx="68" cy="46" rx="6" ry="5"/>
+              <ellipse cx="52" cy="40" rx="15" ry="12" transform="rotate(-8 52 40)"/>
+              <ellipse cx="38" cy="36" rx="5" ry="4"/>
+              <ellipse cx="26" cy="32" rx="11" ry="10"/>
+            </g>
+          </svg>
+        </span>
+        <b>Semut Pintar</b>
+        <small>Mikir dulu cari jalan paling hemat</small>
+      </div>
+      <div class="mode-card" data-mode="greedy">
+        <span class="icon">
+          <svg viewBox="0 0 64 64" width="34" height="34" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+            <circle cx="26" cy="26" r="16" fill="none" stroke="#000" stroke-width="7"/>
+            <line x1="38" y1="38" x2="54" y2="54" stroke="#000" stroke-width="7" stroke-linecap="round"/>
+            <circle cx="26" cy="26" r="6" fill="#000"/>
+          </svg>
+        </span>
+        <b>Cari Terdekat</b>
+        <small>Selalu pilih rumah paling dekat dulu</small>
+      </div>
+      <div class="mode-card" data-mode="random">
+        <span class="icon">🌀</span>
+        <b>Acak Bingung</b>
+        <small>Langsung jalan asal-asalan</small>
+      </div>
+      <div class="mode-card" data-mode="choice">
+        <span class="icon">
+          <svg viewBox="0 0 64 64" width="34" height="34" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+            <path d="M32,8 L32,38" stroke="#000" stroke-width="6" stroke-linecap="round"/>
+            <path d="M32,38 L14,58" stroke="#000" stroke-width="6" stroke-linecap="round"/>
+            <path d="M32,38 L50,58" stroke="#000" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="32" cy="8" r="6" fill="#000"/>
+            <circle cx="14" cy="58" r="6" fill="#000"/>
+            <circle cx="50" cy="58" r="6" fill="#000"/>
+          </svg>
+        </span>
+        <b>Kamu Pilih Jalan</b>
+        <small>Ketuk jalur yang berkelap-kelip</small>
+      </div>
+    </div>
+
+    <button class="big-btn" id="startBtn">🚀 Mulai Antar Paket!</button>
+
+    <button class="race-toggle" id="raceToggleBtn" type="button">🔬 Coba Bandingkan 2 Cara Sekaligus (Real-Time)</button>
+    <div class="race-setup" id="raceSetup">
+      <div class="race-setup-row">
+        <div class="race-pick">
+          <label>Peta Kiri</label>
+          <select id="raceModeA">
+            <option value="ants">🐜 Semut Pintar</option>
+            <option value="greedy">🔎 Cari Terdekat</option>
+            <option value="random">🌀 Acak Bingung</option>
+          </select>
+        </div>
+        <div class="race-vs">VS</div>
+        <div class="race-pick">
+          <label>Peta Kanan</label>
+          <select id="raceModeB">
+            <option value="greedy">🔎 Cari Terdekat</option>
+            <option value="ants">🐜 Semut Pintar</option>
+            <option value="random">🌀 Acak Bingung</option>
+          </select>
+        </div>
+      </div>
+      <button class="big-btn purple" id="raceStartBtn">🏁 Mulai Balapan!</button>
+    </div>
+  </div>
+
+  <div class="race-view" id="raceView">
+    <div class="race-banner" id="raceBanner"></div>
+    <div class="race-lanes">
+      <div class="race-lane">
+        <div class="lane-label"><span id="laneIconA"></span><b id="laneNameA"></b></div>
+        <canvas id="cvA" width="880" height="620"></canvas>
+        <div class="lane-petak">👣 <b id="lanePetakA">0</b> petak</div>
+      </div>
+      <div class="race-lane">
+        <div class="lane-label"><span id="laneIconB"></span><b id="laneNameB"></b></div>
+        <canvas id="cvB" width="880" height="620"></canvas>
+        <div class="lane-petak">👣 <b id="lanePetakB">0</b> petak</div>
+      </div>
+    </div>
+    <div class="race-btn-row">
+      <button class="big-btn purple" id="raceAgainBtn">🔄 Balapan Lagi</button>
+      <button class="big-btn blue" id="raceBackBtn">⬅️ Kembali</button>
+    </div>
+  </div>
+
+  <div class="status" id="statusText">Pilih cara antar, lalu tekan "Mulai Antar Paket!"</div>
+  <div class="counter-row">
+    <div>📦 Terkirim <b id="cntDelivered">0</b>/<b id="cntTotal">5</b></div>
+    <div>👣 Petak jalan <b id="cntPetak">0</b></div>
+  </div>
+
+  <div class="stage-wrap">
+    <div class="algo-badge" id="algoBadge"><span id="algoBadgeIcon"></span><b id="algoBadgeLabel"></b></div>
+    <canvas id="cv" width="880" height="620"></canvas>
+  </div>
+
+  <button class="stop-fab" id="stopBtn" type="button">✕ Berhenti</button>
+
+  <button class="big-btn blue" id="actionBtn" style="display:none;">🚪 Ketuk Pintu!</button>
+
+  <div class="finale" id="finale">
+    <h2>🎉 Semua Paket Sudah Sampai!</h2>
+    <div class="stars" id="finaleStars">⭐⭐⭐</div>
+    <div class="stat">📦 Paket terkirim: <b id="finaleDelivered">5</b></div>
+    <div class="stat">👣 Total petak jalan kurir: <b id="finalePetak">0</b></div>
+    <div class="compare" id="finaleCompare"></div>
+    <button class="big-btn green" id="replayBtn" style="margin-top:12px;">🔄 Main Lagi!</button>
+  </div>
+
+  <details class="parents">
+    <summary>👪 Untuk Orang Tua — apa yang dipelajari lewat main ini?</summary>
+    <ul>
+      <li><b>Berpikir berurutan:</b> anak melihat langsung bahwa urutan kunjungan rumah memengaruhi seberapa jauh kurir harus jalan.</li>
+      <li><b>Berhitung & membandingkan:</b> jumlah paket dan "petak jalan" ditunjukkan sebagai angka kecil yang bisa dihitung dengan jari — coba mainkan beberapa cara (Semut Pintar, Cari Terdekat, Acak Bingung) lalu bandingkan angkanya bersama di layar akhir.</li>
+      <li><b>Intuisi awal tentang rencana yang baik:</b> "mikir dulu sebelum jalan" (Semut Pintar) hampir selalu lebih hemat daripada asal jalan — cikal-bakal pemahaman tentang <i>algoritma</i> (langkah-langkah yang direncanakan untuk menyelesaikan masalah), tanpa perlu istilah teknisnya.</li>
+      <li><b>Kejutan & antisipasi yang positif:</b> isi paket selalu acak setiap pengiriman — momen ketuk-pintu ini sengaja dibuat jadi "puncak keseruan" tiap rumah, meniru rasa senang menunggu paket datang di dunia nyata.</li>
+      <li>Untuk anak yang lebih besar & ingin versi dengan angka/analisis lebih dalam (algoritma semut, tetangga terdekat, algoritma genetika, uji perbandingan), ada versi lengkapnya: <i>kurir-kota-algoritma-semut.html</i>.</li>
+    </ul>
+  </details>
+
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="house-modal" id="houseModal">
+    <h2 id="modalTitle">Rumah #1</h2>
+    <div class="house-stage">
+      <div class="house-big" id="houseBig">
+        <div class="num-badge" id="numBadge">#1</div>
+        <div class="roof-big" id="roofBig"></div>
+        <div class="wall-big" id="wallBig">
+          <div class="win-big l"></div>
+          <div class="win-big r"></div>
+          <div class="door-big" id="doorBig"></div>
+        </div>
+        <div class="accessory-big left" id="accLeft"></div>
+        <div class="package-pop" id="packagePop"></div>
+        <div class="kid-pop" id="kidPop"></div>
+      </div>
+    </div>
+    <div class="flavor-text" id="flavorText">&nbsp;</div>
+    <div class="flavor-sub" id="flavorSub">&nbsp;</div>
+    <button class="big-btn blue" id="modalNextBtn" style="display:none;margin-top:10px;">Lanjut</button>
+  </div>
+</div>
+
+<script>
+/* ================= AUDIO SEDERHANA (tanpa file eksternal) ================= */
+let muted = false, audioCtx = null;
+function ensureAudio(){ if(!audioCtx){ try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } }
+function beep(freq, dur, delay, type){
+  if(muted || !audioCtx) return;
+  const t = audioCtx.currentTime + (delay||0);
+  const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+  osc.type = type || 'sine'; osc.frequency.value = freq;
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  gain.gain.setValueAtTime(0.16, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t+dur);
+  osc.start(t); osc.stop(t+dur+0.02);
+}
+function playDoorbell(){ ensureAudio(); beep(784,0.15,0); beep(659,0.28,0.15); }
+function playTada(){ ensureAudio(); beep(523,0.12,0); beep(659,0.12,0.12); beep(784,0.3,0.24); }
+document.getElementById('muteBtn').addEventListener('click', () => {
+  muted = !muted;
+  document.getElementById('muteBtn').textContent = muted ? '🔇' : '🔊';
+});
+
+/* ================= GRID KOTA (kecil, chunky, ramah anak) ================= */
+const CV = document.getElementById('cv');
+const CTX = CV.getContext('2d');
+const W = 880, H = 620;
+const COLS = 6, ROWS = 5;
+const MX = 46, MY = 60, SPAN_X = W-MX*2, SPAN_Y = H-MY-40;
+const HSTEP = SPAN_X/COLS, VSTEP = SPAN_Y/ROWS;
+const DEPOT_C = 0, DEPOT_R = 0;
+const DEPOT = {x: MX+HSTEP*(DEPOT_C+0.5), y: MY+VSTEP*(DEPOT_R+0.5)};
+
+let houses = []; // {number, x, y, c, r}
+function buildHouses(){
+  houses = [];
+  let n = 1;
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      if(r===DEPOT_R && c===DEPOT_C) continue;
+      houses.push({ number:n++, x: MX+HSTEP*(c+0.5), y: MY+VSTEP*(r+0.5), c, r });
+    }
+  }
+}
+
+/* Gaya rumah acak-tetap per nomor (bukan Math.random supaya konsisten tiap dilihat) */
+function seeded(n, salt){
+  const x = Math.sin(n*12.9898 + salt*78.233) * 43758.5453;
+  return x - Math.floor(x);
+}
+const WALL_COLORS = ['#fef3c7','#dbeafe','#fce7f3','#dcfce7','#ffe4e6','#ede9fe','#fff7d6'];
+const ROOF_COLORS = ['#ef4444','#3b82f6','#22c55e','#f59e0b','#a855f7','#ec4899','#06b6d4'];
+const DOOR_COLORS = ['#7c3aed','#059669','#dc2626','#2563eb','#d97706','#be185d'];
+const ACCESSORIES = ['🌳','🌻','🚩','🎈','🌵','🍄','🪁'];
+function houseStyle(n){
+  return {
+    wall: WALL_COLORS[Math.floor(seeded(n,1)*WALL_COLORS.length)],
+    roof: ROOF_COLORS[Math.floor(seeded(n,2)*ROOF_COLORS.length)],
+    door: DOOR_COLORS[Math.floor(seeded(n,3)*DOOR_COLORS.length)],
+    accessory: ACCESSORIES[Math.floor(seeded(n,4)*ACCESSORIES.length)],
+  };
+}
+
+/* ================= JARAK & JALUR MENGIKUTI JALAN (sama prinsip versi dewasa) ================= */
+function euclid(a,b){ return Math.hypot(a.x-b.x,a.y-b.y); }
+function gridCoord(p){ return { c: Math.round((p.x-MX)/HSTEP), r: Math.round((p.y-MY)/VSTEP) }; }
+function intersectionPoint(c,r){ return {x:MX+HSTEP*c, y:MY+VSTEP*r}; }
+function roadWaypoints(a,b){
+  const ga=gridCoord(a), gb=gridCoord(b);
+  const ia=intersectionPoint(ga.c,ga.r), ib=intersectionPoint(gb.c,gb.r);
+  const corner = {x:ib.x, y:ia.y};
+  const raw=[a,ia,corner,ib,b];
+  const out=[raw[0]];
+  for(let i=1;i<raw.length-1;i++){ if(euclid(out[out.length-1],raw[i])>0.5) out.push(raw[i]); }
+  out.push(raw[raw.length-1]);
+  return out;
+}
+/* Dua varian jalur L (belok lewat horizontal dulu vs vertikal dulu) — dipakai mode
+   "Kamu Pilih Jalan" supaya ada dua rute BEDA (sama-sama sah, sama panjang petaknya)
+   yang bisa dipilih anak di titik persimpangan. */
+function roadWaypointsVariant(a,b,variant){
+  const ga=gridCoord(a), gb=gridCoord(b);
+  const ia=intersectionPoint(ga.c,ga.r), ib=intersectionPoint(gb.c,gb.r);
+  const corner = variant==='H' ? {x:ib.x, y:ia.y} : {x:ia.x, y:ib.y};
+  const raw=[a,ia,corner,ib,b];
+  const out=[raw[0]];
+  for(let i=1;i<raw.length-1;i++){ if(euclid(out[out.length-1],raw[i])>0.5) out.push(raw[i]); }
+  out.push(raw[raw.length-1]);
+  return out;
+}
+function pointToSegDist(px,py,a,b){
+  const dx=b.x-a.x, dy=b.y-a.y;
+  const lenSq=dx*dx+dy*dy;
+  let t = lenSq>0 ? ((px-a.x)*dx+(py-a.y)*dy)/lenSq : 0;
+  t = Math.max(0,Math.min(1,t));
+  return Math.hypot(px-(a.x+t*dx), py-(a.y+t*dy));
+}
+function pointToPolylineDist(px,py,path){
+  let min = Infinity;
+  for(let i=0;i<path.length-1;i++) min = Math.min(min, pointToSegDist(px,py,path[i],path[i+1]));
+  return min;
+}
+function petakSteps(a,b){
+  const ga=gridCoord(a), gb=gridCoord(b);
+  return Math.abs(gb.c-ga.c) + Math.abs(gb.r-ga.r);
+}
+function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+
+/* ================= MODE ACAK BINGUNG ================= */
+function routeRandom(orderHouses){
+  return shuffle(orderHouses.slice());
+}
+
+/* ================= MODE CARI TERDEKAT (Greedy Nearest-Neighbor) =================
+   Algoritma pembanding paling gampang dijelaskan ke anak: "dari sini, rumah mana
+   yang PALING DEKAT? Ke situ dulu." — diulang sampai semua kebagian. Berguna
+   sebagai pembanding untuk Semut Pintar: kadang sama bagus, kadang kalah, karena
+   greedy bisa "terjebak" pilih yang dekat sekarang tapi bikin jalan jauh belakangan. */
+function routeGreedy(orderHouses){
+  const remaining = orderHouses.slice();
+  const route = [];
+  let current = DEPOT;
+  while(remaining.length){
+    let bestIdx = 0, bestDist = Infinity;
+    remaining.forEach((h,i) => {
+      const d = petakSteps(current, h);
+      if(d < bestDist){ bestDist = d; bestIdx = i; }
+    });
+    const next = remaining.splice(bestIdx,1)[0];
+    route.push(next);
+    current = next;
+  }
+  return route;
+}
+
+/* ================= MODE SEMUT PINTAR (ACO ringkas, parameter tetap) ================= */
+function routeAnts(orderHouses){
+  const nodes = [DEPOT, ...orderHouses.map(h=>({x:h.x,y:h.y}))];
+  const n = nodes.length, K = n-1;
+  const D = [];
+  for(let i=0;i<n;i++){ D[i]=[]; for(let j=0;j<n;j++){ D[i][j] = euclid(nodes[i],nodes[j]) + petakSteps(nodes[i],nodes[j])*4; } }
+  // (jarak dibuat sedikit berbeda dari petak murni supaya ada variasi halus, tetap konsisten arah "lebih dekat = lebih baik")
+  const ants=20, iterations=50, alpha=1, beta=3, evaporation=0.3;
+  let pher = Array.from({length:n},()=>new Array(n).fill(1));
+  let bestRoute=null, bestLen=Infinity;
+  for(let it=0; it<iterations; it++){
+    const antRoutes=[];
+    for(let a=0;a<ants;a++){
+      const visited=new Array(n).fill(false); visited[0]=true;
+      let route=[0], current=0;
+      for(let step=0; step<K-1; step++){
+        let cands=[], sum=0;
+        for(let j=1;j<n;j++){
+          if(visited[j]) continue;
+          const tau=Math.pow(pher[current][j],alpha);
+          const eta=Math.pow(1/Math.max(D[current][j],0.0001),beta);
+          const val=tau*eta; cands.push({j,val}); sum+=val;
+        }
+        let r=Math.random()*sum, chosen=cands[cands.length-1].j;
+        for(const c of cands){ r-=c.val; if(r<=0){chosen=c.j;break;} }
+        visited[chosen]=true; route.push(chosen); current=chosen;
+      }
+      for(let j=1;j<n;j++){ if(!visited[j]){ route.push(j); visited[j]=true; break; } }
+      route.push(0);
+      let len=0; for(let k=0;k<route.length-1;k++) len+=D[route[k]][route[k+1]];
+      antRoutes.push({route,len});
+      if(len<bestLen){ bestLen=len; bestRoute=route.slice(); }
+    }
+    for(let i=0;i<n;i++) for(let j=0;j<n;j++) pher[i][j]*=(1-evaporation);
+    for(const {route,len} of antRoutes){
+      for(let k=0;k<route.length-1;k++){ const a=route[k],b=route[k+1]; pher[a][b]+=100/len; pher[b][a]+=100/len; }
+    }
+  }
+  return bestRoute.slice(1,-1).map(idx => orderHouses[idx-1]);
+}
+
+/* ================= GAMBAR PETA ================= */
+function drawRoads(ctx){
+  ctx = ctx || CTX;
+  ctx.strokeStyle = '#c7d6dc'; ctx.lineWidth = 16;
+  for(let c=0;c<=COLS;c++){ const x=MX+HSTEP*c; ctx.beginPath(); ctx.moveTo(x,MY-30); ctx.lineTo(x,H-24); ctx.stroke(); }
+  for(let r=0;r<=ROWS;r++){ const y=MY+VSTEP*r; ctx.beginPath(); ctx.moveTo(MX-30,y); ctx.lineTo(W-20,y); ctx.stroke(); }
+}
+function drawHouseIcon(h, delivered, isOrder, ctx){
+  ctx = ctx || CTX;
+  const st = houseStyle(h.number);
+  const hw=30, hh=24;
+  ctx.fillStyle = st.wall;
+  ctx.fillRect(h.x-hw/2, h.y-hh/2, hw, hh);
+  ctx.fillStyle = st.roof;
+  ctx.beginPath();
+  ctx.moveTo(h.x-hw/2-5, h.y-hh/2);
+  ctx.lineTo(h.x, h.y-hh/2-16);
+  ctx.lineTo(h.x+hw/2+5, h.y-hh/2);
+  ctx.closePath(); ctx.fill();
+  ctx.font='600 10px Quicksand, sans-serif'; ctx.fillStyle='#3a2f28'; ctx.textAlign='center';
+  ctx.fillText(h.number, h.x, h.y+hh/2+13);
+  if(isOrder){
+    const bob = Math.sin(Date.now()/220 + h.number)*3;
+    ctx.font='20px sans-serif';
+    ctx.fillText(delivered ? '✅' : '📦', h.x, h.y-hh/2-22+bob);
+  }
+}
+function drawDepot(ctx){
+  ctx = ctx || CTX;
+  ctx.fillStyle='#c1622d'; ctx.fillRect(DEPOT.x-24,DEPOT.y-14,48,30);
+  ctx.fillStyle='#7a3a1f';
+  ctx.beginPath(); ctx.moveTo(DEPOT.x-28,DEPOT.y-14); ctx.lineTo(DEPOT.x,DEPOT.y-32); ctx.lineTo(DEPOT.x+28,DEPOT.y-14); ctx.closePath(); ctx.fill();
+  ctx.font='20px sans-serif'; ctx.textAlign='center'; ctx.fillText('🏤', DEPOT.x, DEPOT.y+8);
+}
+function drawAntBlack(x,y){
+  CTX.save();
+  CTX.translate(x,y);
+  CTX.scale(0.17,0.17);
+  CTX.translate(-65,-50);
+  CTX.fillStyle = '#000';
+  CTX.beginPath(); CTX.ellipse(92,52,24,18,-15*Math.PI/180,0,Math.PI*2); CTX.fill();
+  CTX.beginPath(); CTX.ellipse(68,46,6,5,0,0,Math.PI*2); CTX.fill();
+  CTX.beginPath(); CTX.ellipse(52,40,15,12,-8*Math.PI/180,0,Math.PI*2); CTX.fill();
+  CTX.beginPath(); CTX.ellipse(38,36,5,4,0,0,Math.PI*2); CTX.fill();
+  CTX.beginPath(); CTX.ellipse(26,32,11,10,0,0,Math.PI*2); CTX.fill();
+  CTX.strokeStyle = '#000'; CTX.lineWidth = 5; CTX.lineCap='round';
+  CTX.beginPath();
+  CTX.moveTo(20,24); CTX.quadraticCurveTo(10,10,4,6);
+  CTX.moveTo(32,23); CTX.quadraticCurveTo(34,8,44,4);
+  CTX.moveTo(42,40); CTX.quadraticCurveTo(26,52,12,50);
+  CTX.moveTo(42,44); CTX.quadraticCurveTo(28,62,16,74);
+  CTX.moveTo(54,46); CTX.quadraticCurveTo(50,62,36,70);
+  CTX.moveTo(56,50); CTX.quadraticCurveTo(58,68,46,84);
+  CTX.moveTo(70,50); CTX.quadraticCurveTo(74,66,62,78);
+  CTX.moveTo(72,54); CTX.quadraticCurveTo(86,68,78,90);
+  CTX.stroke();
+  CTX.restore();
+}
+function drawGlowPath(path, color, alpha){
+  CTX.save();
+  CTX.strokeStyle = color;
+  CTX.globalAlpha = alpha;
+  CTX.lineWidth = 11;
+  CTX.lineCap = 'round'; CTX.lineJoin = 'round';
+  CTX.shadowColor = color; CTX.shadowBlur = 16;
+  CTX.beginPath();
+  path.forEach((p,i) => { if(i===0) CTX.moveTo(p.x,p.y); else CTX.lineTo(p.x,p.y); });
+  CTX.stroke();
+  CTX.restore();
+}
+
+/* ================= STATE PERMAINAN ================= */
+let orderHouses = [];   // rumah yang butuh paket ronde ini
+let currentRoute = [];  // urutan rumah (hasil mode)
+let currentEdgePaths = [];
+let phase = 'idle';     // idle | thinking | driving | arrived | opened | finished | choosing | driving-choice
+let courier = {edgeIndex:0, subIndex:0, subT:0};
+let deliveredSet = new Set();
+let totalPetak = 0;
+let selectedMode = 'ants';
+let antsDecor = [];
+let thinkTimer = 0;
+let rafId = null, lastTs = 0;
+let lastScoreByMode = {}; // {ants:petak, random:petak, choice:petak} sesi berjalan
+const MODE_LABELS = {ants:'Semut Pintar', greedy:'Cari Terdekat', random:'Acak Bingung', choice:'Kamu Pilih Jalan'};
+
+/* Ikon badge "algoritma yang sedang jalan" — semua SILUET HITAM PEKAT tanpa detail
+   wajah/kepala (semut dipakai ulang persis dari kartu mode, tanpa mata/muka),
+   supaya anak selalu bisa lihat jelas "sekarang giliran cara yang mana". */
+const BADGE_ICONS = {
+  ants: '<svg viewBox="0 0 130 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+    + '<g stroke="#000" stroke-width="6" stroke-linecap="round" fill="none">'
+    + '<path d="M20,24 Q10,10 4,6"/><path d="M32,23 Q34,8 44,4"/>'
+    + '<path d="M42,40 Q26,52 12,50"/><path d="M42,44 Q28,62 16,74"/>'
+    + '<path d="M54,46 Q50,62 36,70"/><path d="M56,50 Q58,68 46,84"/>'
+    + '<path d="M70,50 Q74,66 62,78"/><path d="M72,54 Q86,68 78,90"/></g>'
+    + '<g fill="#000"><ellipse cx="92" cy="52" rx="24" ry="18" transform="rotate(-15 92 52)"/>'
+    + '<ellipse cx="68" cy="46" rx="6" ry="5"/><ellipse cx="52" cy="40" rx="15" ry="12" transform="rotate(-8 52 40)"/>'
+    + '<ellipse cx="38" cy="36" rx="5" ry="4"/><ellipse cx="26" cy="32" rx="11" ry="10"/></g></svg>',
+  greedy: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+    + '<circle cx="26" cy="26" r="16" fill="none" stroke="#000" stroke-width="7"/>'
+    + '<line x1="38" y1="38" x2="54" y2="54" stroke="#000" stroke-width="7" stroke-linecap="round"/>'
+    + '<circle cx="26" cy="26" r="6" fill="#000"/></svg>',
+  random: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+    + '<path d="M32,10 C46,10 54,22 54,32 C54,44 44,52 34,52 C26,52 20,46 20,38 C20,32 25,28 30,28 C34,28 36,31 36,34" '
+    + 'stroke="#000" stroke-width="6" fill="none" stroke-linecap="round"/></svg>',
+  choice: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+    + '<path d="M32,8 L32,38" stroke="#000" stroke-width="6" stroke-linecap="round"/>'
+    + '<path d="M32,38 L14,58" stroke="#000" stroke-width="6" stroke-linecap="round"/>'
+    + '<path d="M32,38 L50,58" stroke="#000" stroke-width="6" stroke-linecap="round"/>'
+    + '<circle cx="32" cy="8" r="6" fill="#000"/><circle cx="14" cy="58" r="6" fill="#000"/><circle cx="50" cy="58" r="6" fill="#000"/></svg>',
+};
+function showAlgoBadge(mode){
+  document.getElementById('algoBadgeIcon').innerHTML = BADGE_ICONS[mode] || '';
+  document.getElementById('algoBadgeLabel').textContent = MODE_LABELS[mode];
+  document.getElementById('algoBadge').classList.add('show');
+}
+function hideAlgoBadge(){
+  document.getElementById('algoBadge').classList.remove('show');
+}
+
+/* --- Mode "Kamu Pilih Jalan": kurir tidak jalan otomatis penuh. Tiap kali mau menuju
+   rumah berikutnya, muncul DUA jalur L (sama-sama sah & sama panjang petaknya, beda
+   arah belokan) yang berkelap-kelip di peta; anak KETUK salah satu jalur di layar untuk
+   memandu kurir lewat situ. Kalau target ada tepat satu baris/kolom lurus (tak ada
+   belokan sama sekali), tak ada pilihan berarti — kurir jalan langsung. */
+let legQueue = [];
+let legIndex = 0;
+let legFrom = {x:0,y:0};
+let pendingLegTarget = null;
+let choicePaths = null; // {A:[...pts], B:[...pts]}
+
+function currentLegTarget(){
+  if(legIndex < legQueue.length){ const h = legQueue[legIndex]; return {x:h.x, y:h.y, house:h}; }
+  return {x:DEPOT.x, y:DEPOT.y, house:null};
+}
+
+function prepareLegChoice(){
+  const target = currentLegTarget();
+  const ga = gridCoord(legFrom), gb = gridCoord(target);
+  if(ga.c===gb.c || ga.r===gb.r){
+    beginChoiceDrive(roadWaypoints(legFrom, target), target);
+    return;
+  }
+  choicePaths = { A: roadWaypointsVariant(legFrom, target, 'H'), B: roadWaypointsVariant(legFrom, target, 'V') };
+  phase = 'choosing';
+  document.getElementById('statusText').textContent = target.house
+    ? '🧭 Ketuk jalur berkelap-kelip menuju Rumah #'+target.house.number+'!'
+    : '🧭 Ketuk jalur berkelap-kelip untuk pulang ke kantor pos!';
+}
+
+function beginChoiceDrive(path, target){
+  choicePaths = null;
+  currentEdgePaths = [path];
+  courier = {edgeIndex:0, subIndex:0, subT:0};
+  pendingLegTarget = target;
+  phase = 'driving-choice';
+}
+
+function stepChoiceCourier(dt){
+  const path = currentEdgePaths[0];
+  const a = path[courier.subIndex], b = path[courier.subIndex+1];
+  const segLen = Math.max(euclid(a,b), 0.001);
+  courier.subT += (150*dt)/segLen;
+  if(courier.subT >= 1){
+    courier.subIndex++;
+    courier.subT = 0;
+    if(courier.subIndex >= path.length-1){
+      totalPetak += petakSteps(path[0], path[path.length-1]);
+      document.getElementById('cntPetak').textContent = totalPetak;
+      legFrom = {x:path[path.length-1].x, y:path[path.length-1].y};
+      const target = pendingLegTarget;
+      if(target.house){
+        deliveredSet.add(target.house.number);
+        document.getElementById('cntDelivered').textContent = deliveredSet.size;
+        legIndex++;
+        phase = 'arrived';
+        openHouseModalPrompt(target.house);
+      } else {
+        finishRound();
+      }
+    }
+  }
+}
+
+CV.addEventListener('click', (e) => {
+  if(phase !== 'choosing' || !choicePaths) return;
+  const rect = CV.getBoundingClientRect();
+  const scaleX = CV.width/rect.width, scaleY = CV.height/rect.height;
+  const px = (e.clientX-rect.left)*scaleX, py = (e.clientY-rect.top)*scaleY;
+  const dA = pointToPolylineDist(px,py,choicePaths.A);
+  const dB = pointToPolylineDist(px,py,choicePaths.B);
+  if(Math.min(dA,dB) > 42) return;
+  const chosen = dA <= dB ? choicePaths.A : choicePaths.B;
+  beginChoiceDrive(chosen, currentLegTarget());
+});
+
+function newRound(){
+  const K = Number(document.getElementById('orderVal').textContent);
+  const pool = shuffle(houses.slice());
+  orderHouses = pool.slice(0, K);
+  phase = 'idle';
+  currentRoute = []; currentEdgePaths = [];
+  courier = {edgeIndex:0, subIndex:0, subT:0};
+  deliveredSet = new Set();
+  totalPetak = 0;
+  legQueue = []; legIndex = 0; legFrom = {x:DEPOT.x,y:DEPOT.y}; pendingLegTarget = null; choicePaths = null;
+  document.getElementById('cntTotal').textContent = K;
+  document.getElementById('cntDelivered').textContent = '0';
+  document.getElementById('cntPetak').textContent = '0';
+  document.getElementById('finale').classList.remove('show');
+  document.getElementById('setupArea').style.display = 'block';
+  document.getElementById('actionBtn').style.display = 'none';
+  document.getElementById('statusText').textContent = 'Pilih cara antar, lalu tekan "Mulai Antar Paket!"';
+  hideAlgoBadge();
+  document.getElementById('stopBtn').classList.remove('show');
+  draw();
+}
+
+function startDelivery(){
+  document.getElementById('setupArea').style.display = 'none';
+  showAlgoBadge(selectedMode);
+  document.getElementById('stopBtn').classList.add('show');
+  if(selectedMode === 'ants'){
+    phase = 'thinking'; thinkTimer = 0;
+    antsDecor = Array.from({length:6}, () => ({x: MX+Math.random()*SPAN_X, y: MY+Math.random()*SPAN_Y, vx:(Math.random()-0.5)*3, vy:(Math.random()-0.5)*3}));
+    document.getElementById('statusText').textContent = '🐜 Semut-semut sedang mencari jalan paling hemat...';
+    currentRoute = routeAnts(orderHouses); // dihitung instan, dipakai setelah animasi hias selesai
+  } else if(selectedMode === 'greedy'){
+    phase = 'driving';
+    currentRoute = routeGreedy(orderHouses);
+    document.getElementById('statusText').textContent = '🔎 Kurir mencari rumah paling dekat, lalu jalan ke situ...';
+  } else if(selectedMode === 'random'){
+    phase = 'driving';
+    currentRoute = routeRandom(orderHouses);
+    document.getElementById('statusText').textContent = '🌀 Kurir langsung jalan asal-asalan...';
+  } else if(selectedMode === 'choice'){
+    currentRoute = routeRandom(orderHouses.slice());
+    legQueue = currentRoute.slice();
+    legIndex = 0;
+    legFrom = {x:DEPOT.x, y:DEPOT.y};
+    prepareLegChoice();
+  }
+  if(phase === 'driving') beginDrive();
+  if(!rafId) rafId = requestAnimationFrame(loop);
+}
+
+function beginDrive(){
+  const seq = [DEPOT, ...currentRoute.map(h=>({x:h.x,y:h.y,number:h.number})), DEPOT];
+  currentEdgePaths = [];
+  for(let k=0;k<seq.length-1;k++) currentEdgePaths.push(roadWaypoints(seq[k], seq[k+1]));
+  courier = {edgeIndex:0, subIndex:0, subT:0};
+  phase = 'driving';
+  updateStatusDriving();
+}
+function updateStatusDriving(){
+  const nextHouse = currentRoute[courier.edgeIndex];
+  if(nextHouse) document.getElementById('statusText').textContent = '🚚 Meluncur ke Rumah #'+nextHouse.number+'...';
+  else document.getElementById('statusText').textContent = '🚚 Kembali ke kantor pos...';
+}
+
+function loop(ts){
+  rafId = requestAnimationFrame(loop);
+  const dt = lastTs ? (ts-lastTs)/1000 : 0; lastTs = ts;
+
+  if(phase === 'thinking'){
+    thinkTimer += dt*1000;
+    antsDecor.forEach(a => {
+      a.x += a.vx; a.y += a.vy;
+      if(a.x<MX||a.x>MX+SPAN_X) a.vx*=-1;
+      if(a.y<MY||a.y>MY+SPAN_Y) a.vy*=-1;
+      if(Math.random()<0.05){ a.vx=(Math.random()-0.5)*3; a.vy=(Math.random()-0.5)*3; }
+    });
+    if(thinkTimer > 1400){ antsDecor=[]; beginDrive(); }
+  } else if(phase === 'driving'){
+    stepCourier(dt);
+  } else if(phase === 'driving-choice'){
+    stepChoiceCourier(dt);
+  }
+  draw();
+}
+
+function stepCourier(dt){
+  if(courier.edgeIndex >= currentEdgePaths.length){ finishRound(); return; }
+  const path = currentEdgePaths[courier.edgeIndex];
+  const a = path[courier.subIndex], b = path[courier.subIndex+1];
+  const segLen = Math.max(euclid(a,b), 0.001);
+  courier.subT += (150*dt)/segLen;
+  if(courier.subT >= 1){
+    courier.subIndex++;
+    courier.subT = 0;
+    if(courier.subIndex >= path.length-1){
+      totalPetak += petakSteps(path[0], path[path.length-1]);
+      document.getElementById('cntPetak').textContent = totalPetak;
+      courier.edgeIndex++;
+      courier.subIndex = 0;
+      const arrivedHouse = currentRoute[courier.edgeIndex-1];
+      if(arrivedHouse){
+        deliveredSet.add(arrivedHouse.number);
+        phase = 'arrived';
+        openHouseModalPrompt(arrivedHouse);
+        return;
+      }
+      if(courier.edgeIndex >= currentEdgePaths.length){ finishRound(); return; }
+      updateStatusDriving();
+    }
+  }
+}
+
+function openHouseModalPrompt(house){
+  document.getElementById('statusText').textContent = '🏠 Sampai di Rumah #'+house.number+'! Ketuk pintunya di layar besar di bawah.';
+  document.getElementById('actionBtn').style.display = 'block';
+  document.getElementById('actionBtn').textContent = '🚪 Ketuk Rumah #'+house.number;
+  document.getElementById('actionBtn').onclick = () => showHouseModal(house);
+}
+
+const FLAVORS = [
+  {id:'book',     title:'📚 Ada buku cerita baru di dalamnya!', sub:'Wah, seru buat dibaca sebelum tidur!'},
+  {id:'bear',     title:'🎀 Ada boneka beruang lembut di dalamnya!', sub:'Empuk banget, pasti enak dipeluk!'},
+  {id:'cookies',  title:'🍪 Ada kue kering wangi!', sub:'Baunya sampai kecium dari sini!'},
+  {id:'crayons',  title:'🎨 Ada krayon warna-warni!', sub:'Yuk gambar sesuatu yang seru!'},
+  {id:'ball',     title:'⚽ Ada bola mainan!', sub:'Ayo main bola di halaman!'},
+  {id:'car',      title:'🚗 Ada mobil-mobilan!', sub:'Ngeeeng, siap balapan!'},
+  {id:'shirt',    title:'👕 Ada baju baru!', sub:'Rapi banget kalau dipakai!'},
+  {id:'plant',    title:'🌱 Ada bibit tanaman kecil!', sub:'Nanti disiram supaya tumbuh besar!'},
+  {id:'kite',     title:'🪁 Ada layang-layang!', sub:'Cocok buat main pas angin kencang!'},
+  {id:'balloons', title:'🎈 Ada balon warna-warni!', sub:'Horeee, pesta kecil-kecilan!'},
+];
+/* Ilustrasi isi paket — digambar sendiri (bukan emoji tunggal) supaya momen buka-paket
+   terasa lebih "asik" dan detail. Tetap mengikuti aturan tanpa wajah: boneka beruang
+   sengaja TIDAK punya mata/hidung/mulut, hanya bentuk siluet + pita sebagai aksesori. */
+const PACKAGE_ART = {
+  book: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">'
+    + '<rect x="10" y="12" width="44" height="40" rx="4" fill="#8d6fff"/>'
+    + '<rect x="14" y="16" width="17" height="32" rx="2" fill="#fffdf7"/>'
+    + '<rect x="33" y="16" width="17" height="32" rx="2" fill="#fffdf7"/>'
+    + '<rect x="30" y="16" width="4" height="32" fill="#e4dcff"/>'
+    + '<rect x="17" y="22" width="11" height="2.4" rx="1.2" fill="#c9bfff"/>'
+    + '<rect x="17" y="27" width="11" height="2.4" rx="1.2" fill="#c9bfff"/>'
+    + '<rect x="17" y="32" width="8" height="2.4" rx="1.2" fill="#c9bfff"/>'
+    + '<rect x="36" y="22" width="11" height="2.4" rx="1.2" fill="#c9bfff"/>'
+    + '<rect x="36" y="27" width="11" height="2.4" rx="1.2" fill="#c9bfff"/>'
+    + '<rect x="36" y="32" width="8" height="2.4" rx="1.2" fill="#c9bfff"/>'
+    + '<path d="M40,10 L46,10 L46,20 L43,17 L40,20 Z" fill="#ff6f91"/>'
+    + '</svg>',
+  bear: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">'
+    + '<ellipse cx="32" cy="50" rx="17" ry="14" fill="#d98c4f"/>'
+    + '<ellipse cx="19" cy="46" rx="6" ry="8" fill="#c97a3d"/>'
+    + '<ellipse cx="45" cy="46" rx="6" ry="8" fill="#c97a3d"/>'
+    + '<circle cx="17" cy="19" r="8" fill="#d98c4f"/>'
+    + '<circle cx="47" cy="19" r="8" fill="#d98c4f"/>'
+    + '<circle cx="32" cy="27" r="15" fill="#d98c4f"/>'
+    + '<path d="M24,38 Q32,44 40,38 L36,34 Q32,37 28,34 Z" fill="#ff6f91"/>'
+    + '</svg>',
+  cookies: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">'
+    + '<ellipse cx="32" cy="48" rx="22" ry="7" fill="#f4e4c1"/>'
+    + '<circle cx="22" cy="34" r="10" fill="#d8a15c"/>'
+    + '<circle cx="40" cy="30" r="10" fill="#e0ac66"/>'
+    + '<circle cx="34" cy="42" r="9" fill="#cf9752"/>'
+    + '<g fill="#7a4a20">'
+    + '<circle cx="19" cy="31" r="1.3"/><circle cx="25" cy="36" r="1.3"/><circle cx="21" cy="38" r="1.2"/>'
+    + '<circle cx="37" cy="27" r="1.3"/><circle cx="43" cy="31" r="1.3"/><circle cx="39" cy="34" r="1.2"/>'
+    + '<circle cx="31" cy="40" r="1.3"/><circle cx="37" cy="44" r="1.3"/><circle cx="33" cy="46" r="1.2"/>'
+    + '</g></svg>',
+  crayons: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">'
+    + '<g transform="rotate(-24 32 54)"><rect x="28" y="14" width="8" height="40" rx="3" fill="#ff6f91"/><path d="M28,14 L36,14 L32,4 Z" fill="#ffb3c4"/></g>'
+    + '<g transform="rotate(-12 32 54)"><rect x="28" y="14" width="8" height="40" rx="3" fill="#ff9f45"/><path d="M28,14 L36,14 L32,4 Z" fill="#ffd0a0"/></g>'
+    + '<g><rect x="28" y="14" width="8" height="40" rx="3" fill="#ffd166"/><path d="M28,14 L36,14 L32,4 Z" fill="#ffe6a3"/></g>'
+    + '<g transform="rotate(12 32 54)"><rect x="28" y="14" width="8" height="40" rx="3" fill="#3fb95f"/><path d="M28,14 L36,14 L32,4 Z" fill="#a6e0b3"/></g>'
+    + '<g transform="rotate(24 32 54)"><rect x="28" y="14" width="8" height="40" rx="3" fill="#3d8bfd"/><path d="M28,14 L36,14 L32,4 Z" fill="#aecdfd"/></g>'
+    + '</svg>',
+  ball: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">'
+    + '<defs><clipPath id="ballClip"><circle cx="32" cy="32" r="22"/></clipPath></defs>'
+    + '<circle cx="32" cy="32" r="22" fill="#ffd166"/>'
+    + '<g clip-path="url(#ballClip)">'
+    + '<rect x="0" y="18" width="64" height="10" fill="#ff6f91" transform="rotate(-20 32 32)"/>'
+    + '<rect x="0" y="36" width="64" height="10" fill="#3d8bfd" transform="rotate(20 32 32)"/>'
+    + '</g><circle cx="32" cy="32" r="22" fill="none" stroke="#fff" stroke-width="2"/>'
+    + '</svg>',
+  car: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">'
+    + '<rect x="8" y="34" width="48" height="14" rx="6" fill="#3d8bfd"/>'
+    + '<path d="M16,34 L22,20 L42,20 L48,34 Z" fill="#3d8bfd"/>'
+    + '<rect x="24" y="23" width="16" height="11" rx="2" fill="#bfe0ff"/>'
+    + '<circle cx="20" cy="48" r="7" fill="#222"/><circle cx="20" cy="48" r="2.6" fill="#ccc"/>'
+    + '<circle cx="44" cy="48" r="7" fill="#222"/><circle cx="44" cy="48" r="2.6" fill="#ccc"/>'
+    + '<rect x="10" y="38" width="6" height="4" rx="1.5" fill="#ffd166"/>'
+    + '</svg>',
+  shirt: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">'
+    + '<path d="M22,10 L14,16 L8,26 L16,30 L20,24 L20,54 L44,54 L44,24 L48,30 L56,26 L50,16 L42,10 Q32,18 22,10 Z" fill="#3fb95f"/>'
+    + '<path d="M28,26 L36,26 L32,32 Z" fill="#fff" opacity="0.85"/>'
+    + '</svg>',
+  plant: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">'
+    + '<path d="M18,56 L46,56 L42,38 L22,38 Z" fill="#ff9f45"/>'
+    + '<rect x="15" y="34" width="34" height="6" rx="2" fill="#e8863a"/>'
+    + '<path d="M32,36 C32,20 24,16 18,12 C24,14 30,20 32,28 C34,20 40,14 46,12 C40,16 32,20 32,36 Z" fill="#3fb95f"/>'
+    + '<circle cx="32" cy="14" r="4" fill="#ffd166"/>'
+    + '</svg>',
+  kite: '<svg viewBox="0 0 64 66" xmlns="http://www.w3.org/2000/svg">'
+    + '<path d="M32,6 L50,26 L32,32 Z" fill="#ff6f91"/>'
+    + '<path d="M32,32 L50,26 L32,58 Z" fill="#3d8bfd"/>'
+    + '<path d="M14,26 L32,32 L32,58 Z" fill="#3fb95f"/>'
+    + '<path d="M32,6 L14,26 L32,32 Z" fill="#8d6fff"/>'
+    + '<line x1="32" y1="6" x2="32" y2="58" stroke="#fff" stroke-width="1.5" opacity="0.6"/>'
+    + '<line x1="14" y1="26" x2="50" y2="26" stroke="#fff" stroke-width="1.5" opacity="0.6"/>'
+    + '<path d="M32,58 Q29,61 32,63 Q29,63.5 32,65" stroke="#ff9f45" stroke-width="2.2" fill="none" stroke-linecap="round"/>'
+    + '</svg>',
+  balloons: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">'
+    + '<ellipse cx="22" cy="22" rx="12" ry="15" fill="#ff6f91"/>'
+    + '<ellipse cx="42" cy="18" rx="11" ry="14" fill="#8d6fff"/>'
+    + '<ellipse cx="32" cy="30" rx="11" ry="14" fill="#3d8bfd"/>'
+    + '<path d="M22,37 L20,42 L24,42 Z" fill="#ff6f91"/>'
+    + '<path d="M42,32 L40,37 L44,37 Z" fill="#8d6fff"/>'
+    + '<path d="M32,44 L30,49 L34,49 Z" fill="#3d8bfd"/>'
+    + '<path d="M22,42 Q18,50 22,58" stroke="#c96079" stroke-width="1.5" fill="none"/>'
+    + '<path d="M42,37 Q46,46 40,56" stroke="#6c4fd1" stroke-width="1.5" fill="none"/>'
+    + '<path d="M32,49 Q28,56 32,60" stroke="#2c6fd1" stroke-width="1.5" fill="none"/>'
+    + '</svg>',
+};
+/* Warga penerima paket digambar sebagai SILUET HITAM PEKAT tanpa kepala —
+   sebagai ganti kepala ada bulatan cahaya melayang (tanpa mata/hidung/telinga/
+   detail wajah apa pun), sesuai preferensi pengguna. Warna bulatan cahaya
+   dipilih acak dari palet situs supaya tetap ada rasa "kejutan" tiap rumah,
+   tanpa menggambar wajah manusia. */
+const KID_ORB_COLORS = ['#ff6f91','#8d6fff','#3fb95f','#3d8bfd','#ff9f45','#ffd166'];
+function kidSilhouetteSVG(color){
+  return '<svg viewBox="0 0 60 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">'
+    + '<defs><radialGradient id="orbGlow" cx="50%" cy="50%" r="50%">'
+    + '<stop offset="0%" stop-color="'+color+'" stop-opacity="0.9"/>'
+    + '<stop offset="55%" stop-color="'+color+'" stop-opacity="0.35"/>'
+    + '<stop offset="100%" stop-color="'+color+'" stop-opacity="0"/>'
+    + '</radialGradient></defs>'
+    + '<circle cx="30" cy="16" r="17" fill="url(#orbGlow)"/>'
+    + '<circle cx="30" cy="16" r="6.5" fill="'+color+'"/>'
+    + '<path d="M40,47 Q51,38 55,25" stroke="#161616" stroke-width="9" stroke-linecap="round" fill="none"/>'
+    + '<path d="M20,50 Q13,59 15,68" stroke="#161616" stroke-width="9" stroke-linecap="round" fill="none"/>'
+    + '<path d="M30,40 C18,40 10,51 10,65 C10,78 11,88 15,90 L45,90 C49,88 50,78 50,65 C50,51 42,40 30,40 Z" fill="#161616"/>'
+    + '</svg>';
+}
+
+function showHouseModal(house){
+  document.getElementById('actionBtn').style.display = 'none';
+  const st = houseStyle(house.number);
+  document.getElementById('modalTitle').textContent = 'Rumah #'+house.number;
+  document.getElementById('numBadge').textContent = '#'+house.number;
+  document.getElementById('roofBig').style.setProperty('--roofc', st.roof);
+  document.getElementById('wallBig').style.setProperty('--wallc', st.wall);
+  document.getElementById('doorBig').style.setProperty('--doorc', st.door);
+  document.getElementById('accLeft').textContent = st.accessory;
+  const door = document.getElementById('doorBig');
+  const pkg = document.getElementById('packagePop');
+  const kid = document.getElementById('kidPop');
+  door.classList.remove('open','shake'); pkg.classList.remove('show'); kid.classList.remove('show');
+  document.getElementById('flavorText').innerHTML = '&nbsp;';
+  document.getElementById('flavorSub').innerHTML = '&nbsp;';
+  document.getElementById('modalNextBtn').style.display = 'none';
+  kid.innerHTML = kidSilhouetteSVG(KID_ORB_COLORS[Math.floor(Math.random()*KID_ORB_COLORS.length)]);
+
+  document.getElementById('overlay').classList.add('show');
+
+  door.onclick = () => {
+    door.onclick = null;
+    playDoorbell();
+    door.classList.add('shake');
+    setTimeout(() => {
+      door.classList.add('open');
+      const flavor = FLAVORS[Math.floor(Math.random()*FLAVORS.length)];
+      pkg.innerHTML = PACKAGE_ART[flavor.id] || '';
+      pkg.classList.add('show');
+      kid.classList.add('show');
+      document.getElementById('flavorText').textContent = flavor.title;
+      document.getElementById('flavorSub').textContent = flavor.sub;
+      burstConfetti();
+      document.getElementById('cntDelivered').textContent = deliveredSet.size;
+      setTimeout(() => {
+        const isLast = selectedMode === 'choice' ? legIndex >= legQueue.length : courier.edgeIndex >= currentRoute.length;
+        const btn = document.getElementById('modalNextBtn');
+        btn.style.display = 'inline-block';
+        btn.textContent = isLast ? '🚚 Kembali ke Kantor Pos' : '🚚 Lanjut ke Rumah Berikutnya';
+        btn.onclick = () => {
+          document.getElementById('overlay').classList.remove('show');
+          btn.style.display = 'none';
+          if(selectedMode === 'choice'){
+            prepareLegChoice();
+            if(!rafId) rafId = requestAnimationFrame(loop);
+          } else {
+            phase = 'driving';
+            updateStatusDriving();
+          }
+        };
+      }, 500);
+    }, 350);
+  };
+}
+
+function burstConfetti(){
+  const modal = document.getElementById('houseModal');
+  const colors = ['#ff6f91','#8d6fff','#3fb95f','#3d8bfd','#ff9f45','#ffd166'];
+  for(let i=0;i<22;i++){
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    el.style.left = (10+Math.random()*80)+'%';
+    el.style.background = colors[Math.floor(Math.random()*colors.length)];
+    el.style.animationDuration = (0.9+Math.random()*0.6)+'s';
+    el.style.animationDelay = (Math.random()*0.2)+'s';
+    modal.appendChild(el);
+    setTimeout(()=>el.remove(), 1800);
+  }
+}
+
+function finishRound(){
+  phase = 'finished';
+  playTada();
+  document.getElementById('actionBtn').style.display = 'none';
+  document.getElementById('statusText').textContent = '🎉 Semua paket sudah diantar!';
+  hideAlgoBadge();
+  document.getElementById('stopBtn').classList.remove('show');
+  lastScoreByMode[selectedMode] = totalPetak;
+  document.getElementById('finaleDelivered').textContent = deliveredSet.size;
+  document.getElementById('finalePetak').textContent = totalPetak;
+  const perPaket = totalPetak / Math.max(deliveredSet.size,1);
+  const stars = perPaket < 5 ? '⭐⭐⭐' : perPaket < 8 ? '⭐⭐' : '⭐';
+  document.getElementById('finaleStars').textContent = stars;
+  const thisLabel = MODE_LABELS[selectedMode];
+  const otherKeys = Object.keys(lastScoreByMode).filter(k => k !== selectedMode);
+  let compare;
+  if(otherKeys.length === 0){
+    compare = 'Coba mainkan cara lain juga (Semut Pintar, Cari Terdekat, atau Acak Bingung), lalu bandingkan jumlah petak jalannya!';
+  } else {
+    let best = {label:thisLabel, val:totalPetak};
+    const lines = otherKeys.map(k => {
+      if(lastScoreByMode[k] < best.val) best = {label:MODE_LABELS[k], val:lastScoreByMode[k]};
+      return '• '+MODE_LABELS[k]+' (tadi): <b>'+lastScoreByMode[k]+'</b> petak';
+    });
+    compare = '• '+thisLabel+' (sekarang): <b>'+totalPetak+'</b> petak<br>'+lines.join('<br>')
+      +'<br><br>🏆 Paling hemat sejauh ini: <b>'+best.label+'</b> ('+best.val+' petak)!';
+  }
+  document.getElementById('finaleCompare').innerHTML = compare;
+  document.getElementById('finale').classList.add('show');
+  if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
+  draw();
+}
+
+/* ================= GAMBAR SEMUA ================= */
+function draw(){
+  CTX.clearRect(0,0,W,H);
+  CTX.fillStyle = '#d9f2c4'; CTX.fillRect(0,0,W,H);
+  drawRoads();
+  const orderNumbers = new Set(orderHouses.map(h=>h.number));
+  houses.forEach(h => drawHouseIcon(h, deliveredSet.has(h.number), orderNumbers.has(h.number)));
+  drawDepot();
+
+  if(phase === 'thinking'){
+    antsDecor.forEach(a => drawAntBlack(a.x, a.y));
+  }
+
+  if(phase === 'choosing' && choicePaths){
+    const blink = 0.5 + 0.5*Math.sin(Date.now()/260);
+    drawGlowPath(choicePaths.A, '#ff6f91', blink);
+    drawGlowPath(choicePaths.B, '#3d8bfd', blink);
+  }
+
+  if((phase==='driving' || phase==='arrived' || phase==='driving-choice') && currentEdgePaths.length){
+    CTX.save();
+    CTX.strokeStyle = selectedMode==='ants' ? '#3fb95f' : selectedMode==='choice' ? '#8d6fff' : selectedMode==='greedy' ? '#ff9f45' : '#9aa5b1';
+    CTX.globalAlpha = 0.7; CTX.lineWidth = 4; CTX.lineJoin='round';
+    CTX.beginPath();
+    currentEdgePaths.forEach((path,pi) => {
+      if(pi > courier.edgeIndex) return;
+      path.forEach((p,i) => { if(i===0) CTX.moveTo(p.x,p.y); else CTX.lineTo(p.x,p.y); });
+    });
+    CTX.stroke();
+    CTX.restore();
+
+    const path = currentEdgePaths[Math.min(courier.edgeIndex, currentEdgePaths.length-1)];
+    const si = Math.min(courier.subIndex, path.length-2);
+    const a = path[si], b = path[si+1];
+    const cx = a.x + (b.x-a.x)*courier.subT;
+    const cy = a.y + (b.y-a.y)*courier.subT + Math.sin(Date.now()/120)*1.5;
+    CTX.font = '28px sans-serif'; CTX.textAlign='center';
+    CTX.fillText('🚚', cx, cy+9);
+  } else if(phase==='choosing'){
+    CTX.font = '28px sans-serif'; CTX.textAlign='center';
+    CTX.fillText('🚚', legFrom.x, legFrom.y+9);
+  } else if(phase==='idle' || phase==='finished'){
+    CTX.font = '26px sans-serif'; CTX.textAlign='center';
+    CTX.fillText('🚚', DEPOT.x+18, DEPOT.y+9);
+  }
+}
+
+/* ================= MODE BALAPAN (2 CARA SEKALIGUS, REAL-TIME) =================
+   Dua kurir jalan BERSAMAAN di dua peta identik (rumah pesanan sama persis di
+   kedua sisi, supaya adil), masing-masing pakai algoritma pilihan anak, dengan
+   kecepatan piksel yang SAMA — jadi siapa sampai duluan = siapa yang jalannya
+   paling hemat. Ini versi paling literal dari "lihat perbedaannya secara real
+   time" yang diminta pengguna. Tidak pakai panel ketuk-pintu (supaya kedua sisi
+   tetap sinkron & sederhana) — rumah otomatis tercentang ✅ begitu dilewati. */
+const RCV_A = document.getElementById('cvA'), RCTX_A = RCV_A.getContext('2d');
+const RCV_B = document.getElementById('cvB'), RCTX_B = RCV_B.getContext('2d');
+let raceOrder = [];
+let raceState = { A:null, B:null };
+let raceRafId = null, raceLastTs = 0;
+
+function computeRouteFor(mode, list){
+  if(mode === 'ants') return routeAnts(list);
+  if(mode === 'greedy') return routeGreedy(list);
+  return routeRandom(list);
+}
+function buildEdgePathsFor(route){
+  const seq = [DEPOT, ...route.map(h=>({x:h.x,y:h.y,number:h.number})), DEPOT];
+  const paths = [];
+  for(let k=0;k<seq.length-1;k++) paths.push(roadWaypoints(seq[k], seq[k+1]));
+  return paths;
+}
+function makeRaceLane(mode, list){
+  const route = computeRouteFor(mode, list);
+  return { mode, route, edgePaths: buildEdgePathsFor(route),
+    courier:{edgeIndex:0,subIndex:0,subT:0}, petak:0, delivered:new Set(), done:false };
+}
+
+document.getElementById('raceToggleBtn').addEventListener('click', () => {
+  document.getElementById('raceSetup').classList.toggle('show');
+});
+
+document.getElementById('raceStartBtn').addEventListener('click', () => {
+  ensureAudio();
+  const modeA = document.getElementById('raceModeA').value;
+  const modeB = document.getElementById('raceModeB').value;
+  const K = Number(document.getElementById('orderVal').textContent);
+  raceOrder = shuffle(houses.slice()).slice(0, K);
+  raceState.A = makeRaceLane(modeA, raceOrder);
+  raceState.B = makeRaceLane(modeB, raceOrder);
+  document.getElementById('laneIconA').innerHTML = BADGE_ICONS[modeA];
+  document.getElementById('laneNameA').textContent = MODE_LABELS[modeA];
+  document.getElementById('laneIconB').innerHTML = BADGE_ICONS[modeB];
+  document.getElementById('laneNameB').textContent = MODE_LABELS[modeB];
+  document.getElementById('lanePetakA').textContent = '0';
+  document.getElementById('lanePetakB').textContent = '0';
+  document.getElementById('raceBanner').textContent = '🏁 Bersiap... ayo lihat siapa lebih hemat!';
+  document.getElementById('setupArea').style.display = 'none';
+  document.getElementById('raceView').classList.add('show');
+  raceLastTs = 0;
+  if(!raceRafId) raceRafId = requestAnimationFrame(raceLoop);
+});
+
+document.getElementById('raceAgainBtn').addEventListener('click', () => {
+  document.getElementById('raceView').classList.remove('show');
+  document.getElementById('setupArea').style.display = 'block';
+  document.getElementById('raceSetup').classList.add('show');
+});
+document.getElementById('raceBackBtn').addEventListener('click', () => {
+  if(raceRafId){ cancelAnimationFrame(raceRafId); raceRafId=null; }
+  document.getElementById('raceView').classList.remove('show');
+  document.getElementById('setupArea').style.display = 'block';
+});
+
+function stepRaceLane(lane, dt, petakElId){
+  if(lane.done) return;
+  const path = lane.edgePaths[lane.courier.edgeIndex];
+  if(!path){ lane.done = true; return; }
+  const a = path[lane.courier.subIndex], b = path[lane.courier.subIndex+1];
+  const segLen = Math.max(euclid(a,b), 0.001);
+  lane.courier.subT += (150*dt)/segLen;
+  if(lane.courier.subT >= 1){
+    lane.courier.subIndex++; lane.courier.subT = 0;
+    if(lane.courier.subIndex >= path.length-1){
+      lane.petak += petakSteps(path[0], path[path.length-1]);
+      document.getElementById(petakElId).textContent = lane.petak;
+      lane.courier.edgeIndex++; lane.courier.subIndex = 0;
+      const arrivedHouse = lane.route[lane.courier.edgeIndex-1];
+      if(arrivedHouse) lane.delivered.add(arrivedHouse.number);
+      if(lane.courier.edgeIndex >= lane.edgePaths.length) lane.done = true;
+    }
+  }
+}
+function drawRaceLane(ctx, lane){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#d9f2c4'; ctx.fillRect(0,0,W,H);
+  drawRoads(ctx);
+  const orderNums = new Set(raceOrder.map(h=>h.number));
+  houses.forEach(h => drawHouseIcon(h, lane.delivered.has(h.number), orderNums.has(h.number), ctx));
+  drawDepot(ctx);
+  if(!lane.done){
+    const path = lane.edgePaths[Math.min(lane.courier.edgeIndex, lane.edgePaths.length-1)];
+    const si = Math.min(lane.courier.subIndex, path.length-2);
+    const a = path[si], b = path[si+1];
+    const cx = a.x + (b.x-a.x)*lane.courier.subT;
+    const cy = a.y + (b.y-a.y)*lane.courier.subT + Math.sin(Date.now()/120)*1.5;
+    ctx.font = '28px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('🚚', cx, cy+9);
+  } else {
+    ctx.font = '30px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('🏁', DEPOT.x+18, DEPOT.y+8);
+  }
+}
+function raceLoop(ts){
+  raceRafId = requestAnimationFrame(raceLoop);
+  const dt = raceLastTs ? (ts-raceLastTs)/1000 : 0; raceLastTs = ts;
+  stepRaceLane(raceState.A, dt, 'lanePetakA');
+  stepRaceLane(raceState.B, dt, 'lanePetakB');
+  drawRaceLane(RCTX_A, raceState.A);
+  drawRaceLane(RCTX_B, raceState.B);
+  if(raceState.A.done && raceState.B.done){
+    cancelAnimationFrame(raceRafId); raceRafId = null; raceLastTs = 0;
+    finishRace();
+  }
+}
+function finishRace(){
+  const a = raceState.A, b = raceState.B;
+  const labelA = MODE_LABELS[a.mode], labelB = MODE_LABELS[b.mode];
+  let msg;
+  if(a.petak === b.petak){
+    msg = '🤝 Seri! Sama-sama '+a.petak+' petak jalan.';
+  } else {
+    const winner = a.petak < b.petak ? labelA : labelB;
+    const wp = Math.min(a.petak,b.petak), lp = Math.max(a.petak,b.petak);
+    msg = '🏆 '+winner+' menang! ('+wp+' petak, lawannya '+lp+' petak — lebih hemat '+(lp-wp)+' petak!)';
+  }
+  document.getElementById('raceBanner').textContent = msg;
+  playTada();
+}
+
+/* ================= KONTROL UI ================= */
+document.querySelectorAll('.mode-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.mode-card').forEach(c=>c.classList.remove('selected'));
+    card.classList.add('selected');
+    selectedMode = card.dataset.mode;
+  });
+});
+document.getElementById('minusBtn').addEventListener('click', () => {
+  const el = document.getElementById('orderVal');
+  el.textContent = Math.max(3, Number(el.textContent)-1);
+});
+document.getElementById('plusBtn').addEventListener('click', () => {
+  const el = document.getElementById('orderVal');
+  el.textContent = Math.min(8, Number(el.textContent)+1);
+});
+document.getElementById('startBtn').addEventListener('click', () => { ensureAudio(); newRoundKeepOrders(); startDelivery(); });
+document.getElementById('replayBtn').addEventListener('click', () => { newRound(); });
+document.getElementById('stopBtn').addEventListener('click', () => {
+  if(rafId){ cancelAnimationFrame(rafId); rafId = null; }
+  lastTs = 0;
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('actionBtn').style.display = 'none';
+  document.getElementById('modalNextBtn').style.display = 'none';
+  newRound(); // juga menyembunyikan badge algoritma & tombol berhenti itu sendiri
+});
+
+function newRoundKeepOrders(){
+  // panggil newRound tapi jangan reset pilihan mode; hanya siapkan rumah pesanan & status
+  const K = Number(document.getElementById('orderVal').textContent);
+  const pool = shuffle(houses.slice());
+  orderHouses = pool.slice(0, K);
+  courier = {edgeIndex:0, subIndex:0, subT:0};
+  deliveredSet = new Set();
+  totalPetak = 0;
+  legQueue = []; legIndex = 0; legFrom = {x:DEPOT.x,y:DEPOT.y}; pendingLegTarget = null; choicePaths = null;
+  document.getElementById('cntTotal').textContent = K;
+  document.getElementById('cntDelivered').textContent = '0';
+  document.getElementById('cntPetak').textContent = '0';
+  document.getElementById('finale').classList.remove('show');
+}
+
+/* ================= INIT ================= */
+buildHouses();
+newRound();
+draw();
+</script>
+</body>
+</html>

@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Menghalau dari Api — Permainan Algoritma Ngengat-Api | JAZMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night1:#060a14; --night2:#0d1526; --night3:#182742;
+    --panel:#101a2ce6; --panel-solid:#101a2c;
+    --ink:#eef3fb; --dim:#8fa0ba;
+    --ember:#ff7a29; --ember2:#ffc266; --ember-glow:rgba(255,140,40,.55);
+    --safe:#4fc98a; --danger:#ef5a56; --accent:#ffcf6b;
+    --line:#24314a;
+    --display:'Fredoka',sans-serif; --sans:'Quicksand',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--night1);color:var(--ink);font-family:var(--sans);line-height:1.6;}
+  .wrap{max-width:640px;margin:0 auto;padding:0 0 40px;}
+
+  .hero{padding:12px 16px 6px;text-align:center;}
+  .hero h1{font-family:var(--display);font-weight:600;font-size:clamp(16px,4.2vw,19px);margin:0 0 3px;color:var(--ink);}
+  .hero p{color:var(--dim);font-size:10.5px;margin:0;max-width:520px;margin:0 auto;}
+
+  .stage-wrap{position:relative;margin:8px 8px 0;border-radius:18px;overflow:hidden;border:2px solid var(--line);
+    aspect-ratio:4/3;background:linear-gradient(180deg,var(--night1),var(--night2) 55%,var(--night3));}
+  canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair;}
+
+  .hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;
+    padding:7px 8px;pointer-events:none;font-family:var(--display);}
+  .hud-chip{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px 7px;font-size:10px;
+    pointer-events:auto;}
+  .hud-left,.hud-right{display:flex;flex-direction:column;gap:4px;align-items:flex-start;}
+  .hud-right{align-items:flex-end;}
+  .hud-score{color:var(--accent);transition:background .15s,border-color .15s;}
+  .hud-score b{font-size:12px;}
+  .hud-score.score-loss{background:#3a1414;border-color:var(--danger);}
+  .hud-score.score-loss b{color:var(--danger);}
+  .hud-level-tag{margin-left:5px;font-size:8.5px;color:var(--dim);font-weight:600;}
+  .hud-best{color:var(--dim);font-size:9px;}
+  .hud-best b{font-size:10px;color:#c9d3e4;}
+  .dmg-wrap{width:92px;}
+  .dmg-label{font-size:7.5px;color:var(--dim);font-family:var(--sans);text-transform:uppercase;letter-spacing:.03em;margin-bottom:2px;}
+  .dmg-bar{height:5px;border-radius:4px;background:#1c2740;overflow:hidden;}
+  .dmg-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--safe),var(--danger));transition:width .25s;}
+  .reset-btn{pointer-events:auto;background:var(--panel);border:1px solid var(--line);color:var(--dim);
+    border-radius:7px;font-family:var(--sans);font-size:9.5px;padding:3px 6px;cursor:pointer;}
+
+  .start-overlay,.over-overlay{position:absolute;inset:0;background:rgba(6,10,20,.86);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;padding:20px;gap:10px;}
+  .over-overlay{display:none;}
+  .start-overlay h2,.over-overlay h2{font-family:var(--display);font-weight:600;font-size:18px;margin:0;}
+  .over-overlay h2{color:var(--danger);}
+  .start-overlay p,.over-overlay p{color:var(--dim);font-size:12.5px;max-width:340px;margin:0;}
+  .go-btn{font-family:var(--display);font-weight:600;font-size:14px;background:var(--ember);color:#2a1200;border:none;
+    padding:11px 22px;border-radius:999px;cursor:pointer;margin-top:6px;}
+  .go-btn:active{transform:scale(.97);}
+
+  .toolbar{display:flex;gap:5px;margin:6px 8px 0;overflow-x:auto;padding-bottom:2px;}
+  .tool-btn{flex:1 1 0;min-width:60px;background:var(--panel-solid);border:2px solid var(--line);border-radius:10px;
+    padding:5px 3px;text-align:center;cursor:pointer;color:var(--dim);font-family:var(--sans);}
+  .tool-btn .ticon{font-size:16px;display:block;margin-bottom:1px;}
+  .tool-btn .tname{font-size:9px;font-weight:600;}
+  .tool-btn.active{border-color:var(--ember);color:var(--ink);background:#1c1408;}
+
+  .hint{margin:6px 14px 0;font-size:10px;color:var(--dim);text-align:center;}
+
+  .info{margin:14px 10px 0;background:var(--panel-solid);border:1px solid var(--line);border-radius:14px;padding:12px 14px;}
+  .info h3{font-family:var(--display);font-weight:600;font-size:13px;margin:0 0 5px;color:var(--ember2);}
+  .info p{font-size:11.5px;color:#c3cee0;margin:0 0 7px;}
+  .info a{color:var(--ember2);}
+  .info .note{font-size:10px;color:var(--dim);border-top:1px dashed var(--line);padding-top:7px;margin-top:9px;}
+
+  .go-btn.secondary{background:transparent;color:var(--ember2);border:1.5px solid var(--line);font-size:12px;padding:8px 16px;margin-top:0;}
+  .go-btn.secondary:active{background:#1c1408;}
+
+  /* ---- Tutorial (modal fixed, di luar stage supaya muat di layar HP) ---- */
+  .tut-overlay{position:fixed;inset:0;z-index:50;background:rgba(4,7,14,.9);display:none;align-items:center;
+    justify-content:center;padding:14px;overflow-y:auto;}
+  .tut-overlay.open{display:flex;}
+  .tut-card{width:100%;max-width:400px;background:var(--panel-solid);border:1.5px solid var(--line);border-radius:18px;
+    padding:16px 16px 14px;margin:auto;}
+  .tut-art{height:112px;border-radius:12px;background:linear-gradient(180deg,var(--night1),var(--night3));
+    border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:12px;}
+  .tut-art svg{width:100%;height:100%;display:block;}
+  .tut-step{display:none;}
+  .tut-step.on{display:block;}
+  .tut-step h3{font-family:var(--display);font-weight:600;font-size:16px;margin:0 0 6px;color:var(--ember2);}
+  .tut-step p{font-size:13px;color:#c9d4e6;margin:0;line-height:1.55;}
+  .tut-mini{display:flex;gap:4px;justify-content:center;align-items:stretch;width:100%;padding:0 10px;}
+  .tut-mini .mt{flex:1;max-width:50px;background:var(--panel-solid);border:1.5px solid var(--line);border-radius:8px;
+    text-align:center;font-size:16px;padding:6px 0;color:var(--dim);}
+  .tut-mini .mt.hl{border-color:var(--ember);background:#1c1408;}
+  .tut-hud{display:flex;gap:10px;align-items:center;justify-content:center;width:100%;padding:0 12px;font-family:var(--display);}
+  .tut-hud .hud-chip{font-size:11px;}
+  .tut-hud .dmg-wrap{width:120px;}
+  .tut-hud .dmg-label{font-size:8.5px;}
+  .tut-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:14px;}
+  .tut-dots{display:flex;gap:6px;}
+  .tut-dots i{width:7px;height:7px;border-radius:50%;background:var(--line);display:block;}
+  .tut-dots i.on{background:var(--ember);}
+  .tut-btns{display:flex;gap:6px;align-items:center;}
+  .tut-link{background:none;border:none;color:var(--dim);font-family:var(--sans);font-size:12px;padding:8px 6px;cursor:pointer;}
+  .tut-btn{font-family:var(--display);font-weight:600;font-size:13px;background:var(--ember);color:#2a1200;border:none;
+    padding:9px 18px;border-radius:999px;cursor:pointer;}
+  .tut-btn:active{transform:scale(.97);}
+  .tut-btn:focus-visible,.tut-link:focus-visible,.go-btn:focus-visible{outline:2px solid var(--ember2);outline-offset:2px;}
+
+  .ov-inner{margin:auto;display:flex;flex-direction:column;align-items:center;gap:8px;max-width:360px;width:100%;}
+  .start-overlay,.over-overlay{overflow-y:auto;padding:14px;}
+  .ov-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center;}
+  .ov-row .go-btn{margin-top:0;}
+  .mode-seg{display:flex;gap:6px;width:100%;max-width:300px;}
+  .mode-opt{flex:1;font-family:var(--display);font-weight:600;font-size:12.5px;color:var(--dim);background:var(--panel-solid);
+    border:1.5px solid var(--line);border-radius:999px;padding:8px 4px;min-height:36px;cursor:pointer;}
+  .mode-opt[aria-checked="true"]{border-color:var(--ember);color:var(--ink);background:#1c1408;}
+  .mode-opt:focus-visible{outline:2px solid var(--ember2);outline-offset:2px;}
+  .mode-desc{font-size:11px;color:var(--dim);min-height:16px;}
+
+  /* ---- Legenda jenis serangga (siluet sayap + badan, tanpa kepala) ---- */
+  .species{display:flex;flex-direction:column;gap:7px;margin:8px 0 2px;}
+  .sp-row{display:flex;gap:10px;align-items:center;background:#0b1424;border:1px solid var(--line);border-radius:12px;padding:6px 10px;}
+  .sp-row canvas.sp-cv{width:76px;height:50px;flex:none;background:#070c18;border-radius:8px;cursor:default;touch-action:auto;}
+  .sp-name{font-family:var(--display);font-weight:600;font-size:12.5px;color:var(--ink);margin-bottom:1px;}
+  .sp-name .sp-pts{color:var(--accent);font-size:11.5px;margin-left:4px;}
+  .sp-txt{font-size:11px;color:#c3cee0;line-height:1.45;}
+
+  /* ---- Combo / rangkaian beruntun ---- */
+  .hud-combo{font-size:9.5px;color:var(--dim);min-width:78px;transition:background .15s,border-color .15s,color .15s;}
+  .hud-combo b{font-size:11px;color:#c9d3e4;}
+  .hud-combo .combo-mult{color:var(--ember2);font-weight:700;margin-left:3px;}
+  .combo-bar{height:3px;border-radius:3px;background:#1c2740;margin-top:3px;overflow:hidden;}
+  .combo-fill{height:100%;width:0%;background:var(--ember);transition:width .2s;}
+  .hud-combo.hot{border-color:var(--ember);color:var(--ink);}
+  .hud-combo.broke{background:#3a1414;border-color:var(--danger);}
+  .over-streak{color:var(--ember2);font-family:var(--display);font-size:13px;}
+
+  /* ---- Showcase jejak 3D (setelah game over) ---- */
+  .showcase{display:none;margin:14px 10px 0;background:var(--panel-solid);border:1px solid var(--line);border-radius:14px;padding:12px 12px 14px;}
+  .showcase h3{font-family:var(--display);font-weight:600;font-size:13px;margin:0 0 4px;color:var(--ember2);}
+  .sc-sub{font-size:11px;color:var(--dim);margin:0 0 8px;}
+  .sc-stage{position:relative;height:300px;border-radius:10px;overflow:hidden;background:#060a14;border:1px solid var(--line);pointer-events:none;}
+  .sc-stage canvas{width:100%;height:100%;cursor:default;touch-action:auto;pointer-events:none;}
+  .sc-msg{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:18px;color:var(--dim);font-size:12px;}
+  .sc-legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:10.5px;color:var(--dim);margin-top:9px;}
+  .sc-legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px;}
+  .sc-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px;}
+  .sc-stat{background:#0b1424;border:1px solid var(--line);border-radius:10px;padding:6px 4px;text-align:center;}
+  .sc-stat b{display:block;font-family:var(--display);font-size:15px;color:var(--ink);}
+  .sc-stat span{font-size:9.5px;color:var(--dim);}
+  .sc-lines{margin-top:8px;font-size:11px;color:#c3cee0;line-height:1.6;}
+  .sc-tools{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px;font-size:10.5px;color:var(--dim);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>🕯️ Menghalau dari Api</h1>
+    <p>Serangga-serangga kecil terbang mendekati api mengikuti pola algoritma alam. Halau mereka menjauh — tapi tidak semua alat yang tersedia benar-benar aman.</p>
+  </div>
+
+  <div class="stage-wrap" id="stageWrap">
+    <canvas id="stage"></canvas>
+    <div class="hud">
+      <div class="hud-left">
+        <div class="hud-chip hud-score">Poin <b id="scoreVal">0</b><span class="hud-level-tag" id="levelTag">Lv 1</span></div>
+        <div class="hud-chip hud-best"><span id="bestLbl">Terbaik</span> <b id="bestVal">0</b></div>
+        <div class="hud-chip hud-combo" id="comboChip"><span>Beruntun</span> <b id="comboVal">0</b><span class="combo-mult" id="comboMult"></span>
+          <div class="combo-bar"><div class="combo-fill" id="comboFill"></div></div></div>
+      </div>
+      <div class="hud-chip dmg-wrap">
+        <div class="dmg-label">Tingkat Kerusakan</div>
+        <div class="dmg-bar"><div class="dmg-fill" id="dmgFill"></div></div>
+      </div>
+      <div class="hud-right">
+        <button class="reset-btn" id="muteBtn" type="button">🔊</button>
+        <button class="reset-btn" id="resetBtn" type="button">↺ Ulangi</button>
+      </div>
+    </div>
+    <div class="start-overlay" id="startOverlay">
+      <div class="ov-inner">
+        <h2>▶ Mulai Menghalau</h2>
+        <p>Pilih alat di bawah, lalu ketuk dekat serangga. Amati baik-baik efek tiap alat.</p>
+        <div class="mode-seg" id="modeSeg" role="radiogroup" aria-label="Tingkat kesulitan">
+          <button class="mode-opt" role="radio" aria-checked="false" data-mode="santai" type="button">Santai</button>
+          <button class="mode-opt" role="radio" aria-checked="false" data-mode="normal" type="button">Normal</button>
+          <button class="mode-opt" role="radio" aria-checked="false" data-mode="keras" type="button">Keras</button>
+        </div>
+        <div class="mode-desc" id="modeDesc"></div>
+        <div class="ov-row">
+          <button class="go-btn" id="startBtn" type="button">▶ Mulai</button>
+          <button class="go-btn secondary" id="howBtn" type="button">Cara Main</button>
+        </div>
+      </div>
+    </div>
+    <div class="over-overlay" id="overOverlay">
+      <div class="ov-inner">
+        <h2>🕯️ Beberapa hewan telah mati</h2>
+        <p class="over-streak" id="overStreak"></p>
+        <p id="overDetail">Salah satu alat yang dipakai ternyata berbahaya, dan kerusakannya menumpuk terlalu jauh sebelum disadari.</p>
+        <div class="ov-row">
+          <button class="go-btn" id="overRestartBtn" type="button">↺ Ulangi dari Awal</button>
+          <button class="go-btn secondary" id="overModeBtn" type="button">Ganti Tingkat</button>
+          <button class="go-btn secondary" id="overTrailBtn" type="button">Lihat Jejak ↓</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toolbar" id="toolbar">
+    <button class="tool-btn" data-tool="fan" type="button"><span class="ticon">🌬️</span><span class="tname">Angin Sepoi</span></button>
+    <button class="tool-btn" data-tool="decoy" type="button"><span class="ticon">🔦</span><span class="tname">Cahaya Pengalih</span></button>
+    <button class="tool-btn" data-tool="net" type="button"><span class="ticon">🕸️</span><span class="tname">Jaring Lembut</span></button>
+    <button class="tool-btn" data-tool="zapper" type="button"><span class="ticon">⚡</span><span class="tname">Pengusir Kilat</span></button>
+    <button class="tool-btn" data-tool="spray" type="button"><span class="ticon">🌫️</span><span class="tname">Kabut Pengusir</span></button>
+  </div>
+  <p class="hint" id="toolHint">Pilih salah satu alat di atas, lalu ketuk area permainan di dekat serangga.</p>
+
+  <div class="showcase" id="showcase">
+    <h3>Jejak Penerbangan Sesi Ini</h3>
+    <p class="sc-sub">Tiap garis adalah lintasan satu serangga, makin tinggi berarti makin lama ia terbang. Diputar otomatis, tidak perlu disentuh.</p>
+    <div class="sc-stage" id="showcase3d"><div class="sc-msg" id="scMsg">Memuat model 3D…</div></div>
+    <div class="sc-legend">
+      <span><i style="background:#4fc98a"></i>Selamat</span>
+      <span><i style="background:#ff7a29"></i>Kena api</span>
+      <span><i style="background:#8fa0ba"></i>Terkena alat</span>
+      <span><i style="background:#ffcf6b"></i>Belum selesai</span>
+    </div>
+    <div class="sc-stats" id="scStats"></div>
+    <div class="sc-lines" id="scLines"></div>
+    <div class="sc-tools" id="scTools"></div>
+  </div>
+
+  <div class="info">
+    <h3>Kenapa serangga terbang berputar mendekati api?</h3>
+    <p>Di alam, ngengat bernavigasi malam hari dengan menjaga sudut tetap terhadap cahaya bulan — karena bulan sangat jauh, sinarnya datang hampir sejajar dari segala arah, jadi trik ini membuatnya terbang lurus. Masalahnya muncul kalau "bulan" itu diganti nyala api yang dekat: menjaga sudut tetap terhadap sumber cahaya yang dekat justru memaksanya berputar dalam lintasan spiral yang makin lama makin sempit — itulah yang ditiru permainan ini.</p>
+    <p>Pola gerak ini adalah versi bermain dari algoritma alam <strong>Ngengat-Api (Moth-Flame Optimization)</strong> yang juga ada sebagai modul eksplorasi lengkap (dengan rumus & parameter yang bisa diubah) di <a href="/alat/matematika-dan-sains-komputasi/laboratorium-algoritma-alam" target="_blank" rel="noopener">Laboratorium Algoritma Alam</a>.</p>
+    <h3 style="margin-top:12px">Rangkaian beruntun</h3>
+    <p>Tiap serangga yang selamat menambah rangkaian. Rangkaian 6 melipatgandakan poin dua kali, rangkaian 14 tiga kali. Rangkaian putus kalau ada serangga yang kena api, atau kalau meteran kerusakan naik.</p>
+    <h3 style="margin-top:12px">Kenali serangganya</h3>
+    <div class="species">
+      <div class="sp-row"><canvas class="sp-cv" data-kind="ngengat" aria-hidden="true"></canvas>
+        <div><div class="sp-name">Ngengat<span class="sp-pts">+1 poin</span></div>
+        <div class="sp-txt">Tempo sedang. Yang paling sering datang.</div></div></div>
+      <div class="sp-row"><canvas class="sp-cv" data-kind="laron" aria-hidden="true"></canvas>
+        <div><div class="sp-name">Laron<span class="sp-pts">+2 poin</span></div>
+        <div class="sp-txt">Cepat dan ringan: putarannya rapat, mudah tertiup angin, tapi sulit dijaring.</div></div></div>
+      <div class="sp-row"><canvas class="sp-cv" data-kind="agung" aria-hidden="true"></canvas>
+        <div><div class="sp-name">Ngengat Besar<span class="sp-pts">+3 poin</span></div>
+        <div class="sp-txt">Lebih lambat tapi berat, angin sepoi kurang mempan. Kalau sampai kena api, dendanya lebih besar.</div></div></div>
+    </div>
+    <p class="note">Angka kerusakan, kecepatan, dan interval di permainan ini murni pilihan keseimbangan permainan (game balance) — bukan hasil pemodelan ekologis atau fisika yang diverifikasi, berbeda dari modul-modul di laboratorium algoritma yang memang menyertakan verifikasi numerik.</p>
+  </div>
+</div>
+
+<div class="tut-overlay" id="tutorialOverlay" role="dialog" aria-modal="true" aria-labelledby="tutTitle1">
+  <div class="tut-card">
+
+    <div class="tut-step on" data-step="0">
+      <div class="tut-art" aria-hidden="true">
+        <svg viewBox="0 0 236 112" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="tutGlow"><stop offset="0" stop-color="#ffaa3c" stop-opacity=".6"/><stop offset="1" stop-color="#ff7820" stop-opacity="0"/></radialGradient>
+            <linearGradient id="tutFlame" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset=".5" stop-color="#ffb03d"/><stop offset="1" stop-color="#ff6a1a"/></linearGradient>
+            <g id="tm"><ellipse cx="-4" cy="0" rx="5.5" ry="3" transform="rotate(17)" /><ellipse cx="4" cy="0" rx="5.5" ry="3" transform="rotate(-17)" /><ellipse cx="0" cy="0" rx="1.6" ry="3.6"/></g>
+          </defs>
+          <polyline points="59.3,18.1 75.1,10.8 92.5,6.4 110.3,5.2 127.4,6.8 143.1,11.2 156.3,17.9 166.7,26.3 173.6,36.0 177.1,46.2 176.9,56.4 173.4,65.9 167.0,74.4 158.2,81.4 147.6,86.5 135.9,89.6 123.8,90.6 112.1,89.6 101.3,86.8 92.1,82.4 84.8,76.7 79.8,70.1 77.3,63.1 77.2,56.1 79.4,49.4 83.7,43.4 89.7,38.5 97.0,34.8 105.1,32.5 113.6,31.6 121.8,32.2 129.5,34.1 136.1,37.1 141.4,41.1 145.1,45.7 147.1,50.7 147.4,55.7 145.9,60.6 143.0,64.9 138.8,68.6 133.5,71.3 127.7,73.1 121.5,73.8" fill="none" stroke="#bcd0ee" stroke-opacity=".28" stroke-width="1.4" stroke-dasharray="1 4" stroke-linecap="round"/>
+          <circle cx="118" cy="58" r="30" fill="url(#tutGlow)"/>
+          <path d="M118 66 C127 60 124 50 118 38 C112 50 109 60 118 66Z" fill="url(#tutFlame)"/>
+          <use href="#tm" x="59" y="18" fill="#dfe6f2" fill-opacity=".85" transform="translate(0 0)"/>
+          <use href="#tm" x="177" y="46" fill="#dfe6f2" fill-opacity=".85"/>
+          <use href="#tm" x="122" y="32" fill="#ffc9a0" fill-opacity=".92"/>
+        </svg>
+      </div>
+      <h3 id="tutTitle1">Serangga tertarik ke api</h3>
+      <p>Serangga-serangga ini terbang berputar, makin lama makin dekat ke api. Kalau sampai menyentuh api, poinmu berkurang 3.</p>
+    </div>
+
+    <div class="tut-step" data-step="1">
+      <div class="tut-art" aria-hidden="true">
+        <div class="tut-mini">
+          <div class="mt">🌬️</div><div class="mt hl">🔦</div><div class="mt">🕸️</div><div class="mt">⚡</div><div class="mt">🌫️</div>
+        </div>
+      </div>
+      <h3>Pilih alat, lalu ketuk</h3>
+      <p>Pilih satu alat di bawah area permainan, lalu ketuk area permainan di dekat serangga untuk menghalaunya. Coba semua alat dan amati apa yang terjadi.</p>
+    </div>
+
+    <div class="tut-step" data-step="2">
+      <div class="tut-art" aria-hidden="true">
+        <div class="tut-hud">
+          <div class="hud-chip hud-score">Poin <b>12</b></div>
+          <div class="hud-chip dmg-wrap"><div class="dmg-label">Tingkat Kerusakan</div><div class="dmg-bar"><div class="dmg-fill" style="width:46%"></div></div></div>
+        </div>
+      </div>
+      <h3>Awasi meteran kerusakan</h3>
+      <p>Tiap serangga yang selamat menambah poin. Perhatikan meteran Tingkat Kerusakan di pojok atas: kalau penuh, permainan berakhir. Amati apa yang membuatnya naik.</p>
+    </div>
+
+    <div class="tut-nav">
+      <div class="tut-dots" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
+      <div class="tut-btns">
+        <button class="tut-link" id="tutSkip" type="button">Lewati</button>
+        <button class="tut-link" id="tutBack" type="button" style="display:none">Kembali</button>
+        <button class="tut-btn" id="tutNext" type="button">Lanjut</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= SETUP DASAR ================= */
+const canvas = document.getElementById('stage');
+const ctx = canvas.getContext('2d');
+const stageWrap = document.getElementById('stageWrap');
+let logicalW = 0, logicalH = 0, UNIT = 0;
+
+function resizeCanvas(){
+  const rect = stageWrap.getBoundingClientRect();
+  logicalW = rect.width; logicalH = rect.height;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(logicalW*dpr);
+  canvas.height = Math.round(logicalH*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  UNIT = Math.min(logicalW, logicalH);
+}
+window.addEventListener('resize', resizeCanvas);
+
+/* ================= STATE PERMAINAN ================= */
+const BRAZIERS = [
+  {fx:0.10, fy:0.80}, {fx:0.30, fy:0.55}, {fx:0.50, fy:0.85},
+  {fx:0.72, fy:0.50}, {fx:0.90, fy:0.78}
+];
+let braziers = [];
+let moths = [];
+let decoys = [];
+let ignitions = [];
+let effects = [];
+let stars = [];
+
+let score = 0, damage = 0;
+let showcase = null, showcaseToken = 0, threePromise = null, rec = null; // harus dideklarasikan sebelum resetGame() pertama dipanggil
+let streak = 0, runStreak = 0, bestStreak = 0, progress = 0; // progress = poin dasar tanpa pengali (dipakai untuk kesulitan)
+let running = false, gameOver = false;
+let flameTimer = 0, flameInterval = 6000; // nilai awal sebenarnya diset resetGame() dari cfg
+let mothSpawnTimer = 0, mothSpawnInterval = 1800;
+let desiredFlameCount = 1;
+let lastDifficultyStep = -1;
+let selectedTool = null;
+let lastTs = 0;
+
+const BURN_RADIUS = 0.028;
+
+/* ================= JENIS SERANGGA =================
+   Semua digambar sebagai siluet sayap + badan saja (tanpa kepala/antena) — lihat drawInsectShape().
+   pts: poin bila selamat | spinMul/decayMul: pengali kecepatan putar & spiral menuju api
+   push: pengali dorongan Angin Sepoi | catchMul: pengali jangkauan Jaring Lembut
+   burnMul: pengali denda kena api | size: pengali ukuran gambar
+   weight & unlock: bobot pemilihan acak & skor minimum agar mulai muncul */
+// Pengali poin menurut panjang rangkaian (urut dari tertinggi).
+const COMBO_TIERS = [{at:14, mult:3}, {at:6, mult:2}];
+function comboMult(){ for(const t of COMBO_TIERS) if(streak >= t.at) return t.mult; return 1; }
+function loadBestStreak(){ try{ return parseInt(localStorage.getItem(cfg.bestKey+'_streak')||'0',10) || 0; }catch(e){ return 0; } }
+
+const SPECIES = {
+  ngengat:{label:'Ngengat',       pts:1, spinMul:1,   decayMul:1,   push:1,   catchMul:1,   burnMul:1,   size:1,    weight:1,    unlock:0,  wing:'#dfe6f2', body:'#c3cbdb'},
+  laron:  {label:'Laron',         pts:2, spinMul:1.5, decayMul:1.4, push:1.3, catchMul:0.9, burnMul:1,   size:0.9,  weight:0.45, unlock:5,  wing:'#eadfc4', body:'#b39c78'},
+  agung:  {label:'Ngengat Besar', pts:3, spinMul:0.7, decayMul:0.9, push:0.5, catchMul:1.3, burnMul:1.5, size:1.55, weight:0.2,  unlock:10, wing:'#d2c6ec', body:'#a596c4'}
+};
+function pickSpecies(){
+  const keys = Object.keys(SPECIES).filter(k => progress >= SPECIES[k].unlock);
+  let total = 0; keys.forEach(k => total += SPECIES[k].weight);
+  let r = Math.random()*total;
+  for(const k of keys){ r -= SPECIES[k].weight; if(r <= 0) return k; }
+  return 'ngengat';
+}
+
+/* ================= MODE KESULITAN ================= */
+// Semua angka keseimbangan per-mode ada di sini.
+//  flameStart/flameMin/flameSlope : interval pindah api (ms), batas bawah, penurunan per poin
+//  spawnStart/spawnMin/spawnSlope : interval munculnya serangga (ms), idem
+//  maxFlames : jumlah api aktif maksimum | stepEvery : tiap berapa poin level naik
+//  decay : pengali kecepatan spiral menuju api | dmg : pengali kerusakan alat berbahaya
+//  burn : denda poin bila serangga kena api
+const MODES = {
+  santai:{label:'Santai', desc:'Tempo lebih pelan, lebih banyak waktu untuk mengamati.',
+    flameStart:7500, flameMin:3500, flameSlope:30, spawnStart:2300, spawnMin:900, spawnSlope:10,
+    maxFlames:2, stepEvery:30, decay:0.8, dmg:0.75, burn:2, bestKey:'ngengatApiHighScore_santai'},
+  normal:{label:'Normal', desc:'Tempo seimbang.',
+    flameStart:6000, flameMin:2500, flameSlope:35, spawnStart:1800, spawnMin:650, spawnSlope:13,
+    maxFlames:3, stepEvery:25, decay:1, dmg:1, burn:3, bestKey:'ngengatApiHighScore'},
+  keras:{label:'Keras', desc:'Tempo cepat, kesalahan lebih mahal.',
+    flameStart:5000, flameMin:1800, flameSlope:40, spawnStart:1400, spawnMin:480, spawnSlope:16,
+    maxFlames:4, stepEvery:20, decay:1.2, dmg:1.25, burn:4, bestKey:'ngengatApiHighScore_keras'}
+};
+let modeKey = 'normal';
+try{ const saved = localStorage.getItem('ngengatApiMode'); if(saved && MODES[saved]) modeKey = saved; }catch(e){}
+let cfg = MODES[modeKey];
+const CATCH_RADIUS_PX_FRAC = 0.055;
+const FAN_RADIUS_FRAC = 0.18;
+const SPRAY_RADIUS_FRAC = 0.13;
+const ZAP_RADIUS_FRAC = 0.08;
+
+/* ================= AUDIO (disintesis, tanpa file eksternal) ================= */
+let audioCtx = null, masterGain = null, muted = false;
+let dmgWarned50 = false, dmgWarned80 = false;
+
+function initAudio(){
+  if(audioCtx) return;
+  try{
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = muted ? 0 : 0.5;
+    masterGain.connect(audioCtx.destination);
+  }catch(e){ audioCtx = null; }
+}
+
+function tone(freq, dur, type, peak, opt){
+  if(!audioCtx) return;
+  opt = opt || {};
+  const t0 = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  osc.type = type || 'sine';
+  osc.frequency.setValueAtTime(freq, t0);
+  if(opt.sweepTo) osc.frequency.exponentialRampToValueAtTime(Math.max(20,opt.sweepTo), t0+dur);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.001,peak||0.3), t0+0.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+  osc.connect(g); g.connect(masterGain);
+  osc.start(t0); osc.stop(t0+dur+0.02);
+}
+
+function noiseBurst(dur, filterFreq, type, peak){
+  if(!audioCtx) return;
+  const t0 = audioCtx.currentTime;
+  const bufLen = Math.max(1, Math.floor(audioCtx.sampleRate*dur));
+  const buf = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for(let i=0;i<bufLen;i++) data[i] = (Math.random()*2-1) * (1-i/bufLen);
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  const filt = audioCtx.createBiquadFilter();
+  filt.type = type || 'bandpass';
+  filt.frequency.value = filterFreq || 900;
+  const g = audioCtx.createGain();
+  g.gain.setValueAtTime(Math.max(0.001,peak||0.3), t0);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+  src.connect(filt); filt.connect(g); g.connect(masterGain);
+  src.start(t0);
+}
+
+function sfxIgnite(){ noiseBurst(0.35, 1400, 'bandpass', 0.22); tone(180,0.3,'sine',0.12,{sweepTo:90}); }
+function sfxBurn(){ noiseBurst(0.18, 2200, 'highpass', 0.14); }
+function sfxSaved(p){
+  tone(720,0.14,'sine',0.16,{sweepTo:1080});
+  if(p > 1) setTimeout(()=>tone(1080,0.14,'sine',0.14,{sweepTo:1400}), 90);
+  if(p > 2) setTimeout(()=>tone(1400,0.18,'sine',0.13,{sweepTo:1800}), 190);
+}
+function sfxCaught(){ tone(520,0.12,'triangle',0.18); tone(780,0.1,'triangle',0.14); }
+function sfxFan(){ noiseBurst(0.3, 2000, 'lowpass', 0.12); }
+function sfxDecoy(){ tone(600,0.2,'sine',0.14,{sweepTo:900}); }
+function sfxHarmful(){ noiseBurst(0.28, 350, 'lowpass', 0.28); tone(110,0.3,'sawtooth',0.14,{sweepTo:60}); }
+function sfxCombo(m){
+  tone(880,0.12,'sine',0.14,{sweepTo:1000});
+  setTimeout(()=>tone(1175,0.12,'sine',0.14,{sweepTo:1300}), 90);
+  if(m > 2) setTimeout(()=>tone(1568,0.2,'sine',0.14,{sweepTo:1800}), 190);
+}
+function sfxComboBreak(){ tone(260,0.22,'triangle',0.12,{sweepTo:160}); }
+function sfxLevelUp(){
+  tone(660,0.12,'triangle',0.16,{sweepTo:880});
+  setTimeout(()=>tone(880,0.12,'triangle',0.16,{sweepTo:1100}), 100);
+  setTimeout(()=>tone(1100,0.18,'triangle',0.15,{sweepTo:1320}), 200);
+}
+function sfxWarn(){ tone(220,0.18,'square',0.1); }
+function sfxGameOver(){ tone(300,0.5,'sine',0.2,{sweepTo:80}); }
+
+function setMuted(v){
+  muted = v;
+  if(masterGain) masterGain.gain.value = muted ? 0 : 0.5;
+  document.getElementById('muteBtn').textContent = muted ? '🔇' : '🔊';
+  try{ localStorage.setItem('ngengatApiMuted', muted ? '1':'0'); }catch(e){}
+}
+
+/* ================= SKOR TERTINGGI (localStorage) ================= */
+let bestScore = 0;
+function loadBest(){
+  try{ return parseInt(localStorage.getItem(cfg.bestKey)||'0',10) || 0; }catch(e){ return 0; }
+}
+bestScore = loadBest();
+bestStreak = loadBestStreak();
+try{ muted = localStorage.getItem('ngengatApiMuted') === '1'; }catch(e){ muted = false; }
+
+function maybeSaveBest(){
+  if(score > bestScore){
+    bestScore = score;
+    try{ localStorage.setItem(cfg.bestKey, String(bestScore)); }catch(e){}
+  }
+}
+
+function brazierPos(b){ return {x: b.fx*logicalW, y: b.fy*logicalH}; }
+
+function initBraziers(){
+  braziers = BRAZIERS.map(p => ({fx:p.fx, fy:p.fy, lit:false, igniting:false, flicker:Math.random()*10}));
+}
+
+function initStars(){
+  stars = [];
+  for(let i=0;i<40;i++){
+    stars.push({fx:Math.random(), fy:Math.random()*0.55, phase:Math.random()*Math.PI*2, r:0.6+Math.random()*1.2});
+  }
+}
+
+function resetGame(){
+  score = 0; damage = 0; gameOver = false;
+  streak = 0; runStreak = 0; progress = 0;
+  recReset(); hideShowcase();
+  flameTimer = 0; flameInterval = cfg.flameStart;
+  mothSpawnTimer = 0; mothSpawnInterval = cfg.spawnStart;
+  desiredFlameCount = 1; lastDifficultyStep = -1;
+  document.getElementById('levelTag').textContent = 'Lv 1';
+  dmgWarned50 = false; dmgWarned80 = false;
+  moths = []; decoys = []; ignitions = []; effects = [];
+  initBraziers();
+  igniteRandomBrazier();
+  updateHud();
+  document.getElementById('overOverlay').style.display = 'none';
+}
+
+/* ================= API: PENJADWALAN & ANIMASI TANGAN ================= */
+function unlitIndices(){
+  const out = [];
+  braziers.forEach((b,i)=>{ if(!b.lit && !b.igniting) out.push(i); });
+  return out;
+}
+function litIndices(){
+  const out = [];
+  braziers.forEach((b,i)=>{ if(b.lit) out.push(i); });
+  return out;
+}
+
+function igniteRandomBrazier(){
+  const opts = unlitIndices();
+  if(opts.length === 0) return;
+  const idx = opts[Math.floor(Math.random()*opts.length)];
+  braziers[idx].igniting = true;
+  ignitions.push({idx, start: performance.now(), duration: 750});
+}
+
+function extinguishRandomLit(){
+  const opts = litIndices();
+  if(opts.length === 0) return;
+  const idx = opts[Math.floor(Math.random()*opts.length)];
+  braziers[idx].lit = false;
+}
+
+function updateFlameScheduler(dt){
+  flameTimer += dt*1000;
+  const currentlyLit = litIndices().length;
+  if(currentlyLit < desiredFlameCount){
+    if(flameTimer >= 400){ flameTimer = 0; igniteRandomBrazier(); }
+    return;
+  }
+  if(flameTimer >= flameInterval){
+    flameTimer = 0;
+    extinguishRandomLit();
+    igniteRandomBrazier();
+  }
+}
+
+/* ================= SERANGGA ================= */
+function spawnMoth(){
+  const litOpts = litIndices();
+  if(litOpts.length === 0) return;
+  const targetIdx = litOpts[Math.floor(Math.random()*litOpts.length)];
+  const target = brazierPos(braziers[targetIdx]);
+
+  const edge = Math.floor(Math.random()*4);
+  let sx, sy;
+  if(edge===0){ sx = Math.random()*logicalW; sy = -10; }
+  else if(edge===1){ sx = logicalW+10; sy = Math.random()*logicalH; }
+  else if(edge===2){ sx = Math.random()*logicalW; sy = logicalH+10; }
+  else { sx = -10; sy = Math.random()*logicalH; }
+
+  const dx = sx-target.x, dy = sy-target.y;
+  const dist = Math.sqrt(dx*dx+dy*dy);
+  const kind = pickSpecies(), sp = SPECIES[kind];
+  moths.push({
+    kind, sp,
+    targetIdx,
+    decoy: null,
+    angle: Math.atan2(dy,dx),
+    radius: Math.max(dist/UNIT, 0.55),
+    angularSpeed: (1.0+Math.random()*1.1) * sp.spinMul * (Math.random()<0.5?1:-1),
+    decayRate: (0.40+Math.random()*0.32) * cfg.decay * sp.decayMul,
+    wingPhase: Math.random()*Math.PI*2,
+    sizeScale: (0.95+Math.random()*0.5) * sp.size, // variasi ukuran biar terasa organik, bukan klon identik
+    trail: [], // jejak posisi terakhir, dipakai buat menggambar lintasan spiral
+    alive: true
+  });
+  moths[moths.length-1].rec = recStart(kind, targetIdx);
+}
+
+function currentTargetPos(m){
+  if(m.decoy && m.decoy.life > 0) return {x:m.decoy.x, y:m.decoy.y};
+  if(braziers[m.targetIdx] && braziers[m.targetIdx].lit) return brazierPos(braziers[m.targetIdx]);
+  const lit = litIndices();
+  if(lit.length){
+    m.targetIdx = lit[Math.floor(Math.random()*lit.length)];
+    return brazierPos(braziers[m.targetIdx]);
+  }
+  return null;
+}
+
+// Satu pintu untuk semua jalur "serangga selamat": poin sesuai jenis + teks +N untuk yang bernilai >1.
+function awardMoth(m, x, y, caught){
+  recEnd(m, caught ? 'net' : 'saved', x, y);
+  const before = comboMult();
+  streak++;
+  if(streak > runStreak) runStreak = streak;
+  if(streak > bestStreak){
+    bestStreak = streak;
+    try{ localStorage.setItem(cfg.bestKey+'_streak', String(bestStreak)); }catch(e){}
+  }
+  const mult = comboMult();
+  const base = m.sp.pts;
+  const gain = base*mult;
+  score += gain; progress += base;
+  if(gain > 1){
+    const ex = Math.max(26, Math.min(logicalW-26, x===undefined ? logicalW/2 : x));
+    const ey = Math.max(20, Math.min(logicalH-10, y===undefined ? logicalH/2 : y));
+    effects.push({type:'scoregain', x:ex, y:ey, start:performance.now(), duration:800,
+                  text:'+'+gain+(mult>1 ? ' \u00d7'+mult : '')});
+  }
+  if(mult > before){
+    effects.push({type:'combo', x:logicalW/2, y:logicalH*0.42, start:performance.now(), duration:1000, text:'Beruntun \u00d7'+mult+'!'});
+    flashCombo('hot'); sfxCombo(mult);
+  } else if(caught) sfxCaught(); else sfxSaved(base);
+}
+
+// Rangkaian putus: dipanggil saat serangga kena api atau alat yang menaikkan meteran kerusakan dipakai.
+function breakStreak(){
+  if(streak >= 3){ flashCombo('broke'); sfxComboBreak(); }
+  streak = 0;
+}
+function flashCombo(cls){
+  const el = document.getElementById('comboChip');
+  if(!el) return;
+  el.classList.add(cls);
+  setTimeout(()=> el.classList.remove(cls), 450);
+}
+
+function updateMoths(dt){
+  for(let i=moths.length-1;i>=0;i--){
+    const m = moths[i];
+    m.wingPhase += dt*14;
+    if(m.decoy){
+      m.decoy.life -= dt*1000;
+      if(m.decoy.life <= 0){
+        awardMoth(m, m.x, m.y); moths.splice(i,1); continue; // lolos aman saat umpan padam
+      }
+    }
+    const target = currentTargetPos(m);
+    if(!target){
+      m.radius += dt*0.5;
+      if(m.radius > 1.4){ awardMoth(m, m.x, m.y); moths.splice(i,1); }
+      continue;
+    }
+    m.angle += m.angularSpeed*dt;
+    m.radius *= (1 - m.decayRate*dt);
+    const x = target.x + m.radius*UNIT*Math.cos(m.angle);
+    const y = target.y + m.radius*UNIT*Math.sin(m.angle);
+    m.x = x; m.y = y;
+    if(!m.trail) m.trail = [];
+    m.trail.push({x, y});
+    if(m.trail.length > 9) m.trail.shift();
+    if(m.rec){
+      m.rec.age += dt; m.rec.acc += dt;
+      if((m.rec.pts.length === 0 || m.rec.acc >= REC_DT) && m.rec.pts.length < REC_MAX_PTS){
+        m.rec.acc = 0; m.rec.pts.push([x/logicalW, y/logicalH, m.rec.age]);
+      }
+    }
+
+    if(m.radius < BURN_RADIUS){
+      effects.push({type:'puff', x, y, start:performance.now(), duration:400});
+      const pen = Math.max(1, Math.round(cfg.burn*m.sp.burnMul));
+      effects.push({type:'scoreloss', x, y:y-6, start:performance.now(), duration:750, text:'-'+pen});
+      score = Math.max(0, score-pen);
+      progress = Math.max(0, progress-pen);
+      breakStreak();
+      recEnd(m, 'burn', x, y);
+      flashScoreLoss();
+      moths.splice(i,1);
+      sfxBurn();
+      continue;
+    }
+    if(x < -40 || x > logicalW+40 || y < -40 || y > logicalH+40){
+      awardMoth(m, x, y); moths.splice(i,1);
+    }
+  }
+}
+
+/* ================= ALAT PEMAIN ================= */
+function applyTool(px, py){
+  if(gameOver || !running) return;
+  if(!selectedTool) return;
+  if(rec) rec.stats.tools[selectedTool]++;
+
+  if(selectedTool === 'fan'){
+    effects.push({type:'gust', x:px, y:py, start:performance.now(), duration:450});
+    sfxFan();
+    for(const m of moths){
+      if(m.x===undefined) continue;
+      const d = Math.hypot(m.x-px, m.y-py)/UNIT;
+      if(d < FAN_RADIUS_FRAC){
+        m.radius += (0.22 + Math.random()*0.1) * m.sp.push;
+        m.angularSpeed *= 1.25;
+        m.decoy = null;
+        m.trail = [];
+      }
+    }
+  } else if(selectedTool === 'decoy'){
+    const dObj = {x:px, y:py, life:3600};
+    decoys.push(dObj);
+    sfxDecoy();
+    for(const m of moths){
+      if(m.x===undefined) continue;
+      const d = Math.hypot(m.x-px, m.y-py)/UNIT;
+      if(d < 0.30){
+        const dx=m.x-px, dy=m.y-py, dist=Math.sqrt(dx*dx+dy*dy);
+        m.decoy = dObj;
+        m.angle = Math.atan2(dy,dx);
+        m.radius = Math.max(dist/UNIT, 0.12);
+        m.trail = [];
+      }
+    }
+  } else if(selectedTool === 'net'){
+    let nearest = null, nearestD = Infinity;
+    for(let i=moths.length-1;i>=0;i--){
+      const m = moths[i];
+      if(m.x===undefined) continue;
+      const d = Math.hypot(m.x-px, m.y-py)/UNIT;
+      if(d < CATCH_RADIUS_PX_FRAC*m.sp.catchMul && d < nearestD){ nearestD = d; nearest = i; }
+    }
+    if(nearest !== null){
+      effects.push({type:'catch', x:px, y:py, start:performance.now(), duration:350});
+      awardMoth(moths[nearest], px, py, true);
+      moths.splice(nearest,1);
+    }
+  } else if(selectedTool === 'zapper'){
+    damage += 22 * cfg.dmg;
+    breakStreak();
+    effects.push({type:'zap', x:px, y:py, start:performance.now(), duration:300});
+    sfxHarmful();
+    for(let i=moths.length-1;i>=0;i--){
+      const m = moths[i];
+      if(m.x===undefined) continue;
+      const d = Math.hypot(m.x-px, m.y-py)/UNIT;
+      if(d < ZAP_RADIUS_FRAC){ effects.push({type:'puff', x:m.x, y:m.y, start:performance.now(), duration:400}); recEnd(m, 'lost', m.x, m.y); moths.splice(i,1); }
+    }
+  } else if(selectedTool === 'spray'){
+    damage += 30 * cfg.dmg;
+    breakStreak();
+    effects.push({type:'mist', x:px, y:py, start:performance.now(), duration:600});
+    sfxHarmful();
+    for(let i=moths.length-1;i>=0;i--){
+      const m = moths[i];
+      if(m.x===undefined) continue;
+      const d = Math.hypot(m.x-px, m.y-py)/UNIT;
+      if(d < SPRAY_RADIUS_FRAC){ effects.push({type:'puff', x:m.x, y:m.y, start:performance.now(), duration:400}); recEnd(m, 'lost', m.x, m.y); moths.splice(i,1); }
+    }
+  }
+  if(damage >= 50 && !dmgWarned50){ dmgWarned50 = true; sfxWarn(); }
+  if(damage >= 80 && !dmgWarned80){ dmgWarned80 = true; sfxWarn(); }
+  if(damage >= 100){ damage = 100; triggerGameOver(); }
+  updateHud();
+}
+
+/* ================= KESULITAN & SKOR ================= */
+function updateDifficulty(){
+  const step = Math.floor(progress/cfg.stepEvery);
+  if(step === lastDifficultyStep) return;
+  const leveledUp = lastDifficultyStep >= 0 && step > lastDifficultyStep;
+  lastDifficultyStep = step;
+  desiredFlameCount = Math.min(cfg.maxFlames, 1+step);
+  flameInterval = Math.max(cfg.flameMin, cfg.flameStart - progress*cfg.flameSlope);
+  mothSpawnInterval = Math.max(cfg.spawnMin, cfg.spawnStart - progress*cfg.spawnSlope);
+  document.getElementById('levelTag').textContent = 'Lv '+(step+1);
+  if(leveledUp){
+    effects.push({type:'levelup', x:logicalW/2, y:logicalH*0.3, start:performance.now(), duration:1200, text:'Level '+(step+1)+'!'});
+    sfxLevelUp();
+  }
+}
+
+function updateHud(){
+  document.getElementById('scoreVal').textContent = score;
+  document.getElementById('dmgFill').style.width = Math.min(100,damage)+'%';
+  maybeSaveBest();
+  document.getElementById('bestVal').textContent = bestScore;
+  const mult = comboMult();
+  document.getElementById('comboVal').textContent = streak;
+  document.getElementById('comboMult').textContent = mult > 1 ? '\u00d7'+mult : '';
+  let frac = 1;
+  if(mult === 1) frac = streak / COMBO_TIERS[COMBO_TIERS.length-1].at;
+  else if(mult === 2) frac = (streak-6) / (COMBO_TIERS[0].at-COMBO_TIERS[1].at);
+  document.getElementById('comboFill').style.width = Math.round(Math.max(0,Math.min(1,frac))*100)+'%';
+}
+
+function flashScoreLoss(){
+  const el = document.querySelector('.hud-score');
+  if(!el) return;
+  el.classList.add('score-loss');
+  setTimeout(()=> el.classList.remove('score-loss'), 380);
+}
+
+function triggerGameOver(){
+  gameOver = true; running = false;
+  maybeSaveBest();
+  document.getElementById('bestVal').textContent = bestScore;
+  sfxGameOver();
+  document.getElementById('overStreak').textContent = 'Rangkaian terpanjang: '+runStreak+' (rekor '+bestStreak+')';
+  document.getElementById('overOverlay').style.display = 'flex';
+  showShowcase();
+}
+
+/* ================= RENDER ================= */
+function drawBackground(t){
+  ctx.fillStyle = '#060a14';
+  ctx.fillRect(0,0,logicalW,logicalH);
+  for(const s of stars){
+    const x = s.fx*logicalW, y = s.fy*logicalH;
+    const tw = 0.5+0.5*Math.sin(t*0.001+s.phase);
+    ctx.globalAlpha = 0.3+0.5*tw;
+    ctx.fillStyle = '#cfe0ff';
+    ctx.beginPath(); ctx.arc(x,y,s.r,0,Math.PI*2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  const g = ctx.createLinearGradient(0,logicalH*0.72,0,logicalH);
+  g.addColorStop(0,'rgba(10,16,30,0)');
+  g.addColorStop(1,'rgba(4,7,14,0.9)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,logicalH*0.65,logicalW,logicalH*0.35);
+}
+
+function drawBrazier(b, t){
+  const p = brazierPos(b);
+  ctx.fillStyle = '#241d16';
+  ctx.beginPath();
+  ctx.moveTo(p.x-14,p.y+10); ctx.lineTo(p.x+14,p.y+10); ctx.lineTo(p.x+8,p.y); ctx.lineTo(p.x-8,p.y);
+  ctx.closePath(); ctx.fill();
+
+  if(b.lit){
+    const flick = 0.85+0.15*Math.sin(t*0.012+b.flicker)+0.1*Math.sin(t*0.031+b.flicker*2);
+    const glowR = Math.max(0, 34*flick);
+    const rg = ctx.createRadialGradient(p.x,p.y-6,2,p.x,p.y-6,glowR);
+    rg.addColorStop(0,'rgba(255,170,60,0.55)');
+    rg.addColorStop(1,'rgba(255,120,30,0)');
+    ctx.fillStyle = rg;
+    ctx.beginPath(); ctx.arc(p.x,p.y-6,glowR,0,Math.PI*2); ctx.fill();
+
+    ctx.save();
+    ctx.translate(p.x,p.y);
+    ctx.scale(0.9+0.1*flick, flick);
+    const fg = ctx.createLinearGradient(0,-26,0,4);
+    fg.addColorStop(0,'#fff3c4'); fg.addColorStop(0.5,'#ffb03d'); fg.addColorStop(1,'#ff6a1a');
+    ctx.fillStyle = fg;
+    ctx.beginPath();
+    ctx.moveTo(0,4);
+    ctx.bezierCurveTo(10,-4, 7,-14, 0,-26);
+    ctx.bezierCurveTo(-7,-14, -10,-4, 0,4);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawIgnitions(t){
+  for(let i=ignitions.length-1;i>=0;i--){
+    const ig = ignitions[i];
+    const el = t-ig.start;
+    const prog = Math.max(0, Math.min(1, el/ig.duration));
+    const b = braziers[ig.idx];
+    const p = brazierPos(b);
+    if(prog >= 0.55 && !b.lit){ b.lit = true; b.igniting = false; sfxIgnite(); }
+
+    const slide = prog < 0.6 ? (prog/0.6) : (1-(prog-0.6)/0.4);
+    const handY = p.y + 34 - slide*30;
+    const handX = p.x + 8;
+    ctx.globalAlpha = Math.max(0, slide);
+    ctx.strokeStyle = '#3a2c1f'; ctx.lineWidth = 9; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(handX+16, handY+22); ctx.lineTo(handX, handY); ctx.stroke();
+    ctx.fillStyle = '#4a3a28';
+    ctx.beginPath(); ctx.ellipse(handX-3,handY-2,7,5,0.5,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#4a3a28'; ctx.lineWidth = 3;
+    for(let f=0;f<3;f++){
+      ctx.beginPath(); ctx.moveTo(handX-6+f*4, handY-5); ctx.lineTo(handX-9+f*4, handY-11); ctx.stroke();
+    }
+    if(prog < 0.6){
+      ctx.fillStyle = '#ffd27a';
+      ctx.beginPath(); ctx.arc(handX-10,handY-13,2.4,0,Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    if(prog >= 1) ignitions.splice(i,1);
+  }
+}
+
+function drawDecoys(t){
+  for(let i=decoys.length-1;i>=0;i--){
+    const d = decoys[i];
+    d.life -= 16;
+    if(d.life <= 0){ decoys.splice(i,1); continue; }
+    const a = Math.min(1, d.life/800);
+    const rg = ctx.createRadialGradient(d.x,d.y,1,d.x,d.y,22);
+    rg.addColorStop(0,'rgba(160,220,255,'+(0.6*a)+')');
+    rg.addColorStop(1,'rgba(120,200,255,0)');
+    ctx.fillStyle = rg;
+    ctx.beginPath(); ctx.arc(d.x,d.y,22,0,Math.PI*2); ctx.fill();
+  }
+}
+
+// Interpolasi warna hex sederhana, dipakai buat tint bahaya ngengat & indikator lain.
+function lerpColor(c1, c2, t){
+  t = Math.max(0, Math.min(1, t));
+  const p1 = parseInt(c1.slice(1),16), p2 = parseInt(c2.slice(1),16);
+  const r1=(p1>>16)&255, g1=(p1>>8)&255, b1=p1&255;
+  const r2=(p2>>16)&255, g2=(p2>>8)&255, b2=p2&255;
+  const r=Math.round(r1+(r2-r1)*t), g=Math.round(g1+(g2-g1)*t), b=Math.round(b1+(b2-b1)*t);
+  return 'rgb('+r+','+g+','+b+')';
+}
+
+// Siluet SAYAP + BADAN saja — tanpa kepala, mata, atau antena (sengaja).
+// Konteks sudah di-translate ke pusat serangga dan di-rotate; s = skala, flap = 0..1.
+function drawInsectShape(c, kind, s, flap, wingCol, bodyCol){
+  c.fillStyle = wingCol;
+  if(kind === 'laron'){
+    // empat sayap panjang & tipis, badan ramping
+    c.globalAlpha = 0.5+0.22*flap;
+    [-1,1].forEach(sd=>{
+      c.beginPath(); c.ellipse(sd*5.2*s, -1.2*s, 6.6*s, (1.3+1.0*flap)*s, sd*0.28, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.ellipse(sd*4.4*s,  1.6*s, 5.4*s, (1.1+0.8*flap)*s, sd*0.5,  0, Math.PI*2); c.fill();
+    });
+    c.globalAlpha = 0.92; c.fillStyle = bodyCol;
+    c.beginPath(); c.ellipse(0, 0.6*s, 1.05*s, 5.4*s, 0, 0, Math.PI*2); c.fill();
+  } else if(kind === 'agung'){
+    // sayap depan lebar + sayap belakang lebih kecil, badan tebal
+    c.globalAlpha = 0.55+0.25*flap;
+    [-1,1].forEach(sd=>{
+      c.beginPath(); c.ellipse(sd*6.2*s, -0.8*s, 7.2*s, (3.0+2.2*flap)*s, sd*0.32, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.ellipse(sd*4.6*s,  3.4*s, 4.6*s, (2.2+1.5*flap)*s, sd*0.55, 0, Math.PI*2); c.fill();
+    });
+    c.globalAlpha = 0.92; c.fillStyle = bodyCol;
+    c.beginPath(); c.ellipse(0, 0.6*s, 2.1*s, 4.8*s, 0, 0, Math.PI*2); c.fill();
+  } else {
+    // ngengat kecil (bentuk asli, tanpa antena)
+    c.globalAlpha = 0.55+0.25*flap;
+    c.beginPath(); c.ellipse(-4*s, 0, 5.5*s, (2.4+2*flap)*s,  0.3, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.ellipse( 4*s, 0, 5.5*s, (2.4+2*flap)*s, -0.3, 0, Math.PI*2); c.fill();
+    c.globalAlpha = 0.9; c.fillStyle = bodyCol;
+    c.beginPath(); c.ellipse(0, 0, 1.6*s, 3.4*s, 0, 0, Math.PI*2); c.fill();
+  }
+  c.globalAlpha = 1;
+}
+
+function drawMoths(){
+  // Skala mengikuti UNIT (468 = ukuran rujukan), dengan lantai 0.8 supaya beda siluet antar jenis
+  // tetap terbaca di panel HP yang kecil; sizeScale (termasuk pengali jenis) bikin tiap individu beda.
+  const base = Math.max(UNIT/468, 0.8);
+  for(const m of moths){
+    if(m.x===undefined) continue;
+    const sp = m.sp || SPECIES.ngengat;
+    const s = base * (m.sizeScale||1);
+
+    // Jejak spiral memudar
+    if(m.trail && m.trail.length > 1){
+      for(let k=0;k<m.trail.length;k++){
+        const pt = m.trail[k];
+        const a = (k+1)/m.trail.length;
+        ctx.globalAlpha = a*0.2;
+        ctx.fillStyle = '#bcd0ee';
+        ctx.beginPath(); ctx.arc(pt.x, pt.y, Math.max(0.4,1.1*s*a), 0, Math.PI*2); ctx.fill();
+      }
+    }
+
+    // Makin dekat radius bahaya, warna makin menghangat (isyarat tanpa teks)
+    const danger = 1 - (m.radius - BURN_RADIUS) / 0.13;
+    const wingCol = lerpColor(sp.wing, '#ffb37a', danger);
+    const bodyCol = lerpColor(sp.body, '#ff8c5a', danger);
+    const flap = 0.5+0.5*Math.sin(m.wingPhase);
+
+    ctx.save();
+    ctx.translate(m.x, m.y);
+    ctx.rotate(m.angle+Math.PI/2);
+    drawInsectShape(ctx, m.kind || 'ngengat', s, flap, wingCol, bodyCol);
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+}
+
+// Legenda jenis di kartu info: memakai fungsi gambar yang sama persis dengan di permainan.
+function drawLegends(){
+  document.querySelectorAll('canvas.sp-cv').forEach(cv=>{
+    const kind = cv.dataset.kind, sp = SPECIES[kind];
+    if(!sp) return;
+    const w = 76, h = 50, dpr = window.devicePixelRatio || 1;
+    cv.width = w*dpr; cv.height = h*dpr;
+    const c = cv.getContext('2d');
+    c.setTransform(dpr,0,0,dpr,0,0);
+    c.clearRect(0,0,w,h);
+    c.save(); c.translate(w/2, h/2);
+    drawInsectShape(c, kind, (kind==='agung' ? 1.5 : 2.0)*sp.size, 0.7, sp.wing, sp.body);
+    c.restore();
+  });
+}
+
+function drawEffects(t){
+  for(let i=effects.length-1;i>=0;i--){
+    const e = effects[i];
+    let prog = (t-e.start)/e.duration;
+    if(prog >= 1){ effects.splice(i,1); continue; }
+    if(prog < 0) prog = 0; // jam performance.now() (saat efek dibuat) & timestamp rAF (saat digambar) kadang selisih sepersekian ms
+    const a = 1-prog;
+    if(e.type==='puff'){
+      ctx.globalAlpha = a*0.7;
+      ctx.fillStyle = '#8a8f9c';
+      ctx.beginPath(); ctx.arc(e.x,e.y,Math.max(0,6+prog*10),0,Math.PI*2); ctx.fill();
+    } else if(e.type==='gust'){
+      ctx.globalAlpha = a*0.5;
+      ctx.strokeStyle = '#bcd8ff'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(e.x,e.y, Math.max(0, prog*FAN_RADIUS_FRAC*UNIT), 0, Math.PI*2); ctx.stroke();
+    } else if(e.type==='catch'){
+      ctx.globalAlpha = a*0.7;
+      ctx.strokeStyle = '#ffe9a8'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(e.x,e.y, Math.max(0, 10+prog*14), 0, Math.PI*2); ctx.stroke();
+    } else if(e.type==='zap'){
+      ctx.globalAlpha = a;
+      ctx.strokeStyle = '#fff082'; ctx.lineWidth = 2;
+      for(let k=0;k<5;k++){
+        const ang = Math.random()*Math.PI*2, len = 8+Math.random()*14;
+        ctx.beginPath(); ctx.moveTo(e.x,e.y); ctx.lineTo(e.x+Math.cos(ang)*len, e.y+Math.sin(ang)*len); ctx.stroke();
+      }
+    } else if(e.type==='mist'){
+      ctx.globalAlpha = a*0.35;
+      ctx.fillStyle = '#9fb3a0';
+      ctx.beginPath(); ctx.arc(e.x,e.y, Math.max(0, prog*SPRAY_RADIUS_FRAC*UNIT), 0, Math.PI*2); ctx.fill();
+    } else if(e.type==='scoregain'){
+      ctx.globalAlpha = a;
+      ctx.fillStyle = '#ffd97a';
+      ctx.font = '700 14px Quicksand, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(e.text, e.x, e.y - prog*26);
+      ctx.textAlign = 'start';
+    } else if(e.type==='combo'){
+      ctx.globalAlpha = a;
+      ctx.fillStyle = '#ffcf6b';
+      ctx.font = '700 '+Math.round(Math.max(16, UNIT*0.075))+'px Fredoka, Quicksand, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(e.text, e.x, e.y - prog*30);
+      ctx.textAlign = 'start';
+    } else if(e.type==='levelup'){
+      ctx.globalAlpha = a;
+      ctx.fillStyle = '#ffc266';
+      ctx.font = '700 '+Math.round(Math.max(18, UNIT*0.09))+'px Fredoka, Quicksand, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(e.text, e.x, e.y - prog*24);
+      ctx.textAlign = 'start';
+    } else if(e.type==='scoreloss'){
+      ctx.globalAlpha = a;
+      ctx.fillStyle = '#ff8a80';
+      ctx.font = '700 13px Quicksand, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(e.text, e.x, e.y - prog*24);
+      ctx.textAlign = 'start';
+    }
+    ctx.globalAlpha = 1;
+  }
+}
+
+function render(t){
+  ctx.clearRect(0,0,logicalW,logicalH);
+  drawBackground(t);
+  braziers.forEach(b => drawBrazier(b,t));
+  drawIgnitions(t);
+  drawDecoys(t);
+  drawMoths();
+  drawEffects(t);
+}
+
+/* ================= PEREKAM JEJAK ================= */
+// Lintasan disimpan dalam koordinat normal (0..1) + umur serangga; hasil akhir lewat recEnd().
+const REC_DT = 0.07, REC_MAX_PTS = 140, REC_MAX_MOTHS = 48;
+function recReset(){
+  rec = {time:0, moths:[], stats:{spawned:0, saved:0, burned:0, lost:0, byKind:{},
+         tools:{fan:0, decoy:0, net:0, zapper:0, spray:0}}};
+}
+function recStart(kind, brazier){
+  const r = {kind, brazier, pts:[], age:0, acc:0, outcome:null};
+  rec.moths.push(r);
+  if(rec.moths.length > REC_MAX_MOTHS) rec.moths.shift();
+  rec.stats.spawned++;
+  const bk = rec.stats.byKind[kind] || (rec.stats.byKind[kind] = {n:0, saved:0, burned:0, lost:0});
+  bk.n++;
+  return r;
+}
+function recEnd(m, outcome, x, y){
+  const r = m && m.rec;
+  if(!r || r.outcome) return;
+  r.outcome = outcome;
+  if(x !== undefined && y !== undefined){
+    r.pts.push([Math.max(-0.2, Math.min(1.2, x/logicalW)), Math.max(-0.2, Math.min(1.2, y/logicalH)), r.age]);
+  }
+  const bk = rec.stats.byKind[r.kind];
+  if(outcome === 'burn'){ rec.stats.burned++; bk.burned++; }
+  else if(outcome === 'lost'){ rec.stats.lost++; bk.lost++; }
+  else { rec.stats.saved++; bk.saved++; }
+}
+
+/* ================= SHOWCASE 3D — non-interaktif, kamera berputar sendiri ================= */
+const TOOL_META = {fan:['🌬️','Angin Sepoi'], decoy:['🔦','Cahaya Pengalih'], net:['🕸️','Jaring Lembut'],
+                   zapper:['⚡','Pengusir Kilat'], spray:['🌫️','Kabut Pengusir']};
+const SC_COLORS = {saved:0x4fc98a, burn:0xff7a29, lost:0x8fa0ba, none:0xffcf6b};
+function scOutcomeKey(o){ return o === 'net' ? 'saved' : (o || 'none'); }
+
+function buildStats(){
+  const st = rec.stats, t = Math.round(rec.time);
+  const dur = Math.floor(t/60)+':'+String(t%60).padStart(2,'0');
+  const box = (v,l)=>'<div class="sc-stat"><b>'+v+'</b><span>'+l+'</span></div>';
+  document.getElementById('scStats').innerHTML =
+    box(score,'Poin')+box(st.saved,'Selamat')+box(st.burned,'Kena api')+
+    box(st.lost,'Terkena alat')+box(runStreak,'Rangkaian terpanjang')+box(dur,'Lama bermain');
+  let lines = '<div>Serangga yang datang: '+st.spawned+'</div>';
+  Object.keys(SPECIES).forEach(k=>{
+    const b = st.byKind[k]; if(!b) return;
+    lines += '<div>'+SPECIES[k].label+': '+b.saved+' selamat · '+b.burned+' kena api'+(b.lost ? ' · '+b.lost+' terkena alat' : '')+'</div>';
+  });
+  document.getElementById('scLines').innerHTML = lines;
+  document.getElementById('scTools').innerHTML = Object.keys(TOOL_META).map(k=>
+    '<span>'+TOOL_META[k][0]+' '+TOOL_META[k][1]+' ×'+st.tools[k]+'</span>').join('');
+}
+
+// Three.js dimuat malas (r128, CDN yang sama dgn tahapan-pembangunan.html) saat game over pertama.
+function loadThree(){
+  if(window.THREE) return Promise.resolve();
+  if(threePromise) return threePromise;
+  threePromise = new Promise((resolve, reject)=>{
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+    sc.onload = resolve;
+    sc.onerror = ()=>{ threePromise = null; reject(new Error('three.js gagal dimuat')); };
+    document.head.appendChild(sc);
+  });
+  return threePromise;
+}
+
+function showShowcase(){
+  document.getElementById('showcase').style.display = 'block';
+  buildStats();
+  const msg = document.getElementById('scMsg');
+  msg.style.display = ''; msg.textContent = 'Memuat model 3D…';
+  const token = ++showcaseToken;
+  loadThree().then(()=>{
+    if(token !== showcaseToken || !gameOver) return;
+    startShowcase3D();
+  }).catch(err=>{
+    console.error(err);
+    if(token === showcaseToken) msg.textContent = 'Model 3D tidak bisa dimuat (perlu koneksi internet / WebGL). Ringkasan sesi tetap tersedia di bawah.';
+  });
+}
+
+function hideShowcase(){
+  showcaseToken++;
+  disposeShowcase3D();
+  const box = document.getElementById('showcase');
+  if(box) box.style.display = 'none';
+}
+
+function disposeShowcase3D(){
+  if(!showcase) return;
+  showcase.dead = true;
+  cancelAnimationFrame(showcase.raf);
+  window.removeEventListener('resize', showcase.onResize);
+  showcase.scene.traverse(o=>{
+    if(o.geometry) o.geometry.dispose();
+    if(o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(mt=> mt.dispose());
+  });
+  showcase.renderer.dispose();
+  try{ showcase.renderer.forceContextLoss(); }catch(e){}
+  const cv = showcase.renderer.domElement;
+  if(cv.parentNode) cv.parentNode.removeChild(cv);
+  showcase = null;
+}
+
+// Siluet 3D sayap + badan SAJA (tanpa kepala/mata/antena). Badan memanjang di sumbu z.
+function makeMothMesh(kind, unit){
+  const sp = SPECIES[kind] || SPECIES.ngengat;
+  const g = new THREE.Group();
+  const wm = new THREE.MeshStandardMaterial({color:parseInt(sp.wing.slice(1),16), emissive:0x222222, side:THREE.DoubleSide});
+  const bm = new THREE.MeshStandardMaterial({color:parseInt(sp.body.slice(1),16), emissive:0x111111});
+  const pivots = [];
+  function addWing(sd, sx, sz, ox, oz){
+    const pivot = new THREE.Group();
+    pivot.position.set(0, 0, oz);
+    const wing = new THREE.Mesh(unit, wm);
+    wing.scale.set(sx, 0.08, sz);
+    wing.position.set(sd*ox, 0, 0);
+    pivot.add(wing); g.add(pivot);
+    pivots.push({pivot, sd});
+  }
+  let body;
+  if(kind === 'laron'){
+    [-1,1].forEach(sd=>{ addWing(sd, 1.3, 0.3, 1.3, -0.25); addWing(sd, 1.1, 0.26, 1.1, 0.35); });
+    body = [0.2, 0.2, 1.3];
+  } else if(kind === 'agung'){
+    [-1,1].forEach(sd=>{ addWing(sd, 1.7, 1.0, 1.6, -0.2); addWing(sd, 1.2, 0.7, 1.1, 0.9); });
+    body = [0.5, 0.4, 1.1];
+  } else {
+    [-1,1].forEach(sd=> addWing(sd, 1.0, 0.7, 0.95, 0));
+    body = [0.28, 0.25, 0.9];
+  }
+  const b = new THREE.Mesh(unit, bm);
+  b.scale.set(body[0], body[1], body[2]);
+  g.add(b);
+  g.scale.setScalar ? g.scale.setScalar(1.5*sp.size) : g.scale.set(1.5*sp.size, 1.5*sp.size, 1.5*sp.size);
+  return {group:g, pivots};
+}
+
+function startShowcase3D(){
+  disposeShowcase3D();
+  const holder = document.getElementById('showcase3d');
+  const msg = document.getElementById('scMsg');
+  const w = holder.clientWidth || 320, h = holder.clientHeight || 300;
+  let renderer;
+  try{ renderer = new THREE.WebGLRenderer({antialias:true}); }
+  catch(e){ msg.style.display = ''; msg.textContent = 'Perangkat ini tidak mendukung WebGL, jadi model 3D tidak bisa ditampilkan.'; return; }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(w, h, false); // ukuran CSS diatur stylesheet (.sc-stage canvas)
+  holder.appendChild(renderer.domElement);
+
+  const W3 = 44, D3 = 33, AGE_H = 1.15; // lebar/dalam adegan (4:3 seperti panel) & tinggi per detik umur
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x060a14);
+  const camera = new THREE.PerspectiveCamera(42, w/h, 0.1, 500);
+  const target = new THREE.Vector3(0, 4, 0);
+  const calcRadius = asp => 58 * Math.max(1, Math.pow(1.4/asp, 0.75)); // layar sempit -> mundur
+  let radius = calcRadius(w/h);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.6);
+  sun.position.set(20, 40, 15);
+  scene.add(sun);
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), new THREE.MeshStandardMaterial({color:0x0d1526}));
+  ground.rotation.x = -Math.PI/2; ground.position.y = -0.02;
+  scene.add(ground);
+  scene.add(new THREE.GridHelper(120, 40, 0x24314a, 0x182742));
+
+  // tungku: dasar selalu ada; nyala hanya untuk api yang pernah jadi target serangga terekam
+  const usedB = new Set(rec.moths.map(r=> r.brazier));
+  const flames = [];
+  BRAZIERS.forEach((b, i)=>{
+    const x = (b.fx-0.5)*W3, z = (b.fy-0.5)*D3;
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.4, 1.0, 12), new THREE.MeshStandardMaterial({color:0x241d16}));
+    base.position.set(x, 0.5, z);
+    scene.add(base);
+    if(usedB.has(i)){
+      const flame = new THREE.Mesh(new THREE.ConeGeometry(0.8, 2.4, 10), new THREE.MeshBasicMaterial({color:0xffb03d}));
+      flame.position.set(x, 2.2, z);
+      scene.add(flame); flames.push(flame);
+      const glow = new THREE.Mesh(new THREE.SphereGeometry(2.6, 12, 10),
+        new THREE.MeshBasicMaterial({color:0xff7820, transparent:true, opacity:0.16, depthWrite:false}));
+      glow.position.set(x, 2.2, z);
+      scene.add(glow);
+    }
+  });
+
+  // lintasan + penanda pemutaran ulang
+  const unit = new THREE.SphereGeometry(1, 10, 8);
+  const tracks = [];
+  rec.moths.forEach(r=>{
+    if(r.pts.length < 2) return;
+    const pts3 = r.pts.map(pt=> new THREE.Vector3((pt[0]-0.5)*W3, 0.4 + pt[2]*AGE_H, (pt[1]-0.5)*D3));
+    const geo = new THREE.BufferGeometry();
+    geo.setFromPoints(pts3);
+    scene.add(new THREE.Line(geo, new THREE.LineBasicMaterial({color:SC_COLORS[scOutcomeKey(r.outcome)], transparent:true, opacity:0.6})));
+    const mk = makeMothMesh(r.kind, unit);
+    scene.add(mk.group);
+    tracks.push({pts:r.pts, pts3, end:r.pts[r.pts.length-1][2], mk, off:Math.random()*6});
+  });
+  if(tracks.length === 0){ msg.style.display = ''; msg.textContent = 'Belum ada serangga yang terekam di sesi ini.'; }
+  else msg.style.display = 'none';
+
+  const S = {scene, camera, renderer, dead:false, raf:0, onResize:null};
+  S.onResize = ()=>{
+    const w2 = holder.clientWidth, h2 = holder.clientHeight;
+    if(!w2 || !h2) return;
+    camera.aspect = w2/h2; camera.updateProjectionMatrix();
+    renderer.setSize(w2, h2, false);
+    radius = calcRadius(w2/h2);
+  };
+  window.addEventListener('resize', S.onResize);
+  showcase = S;
+
+  function frame(now){
+    if(S.dead) return;
+    S.raf = requestAnimationFrame(frame);
+    const rc = holder.getBoundingClientRect();
+    if(rc.bottom < 0 || rc.top > (window.innerHeight || 800)) return; // di luar layar: hemat baterai
+    const t = now/1000;
+
+    flames.forEach((fm, i)=>{
+      fm.scale.y = 0.9 + 0.15*Math.sin(t*9 + i);
+      fm.scale.x = fm.scale.z = 0.95 + 0.08*Math.sin(t*11 + i*2);
+    });
+
+    tracks.forEach(tr=>{
+      const g = tr.mk.group;
+      const a = (t*1.5 + tr.off) % (tr.end + 1.4); // 1.5x lebih cepat dari aslinya + jeda sebelum mengulang
+      if(a > tr.end){ g.visible = false; return; }
+      g.visible = true;
+      const P = tr.pts;
+      let i = 0;
+      while(i < P.length-2 && P[i+1][2] < a) i++;
+      const a0 = P[i][2], a1 = P[i+1][2];
+      const f = a1 > a0 ? Math.min(1, Math.max(0, (a-a0)/(a1-a0))) : 0;
+      const p0 = tr.pts3[i], p1 = tr.pts3[i+1];
+      g.position.set(p0.x+(p1.x-p0.x)*f, p0.y+(p1.y-p0.y)*f, p0.z+(p1.z-p0.z)*f);
+      const dx = p1.x-p0.x, dz = p1.z-p0.z;
+      if(dx*dx + dz*dz > 1e-6) g.rotation.y = Math.atan2(dx, dz);
+      const fl = 0.6*Math.sin(t*22 + tr.off*5);
+      tr.mk.pivots.forEach(pv=>{ pv.pivot.rotation.z = pv.sd*fl; });
+    });
+
+    // kamera mengorbit sendiri (tanpa input pengguna)
+    const theta = t*0.18, phi = 1.0 + 0.08*Math.sin(t*0.4);
+    camera.position.x = target.x + radius*Math.sin(phi)*Math.sin(theta);
+    camera.position.z = target.z + radius*Math.sin(phi)*Math.cos(theta);
+    camera.position.y = target.y + radius*Math.cos(phi);
+    camera.lookAt(target);
+    renderer.render(scene, camera);
+  }
+  S.raf = requestAnimationFrame(frame);
+}
+
+/* ================= LOOP UTAMA ================= */
+function loop(ts){
+  if(!lastTs) lastTs = ts;
+  let dt = (ts-lastTs)/1000;
+  dt = Math.min(dt, 0.05);
+  lastTs = ts;
+
+  if(running && !gameOver){
+    rec.time += dt;
+    updateFlameScheduler(dt);
+    mothSpawnTimer += dt*1000;
+    if(mothSpawnTimer >= mothSpawnInterval){ mothSpawnTimer = 0; spawnMoth(); }
+    updateMoths(dt);
+    updateDifficulty();
+    updateHud();
+  }
+  render(ts);
+  requestAnimationFrame(loop);
+}
+
+/* ================= INPUT ================= */
+document.querySelectorAll('.tool-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const tool = btn.dataset.tool;
+    document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('active'));
+    if(selectedTool === tool){ selectedTool = null; }
+    else { selectedTool = tool; btn.classList.add('active'); }
+  });
+});
+
+canvas.addEventListener('pointerdown', (ev)=>{
+  const rect = canvas.getBoundingClientRect();
+  const px = ev.clientX-rect.left, py = ev.clientY-rect.top;
+  applyTool(px,py);
+});
+
+/* ================= TUTORIAL (3 langkah) ================= */
+// Menutup tutorial TIDAK memulai game — tombol Mulai tetap dipakai supaya initAudio()
+// selalu dipanggil dari klik pemain. Tutorial sengaja tidak menyebut alat mana yang berbahaya.
+const TUT_KEY = 'ngengatApiTutorialSeen';
+const tutOverlay = document.getElementById('tutorialOverlay');
+const tutSteps = Array.from(tutOverlay.querySelectorAll('.tut-step'));
+const tutDots = Array.from(tutOverlay.querySelectorAll('.tut-dots i'));
+const tutNext = document.getElementById('tutNext');
+const tutBack = document.getElementById('tutBack');
+const tutSkip = document.getElementById('tutSkip');
+let tutIdx = 0;
+
+function tutRender(){
+  tutSteps.forEach((el,i)=> el.classList.toggle('on', i===tutIdx));
+  tutDots.forEach((el,i)=> el.classList.toggle('on', i===tutIdx));
+  const last = tutIdx === tutSteps.length-1;
+  tutNext.textContent = last ? 'Mengerti' : 'Lanjut';
+  tutBack.style.display = tutIdx > 0 ? '' : 'none';
+  tutSkip.style.display = last ? 'none' : '';
+}
+function openTutorial(){
+  tutIdx = 0; tutRender();
+  tutOverlay.classList.add('open');
+  tutNext.focus();
+}
+function closeTutorial(){
+  tutOverlay.classList.remove('open');
+  try{ localStorage.setItem(TUT_KEY,'1'); }catch(e){}
+  document.getElementById('startBtn').focus();
+}
+tutNext.addEventListener('click', ()=>{
+  if(tutIdx < tutSteps.length-1){ tutIdx++; tutRender(); } else closeTutorial();
+});
+tutBack.addEventListener('click', ()=>{ if(tutIdx>0){ tutIdx--; tutRender(); } });
+tutSkip.addEventListener('click', closeTutorial);
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='Escape' && tutOverlay.classList.contains('open')) closeTutorial();
+});
+document.getElementById('howBtn').addEventListener('click', openTutorial);
+
+/* ================= PILIH MODE ================= */
+// Hanya dipanggil saat game belum berjalan (layar mulai / game over), jadi aman memanggil
+// resetGame() supaya angka awal mode baru langsung berlaku.
+function refreshModeUI(){
+  document.querySelectorAll('.mode-opt').forEach(b=>{
+    b.setAttribute('aria-checked', b.dataset.mode===modeKey ? 'true' : 'false');
+  });
+  document.getElementById('modeDesc').textContent = cfg.desc;
+  document.getElementById('bestLbl').textContent = 'Terbaik ('+cfg.label+')';
+  document.getElementById('bestVal').textContent = bestScore;
+}
+function setMode(key){
+  if(!MODES[key] || running) return;
+  modeKey = key; cfg = MODES[key];
+  try{ localStorage.setItem('ngengatApiMode', key); }catch(e){}
+  bestScore = loadBest();
+  bestStreak = loadBestStreak();
+  resetGame();
+  refreshModeUI();
+}
+document.querySelectorAll('.mode-opt').forEach(b=>{
+  b.addEventListener('click', ()=> setMode(b.dataset.mode));
+});
+document.getElementById('overModeBtn').addEventListener('click', ()=>{
+  resetGame();
+  document.getElementById('startOverlay').style.display = '';
+  document.getElementById('startBtn').focus();
+});
+
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  initAudio(); // harus dipicu langsung dari gestur pengguna, tidak bisa lebih awal
+  document.getElementById('startOverlay').style.display = 'none';
+  running = true;
+});
+document.getElementById('resetBtn').addEventListener('click', resetGame);
+document.getElementById('overRestartBtn').addEventListener('click', ()=>{
+  resetGame(); running = true;
+});
+document.getElementById('muteBtn').addEventListener('click', ()=> setMuted(!muted));
+document.getElementById('overTrailBtn').addEventListener('click', ()=>{
+  document.getElementById('showcase').scrollIntoView({behavior:'smooth', block:'start'});
+});
+
+/* ================= INIT ================= */
+resizeCanvas();
+drawLegends();
+initStars();
+resetGame();
+refreshModeUI();
+document.getElementById('muteBtn').textContent = muted ? '🔇' : '🔊';
+let tutSeen = false;
+try{ tutSeen = localStorage.getItem(TUT_KEY) === '1'; }catch(e){}
+if(!tutSeen) openTutorial(); // pemain baru: tampilkan tutorial sekali
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
