@@ -2458,9 +2458,19 @@ body.nar-open #nar{display:flex}
     <button id="nar-mode" class="on"></button>
     <button id="nar-dots" class="on" title="Tampilkan atau sembunyikan titik warna status keilmuan">● Status</button>
     <button id="nar-copy" title="Salin seluruh narasi sebagai teks">⧉ Salin</button>
+    <button id="nar-tts" title="Mode dengar: narasi dibacakan dengan suara">🔊 Dengar</button>
     <button id="nar-x" class="x">← Peta</button>
   </div>
   <div class="nscroll" id="nar-scroll"><div class="nwrap" id="nar-body"></div></div>
+  <div id="tts-bar">
+    <div id="tts-st">Siap membacakan. Tekan ▶ (mulai dari bagian yang sedang tampil).</div>
+    <div class="r"><button id="tts-bb" title="Bab sebelumnya">⏪</button><button id="tts-pb" title="Paragraf sebelumnya">◀</button><button id="tts-pp" class="pp" title="Putar / jeda">▶</button><button id="tts-pn" title="Paragraf berikutnya">▶|</button><button id="tts-bn" title="Bab berikutnya">⏩</button><button id="tts-stop" title="Berhenti">⏹</button></div>
+    <details id="tts-set"><summary>Pengaturan suara</summary>
+      <div class="r"><select id="tts-voice" aria-label="Suara"></select><select id="tts-rate" aria-label="Kecepatan"><option value="0.7">0,7×</option><option value="0.85">0,85×</option><option value="1">1×</option><option value="1.15">1,15×</option><option value="1.3">1,3×</option><option value="1.5">1,5×</option></select><select id="tts-sleep" aria-label="Pewaktu tidur"><option value="0">Tanpa pewaktu</option><option value="15">Berhenti 15 menit</option><option value="30">Berhenti 30 menit</option><option value="45">Berhenti 45 menit</option><option value="60">Berhenti 60 menit</option></select></div>
+      <div class="r"><label><input type="checkbox" id="tts-next"> Lanjut ke narasi berikutnya</label><label><input type="checkbox" id="tts-intro"> Bacakan pengantar teknis</label></div>
+      <div id="tts-hint"></div>
+    </details>
+  </div>
 </div>
 <script>
 (function(){
@@ -2738,5 +2748,82 @@ setTimeout(dariHashNar,80);
   setTimeout(place,300); setTimeout(place,1200);
 })();
 </script>
+
+<style>
+#nar-tts.on{border-color:var(--na);color:var(--na)}
+#tts-bar{display:none;flex:none;background:var(--np);border-top:1px solid var(--nl);padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));font-size:12px}
+#nar.tts-open #tts-bar{display:block}
+#tts-bar .r{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;margin:5px 0}
+#tts-bar button,#tts-bar select{font:inherit;font-size:13px;padding:8px 11px;border-radius:8px;border:1px solid var(--nl);background:var(--nb);color:var(--ni);cursor:pointer;min-width:0;max-width:100%}
+#tts-bar button.pp{border-color:var(--na);color:var(--na);font-size:16px;padding:7px 20px}
+#tts-bar label{color:var(--nd);display:flex;gap:5px;align-items:center}
+#tts-bar summary{color:var(--nd);cursor:pointer;text-align:center;margin-top:2px}
+#tts-st,#tts-hint{color:var(--nd);text-align:center;line-height:1.4}
+#tts-hint{color:var(--nb2)}
+#nar .tts-on{background:rgba(79,209,197,.14);box-shadow:-8px 0 0 rgba(79,209,197,.14),8px 0 0 rgba(79,209,197,.14);border-radius:4px}
+</style>
+<script>
+/* MODE DENGAR: membacakan narasi dengan Web Speech API (suara dari perangkat) */
+(function(){
+var S=window.speechSynthesis,$=function(i){return document.getElementById(i)},tb=$('nar-tts');
+if(!S||!window.SpeechSynthesisUtterance){if(tb)tb.style.display='none';return;}
+var P={rate:1,voice:'',intro:false,next:true};
+try{Object.assign(P,JSON.parse(localStorage.getItem('rasi_tts')||'{}'))}catch(e){}
+function save(){try{localStorage.setItem('rasi_tts',JSON.stringify(P))}catch(e){}}
+var nar=$('nar'),body=$('nar-body'),sc=$('nar-scroll');
+var blocks=[],bi=0,ci=0,chunks=[],state='stop',tok=0,keep=null,sleepT=null,wl=null,autoNext=false,cur=null;
+function collect(){blocks=[].slice.call(body.querySelectorAll('.ntitle,.nintro,h2,.nsub,p:not(.nmeta)'));if(!P.intro)blocks=blocks.filter(function(e){return !e.classList.contains('nintro')});}
+function say(e){var t=e.textContent;if(e.tagName==='H2')t='Bab '+t;
+  return t.replace(/~/g,'sekitar ').replace(/&/g,' dan ').replace(/\bSM\b/g,'sebelum Masehi').replace(/\s*\/\s*/g,', ').replace(/[*_#`]/g,'').replace(/\s+/g,' ').trim();}
+function split(t){var s=t.replace(/([.!?])\s+/g,'$1\u0001').split('\u0001'),out=[],c='';
+  s.forEach(function(x){if(c&&(c+' '+x).length>200){out.push(c);c=x}else c=c?c+' '+x:x});if(c)out.push(c);
+  var r=[];out.forEach(function(x){while(x.length>260){var k=x.lastIndexOf(',',240);if(k<80)k=x.lastIndexOf(' ',240);if(k<1)k=240;r.push(x.slice(0,k+1));x=x.slice(k+1)}if(x.trim())r.push(x)});return r;}
+function pickVoice(){var vs=S.getVoices(),v=vs.filter(function(x){return x.voiceURI===P.voice})[0];return v||vs.filter(function(x){return /^id/i.test(x.lang)})[0]||null;}
+function fillVoices(){var vs=S.getVoices(),id=vs.filter(function(v){return /^id/i.test(v.lang)}),L=id.length?id:vs,sel=$('tts-voice');sel.innerHTML='';
+  L.forEach(function(v){var o=document.createElement('option');o.value=v.voiceURI;o.textContent=v.name+' ('+v.lang+')';sel.appendChild(o)});
+  if(!L.length){var o=document.createElement('option');o.textContent='Suara bawaan perangkat';sel.appendChild(o)}
+  if(P.voice&&L.some(function(v){return v.voiceURI===P.voice}))sel.value=P.voice;
+  $('tts-hint').textContent=id.length?'':'Belum ada suara bahasa Indonesia di perangkat ini. Pasang lewat pengaturan Teks-ke-ucapan (Android: Google Text-to-speech, bahasa Indonesia).';}
+function mark(e){if(cur)cur.classList.remove('tts-on');cur=e;if(e){e.classList.add('tts-on');e.scrollIntoView({block:'center',behavior:'smooth'})}}
+function ui(){$('tts-pp').textContent=state==='play'?'⏸':'▶';tb.classList.toggle('on',nar.classList.contains('tts-open'));
+  var st=$('tts-st');if(state==='stop'){st.textContent='Siap membacakan. Tekan ▶ (mulai dari bagian yang sedang tampil).';return}
+  var n=0;for(var i=0;i<=bi&&i<blocks.length;i++)if(blocks[i].tagName==='H2')n++;
+  st.textContent=(state==='pause'?'Dijeda · ':'Membaca · ')+(n?'Bab '+n+' · ':'')+'bagian '+(bi+1)+' dari '+blocks.length;}
+function wake(on){try{if(on){if(!wl&&navigator.wakeLock)navigator.wakeLock.request('screen').then(function(l){wl=l;l.addEventListener('release',function(){wl=null})}).catch(function(){})}else if(wl){wl.release();wl=null}}catch(e){}}
+function speakChunk(){var my=++tok;S.cancel();
+  setTimeout(function(){if(my!==tok||state!=='play')return;
+    var u=new SpeechSynthesisUtterance(chunks[ci]);keep=u;u.lang='id-ID';var v=pickVoice();if(v){u.voice=v;u.lang=v.lang}u.rate=P.rate;
+    var nx=function(){if(my!==tok||state!=='play')return;ci++;if(ci<chunks.length)speakChunk();else{bi++;startBlock()}};
+    u.onend=nx;u.onerror=function(e){if(e&&(e.error==='canceled'||e.error==='interrupted'))return;nx()};
+    S.speak(u)},40);}
+function startBlock(){if(bi>=blocks.length){finish();return}
+  var e=blocks[bi];chunks=split(say(e));ci=0;mark(e);ui();if(!chunks.length){bi++;startBlock();return}speakChunk();}
+function finish(){if(state==='play'&&P.next){var s=$('nar-pick');if(s.selectedIndex<s.options.length-1){autoNext=true;s.selectedIndex++;s.dispatchEvent(new Event('change'));return}}stopAll();}
+function go(i){if(state==='stop')collect();if(!blocks.length)return;bi=Math.max(0,Math.min(blocks.length-1,i));state='play';wake(true);startBlock();}
+function stopAll(){state='stop';tok++;S.cancel();mark(null);wake(false);ui();}
+function firstVisible(){var top=sc.getBoundingClientRect().top+30;for(var i=0;i<blocks.length;i++)if(blocks[i].getBoundingClientRect().bottom>top)return i;return 0;}
+function play(){if(state==='play'){state='pause';tok++;S.cancel();ui();return}
+  if(state==='pause'){state='play';wake(true);speakChunk();ui();return}
+  collect();go(firstVisible());}
+function jumpBab(d){var h=[],c=-1;blocks.forEach(function(e,i){if(e.tagName==='H2'){h.push(i);if(i<=bi)c=h.length-1}});
+  var t=d>0?h[c+1]:(bi>h[c]?h[c]:h[c-1]);if(t===undefined)t=d>0?bi:0;go(t);}
+tb.onclick=function(){var o=nar.classList.toggle('tts-open');if(!o)stopAll();ui();};
+$('tts-pp').onclick=play;$('tts-stop').onclick=stopAll;
+$('tts-pn').onclick=function(){go(bi+1)};$('tts-pb').onclick=function(){go(ci>0?bi:bi-1)};
+$('tts-bn').onclick=function(){jumpBab(1)};$('tts-bb').onclick=function(){jumpBab(-1)};
+$('tts-rate').value=String(P.rate);$('tts-next').checked=!!P.next;$('tts-intro').checked=!!P.intro;
+$('tts-rate').onchange=function(){P.rate=+this.value;save();if(state==='play')speakChunk();};
+$('tts-voice').onchange=function(){P.voice=this.value;save();if(state==='play')speakChunk();};
+$('tts-next').onchange=function(){P.next=this.checked;save();};
+$('tts-intro').onchange=function(){P.intro=this.checked;save();};
+$('tts-sleep').onchange=function(){clearTimeout(sleepT);var m=+this.value;if(m>0)sleepT=setTimeout(function(){stopAll();$('tts-sleep').value='0';$('tts-st').textContent='Pewaktu tidur selesai, pembacaan dihentikan.'},m*60000);};
+fillVoices();if(S.addEventListener)S.addEventListener('voiceschanged',fillVoices);else S.onvoiceschanged=fillVoices;
+new MutationObserver(function(){if(autoNext){autoNext=false;collect();go(0)}else{var was=state!=='stop';if(was)stopAll();collect()}}).observe(body,{childList:true});
+new MutationObserver(function(){if(!document.body.classList.contains('nar-open')&&state!=='stop')stopAll()}).observe(document.body,{attributes:true,attributeFilter:['class']});
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&state==='play')wake(true)});
+window.addEventListener('pagehide',function(){S.cancel()});
+})();
+</script>
+
 </body>
 </html>
