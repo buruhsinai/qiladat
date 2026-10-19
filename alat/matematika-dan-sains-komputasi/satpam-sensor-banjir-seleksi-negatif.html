@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Satpam Sensor Banjir: Seleksi Negatif Sistem Imun</title>
+<style>
+:root{--bg:#eaf0ee;--card:#fff;--ink:#0d333b;--dim:#4d6a70;--line:#c5d5d2;--soft:#f3f7f6;--lagoon:#17687a;--lagoon-ink:#fff;--buoy:#d9441a;--good:#1c7a45;--good-bg:#e2f3e8;--mid:#8a5a00;--mid-bg:#fdf0d2}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b181d;--card:#12242b;--ink:#e6f1ee;--dim:#9bbbc0;--line:#27434d;--soft:#0f1f25;--lagoon:#5cc0d2;--lagoon-ink:#08262d;--buoy:#ff8059;--good:#7fdba3;--good-bg:#14352a;--mid:#f2c46a;--mid-bg:#3a2d10}}
+:root[data-theme="dark"]{--bg:#0b181d;--card:#12242b;--ink:#e6f1ee;--dim:#9bbbc0;--line:#27434d;--soft:#0f1f25;--lagoon:#5cc0d2;--lagoon-ink:#08262d;--buoy:#ff8059;--good:#7fdba3;--good-bg:#14352a;--mid:#f2c46a;--mid-bg:#3a2d10}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1120px;margin:0 auto;padding:22px 16px 80px}
+h1{font:700 clamp(1.6rem,4.6vw,2.3rem)/1.15 Georgia,"Times New Roman",serif;margin:0 0 8px}
+h2{font:700 1.08rem/1.3 Georgia,serif;margin:0 0 8px}
+.lead{color:var(--dim);max-width:66ch;margin:0 0 16px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:18px;align-items:start}
+@media(max-width:920px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card+.card{margin-top:14px}
+.mapwrap{position:relative;border-radius:8px;overflow:hidden;border:1px solid var(--line);aspect-ratio:1/1;background:#f4f7f6}
+canvas#map{width:100%;height:100%;display:block;cursor:crosshair;touch-action:manipulation}
+#three3d{position:absolute;inset:0;display:none;cursor:grab;touch-action:none;user-select:none}
+#three3d canvas{display:block;width:100%!important;height:100%!important}
+.cam3d{position:absolute;top:8px;right:8px;display:flex;gap:6px;z-index:3}
+.cam3d[hidden]{display:none}
+.cam3d button{min-height:36px;padding:5px 10px;font-size:.85rem;background:rgba(255,255,255,.94);color:#0d333b;border-color:#9bb7bd}
+button{font:inherit;font-size:.95rem;min-height:42px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:var(--soft);color:var(--ink);cursor:pointer}
+button.go{background:var(--lagoon);color:var(--lagoon-ink);border-color:var(--lagoon);font-weight:700}
+button[aria-pressed="true"]{outline:3px solid var(--lagoon);outline-offset:-1px;font-weight:700}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0}
+.seg{display:inline-flex;margin:0 0 10px}
+.seg button{border-radius:0;min-width:70px}
+.seg button:first-child{border-radius:10px 0 0 10px}.seg button:last-child{border-radius:0 10px 10px 0}
+.hint{margin:10px 0 0;color:var(--dim);font-size:.95rem}
+.story{margin:0}
+.prog{height:8px;background:var(--soft);border-radius:6px;margin-top:10px;overflow:hidden;border:1px solid var(--line)}
+#bar{height:100%;width:0;background:var(--lagoon)}
+.answer strong{display:block;font:700 1.25rem/1.2 Georgia,serif}
+.answer span{color:var(--dim);font-size:.93rem;display:block;margin-top:4px}
+.badge{display:inline-block;margin-top:8px;padding:3px 10px;border-radius:99px;background:var(--soft);border:1px solid var(--line);font-size:.85rem}
+.badge.good{background:var(--good-bg);color:var(--good)}.badge.mid{background:var(--mid-bg);color:var(--mid)}
+.field{margin:0 0 12px}.field label{display:flex;justify-content:space-between;font-size:.95rem;font-weight:600}
+.field input{width:100%}.field small{color:var(--dim);display:block;line-height:1.35}
+.note{color:var(--dim);font-size:.92rem}
+details.about,details.legend{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+details summary{cursor:pointer;font-weight:700}
+.legendgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px;margin-top:10px;font-size:.92rem}
+.legendgrid span{display:flex;gap:8px;align-items:center}.legendgrid i{flex:none;width:18px;height:18px;border-radius:50%;display:inline-block}
+.warn{color:var(--buoy);min-height:1.2em;margin:6px 0 0;font-size:.92rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Satpam Sensor Banjir: Belajar Mengenali yang Tidak Wajar</h1>
+  <p class="lead">Sensor sungai mencatat tinggi muka air dan seberapa cepat air naik. Kita punya banyak data kondisi normal, tetapi hampir tidak punya contoh bencana. Seperti sistem imun yang belajar membedakan "diri sendiri" dari yang asing, satpam ini membuat penjaga acak, membuang yang cocok dengan kondisi normal, lalu menyimpan sisanya untuk membunyikan alarm.</p>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <div class="seg" role="group" aria-label="Mode tampilan">
+          <button id="v2" type="button" aria-pressed="true">Grafik 2D</button><button id="v3" type="button" aria-pressed="false">Maket 3D</button>
+        </div>
+        <div class="mapwrap">
+          <canvas id="map"></canvas>
+          <div id="three3d"></div>
+          <div class="cam3d" id="cam3d" hidden><button id="cTop" type="button">Dari atas</button><button id="cTilt" type="button">Miring</button></div>
+        </div>
+        <p class="hint">Sumbu datar: tinggi muka air. Sumbu tegak: seberapa cepat air naik. Ketuk grafik untuk mengajari satpam satu kondisi normal baru (sekelompok data hijau), ketuk lagi untuk menghapusnya. Di maket 3D, geser untuk memutar dan ketuk untuk menaruh.</p>
+        <p class="warn" id="msg" role="status"></p>
+        <div class="bar">
+          <button class="go" id="play" type="button">▶ Mulai latihan</button>
+          <button id="reseed" type="button">↻ Ulangi</button>
+          <button id="sample" type="button">🎲 Kasus baru</button>
+          <button id="clearU" type="button">Hapus tambahan</button>
+          <button id="voice" type="button" aria-pressed="false">🔇 Suara</button>
+          <button id="tour" type="button">❓ Tur singkat</button>
+        </div>
+        <details class="legend" open>
+          <summary>Arti gambar</summary>
+          <div class="legendgrid">
+            <span><i style="background:#2f9e5a"></i>Data normal untuk belajar (kemarau, hujan, air tinggi tenang)</span>
+            <span><i style="background:rgba(43,111,209,.35);border:2px solid #2b6fd1"></i>Penjaga yang lolos seleksi (area yang ia awasi)</span>
+            <span><i style="background:#d9441a"></i>✕ Kandidat penjaga yang dibuang karena cocok dengan kondisi normal</span>
+            <span><i style="background:#fff;border:3px solid #2f9e5a"></i>Data uji normal (lingkaran kosong = tidak ada alarm)</span>
+            <span><i style="background:#e0721a"></i>Alarm palsu: data normal tetapi dianggap bahaya</span>
+            <span><i style="background:#c62d2d"></i>Bahaya yang berhasil terdeteksi</span>
+            <span><i style="background:#fff;border:3px solid #c62d2d"></i>✕ Bahaya yang lolos (tidak terdeteksi)</span>
+            <span><i style="background:#e0a63a"></i>Garis oranye putus-putus: aturan ambang sederhana (tinggi air &gt; 80%) sebagai pembanding</span>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" aria-live="polite">
+        <h2>Apa yang sedang terjadi?</h2>
+        <p class="story" id="story"></p>
+        <div class="prog" aria-hidden="true"><div id="bar"></div></div>
+        <div id="tourBox" hidden style="margin-top:12px;padding:10px 12px;border:1px dashed var(--lagoon);border-radius:10px"><b id="tT"></b><p id="tX" class="note" style="margin:6px 0"></p><div class="bar" style="margin:0"><button id="tP" type="button" aria-label="Sebelumnya">⏮</button><button id="tN" class="go" type="button">Lanjut ⏭</button><button id="tC" type="button">Tutup</button></div></div>
+      </div>
+      <div class="card" aria-live="polite">
+        <h2>Hasilnya</h2>
+        <div class="answer"><strong id="aMain">—</strong><span id="aSub">Hasil muncul setelah ujian selesai.</span></div>
+        <span class="badge" id="aBadge">Belum dijalankan</span>
+        <p class="note" id="tally" aria-live="polite"></p>
+      </div>
+      <div class="card">
+        <h2>Atur sendiri</h2>
+        <div class="field"><label for="nC">Kandidat penjaga <b id="nCV">400</b></label><input id="nC" type="range" min="50" max="3000" step="50" value="400"><small>Makin banyak, makin rapat penjagaan. Yang cocok dengan kondisi normal dibuang.</small></div>
+        <div class="field"><label for="rad">Jangkauan tiap penjaga <b id="radV">5%</b></label><input id="rad" type="range" min="2" max="12" value="5"><small>Terlalu besar: banyak calon penjaga tersingkir dan celah di dekat kondisi normal terbuka. Terlalu kecil: butuh banyak penjaga.</small></div>
+        <div class="field"><label for="nS">Data normal untuk belajar <b id="nSV">150</b></label><input id="nS" type="range" min="20" max="300" step="10" value="150"><small>Terlalu sedikit data, kondisi normal yang jarang terlihat akan dianggap bahaya (alarm palsu).</small></div>
+        <div class="field"><label for="spd">Kecepatan <b id="spdV">1×</b></label><input id="spd" type="range" min="0.25" max="4" step="0.25" value="1"></div>
+        <details>
+          <summary>Seberapa andal?</summary>
+          <p class="note">Mengulang latihan dan ujian 30 kali dengan data baru, sekali dengan 30 data normal dan sekali dengan jumlah pengaturanmu. Dihitung rata-rata bahaya terdeteksi dan alarm palsu.</p>
+          <button id="trial" type="button" style="width:100%">Bandingkan 30 data dan banyak data</button>
+          <p class="note" id="trialOut" aria-live="polite"></p>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <details class="about">
+    <summary>Bagaimana satpam ini belajar?</summary>
+    <ol>
+      <li>Setiap kejadian diubah menjadi satu titik: seberapa tinggi air dan seberapa cepat naik. Data normal membentuk gerombolan titik hijau (kemarau, musim hujan, air tinggi yang tenang).</li>
+      <li><b>Pembuatan penjaga:</b> penjaga dibuat dengan menaruh lingkaran di tempat acak.</li>
+      <li><b>Seleksi negatif:</b> bila lingkaran sebuah penjaga menyentuh data normal, ia dibuang karena akan membunyikan alarm pada hal yang wajar. Hanya yang menjauh dari kondisi normal yang lolos, seperti sel imun yang menyerang sel sendiri dibuang di timus.</li>
+      <li><b>Penjagaan:</b> saat data baru datang, bila jatuh di dalam lingkaran penjaga mana pun, alarm berbunyi.</li>
+      <li>Ujian memakai data normal baru dan tiga jenis bahaya yang tidak pernah dilihat saat belajar: banjir bandang (naik sangat cepat), banjir besar (tinggi dan cepat), dan sensor rusak (tinggi sekali tetapi diam).</li>
+    </ol>
+    <ul>
+      <li>Ini miniatur dengan dua ciri saja dan data buatan. Data sensor sungguhan punya lebih banyak ciri, musim, dan derau, serta alarm palsu punya biaya nyata. Jangan dipakai sendirian untuk peringatan dini sungguhan.</li>
+      <li>Keunggulannya: tidak butuh contoh bencana. Kelemahannya: bila data normal kurang lengkap, kondisi normal yang jarang dianggap bahaya; dan di ruang dengan banyak ciri, butuh jauh lebih banyak penjaga.</li>
+      <li>Mengikuti Negative Selection Algorithm (Forrest dkk., 1994), versi ruang kontinu 2 dimensi dengan penjaga berbentuk lingkaran.</li>
+    </ul>
+  </details>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){'use strict';
+const $=id=>document.getElementById(id);
+const S=800,U=S/640;
+const cv=$('map'),ctx=cv.getContext('2d');cv.width=cv.height=S;
+const clamp=v=>Math.max(0,Math.min(1,v));
+function gauss(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(6.2832*v);}
+const SELF=[{c:[.2,.12],s:[.05,.03],w:.3},{c:[.48,.25],s:[.08,.05],w:.4},{c:[.7,.15],s:[.04,.04],w:.3}];
+const BAD=[{n:'Banjir bandang',c:[.35,.8],s:[.08,.08]},{n:'Banjir besar',c:[.85,.7],s:[.07,.08]},{n:'Sensor rusak',c:[.95,.03],s:[.03,.02]}];
+const AMB=.8,TOL=.012;
+const smp=(g,extra)=>({x:clamp(g.c[0]+gauss()*g.s[0]),y:clamp(g.c[1]+gauss()*g.s[1])});
+
+/* ===== data dan keadaan ===== */
+let uc=[],selfS=[],test=[],det=[],flash=[],cand=0,ti=0,phase=0,done=false,playing=false,spd=1,view='2d',dirty3=true,acc=0;
+let M={tp:0,fn:0,fp:0,tn:0,ty:[0,0,0],tyN:[0,0,0]},base_={tp:0,fp:0},tNow=0;
+const nC=()=>+$('nC').value,RAD=()=>+$('rad').value/100,NS=()=>+$('nS').value;
+function pickSelf(){let r=Math.random();for(const g of SELF){r-=g.w;if(r<=0)return g;}return SELF[0];}
+function seed(){
+  selfS=[];for(let i=0;i<NS();i++)selfS.push(smp(pickSelf()));
+  for(const u of uc)for(let i=0;i<12;i++)selfS.push({x:clamp(u.x+gauss()*.03),y:clamp(u.y+gauss()*.03)});
+  test=[];for(let i=0;i<200;i++)test.push({...smp(pickSelf()),bad:-1});
+  for(const u of uc)for(let i=0;i<25;i++)test.push({x:clamp(u.x+gauss()*.03),y:clamp(u.y+gauss()*.03),bad:-1});
+  BAD.forEach((g,k)=>{for(let i=0;i<50;i++)test.push({...smp(g),bad:k});});
+  for(let i=test.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[test[i],test[j]]=[test[j],test[i]];}
+  det=[];flash=[];cand=0;ti=0;phase=0;done=false;acc=0;dirty3=true;runId++;lastSpoken='';
+  M={tp:0,fn:0,fp:0,tn:0,ty:[0,0,0],tyN:[0,0,0]};
+  test.forEach(t=>{t.f=null;if(t.bad>=0)M.tyN[t.bad]++;});
+  base_={tp:test.filter(t=>t.bad>=0&&t.x>AMB).length,fp:test.filter(t=>t.bad<0&&t.x>AMB).length};
+}
+function trainStep(n){
+  const r=RAD();
+  for(let b=0;b<n&&cand<nC();b++){const x=Math.random(),y=Math.random();let hit=false;
+    for(const s of selfS){const dx=s.x-x,dy=s.y-y;if(dx*dx+dy*dy<(r+TOL)*(r+TOL)){hit=true;break;}}
+    if(hit)flash.push({x,y,t0:tNow});else det.push({x,y});cand++;}
+  if(cand>=nC()){phase=1;}
+}
+function covered(x,y,r){for(const d of det){const dx=d.x-x,dy=d.y-y;if(dx*dx+dy*dy<r*r)return true;}return false;}
+function testStep(n){
+  const r=RAD();
+  for(let b=0;b<n&&ti<test.length;b++){const t=test[ti++];t.f=covered(t.x,t.y,r);
+    if(t.bad>=0){if(t.f){M.tp++;M.ty[t.bad]++;}else M.fn++;}else{if(t.f)M.fp++;else M.tn++;}}
+  if(ti>=test.length){done=true;phase=2;}
+}
+function runFull(){seed();trainStep(1e9);testStep(1e9);return{tpr:M.tp/(M.tp+M.fn),fpr:M.fp/(M.fp+M.tn)};}
+
+/* ===== 2D ===== */
+const PX=(x)=>60+x*(S-90),PY=(y)=>(S-60)-y*(S-90);
+function draw2D(){
+  ctx.fillStyle='#f4f7f6';ctx.fillRect(0,0,S,S);
+  ctx.strokeStyle='#d5e0de';ctx.lineWidth=1;ctx.font=11*U+'px system-ui';ctx.fillStyle='#4d6a70';ctx.textAlign='center';
+  for(let i=0;i<=10;i++){const v=i/10;ctx.beginPath();ctx.moveTo(PX(v),PY(0));ctx.lineTo(PX(v),PY(1));ctx.stroke();ctx.beginPath();ctx.moveTo(PX(0),PY(v));ctx.lineTo(PX(1),PY(v));ctx.stroke();if(i%2===0){ctx.fillText(i*10+'%',PX(v),S-42);ctx.textAlign='right';ctx.fillText(i*10+'%',52,PY(v)+4);ctx.textAlign='center';}}
+  ctx.fillStyle='#0d333b';ctx.font='bold '+13*U+'px system-ui';ctx.fillText('Tinggi muka air →',S/2+20,S-18);ctx.save();ctx.translate(18,S/2);ctx.rotate(-Math.PI/2);ctx.fillText('Laju kenaikan →',0,0);ctx.restore();
+  const r=RAD()*(S-90);
+  for(const d of det){ctx.fillStyle='rgba(43,111,209,.13)';ctx.strokeStyle='rgba(43,111,209,.45)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(PX(d.x),PY(d.y),r,0,6.2832);ctx.fill();ctx.stroke();}
+  ctx.strokeStyle='#e0a63a';ctx.lineWidth=3*U*.7;ctx.setLineDash([9,6]);ctx.beginPath();ctx.moveTo(PX(AMB),PY(0));ctx.lineTo(PX(AMB),PY(1));ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#8a5a00';ctx.font=11*U+'px system-ui';ctx.textAlign='left';ctx.fillText('ambang 80%',PX(AMB)+4,PY(1)+14);
+  for(const s of selfS){ctx.fillStyle='#2f9e5a';ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(PX(s.x),PY(s.y),4*U,0,6.2832);ctx.fill();ctx.stroke();}
+  for(const u of uc){ctx.strokeStyle='#2f9e5a';ctx.setLineDash([4,3]);ctx.beginPath();ctx.arc(PX(u.x),PY(u.y),16*U,0,6.2832);ctx.stroke();ctx.setLineDash([]);}
+  flash=flash.filter(f=>tNow-f.t0<700);
+  for(const f of flash){const a=1-(tNow-f.t0)/700,x=PX(f.x),y=PY(f.y),q=6*U;ctx.strokeStyle='rgba(217,68,26,'+a+')';ctx.lineWidth=3*U*.7;ctx.beginPath();ctx.moveTo(x-q,y-q);ctx.lineTo(x+q,y+q);ctx.moveTo(x+q,y-q);ctx.lineTo(x-q,y+q);ctx.stroke();}
+  for(let i=0;i<ti;i++){const t=test[i],x=PX(t.x),y=PY(t.y);
+    if(t.bad<0){ctx.strokeStyle='#2f9e5a';ctx.fillStyle=t.f?'#e0721a':'#fff';ctx.lineWidth=2.5*U*.7;ctx.beginPath();ctx.arc(x,y,4.5*U,0,6.2832);ctx.fill();ctx.stroke();}
+    else if(t.f){ctx.fillStyle='#c62d2d';ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x,y,5*U,0,6.2832);ctx.fill();ctx.stroke();}
+    else{ctx.strokeStyle='#c62d2d';ctx.lineWidth=2.5*U*.7;const q=5*U;ctx.beginPath();ctx.moveTo(x-q,y-q);ctx.lineTo(x+q,y+q);ctx.moveTo(x+q,y-q);ctx.lineTo(x-q,y+q);ctx.stroke();}}
+}
+
+/* ===== 3D ===== */
+let R,SC,CAM,detM,selfG,testG,tpool=[],wall,cam={th:.55,ph:.95,r:120},nSelfBuilt=-1,builtDet=-1,dummy;
+const X3=x=>x*100-50,Z3=y=>(1-y)*100-50;
+function init3D(){
+  if(R)return true;
+  try{R=new THREE.WebGLRenderer({antialias:true});}catch(e){R=null;return false;}
+  R.setPixelRatio(Math.min(2,window.devicePixelRatio||1));$('three3d').appendChild(R.domElement);
+  SC=new THREE.Scene();SC.background=new THREE.Color(0xe3ecea);CAM=new THREE.PerspectiveCamera(45,1,1,700);
+  SC.add(new THREE.AmbientLight(0xffffff,.8));const dl=new THREE.DirectionalLight(0xffffff,.6);dl.position.set(40,90,30);SC.add(dl);
+  const g=new THREE.Mesh(new THREE.PlaneGeometry(100,100),new THREE.MeshLambertMaterial({color:0xf4f7f6}));g.rotation.x=-Math.PI/2;SC.add(g);
+  const gh=new THREE.GridHelper(100,10,0x9bb7bd,0xd0dcda);gh.position.y=.05;SC.add(gh);
+  wall=new THREE.Mesh(new THREE.PlaneGeometry(100,14),new THREE.MeshBasicMaterial({color:0xe0a63a,transparent:true,opacity:.28,side:THREE.DoubleSide}));wall.rotation.y=Math.PI/2;wall.position.set(X3(AMB),7,0);SC.add(wall);
+  dummy=new THREE.Object3D();
+  const mS=c=>new THREE.MeshLambertMaterial({color:c});MAT={self:mS(0x2f9e5a),ok:mS(0xffffff),fp:mS(0xe0721a),tp:mS(0xc62d2d),fn:mS(0x222222),wait:mS(0xc9d6d3),col:new THREE.MeshBasicMaterial({color:0xc62d2d,transparent:true,opacity:.45})};
+  detM=new THREE.InstancedMesh(new THREE.SphereGeometry(1,14,7,0,6.2832,0,Math.PI/2),new THREE.MeshLambertMaterial({color:0x2b6fd1,transparent:true,opacity:.3}),3000);detM.count=0;detM.frustumCulled=false;SC.add(detM);
+  selfG=new THREE.Group();testG=new THREE.Group();SC.add(selfG,testG);
+  bind3D();dirty3=true;return true;
+}
+let MAT;
+function sync3D(){
+  const clr=g=>{while(g.children.length)g.remove(g.children[0]);};
+  if(dirty3){clr(selfG);selfS.forEach(s=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.9,.9,3,10),MAT.self);m.position.set(X3(s.x),1.5,Z3(s.y));selfG.add(m);});
+    clr(testG);tpool=test.map(t=>{const gr=new THREE.Group(),b=new THREE.Mesh(new THREE.SphereGeometry(1.1,10,8),MAT.wait),c=new THREE.Mesh(new THREE.CylinderGeometry(.35,.35,26,6),MAT.col);c.position.y=13;gr.add(b,c);gr.position.set(X3(t.x),1.4,Z3(t.y));testG.add(gr);return gr;});
+    detM.count=0;builtDet=-1;dirty3=false;}
+  if(builtDet!==det.length){const r=RAD()*100;det.forEach((d,i)=>{dummy.position.set(X3(d.x),0,Z3(d.y));dummy.scale.set(r,r,r);dummy.updateMatrix();detM.setMatrixAt(i,dummy.matrix);});detM.count=Math.min(3000,det.length);detM.instanceMatrix.needsUpdate=true;builtDet=det.length;}
+  tpool.forEach((gr,i)=>{const t=test[i],b=gr.children[0],c=gr.children[1];gr.visible=i<ti;if(i>=ti)return;
+    b.material=t.bad<0?(t.f?MAT.fp:MAT.ok):(t.f?MAT.tp:MAT.fn);c.visible=t.bad>=0&&t.f;});
+}
+function resize3D(){const b=$('three3d'),w=b.clientWidth,h=b.clientHeight;if(!w||!h)return;if(R.domElement.width!==Math.round(w*R.getPixelRatio())){R.setSize(w,h,false);CAM.aspect=w/h;CAM.updateProjectionMatrix();}}
+function draw3D(){
+  if(!R)return;resize3D();sync3D();
+  CAM.position.set(cam.r*Math.sin(cam.ph)*Math.sin(cam.th),cam.r*Math.cos(cam.ph),cam.r*Math.sin(cam.ph)*Math.cos(cam.th));CAM.lookAt(0,0,0);R.render(SC,CAM);
+}
+function bind3D(){
+  const el=R.domElement;let drag=null;
+  el.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,mv:0};el.setPointerCapture(e.pointerId);$('three3d').style.cursor='grabbing';});
+  el.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.mv+=Math.abs(dx)+Math.abs(dy);cam.th-=dx*.008;cam.ph=Math.max(.12,Math.min(1.45,cam.ph-dy*.008));drag.x=e.clientX;drag.y=e.clientY;});
+  el.addEventListener('pointerup',e=>{$('three3d').style.cursor='grab';if(drag&&drag.mv<6){const r=el.getBoundingClientRect(),v=new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height)*2+1),rc=new THREE.Raycaster();rc.setFromCamera(v,CAM);
+    const o=rc.ray.origin,d=rc.ray.direction;if(d.y<-1e-4){const t=-o.y/d.y,x=(o.x+d.x*t+50)/100,y=1-(o.z+d.z*t+50)/100;if(x>=0&&x<=1&&y>=0&&y<=1)mapClick(x,y);}}drag=null;});
+  el.addEventListener('wheel',e=>{e.preventDefault();cam.r=Math.max(50,Math.min(200,cam.r*(e.deltaY>0?1.08:.92)));},{passive:false});
+}
+
+/* ===== interaksi ===== */
+function mapClick(x,y){
+  $('msg').textContent='';
+  const i=uc.findIndex(u=>Math.hypot(x-u.x,y-u.y)<.06);
+  if(i>=0)uc.splice(i,1);else if(uc.length>=3){$('msg').textContent='Kondisi normal tambahan maksimal 3.';return;}else uc.push({x,y});
+  changed();
+}
+cv.addEventListener('click',e=>{const r=cv.getBoundingClientRect(),px=(e.clientX-r.left)/r.width*S,py=(e.clientY-r.top)/r.height*S;const x=(px-60)/(S-90),y=((S-60)-py)/(S-90);if(x>=0&&x<=1&&y>=0&&y<=1)mapClick(x,y);});
+function changed(){playing=false;seed();refresh();}
+function setView(v){view=v;$('v2').setAttribute('aria-pressed',v==='2d');$('v3').setAttribute('aria-pressed',v==='3d');
+  if(v==='3d'&&!init3D()){$('msg').textContent='Perangkat ini tidak mendukung tampilan 3D. Tampilan 2D tetap bisa dipakai.';view='2d';$('v2').setAttribute('aria-pressed',true);$('v3').setAttribute('aria-pressed',false);}
+  cv.style.display=view==='2d'?'block':'none';$('three3d').style.display=view==='3d'?'block':'none';$('cam3d').hidden=view!=='3d';dirty3=true;}
+$('v2').onclick=()=>setView('2d');$('v3').onclick=()=>setView('3d');
+$('cTop').onclick=()=>{cam.ph=.12;cam.th=0;};$('cTilt').onclick=()=>{cam.ph=.95;cam.th=.55;cam.r=120;};
+$('play').onclick=()=>{if(done)seed();playing=!playing;refresh();};
+$('reseed').onclick=()=>{playing=false;seed();refresh();};
+$('sample').onclick=()=>{uc=[];const n=1+Math.floor(Math.random()*2);for(let i=0;i<n;i++)uc.push({x:.1+Math.random()*.8,y:.1+Math.random()*.55});changed();};
+$('clearU').onclick=()=>{uc=[];changed();};
+['nC','rad','nS'].forEach(id=>$(id).oninput=()=>{$('nCV').textContent=nC();$('radV').textContent=$('rad').value+'%';$('nSV').textContent=NS();playing=false;seed();refresh();});
+$('spd').oninput=()=>{spd=+$('spd').value;$('spdV').textContent=spd+'×';};
+$('trial').onclick=()=>{const n0=NS(),res=[];
+  for(const n of [30,n0]){$('nS').value=n;let a=0,b=0;for(let t=0;t<30;t++){const r=runFull();a+=r.tpr;b+=r.fpr;}res.push([a/30,b/30]);}
+  $('nS').value=n0;playing=false;seed();refresh();
+  $('trialOut').textContent='Rata-rata 30 kali: dengan 30 data normal, bahaya terdeteksi '+(res[0][0]*100).toFixed(0)+'% dan alarm palsu '+(res[0][1]*100).toFixed(0)+'%. Dengan '+n0+' data normal: terdeteksi '+(res[1][0]*100).toFixed(0)+'%, alarm palsu '+(res[1][1]*100).toFixed(0)+'%.';};
+
+/* ===== tur dan suara ===== */
+let voiceOn=false,lastSpoken='',tourOn=false,ti_=0,runId=0,scored=-1;const tally={a:0,b:0};
+const VT={'0':'Titik hijau adalah data normal sungai. Satpam belum punya penjaga.','1':'Penjaga dibuat di tempat acak. Yang menyentuh data normal dibuang, sisanya lolos.','2':'Ujian dimulai. Data baru datang satu per satu, termasuk tiga jenis bahaya yang tidak pernah dilihat saat belajar.','d':'Ujian selesai. Lihat berapa bahaya yang terdeteksi dan berapa alarm palsu.'};
+function say(t){if(!voiceOn||!window.speechSynthesis)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='id-ID';const v=speechSynthesis.getVoices().find(x=>/^id/i.test(x.lang));if(v)u.voice=v;u.rate=.95;speechSynthesis.speak(u);}
+function speakMaybe(k){if(k===lastSpoken)return;lastSpoken=k;if(!tourOn)say(VT[k]);}
+if(!window.speechSynthesis)$('voice').disabled=true;
+$('voice').onclick=()=>{voiceOn=!voiceOn;$('voice').setAttribute('aria-pressed',voiceOn);$('voice').textContent=voiceOn?'🔊 Suara':'🔇 Suara';if(voiceOn){lastSpoken='';refresh();}else if(window.speechSynthesis)speechSynthesis.cancel();};
+const TS=[['1. Masalahnya','Kita punya banyak data sungai yang normal, tetapi hampir tidak punya contoh bencana. Bagaimana mengenali yang tidak wajar tanpa pernah melihat bencana?'],
+['2. Meniru sistem imun','Penjaga dibuat di tempat acak. Yang menyentuh data normal dibuang (seleksi negatif). Sisanya menjaga area di luar kondisi normal.'],
+['3. Ujian','Data baru datang. Bila jatuh di area penjaga, alarm berbunyi. Ujian memakai tiga jenis bahaya yang belum pernah dilihat: bandang, banjir besar, dan sensor rusak.'],
+['4. Bandingkan dengan ambang','Garis oranye adalah aturan sederhana: alarm bila air lebih dari 80%. Banjir bandang tinggi air sedang, jadi lolos dari aturan itu.'],
+['5. Coba sendiri','Kurangi data normal untuk melihat alarm palsu bertambah. Ubah jangkauan penjaga. Ketuk grafik untuk menambah kondisi normal baru, lalu lihat di 3D.']];
+function showTour(){const s=TS[ti_];$('tT').textContent=s[0];$('tX').textContent=s[1];$('tN').textContent=ti_===TS.length-1?'Selesai':'Lanjut ⏭';$('tourBox').hidden=false;if(ti_===4)setView('3d');else if(view==='3d')setView('2d');say(s[1]);}
+function endTour(){tourOn=false;$('tourBox').hidden=true;if(window.speechSynthesis)speechSynthesis.cancel();lastSpoken='';}
+$('tour').onclick=()=>{tourOn=true;ti_=0;showTour();};
+$('tN').onclick=()=>{if(ti_>=TS.length-1){endTour();return;}ti_++;showTour();};
+$('tP').onclick=()=>{if(ti_>0){ti_--;showTour();}};
+$('tC').onclick=endTour;
+
+/* ===== teks dan hasil ===== */
+const pc=(a,b)=>b?(a/b*100).toFixed(0)+'%':'—';
+function refresh(){
+  const p=phase===0?cand/nC()*.5:phase===1?.5+ti/test.length*.5:1;$('bar').style.width=(p*100)+'%';
+  $('play').textContent=playing?'⏸ Jeda':(done?'▶ Latih lagi':(cand>0||ti>0?'▶ Lanjutkan':'▶ Mulai latihan'));
+  const s=cand===0&&ti===0?'Titik hijau adalah data normal sungai. Satpam belum punya penjaga. Tekan Mulai latihan.':done?'Ujian selesai. Lihat berapa bahaya terdeteksi dan berapa alarm palsu.':phase===0?'Penjaga dibuat di tempat acak. Yang menyentuh data normal dibuang (tanda ✕ merah), sisanya lolos dan mengawasi area di sekitarnya. Penjaga lolos: '+det.length+' dari '+cand+' kandidat.':'Ujian: data baru datang satu per satu, termasuk bahaya yang tidak pernah dilihat saat belajar. Terdeteksi: '+M.tp+', lolos: '+M.fn+', alarm palsu: '+M.fp+'.';
+  $('story').textContent=s;speakMaybe(cand===0&&ti===0?'0':done?'d':phase===0?'1':'2');
+  if(!done){$('aMain').textContent=ti?'Sementara: '+M.tp+' bahaya terdeteksi':'—';$('aSub').textContent=ti?'Ujian belum selesai.':'Hasil muncul setelah ujian selesai.';$('aBadge').textContent=cand||ti?'Sedang berjalan':'Belum dijalankan';$('aBadge').className='badge';return;}
+  const nb=M.tp+M.fn,nn=M.fp+M.tn,tpr=M.tp/nb,fpr=M.fp/nn,ok=tpr>=.9&&fpr<=.05;
+  if(scored!==runId&&!tourOn){scored=runId;tally[ok?'a':'b']++;$('tally').textContent='Catatan sesi ini: '+(tally.a+tally.b)+' ujian selesai, '+tally.a+' lulus (bahaya ≥ 90%, alarm palsu ≤ 5%), '+tally.b+' belum lulus.';}
+  $('aMain').textContent=M.tp+' dari '+nb+' bahaya terdeteksi ('+pc(M.tp,nb)+')';
+  $('aSub').innerHTML='Alarm palsu: '+M.fp+' dari '+nn+' data normal ('+pc(M.fp,nn)+'). Penjaga yang lolos seleksi: '+det.length+' dari '+nC()+' kandidat.<br>'+BAD.map((g,k)=>g.n+': '+M.ty[k]+'/'+M.tyN[k]).join(', ')+'.<br>Pembanding ambang tinggi air &gt; 80%: bahaya terdeteksi '+pc(base_.tp,nb)+', alarm palsu '+pc(base_.fp,nn)+'.';
+  $('aBadge').textContent=ok?'Lulus: terdeteksi '+(tpr*100).toFixed(0)+'%, alarm palsu '+(fpr*100).toFixed(0)+'%':'Belum lulus: terdeteksi '+(tpr*100).toFixed(0)+'%, alarm palsu '+(fpr*100).toFixed(0)+'%';$('aBadge').className='badge '+(ok?'good':'mid');
+}
+
+/* ===== putaran ===== */
+let last=0;
+function loop(t){requestAnimationFrame(loop);tNow=t;const dt=Math.min(.1,(t-last)/1000||0);last=t;if(document.hidden)return;
+  if(playing&&!done){acc+=dt*30*spd;let n=Math.floor(acc);if(n>=1){acc-=n;if(phase===0)trainStep(Math.max(1,Math.round(nC()/150))*n);else testStep(Math.max(1,Math.round(test.length/200))*n);refresh();if(done){playing=false;refresh();}}}
+  if(view==='3d')draw3D();else draw2D();}
+seed();refresh();requestAnimationFrame(loop);
+})();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>

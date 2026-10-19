@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lumba-lumba dan Pipa: Mencari Sumber Kebocoran</title>
+<style>
+  :root{
+    --bg:#eaf0ee; --card:#fff; --ink:#0d333b; --dim:#4d6a70; --line:#c5d5d2; --soft:#f3f7f6;
+    --lagoon:#17687a; --lagoon-ink:#fff; --buoy:#d9441a; --good:#1c7a45; --good-bg:#e2f3e8; --mid:#8a5a00; --mid-bg:#fdf0d2; --bad:#a3321a; --bad-bg:#fbe3dc;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){ --bg:#0b181d; --card:#12242b; --ink:#e6f1ee; --dim:#9bbbc0; --line:#27434d; --soft:#0f1f25; --lagoon:#5cc0d2; --lagoon-ink:#08262d; --buoy:#ff8059;
+      --good:#7fdba3; --good-bg:#14352a; --mid:#f2c46a; --mid-bg:#3a2d10; --bad:#ff9a7d; --bad-bg:#40201a; }
+  }
+  :root[data-theme="dark"]{ --bg:#0b181d; --card:#12242b; --ink:#e6f1ee; --dim:#9bbbc0; --line:#27434d; --soft:#0f1f25; --lagoon:#5cc0d2; --lagoon-ink:#08262d; --buoy:#ff8059;
+      --good:#7fdba3; --good-bg:#14352a; --mid:#f2c46a; --mid-bg:#3a2d10; --bad:#ff9a7d; --bad-bg:#40201a; }
+  :root{ box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
+  html{ scroll-padding-top:env(safe-area-inset-top,0px); }
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:auto; }
+  body{ margin:0; background:var(--bg); color:var(--ink); font:18px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  .wrap{ max-width:1120px; margin:0 auto; padding:22px 16px 90px; }
+  h1{ font:700 clamp(1.7rem,4.6vw,2.4rem)/1.15 Georgia,"Times New Roman",serif; margin:0 0 8px; }
+  h2{ font:700 1.1rem/1.3 Georgia,serif; margin:0 0 8px; }
+  .lead{ color:var(--dim); max-width:64ch; margin:0 0 14px; font-size:1.04rem; }
+  .steps3{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; margin:0 0 18px; padding:0; list-style:none; }
+  .steps3 li{ display:flex; gap:10px; align-items:flex-start; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; font-size:.95rem; line-height:1.4; }
+  .steps3 b{ display:grid; place-items:center; flex:none; width:28px; height:28px; border-radius:50%; background:var(--lagoon); color:var(--lagoon-ink); font-size:.95rem; }
+  .steps3 strong{ display:block; }
+  .grid{ display:grid; grid-template-columns:minmax(0,1fr) 360px; gap:18px; align-items:start; }
+  @media (max-width:920px){ .grid{ grid-template-columns:1fr; } }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; scroll-margin-top:70px; }
+  .card + .card{ margin-top:14px; }
+  .mapwrap{ position:relative; border-radius:8px; overflow:hidden; border:1px solid var(--line); aspect-ratio:1/1; background:#efece3; scroll-margin-top:70px; }
+  canvas#map{ width:100%; height:100%; display:block; cursor:crosshair; touch-action:manipulation; }
+  #three3d{ position:absolute; inset:0; display:none; cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; }
+  #three3d.grabbing{ cursor:grabbing; }
+  #three3d canvas{ display:block; width:100%!important; height:100%!important; }
+  .cam3d{ position:absolute; top:8px; right:8px; display:flex; gap:6px; z-index:3; }
+  .cam3d button{ min-height:36px; padding:5px 10px; font-size:.85rem; background:rgba(255,255,255,.94); color:#0d333b; border-color:#9bb7bd; }
+  .cam3d[hidden]{ display:none; }
+  .empty{ position:absolute; inset:0; display:grid; place-items:center; pointer-events:none; z-index:2; }
+  .empty div{ background:rgba(255,255,255,.95); color:#0d333b; border:2px solid #17687a; border-radius:10px; padding:12px 18px; font-weight:600; text-align:center; max-width:80%; }
+  .empty[hidden]{ display:none; }
+  .seg{ display:flex; border:2px solid var(--lagoon); border-radius:9px; overflow:hidden; margin-bottom:10px; scroll-margin-top:70px; }
+  .seg button{ flex:1; border:0; border-radius:0; background:var(--card); font-weight:600; min-height:46px; padding:8px 6px; }
+  .seg button + button{ border-left:1px solid var(--line); }
+  .seg button[aria-pressed="true"]{ background:var(--lagoon); color:var(--lagoon-ink); }
+  .seg.small{ border-width:1px; margin-bottom:0; }
+  .seg.small button{ min-height:38px; font-size:.9rem; }
+  .viewrow{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
+  .viewrow .seg{ margin:0; flex:1 1 260px; }
+  .bar{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; scroll-margin-top:70px; }
+  button{ font:inherit; font-size:.95rem; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:9px; padding:9px 14px; min-height:44px; cursor:pointer; }
+  button:hover{ border-color:var(--lagoon); }
+  button:focus-visible,input:focus-visible,summary:focus-visible{ outline:3px solid var(--lagoon); outline-offset:2px; }
+  button.go{ background:var(--buoy); border-color:var(--buoy); color:#fff; font-weight:700; font-size:1.05rem; min-width:170px; }
+  .hint{ font-size:.92rem; color:var(--dim); margin:8px 0 0; }
+  .warn{ font-size:.92rem; color:var(--bad); font-weight:600; margin:6px 0 0; }
+  .warn:empty{ display:none; }
+  details.legend{ margin-top:14px; padding-top:10px; border-top:1px solid var(--line); }
+  details.legend summary, details.about summary, details.adv summary{ cursor:pointer; font-weight:700; }
+  .legendgrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:8px 14px; font-size:.92rem; margin-top:10px; }
+  .legendgrid span{ display:flex; align-items:center; gap:9px; }
+  .legendgrid svg{ flex:none; width:26px; height:26px; }
+  .story{ font-size:1.08rem; line-height:1.5; margin:0 0 12px; min-height:5.2em; }
+  .prog{ height:8px; background:var(--soft); border-radius:4px; overflow:hidden; border:1px solid var(--line); }
+  .prog div{ height:100%; width:0; background:var(--lagoon); }
+  .answer{ border-left:5px solid var(--buoy); padding:2px 0 2px 12px; margin:0 0 12px; }
+  .answer strong{ display:block; font:700 1.5rem/1.2 Georgia,serif; }
+  .answer span{ font-size:.95rem; color:var(--dim); }
+  .badge{ display:block; border-radius:8px; padding:10px 12px; font-weight:600; font-size:.95rem; background:var(--soft); color:var(--dim); }
+  .badge.good{ background:var(--good-bg); color:var(--good); }
+  .badge.mid{ background:var(--mid-bg); color:var(--mid); }
+  .badge.bad{ background:var(--bad-bg); color:var(--bad); }
+  .field{ margin-bottom:14px; }
+  .field label{ display:flex; justify-content:space-between; font-weight:600; margin-bottom:2px; }
+  .field b{ color:var(--lagoon); }
+  .field small{ display:block; color:var(--dim); font-size:.86rem; }
+  .field .lbl{ font-weight:600; margin-bottom:6px; }
+  input[type=range]{ width:100%; accent-color:var(--lagoon); }
+  .note{ font-size:.92rem; color:var(--dim); margin:10px 0 0; }
+  details.adv{ margin-top:6px; scroll-margin-top:70px; }
+  details.adv > div{ margin-top:12px; }
+  details.about{ margin-top:16px; }
+  details.about ol,details.about ul{ padding-left:22px; margin:8px 0 0; color:var(--dim); max-width:76ch; }
+  details.about li{ margin-bottom:6px; }
+  .voicenote{ font-size:.85rem; color:var(--mid); margin:0 0 10px; }
+  .voicenote:empty{ display:none; }
+
+  /* tombol mini: tur dan suara */
+  .mini{ position:fixed; right:12px; bottom:calc(12px + env(safe-area-inset-bottom,0px)); z-index:40; display:flex; gap:8px; }
+  .mini button{ width:44px; height:44px; min-height:44px; padding:0; border-radius:50%; font-weight:700; font-size:1.05rem; background:var(--card); box-shadow:0 2px 10px rgba(0,0,0,.25); }
+  .mini[hidden]{ display:none; }
+
+  /* tur */
+  .block{ position:fixed; inset:0; z-index:49; background:transparent; }
+  .block.dim{ background:rgba(8,25,30,.66); }
+  .block[hidden],.spot[hidden],.tour[hidden]{ display:none; }
+  .spot{ position:fixed; z-index:50; border-radius:12px; border:3px solid #ffd166; box-shadow:0 0 0 9999px rgba(8,25,30,.62); pointer-events:none; }
+  .tour{ position:fixed; z-index:60; left:50%; transform:translateX(-50%); bottom:calc(12px + env(safe-area-inset-bottom,0px)); width:min(620px,calc(100% - 24px)); background:var(--card); color:var(--ink); border:2px solid var(--lagoon); border-radius:14px; padding:12px 16px 14px; box-shadow:0 10px 40px rgba(0,0,0,.4); max-height:60vh; overflow:auto; }
+  .tour.center{ top:50%; bottom:auto; transform:translate(-50%,-50%); }
+  .tprog{ height:4px; background:var(--soft); border-radius:3px; overflow:hidden; margin-bottom:8px; }
+  .tprog i{ display:block; height:100%; width:0; background:var(--buoy); transition:width .3s; }
+  .thead{ display:flex; justify-content:space-between; align-items:center; color:var(--dim); font-size:.85rem; }
+  .thead button{ min-height:34px; width:34px; padding:0; border-radius:50%; }
+  .tour h2{ margin:2px 0 6px; font-size:1.2rem; }
+  .tour p{ margin:0 0 10px; font-size:1.02rem; line-height:1.5; }
+  .tchk{ display:flex; gap:8px; align-items:center; font-size:.9rem; color:var(--dim); margin:0 0 10px; cursor:pointer; }
+  .tchk input{ width:20px; height:20px; accent-color:var(--lagoon); }
+  .tbar{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .tbar[hidden],.tchk[hidden]{ display:none; }
+  .tbar .sp{ flex:1; }
+  @media (prefers-reduced-motion:reduce){ .tprog i{ transition:none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Lumba-lumba dan Pipa: Mencari Sumber Kebocoran</h1>
+  <p class="lead">Bayangkan pipa air di bawah sebuah kota kecil bocor, tetapi tidak ada yang tahu di jalan mana. Membongkar jalan satu per satu itu mahal. Di sini, sekawanan <strong>lumba-lumba pencari</strong> menyusuri jalan sambil mengirim klik sonar dan mendengar gemanya: desis kebocoran makin keras kalau makin dekat. Awalnya sapuan sonar lebar, lalu menyempit ke sumber suara. Lumba-lumba di sini hanya nama untuk sekelompok penjelajah kecil, bukan lumba-lumba sungguhan.</p>
+  <p class="voicenote" id="voiceNote" role="status"></p>
+
+  <ol class="steps3" aria-label="Cara memakai">
+    <li><b>1</b><span><strong>Sembunyikan kebocoran</strong>Taruh kebocoran di peta, atau tekan "Kota baru".</span></li>
+    <li><b>2</b><span><strong>Mulai</strong>Tekan tombol merah dan tonton lumba-lumba menyapu dengan sonar.</span></li>
+    <li><b>3</b><span><strong>Lihat hasil</strong>Pin merah adalah titik pipa yang sebaiknya digali.</span></li>
+  </ol>
+
+  <div class="grid">
+    <div>
+      <div class="card" id="cardMap">
+        <div class="viewrow">
+          <div class="seg" id="viewSwitch" role="group" aria-label="Pilih tampilan peta">
+            <button type="button" data-view="2d" aria-pressed="true">🗺️ Denah 2D</button>
+            <button type="button" data-view="3d" aria-pressed="false">🧊 Maket 3D</button>
+          </div>
+        </div>
+        <div class="seg" id="tools" role="group" aria-label="Apa yang dilakukan saat peta diklik">
+          <button type="button" data-mode="leak" aria-pressed="true">💧 Taruh kebocoran</button>
+          <button type="button" data-mode="noise" aria-pressed="false">🔊 Taruh sumber bising</button>
+          <button type="button" data-mode="del" aria-pressed="false">🧽 Hapus bising</button>
+        </div>
+        <div class="mapwrap" id="mapArea">
+          <canvas id="map" width="1024" height="1024" aria-label="Denah kota mini: jalan dengan pipa air di bawahnya, lumba-lumba pencari, titik gema sonar, dan titik usulan galian"></canvas>
+          <div id="three3d" aria-label="Maket 3D kota mini. Geser untuk memutar, gulir atau cubit untuk memperbesar"></div>
+          <div class="cam3d" id="cam3d" hidden><button type="button" id="camHome">↺ Kamera awal</button><button type="button" id="camTop">⬇ Dari atas</button></div>
+          <div class="empty" id="empty"><div>Belum ada kebocoran. Klik peta untuk menyembunyikan kebocoran di pipa, atau tekan "Kota baru".</div></div>
+        </div>
+        <p class="hint" id="hint"></p>
+        <p class="warn" id="msg" role="status"></p>
+        <div class="bar" id="playBar">
+          <button class="go" id="play" type="button">▶ Mulai simulasi</button>
+          <button id="reseed" type="button">↻ Ulangi</button>
+          <button id="sample" type="button">🎲 Kota baru</button>
+          <button id="clear" type="button">Kosongkan</button>
+          <button id="peek" type="button" aria-pressed="false">🔍 Intip sumber</button>
+        </div>
+        <details class="legend" open>
+          <summary>Arti gambar di peta</summary>
+          <div class="legendgrid">
+            <span><svg viewBox="0 0 26 26"><line x1="2" y1="13" x2="24" y2="13" stroke="#17687a" stroke-width="5" stroke-linecap="round"/><line x1="2" y1="13" x2="24" y2="13" stroke="#fff" stroke-width="1.4" stroke-dasharray="3 3"/></svg>Pipa air di bawah jalan (warnanya berubah merah menurut kerasnya bunyi, saat sumber diintip atau di akhir)</span>
+            <span><svg viewBox="0 0 26 26"><ellipse cx="13" cy="13" rx="9.5" ry="3.8" fill="#1d4f63" stroke="#fff" stroke-width="1.2"/><path d="M5 13 0 8v10z" fill="#1d4f63" transform="translate(2 0)"/><path d="M11 10 9 5 14 9zM11 16 9 21 14 17z" fill="#1d4f63"/></svg>Lumba-lumba pencari (berenang menyusuri jalan)</span>
+            <span><svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="10" fill="none" stroke="rgba(23,104,122,.55)" stroke-width="2"/></svg>Lingkaran biru: jangkauan sapuan sonar, makin lama makin sempit</span>
+            <span><svg viewBox="0 0 26 26"><circle cx="7" cy="14" r="3.2" fill="rgba(90,185,210,.9)" stroke="#fff"/><circle cx="14" cy="9" r="3.6" fill="rgba(150,130,120,.9)" stroke="#fff"/><circle cx="20" cy="15" r="4.4" fill="rgba(217,68,26,.9)" stroke="#fff"/></svg>Titik gema: biru = bunyi lemah, merah = bunyi keras</span>
+            <span><svg viewBox="0 0 26 26"><path d="M13 24 6 12a7.5 7.5 0 1 1 14 0z" fill="#d9441a" stroke="#fff" stroke-width="1.5"/><circle cx="13" cy="10" r="3" fill="#fff"/></svg>Titik usulan galian (bunyi terkuat yang ditemukan)</span>
+            <span><svg viewBox="0 0 26 26"><path d="M13 3C18 10 20 13 20 16a7 7 0 0 1-14 0c0-3 2-6 7-13z" fill="#1b86c9" stroke="#fff" stroke-width="1.5"/></svg>Kebocoran sebenarnya (tersembunyi sampai akhir)</span>
+            <span><svg viewBox="0 0 26 26"><path d="M13 3 23 13 13 23 3 13z" fill="#d98e2a" stroke="#fff" stroke-width="1.5"/></svg>Sumber bising lain yang bisa menipu (tersembunyi sampai akhir)</span>
+            <span><svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="9" fill="none" stroke="#1c7a45" stroke-width="3" stroke-dasharray="5 3"/></svg>Pencocokan: lokasi kebocoran sebenarnya (muncul di akhir)</span>
+            <span><svg viewBox="0 0 26 26"><rect x="3" y="3" width="9" height="9" fill="#d9d3c3" stroke="#b9b29a"/><rect x="14" y="3" width="9" height="9" fill="#d4cfc2" stroke="#b9b29a"/><rect x="3" y="14" width="9" height="9" fill="#cfe3c0" stroke="#b9b29a"/><rect x="14" y="14" width="9" height="9" fill="#e3a857" stroke="#b9b29a"/></svg>Gedung dan taman: hanya hiasan kota</span>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" id="cardStory" aria-live="polite">
+        <h2>Apa yang sedang terjadi?</h2>
+        <p class="story" id="story"></p>
+        <div class="prog" aria-hidden="true"><div id="bar"></div></div>
+      </div>
+      <div class="card" id="cardResult" aria-live="polite">
+        <h2>Hasilnya</h2>
+        <div class="answer"><strong id="aMain">—</strong><span id="aSub">Hasil muncul setelah simulasi selesai.</span></div>
+        <span class="badge" id="aBadge">Belum dijalankan</span>
+        <p class="note" id="tally" aria-live="polite"></p>
+      </div>
+      <div class="card" id="cardSet">
+        <h2>Atur sendiri</h2>
+        <div class="field"><label for="nSh">Jumlah lumba-lumba <b id="nShV">15</b></label><input id="nSh" type="range" min="1" max="30" value="15"><small>Satu lumba-lumba mudah tertipu sumber bising. Makin banyak, makin jarang meleset.</small></div>
+        <div class="field"><label for="reach">Radius sonar awal <b id="reachV">450 m</b></label><input id="reach" type="range" min="150" max="600" step="50" value="450"><small>Seberapa lebar sapuan di awal. Sapuan akan menyempit sendiri seiring waktu.</small></div>
+        <div class="field"><label for="spdR">Kecepatan lumba-lumba <b id="spdV">1× (normal)</b></label><input id="spdR" type="range" min="0.25" max="4" step="0.25" value="1"><small>Geser ke kiri supaya mereka berenang pelan dan enak ditonton. Tidak mengubah hasilnya, hanya lama tayangannya.</small></div>
+        <details class="adv" id="adv">
+          <summary>Pilihan lainnya</summary>
+          <div>
+            <h2 style="margin-top:6px">Apakah satu lumba-lumba cukup?</h2>
+            <p class="note" style="margin-top:0">Tidak selalu. Tombol ini mengulang pencarian 30 kali di peta ini, sekali dengan 1 lumba-lumba dan sekali dengan lumba-lumba sebanyak pengaturanmu, lalu menghitung berapa kali titik usulan tepat dan berapa kali tertipu sumber bising.</p>
+            <div class="bar"><button id="trial" type="button" style="width:100%">Bandingkan 1 dan banyak lumba-lumba</button></div>
+            <p class="note" id="trialOut" aria-live="polite"></p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <details class="about">
+    <summary>Bagaimana lumba-lumba mencarinya?</summary>
+    <ol>
+      <li>Di bawah jalan ada pipa air. Satu pipa bocor dan mendesis. Bunyinya merambat lewat pipa sambil memudar: makin jauh lewat pipa, makin pelan. Ada juga beberapa sumber bising lain (misalnya pompa) yang bunyinya terdengar mirip dan bisa menipu.</li>
+      <li>Lumba-lumba disebar acak di jalan. Tiap lumba-lumba mengirim klik sonar ke titik acak di sekitarnya, lalu mendengar seberapa keras bunyi di titik itu. Titik yang jatuh di luar jalan digeser ke pipa terdekat, dan lumba-lumba berenang lewat jalan sampai ke sana. Ia hanya pindah kalau bunyinya lebih keras.</li>
+      <li>Jangkauan sapuan melebar dulu lalu menyempit mengikuti waktu. Selain itu, lumba-lumba yang bunyinya sudah keras menyapu sempit (mempertajam titik yang menjanjikan), sedangkan yang masih lemah tetap menyapu lebar (masih menjelajah).</li>
+      <li>Di akhir, titik terkeras yang pernah didengar menjadi usulan galian. Lalu lokasi kebocoran sebenarnya dibuka untuk dicocokkan.</li>
+    </ol>
+    <ul>
+      <li>Ini miniatur. Kerasnya bunyi dihitung dari jarak lewat pipa dengan rumus sederhana. Bunyi kebocoran sungguhan jauh lebih rumit (bahan dan ukuran pipa, pantulan, derau). Jangan dipakai sendirian untuk keputusan perbaikan sungguhan.</li>
+      <li>Di peta sekecil ini, memeriksa setiap titik di sepanjang pipa sebenarnya lebih sedikit kerjanya daripada klik sonar. Keunggulan algoritma alam baru terasa pada ruang pencarian yang jauh lebih besar dan rumit.</li>
+      <li>Cara kerjanya mengikuti modul Dolphin Echolocation di Laboratorium Algoritma Alam, yaitu versi ruang kontinu yang terinspirasi Kaveh dan Farhoudi (2013), bukan rumus asli untuk ruang diskret.</li>
+    </ul>
+  </details>
+</div>
+
+<!-- tombol mini: tur dan suara -->
+<div class="mini" id="mini">
+  <button id="bVoice" type="button" aria-pressed="false" aria-label="Suara narasi: mati" title="Suara narasi">🔇</button>
+  <button id="bTour" type="button" aria-label="Tampilkan tur panduan" title="Tampilkan tur panduan">?</button>
+</div>
+
+<!-- tur -->
+<div class="block" id="tourBlock" hidden></div>
+<div class="spot" id="tourSpot" hidden></div>
+<div class="tour" id="tour" role="dialog" aria-modal="true" aria-labelledby="tTitle" hidden>
+  <div class="tprog" aria-hidden="true"><i id="tProg"></i></div>
+  <div class="thead"><span id="tCount"></span><button id="tSkip" type="button" aria-label="Tutup tur">✕</button></div>
+  <h2 id="tTitle"></h2>
+  <p id="tText"></p>
+  <label class="tchk" id="tChkWrap"><input type="checkbox" id="tOff"> Jangan tampilkan tur ini lagi saat halaman dibuka</label>
+  <div class="tbar" id="tBarStart"><button class="go" id="tGoVoice" type="button">🔊 Mulai tur bersuara</button><button id="tGoQuiet" type="button">Tur tanpa suara</button><button id="tSkip2" type="button">Lewati</button></div>
+  <div class="tbar" id="tBarRun" hidden><button id="tPrev" type="button" aria-label="Langkah sebelumnya">⏮</button><button class="go" id="tPause" type="button" style="min-width:120px">⏸ Jeda</button><button id="tNext" type="button" aria-label="Langkah berikutnya">⏭</button><span class="sp"></span><button id="tVoiceT" type="button"></button></div>
+  <div class="tbar" id="tBarEnd" hidden><button class="go" id="tDone" type="button">Selesai</button><button id="tReplay" type="button">Putar ulang</button></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const S=1024, L=100, sc=S/L, U=S/640, AREA=1000, MPU=AREA/L, P=2.2, T=300, LAM=10;
+const cv=$('map'), ctx=cv.getContext('2d');
+cv.width=S; cv.height=S;
+let leak=null, noises=[], dols=[], gbest=null, it=0, playing=false, last=0, acc=0, mode='leak', spd=1, fr=1, gprev=null, gRt=null, raf=0, lastPhase='', view='2d', dirty3=true, reveal=false, peek=false, echoes=[], SRC=[];
+let voiceOn=false, idVoice=null, tourOn=false;
+const ov=document.createElement('canvas'); ov.width=S; ov.height=S; const octx=ov.getContext('2d');
+const num=id=>+$(id).value, clamp=v=>Math.max(0,Math.min(L,v)), R0=()=>num('reach')/MPU;
+
+/* =============== MODEL KOTA (dipakai 2D dan 3D) =============== */
+const V=[{p:12,w:1.8,n:'Jl. Melati'},{p:30,w:1.8,n:'Jl. Kenanga'},{p:50,w:3.4,n:'Jl. Raya Utama',main:1},{p:69,w:1.8,n:'Jl. Mawar'},{p:88,w:1.8,n:'Jl. Anggrek'}];
+const H=[{p:14,w:1.8,n:'Jl. Pasar'},{p:31,w:1.8,n:'Jl. Sekolah'},{p:52,w:3.4,n:'Jl. Raya Kota',main:1},{p:70,w:1.8,n:'Jl. Taman'},{p:87,w:1.8,n:'Jl. Bakti'}];
+const xs=i=>i===0?0:V[i-1].p+V[i-1].w/2, xe=i=>i===V.length?L:V[i].p-V[i].w/2;
+const ys=j=>j===0?0:H[j-1].p+H[j-1].w/2, ye=j=>j===H.length?L:H[j].p-H[j].w/2;
+const SPECIAL={'2,2':{t:'market',n:'Pasar Lama',c:'#e3a857'},'4,1':{t:'school',n:'Sekolah',c:'#8fb3dd'},'1,4':{t:'hall',n:'Balai Warga',c:'#d29a7a'},'3,3':{t:'park',n:'Taman Kota'},'0,1':{t:'park',n:'Lapangan'}};
+const blocks=[], trees=[];
+(function(){
+  let sd=11; const rnd=()=>(sd=(sd*16807)%2147483647)/2147483647;
+  const pal=['#e0dbce','#d9d3c3','#e6dfcf','#d4cfc2','#dcd2c0'];
+  for(let i=0;i<=V.length;i++) for(let j=0;j<=H.length;j++){
+    const x0=xs(i), x1=xe(i), y0=ys(j), y1=ye(j), w=x1-x0, h=y1-y0, sp=SPECIAL[i+','+j];
+    const b={x0,x1,y0,y1,type:sp?sp.t:'houses',n:sp?sp.n:null,lots:[]};
+    if(b.type==='park'){
+      const n=Math.max(6,Math.round(w*h/50));
+      for(let k=0;k<n;k++) trees.push({x:x0+1.3+rnd()*(w-2.6),y:y0+1.3+rnd()*(h-2.6),r:.8+rnd()*.7});
+      if(sp.n==='Taman Kota') b.pond={x:(x0+x1)/2,y:(y0+y1)/2,r:Math.min(w,h)*.17};
+    } else if(sp){
+      const mx=w*.2, my=h*.2;
+      b.lots.push({x0:x0+mx,x1:x1-mx,y0:y0+my,y1:y1-my,h:b.type==='market'?1.7:b.type==='school'?2.4:2.0,col:sp.c,big:1});
+    } else {
+      const cols=w>11?3:2, rows=h>11?3:2, gw=w/cols, gh=h/rows;
+      for(let a=0;a<cols;a++) for(let c=0;c<rows;c++){ const m=.55+rnd()*.5;
+        b.lots.push({x0:x0+a*gw+m,x1:x0+(a+1)*gw-m,y0:y0+c*gh+m,y1:y0+(c+1)*gh-m,h:1+rnd()*2.4,col:pal[Math.floor(rnd()*pal.length)]}); }
+    }
+    blocks.push(b);
+  }
+})();
+
+/* =============== JARINGAN JALAN (lumba-lumba hanya boleh melaju di jalan, tempat pipa terpasang) =============== */
+const RV=V.map(r=>r.p), RH=H.map(r=>r.p);
+/* titik jalan terdekat dari sembarang titik (jalan = garis tengah tiap ruas) */
+function snapRoad(x,y){
+  x=clamp(x); y=clamp(y); let b={d:1e9,x,y};
+  for(const p of RV){ const d=Math.abs(x-p); if(d<b.d) b={d,x:p,y}; }
+  for(const p of RH){ const d=Math.abs(y-p); if(d<b.d) b={d,x,y:p}; }
+  return b;
+}
+function randRoad(){ const t=Math.random()*L, r=Math.floor(Math.random()*(RV.length+RH.length)); return r<RV.length?{x:RV[r],y:t}:{x:t,y:RH[r-RV.length]}; }
+/* rute terpendek lewat jalan dari titik a ke titik b (keduanya sudah di jalan): Dijkstra pada graf kecil */
+function routeRoad(a,b){
+  const nodes=[], idx=new Map(), adj=[];
+  const node=(x,y)=>{ const k=Math.round(x*100)+','+Math.round(y*100); let i=idx.get(k); if(i===undefined){ i=nodes.length; idx.set(k,i); nodes.push({x,y}); adj.push([]); } return i; };
+  const link=(p,q)=>{ if(p===q) return; const d=Math.hypot(nodes[p].x-nodes[q].x,nodes[p].y-nodes[q].y); adj[p].push([q,d]); adj[q].push([p,d]); };
+  for(const x of RV){ const ys=[0,L,...RH]; for(const p of [a,b]) if(Math.abs(p.x-x)<.01) ys.push(p.y); ys.sort((u,v)=>u-v); let pv=-1; for(const y of ys){ const n=node(x,y); if(pv>=0) link(pv,n); pv=n; } }
+  for(const y of RH){ const xs2=[0,L,...RV]; for(const p of [a,b]) if(Math.abs(p.y-y)<.01) xs2.push(p.x); xs2.sort((u,v)=>u-v); let pv=-1; for(const x of xs2){ const n=node(x,y); if(pv>=0) link(pv,n); pv=n; } }
+  const s0=node(a.x,a.y), t0=node(b.x,b.y);
+  if(s0===t0) return [{x:a.x,y:a.y}];
+  const dist=new Array(nodes.length).fill(Infinity), prev=new Array(nodes.length).fill(-1), done=new Array(nodes.length).fill(false); dist[s0]=0;
+  for(;;){ let u=-1,m=Infinity; for(let i=0;i<nodes.length;i++) if(!done[i]&&dist[i]<m){ m=dist[i]; u=i; } if(u<0||u===t0) break; done[u]=true; for(const e of adj[u]) if(dist[u]+e[1]<dist[e[0]]){ dist[e[0]]=dist[u]+e[1]; prev[e[0]]=u; } }
+  if(!isFinite(dist[t0])) return [{x:a.x,y:a.y},{x:b.x,y:b.y}];
+  const out=[]; for(let u=t0;u>=0;u=prev[u]) out.push({x:nodes[u].x,y:nodes[u].y}); return out.reverse();
+}
+function mkRoute(ax,ay,bx,by){
+  const pts=(ax===bx&&ay===by)?[{x:bx,y:by}]:routeRoad({x:ax,y:ay},{x:bx,y:by}), cum=[0];
+  for(let i=1;i<pts.length;i++) cum.push(cum[i-1]+Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y));
+  return {pts,cum,len:cum[cum.length-1]};
+}
+/* posisi dan arah pada fraksi f (0..1) di sepanjang rute */
+function along(R,f){
+  if(R.len<=0||R.pts.length<2) return {x:R.pts[0].x,y:R.pts[0].y,a:null};
+  const d=R.len*f; let i=1; while(i<R.pts.length-1&&R.cum[i]<d) i++;
+  const p0=R.pts[i-1], p1=R.pts[i], sg=(R.cum[i]-R.cum[i-1])||1, t=Math.max(0,Math.min(1,(d-R.cum[i-1])/sg));
+  return {x:p0.x+(p1.x-p0.x)*t, y:p0.y+(p1.y-p0.y)*t, a:Math.atan2(p1.y-p0.y,p1.x-p0.x)};
+}
+
+/* =============== LAPISAN GAMBAR 2D (denah) =============== */
+const base=document.createElement('canvas'); base.width=S; base.height=S;
+const lab=document.createElement('canvas'); lab.width=S; lab.height=S;
+(function drawBase(){
+  const c=base.getContext('2d');
+  c.fillStyle='#fbf8ef'; c.fillRect(0,0,S,S);
+  for(const b of blocks){
+    const x=b.x0*sc,y=b.y0*sc,w=(b.x1-b.x0)*sc,h=(b.y1-b.y0)*sc;
+    c.fillStyle='#d7d1bd'; c.fillRect(x-3,y-3,w+6,h+6);
+    c.fillStyle=b.type==='park'?'#cfe3c0':b.type==='houses'?'#ebe7dc':'#efe6d0'; c.fillRect(x,y,w,h);
+  }
+  c.strokeStyle='#e4dcbf'; c.lineWidth=2.5; c.setLineDash([16,14]);
+  V.filter(r=>r.main).forEach(r=>{ c.beginPath(); c.moveTo(r.p*sc,0); c.lineTo(r.p*sc,S); c.stroke(); });
+  H.filter(r=>r.main).forEach(r=>{ c.beginPath(); c.moveTo(0,r.p*sc); c.lineTo(S,r.p*sc); c.stroke(); });
+  c.setLineDash([]);
+  for(const b of blocks){
+    if(b.pond){ c.fillStyle='#a7d3e6'; c.strokeStyle='#7fb6cf'; c.lineWidth=3; c.beginPath(); c.ellipse(b.pond.x*sc,b.pond.y*sc,b.pond.r*sc*1.25,b.pond.r*sc,0,0,6.2832); c.fill(); c.stroke(); }
+    for(const l of b.lots){
+      const x=l.x0*sc,y=l.y0*sc,w=(l.x1-l.x0)*sc,h=(l.y1-l.y0)*sc;
+      c.fillStyle='rgba(60,50,30,.2)'; c.fillRect(x+4,y+4,w,h);
+      c.fillStyle=l.col; c.fillRect(x,y,w,h); c.strokeStyle='#b0a98f'; c.lineWidth=1.5; c.strokeRect(x,y,w,h);
+      c.strokeStyle='rgba(255,255,255,.6)'; c.lineWidth=2; c.strokeRect(x+5,y+5,w-10,h-10);
+    }
+  }
+  for(const t of trees){ const x=t.x*sc,y=t.y*sc,r=t.r*sc; c.fillStyle='#8fbf7c'; c.strokeStyle='#5f9a50'; c.lineWidth=2; c.beginPath(); c.arc(x,y,r,0,6.2832); c.fill(); c.stroke(); c.fillStyle='rgba(255,255,255,.28)'; c.beginPath(); c.arc(x-r*.3,y-r*.3,r*.4,0,6.2832); c.fill(); }
+})();
+(function drawLabels(){
+  const c=lab.getContext('2d'); c.clearRect(0,0,S,S); c.textAlign='center'; c.textBaseline='middle'; c.lineJoin='round';
+  const halo=(t,x,y,font,col)=>{ c.font=font; c.lineWidth=5; c.strokeStyle='rgba(255,255,255,.93)'; c.strokeText(t,x,y); c.fillStyle=col; c.fillText(t,x,y); };
+  V.forEach(r=>[1,3].forEach(j=>{ c.save(); c.translate(r.p*sc,(ys(j)+ye(j))/2*sc); c.rotate(-Math.PI/2); halo(r.n,0,0,(r.main?'bold 17px':'bold 14px')+' system-ui,sans-serif','#4a5b5f'); c.restore(); }));
+  H.forEach(r=>[1,3].forEach(i=>halo(r.n,(xs(i)+xe(i))/2*sc,r.p*sc,(r.main?'bold 17px':'bold 14px')+' system-ui,sans-serif','#4a5b5f')));
+  for(const b of blocks) if(b.n){
+    const col=b.type==='park'?'#2f6a22':b.type==='market'?'#7a4a06':b.type==='school'?'#1f4f86':'#7a3f22';
+    halo(b.n,(b.x0+b.x1)/2*sc,(b.y0+b.y1)/2*sc+(b.pond?b.pond.r*sc*1.9:b.type==='park'?0:b.lots[0]?((b.lots[0].y1-b.lots[0].y0)/2*sc+16):0),'bold 16px system-ui,sans-serif',col);
+  }
+  c.strokeStyle='#0d333b'; c.lineWidth=3; c.strokeRect(1.5,1.5,S-3,S-3);
+  c.lineWidth=2; c.beginPath();
+  for(let u=10;u<100;u+=10){ const p=u*sc, len=(u%20===0)?14:8; c.moveTo(p,0); c.lineTo(p,len); c.moveTo(p,S); c.lineTo(p,S-len); c.moveTo(0,p); c.lineTo(len,p); c.moveTo(S,p); c.lineTo(S-len,p); }
+  c.stroke();
+  for(let u=20;u<=80;u+=20){ halo((u*MPU)+' m',u*sc,28,'bold 12px system-ui,sans-serif','#0d333b'); halo((u*MPU)+' m',40,u*sc,'bold 12px system-ui,sans-serif','#0d333b'); }
+  const cx=S-64, cy=92; c.fillStyle='rgba(255,255,255,.92)'; c.strokeStyle='#0d333b'; c.lineWidth=2; c.beginPath(); c.arc(cx,cy,31,0,6.2832); c.fill(); c.stroke();
+  c.fillStyle='#d9441a'; c.beginPath(); c.moveTo(cx,cy-24); c.lineTo(cx-9,cy+11); c.lineTo(cx,cy+4); c.lineTo(cx+9,cy+11); c.closePath(); c.fill();
+  halo('U',cx,cy-44,'bold 15px system-ui,sans-serif','#0d333b');
+  const bar=200, bl=bar/MPU*sc; c.fillStyle='rgba(255,255,255,.93)'; c.fillRect(24,S-76,bl+40,38);
+  c.strokeStyle='#0d333b'; c.lineWidth=2.5; c.beginPath(); c.moveTo(44,S-52); c.lineTo(44+bl,S-52); c.moveTo(44,S-60); c.lineTo(44,S-44); c.moveTo(44+bl,S-60); c.lineTo(44+bl,S-44); c.stroke();
+  c.fillStyle='#0d333b'; c.font='bold 13px system-ui,sans-serif'; c.textAlign='left'; c.fillText(bar+' m',44,S-66);
+})();
+
+/* =============== BUNYI KEBOCORAN: merambat lewat pipa (jalan), bukan garis lurus =============== */
+function memb(x,y){ const r=[]; for(let i=0;i<RV.length;i++) if(Math.abs(x-RV[i])<.01) r.push(i); for(let j=0;j<RH.length;j++) if(Math.abs(y-RH[j])<.01) r.push(100+j); return r; }
+function dnet(ax,ay,am,bx,by,bm){
+  let best=1e9;
+  for(const ia of am) for(const ib of bm){
+    let d;
+    if(ia<100&&ib<100){ if(ia===ib) d=Math.abs(ay-by); else { let m=1e9; for(const h of RH){ const c=Math.abs(ay-h)+Math.abs(by-h); if(c<m) m=c; } d=Math.abs(RV[ia]-RV[ib])+m; } }
+    else if(ia>=100&&ib>=100){ if(ia===ib) d=Math.abs(ax-bx); else { let m=1e9; for(const v of RV){ const c=Math.abs(ax-v)+Math.abs(bx-v); if(c<m) m=c; } d=Math.abs(RH[ia-100]-RH[ib-100])+m; } }
+    else if(ia<100) d=Math.abs(ay-RH[ib-100])+Math.abs(RV[ia]-bx);
+    else d=Math.abs(ax-RV[ib])+Math.abs(RH[ia-100]-by);
+    if(d<best) best=d;
+  }
+  return best;
+}
+const ndist=(a,b)=>dnet(a.x,a.y,memb(a.x,a.y),b.x,b.y,memb(b.x,b.y));
+function buildSrc(){ SRC=[]; const add=(p,a)=>SRC.push({x:p.x,y:p.y,a,m:memb(p.x,p.y)}); if(leak) add(leak,1); noises.forEach(n=>add(n,n.a)); }
+function signal(x,y){ const m=memb(x,y); let t=0; for(const s of SRC) t+=s.a*Math.exp(-dnet(x,y,m,s.x,s.y,s.m)/LAM); return t; }
+function gauss(){ let u=0,v=0; while(!u) u=Math.random(); while(!v) v=Math.random(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+function scanBest(){ let mx=0,o=null; const f=(x,y)=>{ const v=signal(x,y); if(v>mx){ mx=v; o={x,y}; } }; for(const x of RV) for(let y=0;y<=L;y+=.5) f(x,y); for(const y of RH) for(let x=0;x<=L;x+=.5) f(x,y); return o; }
+
+/* lapisan pipa (dan, kalau sumber dibuka, kerasnya bunyi di sepanjang pipa): dipakai 2D dan 3D */
+function buildOverlay(){
+  octx.clearRect(0,0,S,S); octx.lineCap='round'; octx.lineJoin='round';
+  const lines=[]; RV.forEach(x=>lines.push([x,0,x,L])); RH.forEach(y=>lines.push([0,y,L,y]));
+  if(reveal&&SRC.length){
+    let mx=1e-9; const seg=[];
+    for(const l of lines){ const vert=l[0]===l[2]; for(let k=0;k<L*2;k++){ const a=k*.5, b=a+.5, xa=vert?l[0]:a, ya=vert?a:l[1], xb=vert?l[0]:b, yb=vert?b:l[1], v=signal((xa+xb)/2,(ya+yb)/2); if(v>mx) mx=v; seg.push([xa,ya,xb,yb,v]); } }
+    for(const g of seg){ const k=Math.pow(g[4]/mx,.7); octx.strokeStyle='rgba('+Math.round(217*k+23*(1-k))+','+Math.round(68*k+104*(1-k))+','+Math.round(26*k+122*(1-k))+','+(.15+.7*k).toFixed(3)+')'; octx.lineWidth=(7+11*k)*U*.8; octx.beginPath(); octx.moveTo(g[0]*sc,g[1]*sc); octx.lineTo(g[2]*sc,g[3]*sc); octx.stroke(); }
+  }
+  octx.strokeStyle='rgba(23,104,122,.8)'; octx.lineWidth=4.2*U*.8; octx.beginPath(); for(const l of lines){ octx.moveTo(l[0]*sc,l[1]*sc); octx.lineTo(l[2]*sc,l[3]*sc); } octx.stroke();
+  octx.strokeStyle='rgba(255,255,255,.75)'; octx.lineWidth=1.2*U*.8; octx.setLineDash([9*U,9*U]); octx.beginPath(); for(const l of lines){ octx.moveTo(l[0]*sc,l[1]*sc); octx.lineTo(l[2]*sc,l[3]*sc); } octx.stroke(); octx.setLineDash([]);
+  octx.fillStyle='#17687a'; octx.strokeStyle='#fff'; octx.lineWidth=1.6*U*.8;
+  for(const x of RV) for(const y of RH){ octx.beginPath(); octx.arc(x*sc,y*sc,3.6*U,0,6.2832); octx.fill(); octx.stroke(); }
+}
+
+/* =============== LUMBA-LUMBA (Dolphin Echolocation, ruang kontinu ala laboratorium) =============== */
+let runId=0,scored=-1;const tally={g:0,f:0,m:0};
+function seed(n){
+  runId++; n=n||num('nSh'); dols=[]; echoes=[];
+  for(let i=0;i<n;i++){ const c=randRoad(); dols.push({x:c.x,y:c.y,ah:Math.floor(Math.random()*4)*Math.PI/2,fit:signal(c.x,c.y),rad:R0()}); }
+  gbest=dols.reduce((a,s)=>(!a||s.fit>a.fit)?{x:s.x,y:s.y,fit:s.fit}:a,null); it=0; lastPhase=''; fr=1; gprev=null; gRt=null;
+}
+function iterate(rec){
+  it++; gprev={x:gbest.x,y:gbest.y}; gRt=null;
+  const N=dols.length, R=R0(), CF=Math.pow(Math.min(it/T,1),P);
+  const order=dols.map((_,i)=>i).sort((a,b)=>dols[b].fit-dols[a].fit), rank=new Array(N); order.forEach((id,r)=>rank[id]=r);
+  dols.forEach((d,i)=>{
+    d.px=d.x; d.py=d.y; d.rt=null;
+    const nr=N>1?rank[i]/(N-1):0, rad=Math.max(.5,R*(1-CF)*(.25+.75*nr)); d.rad=rad;
+    /* klik sonar jatuh di titik acak sekitar (sebaran Gaussian), lalu dibelokkan ke titik pipa/jalan terdekat */
+    const q=snapRoad(d.x+gauss()*rad,d.y+gauss()*rad), nf=signal(q.x,q.y);
+    if(rec) echoes.push({x:q.x,y:q.y,v:nf});
+    if(nf>d.fit){ d.x=q.x; d.y=q.y; d.fit=nf; }
+    if(d.fit>gbest.fit) gbest={x:d.x,y:d.y,fit:d.fit};
+  });
+  if(rec&&echoes.length>N*14) echoes.splice(0,echoes.length-N*14);
+}
+/* gerak mulus di sepanjang jalan: rute dari posisi lama ke posisi baru dihitung sekali per langkah */
+function routeOf(s){ return s.rt||(s.rt=mkRoute(s.px,s.py,s.x,s.y)); }
+function dp(s){
+  let x=s.x, y=s.y, ta=s.ah;
+  if(fr<1&&s.px!==undefined){ const q=along(routeOf(s),fr); x=q.x; y=q.y; if(q.a!==null) ta=q.a; }
+  s.ah+=Math.atan2(Math.sin(ta-s.ah),Math.cos(ta-s.ah))*.35;
+  return {x,y,a:s.ah};
+}
+function gp(){
+  if(fr>=1||!gprev||!gbest) return gbest;
+  if(!gRt) gRt=mkRoute(gprev.x,gprev.y,gbest.x,gbest.y);
+  const q=along(gRt,fr); return {x:q.x,y:q.y};
+}
+const isDone=()=>it>=T&&!!leak;
+function verdict(){
+  const dl=ndist(gbest,leak)*MPU; let dn=1e9; for(const n of noises) dn=Math.min(dn,ndist(gbest,n)*MPU);
+  const k=dl<=25?'good':(dn<dl&&dn<=100)?'fooled':dl<=100?'mid':'bad';
+  return {k,dl,dn};
+}
+
+/* ---- nama tempat untuk bahasa sehari-hari ---- */
+function nearest(arr,v){ let b=arr[0]; for(const r of arr) if(Math.abs(r.p-v)<Math.abs(b.p-v)) b=r; return b; }
+function whereText(){
+  const g=gbest, v=V.find(r=>Math.abs(r.p-g.x)<.6), h=H.find(r=>Math.abs(r.p-g.y)<.6); let t;
+  if(v&&h) t='di perempatan '+v.n+' dan '+h.n;
+  else if(v) t='di '+v.n+', dekat perempatan '+nearest(H,g.y).n;
+  else if(h) t='di '+h.n+', dekat perempatan '+nearest(V,g.x).n;
+  else t='di sekitar '+nearest(V,g.x).n+' dan '+nearest(H,g.y).n;
+  let lm=null, ld=1e9; for(const k of blocks) if(k.n){ const d=Math.hypot((k.x0+k.x1)/2-g.x,(k.y0+k.y1)/2-g.y); if(d<ld){ ld=d; lm=k; } }
+  if(lm&&ld<13) t+=', tidak jauh dari '+lm.n; return t;
+}
+function resultSentence(){
+  const v=verdict(), r=Math.round(v.dl);
+  if(v.k==='good') return 'Bunyi terkuat ditemukan '+whereText()+'. Kebocoran sebenarnya '+(r<5?'tepat di titik itu':'hanya meleset '+r+' meter dari titik itu')+', jadi cukup satu titik yang digali.';
+  if(v.k==='fooled') return 'Lumba-lumba tertipu: bunyi terkuat yang ditemukan '+whereText()+' ternyata sumber bising lain, dan kebocoran sebenarnya ada '+r+' meter dari sana. Coba tambah lumba-lumba.';
+  return 'Bunyi terkuat yang ditemukan ada '+whereText()+', meleset '+r+' meter dari kebocoran sebenarnya.';
+}
+
+/* =============== GAMBAR 2D =============== */
+function dolphin(q){
+  ctx.save(); ctx.translate(q.x*sc,q.y*sc); ctx.rotate(q.a); ctx.scale(.8*U,.8*U); ctx.fillStyle='#1d4f63'; ctx.strokeStyle='#fff'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.ellipse(0,0,10.5,3.9,0,0,6.2832); ctx.stroke(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(3,3); ctx.lineTo(-1,8.5); ctx.lineTo(-2.6,3.2); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(3,-3); ctx.lineTo(-1,-8.5); ctx.lineTo(-2.6,-3.2); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-9,0); ctx.lineTo(-15.5,-7.5); ctx.lineTo(-13.5,0); ctx.lineTo(-15.5,7.5); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+function pin(x,y,r,fill){
+  r*=U; const cy=y-r-6*U, tri=()=>{ ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-r*.78,cy+r*.62); ctx.lineTo(x+r*.78,cy+r*.62); ctx.closePath(); };
+  ctx.lineWidth=3.5*U*.8; ctx.strokeStyle='#fff'; ctx.fillStyle=fill; tri(); ctx.stroke(); ctx.fill(); ctx.beginPath(); ctx.arc(x,cy,r,0,6.2832); ctx.stroke(); ctx.fill(); tri(); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(x,cy,r*.38,0,6.2832); ctx.fill();
+}
+function drop(x,y,r){
+  r*=U; ctx.lineWidth=3*U*.8; ctx.strokeStyle='#fff'; ctx.fillStyle='#1b86c9';
+  ctx.beginPath(); ctx.moveTo(x,y-r*1.7); ctx.bezierCurveTo(x+r*1.1,y-r*.5,x+r*1.1,y+r*.9,x,y+r*.9); ctx.bezierCurveTo(x-r*1.1,y+r*.9,x-r*1.1,y-r*.5,x,y-r*1.7); ctx.closePath(); ctx.stroke(); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.8)'; ctx.beginPath(); ctx.arc(x-r*.35,y+r*.05,r*.28,0,6.2832); ctx.fill();
+}
+function diamond(x,y,r){ r*=U; ctx.lineWidth=3*U*.8; ctx.strokeStyle='#fff'; ctx.fillStyle='#d98e2a'; ctx.beginPath(); ctx.moveTo(x,y-r); ctx.lineTo(x+r,y); ctx.lineTo(x,y+r); ctx.lineTo(x-r,y); ctx.closePath(); ctx.stroke(); ctx.fill(); }
+function tag(text,x,y,fill){ ctx.font='bold '+(14*U)+'px system-ui'; const w=ctx.measureText(text).width+18*U; ctx.fillStyle=fill; ctx.fillRect(x,y,w,26*U); ctx.fillStyle='#fff'; ctx.fillText(text,x+9*U,y+18*U); }
+function draw2D(){
+  ctx.drawImage(base,0,0); ctx.imageSmoothingEnabled=true; ctx.drawImage(ov,0,0); ctx.drawImage(lab,0,0);
+  const mx=Math.max(1e-9,gbest?gbest.fit:0), n=echoes.length, done=isDone();
+  ctx.lineWidth=1*U; for(let i=0;i<n;i++){ const e=echoes[i], k=Math.pow(Math.min(1,e.v/mx),2), a=.3+.6*(i/n); ctx.fillStyle='rgba('+Math.round(90+127*k)+','+Math.round(185-117*k)+','+Math.round(210-184*k)+','+a.toFixed(2)+')'; ctx.strokeStyle='rgba(255,255,255,'+(a*.8).toFixed(2)+')'; ctx.beginPath(); ctx.arc(e.x*sc,e.y*sc,(3.2+3*k)*U,0,6.2832); ctx.fill(); ctx.stroke(); }
+  if(reveal){ for(const z of noises){ diamond(z.x*sc,z.y*sc,10); tag('Bising',Math.min(S-100*U,z.x*sc+14*U),Math.min(S-30*U,z.y*sc+10*U),'#9a6414'); } if(leak){ drop(leak.x*sc,leak.y*sc,10); tag('Kebocoran',Math.min(S-130*U,leak.x*sc+14*U),Math.min(S-30*U,leak.y*sc+12*U),'#1b86c9'); } }
+  if(done&&leak){ const x=leak.x*sc,y=leak.y*sc; ctx.save(); ctx.strokeStyle='#fff'; ctx.lineWidth=7*U; ctx.beginPath(); ctx.arc(x,y,19*U,0,6.2832); ctx.stroke(); ctx.strokeStyle='#1c7a45'; ctx.lineWidth=3.5*U; ctx.setLineDash([7*U,5*U]); ctx.beginPath(); ctx.arc(x,y,19*U,0,6.2832); ctx.stroke(); ctx.restore(); }
+  if(leak){
+    const Q=dols.map(dp);
+    ctx.save(); ctx.strokeStyle='rgba(23,104,122,.4)'; ctx.lineWidth=2*U*.8; for(let i=0;i<dols.length;i++){ ctx.beginPath(); ctx.arc(Q[i].x*sc,Q[i].y*sc,Math.max(2,dols[i].rad*sc),0,6.2832); ctx.stroke(); } ctx.restore();
+    for(const q of Q) dolphin(q);
+  }
+  if(gbest&&leak&&it>0){ const g=gp(); pin(g.x*sc,g.y*sc,14,'#d9441a'); if(done) tag('Gali di sini',Math.min(S-130*U,g.x*sc+18*U),Math.max(4,g.y*sc-62*U),'#d9441a'); }
+}
+
+/* =============== MAKET 3D (Three.js) =============== */
+let three=null;
+const cam={tx:50,tz:50,r:125,th:.7,ph:.95}; let tween=null, orbit=0;
+function init3D(){
+  if(three) return true; if(typeof THREE==='undefined') return false;
+  const box=$('three3d'); let renderer;
+  try{ renderer=new THREE.WebGLRenderer({antialias:true}); }catch(e){ return false; }
+  const w=box.clientWidth||640, h=box.clientHeight||640;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2)); renderer.setSize(w,h,false); box.appendChild(renderer.domElement);
+  const scene=new THREE.Scene(); scene.background=new THREE.Color(0xdce7e4); scene.fog=new THREE.Fog(0xdce7e4,240,480);
+  const camera=new THREE.PerspectiveCamera(40,w/h,1,700);
+  scene.add(new THREE.HemisphereLight(0xffffff,0xb9b29c,.95));
+  const sun=new THREE.DirectionalLight(0xffffff,.6); sun.position.set(70,100,30); scene.add(sun);
+  const lam=c=>new THREE.MeshLambertMaterial({color:c});
+  const flat=(map,y,order,tr)=>{ const m=new THREE.Mesh(new THREE.PlaneGeometry(L,L),new THREE.MeshBasicMaterial({map,transparent:!!tr,depthWrite:!tr})); m.rotation.x=-Math.PI/2; m.position.set(50,y,50); m.renderOrder=order; scene.add(m); return m; };
+  const outer=new THREE.Mesh(new THREE.PlaneGeometry(900,900),lam(0xc9d6cf)); outer.rotation.x=-Math.PI/2; outer.position.set(50,-2.2,50); scene.add(outer);
+  const slab=new THREE.Mesh(new THREE.BoxGeometry(L+2,2,L+2),lam(0xb4ad98)); slab.position.set(50,-1.05,50); scene.add(slab);
+  const aniso=renderer.capabilities.getMaxAnisotropy();
+  const baseTex=new THREE.CanvasTexture(base); baseTex.anisotropy=aniso; flat(baseTex,0,0,false);
+  const ovTex=new THREE.CanvasTexture(ov); ovTex.anisotropy=aniso; flat(ovTex,.05,1,true);
+  const labTex=new THREE.CanvasTexture(lab); labTex.anisotropy=aniso; flat(labTex,.09,2,true);
+
+  /* bangunan, pohon, kolam: tetap, dibuat sekali */
+  const land=new THREE.Group(); scene.add(land);
+  const boxG=new THREE.BoxGeometry(1,1,1);
+  const shade=(hex,f)=>{ const c=new THREE.Color(hex); c.multiplyScalar(f); return c; };
+  for(const b of blocks) for(const l of b.lots){
+    const w=l.x1-l.x0, d=l.y1-l.y0, m=new THREE.Mesh(boxG,new THREE.MeshLambertMaterial({color:new THREE.Color(l.col)}));
+    m.scale.set(w,l.h,d); m.position.set((l.x0+l.x1)/2,l.h/2,(l.y0+l.y1)/2); land.add(m);
+    const r=new THREE.Mesh(boxG,new THREE.MeshLambertMaterial({color:shade(l.col,.82)})); r.scale.set(w+.18,.16,d+.18); r.position.set(m.position.x,l.h+.08,m.position.z); land.add(r);
+  }
+  const trunkG=new THREE.CylinderGeometry(.1,.14,.7,6), crownG=new THREE.SphereGeometry(1,10,8), trunkM=lam(0x7a5a3a), crownM=lam(0x6fae5c);
+  for(const t of trees){ const tr=new THREE.Mesh(trunkG,trunkM); tr.position.set(t.x,.35,t.y); land.add(tr); const cr=new THREE.Mesh(crownG,crownM); cr.scale.setScalar(t.r*.8); cr.position.set(t.x,.7+t.r*.55,t.y); land.add(cr); }
+  for(const b of blocks) if(b.pond){ const p=new THREE.Mesh(new THREE.CircleGeometry(1,40),new THREE.MeshBasicMaterial({color:0x8fcbe3})); p.rotation.x=-Math.PI/2; p.scale.set(b.pond.r*1.25,b.pond.r,1); p.position.set(b.pond.x,.03,b.pond.y); scene.add(p); }
+
+  /* papan nama tempat */
+  const sprite=(text,color,sx,sy)=>{ const c=document.createElement('canvas'); c.width=320; c.height=80; const x=c.getContext('2d'); x.font='bold 34px system-ui,sans-serif'; const tw=Math.min(300,x.measureText(text).width+30); x.fillStyle='rgba(255,255,255,.95)'; x.strokeStyle=color; x.lineWidth=4; const px=(320-tw)/2; x.beginPath(); x.rect(px,10,tw,60); x.fill(); x.stroke(); x.fillStyle=color; x.textAlign='center'; x.textBaseline='middle'; x.fillText(text,160,41);
+    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthTest:false})); s.scale.set(sx,sy,1); s.renderOrder=6; return s; };
+  for(const b of blocks) if(b.n&&b.type!=='park'){ const s=sprite(b.n,'#0d333b',11,2.75); s.position.set((b.x0+b.x1)/2,b.lots[0].h+2.4,(b.y0+b.y1)/2); scene.add(s); }
+
+  /* bagian yang berubah: sumber bunyi, lumba-lumba, cincin sonar, titik gema, pin */
+  const srcG=new THREE.Group(), ringG=new THREE.Group(), echoG=new THREE.Group(), dolG=new THREE.Group(), marks=new THREE.Group(); scene.add(srcG,ringG,echoG,dolG,marks);
+  const dashRing=(r,color,wid,n)=>{ const g=new THREE.Group(), mt=new THREE.MeshBasicMaterial({color,side:THREE.DoubleSide,depthWrite:false}); for(let k=0;k<n;k++){ const a=new THREE.Mesh(new THREE.RingGeometry(r-wid/2,r+wid/2,6,1,k*6.2832/n,6.2832/n*.58),mt); g.add(a); } g.rotation.x=-Math.PI/2; return g; };
+  const bodyG=new THREE.SphereGeometry(1,14,10), finG=new THREE.ConeGeometry(.4,1,3), flukeG=new THREE.BoxGeometry(.7,.1,2.6), flipG=new THREE.BoxGeometry(.9,.08,.45), dM=new THREE.MeshLambertMaterial({color:0x1d4f63}), shadowM=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.22,depthWrite:false});
+  function mkDolphin(){
+    const g=new THREE.Group(), inner=new THREE.Group(); g.add(inner);
+    const body=new THREE.Mesh(bodyG,dM); body.scale.set(2.2,.62,.78); inner.add(body);
+    const fin=new THREE.Mesh(finG,dM); fin.position.set(-.2,.8,0); fin.rotation.z=.35; inner.add(fin);
+    const fluke=new THREE.Mesh(flukeG,dM); fluke.position.set(-2.5,.05,0); inner.add(fluke);
+    [-1,1].forEach(sd=>{ const f=new THREE.Mesh(flipG,dM); f.position.set(.5,-.15,sd*.85); f.rotation.y=sd*.6; inner.add(f); });
+    inner.scale.setScalar(.85);
+    const sh=new THREE.Mesh(new THREE.CircleGeometry(1,18),shadowM); sh.rotation.x=-Math.PI/2; sh.scale.set(2.6,.9,1); sh.position.y=-1.05; sh.renderOrder=3; g.add(sh);
+    return g;
+  }
+  const ringGeo=new THREE.RingGeometry(.985,1,56), ringM=new THREE.MeshBasicMaterial({color:0x17687a,transparent:true,opacity:.32,side:THREE.DoubleSide,depthWrite:false});
+  function mkRing(){ const m=new THREE.Mesh(ringGeo,ringM); m.rotation.x=-Math.PI/2; m.renderOrder=3; return m; }
+  const echoGeo=new THREE.SphereGeometry(.5,8,6), echoMeshes=[];
+  function echoAt(i){ while(echoMeshes.length<=i){ const m=new THREE.Mesh(echoGeo,new THREE.MeshBasicMaterial({color:0x17687a,transparent:true,opacity:.6,depthWrite:false})); m.renderOrder=4; echoG.add(m); echoMeshes.push(m); } return echoMeshes[i]; }
+  const pinG=new THREE.Group();
+  { const cone=new THREE.Mesh(new THREE.ConeGeometry(.95,2.4,16),lam(0xd9441a)); cone.rotation.z=Math.PI; cone.position.y=1.2; pinG.add(cone);
+    const ball=new THREE.Mesh(new THREE.SphereGeometry(1.25,18,14),lam(0xd9441a)); ball.position.y=3.3; pinG.add(ball);
+    const dot=new THREE.Mesh(new THREE.SphereGeometry(.5,12,10),new THREE.MeshBasicMaterial({color:0xffffff})); dot.position.y=4.3; dot.scale.y=.5; pinG.add(dot); }
+  pinG.visible=false; marks.add(pinG);
+  const gaTag=sprite('Gali di sini','#d9441a',10,2.5); gaTag.visible=false; marks.add(gaTag);
+  const optRing=dashRing(3,0x1c7a45,.9,16); optRing.visible=false; marks.add(optRing);
+  function mkLeak(){ const g=new THREE.Group();
+    const ring=dashRing(2.4,0x1b86c9,.5,20); ring.position.y=.3; g.add(ring);
+    const jet=new THREE.Mesh(new THREE.CylinderGeometry(.25,.7,5,12),new THREE.MeshBasicMaterial({color:0x39a7e0,transparent:true,opacity:.65})); jet.position.y=2.6; g.add(jet);
+    const ball=new THREE.Mesh(new THREE.SphereGeometry(.95,14,10),lam(0x1b86c9)); ball.position.y=5.6; g.add(ball);
+    const lb=sprite('Kebocoran','#1b86c9',9,2.25); lb.position.y=8.6; g.add(lb); return g; }
+  function mkNoise(){ const g=new THREE.Group();
+    const c=new THREE.Mesh(new THREE.ConeGeometry(1,2.6,4),lam(0xd98e2a)); c.position.y=1.5; c.rotation.y=Math.PI/4; g.add(c);
+    const lb=sprite('Bising','#9a6414',6.5,1.6); lb.position.y=4.4; g.add(lb); return g; }
+  const disposeKids=g=>{ while(g.children.length){ const c=g.children[0]; g.remove(c); } };
+
+  const ray=new THREE.Raycaster(), ground=new THREE.Plane(new THREE.Vector3(0,1,0),-.05), hit=new THREE.Vector3(), nd=new THREE.Vector2();
+  const el=renderer.domElement, ptrs=new Map(); let pinchD=0, moved=0;
+  const pdist=()=>{ const a=[...ptrs.values()]; return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1; };
+  el.addEventListener('pointerdown',e=>{ try{ el.setPointerCapture(e.pointerId); }catch(_){} ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY}); if(ptrs.size===1){ moved=0; } else { pinchD=pdist(); moved=99; } orbit=0; tween=null; box.classList.add('grabbing'); });
+  el.addEventListener('pointermove',e=>{ const p=ptrs.get(e.pointerId); if(!p) return;
+    if(ptrs.size===1){ const dx=e.clientX-p.x, dy=e.clientY-p.y; cam.th-=dx*.006; cam.ph=Math.max(.15,Math.min(1.45,cam.ph-dy*.006)); moved+=Math.abs(dx)+Math.abs(dy); p.x=e.clientX; p.y=e.clientY; }
+    else if(ptrs.size===2){ p.x=e.clientX; p.y=e.clientY; const d=pdist(); cam.r=Math.max(25,Math.min(190,cam.r*pinchD/d)); pinchD=d; moved=99; }
+  });
+  el.addEventListener('pointerup',e=>{ const n=ptrs.size; ptrs.delete(e.pointerId); box.classList.remove('grabbing'); if(ptrs.size<2) pinchD=0;
+    if(n===1&&moved<6){ const r=el.getBoundingClientRect(); nd.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1); ray.setFromCamera(nd,camera); if(ray.ray.intersectPlane(ground,hit)&&hit.x>=0&&hit.x<=L&&hit.z>=0&&hit.z<=L) mapClick(hit.x,hit.z); } });
+  el.addEventListener('pointercancel',e=>{ ptrs.delete(e.pointerId); box.classList.remove('grabbing'); });
+  el.addEventListener('wheel',e=>{ e.preventDefault(); orbit=0; tween=null; cam.r=Math.max(25,Math.min(190,cam.r*(1+e.deltaY*.001))); },{passive:false});
+
+  function resize(){ const w2=box.clientWidth, h2=box.clientHeight; if(!w2||!h2) return; camera.aspect=w2/h2; camera.updateProjectionMatrix(); renderer.setSize(w2,h2,false); }
+  window.addEventListener('resize',()=>{ if(view==='3d') resize(); });
+  let tPrev=performance.now();
+  (function loop(t){ requestAnimationFrame(loop); const dt=Math.min(.1,(t-tPrev)/1000); tPrev=t; if(view!=='3d'||document.hidden) return;
+    if(tween){ let p=(t-tween.t0)/tween.ms; if(p>=1){ p=1; } const e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2; for(const k of ['tx','tz','r','th','ph']) cam[k]=tween.f[k]+(tween.o[k]-tween.f[k])*e; if(p>=1) tween=null; }
+    if(orbit) cam.th+=orbit*dt;
+    camera.position.set(cam.tx+cam.r*Math.sin(cam.ph)*Math.sin(cam.th),cam.r*Math.cos(cam.ph),cam.tz+cam.r*Math.sin(cam.ph)*Math.cos(cam.th)); camera.lookAt(cam.tx,0,cam.tz);
+    pinG.position.y=Math.sin(t/260)*.3;
+    renderer.render(scene,camera); })(0);
+
+  three={ovTex,resize,srcG,
+    rebuildStatics(){ disposeKids(srcG); for(const z of noises){ const g=mkNoise(); g.position.set(z.x,0,z.y); srcG.add(g); } if(leak){ const g=mkLeak(); g.position.set(leak.x,0,leak.y); srcG.add(g); } },
+    sync(){
+      const has=!!leak, done=isDone();
+      while(dolG.children.length<dols.length) dolG.add(mkDolphin());
+      while(ringG.children.length<dols.length) ringG.add(mkRing());
+      dolG.children.forEach((g,i)=>{ const d=dols[i], r=ringG.children[i], on=!!d&&has; g.visible=on; r.visible=on; if(on){ const q=dp(d); g.position.set(q.x,1.15+Math.sin(performance.now()/260+i)*.18,q.y); g.rotation.y=-q.a; const rr=Math.max(.3,d.rad||R0()); r.position.set(q.x,.4,q.y); r.scale.set(rr,rr,1); } });
+      const mx=Math.max(1e-9,gbest?gbest.fit:0), n=echoes.length;
+      for(let i=0;i<Math.max(n,echoMeshes.length);i++){ if(i>=n){ if(echoMeshes[i]) echoMeshes[i].visible=false; continue; } const m=echoAt(i), e=echoes[i], k=Math.pow(Math.min(1,e.v/mx),2); m.visible=has; m.position.set(e.x,.5,e.y); m.scale.setScalar(.8+.8*k); m.material.color.setRGB((90+127*k)/255,(185-117*k)/255,(210-184*k)/255); m.material.opacity=.3+.6*(i/n); }
+      srcG.visible=!!(reveal&&has);
+      const showPin=!!(gbest&&has&&it>0);
+      pinG.visible=showPin; const gq=showPin?gp():null; if(showPin) pinG.position.x=gq.x, pinG.position.z=gq.y;
+      gaTag.visible=showPin&&done; if(showPin){ gaTag.position.set(gq.x,8.2,gq.y); }
+      optRing.visible=!!(done&&leak); if(done&&leak) optRing.position.set(leak.x,.3,leak.y);
+    }};
+  return true;
+}
+function camTo(x,z,r,th,ph,ms){ tween={t0:performance.now(),ms:ms||1400,f:{tx:cam.tx,tz:cam.tz,r:cam.r,th:cam.th,ph:cam.ph},o:{tx:x,tz:z,r,th,ph}}; orbit=0; }
+function camPreset(n){
+  if(n==='home') camTo(50,50,125,.7,.95,1200);
+  else if(n==='top') camTo(50,50,135,cam.th,.15,1200);
+  else if(n==='pin'&&gbest) camTo(gbest.x,gbest.y,52,cam.th,.85,1500);
+  else if(n==='orbit'){ camTo(50,50,115,cam.th,.9,1000); setTimeout(()=>{ if(view==='3d'&&tourOn) orbit=.22; },1000); }
+}
+
+/* =============== TAMPILAN 2D / 3D =============== */
+function setView(v){
+  if(v===view) return true;
+  if(v==='3d'){
+    cv.style.display='none'; $('three3d').style.display='block';
+    if(!init3D()){ cv.style.display='block'; $('three3d').style.display='none'; $('msg').textContent='Tampilan 3D belum bisa dimuat. Pastikan internet menyala (pustaka three.js diunduh dari internet) dan browser mendukung WebGL.'; return false; }
+    three.resize(); if(dirty3){ three.rebuildStatics(); dirty3=false; }
+  } else { orbit=0; cv.style.display='block'; $('three3d').style.display='none'; }
+  view=v; $('cam3d').hidden=v!=='3d';
+  document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===v?'true':'false'));
+  $('msg').textContent=''; hintText(); refresh(); return true;
+}
+function hintText(){
+  const h={leak:'Klik peta untuk menyembunyikan kebocoran di pipa. Kebocoran hanya satu, klik lagi untuk memindahkannya.',noise:'Klik peta untuk menaruh sumber bising yang bisa menipu lumba-lumba (paling banyak 4).',del:'Klik sumber bising untuk menghapusnya.'}[mode];
+  $('hint').textContent=h+(view==='3d'?' Geser untuk memutar, gulir atau cubit untuk memperbesar.':'');
+}
+
+/* =============== NARASI & HASIL =============== */
+function narrate(){
+  const N=dols.length, p=it/T, B=$('aBadge'), has=!!leak, nz=noises.length; $('bar').style.width=Math.min(100,p*100)+'%'; let s;
+  if(!has){ s='Belum ada kebocoran. Klik peta untuk menyembunyikan kebocoran di pipa, atau tekan "Kota baru".'; }
+  else if(it===0){ s='Ada kebocoran yang tersembunyi di salah satu pipa'+(nz?' dan '+nz+' sumber bising lain yang bisa menipu':'')+'. '+N+' lumba-lumba siap berpatroli di jalan. Tekan "Mulai simulasi": mereka akan mengirim klik sonar untuk mencari bunyi bocor yang paling keras.'; }
+  else if(p<.3){ s='Sonar melebar: tiap lumba-lumba mengirim klik ke sekitarnya yang luas (lingkaran biru) lalu mendengar gema. Titik gema makin merah kalau bunyinya makin keras.'; }
+  else if(p<.75){ s='Gema mulai terasa. Lumba-lumba yang bunyinya sudah keras menyempitkan sapuannya untuk menajamkan titik itu, yang masih lemah tetap menyapu lebar.'; }
+  else if(it<T){ s='Hampir selesai. Sapuan makin sempit di sekitar bunyi terkuat yang ditemukan (pin merah).'; }
+  else { s='Selesai! '+resultSentence(); }
+  $('story').textContent=s;
+  const key=!has?'empty':it===0?'ready':p<.3?'p1':p<.75?'p2':it<T?'p3':'done';
+  if(key!==lastPhase){ lastPhase=key; if(!tourOn&&key!=='empty'&&key!=='ready') speak(s+(key==='done'?' '+voiceVerdict():'')); }
+  if(!has||it<T){ $('aMain').textContent='—'; $('aSub').textContent=has&&it>0?'Menunggu lumba-lumba selesai mendengar…':'Hasil muncul setelah simulasi selesai.'; B.className='badge'; B.textContent=has&&it>0?'Sedang mencari':'Belum dijalankan'; return; }
+  const v=verdict(), r=Math.round(v.dl);
+  $('aMain').textContent=v.k==='good'?'Kebocoran ditemukan':'Meleset '+r+' m dari kebocoran';
+  $('aSub').textContent='Pipa sebaiknya digali '+whereText()+' (pin merah di peta).';
+  if(v.k==='good'){ B.className='badge good'; B.textContent=r<5?'✔ Tepat: titik usulan persis di kebocoran sebenarnya (lingkaran hijau).':'✔ Tepat: titik usulan hanya meleset '+r+' m dari kebocoran sebenarnya (lingkaran hijau).'; }
+  else if(v.k==='mid'){ B.className='badge mid'; B.textContent='≈ Dekat: meleset '+r+' m dari kebocoran. Tambah lumba-lumba atau tekan Ulangi.'; }
+  else if(v.k==='fooled'){ B.className='badge bad'; B.textContent='✖ Tertipu: lumba-lumba mengejar sumber bising lain, bukan kebocoran (meleset '+r+' m). Tambah lumba-lumba lalu Ulangi.'; }
+  else { B.className='badge bad'; B.textContent='✖ Meleset '+r+' m dari kebocoran. Tambah lumba-lumba lalu tekan Ulangi.'; }
+}
+function voiceVerdict(){ const k=verdict().k; return k==='good'?'Hasilnya tepat: kebocoran ditemukan.':k==='fooled'?'Kali ini lumba-lumba tertipu sumber bising lain. Coba tambah lumba-lumba.':'Hasilnya meleset. Coba tambah lumba-lumba, lalu ulangi.'; }
+function refresh(){
+  if(isDone()&&scored!==runId&&!tourOn){ scored=runId; const k=verdict().k; tally[k==='good'?'g':k==='fooled'?'f':'m']++; const n=tally.g+tally.f+tally.m; $('tally').textContent='Catatan sesi ini: '+n+' pencarian selesai, '+tally.g+' tepat, '+tally.f+' tertipu sumber bising, '+tally.m+' meleset.'; }
+  const rv=peek||isDone(); if(rv!==reveal){ reveal=rv; buildOverlay(); if(three) three.ovTex.needsUpdate=true; }
+  narrate(); if(view==='3d'&&three) three.sync(); else draw2D(); $('empty').hidden=!!leak||noises.length>0;
+}
+function frame(t){
+  if(!playing) return;
+  acc+=Math.min(.1,(t-last)/1000)*(tourOn?22:10*spd); last=t;
+  while(acc>=1&&it<T){ iterate(true); acc--; }
+  fr=it>=T?1:Math.min(1,acc);
+  refresh();
+  if(it>=T){ playing=false; $('play').textContent='▶ Mulai lagi'; return; }
+  raf=requestAnimationFrame(frame);
+}
+function setPlay(on){
+  if(on&&!leak){ $('msg').textContent='Sembunyikan kebocoran dulu: klik di peta.'; on=false; }
+  playing=on;
+  if(on){ $('msg').textContent=''; if(it>=T||it===0) seed(); $('play').textContent='⏸ Jeda'; acc=0; last=performance.now(); cancelAnimationFrame(raf); raf=requestAnimationFrame(frame); }
+  else { stopSpeak(); fr=1; $('play').textContent=it>0&&it<T?'▶ Lanjut':'▶ Mulai simulasi'; refresh(); }
+}
+function changed(){
+  stopSpeak(); playing=false; cancelAnimationFrame(raf); $('play').textContent='▶ Mulai simulasi';
+  buildSrc(); reveal=peek; seed(); buildOverlay(); if(three) three.ovTex.needsUpdate=true;
+  if(view==='3d'&&three) three.rebuildStatics(); else dirty3=true;
+  refresh();
+}
+
+/* ---- klik peta (sama untuk 2D dan 3D) ---- */
+function mapClick(x,y){
+  $('msg').textContent=''; const q=snapRoad(x,y), far=q.d>2.5?'Pipa hanya ada di bawah jalan, jadi titiknya digeser ke pipa terdekat.':'';
+  if(mode==='leak'){ leak={x:q.x,y:q.y}; $('msg').textContent=far; }
+  else if(mode==='noise'){ if(noises.length>=4){ $('msg').textContent='Sumber bising sudah 4, itu batasnya. Hapus satu dulu.'; return; } noises.push({x:q.x,y:q.y,a:.6}); $('msg').textContent=far; }
+  else {
+    let bi=-1,bd=view==='3d'?5:8; noises.forEach((z,i)=>{ const d=Math.hypot(z.x-x,z.y-y); if(d<bd){ bd=d; bi=i; } });
+    if(bi<0){ $('msg').textContent='Tidak ada sumber bising di dekat titik itu. Kebocoran tidak bisa dihapus, hanya dipindah.'; return; } noises.splice(bi,1);
+  }
+  changed();
+}
+cv.addEventListener('click',e=>{ const r=cv.getBoundingClientRect(); mapClick((e.clientX-r.left)/r.width*L,(e.clientY-r.top)/r.height*L); });
+document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{ mode=b.dataset.mode; document.querySelectorAll('[data-mode]').forEach(o=>o.setAttribute('aria-pressed',o===b?'true':'false')); $('msg').textContent=''; hintText(); }));
+document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
+function setSpd(v){ spd=Math.max(.25,Math.min(4,v||1)); $('spdR').value=spd; $('spdV').textContent=(spd===1?'1× (normal)':spd<1?spd+'× (pelan)':spd+'× (cepat)'); }
+$('spdR').addEventListener('input',e=>{ setSpd(+e.target.value); LS.set('lumbaSpeed',String(spd)); });
+$('play').addEventListener('click',()=>setPlay(!playing));
+$('reseed').addEventListener('click',()=>{ stopSpeak(); playing=false; cancelAnimationFrame(raf); $('play').textContent='▶ Mulai simulasi'; seed(); refresh(); });
+$('clear').addEventListener('click',()=>{ leak=null; noises=[]; changed(); });
+$('peek').addEventListener('click',()=>{ peek=!peek; $('peek').setAttribute('aria-pressed',peek?'true':'false'); refresh(); });
+$('sample').addEventListener('click',()=>{
+  for(let tries=0;tries<200;tries++){
+    leak=randRoad(); noises=[];
+    for(let k=0;k<3;k++) for(let t=0;t<60;t++){ const c=randRoad(), m=memb(c.x,c.y); if([leak,...noises].every(o=>dnet(c.x,c.y,m,o.x,o.y,memb(o.x,o.y))>=20)){ noises.push({x:c.x,y:c.y,a:.6+Math.random()*.3}); break; } }
+    buildSrc(); const b=scanBest(); if(Math.hypot(b.x-leak.x,b.y-leak.y)<3) break;
+  }
+  changed();
+});
+$('nSh').addEventListener('input',e=>{ $('nShV').textContent=e.target.value; changed(); });
+$('reach').addEventListener('input',e=>{ $('reachV').textContent=e.target.value+' m'; changed(); });
+$('camHome').addEventListener('click',()=>camPreset('home'));
+$('camTop').addEventListener('click',()=>camPreset('top'));
+function trials(n){ let ok=0,fool=0; for(let t=0;t<30;t++){ seed(n); while(it<T) iterate(false); const k=verdict().k; if(k==='good') ok++; else if(k==='fooled') fool++; } return {ok,fool}; }
+$('trial').addEventListener('click',()=>{
+  const out=$('trialOut'); if(!leak){ out.textContent='Sembunyikan kebocoran dulu.'; return; }
+  playing=false; cancelAnimationFrame(raf);
+  const n=num('nSh')>1?num('nSh'):15, a=trials(1), b=trials(n);
+  out.innerHTML='Dari 30 percobaan, <b>1 lumba-lumba</b> tepat <b>'+a.ok+'</b> kali (tertipu sumber bising lain '+a.fool+' kali), sedangkan <b>'+n+' lumba-lumba</b> tepat <b>'+b.ok+'</b> kali (tertipu '+b.fool+' kali). "Tepat" berarti titik usulan meleset paling jauh 25 meter dari kebocoran sebenarnya.';
+  changed();
+});
+
+/* =============== SUARA =============== */
+const canSpeak=('speechSynthesis' in window)&&('SpeechSynthesisUtterance' in window);
+const LS={ get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }, set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }, del(k){ try{ localStorage.removeItem(k); }catch(e){} } };
+function pickVoice(){ if(!canSpeak) return; const v=speechSynthesis.getVoices(); idVoice=v.find(x=>/^id([-_]|$)/i.test(x.lang))||v.find(x=>/indones/i.test(x.name))||null; }
+if(canSpeak){ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }
+function stopSpeak(){ if(canSpeak) speechSynthesis.cancel(); }
+const clean=t=>t.replace(/Jl\./g,'Jalan').replace(/\b3D\b/g,'tiga dimensi').replace(/\b2D\b/g,'dua dimensi').replace(/(\d+)\s*m\b/g,'$1 meter');
+function speak(t){ if(!canSpeak||!voiceOn) return; speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(clean(t)); u.lang='id-ID'; if(idVoice) u.voice=idVoice; u.rate=.95; speechSynthesis.speak(u); }
+function setVoice(on){
+  voiceOn=on&&canSpeak;
+  const b=$('bVoice'); b.textContent=voiceOn?'🔊':'🔇'; b.setAttribute('aria-pressed',voiceOn?'true':'false'); b.setAttribute('aria-label','Suara narasi: '+(voiceOn?'nyala':'mati'));
+  $('tVoiceT').textContent=voiceOn?'🔊 Suara nyala':'🔇 Suara mati';
+  if(!voiceOn) stopSpeak();
+  $('voiceNote').textContent=voiceOn&&!idVoice?'Perangkat ini tidak punya suara bahasa Indonesia, jadi narasi dibaca dengan suara bawaan yang logatnya mungkin berbeda.':'';
+  LS.set('lumbaVoice',voiceOn?'1':'0');
+}
+if(!canSpeak){ $('bVoice').hidden=true; $('tVoiceT').hidden=true; $('tGoVoice').hidden=true; }
+$('bVoice').addEventListener('click',()=>{ setVoice(!voiceOn); if(voiceOn) speak('Suara dinyalakan. Narasi akan dibacakan.'); });
+$('tVoiceT').addEventListener('click',()=>{ setVoice(!voiceOn); if(tourOn&&tPlay) narrateStep(); });
+
+/* =============== TUR OTOMATIS =============== */
+const stepsAll=[
+  {title:'Selamat datang',center:true,view:'2d',text:'Halo! Halaman ini menunjukkan cara sekawanan lumba-lumba pencari menemukan kebocoran pipa air yang tersembunyi di bawah kota, hanya dengan mendengar gema sonar. Aku akan memandu kamu, dan layar akan berpindah sendiri. Kamu cukup menyimak.'},
+  {title:'Denah kota dan pipa',target:'mapArea',view:'2d',text:'Ini denah kota kecil, dilihat dari atas. Garis biru di tengah jalan adalah pipa air di bawah tanah. Di salah satu pipa ada kebocoran, tetapi tempatnya disembunyikan dari lumba-lumba.'},
+  {title:'Bunyi kebocoran',target:'mapArea',view:'2d',text:'Kebocoran mendesis, dan bunyinya merambat lewat pipa sambil memudar. Makin dekat ke kebocoran, makin keras bunyinya. Tetapi ada juga sumber bising lain, misalnya pompa, yang bisa menipu.'},
+  {title:'Pilih 2D atau 3D',target:'viewSwitch',text:'Di sini kamu bisa memilih cara melihat. Dua dimensi seperti denah di atas kertas. Tiga dimensi seperti maket kota yang bisa diputar. Isinya sama, dan cara kerjanya juga sama.'},
+  {title:'Maket 3D',target:'mapArea',view:'3d',cam:'orbit',need3d:true,text:'Inilah tampilan tiga dimensi. Gedung berdiri seperti maket, dan kamera berputar pelan. Kamu bisa memutarnya sendiri dengan menggeser layar, dan memperbesar dengan mencubit atau menggulir.'},
+  {title:'Ubah kotanya',target:'tools',view:'2d',text:'Kamu boleh mengubah kota. Pilih taruh kebocoran, lalu klik peta untuk menyembunyikan kebocoran di tempat lain. Pilih taruh sumber bising untuk menambah pengecoh. Pilih hapus untuk membersihkan sumber bising.'},
+  {title:'Mulai simulasi',target:'mapArea',view:'2d',act:'start',text:'Sekarang kita coba. Aku menekan tombol mulai simulasi. Lumba-lumba disebar di jalan-jalan kota dan mengirim klik sonar. Lingkaran biru adalah jangkauan sapuan tiap lumba-lumba, dan titik gema makin merah kalau bunyinya makin keras.'},
+  {title:'Penjelasan langsung',target:'cardStory',text:'Kotak ini menceritakan apa yang sedang terjadi. Di awal, sonar melebar menyapu seluruh kota. Lumba-lumba yang bunyinya sudah keras menyempitkan sapuannya, yang masih lemah tetap menyapu lebar.'},
+  {title:'Hasilnya',target:'cardResult',act:'finish',text:()=>'Selesai. '+resultSentence()},
+  {title:'Hasil di 3D',target:'mapArea',view:'3d',cam:'pin',need3d:true,text:'Ini hasil yang sama di tampilan tiga dimensi. Pin merah adalah titik pipa yang diusulkan untuk digali. Pipa berwarna menunjukkan kerasnya bunyi, dan lingkaran hijau menandai kebocoran sebenarnya.'},
+  {title:'Coba utak-atik',target:'cardSet',view:'2d',open:true,text:'Terakhir, coba ubah jumlah lumba-lumba. Satu lumba-lumba sering tertipu sumber bising, sedangkan banyak lumba-lumba lebih andal. Tombol perbandingan di bawahnya membuktikannya.'},
+  {title:'Siap!',center:true,final:true,view:'2d',text:'Itu saja. Sekarang giliranmu: sembunyikan kebocoran, tekan mulai, dan lihat hasilnya. Kalau lupa, tombol tanda tanya di pojok kanan bawah akan memutar tur ini lagi.'}
+];
+let steps=stepsAll, ti=0, tok=0, tPlay=true, started=false, tTimer=0;
+const tour=$('tour'), spot=$('tourSpot'), blk=$('tourBlock');
+const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+function stepText(st){ return typeof st.text==='function'?st.text():st.text; }
+function narrateStep(){
+  const st=steps[ti], my=++tok; stopSpeak(); clearTimeout(tTimer);
+  const text=stepText(st), t=clean(text); let fired=false;
+  const fin=()=>{ if(fired||my!==tok) return; fired=true; clearTimeout(tTimer); if(ti<steps.length-1) tTimer=setTimeout(()=>{ if(my===tok&&tPlay&&tourOn) runStep(ti+1); },900); else $('tPause').textContent='▶ Ulangi'; };
+  const quiet=()=>{ clearTimeout(tTimer); tTimer=setTimeout(fin,Math.max(3500,t.length*68)); };
+  if(!tPlay) return;
+  if(voiceOn&&canSpeak){
+    const u=new SpeechSynthesisUtterance(t); u.lang='id-ID'; if(idVoice) u.voice=idVoice; u.rate=.95; u.onend=fin;
+    u.onerror=ev=>{ if(my!==tok) return; if(ev&&(ev.error==='not-allowed'||ev.error==='synthesis-failed'||ev.error==='audio-busy')){ setVoice(false); quiet(); } else fin(); };
+    tTimer=setTimeout(()=>{ if(my===tok) speechSynthesis.speak(u); },90);
+    setTimeout(()=>{ if(my===tok&&!fired){ clearTimeout(tTimer); tTimer=setTimeout(fin,t.length*125+4000); } },120);
+  } else quiet();
+}
+function showBars(){
+  const st=steps[ti];
+  $('tBarStart').hidden=started; $('tBarRun').hidden=!started||!!st.final; $('tBarEnd').hidden=!started||!st.final;
+  $('tChkWrap').hidden=started&&!st.final;
+  $('tPause').textContent=tPlay?'⏸ Jeda':'▶ Lanjut'; $('tPrev').disabled=ti===0;
+}
+function startDemo(){ if(!leak) $('sample').click(); playing=false; cancelAnimationFrame(raf); setPlay(true); }
+function finishDemo(){ if(!leak) $('sample').click(); if(it===0||!gbest) seed(); while(it<T) iterate(true); fr=1; playing=false; cancelAnimationFrame(raf); $('play').textContent='▶ Mulai lagi'; refresh(); }
+function runStep(i){
+  ti=Math.max(0,Math.min(steps.length-1,i)); const st=steps[ti]; tok++; clearTimeout(tTimer); stopSpeak(); orbit=0;
+  if(st.view&&st.view!==view) setView(st.view);
+  if(st.open) $('adv').open=true;
+  if(st.act==='start') startDemo();
+  if(st.act==='finish') finishDemo();
+  if(st.cam&&view==='3d') camPreset(st.cam);
+  $('tTitle').textContent=st.title; $('tText').textContent=stepText(st);
+  $('tCount').textContent=(ti+1)+' dari '+steps.length; $('tProg').style.width=((ti+1)/steps.length*100)+'%';
+  tour.classList.toggle('center',!!st.center); blk.className=st.center?'block dim':'block';
+  if(st.target){ const el=$(st.target); if(el) el.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'}); }
+  else window.scrollTo({top:0,behavior:reduce?'auto':'smooth'});
+  showBars();
+  if(started) narrateStep();
+}
+function track(){
+  if(!tourOn){ spot.hidden=true; return; }
+  const st=steps[ti], el=st&&st.target&&!st.center?$(st.target):null;
+  if(el){ const r=el.getBoundingClientRect(), pad=6, l=Math.max(4,r.left-pad), t=Math.max(4,r.top-pad), rg=Math.min(innerWidth-4,r.right+pad), b=Math.min(innerHeight-4,r.bottom+pad);
+    spot.hidden=rg<=l||b<=t; spot.style.left=l+'px'; spot.style.top=t+'px'; spot.style.width=Math.max(0,rg-l)+'px'; spot.style.height=Math.max(0,b-t)+'px'; }
+  else spot.hidden=true;
+  requestAnimationFrame(track);
+}
+function openTour(){
+  steps=stepsAll.filter(s=>!s.need3d||typeof THREE!=='undefined'); ti=0; started=false; tPlay=true; tourOn=true; tok++; stopSpeak();
+  $('mini').hidden=true; tour.hidden=false; blk.hidden=false; $('tOff').checked=LS.get('lumbaTourOff')==='1';
+  if(!leak) $('sample').click();
+  if(view!=='2d') setView('2d');
+  runStep(0); requestAnimationFrame(track); $('tGoVoice').hidden&&$('tGoQuiet').focus({preventScroll:true}); if(!$('tGoVoice').hidden) $('tGoVoice').focus({preventScroll:true});
+}
+function closeTour(fin){
+  tourOn=false; tok++; clearTimeout(tTimer); stopSpeak(); orbit=0; tween=null;
+  tour.hidden=true; spot.hidden=true; blk.hidden=true; $('mini').hidden=false;
+  if(fin){ window.scrollTo({top:0,behavior:'auto'}); $('play').focus({preventScroll:true}); } else $('bTour').focus({preventScroll:true});
+}
+function beginTour(withVoice){ setVoice(withVoice); started=true; tPlay=true; runStep(0); }
+$('tGoVoice').addEventListener('click',()=>beginTour(true));
+$('tGoQuiet').addEventListener('click',()=>beginTour(false));
+$('tSkip').addEventListener('click',()=>closeTour(false));
+$('tSkip2').addEventListener('click',()=>closeTour(false));
+$('tDone').addEventListener('click',()=>closeTour(true));
+$('tReplay').addEventListener('click',()=>{ started=true; tPlay=true; runStep(0); });
+$('tNext').addEventListener('click',()=>runStep(ti+1));
+$('tPrev').addEventListener('click',()=>runStep(ti-1));
+$('tPause').addEventListener('click',()=>{
+  if(steps[ti].final&&ti===steps.length-1&&$('tPause').textContent.indexOf('Ulangi')>=0){ tPlay=true; narrateStep(); showBars(); return; }
+  tPlay=!tPlay; if(!tPlay){ tok++; clearTimeout(tTimer); stopSpeak(); } else narrateStep(); showBars();
+});
+$('tOff').addEventListener('change',e=>{ if(e.target.checked) LS.set('lumbaTourOff','1'); else LS.del('lumbaTourOff'); });
+$('bTour').addEventListener('click',openTour);
+document.addEventListener('keydown',e=>{
+  if(!tourOn) return;
+  if(e.key==='Escape') closeTour(false);
+  else if(started&&e.key==='ArrowRight') $('tNext').click();
+  else if(started&&e.key==='ArrowLeft'&&ti>0) $('tPrev').click();
+});
+window.addEventListener('pagehide',stopSpeak);
+
+/* =============== MULAI =============== */
+hintText();
+setSpd(parseFloat(LS.get('lumbaSpeed')));
+$('sample').click();
+setVoice(LS.get('lumbaVoice')==='1'); if(!(LS.get('lumbaVoice')==='1')) $('voiceNote').textContent='';
+if(LS.get('lumbaTourOff')!=='1') openTour();
+})();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>
