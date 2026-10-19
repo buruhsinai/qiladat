@@ -11,7 +11,7 @@
 (function () {
   "use strict";
 
-  const PRODUK_DATA_URL = "data/produk-demo.json";
+  const PRODUK_DATA_URL = "data/produk.json";
   let semuaProduk = [];
   let filterAktif = "Semua";
 
@@ -225,6 +225,18 @@
     document.getElementById("modalDesc").textContent = produk.deskripsi || produk.ringkasan;
     document.getElementById("modalInfo").textContent = produk.informasiPenting || "";
     document.getElementById("modalInfo").hidden = !produk.informasiPenting;
+
+    const tautan = document.getElementById("modalLink");
+    const cta = document.getElementById("modalCta");
+    if (tautan) {
+      const adaTautan = typeof produk.tautan === "string" && produk.tautan.charAt(0) === "/";
+      tautan.hidden = !adaTautan;
+      if (adaTautan) {
+        tautan.href = produk.tautan;
+        tautan.textContent = produk.labelTautan || "Lihat halaman produk";
+      }
+      if (cta) cta.hidden = adaTautan;
+    }
 
     elemenFokusSebelumModal = document.activeElement;
 
