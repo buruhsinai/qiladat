@@ -5,417 +5,968 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tebak Suaranya!</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#fdf6e8; --card:#ffffff; --line:#f0e2c4;
-    --ink:#3a3226; --dim:#8a7c62;
-    --accent:#c9784f; --accent-soft:#f7e9df;
-    --good:#5a8a5a; --good-soft:#dff2df; --good-line:#8fc98f;
-    --bad:#b04a4a; --bad-soft:#fbdede; --bad-line:#dd9a9a;
-    --display:'Fredoka',sans-serif; --sans:'Quicksand',sans-serif; --mono:'JetBrains Mono',monospace;
+    --ink:#3a3226; --dim:#75684f;
+    --accent:#c9784f; --accent-dk:#8a4a2a; --accent-soft:#f7e9df;
+    --blue:#3f7aa6; --blue-soft:#e3eef7;
+    --good:#3f7a41; --good-soft:#dff2df; --good-line:#8fc98f;
+    --bad:#a53f3f; --bad-soft:#fbdede; --bad-line:#dd9a9a;
+    --gold:#e6b43c; --gold-soft:#fff6dc;
+    --display:'Fredoka',system-ui,sans-serif; --sans:'Quicksand',system-ui,sans-serif;
   }
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;}
-  .wrap{max-width:520px;margin:0 auto;padding:0 18px 70px;}
+  [hidden]{display:none !important;}
+  html{font-size:16px;}
+  html.rec{font-size:20px;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;overscroll-behavior:none;}
+  button{font-family:inherit;color:inherit;}
+  button:focus-visible{outline:3px solid var(--blue);outline-offset:2px;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 18px 48px;}
 
-  .hero{padding:36px 10px 18px;text-align:center;}
-  .hero h1{font-family:var(--display);font-weight:700;font-size:clamp(24px,6.5vw,32px);margin:0 0 8px;color:#8a4a2a;}
-  .hero p{color:var(--dim);font-size:14px;max-width:440px;margin:0 auto;}
+  /* ---------- kepala ---------- */
+  .hero{padding:26px 6px 10px;text-align:center;}
+  .hero h1{font-family:var(--display);font-weight:700;font-size:clamp(1.7rem,5vw,2.3rem);margin:0 0 6px;color:var(--accent-dk);}
+  .konsep{max-width:640px;margin:0 auto 14px;color:var(--dim);font-size:1rem;font-weight:500;}
+  .konsep b{color:var(--accent-dk);}
+  .tools{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
+  .tool{display:inline-flex;align-items:center;gap:6px;font-family:var(--display);font-weight:600;font-size:.88rem;
+    background:#fff;border:2px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer;color:var(--dim);}
+  .tool.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .tool .ic{font-size:1.05rem;line-height:1;}
 
-  .tab-nav{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:18px;}
-  .tab-btn{font-family:var(--display);font-weight:600;font-size:13px;background:#fff;border:2px solid var(--line);
-    color:var(--dim);padding:12px 3px;border-radius:12px;cursor:pointer;text-align:center;line-height:1.3;}
-  .tab-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+  /* ---------- tab ---------- */
+  .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px auto 14px;max-width:760px;}
+  .tab{font-family:var(--display);font-weight:600;font-size:1rem;background:#fff;border:2px solid var(--line);color:var(--dim);
+    padding:11px 6px;border-radius:14px;cursor:pointer;line-height:1.25;}
+  .tab small{display:block;font-family:var(--sans);font-weight:600;font-size:.74rem;opacity:.85;}
+  .tab.active{background:var(--accent);border-color:var(--accent);color:#fff;}
 
-  .tab-panel{display:none;}
-  .tab-panel.active{display:block;}
+  /* ---------- kartu pemandu ---------- */
+  .guide{display:flex;gap:12px;align-items:center;background:var(--blue-soft);border:2px solid #bcd6ea;border-radius:16px;
+    padding:12px 16px;margin:0 auto 16px;max-width:900px;}
+  .guide .g-ic{font-size:1.7rem;line-height:1;}
+  .guide .g-tt{font-family:var(--display);font-weight:600;font-size:.78rem;color:var(--blue);}
+  .guide #guideText{font-family:var(--display);font-weight:500;font-size:1.08rem;color:#23465f;line-height:1.35;}
 
-  .card{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px 18px;margin-bottom:16px;}
-  .card p.desc{font-size:13.5px;color:var(--dim);margin:0 0 16px;}
+  /* ---------- tata letak ---------- */
+  .panel{display:none;}
+  .panel.active{display:block;}
+  .cols{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;}
+  @media(min-width:900px){.cols{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;}}
+  .card{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:18px;margin-bottom:16px;}
+  .cols>div>.card:last-child{margin-bottom:0;}
+  .card h2{font-family:var(--display);font-weight:600;font-size:1.05rem;margin:0 0 4px;color:var(--accent-dk);}
+  .desc{font-size:.9rem;color:var(--dim);margin:0 0 12px;}
 
-  .result-panel{background:var(--accent-soft);border-radius:14px;padding:14px;text-align:center;margin-bottom:16px;}
-  .compare-row{display:flex;justify-content:space-around;}
-  .compare-box .n{font-family:var(--display);font-weight:700;font-size:22px;color:#8a4a2a;}
-  .compare-box .l{font-size:10.5px;color:var(--dim);font-family:var(--mono);}
+  .big-btn{width:100%;font-family:var(--display);font-weight:700;font-size:1.1rem;padding:14px;border-radius:14px;border:none;
+    cursor:pointer;background:var(--accent);color:#fff;box-shadow:0 5px 0 rgba(0,0,0,.1);margin-top:12px;}
+  .big-btn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.1);}
+  .big-btn:disabled{opacity:.45;cursor:default;box-shadow:none;}
 
-  .play-btn{width:100%;font-family:var(--display);font-weight:700;font-size:16px;padding:16px;border-radius:14px;border:none;
-    cursor:pointer;background:var(--accent);color:#fff;box-shadow:0 5px 0 rgba(0,0,0,.08);}
-  .play-btn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.08);}
+  /* ---------- gambar suara ---------- */
+  .pic{width:100%;height:auto;display:block;}
+  .pic text{font-family:var(--sans);font-weight:600;fill:#75684f;}
+  .pic .empty{font-family:var(--display);font-size:20px;fill:#b9ad94;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px;min-height:2rem;}
+  .chip{background:var(--accent-soft);color:var(--accent-dk);font-weight:700;font-size:.88rem;border-radius:999px;padding:5px 12px;}
+  .fact{font-size:.92rem;color:var(--dim);text-align:center;margin:10px 0 0;min-height:1.4rem;}
+  .legend{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px;min-height:1.9rem;}
+  .lg{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:.9rem;}
+  .lg i{font-style:normal;color:#fff;background:var(--c);width:1.5rem;height:1.5rem;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-size:.8rem;}
 
-  .eq-bars{display:flex;justify-content:center;gap:4px;height:24px;margin:12px 0 4px;align-items:flex-end;}
-  .eq-bars span{width:5px;background:var(--accent);border-radius:2px;height:6px;}
-  .eq-bars.playing span{animation:eqBounce .6s ease-in-out infinite;}
-  .eq-bars.playing span:nth-child(1){animation-delay:0s;}
-  .eq-bars.playing span:nth-child(2){animation-delay:.12s;}
-  .eq-bars.playing span:nth-child(3){animation-delay:.24s;}
-  .eq-bars.playing span:nth-child(4){animation-delay:.12s;}
-  .eq-bars.playing span:nth-child(5){animation-delay:0s;}
-  @keyframes eqBounce{0%,100%{height:6px;}50%{height:22px;}}
+  /* ---------- Kenali ---------- */
+  .st-head{display:flex;align-items:center;gap:14px;margin-bottom:6px;}
+  .st-emoji{font-size:3.2rem;line-height:1;}
+  .st-name{font-family:var(--display);font-weight:700;font-size:1.5rem;color:var(--accent-dk);line-height:1.15;}
+  .st-kata{font-weight:600;color:var(--dim);font-size:1rem;}
+  .pop{animation:pop .5s ease;}
+  @keyframes pop{0%{transform:scale(.7);}60%{transform:scale(1.18);}100%{transform:scale(1);}}
+  .animal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;}
+  .animal-card{background:#fffdf8;border:2px solid var(--line);border-radius:16px;padding:12px 4px;text-align:center;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:2px;transition:transform .12s,border-color .2s,background .2s;}
+  .animal-card:active{transform:scale(.95);}
+  .animal-card .ae{font-size:2.1rem;line-height:1.1;}
+  .animal-card .an{font-family:var(--display);font-weight:600;font-size:.95rem;}
+  .animal-card.sel{border-color:var(--accent);background:var(--accent-soft);}
+  .animal-card.seen::after{content:"✓";font-size:.75rem;color:var(--good);font-weight:700;line-height:1;}
+  .tangga{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px;align-items:end;margin-top:6px;}
+  .slot{min-height:var(--h);background:#fffdf8;border:2px dashed var(--line);border-radius:10px 10px 4px 4px;padding:4px 0;
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:0;cursor:default;}
+  .slot.on{border:2px solid #e6c36a;background:var(--gold-soft);cursor:pointer;}
+  .slot .se{font-size:1.25rem;line-height:1.2;}
+  .slot .sn{font-size:.58rem;font-weight:700;color:var(--dim);line-height:1.1;}
+  @media(min-width:560px){.slot .sn{font-size:.7rem;}.slot .se{font-size:1.6rem;}}
+  .tg-label{display:flex;justify-content:space-between;font-weight:700;font-size:.85rem;color:var(--dim);margin-top:6px;}
+  .count{font-family:var(--display);font-weight:600;color:var(--accent-dk);font-size:.95rem;margin-bottom:2px;}
+  .conclusion{margin-top:12px;background:var(--good-soft);border:2px solid var(--good-line);border-radius:14px;padding:12px 14px;
+    font-weight:600;color:#2f5d31;font-size:.98rem;}
+  .ref{display:flex;gap:8px;flex-wrap:wrap;}
+  .ref button{flex:1;min-width:140px;font-family:var(--display);font-weight:600;font-size:.92rem;background:#fff;
+    border:2px solid var(--line);border-radius:12px;padding:10px;cursor:pointer;}
 
-  .grid-hewan{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0;}
-  .hewan-box{background:#fff;border:2px solid var(--line);border-radius:14px;padding:18px 8px;text-align:center;
-    font-family:var(--display);font-weight:600;font-size:15px;color:var(--ink);cursor:pointer;
-    transition:transform .1s, background .2s, border-color .2s, color .2s;}
-  .hewan-box:active{transform:scale(0.96);}
-  .hewan-box.correct{background:var(--good-soft);border-color:var(--good-line);color:var(--good);}
-  .hewan-box.wrong{background:var(--bad-soft);border-color:var(--bad-line);color:var(--bad);}
+  /* ---------- Tebak ---------- */
+  .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+  .lv{background:#fff;border:2px solid var(--line);border-radius:14px;padding:9px 6px;cursor:pointer;text-align:center;
+    font-family:var(--display);font-weight:600;font-size:.98rem;line-height:1.25;}
+  .lv small{display:block;font-family:var(--sans);font-weight:600;font-size:.72rem;color:var(--dim);}
+  .lv em{display:block;font-style:normal;font-family:var(--sans);font-weight:700;font-size:.78rem;color:#a77c10;min-height:1.1rem;}
+  .lv.active{border-color:var(--accent);background:var(--accent-soft);}
+  .dots{display:flex;gap:8px;justify-content:center;margin-bottom:10px;flex-wrap:wrap;}
+  .dot{min-width:2.3rem;height:2.3rem;padding:0 6px;border-radius:999px;border:2px solid var(--line);display:grid;place-items:center;
+    font-family:var(--display);font-weight:600;font-size:.82rem;color:var(--dim);background:#fff;}
+  .dot.cur{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-dk);}
+  .dot.done{background:var(--gold-soft);border-color:#e6c36a;color:#7a5a08;}
+  .mystery{text-align:center;padding:6px 0 0;}
+  .m-emoji{font-size:5rem;line-height:1.25;}
+  .m-name{font-family:var(--display);font-weight:700;font-size:1.4rem;color:var(--accent-dk);}
+  .eq{display:flex;justify-content:center;gap:5px;height:30px;margin:8px 0 0;align-items:flex-end;}
+  .eq span{width:7px;background:var(--accent);border-radius:3px;height:7px;}
+  .eq.playing span{animation:eqb .6s ease-in-out infinite;}
+  .eq.playing span:nth-child(2){animation-delay:.12s;} .eq.playing span:nth-child(3){animation-delay:.24s;}
+  .eq.playing span:nth-child(4){animation-delay:.12s;}
+  @keyframes eqb{0%,100%{height:7px;}50%{height:28px;}}
+  .choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+  .choice{background:#fff;border:2px solid var(--line);border-radius:16px;min-height:3.9rem;padding:8px 6px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--display);font-weight:600;font-size:1.05rem;
+    transition:transform .1s,background .2s,border-color .2s;}
+  .choice .ce{font-size:1.7rem;line-height:1;}
+  .choice:active{transform:scale(.96);}
+  .choice.correct{background:var(--good-soft);border-color:var(--good-line);color:var(--good);}
+  .choice.wrong{background:var(--bad-soft);border-color:var(--bad-line);color:var(--bad);}
+  .choice:disabled{cursor:default;}
+  .choice.dim{opacity:.3;}
+  .fb{min-height:7rem;}
+  .fb-text{font-size:1rem;font-weight:600;line-height:1.5;}
+  .fb-text b{color:var(--accent-dk);}
+  .fb-text .ok{color:var(--good);} .fb-text .no{color:var(--bad);}
+  .fb-text .stars{font-size:1.3rem;}
+  .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+  .act{font-family:var(--display);font-weight:600;font-size:.95rem;background:#fff;border:2px solid var(--accent);color:var(--accent-dk);
+    border-radius:12px;padding:10px 14px;cursor:pointer;}
+  .act.main{background:var(--accent);color:#fff;}
+  .summary{text-align:center;}
+  .summary .big-stars{font-size:2.2rem;letter-spacing:2px;}
+  .summary .sum-t{font-family:var(--display);font-weight:700;font-size:1.25rem;color:var(--accent-dk);}
 
-  .feedback{text-align:center;font-family:var(--display);font-weight:600;font-size:13.5px;min-height:20px;color:var(--dim);margin-bottom:6px;}
+  /* ---------- Bandingkan ---------- */
+  .q{font-family:var(--display);font-weight:600;font-size:1.25rem;line-height:1.3;color:var(--ink);margin-bottom:12px;}
+  .q b{color:var(--accent-dk);}
+  .opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+  .opt{position:relative;background:#fff;border:3px solid var(--c);border-radius:18px;padding:18px 6px 14px;cursor:pointer;text-align:center;
+    transition:transform .1s,background .2s;}
+  .opt:active{transform:scale(.97);}
+  .opt .tag{position:absolute;top:-12px;left:12px;background:var(--c);color:#fff;font-family:var(--display);font-weight:700;
+    width:1.8rem;height:1.8rem;border-radius:50%;display:grid;place-items:center;font-size:.95rem;}
+  .opt .oe{display:block;font-size:3rem;line-height:1.1;}
+  .opt .on{display:block;font-family:var(--display);font-weight:700;font-size:1.15rem;}
+  .opt.right{background:var(--good-soft);}
+  .opt.picked::after{content:"tebakanmu";position:absolute;bottom:4px;right:10px;font-size:.7rem;font-weight:700;color:var(--dim);}
+  .opt:disabled{cursor:default;}
 
-  .skip-btn{width:100%;background:none;border:2px dashed var(--line);color:var(--dim);font-family:var(--sans);
-    font-weight:600;font-size:12.5px;padding:10px;border-radius:12px;cursor:pointer;margin-top:2px;}
+  .note{background:var(--accent-soft);border-radius:14px;padding:12px 16px;font-size:.88rem;color:#6b4a30;margin-top:16px;}
+  .note strong{color:#4a2e18;}
+  footer{text-align:center;padding-top:22px;color:#a39879;font-size:.8rem;font-weight:600;}
 
-  .note-card{background:var(--accent-soft);border-radius:14px;padding:14px 16px;font-size:12.5px;color:#6b4a30;margin-top:14px;}
-  .note-card strong{color:#4a2e18;}
+  /* ---------- mode rekam ---------- */
+  html.rec .minor{display:none !important;}
+  html.rec .wrap{max-width:1280px;}
+  html.rec .hero{padding-top:10px;}
+  html.rec .choice{min-height:5rem;font-size:1.35rem;}
+  html.rec .choice .ce{font-size:2.4rem;}
+  html.rec .guide #guideText{font-size:1.35rem;}
+  html.rec .m-emoji{font-size:7rem;}
+  html.rec .animal-card .ae{font-size:2.8rem;}
 
-  footer{text-align:center;padding-top:26px;color:#b9ad94;font-size:11.5px;font-family:var(--mono);}
+  @media(prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none !important;transition:none !important;}
+  }
 </style>
 </head>
 <body>
 
 <div class="wrap">
-  <div class="hero">
+  <header class="hero">
     <h1>🎧 Tebak Suaranya!</h1>
-    <p>Dengarkan suaranya, lalu <strong>cari namanya</strong> di antara kotak-kotak yang ada. Posisinya selalu berubah tiap ronde — jadi kamu harus benar-benar membaca, bukan menghafal tempat!</p>
+    <p class="konsep">Setiap hewan punya <b>sidik suara</b>: nadanya <b>tinggi atau rendah</b>, bunyinya <b>panjang atau pendek</b>, dan berbunyi <b>berapa kali</b>.</p>
+    <div class="tools" role="toolbar" aria-label="Pengaturan">
+      <button class="tool" id="tRec" aria-pressed="false"><span class="ic">🎬</span><span class="tl">Mode rekam</span></button>
+      <button class="tool" id="tFull" aria-pressed="false"><span class="ic">⛶</span><span class="tl">Layar penuh</span></button>
+      <button class="tool on" id="tMute" aria-pressed="true"><span class="ic">🔊</span><span class="tl">Suara hidup</span></button>
+      <button class="tool" id="tAuto" aria-pressed="false"><span class="ic">🔁</span><span class="tl">Otomatis: mati</span></button>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="kenali" role="tab">👂 Kenali<small>dengar &amp; temukan</small></button>
+    <button class="tab" data-tab="tebak" role="tab">🎯 Tebak Suara<small>3 tingkat</small></button>
+    <button class="tab" data-tab="banding" role="tab">⚖️ Bandingkan<small>tebak dulu, buktikan</small></button>
+  </nav>
+
+  <div class="guide" aria-live="polite">
+    <div class="g-ic">🎙️</div>
+    <div><div class="g-tt">Pertanyaan pemandu</div><div id="guideText"></div></div>
   </div>
 
-  <div class="tab-nav">
-    <button class="tab-btn active" data-tab="mudah">🟢 Mudah</button>
-    <button class="tab-btn" data-tab="sedang">🟡 Sedang</button>
-    <button class="tab-btn" data-tab="sulit">🔴 Sulit</button>
-  </div>
-
-  <div class="tab-panel active" id="tab-mudah">
-    <div class="card">
-      <p class="desc">4 pilihan hewan. Level pemanasan yang pas buat mulai melatih telinga sekaligus membaca.</p>
-      <div class="result-panel">
-        <div class="compare-row">
-          <div class="compare-box"><div class="n" id="mudahSkorN">0</div><div class="l">⭐ SKOR</div></div>
-          <div class="compare-box"><div class="n" id="mudahBeruntunN">0</div><div class="l">🔥 BERUNTUN</div></div>
+  <!-- =============== KENALI =============== -->
+  <section class="panel active" id="p-kenali">
+    <div class="cols">
+      <div class="card">
+        <div class="st-head">
+          <div class="st-emoji" id="kEmoji">👂</div>
+          <div><div class="st-name" id="kName">Ketuk satu hewan</div><div class="st-kata" id="kKata">lalu dengarkan suaranya</div></div>
+        </div>
+        <svg class="pic" id="kPic" role="img" aria-label="Gambar suara"></svg>
+        <div class="chips" id="kChips"></div>
+        <p class="fact minor" id="kFact"></p>
+        <button class="big-btn" id="kAgain" disabled>🔊 Dengar lagi</button>
+      </div>
+      <div>
+        <div class="card">
+          <h2>Pilih hewan</h2>
+          <div class="animal-grid" id="kGrid"></div>
+        </div>
+        <div class="card">
+          <h2>Tangga suara</h2>
+          <div class="count" id="kCount"></div>
+          <p class="desc minor">Tiap hewan yang kamu dengar akan naik ke tangga, dari yang nadanya paling rendah sampai paling tinggi.</p>
+          <div class="tangga" id="kTangga"></div>
+          <div class="tg-label"><span>🥁 paling rendah</span><span>paling tinggi 🔔</span></div>
+          <div class="conclusion" id="kConc" hidden></div>
+        </div>
+        <div class="card minor">
+          <h2>Patokan nada</h2>
+          <p class="desc">Nada rendah seperti suara bedug, nada tinggi seperti peluit. Dengarkan dulu supaya telingamu punya patokan.</p>
+          <div class="ref">
+            <button data-f="110">🥁 Contoh nada rendah</button>
+            <button data-f="1500">🔔 Contoh nada tinggi</button>
+          </div>
         </div>
       </div>
-      <button class="play-btn" onclick="mainkanTarget('mudah')">🔊 Dengar Suaranya!</button>
-      <div class="eq-bars" id="mudahEq"><span></span><span></span><span></span><span></span><span></span></div>
-      <div class="grid-hewan" id="mudahGrid"></div>
-      <div class="feedback" id="mudahFeedback"></div>
-      <button class="skip-btn" onclick="acakUlang('mudah')">🔀 Ganti Hewan Lain</button>
     </div>
-    <div class="note-card"><strong>Kenapa kotaknya selalu diacak?</strong> Supaya kamu benar-benar mendengarkan dengan teliti dan membaca nama hewannya — bukan menghafal "sapi selalu di kotak kiri atas". Dua kemampuan sekaligus terlatih: telinga dan mata!</div>
-  </div>
+  </section>
 
-  <div class="tab-panel" id="tab-sedang">
-    <div class="card">
-      <p class="desc">6 pilihan hewan. Suaranya makin beragam, kamu harus makin teliti membedakannya.</p>
-      <div class="result-panel">
-        <div class="compare-row">
-          <div class="compare-box"><div class="n" id="sedangSkorN">0</div><div class="l">⭐ SKOR</div></div>
-          <div class="compare-box"><div class="n" id="sedangBeruntunN">0</div><div class="l">🔥 BERUNTUN</div></div>
+  <!-- =============== TEBAK =============== -->
+  <section class="panel" id="p-tebak">
+    <div class="levels" id="tbLevels">
+      <button class="lv active" data-lv="mudah">🟢 Mudah<small>4 hewan · ada gambar</small><em id="best-mudah"></em></button>
+      <button class="lv" data-lv="sedang">🟡 Sedang<small>6 hewan · ada gambar</small><em id="best-sedang"></em></button>
+      <button class="lv" data-lv="sulit">🔴 Sulit<small>10 hewan · tulisan saja</small><em id="best-sulit"></em></button>
+    </div>
+    <div class="cols">
+      <div class="card">
+        <div class="dots" id="tbDots"></div>
+        <div class="mystery">
+          <div class="m-emoji" id="tbEmoji">❓</div>
+          <div class="m-name" id="tbName">Suara siapa ini?</div>
+        </div>
+        <div class="eq" id="tbEq"><span></span><span></span><span></span><span></span><span></span></div>
+        <svg class="pic" id="tbPic" role="img" aria-label="Gambar suara" hidden></svg>
+        <div class="chips" id="tbChips"></div>
+        <button class="big-btn" id="tbPlay">🔊 Dengar suaranya</button>
+      </div>
+      <div>
+        <div class="card"><div class="choices" id="tbChoices"></div></div>
+        <div class="card fb">
+          <div class="fb-text" id="tbFbText" aria-live="polite"></div>
+          <div class="acts" id="tbActs"></div>
         </div>
       </div>
-      <button class="play-btn" onclick="mainkanTarget('sedang')">🔊 Dengar Suaranya!</button>
-      <div class="eq-bars" id="sedangEq"><span></span><span></span><span></span><span></span><span></span></div>
-      <div class="grid-hewan" id="sedangGrid"></div>
-      <div class="feedback" id="sedangFeedback"></div>
-      <button class="skip-btn" onclick="acakUlang('sedang')">🔀 Ganti Hewan Lain</button>
     </div>
-    <div class="note-card"><strong>Tips:</strong> Kalau ragu, tekan lagi "Dengar Suaranya" — mendengarkan berkali-kali itu wajar dan bagus untuk latihan, bukan curang!</div>
-  </div>
+    <div class="note minor"><strong>Kenapa pilihannya selalu diacak?</strong> Supaya kamu benar-benar mendengarkan dan membaca nama hewannya, bukan menghafal letak kotak. Gambar suara baru muncul <em>sesudah</em> kamu menjawab, jadi tebak dulu dengan telinga.</div>
+  </section>
 
-  <div class="tab-panel" id="tab-sulit">
-    <div class="card">
-      <p class="desc">10 pilihan hewan — level penuh! Butuh telinga tajam dan bacaan cepat untuk menang di sini.</p>
-      <div class="result-panel">
-        <div class="compare-row">
-          <div class="compare-box"><div class="n" id="sulitSkorN">0</div><div class="l">⭐ SKOR</div></div>
-          <div class="compare-box"><div class="n" id="sulitBeruntunN">0</div><div class="l">🔥 BERUNTUN</div></div>
+  <!-- =============== BANDINGKAN =============== -->
+  <section class="panel" id="p-banding">
+    <div class="cols">
+      <div class="card">
+        <div class="dots" id="cmDots"></div>
+        <svg class="pic" id="cmPic" role="img" aria-label="Gambar suara perbandingan"></svg>
+        <div class="legend" id="cmLegend"></div>
+        <div class="ref minor" style="margin-top:12px">
+          <button data-f="110">🥁 Contoh nada rendah</button>
+          <button data-f="1500">🔔 Contoh nada tinggi</button>
         </div>
       </div>
-      <button class="play-btn" onclick="mainkanTarget('sulit')">🔊 Dengar Suaranya!</button>
-      <div class="eq-bars" id="sulitEq"><span></span><span></span><span></span><span></span><span></span></div>
-      <div class="grid-hewan" id="sulitGrid"></div>
-      <div class="feedback" id="sulitFeedback"></div>
-      <button class="skip-btn" onclick="acakUlang('sulit')">🔀 Ganti Hewan Lain</button>
+      <div>
+        <div class="card">
+          <div class="q" id="cmQ"></div>
+          <div class="opts" id="cmOpts"></div>
+        </div>
+        <div class="card fb">
+          <div class="fb-text" id="cmFbText" aria-live="polite"></div>
+          <div class="acts" id="cmActs"></div>
+        </div>
+      </div>
     </div>
-    <div class="note-card"><strong>Jagoan!</strong> Di level ini semua suara sengaja dibuat mirip satu sama lain di beberapa bagian — itu sebabnya membaca nama di kotak jauh lebih bisa diandalkan daripada sekadar menebak-nebak dari ingatan posisi.</div>
-  </div>
+    <div class="note minor"><strong>Tebak dulu, baru buktikan.</strong> Ilmuwan juga begitu: membuat dugaan lebih dulu, lalu mengujinya. Kalau dugaanmu meleset, itu bukan salah. Itu tandanya kamu baru menemukan sesuatu.</div>
+  </section>
 
-  <footer>Laboratorium Dengar & Baca Anak — Bank Alat JAZMI/Qiladat</footer>
+  <footer class="minor">Suara di sini tiruan buatan komputer, jadi suara aslinya lebih beragam. Laboratorium Dengar &amp; Baca Anak · Bank Alat JAZMI/Qiladat</footer>
 </div>
 
 <script>
-  /* ============ TAB SWITCHING ============ */
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+(function(){
+'use strict';
+
+const $ = id => document.getElementById(id);
+const REDUCED = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+function shuffle(a){
+  const r = a.slice();
+  for(let i=r.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [r[i],r[j]]=[r[j],r[i]]; }
+  return r;
+}
+function fmt(n){ return n.toFixed(1).replace('.',','); }
+
+/* =====================================================
+   MESIN SUARA (Web Audio, semua disintesis, tanpa berkas)
+   ===================================================== */
+let ctx=null, master=null, bus=null, DEST=null, muted=false, unlocked=false;
+
+function getCtx(){
+  if(!ctx){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = muted ? 0 : 0.9;
+    master.connect(ctx.destination);
+  }
+  if(ctx.state === 'suspended') ctx.resume();
+  return ctx;
+}
+/* tiap pemutaran punya "bus" sendiri; bus lama diredam supaya suara tidak bertumpuk */
+function newBus(){
+  const c = getCtx(); if(!c) return null;
+  if(bus){ try{ bus.gain.setTargetAtTime(0, c.currentTime, 0.015); }catch(e){} }
+  bus = c.createGain(); bus.gain.value = 1; bus.connect(master); DEST = bus;
+  return c;
+}
+function stopSound(){ if(ctx && bus){ try{ bus.gain.setTargetAtTime(0, ctx.currentTime, 0.015); }catch(e){} } }
+
+function noiseBurst(c, t0, duration, bpFreq, bpQ, peakGain){
+  const len = Math.max(1, Math.floor(c.sampleRate*duration));
+  const buf = c.createBuffer(1, len, c.sampleRate);
+  const d = buf.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
+  const src = c.createBufferSource(); src.buffer = buf;
+  const f = c.createBiquadFilter(); f.type='bandpass'; f.frequency.value=bpFreq; f.Q.value=bpQ;
+  const g = c.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.linearRampToValueAtTime(peakGain, t0+0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0+duration);
+  src.connect(f); f.connect(g); g.connect(DEST);
+  src.start(t0); src.stop(t0+duration+0.02);
+}
+function tone(c, o){
+  const osc = c.createOscillator(); osc.type = o.type;
+  osc.frequency.setValueAtTime(o.freqPoints[0][1], o.t0+o.freqPoints[0][0]);
+  for(let i=1;i<o.freqPoints.length;i++) osc.frequency.linearRampToValueAtTime(o.freqPoints[i][1], o.t0+o.freqPoints[i][0]);
+  const g = c.createGain();
+  g.gain.setValueAtTime(0.0001, o.t0);
+  g.gain.linearRampToValueAtTime(o.peak, o.t0+o.attack);
+  g.gain.linearRampToValueAtTime(o.peak*0.7, o.t0+o.duration*0.75);
+  g.gain.linearRampToValueAtTime(0.0001, o.t0+o.duration);
+  let node = osc;
+  if(o.filterFreq){
+    const f = c.createBiquadFilter(); f.type=o.filterType||'lowpass'; f.frequency.value=o.filterFreq; f.Q.value=o.filterQ||1;
+    osc.connect(f); node = f;
+  }
+  node.connect(g); g.connect(DEST);
+  osc.start(o.t0); osc.stop(o.t0+o.duration+0.03);
+}
+function toneVib(c, o){
+  const osc = c.createOscillator(); osc.type = o.type;
+  const stepDur = (1/o.vibRate)/2;
+  const centerAt = tt => o.startFreq + (o.endFreq-o.startFreq)*(tt/o.duration);
+  let t=0, tg=true;
+  osc.frequency.setValueAtTime(centerAt(0), o.t0);
+  while(t < o.duration){
+    t = Math.min(t+stepDur, o.duration);
+    const cc = centerAt(t);
+    osc.frequency.linearRampToValueAtTime(Math.max(20, tg ? cc+o.vibDepth : cc-o.vibDepth), o.t0+t);
+    tg = !tg;
+  }
+  const g = c.createGain();
+  g.gain.setValueAtTime(0.0001, o.t0);
+  g.gain.linearRampToValueAtTime(o.peak, o.t0+o.attack);
+  if(o.ampWobble){
+    const astep = (1/o.ampWobble.rate)/2;
+    let at=o.attack, atg=true;
+    while(at < o.duration-0.03){
+      at = Math.min(at+astep, o.duration-0.03);
+      g.gain.linearRampToValueAtTime(atg ? Math.max(0.02, o.peak-o.ampWobble.depth) : o.peak, o.t0+at);
+      atg = !atg;
+    }
+  } else {
+    g.gain.linearRampToValueAtTime(o.peak*0.75, o.t0+o.duration*0.75);
+  }
+  g.gain.linearRampToValueAtTime(0.0001, o.t0+o.duration);
+  let node = osc;
+  if(o.filterFreq){
+    const f = c.createBiquadFilter(); f.type=o.filterType||'bandpass'; f.frequency.value=o.filterFreq; f.Q.value=o.filterQ||1;
+    osc.connect(f); node = f;
+  }
+  node.connect(g); g.connect(DEST);
+  osc.start(o.t0); osc.stop(o.t0+o.duration+0.03);
+}
+
+/* =====================================================
+   DATA HEWAN
+   segs = "partitur" tiap bunyi: waktu mulai t (detik) dan titik [dt, frekuensi Hz]
+   (dipakai menggambar "gambar suara" dan menghitung nada, lama, dan jumlah bunyi)
+   ===================================================== */
+const A = {
+  sapi:{ n:'Sapi', e:'🐄', kata:'mooo',
+    fact:'Sapi melenguh: suaranya panjang dan dalam.',
+    segs:[{t:0,pts:[[0,145],[1.3,120]]}],
+    play:(c,t)=>toneVib(c,{t0:t,duration:1.3,type:'sawtooth',startFreq:145,endFreq:120,vibRate:4.5,vibDepth:6,peak:0.28,attack:0.1,filterFreq:700,filterQ:1,filterType:'lowpass'}) },
+  kambing:{ n:'Kambing', e:'🐐', kata:'mbeeek',
+    fact:'Kambing mengembik: suaranya bergetar-getar.',
+    segs:[{t:0,pts:[[0,310],[0.65,260]]}],
+    play:(c,t)=>toneVib(c,{t0:t,duration:0.65,type:'sawtooth',startFreq:310,endFreq:260,vibRate:11,vibDepth:35,peak:0.26,attack:0.05,filterFreq:900,filterQ:1.4,filterType:'bandpass'}) },
+  ayam:{ n:'Ayam Jantan', e:'🐓', kata:'kukuruyuuuk',
+    fact:'Ayam jantan berkokok: nadanya naik-turun dan panjang.',
+    segs:[{t:0,pts:[[0,350],[0.15,750],[0.25,600],[0.35,850],[0.55,500],[1.15,250]]}],
+    play:(c,t)=>tone(c,{t0:t,duration:1.15,type:'sawtooth',freqPoints:[[0,350],[0.15,750],[0.25,600],[0.35,850],[0.55,500],[1.15,250]],peak:0.26,attack:0.05,filterFreq:2500,filterQ:1,filterType:'lowpass'}) },
+  bebek:{ n:'Bebek', e:'🦆', kata:'kwek-kwek-kwek',
+    fact:'Bebek bersuara pendek-pendek dan berulang.',
+    segs:[0,0.22,0.44].map(t=>({t,pts:[[0,700],[0.13,350]]})),
+    play:(c,t)=>{ [0,0.22,0.44].forEach(o=>tone(c,{t0:t+o,duration:0.13,type:'square',freqPoints:[[0,700],[0.13,350]],peak:0.26,attack:0.01,filterFreq:700,filterQ:2,filterType:'bandpass'})); } },
+  anjing:{ n:'Anjing', e:'🐕', kata:'guk, guk',
+    fact:'Anjing menggonggong: pendek dan tegas.',
+    segs:[0,0.22].map(t=>({t,pts:[[0,200],[0.1,120]]})),
+    play:(c,t)=>{ [0,0.22].forEach(o=>{ noiseBurst(c,t+o,0.09,1400,1.3,0.22); tone(c,{t0:t+o,duration:0.1,type:'square',freqPoints:[[0,200],[0.1,120]],peak:0.22,attack:0.005,filterFreq:500,filterQ:1,filterType:'lowpass'}); }); } },
+  kucing:{ n:'Kucing', e:'🐈', kata:'meong',
+    fact:'Kucing mengeong: nadanya naik, lalu turun.',
+    segs:[{t:0,pts:[[0,500],[0.15,850],[0.65,380]]}],
+    play:(c,t)=>tone(c,{t0:t,duration:0.65,type:'triangle',freqPoints:[[0,500],[0.15,850],[0.5,380]],peak:0.26,attack:0.05}) },
+  katak:{ n:'Katak', e:'🐸', kata:'krok, krok',
+    fact:'Katak berkuak: bunyinya pendek, rendah, dan berulang.',
+    segs:[0,0.42].map(t=>({t,pts:[[0,140],[0.3,130]]})),
+    play:(c,t)=>{ [0,0.42].forEach(o=>toneVib(c,{t0:t+o,duration:0.3,type:'sawtooth',startFreq:140,endFreq:130,vibRate:18,vibDepth:22,peak:0.28,attack:0.02,filterFreq:400,filterQ:1.2,filterType:'lowpass'})); } },
+  lebah:{ n:'Lebah', e:'🐝', kata:'bzzzz',
+    fact:'Dengung lebah bukan dari mulutnya, tetapi dari kepakan sayapnya yang sangat cepat.',
+    segs:[{t:0,pts:[[0,225],[1,245]]}],
+    play:(c,t)=>toneVib(c,{t0:t,duration:1.0,type:'triangle',startFreq:225,endFreq:245,vibRate:27,vibDepth:14,peak:0.24,attack:0.05,ampWobble:{rate:27,depth:0.08},filterFreq:1200,filterQ:1,filterType:'lowpass'}) },
+  burung:{ n:'Burung', e:'🐦', kata:'cit-cit-cit-cit',
+    fact:'Burung berkicau: tinggi, pendek, dan berulang.',
+    segs:[0,0.13,0.26,0.39].map(t=>({t,pts:[[0,1600],[0.07,2400]]})),
+    play:(c,t)=>{ [0,0.13,0.26,0.39].forEach(o=>tone(c,{t0:t+o,duration:0.07,type:'sine',freqPoints:[[0,1600],[0.07,2400]],peak:0.22,attack:0.005})); } },
+  kuda:{ n:'Kuda', e:'🐴', kata:'ihiiihii',
+    fact:'Kuda meringkik: suaranya mulai tinggi, lalu turun.',
+    segs:[{t:0.05,pts:[[0,280],[1,200]]}],
+    play:(c,t)=>{ noiseBurst(c,t,0.15,700,1.5,0.15); toneVib(c,{t0:t+0.05,duration:1.0,type:'sawtooth',startFreq:280,endFreq:200,vibRate:9,vibDepth:28,peak:0.26,attack:0.06,filterFreq:650,filterQ:0.9,filterType:'bandpass'}); } }
+};
+const IDS = ['sapi','kucing','anjing','bebek','ayam','kambing','katak','lebah','burung','kuda'];
+
+/* ciri turunan dari partitur: nada (rata-rata geometrik), lama, jumlah bunyi */
+IDS.forEach(id=>{
+  const a = A[id]; let ls=0, cn=0, end=0;
+  a.segs.forEach(s=>{
+    s.pts.forEach(p=>{ ls+=Math.log(p[1]); cn++; });
+    end = Math.max(end, s.t + s.pts[s.pts.length-1][0]);
+  });
+  a.hz = Math.exp(ls/cn);
+  a.dur = end;
+  a.cnt = a.segs.length;
+  a.nada = a.hz<250 ? 'rendah' : (a.hz<900 ? 'sedang' : 'tinggi');
+  a.lama = a.dur<0.6 ? 'pendek' : (a.dur<1.0 ? 'sedang' : 'panjang');
+});
+const ORDER = IDS.slice().sort((x,y)=>A[x].hz-A[y].hz);
+const nTxt = id => A[id].cnt===1 ? 'sekali bunyi' : A[id].cnt+' kali bunyi';
+const chipsHTML = id => `<span class="chip">🎵 nada ${A[id].nada}</span><span class="chip">⏱️ bunyi ${A[id].lama}</span><span class="chip">🔢 ${nTxt(id)}</span>`;
+
+/* ---------- pemutaran ---------- */
+function playIds(ids, gap){
+  const c = newBus(); if(!c) return 0;
+  gap = (gap==null) ? 0.6 : gap;
+  let t = c.currentTime + 0.03, total = 0;
+  ids.forEach((id,i)=>{ A[id].play(c, t); t += A[id].dur + gap; total += A[id].dur + (i<ids.length-1 ? gap : 0); });
+  return total;
+}
+function refTone(f){
+  const c = newBus(); if(!c) return;
+  tone(c,{t0:c.currentTime+0.02,duration:0.9,type:'sine',freqPoints:[[0,f],[0.9,f]],peak:0.32,attack:0.04});
+}
+function chime(ok){
+  const c = newBus(); if(!c) return; const t = c.currentTime+0.02;
+  if(ok){
+    tone(c,{t0:t,duration:0.18,type:'sine',freqPoints:[[0,660],[0.18,660]],peak:0.22,attack:0.01});
+    tone(c,{t0:t+0.14,duration:0.3,type:'sine',freqPoints:[[0,880],[0.3,880]],peak:0.22,attack:0.01});
+  } else {
+    tone(c,{t0:t,duration:0.28,type:'triangle',freqPoints:[[0,240],[0.28,190]],peak:0.2,attack:0.01});
+  }
+}
+
+/* =====================================================
+   GAMBAR SUARA: tinggi garis = nada, panjang garis = lama, jumlah potongan = berapa kali
+   ===================================================== */
+const PW=640, PH=300, PL=64, PR=14, PT=14, PB=46, TMAX=1.5;
+const PX = t => PL + (t/TMAX)*(PW-PL-PR);
+const PY = f => { const a=Math.log(90), b=Math.log(3200); return PH-PB-(Math.log(f)-a)/(b-a)*(PH-PB-PT); };
+
+function drawPic(svg, items, emptyText){
+  svg.setAttribute('viewBox','0 0 '+PW+' '+PH);
+  let s = `<rect x="${PL}" y="${PT}" width="${PW-PL-PR}" height="${PH-PB-PT}" rx="12" fill="#fffdf8" stroke="#f0e2c4" stroke-width="2"/>`;
+  [110,220,440,880,1760].forEach(f=>{ s += `<line x1="${PL}" x2="${PW-PR}" y1="${PY(f)}" y2="${PY(f)}" stroke="#f1e6cc" stroke-width="1.5" stroke-dasharray="4 6"/>`; });
+  [0.5,1].forEach(t=>{ s += `<line x1="${PX(t)}" x2="${PX(t)}" y1="${PT}" y2="${PH-PB}" stroke="#f1e6cc" stroke-width="1.5" stroke-dasharray="4 6"/>`; });
+  s += `<text x="${PL-8}" y="${PY(2300)+2}" text-anchor="end" font-size="22">🔔</text><text x="${PL-8}" y="${PY(2300)+19}" text-anchor="end" font-size="14">tinggi</text>`;
+  s += `<text x="${PL-8}" y="${PY(125)+2}" text-anchor="end" font-size="22">🥁</text><text x="${PL-8}" y="${PY(125)+19}" text-anchor="end" font-size="14">rendah</text>`;
+  [['0',0],['0,5',0.5],['1',1],['1,5',1.5]].forEach(p=>{ s += `<text x="${PX(p[1])}" y="${PH-PB+17}" text-anchor="middle" font-size="13">${p[0]}</text>`; });
+  s += `<text x="${(PL+PW-PR)/2}" y="${PH-8}" text-anchor="middle" font-size="14">lama bunyi (detik)</text>`;
+  items.forEach(it=>{
+    const a = A[it.id];
+    a.segs.forEach((sg,si)=>{
+      const d = sg.pts.map((p,i)=>(i?'L':'M')+PX(sg.t+p[0]).toFixed(1)+' '+PY(p[1]).toFixed(1)).join(' ');
+      s += `<path d="${d}" fill="none" stroke="${it.color}" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>`;
+      if(it.tag && si===0){
+        const x = PX(sg.t+sg.pts[0][0]), y = PY(sg.pts[0][1]);
+        s += `<circle cx="${x.toFixed(1)}" cy="${(y-20).toFixed(1)}" r="11" fill="${it.color}"/><text x="${x.toFixed(1)}" y="${(y-15).toFixed(1)}" text-anchor="middle" font-size="14" style="fill:#fff;font-family:var(--display);font-weight:700">${it.tag}</text>`;
+      }
     });
   });
+  if(emptyText) s += `<text class="empty" x="${(PL+PW-PR)/2}" y="${(PT+PH-PB)/2+6}" text-anchor="middle">${emptyText}</text>`;
+  s += `<line class="ph" x1="${PL}" x2="${PL}" y1="${PT+4}" y2="${PH-PB-4}" stroke="#3f7aa6" stroke-width="3" stroke-linecap="round" style="opacity:0"/>`;
+  svg.innerHTML = s;
+}
 
-  /* ============ AUDIO ENGINE (Web Audio API — semua suara disintesis, tanpa file eksternal) ============ */
-  let audioCtx = null;
-  function getCtx(){
-    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if(audioCtx.state === 'suspended') audioCtx.resume();
-    return audioCtx;
+let phRAF = 0;
+function runPlayhead(svg, spans){
+  cancelAnimationFrame(phRAF);
+  const line = svg.querySelector('.ph'); if(!line || REDUCED || !spans.length) return;
+  const t0 = performance.now(), last = spans[spans.length-1];
+  function step(now){
+    const el = (now-t0)/1000; let act = null;
+    spans.forEach(sp=>{ if(el>=sp.delay && el<=sp.delay+sp.dur) act = sp; });
+    if(act){ const x = PX(el-act.delay); line.setAttribute('x1',x); line.setAttribute('x2',x); line.style.opacity = 1; }
+    else line.style.opacity = 0;
+    if(el < last.delay+last.dur+0.1) phRAF = requestAnimationFrame(step); else line.style.opacity = 0;
   }
+  phRAF = requestAnimationFrame(step);
+}
+function spansFor(ids, gap){
+  let d = 0; const out = [];
+  ids.forEach(id=>{ out.push({delay:d,dur:A[id].dur}); d += A[id].dur + gap; });
+  return out;
+}
 
-  function noiseBurst(ctx, t0, duration, bpFreq, bpQ, peakGain){
-    const len = Math.max(1, Math.floor(ctx.sampleRate * duration));
-    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
-    const data = buf.getChannelData(0);
-    for(let i=0;i<data.length;i++) data[i] = Math.random()*2-1;
-    const src = ctx.createBufferSource(); src.buffer = buf;
-    const filt = ctx.createBiquadFilter(); filt.type='bandpass'; filt.frequency.value=bpFreq; filt.Q.value=bpQ;
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.0001, t0);
-    gain.gain.linearRampToValueAtTime(peakGain, t0+0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t0+duration);
-    src.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
-    src.start(t0); src.stop(t0+duration+0.02);
+function eqPlay(el, sec){
+  if(REDUCED) return;
+  el.classList.add('playing');
+  clearTimeout(el._t); el._t = setTimeout(()=>el.classList.remove('playing'), sec*1000+100);
+}
+function popEl(el){ if(REDUCED) return; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+function burst(el){
+  if(REDUCED) return;
+  const r = el.getBoundingClientRect(), cols = ['#c9784f','#5a8a7c','#dab476','#9b6b8f','#6b8f9b'];
+  for(let i=0;i<14;i++){
+    const d = document.createElement('div');
+    d.style.cssText = 'position:fixed;width:8px;height:8px;border-radius:50%;pointer-events:none;z-index:999;'
+      +'left:'+(r.left+r.width/2+(Math.random()*80-40))+'px;top:'+(r.top+r.height/2)+'px;background:'+cols[i%cols.length]
+      +';transition:transform .9s ease-out,opacity .9s ease-out;';
+    document.body.appendChild(d);
+    requestAnimationFrame(()=>{ d.style.transform='translateY('+(120+Math.random()*60)+'px) scale(.4)'; d.style.opacity='0'; });
+    setTimeout(()=>d.remove(), 1100);
   }
+}
+function setGuide(t){ $('guideText').textContent = t; }
+function setActs(el, list){
+  el.innerHTML = list.map(a=>`<button class="act ${a.main?'main':''}" data-act="${a.id}">${a.t}</button>`).join('');
+}
+const starsStr = n => '⭐'.repeat(n);
 
-  function tone(ctx, opt){
-    const osc = ctx.createOscillator();
-    osc.type = opt.type;
-    osc.frequency.setValueAtTime(opt.freqPoints[0][1], opt.t0+opt.freqPoints[0][0]);
-    for(let i=1;i<opt.freqPoints.length;i++){
-      osc.frequency.linearRampToValueAtTime(opt.freqPoints[i][1], opt.t0+opt.freqPoints[i][0]);
-    }
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.0001, opt.t0);
-    gain.gain.linearRampToValueAtTime(opt.peak, opt.t0+opt.attack);
-    gain.gain.linearRampToValueAtTime(opt.peak*0.7, opt.t0+opt.duration*0.75);
-    gain.gain.linearRampToValueAtTime(0.0001, opt.t0+opt.duration);
-    let node = osc;
-    if(opt.filterFreq){
-      const filt = ctx.createBiquadFilter();
-      filt.type = opt.filterType || 'lowpass';
-      filt.frequency.value = opt.filterFreq;
-      filt.Q.value = opt.filterQ || 1;
-      osc.connect(filt);
-      node = filt;
-    }
-    node.connect(gain); gain.connect(ctx.destination);
-    osc.start(opt.t0); osc.stop(opt.t0+opt.duration+0.03);
-  }
+/* =====================================================
+   MODE 1: KENALI
+   ===================================================== */
+const ACC = '#c9784f', C1 = '#c9784f', C2 = '#3f7aa6';
+const kFound = new Set(); let kCur = null;
 
-  function toneWithVibrato(ctx, opt){
-    const osc = ctx.createOscillator();
-    osc.type = opt.type;
-    const period = 1/opt.vibRate, stepDur = period/2;
-    const centerAt = (tt) => opt.startFreq + (opt.endFreq-opt.startFreq)*(tt/opt.duration);
-    let t = 0, toggle = true;
-    osc.frequency.setValueAtTime(centerAt(0), opt.t0);
-    while(t < opt.duration){
-      t = Math.min(t+stepDur, opt.duration);
-      const c = centerAt(t);
-      const v = toggle ? c+opt.vibDepth : c-opt.vibDepth;
-      osc.frequency.linearRampToValueAtTime(Math.max(20,v), opt.t0+t);
-      toggle = !toggle;
-    }
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.0001, opt.t0);
-    gain.gain.linearRampToValueAtTime(opt.peak, opt.t0+opt.attack);
-    if(opt.ampWobble){
-      const aperiod = 1/opt.ampWobble.rate, astep = aperiod/2;
-      let at = opt.attack, atoggle = true;
-      while(at < opt.duration-0.03){
-        at = Math.min(at+astep, opt.duration-0.03);
-        const v = atoggle ? Math.max(0.02, opt.peak-opt.ampWobble.depth) : opt.peak;
-        gain.gain.linearRampToValueAtTime(v, opt.t0+at);
-        atoggle = !atoggle;
-      }
-    } else {
-      gain.gain.linearRampToValueAtTime(opt.peak*0.75, opt.t0+opt.duration*0.75);
-    }
-    gain.gain.linearRampToValueAtTime(0.0001, opt.t0+opt.duration);
+function buildKenali(){
+  $('kGrid').innerHTML = IDS.map(id=>`<button class="animal-card" data-id="${id}"><span class="ae">${A[id].e}</span><span class="an">${A[id].n}</span></button>`).join('');
+  $('kTangga').innerHTML = ORDER.map((id,i)=>`<button class="slot" data-id="${id}" style="--h:${50+i*8}px" aria-label="tempat ke-${i+1}"><span class="se">·</span></button>`).join('');
+  drawPic($('kPic'), [], 'Ketuk hewan untuk melihat gambar suaranya');
+  kUpdate();
+}
+function kUpdate(){
+  document.querySelectorAll('#kGrid .animal-card').forEach(b=>{
+    b.classList.toggle('sel', b.dataset.id===kCur);
+    b.classList.toggle('seen', kFound.has(b.dataset.id));
+  });
+  document.querySelectorAll('#kTangga .slot').forEach(b=>{
+    const id = b.dataset.id, on = kFound.has(id);
+    b.classList.toggle('on', on);
+    b.innerHTML = on ? `<span class="se">${A[id].e}</span><span class="sn">${A[id].n}</span>` : '<span class="se">·</span>';
+  });
+  $('kCount').textContent = 'Sudah ditemukan: ' + kFound.size + ' dari ' + IDS.length;
+  const conc = $('kConc');
+  if(kFound.size===IDS.length){
+    conc.hidden = false;
+    conc.innerHTML = 'Semua hewan sudah naik tangga! Dari yang paling rendah: '+ORDER.map(i=>A[i].n).join(', ')+'. '
+      + 'Tiap hewan punya sidik suara sendiri: nada, lama, dan berapa kali bunyinya. Nada tidak selalu mengikuti besar badan: lebah kecil, tetapi dengungnya rendah.';
+  } else conc.hidden = true;
+}
+function kPilih(id, quiet){
+  kCur = id; kFound.add(id); const a = A[id];
+  $('kEmoji').textContent = a.e; popEl($('kEmoji'));
+  $('kName').textContent = a.n;
+  $('kKata').textContent = '“'+a.kata+'”';
+  $('kChips').innerHTML = chipsHTML(id);
+  $('kFact').textContent = a.fact;
+  $('kAgain').disabled = false;
+  drawPic($('kPic'), [{id:id,color:ACC}]);
+  kUpdate();
+  const n = kFound.size;
+  if(n===IDS.length) setGuide('Semua hewan sudah kamu dengar! Apa yang membuat tiap suara berbeda? Nada, lama, atau berapa kali bunyinya?');
+  else if(n>=5) setGuide('Hewan mana yang menurutmu paling tinggi nadanya? Tebak dulu, lalu ketuk untuk membuktikan.');
+  else setGuide('Lihat gambar suaranya: garisnya di atas atau di bawah? Panjang atau pendek? Ada berapa potong?');
+  if(!quiet) kPlay();
+}
+function kPlay(){
+  if(!kCur) return;
+  const d = playIds([kCur]); runPlayhead($('kPic'), [{delay:0,dur:A[kCur].dur}]);
+}
+$('kGrid').addEventListener('click', e=>{ const b=e.target.closest('.animal-card'); if(b) kPilih(b.dataset.id); });
+$('kTangga').addEventListener('click', e=>{ const b=e.target.closest('.slot.on'); if(b) kPilih(b.dataset.id); });
+$('kAgain').addEventListener('click', kPlay);
+document.querySelectorAll('.ref button').forEach(b=>b.addEventListener('click', ()=>refTone(+b.dataset.f)));
 
-    let node = osc;
-    if(opt.filterFreq){
-      const filt = ctx.createBiquadFilter();
-      filt.type = opt.filterType || 'bandpass';
-      filt.frequency.value = opt.filterFreq;
-      filt.Q.value = opt.filterQ || 1;
-      osc.connect(filt);
-      node = filt;
-    }
-    node.connect(gain); gain.connect(ctx.destination);
-    osc.start(opt.t0); osc.stop(opt.t0+opt.duration+0.03);
-  }
+/* =====================================================
+   MODE 2: TEBAK SUARA
+   ===================================================== */
+const LV = {
+  mudah:  { pool:['sapi','kucing','anjing','bebek'], emoji:true },
+  sedang: { pool:['sapi','kucing','anjing','bebek','ayam','kambing'], emoji:true },
+  sulit:  { pool:IDS, emoji:false }
+};
+const best = { mudah:0, sedang:0, sulit:0 };
+const tb = { lv:'mudah', qs:[], qi:0, wrong:0, hints:0, locked:false, done:false, total:0, stars:[], last:null, autoT:0, nextT:0, started:false };
 
-  /* ============ POLA SUARA TIAP HEWAN ============ */
-  function playSapi(ctx){
-    const t0 = ctx.currentTime;
-    toneWithVibrato(ctx, {t0, duration:1.3, type:'sawtooth', startFreq:145, endFreq:120, vibRate:4.5, vibDepth:6, peak:0.28, attack:0.1, filterFreq:700, filterQ:1, filterType:'lowpass'});
+function tbClear(){ clearTimeout(tb.autoT); clearTimeout(tb.nextT); }
+function tbPickQs(pool){
+  /* 5 soal; bila hewan kurang dari 5 (tingkat Mudah), satu hewan muncul dua kali tapi tidak berurutan */
+  const q = shuffle(pool).slice(0,5);
+  while(q.length < 5){
+    const c = shuffle(pool).filter(id=>id!==q[q.length-1]);
+    q.push(c[0]);
   }
-  function playKambing(ctx){
-    const t0 = ctx.currentTime;
-    toneWithVibrato(ctx, {t0, duration:0.65, type:'sawtooth', startFreq:310, endFreq:260, vibRate:11, vibDepth:35, peak:0.26, attack:0.05, filterFreq:900, filterQ:1.4, filterType:'bandpass'});
+  return q;
+}
+function tbStart(lv){
+  tbClear(); tb.lv = lv; tb.qs = tbPickQs(LV[lv].pool); tb.qi = 0; tb.total = 0; tb.stars = []; tb.done = false; tb.started = true;
+  document.querySelectorAll('#tbLevels .lv').forEach(b=>b.classList.toggle('active', b.dataset.lv===lv));
+  tbQuestion();
+}
+function tbBest(){
+  Object.keys(best).forEach(k=>{ $('best-'+k).textContent = best[k] ? 'terbaik ⭐ '+best[k]+'/15' : ''; });
+}
+function tbDots(){
+  $('tbDots').innerHTML = [0,1,2,3,4].map(i=>{
+    if(i<tb.stars.length && tb.stars[i]) return `<span class="dot done">${tb.stars[i]}⭐</span>`;
+    return `<span class="dot ${i===tb.qi && !tb.done ? 'cur' : ''}">${i+1}</span>`;
+  }).join('');
+}
+function tbQuestion(){
+  tbClear();
+  tb.wrong = 0; tb.hints = 0; tb.locked = false; tb.last = null;
+  const lv = LV[tb.lv];
+  $('tbChoices').innerHTML = shuffle(lv.pool).map(id=>
+    `<button class="choice" data-id="${id}">${lv.emoji?`<span class="ce">${A[id].e}</span>`:''}<span class="cn">${A[id].n}</span></button>`).join('');
+  $('tbEmoji').textContent = '❓'; $('tbName').textContent = 'Suara siapa ini?';
+  $('tbPic').setAttribute('hidden',''); $('tbChips').innerHTML = ''; $('tbEq').hidden = false;
+  $('tbPlay').disabled = false;
+  $('tbFbText').innerHTML = 'Dengarkan dulu, lalu pilih nama hewannya. Kamu boleh mendengar berkali-kali.';
+  setActs($('tbActs'), []);
+  tbDots(); tbBest();
+  setGuide('Pejamkan mata dan dengarkan. Suaranya tinggi atau rendah? Panjang atau pendek? Berapa kali bunyinya?');
+  if(auto && unlocked && $('p-tebak').classList.contains('active')) tb.autoT = setTimeout(tbPlay, 600);
+}
+function tbPlay(){
+  if(tb.done) return;
+  const tg = tb.qs[tb.qi]; const d = playIds([tg]);
+  eqPlay($('tbEq'), d);
+  if(tb.locked) runPlayhead($('tbPic'), [{delay:0,dur:A[tg].dur}]);
+  clearTimeout(tb.autoT);
+  if(auto && !tb.locked) tb.autoT = setTimeout(tbPlay, (d+3.5)*1000);
+}
+function selisih(g, t){
+  const G=A[g], T=A[t];
+  if(Math.max(G.hz,T.hz)/Math.min(G.hz,T.hz) >= 1.4) return 'Suara yang dicari nadanya lebih <b>'+(T.hz<G.hz?'RENDAH':'TINGGI')+'</b> daripada '+G.n+'.';
+  if(Math.abs(G.dur-T.dur) >= 0.3) return 'Suara yang dicari bunyinya lebih <b>'+(T.dur>G.dur?'PANJANG':'PENDEK')+'</b> daripada '+G.n+'.';
+  if(G.cnt !== T.cnt) return 'Suara yang dicari berbunyi lebih <b>'+(T.cnt>G.cnt?'BANYAK':'SEDIKIT')+'</b> kali daripada '+G.n+'.';
+  return 'Suara yang dicari mirip sekali dengan '+G.n+'. Dengarkan getarannya baik-baik.';
+}
+function tbPick(id){
+  if(tb.locked || tb.done) return;
+  const btn = document.querySelector('#tbChoices .choice[data-id="'+id+'"]');
+  if(!btn || btn.disabled) return;
+  const tg = tb.qs[tb.qi], g = A[id];
+  if(id === tg){
+    tbClear(); tb.locked = true;
+    const st = Math.max(1, 3 - tb.wrong - tb.hints);
+    tb.stars[tb.qi] = st; tb.total += st;
+    btn.classList.add('correct');
+    document.querySelectorAll('#tbChoices .choice').forEach(b=>{ b.disabled = true; });
+    if(!LV[tb.lv].emoji && !btn.querySelector('.ce')) btn.insertAdjacentHTML('afterbegin', `<span class="ce">${g.e}</span>`);
+    $('tbEmoji').textContent = g.e; popEl($('tbEmoji')); $('tbName').textContent = g.n;
+    $('tbEq').hidden = true; $('tbPic').removeAttribute('hidden');
+    drawPic($('tbPic'), [{id:id,color:ACC}]);
+    $('tbChips').innerHTML = chipsHTML(id);
+    const pos = {rendah:'ada di bagian bawah', sedang:'ada di bagian tengah', tinggi:'ada di bagian atas'}[g.nada];
+    const lng = {pendek:'pendek', sedang:'sedang', panjang:'panjang'}[g.lama];
+    $('tbFbText').innerHTML = `<span class="ok">✅ Benar!</span> Itu suara <b>${g.n}</b>: “${g.kata}”. <span class="stars">${starsStr(st)}</span><br>`
+      + `Lihat gambarnya: garisnya ${pos} (nada ${g.nada}), potongannya ${lng}, dan ada ${g.cnt} potong. ${g.fact}`;
+    chime(true); burst(btn);
+    const last = tb.qi >= 4;
+    setActs($('tbActs'), [{id:'replay',t:'🔊 Dengar lagi'},{id:'next',t:last?'Lihat hasil ▶':'Soal berikutnya ▶',main:true}]);
+    setGuide('Apa yang membuatmu yakin tadi? Nadanya, lamanya, atau berapa kali bunyinya?');
+    tbDots();
+    runPlayhead($('tbPic'), [{delay:0.05,dur:A[tg].dur}]);
+    if(auto) tb.nextT = setTimeout(()=>tbAct('next'), 6500);
+  } else {
+    tb.wrong++; tb.last = id;
+    btn.classList.add('wrong'); btn.disabled = true;
+    if(!LV[tb.lv].emoji && !btn.querySelector('.ce')) btn.insertAdjacentHTML('afterbegin', `<span class="ce">${g.e}</span>`);
+    chime(false);
+    $('tbFbText').innerHTML = `<span class="no">❌ Bukan ${g.n}.</span> ${g.n}: nada ${g.nada}, bunyi ${g.lama}, ${nTxt(id)}. ${selisih(id, tg)}`;
+    const acts = [{id:'cmp', t:'🔁 Dengar '+g.n+', lalu suara yang dicari'}];
+    if(!tb.hints) acts.push({id:'hint', t:'💡 Petunjuk (−1 ⭐)'});
+    setActs($('tbActs'), acts);
+    setGuide('Kenapa bukan itu? Apa bedanya suara '+g.n+' dengan suara yang kamu dengar?');
+    clearTimeout(tb.autoT);
   }
-  function playKatak(ctx){
-    const t0 = ctx.currentTime;
-    [0, 0.42].forEach(off => {
-      toneWithVibrato(ctx, {t0:t0+off, duration:0.3, type:'sawtooth', startFreq:140, endFreq:130, vibRate:18, vibDepth:22, peak:0.28, attack:0.02, filterFreq:400, filterQ:1.2, filterType:'lowpass'});
+}
+function tbAct(a){
+  if(a==='replay') tbPlay();
+  else if(a==='cmp' && tb.last){
+    const tg = tb.qs[tb.qi], d = playIds([tb.last, tg], 0.8); eqPlay($('tbEq'), d);
+  } else if(a==='hint' && !tb.hints && !tb.locked){
+    tb.hints = 1; const tg = tb.qs[tb.qi], T = A[tg];
+    document.querySelectorAll('#tbChoices .choice').forEach(b=>{
+      if(A[b.dataset.id].nada !== T.nada && !b.classList.contains('wrong')){ b.classList.add('dim'); b.disabled = true; }
     });
-  }
-  function playLebah(ctx){
-    const t0 = ctx.currentTime;
-    toneWithVibrato(ctx, {t0, duration:1.0, type:'triangle', startFreq:225, endFreq:245, vibRate:27, vibDepth:14, peak:0.24, attack:0.05, ampWobble:{rate:27, depth:0.08}, filterFreq:1200, filterQ:1, filterType:'lowpass'});
-  }
-  function playKuda(ctx){
-    const t0 = ctx.currentTime;
-    noiseBurst(ctx, t0, 0.15, 700, 1.5, 0.15);
-    toneWithVibrato(ctx, {t0:t0+0.05, duration:1.0, type:'sawtooth', startFreq:280, endFreq:200, vibRate:9, vibDepth:28, peak:0.26, attack:0.06, filterFreq:650, filterQ:0.9, filterType:'bandpass'});
-  }
-  function playAyam(ctx){
-    const t0 = ctx.currentTime;
-    tone(ctx, {t0, duration:1.15, type:'sawtooth',
-      freqPoints:[[0,350],[0.15,750],[0.25,600],[0.35,850],[0.55,500],[1.15,250]],
-      peak:0.26, attack:0.05, filterFreq:2500, filterQ:1, filterType:'lowpass'});
-  }
-  function playBebek(ctx){
-    const t0 = ctx.currentTime;
-    [0, 0.22, 0.44].forEach(off => {
-      tone(ctx, {t0:t0+off, duration:0.13, type:'square', freqPoints:[[0,700],[0.13,350]], peak:0.26, attack:0.01, filterFreq:700, filterQ:2, filterType:'bandpass'});
-    });
-  }
-  function playBurung(ctx){
-    const t0 = ctx.currentTime;
-    [0, 0.13, 0.26, 0.39].forEach(off => {
-      tone(ctx, {t0:t0+off, duration:0.07, type:'sine', freqPoints:[[0,1600],[0.07,2400]], peak:0.22, attack:0.005, filterFreq:0});
-    });
-  }
-  function playKucing(ctx){
-    const t0 = ctx.currentTime;
-    tone(ctx, {t0, duration:0.65, type:'triangle', freqPoints:[[0,500],[0.15,850],[0.5,380]], peak:0.26, attack:0.05, filterFreq:0});
-  }
-  function playAnjing(ctx){
-    const t0 = ctx.currentTime;
-    [0, 0.22].forEach(off => {
-      noiseBurst(ctx, t0+off, 0.09, 1400, 1.3, 0.22);
-      tone(ctx, {t0:t0+off, duration:0.1, type:'square', freqPoints:[[0,200],[0.1,120]], peak:0.22, attack:0.005, filterFreq:500, filterQ:1, filterType:'lowpass'});
-    });
-  }
+    $('tbFbText').innerHTML += `<br>💡 <b>Petunjuk:</b> nadanya ${T.nada}, bunyinya ${T.lama}, ${nTxt(tg)}.`;
+    setActs($('tbActs'), [{id:'cmp', t:'🔁 Dengar '+A[tb.last].n+', lalu suara yang dicari'}]);
+  } else if(a==='next'){
+    tbClear();
+    if(tb.qi >= 4) tbSummary(); else { tb.qi++; tbQuestion(); }
+  } else if(a==='again') tbStart(tb.lv);
+  else if(a==='up'){ const nx = tb.lv==='mudah' ? 'sedang' : 'sulit'; tbStart(nx); }
+}
+function tbSummary(){
+  tbClear(); tb.done = true; tb.locked = true;
+  best[tb.lv] = Math.max(best[tb.lv], tb.total); tbBest(); tbDots();
+  const msg = tb.total>=13 ? 'Telingamu tajam sekali!' : tb.total>=9 ? 'Bagus! Telingamu makin terlatih.' : 'Tidak apa-apa. Dengarkan lagi, telinga makin tajam kalau sering berlatih.';
+  $('tbEmoji').textContent = '🏆'; $('tbName').textContent = 'Ronde selesai';
+  $('tbPic').setAttribute('hidden',''); $('tbEq').hidden = true; $('tbChips').innerHTML = ''; $('tbPlay').disabled = true;
+  $('tbFbText').innerHTML = `<div class="summary"><div class="sum-t">${tb.total} dari 15 bintang</div><div class="big-stars">${starsStr(Math.round(tb.total/5)||1)}</div>`
+    + `<p>${msg}<br>Kamu mengenali hewan hanya dari <b>sidik suaranya</b>: nada, lama, dan berapa kali bunyinya.</p></div>`;
+  const acts = [{id:'again',t:'↻ Main lagi',main:tb.lv==='sulit'}];
+  if(tb.lv!=='sulit') acts.push({id:'up', t:'Tingkat berikutnya ▶', main:true});
+  setActs($('tbActs'), acts);
+  setGuide('Hewan mana yang paling mudah kamu kenali? Dan mana yang paling sulit? Kenapa?');
+}
+$('tbChoices').addEventListener('click', e=>{ const b=e.target.closest('.choice'); if(b) tbPick(b.dataset.id); });
+$('tbActs').addEventListener('click', e=>{ const b=e.target.closest('[data-act]'); if(b) tbAct(b.dataset.act); });
+$('tbPlay').addEventListener('click', tbPlay);
+$('tbLevels').addEventListener('click', e=>{ const b=e.target.closest('.lv'); if(b) tbStart(b.dataset.lv); });
 
-  const ANIMALS = {
-    sapi:    { label:'Sapi',        play: playSapi },
-    kambing: { label:'Kambing',     play: playKambing },
-    ayam:    { label:'Ayam Jantan', play: playAyam },
-    bebek:   { label:'Bebek',       play: playBebek },
-    anjing:  { label:'Anjing',      play: playAnjing },
-    kucing:  { label:'Kucing',      play: playKucing },
-    katak:   { label:'Katak',       play: playKatak },
-    lebah:   { label:'Lebah',       play: playLebah },
-    burung:  { label:'Burung',      play: playBurung },
-    kuda:    { label:'Kuda',        play: playKuda }
-  };
-
-  /* ============ LOGIKA PERMAINAN ============ */
-  const LEVELS = {
-    mudah:  { pool:['sapi','kucing','anjing','bebek'], target:null, order:[], score:0, streak:0, locked:false },
-    sedang: { pool:['sapi','kucing','anjing','bebek','ayam','kambing'], target:null, order:[], score:0, streak:0, locked:false },
-    sulit:  { pool:['sapi','kucing','anjing','bebek','ayam','kambing','katak','lebah','burung','kuda'], target:null, order:[], score:0, streak:0, locked:false }
-  };
-
-  function shuffle(arr){
-    const a = arr.slice();
-    for(let i=a.length-1;i>0;i--){
-      const j = Math.floor(Math.random()*(i+1));
-      [a[i],a[j]] = [a[j],a[i]];
+/* =====================================================
+   MODE 3: BANDINGKAN (tebak dulu, lalu buktikan dengan suara)
+   ===================================================== */
+const cm = { qs:[], qi:0, score:0, done:false, answered:false, nextT:0, started:false };
+const CMP = {
+  nada:  { pool:['sapi','anjing','lebah','kuda','kambing','bebek','ayam','kucing','burung'], ok:(a,b)=>Math.max(A[a].hz,A[b].hz)/Math.min(A[a].hz,A[b].hz)>=1.7 },
+  lama:  { pool:IDS, ok:(a,b)=>Math.abs(A[a].dur-A[b].dur)>=0.5 },
+  banyak:{ pool:IDS, ok:(a,b)=>Math.abs(A[a].cnt-A[b].cnt)>=2 }
+};
+const CMP_Q = {
+  rendah:  'Menurutmu, suara siapa yang nadanya lebih <b>RENDAH</b>?',
+  tinggi:  'Menurutmu, suara siapa yang nadanya lebih <b>TINGGI</b>?',
+  panjang: 'Menurutmu, suara siapa yang bunyinya lebih <b>PANJANG</b> (lebih lama)?',
+  pendek:  'Menurutmu, suara siapa yang bunyinya lebih <b>PENDEK</b> (cepat selesai)?',
+  banyak:  'Menurutmu, suara siapa yang bunyinya lebih <b>BERKALI-KALI</b>?',
+  sedikit: 'Menurutmu, suara siapa yang bunyinya lebih <b>SEDIKIT</b> kali?'
+};
+function cmBuild(){
+  const plan = [['nada',shuffle(['rendah','tinggi'])[0]],['lama',shuffle(['panjang','pendek'])[0]],['banyak',shuffle(['banyak','sedikit'])[0]],
+                ['nada',shuffle(['rendah','tinggi'])[0]],['lama',shuffle(['panjang','pendek'])[0]],['banyak',shuffle(['banyak','sedikit'])[0]]];
+  const used = new Set(), out = [];
+  plan.forEach(p=>{
+    const cfg = CMP[p[0]]; let pair = null;
+    for(let i=0;i<300 && !pair;i++){
+      const s = shuffle(cfg.pool).slice(0,2), key = s.slice().sort().join('|');
+      if(cfg.ok(s[0],s[1]) && !used.has(key)){ pair = s; used.add(key); }
     }
-    return a;
+    pair = pair || shuffle(cfg.pool).slice(0,2);
+    const a = pair[0], b = pair[1], dir = p[1]; let right;
+    if(dir==='rendah') right = A[a].hz<A[b].hz ? 'a':'b';
+    else if(dir==='tinggi') right = A[a].hz>A[b].hz ? 'a':'b';
+    else if(dir==='panjang') right = A[a].dur>A[b].dur ? 'a':'b';
+    else if(dir==='pendek') right = A[a].dur<A[b].dur ? 'a':'b';
+    else if(dir==='banyak') right = A[a].cnt>A[b].cnt ? 'a':'b';
+    else right = A[a].cnt<A[b].cnt ? 'a':'b';
+    out.push({type:p[0], dir, a, b, right});
+  });
+  return out;
+}
+function cmStart(){
+  clearTimeout(cm.nextT);
+  cm.qs = cmBuild(); cm.qi = 0; cm.score = 0; cm.done = false; cm.started = true;
+  cmQuestion();
+}
+function cmDots(){
+  $('cmDots').innerHTML = cm.qs.map((q,i)=>{
+    if(q.res===1) return '<span class="dot done">✓</span>';
+    if(q.res===0) return '<span class="dot">✗</span>';
+    return `<span class="dot ${i===cm.qi && !cm.done ? 'cur' : ''}">${i+1}</span>`;
+  }).join('');
+}
+function cmQuestion(){
+  clearTimeout(cm.nextT);
+  const q = cm.qs[cm.qi]; cm.answered = false;
+  $('cmQ').innerHTML = CMP_Q[q.dir];
+  $('cmOpts').innerHTML = [['a',q.a,'A',C1],['b',q.b,'B',C2]].map(o=>
+    `<button class="opt" data-side="${o[0]}" style="--c:${o[3]}"><span class="tag">${o[2]}</span><span class="oe">${A[o[1]].e}</span><span class="on">${A[o[1]].n}</span></button>`).join('');
+  drawPic($('cmPic'), [], 'Gambar suara muncul setelah kamu menebak');
+  $('cmLegend').innerHTML = '';
+  $('cmFbText').innerHTML = 'Tebak dulu sebelum mendengar! Pilih salah satu, lalu kita buktikan dengan suaranya.';
+  setActs($('cmActs'), []);
+  cmDots();
+  setGuide('Tebak dulu sebelum mendengar: menurutmu jawabannya yang mana? Kenapa kamu berpikir begitu?');
+}
+function fmtCnt(id){ return A[id].cnt===1 ? 'hanya sekali' : A[id].cnt+' kali'; }
+function cmPick(side){
+  if(cm.answered || cm.done) return;
+  cm.answered = true;
+  const q = cm.qs[cm.qi], ok = side===q.right;
+  q.res = ok ? 1 : 0; if(ok) cm.score++;
+  document.querySelectorAll('#cmOpts .opt').forEach(b=>{
+    b.disabled = true;
+    if(b.dataset.side===q.right) b.classList.add('right');
+    if(b.dataset.side===side) b.classList.add('picked');
+  });
+  drawPic($('cmPic'), [{id:q.a,color:C1,tag:'A'},{id:q.b,color:C2,tag:'B'}]);
+  $('cmLegend').innerHTML = `<span class="lg" style="--c:${C1}"><i>A</i>${A[q.a].e} ${A[q.a].n}</span><span class="lg" style="--c:${C2}"><i>B</i>${A[q.b].e} ${A[q.b].n}</span>`;
+  const A_ = A[q.a], B_ = A[q.b]; let why;
+  if(q.type==='nada'){
+    const lo = A_.hz<B_.hz ? q.a : q.b, hi = lo===q.a ? q.b : q.a;
+    why = `Lihat gambarnya: garis <b>${A[lo].n}</b> lebih ke bawah (nada lebih rendah), garis <b>${A[hi].n}</b> lebih ke atas (nada lebih tinggi).`;
+  } else if(q.type==='lama'){
+    const lg = A_.dur>B_.dur ? q.a : q.b, sh = lg===q.a ? q.b : q.a;
+    why = `Garis <b>${A[lg].n}</b> lebih panjang ke kanan: sekitar ${fmt(A[lg].dur)} detik. <b>${A[sh].n}</b> hanya sekitar ${fmt(A[sh].dur)} detik.`;
+  } else {
+    const mn = A_.cnt>B_.cnt ? q.a : q.b, fw = mn===q.a ? q.b : q.a;
+    why = `Hitung potongan garisnya: <b>${A[mn].n}</b> berbunyi ${fmtCnt(mn)}, sedangkan <b>${A[fw].n}</b> ${fmtCnt(fw)}.`;
   }
+  $('cmFbText').innerHTML = (ok ? '<span class="ok">✅ Tebakanmu tepat!</span> ' : '<span class="no">🤔 Belum tepat, tapi sekarang kamu tahu.</span> ') + why;
+  chime(ok); if(ok) burst(document.querySelector('#cmOpts .opt.right'));
+  const total = ok ? 0.5 : 0.3;
+  setTimeout(()=>cmPlayBoth(), total*1000);
+  const last = cm.qi >= cm.qs.length-1;
+  setActs($('cmActs'), [{id:'replay',t:'🔊 Dengar lagi'},{id:'next',t:last?'Lihat hasil ▶':'Soal berikutnya ▶',main:true}]);
+  setGuide(ok ? 'Tebakanmu cocok! Apa yang kamu perhatikan dari gambar suaranya?' : 'Ternyata beda dari dugaanmu. Apa yang kamu pelajari dari gambar suaranya?');
+  cmDots();
+  if(auto) cm.nextT = setTimeout(()=>cmAct('next'), 9000);
+}
+function cmPlayBoth(){
+  const q = cm.qs[cm.qi]; if(!q || !cm.answered) return;
+  playIds([q.a,q.b], 0.7);
+  runPlayhead($('cmPic'), spansFor([q.a,q.b], 0.7).map(s=>({delay:s.delay+0.03,dur:s.dur})));
+}
+function cmAct(a){
+  if(a==='replay') cmPlayBoth();
+  else if(a==='next'){
+    clearTimeout(cm.nextT);
+    if(cm.qi >= cm.qs.length-1) cmSummary(); else { cm.qi++; cmQuestion(); }
+  } else if(a==='again') cmStart();
+}
+function cmSummary(){
+  clearTimeout(cm.nextT); cm.done = true; cmDots(); stopSound();
+  const n = cm.score, st = n>=5 ? 3 : n>=3 ? 2 : 1;
+  $('cmQ').innerHTML = '🏆 <b>Selesai!</b>';
+  $('cmOpts').innerHTML = '';
+  drawPic($('cmPic'), [], 'Hebat sudah mencoba!'); $('cmLegend').innerHTML = '';
+  $('cmFbText').innerHTML = `<div class="summary"><div class="sum-t">Tebakanmu tepat ${n} dari ${cm.qs.length}</div><div class="big-stars">${starsStr(st)}</div>`
+    + `<p>Suara hewan bisa dibandingkan lewat tiga hal: <b>nada</b> (tinggi atau rendah), <b>lama</b> (panjang atau pendek), dan <b>berapa kali</b> bunyinya.</p></div>`;
+  setActs($('cmActs'), [{id:'again',t:'↻ Main lagi',main:true}]);
+  setGuide('Apa yang paling mengejutkan dari tebakanmu hari ini? Hewan mana yang ternyata lain dari dugaanmu?');
+}
+$('cmOpts').addEventListener('click', e=>{ const b=e.target.closest('.opt'); if(b) cmPick(b.dataset.side); });
+$('cmActs').addEventListener('click', e=>{ const b=e.target.closest('[data-act]'); if(b) cmAct(b.dataset.act); });
 
-  function newRound(level){
-    const st = LEVELS[level];
-    st.order = shuffle(st.pool);
-    st.target = st.pool[Math.floor(Math.random()*st.pool.length)];
-    st.locked = false;
-    renderGrid(level);
-    document.getElementById(level+'Feedback').textContent = '';
+/* =====================================================
+   TAB & ALAT
+   ===================================================== */
+let curTab = 'kenali';
+function showTab(name){
+  tbClear(); clearTimeout(cm.nextT); cancelAnimationFrame(phRAF); stopSound();
+  curTab = name;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', p.id==='p-'+(name)));
+  if(name==='kenali'){
+    setGuide(kFound.size ? 'Hewan mana lagi yang belum kamu dengar? Coba ketuk dan lihat gambar suaranya.' : 'Menurutmu, hewan mana yang suaranya paling rendah? Ketuk dan dengarkan, lalu lihat gambar suaranya!');
+  } else if(name==='tebak'){
+    if(!tb.started) tbStart('mudah');
+    else if(tb.done) tbSummary();
+    else if(!tb.locked){ setGuide('Pejamkan mata dan dengarkan. Suaranya tinggi atau rendah? Panjang atau pendek? Berapa kali bunyinya?'); if(auto && unlocked) tb.autoT = setTimeout(tbPlay, 600); }
+  } else {
+    if(!cm.started) cmStart();
+    else if(cm.done) cmSummary();
   }
+}
+let auto = false;
+function setPressed(btn, on){ btn.setAttribute('aria-pressed', on); btn.classList.toggle('on', on); }
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click', ()=>showTab(b.dataset.tab)));
 
-  function renderGrid(level){
-    const st = LEVELS[level];
-    const grid = document.getElementById(level+'Grid');
-    grid.innerHTML = '';
-    st.order.forEach(id => {
-      const box = document.createElement('div');
-      box.className = 'hewan-box';
-      box.textContent = ANIMALS[id].label;
-      box.addEventListener('click', () => tebak(level, id, box));
-      grid.appendChild(box);
-    });
-  }
+$('tRec').addEventListener('click', ()=>{
+  const on = !document.documentElement.classList.contains('rec');
+  document.documentElement.classList.toggle('rec', on); setPressed($('tRec'), on);
+  $('tRec').querySelector('.tl').textContent = on ? 'Keluar mode rekam' : 'Mode rekam';
+});
+const root = document.documentElement;
+const reqFS = root.requestFullscreen || root.webkitRequestFullscreen;
+if(!reqFS) $('tFull').hidden = true;
+$('tFull').addEventListener('click', ()=>{
+  try{
+    if(document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    else reqFS.call(root);
+  }catch(e){}
+});
+function fsChange(){
+  const on = !!(document.fullscreenElement || document.webkitFullscreenElement);
+  setPressed($('tFull'), on); $('tFull').querySelector('.tl').textContent = on ? 'Keluar layar penuh' : 'Layar penuh';
+}
+document.addEventListener('fullscreenchange', fsChange);
+document.addEventListener('webkitfullscreenchange', fsChange);
+$('tMute').addEventListener('click', ()=>{
+  muted = !muted; if(master) master.gain.value = muted ? 0 : 0.9;
+  setPressed($('tMute'), !muted);
+  $('tMute').querySelector('.ic').textContent = muted ? '🔇' : '🔊';
+  $('tMute').querySelector('.tl').textContent = muted ? 'Suara mati' : 'Suara hidup';
+});
+$('tAuto').addEventListener('click', ()=>{
+  auto = !auto; setPressed($('tAuto'), auto);
+  $('tAuto').querySelector('.tl').textContent = auto ? 'Otomatis: hidup' : 'Otomatis: mati';
+  if(!auto){ tbClear(); clearTimeout(cm.nextT); }
+  else if(curTab==='tebak' && !tb.locked && !tb.done) tb.autoT = setTimeout(tbPlay, 400);
+});
+document.addEventListener('pointerdown', ()=>{ unlocked = true; getCtx(); }, {once:true});
 
-  function tebak(level, id, boxEl){
-    const st = LEVELS[level];
-    if(st.locked) return;
-    if(id === st.target){
-      st.locked = true;
-      boxEl.classList.add('correct');
-      st.score++; st.streak++;
-      updateSkor(level);
-      document.getElementById(level+'Feedback').textContent = '✅ Benar! Itu suara ' + ANIMALS[id].label + '!';
-      spawnConfetti(boxEl);
-      setTimeout(() => { newRound(level); }, 1300);
-    } else {
-      st.streak = 0;
-      updateSkor(level);
-      boxEl.classList.add('wrong');
-      document.getElementById(level+'Feedback').textContent = '❌ Belum tepat, dengarkan lagi baik-baik~';
-      setTimeout(() => boxEl.classList.remove('wrong'), 500);
-    }
-  }
+/* Spasi = dengar lagi (hanya bila tidak sedang menekan tombol lain) */
+document.addEventListener('keydown', e=>{
+  if(e.code!=='Space' || document.activeElement!==document.body) return;
+  e.preventDefault();
+  if(curTab==='kenali') kPlay(); else if(curTab==='tebak') tbPlay(); else cmPlayBoth();
+});
 
-  function updateSkor(level){
-    document.getElementById(level+'SkorN').textContent = LEVELS[level].score;
-    document.getElementById(level+'BeruntunN').textContent = LEVELS[level].streak;
-  }
-
-  function mainkanTarget(level){
-    const ctx = getCtx();
-    const st = LEVELS[level];
-    ANIMALS[st.target].play(ctx);
-    const eq = document.getElementById(level+'Eq');
-    eq.classList.add('playing');
-    setTimeout(() => eq.classList.remove('playing'), 1000);
-  }
-
-  function acakUlang(level){
-    newRound(level);
-  }
-
-  function spawnConfetti(originEl){
-    const rect = originEl.getBoundingClientRect();
-    const colors = ['#c9784f','#5a8a7c','#dab476','#9b6b8f','#6b8f9b'];
-    for(let i=0;i<14;i++){
-      const el = document.createElement('div');
-      el.style.position = 'fixed';
-      el.style.left = (rect.left + rect.width/2 + (Math.random()*80-40)) + 'px';
-      el.style.top = (rect.top + rect.height/2) + 'px';
-      el.style.width = '8px';
-      el.style.height = '8px';
-      el.style.borderRadius = '50%';
-      el.style.pointerEvents = 'none';
-      el.style.zIndex = '999';
-      el.style.background = colors[Math.floor(Math.random()*colors.length)];
-      const dur = (0.7+Math.random()*0.5);
-      el.style.transition = 'transform '+dur+'s ease-out, opacity '+dur+'s ease-out';
-      document.body.appendChild(el);
-      requestAnimationFrame(() => {
-        el.style.transform = 'translateY(' + (140+Math.random()*60) + 'px) scale(0.4)';
-        el.style.opacity = '0';
-      });
-      setTimeout(() => el.remove(), 1300);
-    }
-  }
-
-  /* ============ INIT ============ */
-  Object.keys(LEVELS).forEach(level => newRound(level));
+/* ---------- mulai ---------- */
+buildKenali();
+setGuide('Menurutmu, hewan mana yang suaranya paling rendah? Ketuk dan dengarkan, lalu lihat gambar suaranya!');
+})();
 </script>
 
 <script src="../alat-nav-kembali.js" defer></script>

@@ -5,296 +5,714 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gelas Isi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#fdf6e8; --card:#ffffff; --line:#f0e2c4;
-    --ink:#3a3226; --dim:#8a7c62;
-    --accent:#2f8fbf; --accent-soft:#e5f3fa;
-    --display:'Fredoka',sans-serif; --sans:'Quicksand',sans-serif; --mono:'JetBrains Mono',monospace;
+    --ink:#3a3226; --dim:#7a6c52;
+    --accent:#2f8fbf; --accent-d:#215e80; --accent-soft:#e5f3fa;
+    --warn:#e0663a; --ok:#3f9d62; --gold:#f2b632;
+    --display:'Fredoka',sans-serif; --sans:'Quicksand',sans-serif;
   }
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;overscroll-behavior:none;}
-  .wrap{max-width:460px;margin:0 auto;padding:0 18px 60px;}
+  html{font-size:16px;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;overscroll-behavior:none;}
+  button{font-family:inherit;}
+  button:focus-visible{outline:3px solid var(--accent-d);outline-offset:2px;}
+  .app{max-width:1180px;margin:0 auto;padding:0 18px 56px;}
 
-  .hero{padding:36px 10px 18px;text-align:center;}
-  .hero h1{font-family:var(--display);font-weight:700;font-size:clamp(24px,7vw,32px);margin:0 0 8px;color:#215e80;}
-  .hero p{color:var(--dim);font-size:14px;margin:0;}
+  /* ---------- bagian atas ---------- */
+  .top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 20px;padding:22px 0 16px;}
+  .top h1{font-family:var(--display);font-weight:700;font-size:clamp(26px,5vw,36px);margin:0;color:var(--accent-d);line-height:1.1;}
+  .top p{margin:4px 0 0;color:var(--dim);font-size:.95rem;}
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;}
+  .tabs{display:flex;gap:6px;background:#f6ebd2;padding:5px;border-radius:16px;}
+  .tab{font-family:var(--display);font-weight:600;font-size:.95rem;border:none;background:transparent;color:var(--dim);padding:9px 16px;border-radius:12px;cursor:pointer;}
+  .tab[aria-selected="true"]{background:var(--accent);color:#fff;box-shadow:0 3px 0 rgba(0,0,0,.1);}
+  .toggle{font-family:var(--display);font-weight:600;font-size:.85rem;border:2px solid var(--line);background:#fff;color:var(--dim);padding:8px 12px;border-radius:12px;cursor:pointer;}
+  .toggle[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-d);}
 
-  .preset-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
-  .preset-btn{font-family:var(--display);font-weight:600;font-size:11.5px;background:var(--card);border:2px solid var(--line);
-    color:var(--dim);padding:10px 4px;border-radius:12px;cursor:pointer;text-align:center;line-height:1.3;}
-  .preset-btn .cap{display:block;font-family:var(--mono);font-size:9.5px;font-weight:400;color:#b9ad94;margin-top:2px;}
+  /* ---------- tata letak ---------- */
+  .layout{display:grid;gap:18px;grid-template-columns:1fr;}
+  @media(min-width:920px){.layout{grid-template-columns:minmax(0,1.4fr) minmax(330px,1fr);align-items:start;}}
+  .col{display:flex;flex-direction:column;gap:14px;min-width:0;}
+  .card{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:16px 18px;}
+
+  /* ---------- panggung ---------- */
+  .stage-card{padding:14px 14px 16px;}
+  .stage-top{min-height:56px;margin-bottom:6px;}
+  .preset-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .preset-btn{font-family:var(--display);font-weight:600;font-size:.9rem;background:#fff;border:2px solid var(--line);color:var(--dim);padding:8px 4px;border-radius:14px;cursor:pointer;line-height:1.25;}
+  .preset-btn span{display:block;font-weight:500;font-size:.78rem;color:#a89b80;}
   .preset-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
-  .preset-btn.active .cap{color:rgba(255,255,255,.85);}
+  .preset-btn.active span{color:rgba(255,255,255,.88);}
+  .goal{background:#fff3e6;border:2px dashed var(--warn);border-radius:16px;padding:10px 16px;}
+  .goal-big{font-family:var(--display);font-weight:700;font-size:clamp(1.15rem,2.6vw,1.6rem);color:#a8421d;line-height:1.2;}
+  .goal-sub{font-size:.85rem;color:var(--dim);}
+  #stageSvg{width:100%;height:auto;display:block;touch-action:manipulation;}
+  .controls{display:flex;flex-direction:column;gap:10px;margin-top:6px;}
+  .pour-btn{width:100%;font-family:var(--display);font-weight:700;font-size:1.15rem;padding:16px;border-radius:18px;border:none;cursor:pointer;background:var(--accent);color:#fff;box-shadow:0 6px 0 rgba(0,0,0,.12);transition:transform .08s;touch-action:none;user-select:none;-webkit-user-select:none;}
+  .pour-btn:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.12);}
+  .pour-btn.off{background:#e6ddc6;color:#a89b80;box-shadow:none;cursor:default;}
+  .pour-btn.live{background:#1f78a8;}
+  .ctl-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .btn2{flex:1;min-width:120px;font-family:var(--display);font-weight:600;font-size:.95rem;padding:11px 12px;border-radius:14px;border:2px solid var(--accent);background:#fff;color:var(--accent-d);cursor:pointer;}
+  .btn2.solid{background:var(--accent);color:#fff;}
+  .btn2:disabled{opacity:.4;cursor:default;}
+  .kbd{font-size:.8rem;color:#a89b80;margin:0;}
 
-  .stage-card{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px 16px;margin-bottom:16px;text-align:center;}
-  #stageSvg{width:220px;height:260px;}
+  /* ---------- panel kanan ---------- */
+  .readout{background:var(--accent-soft);border-color:#cfe6f2;text-align:center;}
+  .readout-num{font-family:var(--display);font-weight:700;font-size:2.4rem;color:var(--accent-d);line-height:1.1;}
+  .readout-sub{font-size:.95rem;color:var(--dim);margin-top:2px;}
+  .readout-eq{font-size:.88rem;color:var(--dim);margin-top:2px;}
+  .readout-status{font-family:var(--display);font-weight:600;font-size:1.05rem;color:var(--accent-d);margin-top:8px;min-height:1.5em;}
+  .card h2{font-family:var(--display);font-weight:600;font-size:1.05rem;margin:0 0 8px;color:var(--accent-d);}
+  .speed-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .speed-btn{font-family:var(--display);font-weight:600;font-size:.92rem;padding:9px 4px;border-radius:12px;border:2px solid var(--line);background:#fff;color:var(--dim);cursor:pointer;}
+  .speed-btn span{display:block;font-weight:500;font-size:.76rem;color:#a89b80;}
+  .speed-btn[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-d);}
+  table{width:100%;border-collapse:collapse;font-size:.88rem;}
+  th{font-weight:600;text-align:left;color:var(--dim);padding:4px 6px 6px;border-bottom:2px solid var(--line);font-size:.8rem;}
+  td{padding:7px 6px;border-bottom:1px dashed var(--line);}
+  tr.on td{background:var(--accent-soft);font-weight:700;color:var(--accent-d);}
+  .chips{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:10px;}
+  .chip{font-family:var(--display);font-weight:700;border:2px solid var(--line);background:#fff;border-radius:12px;padding:6px 0 4px;cursor:pointer;color:var(--dim);font-size:1rem;line-height:1.1;}
+  .chip span{display:block;font-size:.7rem;color:var(--gold);letter-spacing:-1px;min-height:1em;}
+  .chip.on{border-color:var(--warn);background:#fff3e6;color:#a8421d;}
+  .result{border-radius:14px;padding:12px 14px;margin:8px 0;font-size:.95rem;}
+  .result.good{background:#e6f5ea;color:#2a6b44;}
+  .result.mid{background:#fff6dc;color:#8a6410;}
+  .result.bad{background:#fdeae4;color:#a8421d;}
+  .result b{font-family:var(--display);font-size:1.1rem;display:block;}
+  .pick-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  .pick-row small{width:100%;color:var(--dim);font-weight:600;}
+  .pick{flex:1;min-width:110px;font-family:var(--display);font-weight:600;font-size:.9rem;padding:8px;border-radius:12px;border:2px solid var(--line);background:#fff;color:var(--dim);cursor:pointer;}
+  .pick[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-d);}
+  .opts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0;}
+  .opt{font-family:var(--display);font-weight:700;font-size:1.4rem;padding:10px 0;border-radius:14px;border:2px solid var(--line);background:#fff;color:var(--accent-d);cursor:pointer;}
+  .opt.chosen{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .opt:disabled{cursor:default;}
+  .tray{font-size:1.6rem;line-height:1.3;min-height:2.2rem;word-break:break-all;}
+  .balance{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center;margin-top:8px;}
+  .balance div{background:#fff;border-radius:12px;padding:6px 2px;font-size:.78rem;color:var(--dim);}
+  .balance b{display:block;font-family:var(--display);font-size:1.05rem;color:var(--accent-d);}
+  .guide{background:#fffbea;border-color:#f3dd8c;}
+  .guide .g-label{font-family:var(--display);font-weight:700;font-size:.9rem;color:#8a6410;}
+  .guide .g-text{font-size:1.02rem;font-weight:600;margin-top:2px;}
+  .note{background:var(--accent-soft);border:none;font-size:.92rem;color:var(--accent-d);}
+  footer{text-align:center;padding-top:26px;color:#a89b80;font-size:.8rem;}
 
-  .pour-btn{width:100%;font-family:var(--display);font-weight:700;font-size:16px;padding:16px;border-radius:16px;border:none;
-    cursor:pointer;background:var(--accent);color:#fff;box-shadow:0 6px 0 rgba(0,0,0,0.08);transition:transform .1s;
-    touch-action:none;user-select:none;margin-top:10px;}
-  .pour-btn:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,0.08);}
-  .pour-btn.penuh{background:#e6ddc6;color:#b9ad94;}
+  /* ---------- mode rekam ---------- */
+  body.rec .app{max-width:1360px;}
+  body.rec .top p, body.rec .note, body.rec footer, body.rec .kbd{display:none;}
+  body.rec .readout-num{font-size:3.4rem;}
+  body.rec .readout-status{font-size:1.3rem;}
+  body.rec .guide .g-text{font-size:1.4rem;}
+  body.rec .guide .g-label{font-size:1.05rem;}
+  body.rec .goal-big{font-size:clamp(1.5rem,3vw,2.2rem);}
+  body.rec .pour-btn{font-size:1.4rem;padding:20px;}
+  body.rec .toolbar{opacity:.55;}
+  body.rec .toolbar:hover{opacity:1;}
+  @media(min-width:920px){body.rec .layout{grid-template-columns:minmax(0,1.6fr) minmax(360px,1fr);}}
 
-  .readout-card{background:var(--accent-soft);border-radius:16px;padding:16px 18px;text-align:center;margin-bottom:16px;}
-  .readout-num{font-family:var(--display);font-weight:700;font-size:26px;color:#215e80;}
-  .readout-sub{font-size:13px;color:var(--dim);margin-top:2px;}
-  .readout-status{font-family:var(--display);font-size:14.5px;color:#215e80;margin-top:8px;}
-
-  .btn-row{display:flex;gap:10px;margin-bottom:16px;}
-  .btn-secondary{flex:1;font-family:var(--display);font-weight:600;font-size:13.5px;padding:11px;border-radius:12px;
-    border:2px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer;}
-
-  .compare-card{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:16px;}
-  .compare-title{font-family:var(--mono);font-size:11px;color:var(--dim);text-transform:uppercase;margin-bottom:10px;}
-  .compare-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--line);font-size:13.5px;}
-  .compare-row:last-child{border-bottom:none;}
-  .compare-row b{color:#215e80;}
-
-  .note-card{background:var(--accent-soft);border-radius:14px;padding:16px 18px;font-size:13.5px;color:#215e80;}
-  .note-card strong{color:#173f57;}
-
-  footer{text-align:center;padding-top:26px;color:#b9ad94;font-size:11.5px;font-family:var(--mono);}
+  @media(prefers-reduced-motion:reduce){.pour-btn{transition:none;}}
 </style>
 </head>
 <body>
 
-<div class="wrap">
-  <div class="hero">
-    <h1>🫗 Gelas Isi</h1>
-    <p>Tahan tombolnya untuk menuang — lihat sendiri airnya naik pelan-pelan.</p>
-  </div>
+<div class="app">
+  <header class="top">
+    <div>
+      <h1>🫗 Gelas Isi</h1>
+      <p>Tuang air, rasakan isi (volume) — lewat tinggi air, lama menuang, dan suaranya.</p>
+    </div>
+    <div class="toolbar">
+      <div class="tabs" role="tablist" aria-label="Pilih permainan">
+        <button class="tab" role="tab" data-mode="tuang" aria-selected="true">Tuang Bebas</button>
+        <button class="tab" role="tab" data-mode="tantang" aria-selected="false">Tantangan Takar</button>
+        <button class="tab" role="tab" data-mode="pindah" aria-selected="false">Tuang Pindah</button>
+      </div>
+      <button class="toggle" id="tgAuto" aria-pressed="false" title="Klik sekali untuk mulai, klik lagi untuk berhenti">🔁 Tuang otomatis</button>
+      <button class="toggle" id="tgSound" aria-pressed="true">🔊 Suara</button>
+      <button class="toggle" id="tgRec" aria-pressed="false" title="Tampilan besar & bersih untuk rekam layar">🎬 Mode rekam</button>
+      <button class="toggle" id="tgFull" aria-pressed="false">⛶ Layar penuh</button>
+    </div>
+  </header>
 
-  <div class="preset-row" id="presetRow"></div>
+  <div class="layout">
+    <!-- ================= PANGGUNG ================= -->
+    <section class="col">
+      <div class="card stage-card">
+        <div class="stage-top" id="stageTop"></div>
+        <svg id="stageSvg" viewBox="0 0 560 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Wadah air yang sedang diisi"></svg>
+        <div class="controls">
+          <button class="pour-btn" id="pourBtn">💧 Tahan untuk menuang</button>
+          <div class="ctl-row">
+            <button class="btn2" id="resetBtn">🔁 Kosongkan</button>
+          </div>
+          <p class="kbd">Bisa juga pakai tombol Spasi di keyboard.</p>
+        </div>
+      </div>
+    </section>
 
-  <div class="stage-card">
-    <svg id="stageSvg" viewBox="0 0 220 260" xmlns="http://www.w3.org/2000/svg"></svg>
-    <button class="pour-btn" id="pourBtn">💧 Tahan untuk Menuang</button>
-  </div>
+    <!-- ================= PANEL ================= -->
+    <aside class="col">
+      <div class="card readout" aria-live="off">
+        <div class="readout-num" id="roNum">0 ml</div>
+        <div class="readout-sub" id="roSub">= 0 liter</div>
+        <div class="readout-eq" id="roEq"></div>
+        <div class="readout-status" id="roStatus"></div>
+      </div>
 
-  <div class="readout-card">
-    <div class="readout-num" id="readoutNum">0 ml</div>
-    <div class="readout-sub" id="readoutSub">= 0 liter</div>
-    <div class="readout-status" id="readoutStatus"></div>
-  </div>
+      <div class="card">
+        <h2>Derasnya kran</h2>
+        <div class="speed-row" id="speedRow"></div>
+      </div>
 
-  <div class="btn-row">
-    <button class="btn-secondary" onclick="kosongkan()">🔁 Kosongkan</button>
-  </div>
+      <!-- mode: tuang bebas -->
+      <div class="card" id="pan-tuang">
+        <h2>Catatan penemuan</h2>
+        <table id="tbl"></table>
+      </div>
 
-  <div class="compare-card">
-    <div class="compare-title">Kalau wadah ini penuh...</div>
-    <div id="compareList"></div>
-  </div>
+      <!-- mode: tantangan -->
+      <div class="card" id="pan-tantang" hidden>
+        <h2>Tantangan takar</h2>
+        <div class="chips" id="chips"></div>
+        <button class="btn2 solid" id="gradeBtn" style="width:100%">✅ Nilai hasilku</button>
+        <div id="resultBox" aria-live="polite"></div>
+        <div class="ctl-row" id="nextRow" hidden>
+          <button class="btn2" id="retryBtn">↺ Ulangi soal ini</button>
+          <button class="btn2 solid" id="nextBtn">Soal berikutnya ▸</button>
+        </div>
+      </div>
 
-  <div class="note-card">
-    <strong>Kenapa harus ditahan lama?</strong> Wadah yang lebih besar butuh air lebih banyak untuk penuh — jadi butuh waktu menuang lebih lama juga. Isi (volume) itu sebenarnya bisa dirasakan dari dua hal sekaligus: seberapa tinggi air naik, dan seberapa lama kita menuang untuk membuatnya penuh.
+      <!-- mode: tuang pindah -->
+      <div class="card" id="pan-pindah" hidden>
+        <h2>Air pindah tempat</h2>
+        <div class="pick-row" id="pickSrc"><small>Air dari</small></div>
+        <div class="pick-row" id="pickTgt"><small>Dituang ke</small></div>
+        <div id="tebakBox"></div>
+        <div class="tray" id="tray" aria-label="Gelas yang sudah penuh"></div>
+        <div class="balance" id="balance"></div>
+        <div id="pindahResult" aria-live="polite"></div>
+      </div>
+
+      <div class="card guide">
+        <div class="g-label" id="gLabel"></div>
+        <div class="g-text" id="gText"></div>
+      </div>
+
+      <div class="card note">
+        <b>Kenapa harus ditahan lama?</b> Wadah yang lebih besar butuh air lebih banyak untuk penuh, jadi butuh waktu menuang lebih lama. Isi (volume) bisa dirasakan dari dua hal sekaligus: seberapa tinggi air naik, dan seberapa lama kita menuang. Dengarkan juga suaranya: makin penuh, nada air makin tinggi.
+      </div>
+    </aside>
   </div>
 
   <footer>Laboratorium Pendidikan Anak — Bank Alat JAZMI/Qiladat</footer>
 </div>
 
 <script>
+(function(){
+  'use strict';
+  /* =============== DATA =============== */
   const WADAH = [
-    { nama:'Gelas Kecil', kap:250, tick:50 },
-    { nama:'Gelas Besar', kap:350, tick:50 },
-    { nama:'Botol Minum', kap:600, tick:100 },
-    { nama:'Ember', kap:5000, tick:1000 }
+    { id:'kecil', nama:'Gelas Kecil', kap:250,  tick:50,   w:122, h:164, speed:0 },
+    { id:'besar', nama:'Gelas Besar', kap:350,  tick:50,   w:136, h:192, speed:0 },
+    { id:'botol', nama:'Botol Minum', kap:600,  tick:100,  w:100, h:250, speed:1 },
+    { id:'ember', nama:'Ember',       kap:5000, tick:1000, w:216, h:218, speed:2 }
   ];
+  const byId = Object.fromEntries(WADAH.map(w => [w.id, w]));
+  const SPEEDS = [ {n:'Pelan', r:40}, {n:'Sedang', r:120}, {n:'Deras', r:400} ];
+  const SOAL = [
+    { w:'kecil', teks:'Isi Gelas Kecil sampai separuh (½)',       target:125,   garis:true,  label:'½' },
+    { w:'besar', teks:'Isi Gelas Besar sampai 200 ml',            target:200,   garis:true,  label:'200 ml' },
+    { w:'kecil', teks:'Isi Gelas Kecil sampai tiga perempat (¾)', target:187.5, garis:true,  label:'¾' },
+    { w:'botol', teks:'Isi Botol sampai 300 ml. Kali ini tanpa garis bantu!', target:300, garis:false },
+    { w:'botol', teks:'Isi Botol sampai 450 ml',                  target:450,   garis:false },
+    { w:'ember', teks:'Isi Ember sampai 3 liter',                 target:3000,  garis:false }
+  ];
+  const SRC_DIM = { botol:{w:86,h:150}, ember:{w:132,h:150} };
+  const TGT_DIM = { kecil:{w:80,h:100}, besar:{w:90,h:122} };
+  const FLOOR = 370, CX = 280, PLANK_Y = 232, SRC_CX = 250;
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  let wadahAktif = WADAH[0];
-  let volume = 0;
-  let pouring = false;
-  let rafId = null;
-  let lastTs = 0;
-  let waveTime = 0;
-  let droplets = [];
-  const RATE_ML_PER_SEC = 45;
+  /* =============== STATE =============== */
+  let mode = 'tuang', wadah = WADAH[0];
+  let vol = 0, pouring = false, auto = false, speedIdx = 0, fillSpeed = null;
+  let tPour = 0, waveT = 0, jugA = -4, drops = [], spawnAcc = 0, streamOn = false, lastTs = 0;
+  let soalIdx = 0, hasil = null; const bintang = [];
+  let pin = null;
+  let soundOn = true, rec = false;
+  const waktu = {};
 
-  function buatPreset(){
-    const row = document.getElementById('presetRow');
-    row.innerHTML = '';
-    WADAH.forEach((w, i) => {
-      const btn = document.createElement('button');
-      btn.className = 'preset-btn' + (i===0 ? ' active' : '');
-      btn.innerHTML = `${w.nama}<span class="cap">${w.kap >= 1000 ? (w.kap/1000)+' L' : w.kap+' ml'}</span>`;
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        wadahAktif = w;
-        volume = 0;
-        renderAll();
-      });
-      row.appendChild(btn);
+  const $ = id => document.getElementById(id);
+  const svg = $('stageSvg'), pourBtn = $('pourBtn');
+  const nf = (n,d=0) => n.toLocaleString('id-ID',{minimumFractionDigits:d,maximumFractionDigits:d});
+  function fmtVol(ml){
+    if(ml >= 1000) return nf(ml/1000,2).replace(/,00$/,'').replace(/(,\d)0$/,'$1') + ' L';
+    return nf(Math.round(ml)) + ' ml';
+  }
+  const setText = (el, t) => { if(el._t !== t){ el._t = t; el.textContent = t; } };
+  const setHtml = (el, t) => { if(el._h !== t){ el._h = t; el.innerHTML = t; } };
+  function fracLabel(f){
+    const m = [[0.25,'seperempat (¼)'],[0.5,'separuh (½)'],[0.75,'tiga perempat (¾)'],[1,'penuh']];
+    for(const [v,t] of m) if(Math.abs(f-v) < 0.02) return t;
+    return '';
+  }
+
+  /* =============== SUARA =============== */
+  let ac = null, nGain = null, nFilt = null;
+  function audioInit(){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(ac || !AC) return;
+    ac = new AC();
+    const len = ac.sampleRate * 2, buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
+    for(let i=0;i<len;i++) d[i] = Math.random()*2-1;
+    const src = ac.createBufferSource(); src.buffer = buf; src.loop = true;
+    nFilt = ac.createBiquadFilter(); nFilt.type = 'bandpass'; nFilt.Q.value = 0.9; nFilt.frequency.value = 600;
+    nGain = ac.createGain(); nGain.gain.value = 0;
+    src.connect(nFilt); nFilt.connect(nGain); nGain.connect(ac.destination); src.start();
+  }
+  function audioUpdate(frac, streaming){
+    if(!ac) return;
+    const t = ac.currentTime;
+    nGain.gain.setTargetAtTime(streaming && soundOn ? 0.17 : 0, t, 0.05);
+    nFilt.frequency.setTargetAtTime(500 + 2200*Math.min(1,frac), t, 0.08);
+  }
+  function chime(freqs){
+    if(!soundOn) return;
+    audioInit(); if(!ac) return;
+    if(ac.resume) ac.resume();
+    freqs.forEach((f,i) => {
+      const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + i*0.12;
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.18,t+0.02); g.gain.exponentialRampToValueAtTime(0.001,t+0.55);
+      o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+0.6);
     });
   }
 
-  function kosongkan(){
-    volume = 0;
-    renderAll();
+  /* =============== LOGIKA MENUANG =============== */
+  function canPour(){
+    if(mode === 'tuang') return vol < wadah.kap - 0.01;
+    if(mode === 'tantang') return !hasil && vol < wadah.kap - 0.01;
+    return pin.tebak !== null && !pin.selesai;
   }
-
-  // ---- interaksi tuang (tahan untuk menuang) ----
-  const pourBtn = document.getElementById('pourBtn');
-  function startPour(e){
-    if(volume >= wadahAktif.kap) return;
-    pouring = true;
-    lastTs = performance.now();
-    loop();
-    e.preventDefault();
+  function setPour(on){
+    if(on && !canPour()) return;
+    if(on){ audioInit(); if(ac && ac.resume) ac.resume(); if(mode==='tuang' && vol<=0.001) fillSpeed = speedIdx; }
+    pouring = on;
   }
-  function stopPour(){
-    pouring = false;
-    cancelAnimationFrame(rafId);
-  }
-  pourBtn.addEventListener('mousedown', startPour);
-  pourBtn.addEventListener('mouseup', stopPour);
-  pourBtn.addEventListener('mouseleave', stopPour);
-  pourBtn.addEventListener('touchstart', startPour, {passive:false});
-  pourBtn.addEventListener('touchend', stopPour);
-  pourBtn.addEventListener('touchcancel', stopPour);
+  const pourDown = () => { if(auto) setPour(!pouring); else setPour(true); };
+  const pourUp = () => { if(!auto) setPour(false); };
 
-  function loop(ts){
-    if(!ts) ts = performance.now();
-    const dt = (ts - lastTs)/1000;
-    lastTs = ts;
-
-    if(pouring && volume < wadahAktif.kap){
-      volume = Math.min(wadahAktif.kap, volume + RATE_ML_PER_SEC * dt);
-      if(Math.random() < 0.5) droplets.push({y: 40, vy: 3+Math.random()*1.5, x: 110+(Math.random()*8-4)});
+  function geo(){
+    if(mode === 'pindah'){
+      const sd = SRC_DIM[pin.src.id], td = TGT_DIM[pin.tgt.id];
+      const tapX = SRC_CX + sd.w/2 + 16;
+      return { tx:tapX, y0:PLANK_Y-17, surf:FLOOR - td.h*(pin.tgtVol/pin.tgt.kap) };
     }
-    droplets.forEach(d => d.y += d.vy);
-    const waterY = waterSurfaceY();
-    droplets = droplets.filter(d => d.y < waterY + 5);
-
-    waveTime += dt;
-    renderStage();
-    renderReadout();
-
-    if(volume >= wadahAktif.kap){
-      pouring = false;
-      cancelAnimationFrame(rafId);
-      return;
-    }
-    if(pouring) rafId = requestAnimationFrame(loop);
+    const top = FLOOR - wadah.h;
+    return { tx:CX, y0:top-76+3, surf:FLOOR - wadah.h*Math.min(1,vol/wadah.kap), top };
   }
 
-  // ---- geometri wadah ----
-  const CUP_TOP_Y = 40, CUP_BOTTOM_Y = 240, CUP_LEFT = 55, CUP_RIGHT = 165, CUP_H = CUP_BOTTOM_Y - CUP_TOP_Y;
+  function onFull(){
+    if(mode === 'tuang'){
+      if(fillSpeed === speedIdx) waktu[wadah.id+'|'+speedIdx] = tPour;
+      renderTable();
+    }
+    chime([523,659,784]);
+    if(navigator.vibrate) navigator.vibrate(40);
+  }
 
-  function waterSurfaceY(){
-    const frac = wadahAktif.kap > 0 ? volume / wadahAktif.kap : 0;
-    return CUP_BOTTOM_Y - CUP_H * frac;
+  function update(dt){
+    waveT += dt;
+    let streaming = false, frac = 0;
+    if(mode === 'pindah'){
+      if(pin.hold > 0){
+        pin.hold -= dt;
+        if(pin.hold <= 0) pin.tgtVol = 0;
+      } else if(pouring && !pin.selesai && pin.tebak !== null){
+        const amt = Math.min(SPEEDS[speedIdx].r*dt, pin.srcVol, pin.tgt.kap - pin.tgtVol);
+        pin.srcVol -= amt; pin.tgtVol += amt; streaming = amt > 0;
+        if(pin.tgtVol >= pin.tgt.kap - 0.001){
+          pin.tgtVol = pin.tgt.kap; pin.gelas++; pin.hold = 0.9; streaming = false; chime([659,880]);
+        }
+        if(pin.srcVol <= 0.001){
+          pin.srcVol = 0; pouring = false; pin.selesai = true; streaming = false; selesaiPindah();
+        }
+      }
+      frac = pin.tgtVol / pin.tgt.kap;
+    } else {
+      if(pouring && !canPour()) pouring = false;
+      if(pouring){
+        vol = Math.min(wadah.kap, vol + SPEEDS[speedIdx].r*dt); tPour += dt; streaming = true;
+        if(vol >= wadah.kap - 0.001){ vol = wadah.kap; pouring = false; streaming = false; onFull(); renderTantang(); }
+      }
+      frac = vol / wadah.kap;
+    }
+    streamOn = streaming;
+
+    const g = geo();
+    if(streaming && !reduce){
+      spawnAcc += dt * (18 + SPEEDS[speedIdx].r/12);
+      while(spawnAcc > 1){
+        spawnAcc--;
+        drops.push({ x:g.tx + (Math.random()*10-5), y:g.surf, vx:(Math.random()*2-1)*60, vy:-(50+Math.random()*90), life:0.5, r:1.8+Math.random()*2 });
+      }
+    }
+    drops.forEach(p => { p.vy += 520*dt; p.x += p.vx*dt; p.y += p.vy*dt; p.life -= dt; });
+    drops = drops.filter(p => p.life > 0 && !(p.vy > 0 && p.y > g.surf + 1));
+
+    const tgtA = (mode !== 'pindah' && pouring) ? -34 : -4;
+    jugA += (tgtA - jugA) * Math.min(1, dt * (reduce ? 60 : 9));
+    audioUpdate(frac, streaming);
+  }
+
+  /* =============== GAMBAR =============== */
+  function shapePath(x0,x1,top,bot,r){
+    return `M${x0} ${top}L${x0} ${bot-r}Q${x0} ${bot} ${x0+r} ${bot}L${x1-r} ${bot}Q${x1} ${bot} ${x1} ${bot-r}L${x1} ${top}`;
+  }
+  function cup(id, cx, bot, w, h, v, kap, step, o){
+    o = o || {};
+    const x0 = cx-w/2, x1 = cx+w/2, top = bot-h, frac = Math.max(0,Math.min(1,v/kap)), sy = bot-h*frac;
+    const sp = shapePath(x0,x1,top,bot,10);
+    let s = `<clipPath id="c${id}"><path d="${sp}Z"/></clipPath>`;
+    s += `<path d="${sp}Z" fill="rgba(255,255,255,.6)"/>`;
+    if(v > 0.01){
+      const amp = (o.amp || 1.2) * (reduce ? 0.3 : 1);
+      let wp = `M${x0-2} ${sy.toFixed(1)}`;
+      for(let x=x0; x<=x1+4; x+=5) wp += `L${x} ${(sy + Math.sin(x*0.09 + waveT*3.2)*amp).toFixed(1)}`;
+      wp += `L${x1+2} ${bot+2}L${x0-2} ${bot+2}Z`;
+      s += `<g clip-path="url(#c${id})"><path d="${wp}" fill="url(#wg)"/></g>`;
+    }
+    // garis takar
+    const n = Math.round(kap/step);
+    for(let i=1;i<n;i++){
+      const val = i*step, y = bot - (val/kap)*h;
+      s += `<line x1="${x0}" y1="${y.toFixed(1)}" x2="${x0+11}" y2="${y.toFixed(1)}" stroke="#7a6c52" stroke-width="2"/>`;
+      s += `<text x="${x0-7}" y="${(y+4.5).toFixed(1)}" text-anchor="end" font-size="13" font-weight="700" fill="#7a6c52" font-family="Quicksand,sans-serif">${val>=1000 ? (val/1000)+' L' : val}</text>`;
+    }
+    s += `<text x="${x0-7}" y="${(top+4.5).toFixed(1)}" text-anchor="end" font-size="13" font-weight="700" fill="#215e80" font-family="Quicksand,sans-serif">${kap>=1000 ? (kap/1000)+' L' : kap}</text>`;
+    s += `<line x1="${x0}" y1="${top}" x2="${x0+11}" y2="${top}" stroke="#215e80" stroke-width="2.5"/>`;
+    if(o.target !== undefined && (o.showTarget)){
+      const ty = bot - (o.target/kap)*h;
+      s += `<line x1="${x0-6}" y1="${ty.toFixed(1)}" x2="${x1+10}" y2="${ty.toFixed(1)}" stroke="#e0663a" stroke-width="3" stroke-dasharray="7 5"/>`;
+      if(o.targetLabel) s += `<text x="${x1+14}" y="${(ty+5).toFixed(1)}" font-size="15" font-weight="700" fill="#e0663a" font-family="Fredoka,sans-serif">${o.targetLabel}</text>`;
+    }
+    s += `<path d="${sp}" fill="none" stroke="${o.edge || '#7a6c52'}" stroke-width="${o.edge ? 4.5 : 3.5}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    return s;
+  }
+  function label(x,y,t,size){
+    return `<text x="${x}" y="${y}" text-anchor="middle" font-size="${size||15}" font-weight="700" fill="#6b5d44" font-family="Fredoka,sans-serif">${t}</text>`;
+  }
+  function dropsSvg(){
+    return drops.map(p => `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.r.toFixed(1)}" fill="#7fd0f2" opacity="${Math.min(1,p.life*2.5).toFixed(2)}"/>`).join('');
+  }
+  function streamSvg(x, y0, y1){
+    if(!streamOn || y1 <= y0) return '';
+    const sw = 4 + SPEEDS[speedIdx].r/60;
+    return `<rect x="${(x-sw/2).toFixed(1)}" y="${y0}" width="${sw.toFixed(1)}" height="${(y1-y0).toFixed(1)}" rx="${(sw/2).toFixed(1)}" fill="#6fc3ea" opacity=".88"/>`;
+  }
+
+  function sceneSingle(){
+    const g = geo(), d = wadah;
+    const s0 = SOAL[soalIdx];
+    const showT = mode === 'tantang' && (s0.garis || hasil);
+    let s = cup('A', CX, FLOOR, d.w, d.h, vol, d.kap, d.tick, {
+      amp: pouring ? 3 : 1.2,
+      target: mode==='tantang' ? s0.target : undefined,
+      showTarget: showT,
+      targetLabel: mode==='tantang' ? (s0.label || fmtVol(s0.target)) : '',
+      edge: vol >= d.kap-0.01 && mode==='tuang' ? '#3f9d62' : null
+    });
+    s += label(CX, FLOOR+24, `${d.nama} · ${fmtVol(d.kap)}`, 16);
+    s += dropsSvg();
+    s += streamSvg(g.tx, g.y0, g.surf);
+    const ly = g.top - 76;
+    s += `<g transform="translate(${CX},${ly}) rotate(${jugA.toFixed(1)})">
+      <path d="M-5 -4 L58 0 L52 62 Q50 68 44 68 L14 68 Q8 68 6 62 Z" fill="#e8c98e" stroke="#7a6c52" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M57 16 q26 4 6 34" fill="none" stroke="#7a6c52" stroke-width="5" stroke-linecap="round"/>
+      <rect x="14" y="28" width="30" height="10" rx="5" fill="#fff" opacity=".45"/>
+    </g>`;
+    return s;
+  }
+
+  function scenePindah(){
+    const sd = SRC_DIM[pin.src.id], td = TGT_DIM[pin.tgt.id];
+    const srcR = SRC_CX + sd.w/2, srcL = SRC_CX - sd.w/2, tapX = srcR + 16;
+    const plankL = srcL - 26, plankR = srcR + 8;
+    let s = '';
+    s += `<rect x="${plankL+8}" y="${PLANK_Y+12}" width="10" height="${FLOOR-PLANK_Y-12}" fill="#c9a56b"/>`;
+    s += `<rect x="${SRC_CX-6}" y="${PLANK_Y+12}" width="10" height="${FLOOR-PLANK_Y-12}" fill="#c9a56b"/>`;
+    s += `<rect x="${plankL}" y="${PLANK_Y}" width="${plankR-plankL}" height="12" rx="3" fill="#d9b67c" stroke="#b8935a" stroke-width="2"/>`;
+    s += cup('S', SRC_CX, PLANK_Y, sd.w, sd.h, pin.srcVol, pin.src.kap, pin.src.tick, {amp:1.2});
+    s += label(SRC_CX, PLANK_Y - sd.h - 12, `${pin.src.nama} · ${fmtVol(pin.src.kap)}`, 15);
+    // kran
+    s += `<rect x="${srcR-2}" y="${PLANK_Y-27}" width="24" height="10" rx="3" fill="#7a6c52"/>`;
+    s += `<rect x="${tapX-4}" y="${PLANK_Y-20}" width="8" height="6" rx="2" fill="#7a6c52"/>`;
+    const flash = pin.hold > 0;
+    s += cup('T', tapX, FLOOR, td.w, td.h, pin.tgtVol, pin.tgt.kap, pin.tgt.tick, { amp: streamOn ? 2.6 : 1.2, edge: flash ? '#3f9d62' : null });
+    s += label(tapX, FLOOR+24, `${pin.tgt.nama} · ${fmtVol(pin.tgt.kap)}`, 15);
+    const g = geo();
+    s += dropsSvg();
+    s += streamSvg(g.tx, g.y0, g.surf);
+    if(flash) s += `<text x="${tapX}" y="${FLOOR-td.h-14}" text-anchor="middle" font-size="22" font-weight="700" fill="#3f9d62" font-family="Fredoka,sans-serif">Penuh! Gelas ke-${pin.gelas}</text>`;
+    return s;
   }
 
   function renderStage(){
-    const svg = document.getElementById('stageSvg');
-    const frac = wadahAktif.kap > 0 ? volume / wadahAktif.kap : 0;
-    const surfaceY = waterSurfaceY();
-
-    // garis takar
-    let ticks = '';
-    const jumlahTick = Math.round(wadahAktif.kap / wadahAktif.tick);
-    for(let i=1;i<jumlahTick;i++){
-      const val = i * wadahAktif.tick;
-      const y = CUP_BOTTOM_Y - (val/wadahAktif.kap)*CUP_H;
-      ticks += `<line x1="${CUP_LEFT-4}" y1="${y}" x2="${CUP_LEFT+4}" y2="${y}" stroke="#8a7c62" stroke-width="1.5"/>`;
-    }
-
-    // gelombang air
-    const amp = pouring ? 3 : 1.2;
-    let wavePath = `M ${CUP_LEFT} ${surfaceY}`;
-    for(let x=CUP_LEFT; x<=CUP_RIGHT; x+=8){
-      const y = surfaceY + Math.sin((x*0.15) + waveTime*4) * amp;
-      wavePath += ` L ${x} ${y}`;
-    }
-    wavePath += ` L ${CUP_RIGHT} ${CUP_BOTTOM_Y} L ${CUP_LEFT} ${CUP_BOTTOM_Y} Z`;
-
-    let dropletsHtml = '';
-    droplets.forEach(d => {
-      dropletsHtml += `<ellipse cx="${d.x.toFixed(1)}" cy="${d.y.toFixed(1)}" rx="2.5" ry="4" fill="#5fb3e0"/>`;
-    });
-
-    const streamHtml = pouring ? `<rect x="106" y="18" width="8" height="24" fill="#5fb3e0" opacity="0.8"/>` : '';
-    const jugHtml = `
-      <g transform="translate(110,10)">
-        <path d="M -14 0 L 14 0 L 10 20 L -10 20 Z" fill="#c9b48a" stroke="#8a7c62" stroke-width="1.5"/>
-        <rect x="-4" y="-6" width="8" height="8" fill="#c9b48a" stroke="#8a7c62" stroke-width="1.5"/>
-      </g>`;
-
-    svg.innerHTML = `
-      <clipPath id="cupClip"><rect x="${CUP_LEFT}" y="${CUP_TOP_Y}" width="${CUP_RIGHT-CUP_LEFT}" height="${CUP_H}"/></clipPath>
-      ${jugHtml}
-      ${streamHtml}
-      ${dropletsHtml}
-      <g clip-path="url(#cupClip)">
-        <path d="${wavePath}" fill="url(#waterGrad)"/>
-      </g>
-      <defs>
-        <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#6fc3ea"/>
-          <stop offset="100%" stop-color="#2f8fbf"/>
-        </linearGradient>
-      </defs>
-      <path d="M ${CUP_LEFT} ${CUP_TOP_Y} L ${CUP_LEFT} ${CUP_BOTTOM_Y} L ${CUP_RIGHT} ${CUP_BOTTOM_Y} L ${CUP_RIGHT} ${CUP_TOP_Y}"
-        fill="none" stroke="#8a7c62" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-      ${ticks}
-    `;
+    let s = `<defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fd0f2"/><stop offset="1" stop-color="#2f8fbf"/></linearGradient></defs>`;
+    s += `<rect x="0" y="${FLOOR}" width="560" height="30" fill="#ecd8ae"/><rect x="0" y="${FLOOR}" width="560" height="4" fill="#d9bf8a"/>`;
+    s += mode === 'pindah' ? scenePindah() : sceneSingle();
+    svg.innerHTML = s;
+    const vy = mode === 'pindah' ? 30 : Math.max(0, FLOOR - wadah.h - 126);
+    const vb = `0 ${vy} 560 ${400 - vy}`;
+    if(svg._vb !== vb){ svg._vb = vb; svg.setAttribute('viewBox', vb); }
   }
 
-  function formatMl(ml){
-    if(ml >= 1000) return (ml/1000).toFixed(2).replace(/\.00$/,'') + ' L';
-    return Math.round(ml) + ' ml';
-  }
-
+  /* =============== PANEL & TEKS =============== */
   function renderReadout(){
-    document.getElementById('readoutNum').textContent = formatMl(volume);
-    document.getElementById('readoutSub').textContent = `= ${(volume/1000).toFixed(3)} liter`;
-    const persen = wadahAktif.kap > 0 ? Math.round((volume/wadahAktif.kap)*100) : 0;
-    const statusEl = document.getElementById('readoutStatus');
-    if(volume >= wadahAktif.kap){
-      statusEl.textContent = `🎉 ${wadahAktif.nama} sudah PENUH!`;
-      pourBtn.classList.add('penuh');
-      pourBtn.textContent = '✅ Sudah Penuh';
+    if(mode === 'pindah'){
+      const tg = pin.hold > 0 ? 0 : pin.tgtVol, nampan = pin.gelas * pin.tgt.kap;
+      setText($('roNum'), `Di botol: ${fmtVol(pin.srcVol)}`.replace('botol', pin.src.id==='ember' ? 'ember' : 'botol'));
+      setText($('roSub'), `Di gelas: ${fmtVol(tg)}`);
+      setText($('roEq'), `${pin.gelas} gelas penuh sudah dipindah`);
+      setText($('roStatus'), `Jumlah air semuanya tetap ${fmtVol(pin.src.kap)}`);
+      setHtml($('balance'),
+        `<div><b>${fmtVol(pin.srcVol)}</b>sisa di sumber</div><div><b>${fmtVol(tg)}</b>di gelas</div><div><b>${fmtVol(nampan)}</b>di nampan</div>`);
+      return;
+    }
+    const frac = vol / wadah.kap, pct = Math.round(frac*100);
+    if(mode === 'tantang' && !hasil){
+      setText($('roNum'), '… ml');
+      setText($('roSub'), 'Baca garis takarnya sendiri');
+      setText($('roEq'), '');
+      setText($('roStatus'), 'Hasil akan terlihat setelah dinilai');
+      return;
+    }
+    setText($('roNum'), fmtVol(vol));
+    setText($('roSub'), `= ${nf(vol/1000,3)} liter`);
+    setText($('roEq'), `≈ ${nf(vol/15,0)} sendok makan · ≈ ${nf(vol/250,1)} gelas (250 ml)`);
+    const fl = mode==='tuang' ? fracLabel(frac) : '';
+    setText($('roStatus'), vol >= wadah.kap-0.01 ? `🎉 ${wadah.nama} sudah penuh!` : `Terisi ${pct}% dari ${wadah.nama}${fl ? ' — pas ' + fl : ''}`);
+  }
+
+  function updateBtn(){
+    let t, off = false;
+    const can = canPour();
+    if(mode === 'pindah' && pin.tebak === null){ t = '🤔 Tebak dulu di panel samping'; off = true; }
+    else if(mode === 'pindah' && pin.selesai){ t = '✅ Selesai — tekan Ulangi'; off = true; }
+    else if(mode === 'tantang' && hasil){ t = 'Sudah dinilai — Ulangi atau lanjut'; off = true; }
+    else if(!can){ t = '✅ Sudah penuh — kosongkan dulu'; off = true; }
+    else if(auto) t = pouring ? '⏸ Berhenti menuang' : '▶ Mulai menuang';
+    else t = pouring ? '💧 Menuang… lepas untuk berhenti' : '💧 Tahan untuk menuang';
+    setText(pourBtn, t);
+    pourBtn.classList.toggle('off', off);
+    pourBtn.classList.toggle('live', pouring && !off);
+    setText($('resetBtn'), mode==='pindah' ? '🔁 Ulangi dari awal' : mode==='tantang' ? '↺ Kosongkan & coba lagi' : '🔁 Kosongkan');
+    const gb = $('gradeBtn'); gb.disabled = !(mode==='tantang' && !hasil && vol > 0.5);
+  }
+
+  function guide(){
+    let L, T;
+    if(mode === 'tuang'){
+      if(pouring){ L='Perhatikan'; T='Airnya naik terus. Yang bertambah itu tinggi air, atau banyaknya air? Dengar juga suaranya: makin tinggi atau makin rendah?'; }
+      else if(vol >= wadah.kap-0.01){ L='Bandingkan'; T=`${wadah.nama} penuh dalam ${nf(tPour,1)} detik. Coba wadah lain dengan kran yang sama. Mana yang paling lama, dan kenapa?`; }
+      else if(vol <= 0.001){ L='Tebak dulu'; T=`Menurutmu, berapa detik sampai ${wadah.nama} penuh dengan kran ${SPEEDS[speedIdx].n.toLowerCase()}?`; }
+      else { L='Kira-kira'; T=`Sekarang terisi ${Math.round(vol/wadah.kap*100)}%. Kira-kira berapa ml lagi sampai penuh?`; }
+    } else if(mode === 'tantang'){
+      if(hasil){ L='Renungkan'; T = hasil.st===3 ? 'Tepat sekali! Ceritakan: bagaimana caramu menghitung?' : 'Kenapa bisa meleset? Berhentinya terlambat, atau salah membaca garis?'; }
+      else if(pouring){ L='Awas!'; T='Lepas sebelum melewati garis. Air yang sudah tertuang tidak bisa diambil lagi.'; }
+      else if(vol > 0.5){ L='Cek dulu'; T='Sudah pas? Kalau yakin, tekan Nilai hasilku.'; }
+      else { L='Hitung dulu'; T='Satu ruas garis takar bernilai berapa ml? Hitung dulu, baru tuang.'; }
     } else {
-      statusEl.textContent = `Terisi ${persen}% dari ${wadahAktif.nama}`;
-      pourBtn.classList.remove('penuh');
-      pourBtn.textContent = '💧 Tahan untuk Menuang';
+      if(pin.tebak === null){ L='Tebak dulu'; T='Air akan dituang ke gelas sampai habis. Berapa gelas yang bisa penuh?'; }
+      else if(pin.selesai){ L='Kesimpulan'; T='Air tidak hilang sedikit pun. Ia hanya pindah tempat, jumlahnya tetap sama.'; }
+      else { L='Perhatikan'; T='Air di sumber berkurang, air di gelas bertambah. Apakah airnya hilang, atau hanya pindah?'; }
+    }
+    setText($('gLabel'), L); setText($('gText'), T);
+  }
+
+  function renderTable(){
+    const rows = WADAH.map(w => {
+      const t = waktu[w.id+'|'+speedIdx];
+      return `<tr class="${w===wadah?'on':''}"><td>${w.nama}</td><td>${fmtVol(w.kap)}</td><td>${nf(w.kap/WADAH[0].kap,1)}×</td><td>${t ? nf(t,1)+' dtk' : '—'}</td></tr>`;
+    }).join('');
+    $('tbl').innerHTML = `<thead><tr><th>Wadah</th><th>Isi</th><th>Dibanding Gelas Kecil</th><th>Waktu penuh<br>(kran ${SPEEDS[speedIdx].n})</th></tr></thead><tbody>${rows}</tbody>`;
+  }
+
+  function renderSpeed(){
+    $('speedRow').innerHTML = SPEEDS.map((s,i) =>
+      `<button class="speed-btn" data-s="${i}" aria-pressed="${i===speedIdx}">${s.n}<span>${s.r} ml/detik</span></button>`).join('');
+  }
+  function setSpeed(i){
+    if(mode==='tuang' && vol > 0.001 && i !== fillSpeed) fillSpeed = -1;
+    speedIdx = i; renderSpeed(); renderTable();
+  }
+
+  function renderTop(){
+    const el = $('stageTop');
+    if(mode === 'tuang'){
+      el.innerHTML = `<div class="preset-row">` + WADAH.map(w =>
+        `<button class="preset-btn ${w===wadah?'active':''}" data-w="${w.id}">${w.nama}<span>${fmtVol(w.kap)}</span></button>`).join('') + `</div>`;
+    } else if(mode === 'tantang'){
+      const s = SOAL[soalIdx];
+      el.innerHTML = `<div class="goal"><div class="goal-big">${s.teks}</div><div class="goal-sub">${wadah.nama} · kapasitas ${fmtVol(wadah.kap)}${s.garis ? ' · ikuti garis putus-putus' : ' · tidak ada garis target'}</div></div>`;
+    } else {
+      el.innerHTML = `<div class="goal"><div class="goal-big">Air dari ${pin.src.id==='ember'?'ember':'botol'} dituang ke gelas, satu per satu</div><div class="goal-sub">Berapa gelas yang bisa penuh? Tebak dulu, lalu buktikan.</div></div>`;
     }
   }
 
-  function renderCompare(){
-    const list = document.getElementById('compareList');
-    list.innerHTML = '';
-    WADAH.forEach(w => {
-      if(w === wadahAktif) return;
-      const rasio = wadahAktif.kap / w.kap;
-      const row = document.createElement('div');
-      row.className = 'compare-row';
-      row.innerHTML = `<span>${wadahAktif.nama} = </span><b>${rasio >= 1 ? rasio.toFixed(1) : rasio.toFixed(2)}× ${w.nama}</b>`;
-      list.appendChild(row);
-    });
+  /* ----- tantangan ----- */
+  function loadSoal(i){
+    soalIdx = i; const s = SOAL[i];
+    wadah = byId[s.w]; vol = 0; hasil = null; tPour = 0; pouring = false;
+    speedIdx = wadah.speed; renderSpeed(); renderTop(); renderTantang();
+  }
+  function nilai(){
+    if(hasil || vol <= 0.5) return;
+    const s = SOAL[soalIdx], err = vol - s.target, pct = Math.abs(err)/wadah.kap*100;
+    const st = pct <= 4 ? 3 : pct <= 9 ? 2 : pct <= 18 ? 1 : 0;
+    bintang[soalIdx] = Math.max(bintang[soalIdx] || 0, st);
+    hasil = { err, pct, st }; pouring = false;
+    chime(st >= 2 ? [523,659,784] : st === 1 ? [523,659] : [330]);
+    renderTantang();
+  }
+  function renderTantang(){
+    $('chips').innerHTML = SOAL.map((s,i) => {
+      const b = bintang[i];
+      return `<button class="chip ${i===soalIdx?'on':''}" data-i="${i}" aria-label="Soal ${i+1}">${i+1}<span>${b===undefined ? '·' : '★'.repeat(b)+'☆'.repeat(3-b)}</span></button>`;
+    }).join('');
+    const box = $('resultBox'), nxt = $('nextRow');
+    if(!hasil){ box.innerHTML = ''; nxt.hidden = true; return; }
+    const cls = hasil.st >= 3 ? 'good' : hasil.st >= 1 ? 'mid' : 'bad';
+    const judul = ['Belum pas, coba lagi!','Lumayan dekat!','Bagus sekali!','Tepat sekali!'][hasil.st];
+    const sel = Math.round(Math.abs(hasil.err));
+    const arah = hasil.err > 0 ? `Kelebihan ${fmtVol(sel)}. Tuangnya terlalu lama.` : `Kurang ${fmtVol(sel)}. Tuangnya belum cukup.`;
+    box.innerHTML = `<div class="result ${cls}"><b>${judul} ${'★'.repeat(hasil.st)}${'☆'.repeat(3-hasil.st)}</b>Kamu menuang ${fmtVol(vol)}, targetnya ${fmtVol(SOAL[soalIdx].target)}. ${sel<=1 ? 'Selisih nyaris nol.' : arah}</div>`;
+    nxt.hidden = false;
+    const last = soalIdx === SOAL.length-1;
+    $('nextBtn').textContent = last ? '🏁 Lihat total bintang' : 'Soal berikutnya ▸';
   }
 
-  function renderAll(){
+  /* ----- tuang pindah ----- */
+  function initPindah(srcId, tgtId){
+    const src = byId[srcId || (pin ? pin.src.id : 'botol')], tgt = byId[tgtId || (pin ? pin.tgt.id : 'kecil')];
+    const f = Math.floor(src.kap / tgt.kap);
+    let ops = [f-2, f-1, f, f+1].filter(n => n >= 1);
+    for(let k = f+2; ops.length < 4; k++) ops.push(k);
+    pin = { src, tgt, srcVol:src.kap, tgtVol:0, gelas:0, hold:0, tebak:null, selesai:false, f, ops };
+    pouring = false; drops = [];
+    speedIdx = src.speed; renderSpeed();
+    renderPindahPanel(); renderTop();
+  }
+  function renderPindahPanel(){
+    const pk = (id, items, cur) => items.map(w =>
+      `<button class="pick" data-${id}="${w.id}" aria-pressed="${w.id===cur}">${w.nama}<br><small style="width:auto;font-weight:500">${fmtVol(w.kap)}</small></button>`).join('');
+    $('pickSrc').innerHTML = `<small>Air dari</small>` + pk('src', [byId.botol, byId.ember], pin.src.id);
+    $('pickTgt').innerHTML = `<small>Dituang ke</small>` + pk('tgt', [byId.kecil, byId.besar], pin.tgt.id);
+    $('tebakBox').innerHTML = `<div style="font-weight:700;color:var(--dim)">Tebakanmu: berapa gelas yang bisa penuh?</div><div class="opts">` +
+      pin.ops.map(n => `<button class="opt ${pin.tebak===n?'chosen':''}" data-t="${n}" ${pin.tebak!==null?'disabled':''}>${n}</button>`).join('') + `</div>`;
+    $('pindahResult').innerHTML = '';
+  }
+  function selesaiPindah(){
+    const total = pin.src.kap, sisa = total - pin.gelas*pin.tgt.kap;
+    const benar = pin.tebak === pin.gelas;
+    const sisaTxt = sisa > 0.5 ? ` ditambah sisa ${fmtVol(sisa)} (${nf(sisa/pin.tgt.kap*100,0)}% gelas)` : ' tanpa sisa';
+    $('pindahResult').innerHTML = `<div class="result ${benar?'good':'mid'}"><b>${benar ? 'Tebakanmu benar! 🎉' : `Tebakanmu ${pin.tebak}, hasilnya ${pin.gelas}.`}</b>${fmtVol(total)} = ${pin.gelas} gelas penuh${sisaTxt}. Jumlah airnya tetap ${fmtVol(total)}.</div>`;
+    chime(benar ? [523,659,784,1047] : [523,659]);
+  }
+  function renderTray(){
+    const t = '🥛'.repeat(Math.min(pin.gelas, 24)) + (pin.gelas > 24 ? '…' : '');
+    setText($('tray'), pin.gelas ? t : 'Nampan masih kosong');
+  }
+
+  /* =============== MODE & EVENT =============== */
+  function setMode(m){
+    mode = m; pouring = false; vol = 0; tPour = 0; drops = []; hasil = null; fillSpeed = null;
+    document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', b.dataset.mode === m));
+    ['tuang','tantang','pindah'].forEach(k => { $('pan-'+k).hidden = k !== m; });
+    if(m === 'tantang') loadSoal(soalIdx);
+    else if(m === 'pindah') initPindah();
+    else { speedIdx = wadah.speed; renderSpeed(); renderTop(); renderTable(); }
+  }
+  function resetAll(){
+    pouring = false; drops = [];
+    if(mode === 'pindah') initPindah();
+    else { vol = 0; tPour = 0; hasil = null; fillSpeed = null; if(mode==='tantang') renderTantang(); }
+  }
+
+  document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+  $('resetBtn').addEventListener('click', resetAll);
+  $('gradeBtn').addEventListener('click', nilai);
+  $('retryBtn').addEventListener('click', () => loadSoal(soalIdx));
+  $('nextBtn').addEventListener('click', () => {
+    if(soalIdx === SOAL.length-1){
+      const total = bintang.reduce((a,b) => a + (b||0), 0);
+      $('resultBox').innerHTML = `<div class="result good"><b>Semua soal selesai! ${total} dari ${SOAL.length*3} bintang ⭐</b>Mau memperbaiki bintang? Pilih nomor soalnya di atas.</div>`;
+      $('nextRow').hidden = true; chime([523,659,784,1047]);
+    } else loadSoal(soalIdx+1);
+  });
+  $('chips').addEventListener('click', e => { const b = e.target.closest('.chip'); if(b) loadSoal(+b.dataset.i); });
+  $('speedRow').addEventListener('click', e => { const b = e.target.closest('.speed-btn'); if(b) setSpeed(+b.dataset.s); });
+  $('stageTop').addEventListener('click', e => {
+    const b = e.target.closest('.preset-btn'); if(!b) return;
+    wadah = byId[b.dataset.w]; vol = 0; tPour = 0; pouring = false; fillSpeed = null;
+    speedIdx = wadah.speed; renderSpeed(); renderTop(); renderTable();
+  });
+  $('pickSrc').addEventListener('click', e => { const b = e.target.closest('[data-src]'); if(b) initPindah(b.dataset.src, null); });
+  $('pickTgt').addEventListener('click', e => { const b = e.target.closest('[data-tgt]'); if(b) initPindah(null, b.dataset.tgt); });
+  $('tebakBox').addEventListener('click', e => {
+    const b = e.target.closest('[data-t]'); if(!b || pin.tebak !== null) return;
+    pin.tebak = +b.dataset.t; renderPindahPanel();
+  });
+
+  // tombol tuang: pointer + keyboard
+  pourBtn.addEventListener('pointerdown', e => { e.preventDefault(); try{ pourBtn.setPointerCapture(e.pointerId); }catch(_){} pourDown(); });
+  pourBtn.addEventListener('pointerup', pourUp);
+  pourBtn.addEventListener('pointercancel', pourUp);
+  pourBtn.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('keydown', e => {
+    const tg = e.target;
+    if(tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA')) return;
+    if(e.code === 'Space'){ e.preventDefault(); if(!e.repeat) pourDown(); }
+    else if(e.key === 'Enter' && tg === pourBtn){ e.preventDefault(); if(!e.repeat) setPour(!pouring); }
+  });
+  document.addEventListener('keyup', e => { if(e.code === 'Space'){ e.preventDefault(); pourUp(); } });
+  window.addEventListener('blur', () => { if(!auto) pouring = false; });
+
+  // toggle
+  $('tgAuto').addEventListener('click', e => {
+    auto = !auto; e.currentTarget.setAttribute('aria-pressed', auto); if(!auto) pouring = false;
+  });
+  $('tgSound').addEventListener('click', e => { soundOn = !soundOn; e.currentTarget.setAttribute('aria-pressed', soundOn); });
+  $('tgRec').addEventListener('click', e => {
+    rec = !rec; document.body.classList.toggle('rec', rec); e.currentTarget.setAttribute('aria-pressed', rec);
+    if(rec && !auto) $('tgAuto').click();
+  });
+  $('tgFull').addEventListener('click', e => {
+    if(!document.fullscreenElement){ if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); }
+    else if(document.exitFullscreen) document.exitFullscreen();
+  });
+  document.addEventListener('fullscreenchange', () => $('tgFull').setAttribute('aria-pressed', !!document.fullscreenElement));
+
+  /* =============== LOOP =============== */
+  function tick(ts){
+    const dt = Math.min(0.05, (ts - (lastTs || ts)) / 1000); lastTs = ts;
+    update(dt);
     renderStage();
     renderReadout();
-    renderCompare();
+    updateBtn();
+    guide();
+    if(mode === 'pindah') renderTray();
+    requestAnimationFrame(tick);
   }
 
-  // idle wave animation walau tidak menuang
-  function idleLoop(ts){
-    if(!pouring){
-      waveTime += 0.016;
-      renderStage();
-    }
-    requestAnimationFrame(idleLoop);
-  }
-
-  buatPreset();
-  renderAll();
-  requestAnimationFrame(idleLoop);
+  renderSpeed(); renderTop(); renderTable();
+  requestAnimationFrame(tick);
+})();
 </script>
 
 <script src="../alat-nav-kembali.js" defer></script>
