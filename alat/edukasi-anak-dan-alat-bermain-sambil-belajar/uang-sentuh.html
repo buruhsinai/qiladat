@@ -5,236 +5,201 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Uang Sentuh</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#fdf6e8; --card:#ffffff; --line:#f0e2c4;
-    --ink:#3a3226; --dim:#8a7c62;
-    --accent:#2f7a5c; --accent-soft:#e4f3ec;
-    --display:'Fredoka',sans-serif; --sans:'Quicksand',sans-serif; --mono:'JetBrains Mono',monospace;
-  }
-  *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;}
-  .wrap{max-width:480px;margin:0 auto;padding:0 18px 60px;}
-
-  .hero{padding:36px 10px 18px;text-align:center;}
-  .hero h1{font-family:var(--display);font-weight:700;font-size:clamp(24px,7vw,32px);margin:0 0 8px;color:#1f5540;}
-  .hero p{color:var(--dim);font-size:14px;margin:0;}
-
-  .target-card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:16px 18px;margin-bottom:16px;}
-  .target-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
-  .target-btn{font-family:var(--mono);font-size:12px;background:#fffdf8;border:2px solid var(--line);color:var(--dim);
-    padding:8px 12px;border-radius:20px;cursor:pointer;}
-  .target-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
-  .custom-row{display:flex;gap:8px;align-items:center;}
-  .custom-row input{flex:1;padding:9px 12px;border:2px solid var(--line);border-radius:10px;font-family:var(--mono);font-size:14px;background:#fffdf8;color:var(--ink);}
-  .custom-row button{font-family:var(--display);font-weight:600;font-size:12.5px;background:#fff;border:2px solid var(--accent);
-    color:var(--accent);padding:9px 14px;border-radius:10px;cursor:pointer;}
-
-  .palette-card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:16px;margin-bottom:16px;}
-  .palette-title{font-family:var(--mono);font-size:11px;color:var(--dim);text-transform:uppercase;margin-bottom:10px;}
-  .palette-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-
-  .coin{aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;
-    cursor:pointer;border:3px solid rgba(0,0,0,0.12);box-shadow:0 3px 0 rgba(0,0,0,0.1);}
-  .coin:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,0.1);}
-  .note{aspect-ratio:1.7;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;
-    cursor:pointer;border:2px solid rgba(0,0,0,0.15);box-shadow:0 3px 0 rgba(0,0,0,0.1);position:relative;overflow:hidden;}
-  .note:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,0.1);}
-  .note::before{content:'';position:absolute;top:4px;left:4px;right:4px;bottom:4px;border:1px dashed rgba(255,255,255,.5);border-radius:5px;}
-  .money-label{font-family:var(--display);font-weight:700;font-size:12px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25);}
-  .money-sub{font-family:var(--mono);font-size:8px;color:rgba(255,255,255,.85);margin-top:1px;}
-
-  .tray-card{background:var(--accent-soft);border-radius:16px;padding:16px 18px;margin-bottom:16px;}
-  .tray-title{font-family:var(--mono);font-size:11px;color:var(--dim);text-transform:uppercase;margin-bottom:10px;}
-  .tray-empty{font-size:13px;color:var(--dim);text-align:center;padding:10px 0;}
-  .tray-chip{display:flex;justify-content:space-between;align-items:center;background:#fff;border-radius:10px;
-    padding:8px 12px;margin-bottom:6px;cursor:pointer;font-size:13.5px;}
-  .tray-chip .kiri{display:flex;align-items:center;gap:8px;}
-  .tray-chip .dot{width:16px;height:16px;border-radius:50%;flex-shrink:0;}
-  .tray-chip .sub{font-family:var(--mono);color:var(--dim);font-size:12px;}
-
-  .total-card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:18px;text-align:center;margin-bottom:16px;}
-  .total-num{font-family:var(--display);font-weight:700;font-size:30px;color:#1f5540;}
-  .total-status{font-family:var(--display);font-size:15px;margin-top:6px;}
-  .total-status.kurang{color:#c9784f;}
-  .total-status.lebih{color:#c1705a;}
-  .total-status.pas{color:#2f7a5c;}
-
-  .reset-btn{width:100%;font-family:var(--display);font-weight:600;font-size:14px;padding:12px;border-radius:12px;
-    border:2px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer;margin-bottom:16px;}
-
-  .note-card{background:var(--accent-soft);border-radius:14px;padding:16px 18px;font-size:13.5px;color:#1f5540;}
-  .note-card strong{color:#153a2c;}
-
-  footer{text-align:center;padding-top:26px;color:#b9ad94;font-size:11.5px;font-family:var(--mono);}
+:root{--bg:#fdf6e8;--card:#fff;--line:#f0e2c4;--ink:#3a3226;--dim:#7a6c52;--accent:#b9852b;--accent-d:#7a5410;--soft:#f8efd9;--ok:#3f9d62;--warn:#e0663a;--gold:#f2b632;--display:'Fredoka',sans-serif;--sans:'Quicksand',sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55}
+button{font-family:inherit}
+button:focus-visible{outline:3px solid var(--accent-d);outline-offset:2px}
+.app{max-width:1180px;margin:0 auto;padding:0 18px 56px}
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 20px;padding:22px 0 16px}
+.top h1{font-family:var(--display);font-weight:700;font-size:clamp(26px,5vw,36px);margin:0;color:var(--accent-d);line-height:1.1}
+.top p{margin:4px 0 0;color:var(--dim);font-size:.95rem}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tabs{display:flex;gap:6px;background:#f4e8cc;padding:5px;border-radius:16px;flex-wrap:wrap}
+.tab{font-family:var(--display);font-weight:600;font-size:.95rem;border:none;background:transparent;color:var(--dim);padding:9px 14px;border-radius:12px;cursor:pointer}
+.tab[aria-selected=true]{background:var(--accent);color:#fff}
+.tg{font-family:var(--display);font-weight:600;font-size:.85rem;border:2px solid var(--line);background:#fff;color:var(--dim);padding:8px 12px;border-radius:12px;cursor:pointer}
+.tg[aria-pressed=true]{border-color:var(--accent);background:var(--soft);color:var(--accent-d)}
+.layout{display:grid;gap:18px;grid-template-columns:1fr}
+@media(min-width:920px){.layout{grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);align-items:start}}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.card{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:16px 18px}
+.card h2{font-family:var(--display);font-weight:600;font-size:1.05rem;margin:0 0 8px;color:var(--accent-d)}
+.guide{background:#fff3e6;border:2px dashed var(--warn)}
+.guide .q{font-family:var(--display);font-weight:700;font-size:1.25rem;color:#a8421d;line-height:1.25}
+.guide .s{font-size:.85rem;color:var(--dim);margin-top:4px}
+.goal{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.goal .gl{font-size:.95rem;color:var(--dim)}
+.goal .gb{font-family:var(--display);font-weight:700;font-size:clamp(1.6rem,4vw,2.4rem);color:var(--accent-d)}
+.tray{display:flex;flex-wrap:wrap;gap:10px;min-height:170px;padding:12px;background:#fffdf8;border:2px dashed var(--line);border-radius:16px;align-content:flex-start}
+.emp{color:#a89b80;font-size:.95rem;align-self:center;width:100%;text-align:center}
+.pc{border:3px solid rgba(255,255,255,.55);background:var(--c);color:#fff;font-family:var(--display);font-weight:700;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.18);transition:transform .15s}
+.pc.coin{width:62px;height:62px;border-radius:50%;font-size:1.05rem}
+.pc.note{width:104px;height:56px;border-radius:9px;font-size:1.15rem}
+.pc.sel{outline:4px solid var(--warn)}
+.pc.on{transform:scale(1.15);outline:4px solid var(--ok)}
+.pc:disabled{cursor:default}
+.pal{display:flex;flex-wrap:wrap;gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;align-items:center}
+.chip{font-family:var(--display);font-weight:600;font-size:.9rem;background:#fffdf8;border:2px solid var(--line);color:var(--dim);padding:7px 12px;border-radius:20px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#fff}
+.chips input{width:120px;font:inherit;padding:7px 10px;border:2px solid var(--line);border-radius:12px}
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:6px}
+.opt{font-family:var(--display);font-weight:700;font-size:1.1rem;background:#fff;border:2px solid var(--accent);color:var(--accent-d);padding:14px 4px;border-radius:14px;cursor:pointer}
+.opt:disabled{cursor:default}.opt.good{background:var(--ok);border-color:var(--ok);color:#fff}.opt.bad{background:#fbe3da;border-color:var(--warn);color:#a8421d}
+.btn{font-family:var(--display);font-weight:600;font-size:.95rem;padding:11px 16px;border-radius:12px;border:none;cursor:pointer;background:var(--accent);color:#fff;margin:8px 8px 0 0}
+.btn.o{background:#fff;border:2px solid var(--accent);color:var(--accent-d)}
+.item{display:flex;align-items:center;gap:14px;margin-bottom:10px;flex-wrap:wrap}
+.item .em{font-size:3rem}.item .nm{font-family:var(--display);font-weight:700;font-size:1.4rem}.item .pr{color:var(--dim)}
+.res{background:var(--soft);border-color:#ecdcae;text-align:center;min-height:96px}
+.res .big{font-family:var(--display);font-weight:700;font-size:1.8rem;color:var(--accent-d);line-height:1.15}
+.res .sm{font-size:.95rem;color:#6b4a30;margin-top:4px}
+.stars{font-size:1.6rem;letter-spacing:4px;color:var(--gold)}
+body.rec .top p,body.rec .hint{display:none}
+body.rec .app{max-width:1400px}
+body.rec .guide .q{font-size:1.7rem}body.rec .opt{font-size:1.5rem;padding:20px 4px}body.rec .res .big{font-size:2.5rem}body.rec .res .sm{font-size:1.2rem}body.rec .btn,body.rec .chip{font-size:1.2rem}
+body.rec .pc.coin{width:84px;height:84px;font-size:1.4rem}body.rec .pc.note{width:140px;height:76px;font-size:1.5rem}body.rec .goal .gb{font-size:3rem}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
-
-<div class="wrap">
-  <div class="hero">
-    <h1>💰 Uang Sentuh</h1>
-    <p>Susun pecahan uang sampai jumlahnya pas dengan target.</p>
-  </div>
-
-  <div class="target-card">
-    <div class="target-row" id="targetRow"></div>
-    <div class="custom-row">
-      <input id="customTarget" type="number" placeholder="Target sendiri (Rp)" min="100" step="100">
-      <button onclick="pakaiCustomTarget()">Pakai</button>
+<div class="app">
+  <div class="top">
+    <div><h1>💰 Uang Sentuh</h1><p>Nilai uang tidak berubah walau bentuk dan jumlah kepingnya berbeda.</p></div>
+    <div class="toolbar">
+      <div class="tabs" role="tablist" id="tabs"></div>
+      <button class="tg" id="tgRec" aria-pressed="false">🎬 Mode rekam</button>
+      <button class="tg" id="tgFs">⛶ Layar penuh</button>
+      <button class="tg" id="tgSnd" aria-pressed="true">🔊 Suara</button>
+      <button class="tg" id="tgAuto" aria-pressed="false">🔁 Otomatis</button>
     </div>
   </div>
-
-  <div class="palette-card">
-    <div class="palette-title">Ketuk untuk menambah ke keranjang</div>
-    <div class="palette-grid" id="paletteGrid"></div>
+  <div class="layout">
+    <div class="col"><div class="card" id="stage"></div></div>
+    <div class="col">
+      <div class="card guide"><div class="q" id="gq"></div><div class="s" id="gs"></div></div>
+      <div class="card" id="panel"></div>
+      <div class="card res" id="res"></div>
+    </div>
   </div>
-
-  <div class="tray-card">
-    <div class="tray-title">Keranjangmu (ketuk untuk mengurangi)</div>
-    <div id="trayList"></div>
-  </div>
-
-  <div class="total-card">
-    <div class="total-num" id="totalNum">Rp0</div>
-    <div class="total-status" id="totalStatus"></div>
-  </div>
-
-  <button class="reset-btn" onclick="resetKeranjang()">🔁 Kosongkan Keranjang</button>
-
-  <div class="note-card">
-    <strong>Coba buktikan:</strong> satu lembar Rp10.000 itu sebenarnya sama saja nilainya dengan 10 keping Rp1.000, atau 2 lembar Rp5.000. Coba susun salah satu caranya di keranjang — jumlahnya akan tetap sama meski bentuk uangnya beda!
-  </div>
-
-  <footer>Laboratorium Pendidikan Anak — Bank Alat JAZMI/Qiladat</footer>
 </div>
 
 <script>
-  const UANG = [
-    { nilai:100,   jenis:'coin', warna:'#c98a4a' },
-    { nilai:200,   jenis:'coin', warna:'#a9adb6' },
-    { nilai:500,   jenis:'coin', warna:'#8f97a3' },
-    { nilai:1000,  jenis:'coin', warna:'#c9963f' },
-    { nilai:2000,  jenis:'note', warna:'#8a95a3' },
-    { nilai:5000,  jenis:'note', warna:'#8a6a4a' },
-    { nilai:10000, jenis:'note', warna:'#7a5fc9' },
-    { nilai:20000, jenis:'note', warna:'#3a8a5e' },
-    { nilai:50000, jenis:'note', warna:'#3a7ac9' }
-  ];
+const $=id=>document.getElementById(id);
+const UANG=[{v:100,k:'c',c:'#c98a4a'},{v:200,k:'c',c:'#a9adb6'},{v:500,k:'c',c:'#8f97a3'},{v:1000,k:'c',c:'#c99a2e'},{v:2000,k:'n',c:'#7f8b99'},{v:5000,k:'n',c:'#9a7a52'},{v:10000,k:'n',c:'#7a5fc9'},{v:20000,k:'n',c:'#3a8a5e'},{v:50000,k:'n',c:'#3a7ac9'}];
+const U=v=>UANG.find(u=>u.v===v),fmt=n=>'Rp'+n.toLocaleString('id-ID'),sh=v=>v>=1000?(v/1000)+'rb':String(v);
+const pc=(v,at='',cl='')=>`<button class="pc ${U(v).k==='c'?'coin':'note'} ${cl}" style="--c:${U(v).c}" ${at} aria-label="${fmt(v)}"><b>${sh(v)}</b></button>`;
+const sum=a=>a.reduce((x,y)=>x+y,0);
+const EX={200:[[100,100]],500:[[100,100,100,100,100],[200,200,100]],1000:[[500,500],[200,200,200,200,200],[100,100,100,100,100,100,100,100,100,100]],2000:[[1000,1000],[500,500,500,500]],5000:[[2000,2000,1000],[1000,1000,1000,1000,1000]],10000:[[5000,5000],[2000,2000,2000,2000,2000],[5000,2000,2000,1000]],20000:[[10000,10000],[5000,5000,5000,5000]],50000:[[20000,20000,10000],[10000,10000,10000,10000,10000]]};
+const parts=a=>{const m={};a.forEach(v=>m[v]=(m[v]||0)+1);return Object.keys(m).sort((x,y)=>y-x).map(v=>m[v]>1?`${m[v]} × ${sh(+v)}`:sh(+v)).join(' + ')};
+const greedy=n=>{const r=[];UANG.slice().reverse().forEach(u=>{while(n>=u.v){r.push(u.v);n-=u.v}});return r};
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const PRE=[500,1500,2500,5000,10000,25000];
+const S={mode:'bebas',target:2500,tray:[],sel:-1,ways:new Set(),msg:'',snd:true,auto:false,rec:false,q:0,stars:0,answered:false,done:false,wrong:0,timers:[]};
+const clr=()=>{S.timers.forEach(clearTimeout);S.timers=[]},later=(f,ms)=>S.timers.push(setTimeout(f,ms));
+let AC;function tone(f,d=.1,t='triangle',v=.12){if(!S.snd)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type=t;o.frequency.value=f;g.gain.value=v;g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
+const snd=v=>tone(U(v).k==='c'?1300:520,U(v).k==='c'?.07:.12),ok=()=>{tone(660,.12,'sine');setTimeout(()=>tone(880,.18,'sine'),110)},bad=()=>tone(200,.25);
+const pal=()=>`<div class="pal">${UANG.map(u=>pc(u.v,`data-a="${u.v}"`)).join('')}</div>`;
+const T=()=>sum(S.tray);
+function guide(q,s){$('gq').textContent=q;$('gs').textContent=s||''}
 
-  const TARGET_PRESET = [500, 1500, 2500, 5000, 10000, 25000];
-  let target = TARGET_PRESET[2];
-  let keranjang = {}; // nilai -> jumlah
+/* ===== Susun & Tukar ===== */
+function bebas(){S.tray=[];S.sel=-1;S.ways=new Set();S.msg='';rBebas();if(S.auto)demo()}
+function rBebas(){
+  const t=T(),tg=S.target;
+  $('stage').innerHTML=`<div class="goal"><span class="gl">Target:</span><span class="gb">${fmt(tg)}</span><span class="gl">Isi dompet: <b>${fmt(t)}</b></span></div>
+  <div class="chips">${PRE.map(p=>`<button class="chip" data-t="${p}" aria-pressed="${p===tg}">${fmt(p)}</button>`).join('')}<input id="cu" type="number" min="100" step="100" placeholder="Target sendiri"><button class="chip" data-cu="1">Pakai</button></div>
+  <div class="tray">${S.tray.length?S.tray.map((v,i)=>pc(v,`data-i="${i}"`,i===S.sel?'sel':'')).join(''):'<div class="emp">Ketuk uang di sebelah kanan untuk menaruhnya di sini.</div>'}</div>`;
+  const v=S.tray[S.sel],ex=v&&EX[v];
+  $('panel').innerHTML=`<h2>Ketuk untuk menaruh uang</h2>${pal()}`+(v?`<h2 style="margin-top:14px">Tukar ${fmt(v)} jadi:</h2><div class="chips">${ex?ex.map((p,k)=>`<button class="chip" data-x="${k}">${parts(p)}</button>`).join(''):'<span style="font-size:.9rem;color:var(--dim)">Ini keping terkecil, tidak bisa ditukar.</span>'}<button class="chip" data-del="1">🗑 Buang</button></div>`:`<div class="hint" style="font-size:.85rem;color:#a89b80;margin-top:8px">Ketuk uang di dompet untuk memilih, lalu tukar dengan uang lain yang nilainya sama.</div>`);
+  let big,sm;
+  if(S.msg){big=fmt(t);sm=S.msg}
+  else if(t===tg){const n=S.ways.size;big=`🎉 Pas ${fmt(tg)}!`;sm=n>=3?'Bentuk uangnya berbeda-beda, nilainya tetap sama.':`Cara ke-${n}. Coba susun ${fmt(tg)} dengan cara lain.`}
+  else if(t<tg){big=`Kurang ${fmt(tg-t)}`;sm='Tambahkan uang lagi.'}
+  else{big=`Lebih ${fmt(t-tg)}`;sm='Kurangi atau tukar uangnya.'}
+  $('res').innerHTML=`<div class="big">${big}</div><div class="sm">${sm}</div>`;
+  guide(v?'Uang ini bisa ditukar jadi apa saja?':t===tg?'Adakah cara lain untuk jumlah yang sama?':'Uang apa yang harus ditambah?',v?'Nilainya tetap sama.':'Jumlahkan nilai tiap keping, bukan menghitung kepingnya.');
+}
+function addV(v){S.tray.push(v);S.msg='';snd(v);checkPas()}
+function checkPas(){if(T()===S.target){const s=S.tray.slice().sort((a,b)=>a-b).join();if(!S.ways.has(s)){S.ways.add(s);ok()}}rBebas()}
+function exch(k){const v=S.tray[S.sel],p=EX[v][k];S.tray.splice(S.sel,1,...p);S.sel=-1;S.msg=`${fmt(v)} = ${parts(p)}. Jumlahnya tetap ${fmt(T())}.`;tone(900,.1);checkPas();S.msg=S.msg;rBebas()}
+function demo(){clr();S.tray=[];S.ways=new Set();S.msg='';S.sel=-1;rBebas();const seq=greedy(S.target);
+  seq.forEach((v,i)=>later(()=>{addV(v)},800*(i+1)));
+  const e=800*(seq.length+1);
+  later(()=>{const i=S.tray.findIndex(v=>EX[v]);if(i>=0){S.sel=i;rBebas();later(()=>exch(0),1600)}},e+300);
+  later(()=>{S.target=PRE[(PRE.indexOf(S.target)+1)%PRE.length];demo()},e+5200)}
 
-  function formatRupiah(n){
-    return 'Rp' + n.toLocaleString('id-ID');
-  }
+/* ===== Tebak jumlah ===== */
+const TQ=[[500,500,500],[1000,1000,500,200,200,100],[5000,2000,2000],[10000,5000,2000,500],[20000,10000,5000,1000,1000],[50000,20000,5000,2000,500,500]];
+function summary(max,msg){S.done=true;$('stage').innerHTML=`<div class="goal"><span class="gb">Selesai! 🎉</span></div><div class="tray"><div class="emp"><div class="stars">${'★'.repeat(S.stars)}${'☆'.repeat(max-S.stars)}</div></div></div>`;
+  $('panel').innerHTML=`<button class="btn" id="again">Main lagi</button>`;$('res').innerHTML=`<div class="big">${S.stars} dari ${max}</div><div class="sm">${msg}</div>`;
+  $('again').onclick=()=>{S.q=0;S.stars=0;S.done=false;S.mode==='tebak'?tebak():belanja()};guide('Berapa bintang yang kamu dapat?','')}
+function tebak(){
+  if(S.q>=TQ.length)return summary(TQ.length*3,'Jumlah uang dihitung dari nilai tiap keping, bukan dari banyaknya keping.');
+  S.answered=false;S.done=false;const pcs=TQ[S.q],tot=sum(pcs),m=Math.min(...pcs),o=[tot,tot-m,tot+m],k=S.q%3,arr=o.slice(k).concat(o.slice(0,k));
+  S.cnt=pcs.map((v,i)=>i).sort((a,b)=>pcs[b]-pcs[a]);
+  $('stage').innerHTML=`<div class="goal"><span class="gb">Berapa jumlah uang ini?</span></div><div class="tray">${pcs.map((v,i)=>pc(v,`data-p="${i}" disabled`)).join('')}</div>`;
+  $('panel').innerHTML=`<h2>Soal ${S.q+1} dari ${TQ.length}</h2><div class="opts">${arr.map(v=>`<button class="opt" data-o="${v}">${fmt(v)}</button>`).join('')}</div>`;
+  $('res').innerHTML=`<div class="big">?</div><div class="sm">Bintang: ${S.stars}</div>`;guide('Berapa jumlah semua uang ini?','Tebak dulu, lalu kita hitung bersama.');
+  if(S.auto)later(()=>{const b=$('panel').querySelector('.opt');b&&!S.answered&&b.click()},4200)}
+function answerT(b){if(S.answered)return;S.answered=true;const pcs=TQ[S.q],tot=sum(pcs),v=+b.dataset.o,good=v===tot;
+  $('panel').querySelectorAll('.opt').forEach(x=>{x.disabled=true;if(+x.dataset.o===tot)x.classList.add('good')});
+  if(good){S.stars+=3;ok()}else{b.classList.add('bad');bad();S.stars+=1}
+  guide('Ayo hitung satu per satu!','Mulai dari yang paling besar.');
+  let run=0;const done=()=>{$('res').innerHTML=`<div class="big">${fmt(tot)}</div><div class="sm">${good?'Tepat! ':`Kamu memilih ${fmt(v)}. `}${pcs.length} keping, tapi jumlah uangnya ${fmt(tot)}: jumlahkan nilainya.</div><button class="btn" id="nx">Soal berikutnya ›</button>`;
+    $('nx').onclick=()=>{S.q++;tebak()};if(S.auto)later(()=>$('nx')&&$('nx').click(),3500)};
+  S.cnt.forEach((idx,n)=>{const f=()=>{run+=pcs[idx];const e=$('stage').querySelector(`[data-p="${idx}"]`);e&&e.classList.add('on');snd(pcs[idx]);
+      $('res').innerHTML=`<div class="big">${fmt(run)}</div><div class="sm">${S.cnt.slice(0,n+1).map(j=>sh(pcs[j])).join(' + ')}</div>`;if(n===pcs.length-1)later(done,700)};
+    RM?f():later(f,800*n+300)})}
 
-  function buatTargetRow(){
-    const row = document.getElementById('targetRow');
-    row.innerHTML = '';
-    TARGET_PRESET.forEach(t => {
-      const btn = document.createElement('button');
-      btn.className = 'target-btn' + (t===target ? ' active' : '');
-      btn.textContent = formatRupiah(t);
-      btn.addEventListener('click', () => {
-        target = t;
-        buatTargetRow();
-        render();
-      });
-      row.appendChild(btn);
-    });
-  }
+/* ===== Belanja ===== */
+const BQ=[['🍬','Permen',500,1000],['🍪','Biskuit',1500,2000],['🍌','Pisang goreng',3500,5000],['✏️','Pensil',4000,5000],['📒','Buku tulis',7500,10000],['🧸','Mainan',12000,20000]];
+function belanja(){
+  if(S.q>=BQ.length)return summary(BQ.length*3,'Kembalian = uang yang dibayar dikurangi harga.');
+  const [em,nm,pr,py]=BQ[S.q];S.tray=[];S.answered=false;S.wrong=0;S.done=false;rBel()}
+function rBel(){const [em,nm,pr,py]=BQ[S.q];
+  $('stage').innerHTML=`<div class="item"><span class="em">${em}</span><div><div class="nm">${nm}: ${fmt(pr)}</div><div class="pr">Kamu membayar dengan:</div></div>${pc(py,'disabled')}</div>
+  <div class="goal"><span class="gl">Kembalian yang kamu beri: <b>${fmt(T())}</b></span></div>
+  <div class="tray">${S.tray.length?S.tray.map((v,i)=>pc(v,`data-i="${i}"`)).join(''):'<div class="emp">Susun uang kembalian di sini. Ketuk keping untuk mengambilnya lagi.</div>'}</div>`;
+  $('panel').innerHTML=`<h2>Soal ${S.q+1} dari ${BQ.length}: ambil uang kembalian</h2>${pal()}<button class="btn" id="cek">Periksa kembalian</button>`;
+  if(!S.answered)$('res').innerHTML=`<div class="big">?</div><div class="sm">${S.msg||'Berapa uang kembaliannya?'}</div>`;
+  guide('Berapa kembaliannya?','Kembalian ditambah harga harus sama dengan uang yang dibayar.');
+  if(S.auto&&!S.answered){S.timers.length||later(autoBel,3000)}}
+function cekBel(){const [em,nm,pr,py]=BQ[S.q],ch=py-pr,t=T();if(S.answered)return;
+  if(t===ch){S.answered=true;const mn=greedy(ch).length,st=Math.max(1,3-S.wrong-(S.tray.length>mn+2?1:0));S.stars+=st;ok();
+    $('panel').querySelectorAll('button').forEach(b=>b.disabled=true);
+    $('res').innerHTML=`<div class="big">${fmt(py)} − ${fmt(pr)} = ${fmt(ch)} ${'★'.repeat(st)}</div><div class="sm">${fmt(ch)} + ${fmt(pr)} = ${fmt(py)}. Uangnya tidak hilang, hanya berpindah.</div><button class="btn" id="nx">Soal berikutnya ›</button>`;
+    $('nx').onclick=()=>{S.q++;belanja()};if(S.auto)later(()=>$('nx')&&$('nx').click(),3500)}
+  else{S.wrong++;bad();S.msg=t>ch?'Kembalianmu terlalu banyak. Penjual bisa rugi!':'Kembalianmu masih kurang. Pembeli bisa rugi!';rBel();S.msg=''}}
+function autoBel(){clr();const ch=BQ[S.q][3]-BQ[S.q][2];greedy(ch).forEach((v,i)=>later(()=>{if(!S.answered){S.tray.push(v);snd(v);rBel()}},900*(i+1)));later(cekBel,900*(greedy(ch).length+1)+600)}
 
-  function pakaiCustomTarget(){
-    const val = parseInt(document.getElementById('customTarget').value);
-    if(val && val > 0){
-      target = val;
-      buatTargetRow();
-      render();
-    }
-  }
+/* ===== penghubung ===== */
+$('stage').addEventListener('click',e=>{const t=e.target.closest('[data-t]'),cu=e.target.closest('[data-cu]'),i=e.target.closest('[data-i]');
+  if(S.mode==='bebas'){
+    if(t){S.target=+t.dataset.t;S.ways=new Set();S.msg='';checkPas()}
+    else if(cu){const v=parseInt($('cu').value);if(v>0){S.target=v;S.ways=new Set();S.msg='';checkPas()}}
+    else if(i){const k=+i.dataset.i;S.sel=S.sel===k?-1:k;S.msg='';rBebas()}}
+  else if(S.mode==='belanja'&&i&&!S.answered){S.tray.splice(+i.dataset.i,1);rBel()}});
+$('panel').addEventListener('click',e=>{const a=e.target.closest('[data-a]'),x=e.target.closest('[data-x]'),d=e.target.closest('[data-del]'),o=e.target.closest('.opt'),ck=e.target.closest('#cek');
+  if(a&&!S.answered){const v=+a.dataset.a;if(S.mode==='bebas')addV(v);else if(S.mode==='belanja'){S.tray.push(v);snd(v);rBel()}}
+  else if(x)exch(+x.dataset.x);
+  else if(d){S.tray.splice(S.sel,1);S.sel=-1;S.msg='';checkPas()}
+  else if(o)answerT(o);else if(ck)cekBel()});
 
-  function buatPalette(){
-    const grid = document.getElementById('paletteGrid');
-    grid.innerHTML = '';
-    UANG.forEach(u => {
-      const el = document.createElement('div');
-      el.className = u.jenis === 'coin' ? 'coin' : 'note';
-      el.style.background = u.warna;
-      el.innerHTML = `<div class="money-label">${u.nilai >= 1000 ? (u.nilai/1000)+'rb' : u.nilai}</div><div class="money-sub">${formatRupiah(u.nilai)}</div>`;
-      el.addEventListener('click', () => {
-        keranjang[u.nilai] = (keranjang[u.nilai] || 0) + 1;
-        render();
-      });
-      grid.appendChild(el);
-    });
-  }
-
-  function kurangiUang(nilai){
-    if(!keranjang[nilai]) return;
-    keranjang[nilai] -= 1;
-    if(keranjang[nilai] <= 0) delete keranjang[nilai];
-    render();
-  }
-
-  function resetKeranjang(){
-    keranjang = {};
-    render();
-  }
-
-  function hitungTotal(){
-    return Object.entries(keranjang).reduce((sum, [nilai, jml]) => sum + Number(nilai)*jml, 0);
-  }
-
-  function renderTray(){
-    const list = document.getElementById('trayList');
-    const entries = Object.entries(keranjang).sort((a,b) => Number(a[0])-Number(b[0]));
-    if(entries.length === 0){
-      list.innerHTML = '<div class="tray-empty">Keranjang masih kosong — ketuk uang di atas</div>';
-      return;
-    }
-    list.innerHTML = '';
-    entries.forEach(([nilai, jml]) => {
-      const u = UANG.find(x => x.nilai === Number(nilai));
-      const chip = document.createElement('div');
-      chip.className = 'tray-chip';
-      chip.innerHTML = `
-        <div class="kiri">
-          <div class="dot" style="background:${u.warna}"></div>
-          <span>${formatRupiah(u.nilai)} × ${jml}</span>
-        </div>
-        <span class="sub">${formatRupiah(u.nilai*jml)}</span>
-      `;
-      chip.addEventListener('click', () => kurangiUang(Number(nilai)));
-      list.appendChild(chip);
-    });
-  }
-
-  function render(){
-    renderTray();
-    const total = hitungTotal();
-    document.getElementById('totalNum').textContent = formatRupiah(total);
-    const statusEl = document.getElementById('totalStatus');
-    statusEl.className = 'total-status';
-    if(total === target){
-      statusEl.textContent = `🎉 Pas! Tepat ${formatRupiah(target)}`;
-      statusEl.classList.add('pas');
-    } else if(total < target){
-      statusEl.textContent = `Kurang ${formatRupiah(target-total)} lagi`;
-      statusEl.classList.add('kurang');
-    } else {
-      statusEl.textContent = `Kelebihan ${formatRupiah(total-target)}, coba kurangi`;
-      statusEl.classList.add('lebih');
-    }
-  }
-
-  buatTargetRow();
-  buatPalette();
-  render();
+const MODES=[['bebas','🧮 Susun & Tukar'],['tebak','🤔 Tebak Jumlah'],['belanja','🛒 Belanja']];
+function go(m){clr();S.mode=m;S.q=0;S.stars=0;S.done=false;S.answered=false;S.msg='';
+  document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.m===m));
+  m==='bebas'?bebas():m==='tebak'?tebak():belanja()}
+$('tabs').innerHTML=MODES.map(([k,l])=>`<button class="tab" role="tab" data-m="${k}" aria-selected="${k==='bebas'}">${l}</button>`).join('');
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>go(t.dataset.m));
+$('tgRec').onclick=e=>{S.rec=!S.rec;document.body.classList.toggle('rec',S.rec);e.currentTarget.setAttribute('aria-pressed',S.rec)};
+$('tgSnd').onclick=e=>{S.snd=!S.snd;e.currentTarget.setAttribute('aria-pressed',S.snd)};
+$('tgAuto').onclick=e=>{S.auto=!S.auto;e.currentTarget.setAttribute('aria-pressed',S.auto);go(S.mode)};
+$('tgFs').onclick=()=>{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()};
+go('bebas');
 </script>
-
 <script src="../alat-nav-kembali.js" defer></script>
 </body>
 </html>
