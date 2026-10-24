@@ -37,7 +37,9 @@
   const KITAB_FILES = [
     "../syair-bank/kitab-almusid-adabalmasjid.json",
     "../syair-bank/kitab-manair-alisad.json",
-    "../syair-bank/diwan-amr-bin-kultsum.json"
+    "../syair-bank/diwan-amr-bin-kultsum.json",
+    "../syair-bank/diwan-aus-bin-hajar.json",
+    "../syair-bank/diwan-penyair-lain-001.json"
   ];
   const PILIHAN_PATH = "../syair-editorial/pilihan.json";
 
