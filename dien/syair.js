@@ -36,7 +36,8 @@
   // Dependency yang sudah diketahui (lihat catatan di atas).
   const KITAB_FILES = [
     "../syair-bank/kitab-almusid-adabalmasjid.json",
-    "../syair-bank/kitab-manair-alisad.json"
+    "../syair-bank/kitab-manair-alisad.json",
+    "../syair-bank/diwan-amr-bin-kultsum.json"
   ];
   const PILIHAN_PATH = "../syair-editorial/pilihan.json";
 
@@ -230,7 +231,7 @@
         <dl class="bait-card-detail" id="${domId}" hidden>
           ${kitab ? `<dt>Kitab</dt><dd>${escapeHTML(kitab.judulArab || "")} — ${escapeHTML(kitab.judulLatin || "")}</dd>` : ""}
           ${penyair ? `<dt>Penyair</dt><dd>${escapeHTML(penyair.namaLatin || "")}</dd>` : ""}
-          ${bait.jenis ? `<dt>Jenis</dt><dd>${escapeHTML(bait.jenis === "syahid" ? "Syahid (kutipan)" : "Matan")}</dd>` : ""}
+          ${bait.jenis ? `<dt>Jenis</dt><dd>${escapeHTML(bait.jenis === "syahid" ? "Syahid (kutipan)" : (bait.jenis === "pilihan-diwan" ? "Diwan (pilihan)" : "Matan"))}</dd>` : ""}
           ${alasan ? `<dt>Catatan Editorial</dt><dd>${alasan}</dd>` : ""}
         </dl>
       </article>
