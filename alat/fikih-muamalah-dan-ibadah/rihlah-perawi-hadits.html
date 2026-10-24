@@ -1751,7 +1751,7 @@ let VSEQ=0;const vstat=m=>{const n=$("tvn");if(n)n.textContent=m||""};
 function spk(tx,done,tst){const SY=speechSynthesis,my=++VSEQ;let fin=false,started=false;const fn=()=>{if(!fin){fin=true;if(done)done()}};
 const run=()=>{if(my!==VSEQ)return;try{SY.resume()}catch(e){}
 const parts=tx.match(/.+?(?:[.!?](?=\s|$)|$)/g)||[tx];
-parts.forEach((p,k)=>{const u=new SpeechSynthesisUtterance(p.trim());u.lang=VO?VO.lang:"id-ID";if(VO)u.voice=VO;u.rate=+$("trt").value||.95;
+parts.forEach((p,k)=>{const u=new SpeechSynthesisUtterance(p.trim());u.lang=VO?VO.lang:"id-ID";if(VO)u.voice=VO;u.rate=(+$("trt").value||.95)*(window.BCR?BCR():1);
 u.onstart=()=>{started=true;vstat(tst?"Suara keluar. Bila tidak terdengar, naikkan volume media.":"")};
 const er=e=>{const c=e&&e.error;if(c&&c!="canceled"&&c!="interrupted")vstat("Suara gagal: "+c+". Cek suara teks-ke-ucapan di pengaturan perangkat.")};
 if(k==parts.length-1){u.onend=fn;u.onerror=e=>{er(e);fn()}}else u.onerror=er;
@@ -2664,7 +2664,7 @@ if(pv2&&pv2.kota!==s.kota){const a=legs(h)[i];if(a.k>0)o.push("Dari "+pv2.kota+"
 const st={hilang:"Di sini ada perawi yang hilang dari rantai.",terputus:"Di sini sanad terputus.",lemah:"Perawi ini dinilai lemah.","kuat-tak-di-peta":"Perawi ini kuat, tetapi belum ada di daftar peta.","tak-di-peta":"Perawi ini belum ada di daftar peta; tidak ditandai cacat di hadits ini.",penyusun:"Penyusun kitab."}[s.status]||"";
 o.push((st?st+" ":"")+nm(s)+", di "+s.kota+(s.tahun?", sekitar tahun "+s.tahun+" Masehi":"")+".");o.push(window.BCT?BCT(h,s,i):s.cerita);return o.map(spk).filter(Boolean)}
 function stopSpeech(){clearTimeout(AP.tm);clearTimeout(AP.wd);AP.tm=AP.wd=0;AP.tok++;AP.us=[];if(CAN)try{SY.cancel()}catch(e){}}
-window.HSJ=function(i){jump(i)};window.HSI=function(){return ST?ST.i:-1};function wake(on){try{if(on){if(navigator.wakeLock&&!AP.wl)navigator.wakeLock.request("screen").then(x=>{AP.wl=x;x.addEventListener("release",()=>{AP.wl=null})}).catch(()=>{})}else if(AP.wl){AP.wl.release();AP.wl=null}}catch(e){AP.wl=null}}
+window.HSJ=function(i){jump(i)};window.HSO=function(h,i){if(ST&&ST.h===h){if(i>0)jump(i);return}open(h);if(i>0)setTimeout(function(){if(ST&&ST.h===h)jump(i)},1200)};window.HSI=function(){return ST?ST.i:-1};function wake(on){try{if(on){if(navigator.wakeLock&&!AP.wl)navigator.wakeLock.request("screen").then(x=>{AP.wl=x;x.addEventListener("release",()=>{AP.wl=null})}).catch(()=>{})}else if(AP.wl){AP.wl.release();AP.wl=null}}catch(e){AP.wl=null}}
 function unlock(){if(CAN&&AP.vo)try{const u=new SpeechSynthesisUtterance(" ");u.volume=0;SY.speak(u)}catch(e){}}
 function apl(){return AP.on?"⏸ Jeda":(ST&&ST.i>=ST.h.langkah.length?"↺ Putar ulang":(ST&&ST.i>0?"▶ Lanjutkan":"▶ Putar otomatis"))}
 function upd(){const a=$("hsap");if(!a)return;a.textContent=apl();a.classList.toggle("on",AP.on)}
@@ -2675,7 +2675,7 @@ const done=()=>{if(fired||tok!==AP.tok||!AP.on)return;fired=true;clearTimeout(AP
 if(!(AP.vo&&CAN)){AP.tm=setTimeout(done,Math.max((ST.cms||0)+1400,txt.length*58/AP.rt));return}
 const parts=[];a.forEach(t=>(t.match(/[^.!?]+[.!?]*/g)||[t]).forEach(x=>{x=x.trim();if(x)parts.push(x)}));
 AP.wd=setTimeout(done,Math.max(9000,txt.length*140/AP.rt+6000));
-setTimeout(()=>{if(tok!==AP.tok||!AP.on)return;parts.forEach((x,k)=>{const u=new SpeechSynthesisUtterance(x);u.lang=VOI?VOI.lang:"id-ID";if(VOI)u.voice=VOI;u.rate=Math.min(1.6,.95*AP.rt);u.onerror=e=>{if(e&&(e.error==="interrupted"||e.error==="canceled"))return;done()};if(k===parts.length-1)u.onend=done;AP.us.push(u);SY.speak(u)})},80)}
+setTimeout(()=>{if(tok!==AP.tok||!AP.on)return;parts.forEach((x,k)=>{const u=new SpeechSynthesisUtterance(x);u.lang=VOI?VOI.lang:"id-ID";if(VOI)u.voice=VOI;u.rate=Math.min(1.6,.95*AP.rt*(window.BCR?BCR():1));u.onerror=e=>{if(e&&(e.error==="interrupted"||e.error==="canceled"))return;done()};if(k===parts.length-1)u.onend=done;AP.us.push(u);SY.speak(u)})},80)}
 function jump(i){go(i,AP.on);if(AP.on)narrate(i);else stopSpeech()}
 function nxt(){if(!ST||!AP.on)return;if(ST.cm){stopAuto();return}if(ST.i>=ST.h.langkah.length){finish();return}jump(ST.i+1)}
 function finish(){AP.on=false;stopSpeech();wake(false);if(ST&&!ST.cm)render()}
@@ -3634,6 +3634,235 @@ var STORYH={1:{
 ["Setelah itu ia singgah di Merv, Naisabur, Kufa, Basra, Mekkah, Damaskus, dan Mesir. Ia wafat tahun 915 di Ramla, atau di Damaskus menurut data kami.",["H"]],
 ["Inilah ironinya: rantai sesudah Madinah rapi, perawinya tsiqah dan terhubung lewat rihlah, tetapi rapi di ujung tidak memperbaiki cacat di pangkal.",["H"]]]
 }};
+Object.assign(STORYR,{
+"Jabir bin Abdullah":[
+[["Kisah ini bermula di Madinah.",[],1],
+["Jabir bin Abdullah lahir di Madinah, sekitar enam belas tahun sebelum hijrah, kira-kira tahun 607 Masehi.",["ja5","ja3"]]],
+[["Suatu kali Jabir mendengar kabar tentang seorang sahabat, Abdullah bin Unais, yang mendengar langsung dari Nabi sebuah hadits tentang qisas, pembalasan di akhirat. Jabir sendiri belum pernah mendengarnya.",["ja1","ja2","ja4","ja3","ja7"]],
+["Maka ia membeli seekor unta dan berjalan sekitar sebulan sampai ke Syam.",["ja1","ja2","ja4","ja3","ja7"]],
+["Di rumah Abdullah, ia meminta penjaga pintu memberi tahu bahwa Jabir ada di pintu. Abdullah keluar tergesa sambil menyeret pakaiannya, lalu keduanya berpelukan.",["ja1","ja2","ja4","ja3","ja7"]],
+["Jabir berkata bahwa ia khawatir salah satu dari mereka wafat sebelum hadits itu didengar. Abdullah pun menyampaikan haditsnya.",["ja1","ja2","ja4","ja3","ja7"]],
+["Sumber berbeda tentang tujuannya: sebagian riwayat menyebut Mesir, bukan Syam. Tahunnya tidak diketahui, jadi titik ini taksiran.",["ja4","ja7"]]],
+[["Setelah mendengar hadits itu, Jabir langsung berbalik pulang ke Madinah, menempuh perjalanan sekitar sebulan lagi. Tahun ini taksiran.",["ja6"]]],
+[["Jabir wafat di Madinah tahun 78 Hijriah, sekitar 697 Masehi. Satu sumber menyebutnya sahabat terakhir yang wafat di Madinah.",["ja5","ja3","ja4"]]]],
+"Abu Ayyub al-Anshari":[
+[["Abu Ayyub, yang bernama Khalid bin Zayd, berasal dari Madinah, dari Bani Najjar.",["au3"]],
+["Ia termasuk tokoh Ansar yang berbaiat kepada Nabi di Aqabah.",["au3"]]],
+[["Abu Ayyub mendengar dari Nabi sebuah hadits tentang menutupi aib seorang muslim. Menurut kisah, hanya ia dan Uqbah bin Amir yang masih hidup yang mendengarnya.",["au1","au2","au4"]],
+["Dari Madinah ia berangkat ke Mesir. Di sana ia lebih dulu mendatangi rumah gubernur Maslamah bin Mukhallad, yang menyambut dan memeluknya lalu bertanya apa yang membawanya.",["au1","au2","au4"]],
+["Abu Ayyub menjawab bahwa urusannya hanya hadits itu. Maslamah mengirim seorang penunjuk jalan ke rumah Uqbah.",["au1","au2","au4"]],
+["Uqbah menyampaikan haditsnya: siapa menutupi aib seorang muslim di dunia, Allah akan menutupi aibnya di hari kiamat. Abu Ayyub berkata bahwa Uqbah benar.",["au1","au2","au4"]],
+["Sumber lain menyebut Uqbah sendiri yang menjadi gubernur Mesir saat itu, dan Wikipedia menyebut Abu Ayyub pernah pindah ke Fustat. Tahunnya taksiran.",["au1","au2","au4"]]],
+[["Setelah mendengar hadits itu, Abu Ayyub pulang ke Madinah. Tahun ini taksiran.",["au1"]],
+["Ia kemudian wafat dalam pengepungan Konstantinopel, tahun 52 Hijriah atau sekitar 674 Masehi. Kota itu belum ada di peta ini.",["au1"]]]],
+"Uqbah bin Amir al-Juhani":[
+[["Uqbah bin Amir berasal dari suku Juhaynah. Menurut Wikipedia, sejak awal tahun pertama hijrah ia termasuk sahabat Nabi, dan ia pernah menjadi penuntun hewan tunggangan beliau.",["uq1"]],
+["Tahun lahirnya tidak ditemukan; titik ini hanya penanda awal hijrah.",[],1]],
+[["Uqbah ikut penaklukan Mesir bersama Amr bin al-Ash. Ia menjadi gubernur Mesir pada 665 sampai 667 Masehi menurut Wikipedia, sebelum digantikan Maslamah bin Mukhallad.",["uq1","uq2"]],
+["Di Mesir inilah Abu Ayyub datang menemuinya demi satu hadits.",["uq1","uq2"]]],
+[["Uqbah wafat di Mesir pada 677 atau 678 Masehi. Makamnya ada di Kairo.",["uq1","uq2"]]]],
+"Ibnu Thahir al-Maqdisi":[
+[["Muhammad bin Thahir al-Maqdisi, dikenal juga sebagai Ibnu al-Qaisarani, lahir di Baitul Maqdis, Yerusalem, sekitar tahun 448 Hijriah.",["it1","it5"]],
+["Ia mulai belajar hadits pada usia dua belas tahun.",["it1","it5"]]],
+[["Pada usia sembilan belas tahun ia pindah ke Baghdad dan tinggal beberapa waktu di Irak.",["it1"]],
+["Ia sendiri bercerita pernah kencing darah dua kali selama mencari hadits, sekali di Baghdad dan sekali di Mekkah. Sumber tidak menyebut tahun kejadiannya.",["it1"]],
+["Ia mengaitkan sakitnya dengan berjalan tanpa alas kaki di panas terik, dan mengaku tidak pernah naik tunggangan selama mencari hadits. Sumber berbeda soal cara ia membawa kitab, di punggung atau di kepala.",["it1"]]],
+[["Setelah singgah di Irak, ia pulang sebentar ke kota asalnya, lalu berangkat haji ke Mekkah. Tahun kunjungan ini taksiran.",["it1","it2","it3"]],
+["Di Mekkah itulah, menurut ceritanya sendiri, ia kencing darah untuk kedua kalinya.",["it1","it2","it3"]],
+["Kelak ia menempuh Tihamah, Hijaz, Syam, Mesir, Mesopotamia, Persia, dan Khurasan. Tahunnya tidak ditemukan, jadi tidak digambar di peta.",["it1","it2","it3"]]],
+[["Ibnu Thahir wafat di Baghdad pada hari Jumat, September 1113 Masehi, 507 Hijriah, dalam perjalanan pulang dari haji ke Mekkah, yang ia lakukan berkali-kali.",["it1","it5"]]]]
+});
+(function(){function S_(n,m){var a=[];Object.keys(m).forEach(function(k){a[+k]=m[k]});STORYR[n]=a}
+S_("Nafi' mawla Ibnu Umar",{
+0:[["Nafi' berasal dari Daylam, di Persia utara. Ia tertawan dalam penaklukan Persia dan menjadi budak, lalu dimerdekakan oleh Abdullah bin Umar, dan menetap di Madinah.",["nf1","nf2"]],
+["Tahun lahirnya dan tahun ia mulai bersama Ibnu Umar tidak ditemukan, jadi titik ini taksiran.",["nf1","nf2"]]],
+1:[["Pada masa Khalifah Umar bin Abdul Aziz, Nafi' menjadi mufti dan diutus ke Mesir untuk mengajarkan Islam kepada penduduknya.",["nf1"]],
+["Tahun ini taksiran dari masa pemerintahan khalifah itu.",["nf1"]]],
+2:[["Nafi' wafat di Madinah, diperkirakan tahun 117 Hijriah, sekitar 735 atau 736 Masehi. Sebagian penulis menyebut tahun 120 Hijriah.",["nf1"]]]});
+S_("Yahya bin Ma'in",{
+6:[["Sebelum menuju Shan'a, Yahya bin Ma'in dan Ahmad bin Hanbal berhaji lebih dulu.",["h1","ks1","ks2"]],
+["Dalam penuturan yang dinisbatkan kepada Yahya, di Mekkah saat tawaf ia bertemu Abdurrazzaq ash-Shan'ani dan memperkenalkan Ahmad kepadanya.",["h1","ks1","ks2"]],
+["Tahun haji ini taksiran, dan sumbernya sekunder.",["h1","ks1","ks2"]]],
+7:[["Pada tahun 197 Hijriah, Yahya menemani Ahmad bin Hanbal ke Shan'a untuk menemui Abdurrazzaq ash-Shan'ani.",["h1","y3","ks1","ks2"]],
+["Menurut kisah yang dinisbatkan kepada Yahya sendiri, ia mengusulkan agar mereka menyimak hadits itu di Mekkah saja, demi menghemat bekal perjalanan sebulan ke Yaman. Ahmad menolak, karena sejak dari Baghdad niatnya mendengar di Shan'a.",["h1","y3","ks1","ks2"]],
+["Yahya kemudian menawarkan bekalnya kepada Ahmad yang kehabisan, tetapi Ahmad tetap tidak mau menerimanya.",["h1","y3","ks1","ks2"]],
+["Perlu diingat: sumbernya artikel dan blog sekunder, bukan kitab primer, jadi rincian kisah ini belum teruji sanadnya.",[],1]]});
+S_("Ahmad bin Hanbal",{
+7:[["Pada tahun 197 Hijriah, Ahmad bin Hanbal berangkat bersama sahabatnya Yahya bin Ma'in untuk menyimak hadits Abdurrazzaq ash-Shan'ani di Shan'a, Yaman. Mereka berhaji dulu.",["h1","ks1","ks2","ks3","ks4"]],
+["Menurut penuturan Yahya, saat tawaf di Mekkah ia berpapasan dengan Abdurrazzaq sendiri dan memperkenalkan Ahmad kepadanya. Yahya mengusulkan hadits itu diambil saja di Mekkah supaya bekal tidak terkuras, tetapi Ahmad menolak: niatnya sejak dari Baghdad adalah mendengar di Shan'a, dan niat itu tidak ia ubah.",["h1","ks1","ks2","ks3","ks4"]],
+["Dalam kisah yang dituturkan situs-situs populer, bekalnya habis di jalan. Ia menolak tawaran dirham dari Abdurrazzaq maupun bekal dari Yahya, menganyam kain kasar untuk dijual, dan di Shan'a sempat menggadaikan sebuah bejana untuk mencukupi kebutuhannya.",["ks1","ks3","ks4"]],
+["Sepulang dari Yaman, seseorang melihatnya di Mekkah sangat letih. Ia menjawab bahwa lelah itu lebih ringan daripada faedah yang ia peroleh dari Abdurrazzaq.",["ks3","ks4"]],
+["Perlu diingat: rincian ini bersumber artikel dan blog sekunder, sebagian hanya mengutip penuturan Yahya tanpa kitab asalnya. Anggap sebagai kisah yang dikenal, belum teruji sanadnya.",[],1]]});
+S_("Al-Bukhari",{
+8:[["Menurut kisah yang dinukil dari Ibnu Adi lewat Tarikh Baghdad, ketika Al-Bukhari datang ke Baghdad para ahli hadits mendengar kabarnya dan ingin menguji hafalannya.",["bt1","bt2","bt3","bt4","bt6"]],
+["Mereka mengambil seratus hadits lalu menukar isinya: matan dipasang pada sanad hadits lain, dan sanad dipasang pada matan lain. Seratus hadits itu dibagikan kepada sepuluh orang, masing-masing sepuluh hadits, untuk dibacakan di majelis.",["bt1","bt2","bt3","bt4","bt6"]],
+["Penguji maju satu per satu. Untuk tiap hadits yang sudah dikacaukan, Al-Bukhari menjawab bahwa ia tidak mengenalnya.",["bt1","bt2","bt3","bt4","bt6"]],
+["Setelah kesepuluh penguji selesai, ia membetulkan hadits tiap penguji berurutan, menyebut sanad dan matan yang benar, sehingga seratus hadits itu kembali tersusun.",["bt1","bt2","bt3","bt4","bt6"]],
+["Ahli hadits segera paham kedudukannya, sedangkan orang awam menyangka ia tidak tahu apa-apa. Menurut kutipan Ibnu Hajar, yang menakjubkan bukan ia tahu hadits itu tertukar, melainkan ia menghafal versi yang tertukar secara berurutan lalu menyusun yang benar.",["bt1","bt2","bt3","bt4","bt6"]],
+["Perlu diingat: Ibnu Adi menukilnya dari beberapa guru yang namanya tidak disebut, dan satu kutipan menyebut Ibnu Hajar menilai sanad kisah ini ada pembicaraan. Ini kisah masyhur yang sanadnya diperselisihkan, bukan catatan sejarah yang pasti. Tahun titik ini taksiran.",["bt3","bt6"]]]});
+S_("Abu Hatim ar-Razi",{
+3:[["Abu Hatim menuturkan lewat putranya bahwa pada tahun 214 Hijriah ia tinggal di Basra delapan bulan. Niatnya setahun, tetapi bekalnya habis.",["hr1","ahh1","ahh2"]],
+["Ia menjual pakaiannya satu per satu sampai tak ada lagi yang bisa dijual, namun tetap menghadiri majelis ulama bersama seorang temannya. Hari pertama ia pulang lapar dan hanya punya air. Hari kedua ia tetap ke majelis dalam lapar.",["hr1","ahh1","ahh2"]],
+["Hari ketiga ia berkata kepada temannya bahwa ia terlalu lemah untuk ikut karena dua hari tidak makan. Temannya menjawab bahwa ia punya satu dinar dan akan membaginya separuh, dan begitulah mereka meninggalkan Basra.",["hr1","ahh1","ahh2"]],
+["Kisah ini dibaca dari sumber sekunder; kitab primernya belum dibaca.",[],1]],
+6:[["Dari Madinah ia naik kapal di Al-Jar, pantai Laut Merah sehari perjalanan dari Madinah, bertiga dengan Abu Zuhair al-Marwarrudzi dan seorang syekh dari Naisabur.",["hr1","ahh1"]],
+["Menurut penuturannya, mereka tersesat di laut tiga bulan sampai tiba di daratan yang tak dikenal. Beberapa hari berjalan di sana, makanan dan air habis. Dua hari penuh mereka berjalan lapar, hari ketiga Al-Marwarrudzi pingsan, lalu Abu Hatim sendiri pingsan beberapa farsakh kemudian.",["hr1","ahh1"]],
+["Syekh dari Naisabur menemukan orang-orang yang baru tiba dari laut. Mereka menolong, memberi bekal, dan surat pengantar kepada gubernur kota bernama Rayah. Setelah bekal habis lagi, mereka menemukan seekor kura-kura di pantai dan makan darinya.",["hr1","ahh1"]],
+["Di Rayah sang gubernur menjamu mereka beberapa hari dan membekali mereka sampai ke Mesir.",["hr1","ahh1"]],
+["Perlu diingat: tahun kejadian tidak disebut, letak Rayah dan daratan asing tidak jelas sehingga rute laut tidak digambar, dan hitungan hari di tur memakai garis lurus Madinah ke Kairo, bukan tiga bulan di laut. Sumbernya satu penuturan yang sama, sekunder.",[],1]]});
+})();
+Object.assign(STORYH,{
+"niat-bukhari-1":{
+0:[["Kita mulai dari Umar bin al-Khaththab, khalifah kedua dan sahabat, di Madinah.",["umr1","nt1","nt2"]],
+["Dalam sanad ini, Umar yang mendengar sabda itu dari Nabi ﷺ, lalu menyampaikannya dalam khutbah di hadapan orang banyak. Riwayat Al-Bukhari yang dibaca menyebut di atas mimbar.",["umr1","nt1","nt2"]],
+["Isinya: amal itu tergantung niatnya, dan setiap orang mendapat sesuai yang ia niatkan. Karena itu hijrah karena Allah dan Rasul-Nya adalah hijrah kepada Allah dan Rasul-Nya, sedangkan hijrah karena dunia atau perempuan yang hendak dinikahi adalah kepada apa yang ia tuju.",["H"]],
+["Tahun tepatnya khutbah tidak dicatat oleh sumber yang dibaca. Tahun 644 di peta hanyalah titik wafat Umar.",[],1]],
+1:[["Dari Umar, hadits ini diterima 'Alqamah bin Waqqash al-Laitsi, seorang tabi'in Madinah. Dalam sanad ini ia mendengar Umar.",["alw1","nt1","nt2"]],
+["Tahun lahirnya tidak diketahui. Ia wafat sekitar 705 Masehi menurut TDV, dengan tanda tanya. Riwayatnya tidak banyak, tetapi haditsnya ada di Kutub Sittah.",["alw1"]],
+["Ibnu Sa'd dan An-Nasa'i menyebutnya tsiqah, sebagaimana dikutip TDV. Kota Madinah di peta berasal dari nisbahnya, bukan bukti tempat khutbah Umar.",["alw1"]]],
+2:[["Dari 'Alqamah, hadits ini sampai ke Muhammad bin Ibrahim at-Taimi, ahli fiqh Madinah yang tsiqah menurut kutipan Adz-Dzahabi.",["mi1","nt2"]],
+["Dalam sanad ini ia menyatakan mendengar 'Alqamah. Ia wafat sekitar tahun 738 Masehi, 120 Hijriah, dan sebagian menyebut 119.",["mi1","nt2"]],
+["Tahun ia menerima hadits dari 'Alqamah tidak dicatat.",[],1]],
+3:[["Dari at-Taimi, hadits ini diterima Yahya bin Sa'id al-Anshari, qadhi dan muhaddits tabi'in Madinah.",["yss1","nt3"]],
+["Ia memakai lafaz akhbarani, memberitakan kepadaku, dari Muhammad bin Ibrahim, seperti pada potongan sanad Al-Bukhari no. 6689.",["yss1","nt3"]],
+["Kelak ia menjadi qadhi di Hasyimiyah dekat Kufah dan wafat sekitar tahun 760 Masehi. Tahun 710 di peta hanya dugaan.",["yss1","nt3"]]],
+4:[["Dari Yahya, hadits ini diterima Sufyan bin Uyainah, muhaddits Mekkah yang menetap di sana sebagian besar hidupnya.",["sfu1","yss1"]],
+["Di data kita Yahya tercatat di Madinah dan Sufyan di Mekkah, jadi tempat Sufyan menerima dari Yahya tidak diketahui. Bertemu di Hijaz mungkin, tetapi sumber yang dibaca tidak menyebut tempatnya.",["sfu1","yss1"]]],
+5:[["Dari Sufyan, hadits ini diterima Al-Humaidi, hafizh dan faqih Mekkah, penulis Al-Musnad.",["hmd1","nt4"]],
+["Ia menyertai Sufyan bin Uyainah selama sembilan belas tahun, dan dianggap murid terbesarnya. Ia wafat di Mekkah pada Rabiul Awal 219 Hijriah, Maret 834 Masehi.",["hmd1","nt4"]]],
+6:[["Akhirnya hadits ini sampai kepada Al-Bukhari, penyusun Shahih-nya. Al-Humaidi tercatat di antara gurunya, dan hadits ini ia letakkan paling awal dalam kitabnya.",["b2","hmd1","nt1","nt4"]],
+["Di data kita, Al-Humaidi dan Al-Bukhari sama-sama tercatat di Mekkah pada masa hidup yang bersamaan, jadi pertemuan mungkin. Tahun dan tempat tepatnya tidak dicatat.",["b2","hmd1","nt1","nt4"]],
+["Rantai ini dicocokkan dengan sumber sekunder; kitab primernya belum dibaca.",["H"]]]},
+"khiyar-2111":{
+0:[["Hadits ini tentang khiyar dalam jual beli. Dua pihak yang berjual beli masing-masing berhak memilih terhadap rekannya selama belum berpisah, kecuali jual beli khiyar.",["H"]],
+["Sabdanya disampaikan lewat Ibnu Umar. Tempat dan tahun sabda tidak disebut sumber yang dibaca; Madinah di peta hanya wakil.",["H"]]],
+1:[["Orang pertama dalam rantai ini adalah Ibnu Umar, sahabat yang banyak meriwayatkan hadits.",["iu1"]],
+["Ia hijrah ke Madinah tahun 622, tetap di sana pada masa Fitnah Kedua, dan wafat di Mekkah sekitar tahun 693.",["iu1"]]],
+2:[["Dari Ibnu Umar, hadits ini diterima Nafi', budak yang dimerdekakan olehnya, yang menetap di Madinah dan wafat sekitar tahun 735 atau 736.",["nf1","nf2"]],
+["Inilah bagian dari mata rantai emas: Malik dari Nafi' dari Ibnu Umar.",["nf1","nf2"]]],
+3:[["Dari Nafi', hadits ini diterima Malik bin Anas, imam Madinah dan penyusun Al-Muwaththa'.",["k1"]],
+["Hampir seluruh hidupnya di Madinah, dan ia wafat tahun 795 Masehi. Tahun ia belajar dari Nafi' tidak diketahui.",["k1"]]],
+4:[["Dari Malik, hadits ini diterima Abdullah bin Yusuf at-Tinnisi. Ia asal Damaskus, tinggal di Tinnis, Mesir, perawi Al-Muwaththa' dari Malik, dan guru Al-Bukhari.",["hd3","hd4"]],
+["Ia wafat tahun 833 Masehi. Kapan dan di mana ia belajar dari Malik tidak disebut sumber.",["hd3","hd4"]]],
+5:[["Rantai berakhir pada Al-Bukhari, yang memuat hadits ini dalam Shahih-nya.",["b1","hd1","hd2"]],
+["Menurut satu sumber, ia bertemu Abdullah bin Yusuf di Mesir pada tahun 217 Hijriah, sekitar 832 Masehi.",["b1","hd1","hd2"]],
+["Rantai Malik, Nafi', Ibnu Umar dinilai paling sahih oleh Al-Bukhari dan sebagian ulama. Ulama lain menyebut rantai lain: Ahmad dan Ishaq memilih az-Zuhri, Salim, Ibnu Umar.",["H"]]]},
+"mighfar-1846":{
+0:[["Peristiwanya Fathu Makkah, tahun 8 Hijriah, sekitar 630 Masehi. Nabi ﷺ masuk Mekkah dengan mighfar, tutup kepala besi, di kepala beliau.",["hs1"]],
+["Kisah ini sampai kepada kita lewat Anas bin Malik.",["hs1"]]],
+1:[["Anas bin Malik adalah pelayan Nabi ﷺ. Ia wafat di Basra tahun 93 Hijriah, sekitar 712 Masehi.",["an2","an3"]],
+["Menurut sumber yang dibaca, ia pernah ke Damaskus mengadu kepada khalifah soal Al-Hajjaj. Tahunnya taksiran, dan tempat ia menyampaikan hadits ini tidak diketahui.",["an2","an3"]]],
+2:[["Dari Anas, hadits ini diterima Ibnu Syihab az-Zuhri. Dalam sanad ia ditulis Ibnu Syihab; identifikasi dengan az-Zuhri mengikuti daftar paralel Ad-Darimi.",["zu1"]],
+["Menurut satu sumber, ia diperkenalkan kepada khalifah di Damaskus sekitar tahun 82 Hijriah. Maka data kita memuat Anas dan Az-Zuhri sama-sama di Damaskus. Itu kemungkinan pertemuan, bukan bukti.",["zu1"]]],
+3:[["Dari Az-Zuhri, hadits ini diterima Malik bin Anas, imam Madinah, yang hampir seluruh hidupnya di sana.",["k1"]],
+["Az-Zuhri tercatat di Madinah sekitar tahun 710 pada data kita, jadi pertemuan keduanya mungkin. Tahun Malik belajar darinya tidak disebut.",["k1"]]],
+4:[["Dari Malik, hadits ini diterima Abdullah bin Yusuf at-Tinnisi, asal Damaskus yang tinggal di Tinnis, Mesir, dan guru Al-Bukhari. Ia wafat tahun 833 Masehi.",["hd3","hd4"]],
+["Tempat dan tahun ia belajar dari Malik tidak disebut sumber.",["hd3","hd4"]]],
+5:[["Rantai berakhir pada Al-Bukhari, yang memuat hadits ini dalam Shahih-nya sebagai no. 1846, dengan paralel no. 3044 dan 4286.",["b1","hs1","hs2"]],
+["Muslim no. 1357 memuat jalur Malik, Ibnu Syihab, Anas.",["b1","hs1","hs2"]],
+["Sanad ini dibaca dari agregator sekunder; kitab primernya belum dibaca.",["H"]]]}
+});
+Object.assign(STORYH,{
+2:{
+0:[["Hadits ini tentang keadaan para sahabat: dahulu mereka bersama Rasulullah ﷺ dan tujuan mereka satu, tetapi setelah beliau wafat pandangan mereka menoleh ke sana kemari.",["H"]],
+["Penuturnya Ubay bin Ka'b, sahabat Anshar, pemimpin para qari dan penulis wahyu. Ia saksi mata yang menuturkan keadaan para sahabat.",["ubk1"]],
+["Tahun ucapan ini tidak disebut. Ubay wafat di Madinah, tahunnya diperselisihkan antara 19 dan 36 Hijriah, dan data kita memakai 653 sebagai taksiran.",["ubk1"]],
+["Yang dikritik hanya sanadnya; isi haditsnya tidak dihukumi lemah.",["H"]]],
+1:[["Sekarang perhatikan satu nama yang tidak disebut di sanad Ibnu Majah: 'Utayy bin Dhamrah, tabi'in Basra.",["ut1","H"]],
+["Ia tsiqah dan sedikit haditsnya, mendengar dari Ubay bin Ka'b. Menurut kutipan Jami' at-Tahshil dan Mishbah az-Zujajah lewat Muqbil, al-Hasan mendengar hadits ini lewat dia.",["ut1"]],
+["Dalam rantai Ibnu Majah namanya tidak ada. Inilah perawi yang hilang itu.",["H"]]],
+2:[["Berikutnya Al-Hasan al-Bashri, imam tabi'in Basra. Dalam sanad ini ia meriwayatkan langsung dari Ubay.",["hb1","hb2"]],
+["Padahal menurut kutipan tadi ia tidak mendengar dari Ubay. Di sinilah letak cacatnya.",["hb1","hb2"]],
+["Dari data: ia lahir di Madinah tahun 642 dan pindah ke Basra tahun 656, sedangkan Ubay wafat paling akhir sekitar 653 menurut taksiran kita. Itu hanya kemungkinan dari data, bukan bukti.",["hb1","hb2"]]],
+3:[["Dari Al-Hasan, hadits ini diterima Ibnu 'Awn, hafizh Basra yang hidup antara 685 dan 768, sezaman dan sekota dengan gurunya.",["iaw1"]],
+["Muqbil tidak menandainya sebagai titik cacat di hadits ini.",["iaw1"]]],
+4:[["Dari Ibnu 'Awn, hadits ini diterima 'Abd al-Wahhab bin 'Atha' al-'Ijli, orang Basra yang menetap di Baghdad, sahabat dan mustamli Sa'id bin Abi 'Arubah.",["wa1"]],
+["Ia tidak ditandai cacat oleh Muqbil, tetapi penilaian ulama atasnya beragam: Ibnu Ma'in menilainya tsiqah, Al-Bukhari dan An-Nasa'i berkata laisa bil-qawi, dan Ibnu Hajar menyebutnya shaduq yang kadang keliru. Ia wafat tahun 819 di Baghdad, menurut satu sumber.",["wa1"]]],
+5:[["Dari 'Abd al-Wahhab, hadits ini diterima Ishaq bin Manshur al-Kausaj. Ia lahir di Merv, tinggal dan wafat di Naisabur tahun 865.",["ik1"]],
+["Ibnu Hajar menilainya tsiqah tsabt dan Abu Hatim menilainya shaduq. Pertemuannya dengan 'Abd al-Wahhab mungkin, tetapi tempat dan tahunnya tidak dicatat.",["ik1"]]],
+6:[["Rantai berakhir pada Ibnu Majah, penyusun Sunan dari Qazwin. Rihlahnya dimulai tahun 845 ke Ray, Basra, Kufa, Baghdad, Mekkah, Madinah, Damaskus, Kairo, dan Naisabur.",["i1","im5"]],
+["Catatan data: titik Naisabur Ibnu Majah, tahun 868, jatuh sesudah wafat Ishaq tahun 865. Tahun Ibnu Majah memang taksiran, jadi ini berarti urutan tahun di data perlu dicek, bukan bukti keduanya tidak bertemu.",["i1","im5"]],
+["Pensyarah sendiri mencatat bahwa bila hanya melihat para perawinya, hadits ini sempat tampak layak dihasankan. Rapi di ujung tidak memperbaiki cacat di pangkal.",["H"]]]},
+3:{
+0:[["Hadits ini bermula dari sabda Nabi ﷺ. Beliau bertanya kepada para sahabat apakah mereka tahu zina yang paling keji di sisi Allah. Jawab beliau: menghalalkan kehormatan seorang muslim. Lalu beliau membaca ayat tentang orang yang menyakiti mukminin dan mukminat tanpa kesalahan yang mereka perbuat.",["H"]],
+["Di sanad ini yang meneruskannya adalah 'Aisyah, ummul mukminin dan faqihah. Tahun penyampaian tidak disebut, dan ia wafat di Madinah tahun 678.",["ai1","ai2"]],
+["Yang dikritik hanya sanad ini; isi haditsnya tidak dihukumi lemah.",["H"]]],
+1:[["Dari 'Aisyah, hadits ini diterima Ibnu Abi Mulaikah, tabi'in Mekkah, muadzin Ibnu az-Zubair dan qadhi Thaif, yang dinilai tsiqah faqih oleh Ibnu Hajar.",["iam1","iam2","iam3"]],
+["Ia wafat di Mekkah tahun 735. Dalam hadits ini ia perantara antara 'Imran dan 'Aisyah, dan Muqbil tidak menandainya cacat.",["iam1","iam2","iam3"]]],
+2:[["Di sinilah titik cacatnya: 'Imran bin Anas al-Makki, yang di sanad tertulis 'Imran bin Abi Anas.",["ia1"]],
+["Ia menerima dari Ibnu Abi Mulaikah dan 'Atha' bin Abi Rabah, dan dinilai lemah oleh Al-'Uqayli, Abu Hatim, dan Ibnu Hajar. Tahun lahir dan wafatnya tidak ditemukan.",["ia1"]],
+["Pensyarah semula menyahihkan karena mengira yang dimaksud 'Imran al-Qurasyi yang terpercaya, lalu dikoreksi seorang syaikh. Ada pula riwayat lain lewat 'Abdullah bin ar-Rahib dari Ka'b yang berhenti pada ucapan Ka'b dan dinilai lebih sahih; jalur itu belum digambar.",["ia1","H"]]],
+3:[["Dari 'Imran, hadits ini diterima Mu'awiyah bin Hisyam, Al-Qashshar, perawi Kufah, murid dan tetangga Sufyan ats-Tsauri.",["mhq1","mhq2"]],
+["Penilaian ulama atasnya beragam: Abu Hatim shaduq, Ibnu Ma'in shalih, Ahmad banyak salah, dan Ibnu Hajar shaduq yang punya beberapa keliru. Ia wafat tahun 819, menurut satu sumber.",["mhq1","mhq2"]]],
+4:[["Dari Mu'awiyah, hadits ini diterima Abu Kuraib, Muhammad bin al-'Ala' al-Hamdani al-Kufi, salah satu guru para penyusun kitab induk.",["ak1"]],
+["Ia wafat tahun 862 menurut satu sumber; sumber lain memberi angka berbeda.",["ak1"]]],
+5:[["Rantai berakhir pada Abu Ya'la al-Mawshili, penyusun Musnad Abi Ya'la, yang lahir tahun 825 di Mosul dan wafat tahun 919.",["ya1"]],
+["Guru-gurunya tersebar di Baghdad, Basra, Kufah, Wasith, dan Mosul tanpa tahun, jadi rihlahnya tidak digambar.",["ya1"]],
+["Ruas sesudah 'Imran, dari Mekkah ke Kufah lalu Mosul, tidak memperbaiki cacat di tengahnya.",["H"]]]},
+4:{
+0:[["Usamah bin Zaid masuk Ka'bah bersama Rasulullah ﷺ, dan Bilal diperintah menutup pintu. Beliau berdoa, memuji Allah, dan beristighfar di dalamnya.",["usz1","H"]],
+["Lalu beliau keluar, shalat dua rakaat menghadap bagian depan Ka'bah, dan bersabda: inilah kiblat, inilah kiblat.",["H"]],
+["Tahun peristiwa tidak disebut sumber yang dibaca. Dari data, Usamah masuk Ka'bah bersama Nabi ﷺ saat Fathu Makkah tahun 8 Hijriah, tetapi itu belum tentu peristiwa ini.",["usz1"]],
+["Yang dikritik hanya sanad; hadits yang sama datang lewat Ibnu Abbas dalam Shahih Muslim dan An-Nasa'i.",["H"]]],
+1:[["Sekarang perhatikan nama yang digugurkan: Ibnu Abbas. Menurut Muqbil, yang digugurkan 'Atha' di sanad ini adalah Ibnu Abbas, sebagaimana dalam Shahih Muslim dan An-Nasa'i juz 5 halaman 220.",["ib1","ib2"]],
+["Namanya tidak ada dalam rantai An-Nasa'i di kartu ini. Dari data, ia kembali ke Mekkah setelah masa Basra, sekitar tahun 662, perkiraan.",["ib1","ib2"]]],
+2:[["Berikutnya 'Atha' bin Abi Rabah, mufti Mekkah dan tabi'in. Dalam sanad ia meriwayatkan langsung dari Usamah.",["ata1"]],
+["Padahal menurut Abu Zur'ah dan Abu Hatim ia tidak mendengar dari Usamah. Di sinilah letak cacatnya.",["ata1"]],
+["Dari data: 'Atha' wafat di Mekkah sekitar tahun 733, sedangkan Usamah wafat tahun 674 di dekat Madinah. Kedua kota ini kemungkinan sezaman di data, tetapi itu hanya kemungkinan, bukan bukti.",["ata1"]]],
+3:[["Dari 'Atha', hadits ini diterima Abdul Malik bin Abi Sulaiman. Ia tidak ditandai cacat oleh Muqbil, tetapi belum ada di daftar perawi, jadi biografinya belum dibaca.",["H"]]],
+4:[["Berikutnya seorang perawi bernama Yahya. Identitasnya mengikuti pembacaan konteks kitab dan belum diverifikasi, dan ia juga belum ada di daftar perawi.",["H"]]],
+5:[["Lalu Ya'qub bin Ibrahim. Ia juga tidak ditandai cacat, tetapi belum ada di daftar perawi.",["H"]]],
+6:[["Rantai berakhir pada An-Nasa'i, penyusun Sunan, yang akhirnya menetap di Mesir.",["n1"]],
+["Tempat ia menerima hadits ini dari Ya'qub bin Ibrahim tidak dicatat.",["n1"]],
+["Rapi di ujung, tetapi satu perawi yang terlewat di pangkal tidak bisa ditambal.",["H"]]]},
+5:{
+0:[["Usamah bin Zaid membonceng Nabi ﷺ dari Muzdalifah. Unta beliau tidak mengangkat kedua kaki depannya dengan cepat sampai beliau melempar jumrah.",["usz1","H"]],
+["Muzdalifah dan Mina tidak ada di tabel kota, jadi Mekkah dipakai sebagai wakil kawasan. Tahun hajinya tidak ditentukan sumber.",["usz1"]],
+["Muqbil mencatat bahwa hadits ini lahiriahnya hasan. Yang dipertanyakan hanya sanad.",["H"]]],
+1:[["Sekarang Asy-Sya'bi, tabi'in Kufah, hakim dan faqih. Dalam sanad ia meriwayatkan dari Usamah.",["sab1"]],
+["Abu Hatim berkata tidak mungkin ia mendengar dari Usamah, mestinya ada seseorang di antara mereka, tetapi begitulah Hammam meriwayatkannya. Al-Bazzar sendiri mencatat tidak ada riwayat Asy-Sya'bi dari Usamah selain ini.",["sab1","H"]],
+["Dari data: Usamah wafat tahun 674 dan Asy-Sya'bi lahir sekitar 640 di Kufah. Hidup sezaman mungkin, tetapi kota hidup keduanya berbeda; itu hanya kemungkinan, bukan bukti.",["sab1"]]],
+2:[["Dari Asy-Sya'bi, hadits ini diterima 'Azrah bin Abdirrahman. Al-Bazzar mencatat hanya 'Azrah yang meriwayatkan dari Asy-Sya'bi.",["H"]],
+["Menurut sumber sekunder, ia al-Khuza'i al-Kufi, guru antara lain Asy-Sya'bi dan murid Qatadah dan Sulaiman at-Taimi. Wafatnya tidak dicatat, jadi belum masuk daftar.",["H"]]],
+3:[["Dari 'Azrah, hadits ini terus ke Qatadah bin Di'amah, tabi'in Basra, buta sejak lahir, dan hafizh.",["qtd1"]],
+["Ia tidak ditandai cacat di hadits ini.",["qtd1"]]],
+4:[["Dari Qatadah, hadits ini diterima Hammam, murid Qatadah di Basra.",["hm1"]],
+["Identitas Hammam sebagai Hammam bin Yahya al-Awdi, yang wafat di Basra sekitar tahun 780, adalah dugaan yang belum diverifikasi.",["hm1"]]],
+5:[["Dari Hammam, hadits ini diterima Mu'adz bin Hisyam, perawi Basra, putra Hisyam ad-Dastuwa'i, murid Qatadah. Ia wafat di Basra pada Rabiul Akhir tahun 200 Hijriah.",["mh1","mhs1","mhs3"]],
+["Ibnu Ma'in menilainya tsiqah sekaligus tidak terlalu kuat. Hubungannya dengan Hammam sebagai gurunya mengikuti Muqbil; sumber lain tidak mencatatnya.",["mh1","mhs1","mhs3"]]],
+6:[["Dari Mu'adz, hadits ini diterima Amr bin Ali al-Fallas, hafizh Basra yang wafat di Samarra, akhir Dzulqa'dah tahun 249 Hijriah, dan dinilai tsiqah hafizh oleh An-Nasa'i.",["am1","aml2","mh1"]],
+["Daftar gurunya di salah satu sumber terpotong, tetapi sumber lain mencatat Amr sebagai murid Mu'adz bin Hisyam.",["am1","aml2","mh1"]]],
+7:[["Rantai berakhir pada Al-Bazzar, penyusun Al-Musnad, yang lahir tahun 213 Hijriah dan wafat di Ramla tahun 292.",["bz1"]],
+["Ia berkeliling ke Isfahan, Mekkah, Basra, Baghdad, Syam, dan Mesir tanpa tahun. Tempat ia menerima hadits ini dari Amr bin Ali tidak dicatat.",["bz1"]]]},
+6:{
+0:[["Usamah bin Zaid bertolak bersama Rasulullah ﷺ dari Arafah. Kendaraan beliau tidak mengangkat kaki depannya dengan cepat sampai tiba di Muzdalifah.",["usz1","H"]],
+["Arafah tidak ada di tabel kota, jadi Mekkah dipakai sebagai wakil kawasan, dan tahunnya tidak disebut.",["usz1"]]],
+1:[["Sekarang Asy-Sya'bi, tabi'in Kufah. Dalam sanad tertulis ia berkata haddatsani, menyimak langsung, dari Usamah.",["sab1"]],
+["Abu Hatim menegaskan ia tidak mendengar sesuatu pun dari Usamah. Muqbil mencatat lafaz penyimakan di sini mungkin kesalahan penyalin atau perawi, dan ucapan hafizh didahulukan.",["sab1","H"]]],
+2:[["Dari Asy-Sya'bi, hadits ini diterima 'Azrah, orang Kufah, guru antara lain Asy-Sya'bi dan murid Qatadah dan Sulaiman at-Taimi, menurut sumber sekunder.",["H"]],
+["Ia tidak ditandai cacat oleh Muqbil di hadits ini, tetapi belum ada di daftar perawi.",["H"]]],
+3:[["Dari 'Azrah, hadits ini terus ke Qatadah bin Di'amah, tabi'in Basra, buta sejak lahir, hafizh. Ia tidak ditandai cacat.",["qtd1"]]],
+4:[["Dari Qatadah, hadits ini diterima dua muridnya yang disebut bersama di sanad: Syu'bah dan Hammam.",["shb1","shb2"]],
+["Syu'bah menetap di Basra dan wafat di sana karena wabah. Hammam belum ada di daftar, dan identitasnya mengikuti konteks kitab.",["shb1","shb2"]]],
+5:[["Rantai berakhir pada Abu Dawud ath-Thayalisi, penyusun Al-Musnad, yang lahir dan wafat di Basra tahun 204 Hijriah, 819 Masehi, menurut Wikipedia.",["tay1"]],
+["Ia pindah ke Baghdad untuk belajar, tanpa tahun, dan banyak bepergian. Tempat ia menerima hadits ini tidak dicatat.",["tay1"]],
+["Abu Hatim menilai kedua hadits Usamah dari Asy-Sya'bi ini keliru. Rapi di ujung, tetapi cacat ada di pangkal.",["H"]]]},
+7:{
+0:[["Hadits ini pendek tetapi dikenal: barang siapa diberi kebaikan lalu berkata kepada pelakunya jazakallahu khairan, sungguh ia telah sangat baik dalam memuji.",["H"]],
+["Usamah bin Zaid meriwayatkannya dari Nabi ﷺ. Tempat dan tahun tidak disebut; Madinah dipakai di peta karena ia wafat di dekatnya.",["usz1"]],
+["Yang istimewa dari hadits ini: pengkritiknya tidak menunjuk satu perawi pun sebagai biang cacat.",["H"]]],
+1:[["Dari Usamah, hadits ini diterima Abu Utsman an-Nahdi, tabi'in yang masuk Islam semasa Nabi ﷺ tetapi tidak bertemu beliau, dan wafat di Basra.",["aun1"]],
+["Ia tidak ditunjuk sebagai titik cacat oleh pengkritik.",["aun1"]]],
+2:[["Dari Abu Utsman, hadits ini diterima Sulaiman at-Taimi, tabi'in Basra yang wafat tahun 143 Hijriah pada usia 92 tahun, menurut satu sumber.",["sat1"]],
+["Sumber itu tidak menyebut Abu Utsman sebagai gurunya; hubungan di sanad ini mengikuti Muqbil.",["sat1"]]],
+3:[["Berikutnya Su'air bin al-Khims, perawi Basra. Ia tidak ditandai cacat, tetapi belum ada di daftar perawi, jadi biografinya belum dibaca.",["H"]]],
+4:[["Lalu Al-Ahwash bin Jawwab, juga dari Basra. Statusnya sama: tidak ditandai cacat dan belum ada di daftar perawi.",["H"]]],
+5:[["Langkah ini menggabungkan dua nama: Al-Husain bin al-Hasan al-Marwazi, yang di sanad ditulis berada di Mekkah, dan Ibrahim bin Sa'id al-Jauhari.",["H"]],
+["Ibrahim ada di daftar dengan kota Baghdad, wafat sekitar tahun 861 dengan tahun yang diperselisihkan, dan di antara muridnya Al-Bazzar, At-Tirmidzi, dan Muslim. Peta tetap memakai Mekkah untuk langkah gabungan ini karena kota Al-Husain tertulis di sanad.",["H"]]],
+6:[["Rantai berakhir pada At-Tirmidzi, penyusun Jami'. Data mencatat rihlahnya ke Hijaz sekitar tahun 862, taksiran.",["t1"]],
+["Gurunya Al-Husain al-Marwazi tertulis berada di Mekkah, sehingga titik ini cocok, tetapi itu belum membuktikan tempat ia menerima hadits ini.",["t1"]],
+["At-Tirmidzi menilainya hasan jayyid gharib dan mencatat Al-Bukhari tidak mengenalnya. Abu Hatim berkata hadits ini munkar dengan sanad ini, tanpa menunjuk satu perawi. Peta tidak bisa memastikan di mana masalahnya; ini batas alat ini, bukan bukti sanadnya sehat.",["H"]]]}
+});
 BC.R=STORYR;BC.H=STORYH;
 var on=function(){return BC.mode==="cerita"};
 function plain(a){return a.map(function(p){return p[0]}).join(" ")}
@@ -3650,7 +3879,13 @@ return '<span class="bcm">📖 Bercerita</span> '+html(a)+'<details class="bcd">
 /* --- hadits --- */
 function had(h,i){var o=STORYH[h.id];return o&&o[i]||null}
 window.BCT=function(h,s,i){var a=on()&&had(h,i);return a?plain(a):s.cerita};
-window.BCP=function(h,s,i){if(!on())return null;var a=had(h,i);if(!a)return'<p>'+esc(s.cerita)+'</p><p class="hsl bcn">Naskah Bercerita belum ada untuk langkah ini; memakai mode Info.</p>';
+function posKey(h){return"rhs.bcpos."+h.id}
+window.BCRES=function(id,i){var h=(window.HS||[]).find(function(x){return String(x.id)===String(id)});if(h&&window.HSO)HSO(h,i)};
+window.BCP=function(h,s,i){if(!on())return null;var a=had(h,i);var rs="";
+try{var n=h.langkah.length;if(a){if(i>0&&i<n-1)localStorage.setItem(posKey(h),String(i));else if(i>=n-1)localStorage.removeItem(posKey(h));
+if(i===0){var sv=+localStorage.getItem(posKey(h));if(sv>0&&sv<n)rs='<p><button type="button" class="hb" style="min-height:36px" onclick="BCRES(\''+String(h.id).replace(/'/g,"")+'\','+sv+')">⏯ Lanjutkan dari langkah '+(sv+1)+' ('+esc(h.langkah[sv].perawi.replace(/\s*\(.*?\)\s*$/,""))+')</button></p>'}}}catch(e){}
+if(a)a=a.slice();if(rs&&a)return rs+BCP2(h,s,i,a);return BCP2(h,s,i,a)};
+window.BCP2=function(h,s,i,a){if(!a)return'<p>'+esc(s.cerita)+'</p><p class="hsl bcn">Naskah Bercerita belum ada untuk langkah ini; memakai mode Info.</p>';
 return'<p><span class="bcm">📖 Bercerita</span> '+html(a)+'</p><details class="bcd"><summary>Sumber langkah ini</summary><p class="bco"><b>Teks Info (data):</b> '+esc(s.cerita)+'</p>'+refl(a,h.sumber)+'<p class="bcw">Miring = jembatan tanpa klaim baru. Kurung siku = id rujukan.</p></details>'};
 /* --- pilihan mode --- */
 window.BCM=function(){return'<label class="bcsel">Mode <select class="bcm-sel"><option value="info"'+(on()?"":" selected")+'>ℹ️ Info</option><option value="cerita"'+(on()?" selected":"")+'>📖 Bercerita</option></select></label>'};
@@ -3660,6 +3895,18 @@ document.querySelectorAll(".bcm-sel").forEach(function(o){o.value=BC.mode});
 if(window.HSJ&&window.HSI&&window.HSI()>=0&&document.getElementById("hsp")&&document.getElementById("hsp").children.length)try{HSJ(HSI())}catch(x){}});
 /* sisipkan di kontrol tur rawi */
 (function(){var l=document.getElementById("tvl");if(!l||!l.parentNode)return;var w=document.createElement("span");w.innerHTML=BCM();l.parentNode.insertBefore(w,l)})();
+
+/* laju lebih tenang di mode Bercerita + timer tidur (sesi 2) */
+window.BCR=function(){return BC.mode==="cerita"?.93:1};
+var SL={t:0,end:0,iv:0};
+function sleepStop(){var go=function(){try{var b=document.getElementById("hsap");if(b&&/^⏸/.test(b.textContent))b.click();var x=document.getElementById("tx");if(x)x.click();if(window.speechSynthesis)speechSynthesis.cancel()}catch(e){}};
+var n=0,w=setInterval(function(){n++;if(!(window.speechSynthesis&&speechSynthesis.speaking)||n>40){clearInterval(w);go()}},500)}
+function sleepSet(m){clearTimeout(SL.t);clearInterval(SL.iv);SL.end=0;var lb=document.querySelectorAll(".bcsl-t");lb.forEach(function(e){e.textContent=""});
+if(!m)return;SL.end=Date.now()+m*60000;SL.t=setTimeout(function(){clearInterval(SL.iv);lb.forEach(function(e){e.textContent="selesai"});sleepStop()},m*60000);
+SL.iv=setInterval(function(){var r=Math.max(0,Math.round((SL.end-Date.now())/60000));document.querySelectorAll(".bcsl-t").forEach(function(e){e.textContent="sisa "+r+" mnt"})},15000);lb.forEach(function(e){e.textContent="sisa "+m+" mnt"})}
+var oldM=window.BCM;window.BCM=function(){return oldM()+'<label class="bcsel">😴 Timer <select class="bcsl"><option value="0">mati</option><option value="15">15 mnt</option><option value="30">30 mnt</option><option value="45">45 mnt</option><option value="60">60 mnt</option></select> <small class="bcsl-t"></small></label>'};
+document.addEventListener("change",function(e){var t=e.target;if(t&&t.classList&&t.classList.contains("bcsl")){document.querySelectorAll(".bcsl").forEach(function(o){o.value=t.value});sleepSet(+t.value)}});
+(function(){var l=document.querySelector("#tvl");if(!l||!l.parentNode)return;var w=document.createElement("span");var d=document.createElement("div");d.innerHTML=window.BCM();var all=d.querySelectorAll("label");w.appendChild(all[all.length-1]);l.parentNode.insertBefore(w,l)})();
 var st=document.createElement("style");st.textContent=".bcsel{display:inline-flex;gap:5px;align-items:center;font-size:.8rem}.bcsel select{font:inherit}.bcm{font-size:.72rem;opacity:.8;letter-spacing:.03em}.bcp i{opacity:.85}.bcr{opacity:.55}.bcd{margin-top:6px;font-size:.82rem}.bcd summary{cursor:pointer}.bcl{margin:4px 0 4px 16px;padding:0}.bcw,.bcn{opacity:.65;font-size:.76rem}.bco{opacity:.85}";document.head.appendChild(st);
 })();
 </script>
