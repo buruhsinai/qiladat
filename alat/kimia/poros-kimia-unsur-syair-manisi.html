@@ -3119,5 +3119,162 @@ list();
 })();
 </script>
 <script src="../alat-nav-kembali.js" defer></script>
+<!--TUR-START-->
+<style id="tur-css">
+#tur-fab{position:fixed;left:14px;bottom:14px;z-index:9996;background:var(--panel);color:var(--gold);border:1px solid var(--border-strong);border-radius:100px;padding:8px 14px;font:600 13px Karla,sans-serif;box-shadow:0 4px 18px rgba(0,0,0,.4)}
+#tur-welcome{position:fixed;inset:0;z-index:10000;background:rgba(16,20,26,.94);display:none;align-items:center;justify-content:center;padding:20px}
+#tur-welcome.on{display:flex}
+#tur-welcome .bx{max-width:540px;background:var(--panel);border:1px solid var(--border-strong);border-radius:8px;padding:28px;text-align:center}
+#tur-welcome h2{font-size:26px;margin-bottom:4px}
+#tur-welcome .ar{font:32px/1.8 Amiri,serif;color:var(--gold);direction:rtl}
+#tur-welcome p{color:var(--muted);font-size:14.5px;margin:8px 0 16px}
+#tur-welcome .k{font-size:12px;margin:14px 0 0}
+.tur-b{background:var(--gold);color:#10141A;border-radius:4px;padding:10px 18px;font:600 14px Karla,sans-serif;margin:4px}
+.tur-b.g{background:transparent;color:var(--muted);border:1px solid var(--border-strong)}
+#tur-spot{position:fixed;z-index:9990;pointer-events:none;border:2px solid var(--gold);border-radius:8px;box-shadow:0 0 0 100vmax rgba(10,13,18,.62);display:none}
+#tur-sub{position:fixed;z-index:9995;left:50%;bottom:74px;transform:translateX(-50%);width:min(760px,calc(100% - 28px));background:rgba(23,29,37,.96);border:1px solid var(--border-strong);border-radius:8px;padding:12px 18px;text-align:center;display:none;font-size:16.5px;line-height:1.55}
+#tur-sub small{display:block;color:var(--gold);font:italic 13px Fraunces,serif;margin-bottom:3px}
+#tur-sub .ar{display:block;font:26px/1.8 Amiri,serif;direction:rtl;color:var(--gold)}
+#tur-ctl{width:max-content;max-width:calc(100% - 16px);flex-wrap:wrap;justify-content:center;position:fixed;z-index:9996;left:50%;bottom:16px;transform:translateX(-50%);display:none;gap:6px;align-items:center;background:var(--panel);border:1px solid var(--border-strong);border-radius:100px;padding:5px 8px}
+#tur-ctl button,#tur-ctl select{background:var(--panel-2);border:1px solid var(--border-strong);color:var(--text);border-radius:100px;padding:5px 11px;font:600 12.5px Karla,sans-serif;max-width:160px}
+#tur-prog{position:fixed;z-index:9997;left:0;bottom:0;height:4px;width:0;background:var(--gold);transition:width .4s;display:none}
+body.tur-on #tur-ctl{display:flex}body.tur-on #tur-prog,body.tur-on #tur-spot,body.tur-on #tur-sub{display:block}body.tur-on #tur-fab{display:none}
+#tur-cur{position:fixed;left:-11px;top:-11px;width:22px;height:22px;z-index:9998;pointer-events:none;border:2px solid #fff;border-radius:50%;background:rgba(224,169,77,.55);box-shadow:0 0 0 2px rgba(16,20,26,.6);opacity:0;transition:transform .5s cubic-bezier(.3,.7,.3,1),opacity .3s;display:none}
+body.tur-on #tur-cur{display:block}#tur-cur.p{animation:turp .45s}@keyframes turp{50%{box-shadow:0 0 0 14px rgba(224,169,77,.25)}}
+@media(max-width:700px){#tur-sub{bottom:112px;font-size:15px}#tur-sub .ar{font-size:22px}#tur-ctl{border-radius:16px;left:8px;right:8px;transform:none;width:auto;max-width:none}#tur-fab{bottom:10px}}
+body.tur-clean #snav{display:none}body.tur-clean #tur-ctl,body.tur-clean #tur-prog,body.tur-clean #tur-fab{display:none!important}
+</style>
+<div id="tur-welcome"><div class="bx"><h2>Tur Suara</h2><div class="ar">المنظومة الكيميائية</div>
+<p>Dengarkan kisah kimia dari dua belas bait ini sambil melihat alat bergerak sendiri mengikuti narasi. Enam belas bab, sekitar 9 menit.</p>
+<button class="tur-b" id="tur-v">🔊 Mulai dengan suara</button><button class="tur-b g" id="tur-s">💬 Subtitle saja</button><button class="tur-b g" id="tur-n">📄 Unduh naskah</button><button class="tur-b g" id="tur-r">🎞 SRT putaran terakhir</button><button class="tur-b g" id="tur-x">Lewati</button>
+<p class="k" id="tur-note"></p><p class="k">Kunci: Spasi jeda · ←/→ maju-mundur · H mode rekam bersih · Esc tutup. Tombol 🎬 Tur di kiri bawah memunculkan tur kapan saja.</p></div></div>
+<button id="tur-fab">🎬 Tur</button>
+<div id="tur-cur"></div><div id="tur-spot"></div><div id="tur-sub"></div><div id="tur-prog"></div>
+<div id="tur-ctl"><button id="tur-pv">◀</button><button id="tur-pl">⏸</button><button id="tur-nx">▶</button><select id="tur-ch"></select><select id="tur-vs" style="display:none"></select><select id="tur-rt"><option value="0.9">0,9×</option><option value="1" selected>1×</option><option value="1.12">1,12×</option></select><button id="tur-vo">🔊</button><button id="tur-cl" title="Mode rekam bersih (H)">🎥</button><button id="tur-cx">✕</button></div>
+<script id="tur-js">
+(function(){'use strict';
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],SS=window.speechSynthesis,B=document.body;
+let t0=0,lg=[],vn='',tok=0,k=-1,voice=true,rate=1,fast=1,tw=[],tm=[],tgt=null,lastEl='';
+const at=(f,ms)=>tm.push(setTimeout(f,ms));
+function clr(){tw.forEach(o=>o.x=1);tw=[];tm.forEach(clearTimeout);tm=[]}
+function val(s,v,ev){const e=$(s);if(e){e.value=v;e.dispatchEvent(new Event(ev||'input',{bubbles:true}));at(()=>cur(e),450/fast)}}
+const pick=(s,i)=>i==null?$(s):$$(s)[i];
+function cur(e,f){const c=$('#tur-cur');if(!e||!B.classList.contains('tur-on'))return;const r=e.getBoundingClientRect();if(r.bottom<0||r.top>innerHeight)return;c.style.opacity=1;c.style.transform='translate('+(r.left+(f==null?Math.min(r.width/2,70):f*r.width))+'px,'+(r.top+r.height/2)+'px)'}
+function clk(s,i){const e=pick(s,i);if(!e)return;const on=B.classList.contains('tur-on');if(on)cur(e);at(()=>{const x=pick(s,i)||e,c=$('#tur-cur');c.classList.remove('p');void c.offsetWidth;c.classList.add('p');x.click()},on?600/fast:0)}
+function seq(s,ms){const n=$$(s).length;for(let i=0;i<n;i++)at(()=>clk(s,i),ms*i/n)}
+function sw(s,p,ms){const e=$(s);if(!e)return;const t0=performance.now(),n=p.length-1,o={};tw.push(o);
+ (function f(now){if(o.x)return;const u=Math.min(1,(now-t0)/ms),q=u*n,i=Math.min(n-1,Math.floor(q));
+ e.value=+(p[i]+(p[i+1]-p[i])*(q-i)).toFixed(2);e.dispatchEvent(new Event('input',{bubbles:true}));if(e.type==='range')cur(e,(e.value-e.min)/(e.max-e.min));else cur(e);if(u<1)requestAnimationFrame(f)})(t0)}
+const op=(...a)=>a.forEach(n=>{const e=$('.bait[data-n="'+n+'"]');e&&e.classList.add('open')});
+const bt=n=>'.bait[data-n="'+n+'"]';
+function tg(s){const e=$(s);if(!e)return;tgt=e;if(s===lastEl)return;lastEl=s;
+ const r=e.getBoundingClientRect(),av=innerHeight*.62;
+ scrollTo({top:r.top+scrollY-(r.height>av?70:(av-r.height)/2+56),behavior:'smooth'})}
+function loop(){const s=$('#tur-spot');s.style.visibility=tgt?'visible':'hidden';if(tgt&&B.classList.contains('tur-on')){const r=tgt.getBoundingClientRect(),t=Math.max(r.top-6,6),b=Math.min(r.bottom+6,innerHeight-6);
+ s.style.top=t+'px';s.style.left=Math.max(r.left-6,4)+'px';s.style.width=Math.min(r.width+12,innerWidth-8)+'px';s.style.height=Math.max(b-t,0)+'px'}
+ requestAnimationFrame(loop)}
+/* BAB: t=judul, el=sorotan awal, b=[[narasi, fn(ms), arab]] */
+const BAB=[
+{t:'Pembukaan',el:'header.top',b:[
+['Bayangkan sebuah syair pendek, hanya dua belas bait, yang ditulis agar kimia mudah dihafal. Penyairnya Walid bin Idris al-Manisi. Isinya tujuh jalan pembentukan garam, dan urutan logam dari yang paling garang sampai yang paling mulia.',null,'المنظومة الكيميائية'],
+['Halaman ini mengubah syair itu menjadi laboratorium. Setiap bait bisa dibaca, lalu diuji lewat lima belas alat interaktif, dan dari situ tumbuh tiga ratus tujuh puluh teori. Mari berjalan, satu bab satu cerita.',()=>tg('.badge-row')]]},
+{t:'Cara menjelajah',el:'#snav',b:[
+['Sebelum mulai, tiga hal yang membantu. Menu atas selalu menempel: sekali klik, Anda melompat ke bagian mana pun. Di bab syair ada kotak cari yang menelusuri bait dan seluruh bahan, dan ukuran huruf Arab bisa digeser sesuai layar. Semua alat di halaman ini boleh Anda gerakkan sendiri kapan saja.',ms=>at(()=>tg('#syair .controls'),ms*.55)]]},
+{t:'Bait pertama: besi diturunkan',el:bt(1),b:[
+['Syair dibuka dengan memuji Pencipta logam, dan Dia yang menurunkan besi. Kata menurunkan ini menarik: Al-Quran juga memakainya, di surat Al-Hadid ayat dua puluh lima.',()=>op(1),'وَمُنْزِلَ الْحَدِيدِ فِي الْمَدَائِنِ'],
+['Dan sains menambahkan kejutan. Besi tidak lahir di bumi. Ia ditempa di inti bintang-bintang besar, lalu disebar ke angkasa oleh ledakan supernova.'],
+['Untuk menghafal, ada mode hafalan. Baris kedua tiap bait dikaburkan. Tebak dulu dalam hati, lalu klik untuk membukanya.',ms=>{tg('#hf');clk('#hf');at(()=>clk('#hf'),ms)}]]},
+{t:'Mengapa besi? Kurva energi ikat',el:'#besi .card',b:[
+['Mengapa besi? Lihat kurva energi ikat per nukleon. Dari helium, kurva naik melewati karbon dan oksigen, sampai mencapai puncak di sekitar besi dan nikel.',ms=>sw('#bs',[4,56],ms)],
+['Setelah itu kurva turun pelan sampai emas dan uranium. Artinya, menggabungkan inti yang lebih ringan dari besi melepas energi, itulah bahan bakar bintang. Tetapi di besi keuntungan itu habis. Maka fusi bintang berhenti di sana, dan besi menumpuk.',ms=>sw('#bs',[56,197],ms)]]},
+{t:'Besi ditempa',el:'#tempa .two',b:[
+['Besi di tangan manusia. Kadar karbon, suhu, dan laju pendinginan menentukan apakah baja lunak, keras, atau getas. Perhatikan struktur berubah ketika pendinginan dipercepat.',ms=>sw('#rt',[0,100],ms)],
+['Baja yang terlalu keras mudah patah seperti kaca. Maka ia dipanaskan lagi dengan lembut, namanya tempering. Geser suhunya, dan lihat grafik kerasnya melawan getasnya bergeser.',ms=>sw('#tp',[150,650],ms)]]},
+{t:'Tujuh jalan pembentukan garam',el:bt(2),b:[
+['Bait kedua berjanji: pembentukan garam punya beberapa jalan. Bait tiga sampai delapan merincinya menjadi tujuh.',()=>op(2),'تَكَوُّنُ الأَمْلَاحِ يَا صَاحِ طُرُقْ'],
+['Jalan satu: logam bertemu asam, jadi garam dan gas hidrogen. Jalan dua: oksida logam bertemu asam, jadi garam dan air. Jalan tiga: asam bertemu basa, jadi garam dan air.',()=>{op(3,4,5);tg(bt(4))}],
+['Jalan empat dan lima: asam atau basa bertemu garamnya, lalu bertukar pasangan. Jalan enam: dua garam bertukar, dan sering menghasilkan endapan. Jalan tujuh: logam mendesak logam lain dari garamnya.',()=>{op(6,7,8);tg(bt(7))}],
+['Bait sembilan merapikannya: jalan pertama dan ketujuh disebut penggantian, sisanya pertukaran. Dan penggantian itulah yang kita uji berikutnya.',()=>{op(9);tg(bt(9))},'فَسَابِعٌ وَأَوَّلٌ إِزَاحَةُ']]},
+{t:'Deret pendesakan logam',el:'#deret-row',b:[
+['Bait sepuluh sampai dua belas menyebut urutannya: kalium, kalsium, natrium, magnesium, aluminium, seng, besi, timbal, hidrogen, tembaga, raksa, perak, dan emas. Makin ke kiri, makin garang.'],
+['Coba: besi dimasukkan ke larutan tembaga sulfat. Besi berada di kiri tembaga, jadi besi mendesak tembaga. Besi larut, dan tembaga keluar sebagai endapan merah. Itulah bait delapan, hidup di depan mata.',()=>{tg('#res');val('#an','SO4','change');val('#m1',6,'change');val('#m2',9,'change')}],
+['Sekarang dibalik: tembaga dimasukkan ke larutan besi. Tidak terjadi apa-apa, sebab yang di kanan tidak sanggup mendesak yang di kiri.',()=>{val('#m1',9,'change');val('#m2',6,'change')}]]},
+{t:'Bait 10–12 dibaca perlahan',el:bt(10),b:[
+['Sekarang kita baca deretnya langsung dari syair. Bait sepuluh membuka dengan kalium, lalu kalsium, natrium, dan magnesium. Perhatikan: penyair menuliskan nama unsur dengan ejaan Arab hasil serapan, bukan kata Arab asli.',()=>op(10),'إِزَاحَةٌ فَهَاكَهَا بُوتَسْيُمُ'],
+['Bait sebelas melanjutkan: aluminium, seng, besi, timbal, hidrogen, dan tembaga. Hidrogen ikut berbaris sebagai patokan: logam di kirinya bisa mendesak hidrogen dari asam, yang di kanannya tidak.',()=>{op(11);tg(bt(11))},'أَلَمْنِيُمٌ فَزِنْكُهَا حَدِيدُهُمْ'],
+['Bait dua belas menutup dengan raksa, perak, dan emas. Penyair menutupnya dengan kata takjub: sungguh mengagumkan. Dari kalium yang sangat garang sampai emas yang diam di dalam asam, semuanya tersusun dalam tiga bait.',()=>{op(12);tg(bt(12))},'خِتَامُهَا وَإِنَّهُ لَعَجَبُ']]},
+{t:'Tumbaga: mengapa emas mulia',el:'#tumbaga .two',b:[
+['Orang Quimbaya di Kolombia membuat perhiasan tumbaga, paduan emas dan tembaga. Geser kadar emasnya, dan lihat titik leleh serta tembaga yang dihemat.',ms=>sw('#ts',[0,100],ms)],
+['Lalu mereka menyepuhnya dengan asam. Permukaan dipanaskan, tembaga di kulit menjadi oksida. Direndam asam, oksida tembaga larut, itu bait empat. Emas, penutup deret di bait dua belas, tidak bereaksi. Tertinggal kulit emas yang berkilau.',ms=>seq('#trow .chip',ms)]]},
+{t:'Asam, basa, dan netralisasi',el:'#asam>.card',b:[
+['Bait tiga dan lima membicarakan asam dan basa. Skala pH berjalan dari nol, sangat asam, sampai empat belas, sangat basa. Tujuh adalah netral.',ms=>sw('#phs',[7,0,14,7],ms)],
+['Asam pekat harus diencerkan. Rumusnya: molaritas awal kali volume awal sama dengan molaritas akhir kali volume akhir. Untuk lima ratus mililiter asam satu molar dari stok dua belas molar, perlu sekitar empat puluh dua mililiter stok, lalu tambah air.',()=>tg('#asam .two>.card:first-child')],
+['Netralisasi, bait lima: asam klorida bertemu natrium hidroksida jadi garam dapur dan air. Lima milimol asam, baru empat milimol basa, asam masih tersisa. Tambah basa sampai lima puluh mililiter, tepat seimbang, dan yang tertinggal hanya garam dan air.',ms=>{tg('#asam .two>.card:last-child');sw('#n4',[40,50],ms*.8)}]]},
+{t:'Garam dalam larutan',el:'#garam .card',b:[
+['Bait enam dan tujuh: garam yang larut pecah menjadi ion. Makin pekat, ion makin rapat, dan jarak yang masih terasa oleh sebuah muatan, yang disebut panjang Debye, makin pendek. Di air tawar sekitar sepuluh nanometer. Di cairan tubuh kurang dari satu nanometer. Di air laut, lebih pendek lagi.',ms=>seq('#garam [data-c]',ms*.85)]]},
+{t:'Gas dan perubahan fase',el:'#atmosfer .two',b:[
+['Hidrogen yang dilepas logam dari asam, bait tiga, tunduk pada hukum gas ideal. Satu mol gas pada nol derajat dan satu atmosfer memakai dua puluh dua koma empat liter. Dan seratus milimol hidrogen dari seng dan asam, pada dua puluh lima derajat, memakai sekitar dua koma empat lima liter.',ms=>{clk('#gstp');at(()=>clk('#gh2'),ms*.5)}],
+['Lalu uap air dari netralisasi, bait lima. Panaskan seratus gram es, dan grafik menunjukkan tiga tahap: melebur, mendidih, lalu menjadi uap. Panas tersembunyi saat mendidih, dua ribu dua ratus enam puluh joule per gram, jauh lebih besar daripada saat melebur.',ms=>{tg('#atmosfer .two>.card:last-child');sw('#f3',[0,150],ms)}]]},
+{t:'Model Bohr: asal warna nyala',el:'#bohr .card',b:[
+['Mengapa logam bernyala dengan warna berbeda? Karena elektron turun dari tingkat energi tinggi ke rendah, dan melepas cahaya. Untuk hidrogen, turun dari tingkat tiga ke dua memberi merah, sekitar enam ratus lima puluh enam nanometer. Dari tingkat enam ke dua memberi ungu, sekitar empat ratus sepuluh. Logam sebenarnya berelektron banyak, jadi warnanya campuran banyak garis.',ms=>{val('#bzs',1);val('#bls',2);sw('#bhs',[3,6],ms)}]]},
+{t:'Peta unsur',el:'#peta118 .card',b:[
+['Syair hanya menyebut tiga belas nama. Tetapi bahan menunjukkan tiga belas nama itu menarik tiga puluh lima unsur, dari seratus delapan belas yang ada. Lapisan-lapisan peta dinyalakan satu per satu.',ms=>seq('#lf button',ms*.9)]]},
+{t:'Peta 35 unsur',el:'#unsur .card',b:[
+['Dari tiga belas nama dalam syair, bahan menarik sisanya lewat lima poros, hingga tiga puluh lima unsur unik. Setiap poros bisa dinyalakan sendiri, dan menyentuh sebuah unsur menampilkan perannya serta posisinya dalam syair. Satu catatan jujur dari halaman ini: dua bagian bahan membagi poros dengan cara berbeda, tetapi himpunan tiga puluh lima unsurnya sama persis.',ms=>seq('#ef button',ms*.85)],
+['Coba sentuh besi. Panel di bawahnya menampilkan poros dan perannya, dan menyebut bahwa besi berada di urutan ketujuh dari tiga belas dalam deret syair.',()=>{clk('.et[data-s="Fe"]');tg('#ed')}],
+['Sekarang nikel. Ia tidak disebut dalam syair, tetapi ditarik masuk oleh poros dari bahan. Begitulah tiga belas nama menjadi tiga puluh lima unsur.',()=>clk('.et[data-s="Ni"]')]]},
+{t:'Teori dan kuis',el:'#teori .card',b:[
+['Di baliknya ada tiga ratus tujuh puluh teori, dari fisika dan kimia sampai ekonomi, sejarah, dan teologi. Pilih sebuah bait, dan teori yang menyentuhnya muncul. Mereka dimuat sebagai kacamata membaca, bukan sebagai pembuktian.'],
+['Sekarang giliran Anda. Kuis ini menyajikan persamaan acak; tebak termasuk jalan yang keberapa. Kita coba satu jawaban, dan benar atau salah, alat langsung menunjukkan jalan yang tepat beserta baitnya.',ms=>{tg('#tujuh .card');at(()=>clk('#qopts button',0),ms*.6)}],
+['Dua belas bait, tujuh jalan, tiga belas logam, dan seperti kata penutup syair, sungguh mengagumkan. Terima kasih sudah ikut berjalan.',null,'خِتَامُهَا وَإِنَّهُ لَعَجَبُ']]}
+];
+const F=[];BAB.forEach((c,ci)=>c.b.forEach(b=>F.push({c,ci,b})));
+const first=ci=>F.findIndex(x=>x.ci===ci);
+const est=t=>Math.max(2200,t.length*68/rate)/fast;
+const vc=()=>{const a=SS?SS.getVoices():[];return a.find(v=>v.name===vn)||a.find(v=>/^id/i.test(v.lang))||null};
+function fillV(){if(!SS)return;const a=SS.getVoices().filter(v=>/^id/i.test(v.lang)),e=$('#tur-vs');if(a.length>1){e.innerHTML=a.map(v=>'<option>'+v.name+'</option>').join('');e.style.display='';if(!vn)vn=e.value}}
+function sub(t,x,a){const s=$('#tur-sub');s.innerHTML='<small>'+t+'</small>'+x+(a?'<span class="ar">'+a+'</span>':'')}
+function go(i){clr();const my=++tok;if(SS)SS.cancel();if(i<0)return;if(i>=F.length){lg.e=performance.now()-t0;end();return welcome()}
+ k=i;lg.push([i,performance.now()-t0]);const{c,ci,b}=F[i];$('#tur-prog').style.width=((i+1)/F.length*100)+'%';$('#tur-ch').value=ci;$('#tur-pl').textContent='⏸';
+ if(i===first(ci)||!tgt)tg(c.el);
+ const ms=est(b[0]);try{b[1]&&b[1](ms*.92)}catch(e){console.warn('tur',e)}
+ sub(c.t,b[0],b[2]);
+ const nx=()=>{if(my===tok)at(()=>go(i+1),(F[i+1]&&F[i+1].ci!==ci?1100:500)/fast)};
+ if(voice&&SS){const ch=b[0].match(/[^.:?!]+[.:?!]*/g)||[b[0]],v=vc(),t1=performance.now();
+  const done=()=>{if(my!==tok)return;const w=ms*.5-(performance.now()-t1);w>0?at(nx,w):nx()};
+  ch.forEach((x,j)=>{const u=new SpeechSynthesisUtterance(x.trim());u.lang='id-ID';if(v)u.voice=v;u.rate=rate;if(j===ch.length-1)u.onend=u.onerror=done;SS.speak(u)})}
+ else at(nx,ms+700/fast)}
+function end(){clr();$('#tur-cur').style.opacity=0;tok++;if(SS)SS.cancel();B.classList.remove('tur-on','tur-clean');tgt=null;lastEl='';k=-1}
+function start(v){voice=v&&!!SS;$('#tur-vo').textContent=voice?'🔊':'🔇';try{localStorage.setItem('poros-tur','1')}catch(e){}
+ $('#tur-welcome').classList.remove('on');B.classList.add('tur-on');lastEl='';t0=performance.now();lg=[];tgt=null;scrollTo({top:0});cd(3)}
+function cd(n){if(!n)return go(0);sub('Tur dimulai dalam','<b style="font-size:36px;color:var(--gold)">'+n+'</b>');at(()=>cd(n-1),1000/fast)}
+function welcome(){const n=$('#tur-note');n.textContent=(SS&&vc())?'':'Catatan: suara Indonesia tidak ditemukan di perangkat ini, jadi narasi memakai suara bawaan. Subtitle saja tetap nyaman untuk rekaman.';$('#tur-welcome').classList.add('on')}
+$('#tur-ch').innerHTML=BAB.map((c,i)=>'<option value="'+i+'">'+(i+1)+'. '+c.t+'</option>').join('');
+$('#tur-v').onclick=()=>start(true);$('#tur-s').onclick=()=>start(false);
+$('#tur-x').onclick=()=>{try{localStorage.setItem('poros-tur','1')}catch(e){}$('#tur-welcome').classList.remove('on')};
+$('#tur-fab').onclick=welcome;$('#tur-cx').onclick=end;
+$('#tur-pv').onclick=()=>go(k-1);$('#tur-nx').onclick=()=>go(k+1);
+$('#tur-pl').onclick=function(){if(this.textContent==='⏸'){clr();tok++;if(SS)SS.cancel();this.textContent='▶'}else go(k)};
+$('#tur-ch').onchange=e=>{lastEl='';go(first(+e.target.value))};
+$('#tur-rt').onchange=e=>rate=+e.target.value;
+$('#tur-vo').onclick=function(){voice=!voice&&!!SS;this.textContent=voice?'🔊':'🔇';go(k)};
+$('#tur-cl').onclick=()=>B.classList.toggle('tur-clean');
+document.addEventListener('keydown',e=>{if(!B.classList.contains('tur-on')||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;
+ if(e.key==='Escape')end();else if(e.key==='ArrowRight')go(k+1);else if(e.key==='ArrowLeft')go(k-1);
+ else if(e.key==='h'||e.key==='H')B.classList.toggle('tur-clean');else if(e.key===' '){e.preventDefault();$('#tur-pl').click()}});
+if(SS){SS.onvoiceschanged=fillV;fillV()}
+$('#tur-vs').onchange=e=>{vn=e.target.value;go(k)};
+const ts=m=>new Date(m).toISOString().substr(11,12).replace('.',',');
+function mkSrt(){if(!lg.length||!lg.e)return '';return lg.map((x,j)=>(j+1)+'\n'+ts(x[1])+' --> '+ts(lg[j+1]?lg[j+1][1]-400:lg.e)+'\n'+F[x[0]].b[0]).join('\n\n')+'\n'}
+function dl(n,t){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/plain'}));a.download=n;a.click()}
+$('#tur-r').onclick=()=>{const t=mkSrt();t?dl('subtitle-tur-poros-kimia.srt',t):alert('Jalankan tur sampai selesai dulu (jangan lompat-lompat), lalu unduh SRT. Waktunya mengikuti putaran terakhir.')};
+$('#tur-n').onclick=()=>{const t=BAB.map((c,i)=>(i+1)+'. '+c.t+'\n\n'+c.b.map(b=>b[0]).join('\n\n')).join('\n\n\n');dl('naskah-tur-poros-kimia.txt',t)};
+loop();
+window.PorosTur={mkSrt,go,start,end,F,BAB,set fast(v){fast=v},miss:()=>BAB.filter(c=>!$(c.el)).map(c=>c.el)};
+let seen=0;try{seen=localStorage.getItem('poros-tur')}catch(e){}
+if(!seen)setTimeout(welcome,1000);
+})();
+</script>
+<!--TUR-END-->
 </body>
 </html>
