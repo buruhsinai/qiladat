@@ -33,7 +33,8 @@
   // Tahap 18) — tidak perlu ubah apa pun yang lain di file ini.
   var KITAB_FILES = [
     "syair-bank/kitab-almusid-adabalmasjid.json",
-    "syair-bank/kitab-manair-alisad.json"
+    "syair-bank/kitab-manair-alisad.json",
+    "syair-bank/diwan-amr-bin-kultsum.json"
   ];
 
   function pilihIndeksHariIni(panjang) {
