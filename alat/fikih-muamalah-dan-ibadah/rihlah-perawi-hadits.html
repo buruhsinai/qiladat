@@ -1762,8 +1762,8 @@ function say(tx,tok){if(!$("tvo").checked||!window.speechSynthesis)return false;
 function tmove(i){const s=S[cur],prev=s.r[Math.max(0,i-1)][0],km=hav(P[prev],P[s.r[i][0]]);TR.i=i;TR.ph="move";TR.el=0;TR.dur=clamp(1300+km*.9,1300,4200);TR.y0=TR.y;TR.y1=s.r[i][1];TR.tok++;TR.vo=false;TR.vd=false;TR.paused=false;
 const span=Math.max(1800,km*2.2);TR.zv=clamp(W*.8/(span*(W/2-20)/RK),2,8);if(window.speechSynthesis)speechSynthesis.cancel();
 $("tnr").innerHTML=`<small>Titik ${i+1} dari ${s.r.length} · menuju ${s.r[i][0]}…</small>`;tlab()}
-function tarrive(){const s=S[cur],q=s.r[TR.i],tx=narr(s,TR.i);TR.ph="dwell";TR.el=0;TR.y=q[1];TR.min=Math.max(2400,tx.length*55);TR.len=tx.length;TR.vo=say(tx,TR.tok);
-$("tnr").innerHTML=`<b>${q[0]} <small>±${q[1]} M · titik ${TR.i+1} dari ${s.r.length}</small></b><br>${tx} ${cfb(q).replace(/<br><small class=\"nt\">.*?<\/small>/,"")}`}
+function tarrive(){const s=S[cur],q=s.r[TR.i],tx=(window.BCN&&BCN(s,TR.i))||narr(s,TR.i);TR.ph="dwell";TR.el=0;TR.y=q[1];TR.min=Math.max(2400,tx.length*55);TR.len=tx.length;TR.vo=say(tx,TR.tok);
+$("tnr").innerHTML=`<b>${q[0]} <small>±${q[1]} M · titik ${TR.i+1} dari ${s.r.length}</small></b><br>${window.BCF?BCF(s,TR.i,tx):tx} ${cfb(q).replace(/<br><small class=\"nt\">.*?<\/small>/,"")}`}
 function tstop(msg){if(window.speechSynthesis)speechSynthesis.cancel();if(TR&&TR.c3&&window.CAM3)CAM3(TR.c3.f,TR.c3.r,TR.c3.g);TR=null;tlab();zt();$("tnr").innerHTML=msg||TIDLE}
 function tstart(){if(TC)cstop();playing=false;$("pl").textContent="▶ Putar";const s=S[cur];TR={i:0,ph:"dwell",y:s.r[0][1],el:0,paused:false,cur:cur,last:0,tok:0,y0:0,y1:0,dur:1,zv:6};tmove(0);requestAnimationFrame(tf)}
 function tf(ts){if(!TR)return;requestAnimationFrame(tf);const dt=TR.last?Math.min(100,ts-TR.last):0;TR.last=ts;
@@ -2662,13 +2662,13 @@ const s=L[i],pv2=i?L[i-1]:null;
 if(i===0){o.push("Kita ikuti perjalanan satu hadits: "+h.hadits+".");if(h.matan_id)o.push("Isinya: "+h.matan_id);if(h.catatan_matan)o.push(h.catatan_matan)}
 if(pv2&&pv2.kota!==s.kota){const a=legs(h)[i];if(a.k>0)o.push("Dari "+pv2.kota+" ke "+s.kota+", sekitar "+nf(a.k)+" kilometer garis lurus, "+hr2(a.d)+" perjalanan.")}
 const st={hilang:"Di sini ada perawi yang hilang dari rantai.",terputus:"Di sini sanad terputus.",lemah:"Perawi ini dinilai lemah.","kuat-tak-di-peta":"Perawi ini kuat, tetapi belum ada di daftar peta.","tak-di-peta":"Perawi ini belum ada di daftar peta; tidak ditandai cacat di hadits ini.",penyusun:"Penyusun kitab."}[s.status]||"";
-o.push((st?st+" ":"")+nm(s)+", di "+s.kota+(s.tahun?", sekitar tahun "+s.tahun+" Masehi":"")+".");o.push(s.cerita);return o.map(spk).filter(Boolean)}
+o.push((st?st+" ":"")+nm(s)+", di "+s.kota+(s.tahun?", sekitar tahun "+s.tahun+" Masehi":"")+".");o.push(window.BCT?BCT(h,s,i):s.cerita);return o.map(spk).filter(Boolean)}
 function stopSpeech(){clearTimeout(AP.tm);clearTimeout(AP.wd);AP.tm=AP.wd=0;AP.tok++;AP.us=[];if(CAN)try{SY.cancel()}catch(e){}}
-function wake(on){try{if(on){if(navigator.wakeLock&&!AP.wl)navigator.wakeLock.request("screen").then(x=>{AP.wl=x;x.addEventListener("release",()=>{AP.wl=null})}).catch(()=>{})}else if(AP.wl){AP.wl.release();AP.wl=null}}catch(e){AP.wl=null}}
+window.HSJ=function(i){jump(i)};window.HSI=function(){return ST?ST.i:-1};function wake(on){try{if(on){if(navigator.wakeLock&&!AP.wl)navigator.wakeLock.request("screen").then(x=>{AP.wl=x;x.addEventListener("release",()=>{AP.wl=null})}).catch(()=>{})}else if(AP.wl){AP.wl.release();AP.wl=null}}catch(e){AP.wl=null}}
 function unlock(){if(CAN&&AP.vo)try{const u=new SpeechSynthesisUtterance(" ");u.volume=0;SY.speak(u)}catch(e){}}
 function apl(){return AP.on?"⏸ Jeda":(ST&&ST.i>=ST.h.langkah.length?"↺ Putar ulang":(ST&&ST.i>0?"▶ Lanjutkan":"▶ Putar otomatis"))}
 function upd(){const a=$("hsap");if(!a)return;a.textContent=apl();a.classList.toggle("on",AP.on)}
-function apr(){let t=`<div class="hsap"><label><input type="checkbox" id="hsvo"${AP.vo&&CAN?" checked":""}${CAN?"":" disabled"}> 🔊 Narator</label><label>Kecepatan <select id="hsrt">`+[[.8,"0,8×"],[1,"1×"],[1.25,"1,25×"],[1.5,"1,5×"]].map(a=>`<option value="${a[0]}"${Math.abs(AP.rt-a[0])<.01?" selected":""}>${a[1]}</option>`).join("")+`</select></label></div>`;
+function apr(){let t=`<div class="hsap"><label><input type="checkbox" id="hsvo"${AP.vo&&CAN?" checked":""}${CAN?"":" disabled"}> 🔊 Narator</label><label>Kecepatan <select id="hsrt">`+[[.8,"0,8×"],[1,"1×"],[1.25,"1,25×"],[1.5,"1,5×"]].map(a=>`<option value="${a[0]}"${Math.abs(AP.rt-a[0])<.01?" selected":""}>${a[1]}</option>`).join("")+`</select></label>${window.BCM?BCM():""}</div>`;
 if(!CAN)t+=`<p class="hsl">Perangkat ini tidak mendukung suara. Cerita tetap berjalan sendiri sebagai teks.</p>`;else if(ST&&ST.i===0&&AP.vo&&!VOI&&SY.getVoices().length)t+=`<p class="hsl">Suara bahasa Indonesia tidak ditemukan di perangkat ini, jadi narator memakai suara bawaan (bisa terdengar aneh). Matikan Narator bila mengganggu.</p>`;return t}
 function narrate(i){stopSpeech();if(!ST||!AP.on)return;const tok=AP.tok,a=segs(i),txt=a.join(" "),minEnd=(ST.gt||performance.now())+(ST.cms||0);let fired=false;
 const done=()=>{if(fired||tok!==AP.tok||!AP.on)return;fired=true;clearTimeout(AP.wd);AP.tm=setTimeout(()=>{if(tok===AP.tok&&AP.on)nxt()},Math.max(900/AP.rt,minEnd-performance.now()))};
@@ -2697,7 +2697,7 @@ const od=window.draw;window.draw=function(){od();if(ST)over()};
 function render(){if(ST.cm)return rcmp();const h=ST.h,L=h.langkah,n=L.length,i=ST.i;
 let b=`<div class="hsh"><b>📖 ${esc(h.hadits)}</b><button class="pl" id="hsx" aria-label="Tutup mode cerita">✕</button></div>${apr()}`;
 if(i<n){const s=L[i],pv=i?L[i-1]:null,d=pv&&pv.kota!==s.kota?km(pv.kota,s.kota):null,rf=(s.ref||[]).map((k,j)=>REF[k]&&REF[k].u?`<a href="${esc(REF[k].u)}" target="_blank" rel="noopener" title="${esc(REF[k].t)}">[${j+1}]</a>`:"").join(" ");
-b+=`<div class="hsb" style="color:${COL[s.status]||"#a89b7f"}">${LBL[s.status]||esc(s.status)}</div><div class="hsn">${esc(s.perawi)}</div><div class="hsm">Langkah ${i+1} dari ${n} · ${esc(s.kota)} · ${s.tahun?s.tahun+" M":"tahun tidak diketahui"}${d?` · ±${d} km garis lurus dari ${esc(pv.kota)}`:pv?" · kota yang sama":""}</div>${cx(i)}<p>${esc(s.cerita)}</p><p class="hsl">Catatan kejujuran: ${esc(s.label)}${s.status!="peristiwa"&&!inS(s.S)?"; belum ada di daftar perawi (hanya penanda kota)":""}${rf?" · rujukan: "+rf:""}</p>${mx(i)}`}
+b+=`<div class="hsb" style="color:${COL[s.status]||"#a89b7f"}">${LBL[s.status]||esc(s.status)}</div><div class="hsn">${esc(s.perawi)}</div><div class="hsm">Langkah ${i+1} dari ${n} · ${esc(s.kota)} · ${s.tahun?s.tahun+" M":"tahun tidak diketahui"}${d?` · ±${d} km garis lurus dari ${esc(pv.kota)}`:pv?" · kota yang sama":""}</div>${cx(i)}${(window.BCP&&BCP(h,s,i))||`<p>${esc(s.cerita)}</p>`}<p class="hsl">Catatan kejujuran: ${esc(s.label)}${s.status!="peristiwa"&&!inS(s.S)?"; belum ada di daftar perawi (hanya penanda kota)":""}${rf?" · rujukan: "+rf:""}</p>${mx(i)}`}
 else b+=`<div class="hsb" style="color:${h.kuat?"#e0c070":"#e0564a"}">Ringkasan</div><p><b>Penilaian dalam sumber</b> (${esc(h.sumber)}): ${esc(h.vonis)}.</p><p><b>Matan:</b> ${esc(h.catatan_matan)}</p><ul>${(h.alasan_lemah||h.alasan_kuat).map(x=>"<li>"+esc(x)+"</li>").join("")}</ul>${sum()}<p>${esc(h.rasa_perjalanan)}</p><button class="pl" id="hscm" type="button">⚖ Bandingkan: hadits kuat dan hadits lemah</button><details><summary>Belum dikerjakan atau dicek</summary><ul>${h.belum.map(x=>"<li>"+esc(x)+"</li>").join("")}</ul></details>`;
 b+=`<div class="hsc"><button class="pl" id="hsb1" ${i?"":"disabled"}>◀ Sebelumnya</button><button class="pl ap${AP.on?" on":""}" id="hsap" type="button">${apl()}</button><button class="pl" id="hsb2">${i>=n?"↺ Ulangi":i==n-1?"Ringkasan ▶":"Berikutnya ▶"}</button></div>`;
 pan.innerHTML=b;{const sv=$("hsv");if(sv)sv.onchange=()=>{HV=sv.value;const t=pan.scrollTop;render();pan.scrollTop=t}}{const c=$("hscm");if(c)c.onclick=()=>{stopAuto();ST.cm=cmPair();go(ST.h.langkah.length)}}$("hsx").onclick=end;$("hsb1").onclick=()=>jump(Math.max(0,ST.i-1));$("hsb2").onclick=()=>jump(ST.i>=n?0:ST.i+1);{const a=$("hsap");if(a)a.onclick=()=>{if(AP.on)stopAuto();else{unlock();startAuto()}}}{const c=$("hsvo");if(c)c.onchange=()=>{AP.vo=c.checked;try{localStorage.setItem("rhs.vo",AP.vo?"1":"0")}catch(e){}if(AP.on)narrate(ST.i);else stopSpeech()}}{const r=$("hsrt");if(r)r.onchange=()=>{AP.rt=+r.value;try{localStorage.setItem("rhs.rt",String(AP.rt))}catch(e){}if(AP.on)narrate(ST.i)}}pan.scrollTop=0}
@@ -3562,6 +3562,105 @@ document.addEventListener("keydown",e=>{if(!isOpen)return;if(e.key=="Escape"){e.
 addEventListener("resize",()=>{if(isOpen)render()});
 window.FT={start,close,isOpen:()=>isOpen};
 const fb=$("ftbtn");if(fb)fb.onclick=()=>start();
+})();
+</script>
+<script id="bc-js">
+/* === MODE BERCERITA (RENCANA-bercerita-rihlah-perawi-hadits.md, sesi 1) === */
+(function(){
+"use strict";
+var BC=window.BC={mode:"info",ver:1};
+try{var m=localStorage.getItem("rhs.bcm");if(m==="cerita")BC.mode="cerita"}catch(e){}
+var esc=function(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})};
+/* para = [teks, [id REF | "H"], jembatan?]; "H" = sumber hadits (h.sumber); tanpa REF = jembatan/catatan (miring) */
+var STORYR={
+"Baqi bin Makhlad":[
+/*0 Cordoba 817*/[
+["Kisah ini dimulai di barat dunia Islam, di Cordoba, Andalusia.",[],1],
+["Di kota itulah Baqi bin Makhlad lahir, tahun 201 Hijriah, sekitar 817 Masehi. Sumber lain menyebut kisaran 816 sampai 820.",["bk2","bk6","bk7"]],
+["Kelak ia dikenal sebagai ulama hadits dan tafsir dari Andalusia.",["bk2","bk6","bk7"]],
+["Sekarang ikuti langkahnya, jauh ke arah timur.",[],1]],
+/*1 Mekkah ~840*/[
+["Menurut kisah, ia berangkat dengan berjalan kaki, pada usia sekitar dua puluh tahun, dan menyeberangi laut ke Afrika.",["bk3","bk4","bk9","bk2"]],
+["Kota-kota yang ia lewati tidak dirinci oleh sumber. Karena itu garis di peta hanya garis lurus, bukan jalan yang sebenarnya ia tempuh.",[],1],
+["Satu sumber menyebut ia singgah di Mekkah. Tahun di titik ini hanya taksiran, sekitar 840 Masehi.",["bk3","bk4","bk9","bk2"]]],
+/*2 Madinah ~841*/[
+["Satu sumber menyebut ia juga singgah di Madinah sebelum menuju Baghdad. Ini dugaan, dan tahunnya taksiran.",["bk2"]],
+["Perjalanan berlanjut ke Baghdad.",[],1]],
+/*3 Baghdad ~844*/[
+["Di Baghdad ia lebih dulu menghadiri majelis Yahya bin Ma'in di masjid.",["bk3","bk4","bk5"]],
+["Usia keberangkatannya diriwayatkan berbeda, sekitar dua puluh tahun atau dua puluh sembilan tahun. Maka tahun tibanya pun perkiraan: antara sekitar 836 dan 845 Masehi, dan titik di peta memakai 844.",["bk3","bk4","bk5","bk9"]],
+["Lalu ia mendapati Imam Ahmad sedang dilarang menerima orang, karena ujian dari khalifah. Sumber berbeda soal nama khalifahnya.",["bk3","bk4","bk5","bk9"]],
+["Baqi mengusulkan sebuah cara. Setiap hari ia datang berpakaian pengemis, dengan tongkat dan kain di kepala, kertas dan tinta tersembunyi di lengan baju, lalu berteriak minta sedekah di depan pintu. Rincian kisah menyamar ini berbeda-beda antar sumber.",["bk1","bk3","bk4","bk9"]],
+["Imam Ahmad setuju, dan mengajarnya di sebuah lorong agar tak terlihat orang, dua atau tiga hadits sehari.",["bk1","bk3","bk4","bk9"]],
+["Sampai larangan berakhir, ia mengumpulkan sekitar tiga ratus hadits. Setelah itu Imam Ahmad memberinya tempat duduk di dekat beliau, di hadapan murid-muridnya.",["bk1","bk3","bk4","bk9"]]],
+/*4 Damaskus ~850*/[
+["Titik berikutnya di peta adalah Damaskus.",[],1],
+["Sebuah tesis tentang Baqi mencatat Hisham bin Ammar, ulama Syam, di antara gurunya.",["bk7"]],
+["Damaskus di peta hanya wakil bagi Syam, dan tahunnya taksiran.",[],1]],
+/*5 Cordoba ~855*/[
+["Ia kembali ke Andalusia. Tahun pulangnya tidak disebut sumber yang dirujuk, jadi tahun 855 Masehi hanya taksiran.",["bk7","bk8"]],
+["Ia disebut menyusun Musnad dan tafsir, dan dikenal sebagai pelopor tafsir Al-Qur'an di Andalusia.",["bk7","bk8"]]],
+/*6 Cordoba 889*/[
+["Baqi bin Makhlad wafat di Cordoba pada tahun 276 Hijriah, sekitar 889 Masehi.",["bk2","bk5"]],
+["Ia lahir dan wafat di kota yang sama, dengan satu perjalanan panjang di tengahnya.",[],1]]
+]};
+/* STORYH[id][indeks langkah] */
+var STORYH={1:{
+0:[["Kisah hadits ini bermula di Ahjar az-Zait, dekat Madinah. Di sana Nabi ﷺ memohon hujan sambil mengangkat kedua telapak tangannya berdoa.",["H"]],
+["Tahun peristiwanya tidak disebut oleh sumber yang kita punya.",["H"]],
+["Hanya sanadnya yang akan dikritik dalam perjalanan ini. Isi haditsnya tidak dihukumi lemah.",["H"]]],
+1:[["Orang pertama yang melihatnya adalah seorang sahabat, Ābī al-Laḥm, dari suku Ghifar. Ia tinggal di as-Safra', dekat Madinah.",["alh2","alh3"]],
+["Ābī al-Laḥm sebenarnya julukan, dan nama aslinya diperselisihkan. Menurut rujukan, julukan itu berkaitan dengan keengganannya memakan sembelihan untuk berhala.",["alh2"]],
+["Ia ikut perang Khaibar tahun 628 dan gugur di Hunain tahun 630. Ia saksi mata peristiwa istisqa itu.",["alh3","alh5"]]],
+2:[["Dari sang sahabat, hadits ini sampai ke 'Umair, mawla Ābī al-Laḥm, yaitu budak yang dimerdekakan olehnya.",["alh3","alh4"]],
+["Ia hadir bersama tuannya di Khaibar dan Hunain. Al-Bukhari mencatat bahwa ia punya persahabatan dengan Nabi, lahu shuhbah.",["alh3","alh4"]],
+["Ia belum ada di daftar perawi peta kita, karena tahun lahir dan wafatnya tidak tercatat. Kotanya di peta hanya wakil.",[],1]],
+3:[["Sekarang perhatikan satu nama yang tidak ada di sanad An-Nasa'i: Muhammad bin Ibrahim at-Taimi.",["H"]],
+["Menurut kutipan Ibnu Hajar dalam Tahdzib at-Tahdzib, di antara Yazid dan 'Umair seharusnya ada at-Taimi.",["yah1","alh4"]],
+["Ia wafat di Madinah tahun 120 Hijriah, sekitar 738 Masehi. Tahun ini perkiraan dari data perawi kami.",["mi1"]],
+["Dalam rantai An-Nasa'i, namanya tidak disebut. Inilah perawi yang hilang itu.",["H"]]],
+4:[["Berikutnya Yazid bin 'Abdillah bin al-Had, yang dinilai tsiqah oleh Ibnu Hajar.",["yah1"]],
+["Namun dalam sanad ini ia meriwayatkan langsung dari 'Umair, padahal at-Taimi ada di antara mereka. Di sinilah letak cacatnya: sanad tampak sambung, tetapi ada perantara yang terlewat.",["yah1","H"]],
+["Yazid wafat tahun 139 Hijriah, sekitar 756 Masehi. Ia pernah rihlah ke Mesir, tanpa tahun.",["yah1"]]],
+5:[["Dari Yazid, hadits ini diterima Sa'id bin Abi Hilal.",["sah1"]],
+["Menurut data kami ia lahir di Mesir tahun 689, dibesarkan di Madinah, lalu kembali ke Mesir pada masa Hisyam.",["sah1"]],
+["Di mana ia menerima hadits dari Yazid tidak dicatat, di Madinah atau di Mesir. Titik Kairo tahun 730 di peta hanyalah dugaan.",["sah1"]]],
+6:[["Dari Sa'id, hadits ini terus ke Khalid bin Yazid al-Jumahi, fakih dan mufti Mesir yang wafat tahun 139 Hijriah, sekitar 756 Masehi.",["kyj1","sah1"]],
+["Titik Khalid di peta hanya penanda, sebab tahun lahirnya tidak diketahui.",[],1]],
+7:[["Hadits sampai kepada Al-Laits bin Sa'd, imam Mesir yang wafat tahun 791 di Kairo.",["H"]],
+["Qutaibah bin Sa'id menemuinya di Mesir pada rihlah tahun 788.",["qtb1"]]],
+8:[["Qutaibah berasal dari Balkh. Pada tahun 788 ia merantau lewat Baghdad, Damaskus, Mesir, Mekkah, dan Madinah, lalu kembali ke Balkh dan wafat di sana tahun 855.",["qtb1"]]],
+9:[["Penyusunnya, An-Nasa'i, berangkat dari kota Nasa. Di Balkh, sekitar tahun 849, ia belajar dari Qutaibah.",["H"]],
+["Setelah itu ia singgah di Merv, Naisabur, Kufa, Basra, Mekkah, Damaskus, dan Mesir. Ia wafat tahun 915 di Ramla, atau di Damaskus menurut data kami.",["H"]],
+["Inilah ironinya: rantai sesudah Madinah rapi, perawinya tsiqah dan terhubung lewat rihlah, tetapi rapi di ujung tidak memperbaiki cacat di pangkal.",["H"]]]
+}};
+BC.R=STORYR;BC.H=STORYH;
+var on=function(){return BC.mode==="cerita"};
+function plain(a){return a.map(function(p){return p[0]}).join(" ")}
+function rh(p){return p[2]?'<i>'+esc(p[0])+'</i>':esc(p[0])+(p[1]&&p[1].length?' <small class="bcr">['+p[1].map(esc).join(", ")+']</small>':"")}
+function html(a){return a.map(function(p){return'<span class="bcp">'+rh(p)+'</span>'}).join(" ")}
+function ids(a){var o=[];a.forEach(function(p){(p[1]||[]).forEach(function(x){if(o.indexOf(x)<0)o.push(x)})});return o}
+function refl(a,hsrc){var l=ids(a).map(function(x){if(x==="H")return"<li><b>H</b>: "+esc(hsrc||"sumber hadits")+"</li>";var r=window.REF&&REF[x];return r?"<li><b>"+esc(x)+"</b>: "+esc(r.t)+(r.u?' <a href="'+esc(r.u)+'" target="_blank" rel="noopener">🔗</a>':"")+"</li>":"<li><b>"+esc(x)+"</b>: (rujukan tidak ditemukan)</li>"}).join("");return l?"<ul class=\"bcl\">"+l+"</ul>":""}
+/* --- rawi (tur) --- */
+function rawi(s,i){var a=STORYR[s.n];return a&&a[i]||null}
+window.BCN=function(s,i){if(!on())return null;var a=rawi(s,i);return a?plain(a):null};
+window.BCF=function(s,i,tx){if(!on())return tx;var a=rawi(s,i);if(!a)return tx+' <small class="bcn">(naskah Bercerita belum ada untuk perawi/titik ini; memakai mode Info)</small>';
+var q=s.r[i],orig=(q[5]||q[4]||"");
+return '<span class="bcm">📖 Bercerita</span> '+html(a)+'<details class="bcd"><summary>Sumber titik ini</summary>'+(orig?'<p class="bco"><b>Teks Info (data):</b> '+esc(orig)+'</p>':"")+refl(a)+'<p class="bcw">Miring = jembatan tanpa klaim baru. Kurung siku = id rujukan.</p></details>'};
+/* --- hadits --- */
+function had(h,i){var o=STORYH[h.id];return o&&o[i]||null}
+window.BCT=function(h,s,i){var a=on()&&had(h,i);return a?plain(a):s.cerita};
+window.BCP=function(h,s,i){if(!on())return null;var a=had(h,i);if(!a)return'<p>'+esc(s.cerita)+'</p><p class="hsl bcn">Naskah Bercerita belum ada untuk langkah ini; memakai mode Info.</p>';
+return'<p><span class="bcm">📖 Bercerita</span> '+html(a)+'</p><details class="bcd"><summary>Sumber langkah ini</summary><p class="bco"><b>Teks Info (data):</b> '+esc(s.cerita)+'</p>'+refl(a,h.sumber)+'<p class="bcw">Miring = jembatan tanpa klaim baru. Kurung siku = id rujukan.</p></details>'};
+/* --- pilihan mode --- */
+window.BCM=function(){return'<label class="bcsel">Mode <select class="bcm-sel"><option value="info"'+(on()?"":" selected")+'>ℹ️ Info</option><option value="cerita"'+(on()?" selected":"")+'>📖 Bercerita</option></select></label>'};
+document.addEventListener("change",function(e){var t=e.target;if(!t||!t.classList||!t.classList.contains("bcm-sel"))return;
+BC.mode=t.value==="cerita"?"cerita":"info";try{localStorage.setItem("rhs.bcm",BC.mode)}catch(x){}
+document.querySelectorAll(".bcm-sel").forEach(function(o){o.value=BC.mode});
+if(window.HSJ&&window.HSI&&window.HSI()>=0&&document.getElementById("hsp")&&document.getElementById("hsp").children.length)try{HSJ(HSI())}catch(x){}});
+/* sisipkan di kontrol tur rawi */
+(function(){var l=document.getElementById("tvl");if(!l||!l.parentNode)return;var w=document.createElement("span");w.innerHTML=BCM();l.parentNode.insertBefore(w,l)})();
+var st=document.createElement("style");st.textContent=".bcsel{display:inline-flex;gap:5px;align-items:center;font-size:.8rem}.bcsel select{font:inherit}.bcm{font-size:.72rem;opacity:.8;letter-spacing:.03em}.bcp i{opacity:.85}.bcr{opacity:.55}.bcd{margin-top:6px;font-size:.82rem}.bcd summary{cursor:pointer}.bcl{margin:4px 0 4px 16px;padding:0}.bcw,.bcn{opacity:.65;font-size:.76rem}.bco{opacity:.85}";document.head.appendChild(st);
 })();
 </script>
 </body>
