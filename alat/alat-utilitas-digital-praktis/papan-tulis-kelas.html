@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Papan Tulis Kelas</title>
+<style>
+:root{--bg:#e3e9e5;--panel:#f5f8f6;--ink:#17231f;--mut:#58685f;--line:#c2cec7;--acc:#2d6b5a;--on:#fff;--warn:#9a4b12;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1815;--panel:#18241f;--ink:#e3ece7;--mut:#93a59d;--line:#2c3d36;--acc:#74c8ae;--on:#0f1815;--warn:#e0a463;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1815;--panel:#18241f;--ink:#e3ece7;--mut:#93a59d;--line:#2c3d36;--acc:#74c8ae;--on:#0f1815;--warn:#e0a463;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 "Segoe UI",system-ui,"Noto Naskh Arabic",sans-serif}
+header{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;padding:12px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+h1{font-size:18px;margin:0 auto 0 0;font-weight:700}
+input,button,select{font:inherit;color:inherit}
+input[type=text]{padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);width:150px}
+button{padding:6px 12px;border:1px solid var(--line);border-radius:6px;background:var(--panel);cursor:pointer}
+button:hover{border-color:var(--acc)}
+button[aria-pressed=true]{background:var(--acc);color:var(--on);border-color:var(--acc)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+button:disabled{opacity:.45;cursor:not-allowed}
+.seg{display:flex}.seg button:first-child{border-radius:6px 0 0 6px}.seg button:last-child{border-radius:0 6px 6px 0;border-left:0}
+main{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:14px;padding:14px 16px;max-width:1300px;margin:0 auto}
+@media (max-width:820px){main{grid-template-columns:1fr}}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.sw{width:26px;height:26px;border-radius:50%;padding:0;border:2px solid var(--line)}
+.sw[aria-pressed=true]{outline:2px solid var(--ink);outline-offset:2px;border-color:var(--bg)}
+.tools label{color:var(--mut);display:flex;gap:6px;align-items:center}
+.sp{flex:1}
+#st{color:var(--mut);font-size:13px}
+.board{position:relative;aspect-ratio:16/10;background:#22403a;border:10px solid #6b5a43;border-radius:8px;overflow:hidden;box-shadow:inset 0 0 40px rgba(0,0,0,.35)}
+.board canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+#pv{pointer-events:none}
+#cv{cursor:crosshair}
+.board.ro #cv{cursor:not-allowed}
+.veil{position:absolute;left:12px;bottom:12px;background:rgba(0,0,0,.55);color:#f3f1ea;padding:4px 10px;border-radius:6px;font-size:13px;pointer-events:none}
+#ti{position:absolute;display:none;background:transparent;border:1px dashed #f3f1ea;color:#f3f1ea;font-family:inherit;padding:0 4px;min-width:120px;outline:none;z-index:3}
+aside{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;align-self:start}
+aside h2{font-size:15px;margin:0 0 8px}
+ul{list-style:none;margin:0;padding:0}
+li{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}
+li small{color:var(--mut)}
+.note{color:var(--mut);font-size:13px;margin:10px 0 0}
+#warn{color:var(--warn);font-size:13px;display:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Papan tulis kelas</h1>
+  <input type="text" id="nm" aria-label="Nama Anda" maxlength="24">
+  <div class="seg" role="group" aria-label="Peran">
+    <button id="rg" aria-pressed="false">Guru</button><button id="rm" aria-pressed="true">Murid</button>
+  </div>
+<span id="st" role="status"></span>
+  <button id="nr">Buat ruang baru</button>
+  <button id="ls">Salin tautan murid</button>
+  <button id="lg">Salin tautan guru</button>
+</header>
+<main>
+  <section>
+    <div class="tools" id="tools">
+      <button data-t="pen" aria-pressed="true">Pena</button>
+      <button data-t="line" aria-pressed="false">Garis</button>
+      <button data-t="text" aria-pressed="false">Teks</button>
+      <button data-t="er" aria-pressed="false">Penghapus</button>
+      <span id="sws"></span>
+      <label>Tebal <input type="range" id="sz" min="2" max="12" value="4"></label>
+      <span class="sp"></span>
+      <button id="rp">Putar ulang</button>
+      <button id="cl">Bersihkan papan</button>
+    </div>
+    <div class="board" id="bd">
+      <canvas id="cv" width="1600" height="1000"></canvas>
+      <canvas id="pv" width="1600" height="1000"></canvas>
+      <input id="ti" dir="auto" aria-label="Ketik teks di papan">
+      <div class="veil" id="vl"></div>
+    </div>
+  </section>
+  <aside>
+    <h2>Peserta</h2>
+    <ul id="ps"></ul>
+    <p id="warn">Sudah ada guru di ruang ini. Hanya satu guru yang dianjurkan.</p>
+    <p class="note">Guru memberi izin menulis per murid lewat kotak centang. Murid yang belum diberi izin hanya melihat.</p>
+  </aside>
+</main>
+<script>
+const $=s=>document.querySelector(s), W=1600, H=1000;
+const cv=$('#cv'), cx=cv.getContext('2d'), pv=$('#pv'), pc=pv.getContext('2d'), ti=$('#ti');
+const COL=['#f3f1ea','#f2d45c','#8cc7f0','#f08a8a','#9be39b'];
+const me={id:Math.random().toString(36).slice(2,8),name:'',role:'murid'};
+me.name='Murid-'+me.id.slice(0,3);
+// Isi setelah worker dipasang, contoh: 'wss://papan-kelas.NAMA-ANDA.workers.dev'
+// Dibiarkan kosong = mode uji antar tab (seperti Tahap 1).
+const SERVER='wss://papan-kelas.a-qiller-am-11e.workers.dev';
+const bc=SERVER?null:new BroadcastChannel('papan-kelas-v1');
+let ws=null, online=false;
+let hist=[], peers=new Map(), allowed=new Set(), tool='pen', color=COL[0], size=4, replaying=false, draft=null;
+
+const send=m=>{if(SERVER){if(ws&&ws.readyState===1)ws.send(JSON.stringify(m))}else bc.postMessage({...m,from:me.id})};
+const canWrite=()=>(!SERVER||(online&&room()))&&(me.role==='guru'||allowed.has(me.id));
+const room=()=>location.hash.slice(1).split('~')[0].toUpperCase();
+const guruId=()=>{for(const[i,p]of peers)if(p.role==='guru')return i;return null};
+const isArab=s=>/[\u0590-\u08FF]/.test(s);
+
+/* ---------- gambar ---------- */
+function seg(c,it,from){
+  const p=it.p; if(!p.length)return;
+  c.save(); c.lineCap=c.lineJoin='round'; c.lineWidth=it.er?it.w*5:it.w;
+  c.strokeStyle=it.c; c.globalCompositeOperation=it.er?'destination-out':'source-over';
+  c.beginPath(); const a=p[Math.max(0,from-1)]; c.moveTo(a[0],a[1]);
+  if(p.length===1)c.lineTo(a[0]+.01,a[1]);
+  for(let i=Math.max(1,from);i<p.length;i++)c.lineTo(p[i][0],p[i][1]);
+  c.stroke(); c.restore();
+}
+function put(c,it){
+  if(it.k==='s')seg(c,it,0);
+  else if(it.k==='l'){c.save();c.lineCap='round';c.lineWidth=it.w;c.strokeStyle=it.c;c.beginPath();c.moveTo(...it.a);c.lineTo(...it.b);c.stroke();c.restore()}
+  else if(it.k==='x'){c.save();c.fillStyle=it.c;c.font=it.f+'px "Segoe UI",system-ui,"Noto Naskh Arabic",sans-serif';c.textBaseline='top';
+    c.direction=isArab(it.s)?'rtl':'ltr';c.fillText(it.s,it.a[0],it.a[1]);c.restore()}
+  else if(it.k==='c')c.clearRect(0,0,W,H);
+}
+const redraw=()=>{cx.clearRect(0,0,W,H);hist.forEach(i=>put(cx,i))};
+
+/* ---------- jaringan ---------- */
+function hello(re){send({k:'hello',re,name:me.name,role:me.role})}
+function onMsg(m){
+  const f=m.from, T=!!SERVER, fromGuru=T||peers.get(f)?.role==='guru'||m.role==='guru';
+  if(m.k==='init'){me.id=m.you;me.role=m.role;hist=m.hist;allowed=new Set(m.allowed);redraw()}
+  else if(m.k==='peers'){peers=new Map(m.peers.map(p=>[p.id,p]))}
+  else if(m.k==='hello'){peers.set(f,{name:m.name,role:m.role});if(!m.re){hello(1);if(me.role==='guru')sendState()}}
+  else if(m.k==='bye'){peers.delete(f);allowed.delete(f)}
+  else if(m.k==='need'){if(me.role==='guru')sendState()}
+  else if(m.k==='state'){if(fromGuru&&!m.to||m.to===me.id){hist=m.hist;allowed=new Set(m.allowed);redraw()}}
+  else if(m.k==='perm'){if(fromGuru)allowed=new Set(m.allowed)}
+  else if(m.k==='clr'){if(fromGuru){hist.push({k:'c',at:m.at});if(!replaying)redraw()}}
+  else if(m.k==='add'){if(T||fromGuru||allowed.has(f)){hist.push(m.it);if(!replaying)put(cx,m.it)}}
+  else if(m.k==='pt'){if(T||fromGuru||allowed.has(f)){const it=hist.findLast(i=>i.sid===m.sid);if(it){const n=it.p.length;it.p.push(...m.pts);if(!replaying)seg(cx,it,n)}}}
+  ui();
+}
+if(bc)bc.onmessage=({data})=>onMsg(data);
+function sendState(){send({k:'state',hist,allowed:[...allowed]})}
+const sendPerm=()=>send({k:'perm',allowed:[...allowed]});
+addEventListener('beforeunload',()=>{if(!SERVER)send({k:'bye'})});
+
+const store={get:k=>{try{return localStorage.getItem(k)||''}catch{return ''}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}};
+function parseHash(){ // #KODE~TOKEN dari tautan guru: simpan token, sisakan #KODE
+  const [r,t]=location.hash.slice(1).split('~');
+  if(t){store.set('pk-'+r.toUpperCase(),t);history.replaceState(null,'','#'+r.toUpperCase())}
+}
+function connect(){
+  if(!SERVER||!room()){ui();return}
+  const w=ws=new WebSocket(`${SERVER}/room/${room()}?n=${encodeURIComponent(me.name)}&t=${store.get('pk-'+room())}`);
+  w.onopen=()=>{online=true;ui()};
+  w.onmessage=e=>onMsg(JSON.parse(e.data));
+  w.onclose=()=>{if(ws!==w)return;online=false;peers=new Map();allowed=new Set();ui();setTimeout(connect,2000+Math.random()*2000)};
+}
+function leave(){const o=ws;ws=null;online=false;if(o)o.close();hist=[];allowed=new Set();peers=new Map();redraw()}
+function newRoom(){
+  const r=Math.random().toString(36).slice(2,8).toUpperCase(), t=crypto.randomUUID().replace(/-/g,'');
+  store.set('pk-'+r,t);leave();location.hash=r;
+}
+addEventListener('hashchange',()=>{if(!SERVER)return;parseHash();leave();connect();ui()});
+const copy=u=>navigator.clipboard?.writeText(u).catch(()=>prompt('Salin tautan ini:',u))||prompt('Salin tautan ini:',u);
+$('#nr').onclick=newRoom;
+$('#ls').onclick=()=>copy(location.origin+location.pathname+'#'+room());
+$('#lg').onclick=()=>copy(location.origin+location.pathname+'#'+room()+'~'+store.get('pk-'+room()));
+
+/* ---------- input papan ---------- */
+const pos=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height]};
+let cur=null;
+cv.addEventListener('pointerdown',e=>{
+  if(replaying||!canWrite())return;
+  const p=pos(e);
+  if(tool==='text'){openText(p,e);return}
+  cv.setPointerCapture(e.pointerId);
+  const at=Date.now();
+  if(tool==='pen'||tool==='er'){
+    cur={k:'s',sid:me.id+at,c:color,w:size,er:tool==='er',p:[p],at};
+    hist.push(cur);put(cx,cur);send({k:'add',it:cur});
+  }else cur={k:'l',c:color,w:size,a:p,b:p,at};
+});
+cv.addEventListener('pointermove',e=>{
+  if(!cur)return; const p=pos(e);
+  if(cur.k==='s'){const n=cur.p.length;cur.p.push(p);seg(cx,cur,n);send({k:'pt',sid:cur.sid,pts:[p]})}
+  else{cur.b=p;pc.clearRect(0,0,W,H);put(pc,cur)}
+});
+const endDraw=()=>{
+  if(!cur)return;
+  if(cur.k==='l'){pc.clearRect(0,0,W,H);hist.push(cur);put(cx,cur);send({k:'add',it:cur})}
+  cur=null;
+};
+cv.addEventListener('pointerup',endDraw);cv.addEventListener('pointercancel',endDraw);
+
+function openText(p,e){
+  const r=$('#bd').getBoundingClientRect(), fs=16+size*4, sc=r.width/W;
+  Object.assign(ti.style,{display:'block',left:(p[0]*sc)+'px',top:(p[1]*sc)+'px',fontSize:(fs*sc)+'px',color});
+  ti.value='';ti.dataset.x=p[0];ti.dataset.y=p[1];ti.dataset.f=fs;ti.dataset.c=color;
+  setTimeout(()=>ti.focus(),0);e.preventDefault();
+}
+function commitText(save){
+  if(ti.style.display==='none')return;
+  const s=ti.value.trim(); ti.style.display='none';
+  if(save&&s&&canWrite()){const it={k:'x',s,a:[+ti.dataset.x,+ti.dataset.y],f:+ti.dataset.f,c:ti.dataset.c,at:Date.now()};
+    hist.push(it);put(cx,it);send({k:'add',it})}
+}
+ti.addEventListener('keydown',e=>{if(e.key==='Enter')commitText(true);if(e.key==='Escape')commitText(false)});
+ti.addEventListener('blur',()=>commitText(true));
+
+/* ---------- putar ulang ---------- */
+$('#rp').onclick=()=>{
+  if(replaying||!hist.length)return;
+  replaying=true;cx.clearRect(0,0,W,H);ui();
+  const snap=hist.slice();let t=0,prev=snap[0].at;
+  snap.forEach(it=>{t+=Math.min(1200,Math.max(150,it.at-prev));prev=it.at;setTimeout(()=>put(cx,it),t)});
+  setTimeout(()=>{replaying=false;redraw();ui()},t+600);
+};
+$('#cl').onclick=()=>{if(me.role!=='guru'||replaying)return;const at=Date.now();hist.push({k:'c',at});cx.clearRect(0,0,W,H);send({k:'clr',at})};
+
+/* ---------- antarmuka ---------- */
+document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{tool=b.dataset.t;commitText(true);ui()});
+$('#sz').oninput=e=>size=+e.target.value;
+$('#sws').innerHTML=COL.map(c=>`<button class="sw" style="background:${c}" data-c="${c}" aria-label="Warna ${c}" aria-pressed="false"></button>`).join(' ');
+document.querySelectorAll('.sw').forEach(b=>b.onclick=()=>{color=b.dataset.c;if(tool==='er')tool='pen';ui()});
+$('#nm').value=me.name;
+$('#nm').onchange=e=>{me.name=e.target.value.trim()||me.name;SERVER?send({k:'hello',name:me.name}):hello(0);ui()};
+function setRole(r){
+  if(SERVER)return;
+  me.role=r;if(r==='guru')send({k:'perm',allowed:[...allowed]});else allowed=new Set();
+  hello(0);if(r==='murid')send({k:'need'});ui();
+}
+$('#rg').onclick=()=>setRole('guru');$('#rm').onclick=()=>setRole('murid');
+
+function ui(){
+  const g=me.role==='guru',w=canWrite();
+  $('#rg').setAttribute('aria-pressed',g);$('#rm').setAttribute('aria-pressed',!g);
+  document.querySelectorAll('[data-t]').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.t===tool);b.disabled=!w});
+  document.querySelectorAll('.sw').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.c===color);b.disabled=!w});
+  $('#sz').disabled=!w;$('#cl').disabled=!g;$('#cl').style.display=g?'':'none';$('#rp').disabled=replaying;
+  $('#bd').classList.toggle('ro',!w);
+  document.querySelector('.seg').style.display=SERVER?'none':'';
+  $('#nr').style.display=SERVER?'':'none';
+  $('#ls').style.display=SERVER&&room()?'':'none';
+  $('#lg').style.display=SERVER&&room()&&g?'':'none';
+  $('#st').textContent=!SERVER?'Mode uji antar tab':!room()?'Belum ada ruang':online?'Ruang '+room()+' terhubung':'Menyambung ke ruang '+room()+'…';
+  $('#vl').textContent=SERVER&&!room()?'Buat ruang baru, atau buka tautan dari guru':SERVER&&!online?'Menyambung…':replaying?'Memutar ulang sesi…':w?(g?'Anda guru: bisa menulis':'Guru mengizinkan Anda menulis'):'Hanya melihat. Menunggu izin menulis dari guru';
+  const others=[...peers].filter(([i])=>i!==me.id);
+  $('#warn').style.display=(g&&others.some(([,p])=>p.role==='guru'))?'block':'none';
+  const row=(id,p,self)=>{
+    const gr=p.role==='guru';let r=`<li><span>${esc(p.name)}${self?' (Anda)':''}<br><small>${gr?'Guru':'Murid'}</small></span>`;
+    if(!gr){ if(g&&!self)r+=`<label><input type="checkbox" data-id="${id}" ${allowed.has(id)?'checked':''}> boleh menulis</label>`;
+      else r+=`<small>${allowed.has(id)?'boleh menulis':'melihat'}</small>`}
+    return r+'</li>'};
+  $('#ps').innerHTML=row(me.id,me,true)+others.map(([i,p])=>row(i,p,false)).join('');
+  document.querySelectorAll('#ps input').forEach(c=>c.onchange=()=>{
+    c.checked?allowed.add(c.dataset.id):allowed.delete(c.dataset.id);sendPerm();ui()});
+}
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+if(SERVER){parseHash();connect()}else{hello(0);send({k:'need'})}
+ui();
+</script>
+<script src="../alat-nav-kembali.js" defer></script>
+</body>
+</html>
