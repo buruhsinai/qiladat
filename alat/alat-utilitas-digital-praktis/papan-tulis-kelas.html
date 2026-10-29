@@ -69,8 +69,8 @@ aside{background:var(--panel);border:1px solid var(--line);border-radius:14px;pa
 aside h2{font:700 17px/1.2 "Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Noto Naskh Arabic",serif;margin:0 0 8px;display:flex;gap:8px;align-items:center}
 .cnt{font:600 12px/1 system-ui,sans-serif;background:var(--acc);color:var(--on);padding:4px 8px;border-radius:999px}
 ul{list-style:none;margin:0;padding:0}
-#ps li{display:grid;grid-template-columns:34px 1fr;gap:6px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
-#ps li:first-child{border-top:0}
+#ps li,#qs li{display:grid;grid-template-columns:34px 1fr;gap:6px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+#ps li:first-child,#qs li:first-child{border-top:0}
 .av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--panel2);border:1px solid var(--line);color:var(--acc)}
 .av.g{background:var(--acc);color:var(--on);border-color:var(--acc)}
 .pn1{font-weight:600;overflow-wrap:anywhere}.pn1 em{font-style:normal;color:var(--mut);font-weight:400}
@@ -151,6 +151,13 @@ button.dgr:hover:not(:disabled){background:var(--warn);filter:brightness(1.08);c
 .eb{border-left-color:var(--warn)}.eb p{margin:6px 0}.eb .ebb{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 #ebm{font-weight:600}
 body.clean .eb{display:none!important}
+.qw{margin:0 0 12px;padding:10px 12px;border:1px solid var(--line);border-left:5px solid var(--warn);border-radius:12px;background:var(--panel2)}
+.qw h3{margin:0 0 4px;font:700 14px/1.2 system-ui,sans-serif;display:flex;gap:8px;align-items:center}
+#qs .perm button.ok{background:var(--acc);border-color:var(--acc);color:var(--on)}
+#qa{margin-top:8px;min-height:34px;font-size:13.5px;padding:0 12px}
+.wt .wtn{font-weight:600;overflow-wrap:anywhere}
+#qn{display:none}
+@media (max-width:860px){#qn:not([hidden]){display:block}}
 body.bye main{display:none}
 .by .byb{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
 dialog{border:1px solid var(--line);border-radius:16px;background:var(--panel);color:var(--ink);padding:20px;width:min(440px,calc(100vw - 24px));box-shadow:0 24px 60px -12px rgba(0,0,0,.5)}
@@ -190,6 +197,8 @@ dialog input[type=text]{width:100%}
 </section>
 <main>
   <section>
+    <div id="wt" class="gs eb wt" hidden role="status"><b>Menunggu persetujuan guru</b><p>Permintaan masuk Anda sudah dikirim sebagai <span class="wtn" id="wtn"></span>. Papan dan suara terbuka setelah guru menerima Anda.</p><p class="mut">Biarkan halaman ini tetap terbuka. Nama bisa diganti di kolom nama bila salah.</p></div>
+    <div id="qn" class="gs eb" hidden role="status"><b id="qnt"></b><div class="ebb"><button id="qn1" class="pri">Terima semua</button><button id="qn2">Lihat daftar</button></div></div>
     <div id="eb" class="gs eb" hidden role="status"><b id="ebt"></b><p id="ebm" hidden></p><p id="ebh"></p>
       <div class="ebb"><button id="es"><svg class="ic" aria-hidden="true"><use href="#i-down"/></svg><span class="lb">Simpan papan</span></button><button id="eo" class="pri"><svg class="ic" aria-hidden="true"><use href="#i-unlock"/></svg><span class="lb">Buka kembali kelas</span></button><button id="en"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span class="lb">Mulai kelas baru</span></button><button id="ex"><svg class="ic" aria-hidden="true"><use href="#i-exit"/></svg><span class="lb">Keluar</span></button></div></div>
     <div id="gs" class="gs" hidden><b>Langkah awal guru</b><ol>
@@ -243,6 +252,7 @@ dialog input[type=text]{width:100%}
   <aside>
     <h2>Peserta <span class="cnt" id="pc"></span></h2>
     <div id="cc" class="cc" hidden><button id="cm" title="Cabut izin bicara semua murid"><svg class="ic" aria-hidden="true"><use href="#i-micoff"/></svg><span class="lb">Bisukan semua</span></button><button id="ck" title="Murid baru tidak bisa masuk"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg><span class="lb">Kunci ruang</span></button></div>
+    <div id="qw" class="qw" hidden><h3>Menunggu persetujuan <span class="cnt" id="qc"></span></h3><ul id="qs"></ul><button id="qa" class="pri">Terima semua</button></div>
     <ul id="ps"></ul>
     <p id="warn">Sudah ada guru di ruang ini. Hanya satu guru yang dianjurkan.</p>
     <p class="note">Guru memberi izin menulis dan izin bicara per murid lewat tombol di bawah nama. Murid yang belum diberi izin hanya melihat dan mendengar. Gambar kitab hanya bisa ditempel oleh guru.</p>
@@ -260,7 +270,7 @@ const me={id:Math.random().toString(36).slice(2,8),name:'',role:'murid'};
 me.name='Murid-'+me.id.slice(0,3);
 // Isi setelah worker dipasang, contoh: 'wss://papan-kelas.NAMA-ANDA.workers.dev'
 // Dibiarkan kosong = mode uji antar tab (seperti Tahap 1).
-const SERVER='wss://papan-kelas.a-qiller-am-11e.workers.dev';
+const SERVER='';
 const API=SERVER.replace(/^ws/,'http');
 const bc=SERVER?null:new BroadcastChannel('papan-kelas-v1');
 let ws=null, online=false, dup=false;
@@ -268,7 +278,7 @@ let spk=new Set(), vj=false, mic=null, micOn=true, pcs=new Map(), mb=0;
 const cid=(()=>{const n=()=>crypto.randomUUID().replace(/-/g,'');try{let c=sessionStorage.getItem('pk-cid');if(!c){c=n();sessionStorage.setItem('pk-cid',c)}return c}catch{return n()}})();
 let hist=[], peers=new Map(), allowed=new Set(), tool='pen', color=COL[0], size=4, replaying=false, draft=null;
 
-let page=0,npages=1,locked=false,gone='',ended=null,left=false,lend=false;
+let page=0,npages=1,locked=false,gone='',ended=null,left=false,lend=false,waiting=false,queue=[];
 const PG=it=>(it.g||0)===page;
 const send=m=>{if(SERVER){if(ws&&ws.readyState===1)ws.send(JSON.stringify(m))}else bc.postMessage({...m,from:me.id})};
 const canWrite=()=>!ended&&(!SERVER||(online&&room()))&&(me.role==='guru'||allowed.has(me.id));
@@ -325,7 +335,9 @@ const redraw=()=>{cx.clearRect(0,0,W,H);ibx.clearRect(0,0,W,H);hist.filter(PG).f
 function hello(re){send({k:'hello',re,name:me.name,role:me.role})}
 function onMsg(m){
   const f=m.from, T=!!SERVER, fromGuru=T||peers.get(f)?.role==='guru'||m.role==='guru';
-  if(m.k==='init'){me.id=m.you;me.role=m.role;hist=m.hist;allowed=new Set(m.allowed);spk=new Set(m.speak||[]);page=m.page||0;npages=m.npages||1;locked=!!m.locked;ended=m.ended||null;redraw();syncMic()}
+  if(m.k==='wait'){waiting=true}
+  else if(m.k==='queue'){const old=new Set(queue.map(q=>q.id));queue=Array.isArray(m.list)?m.list:[];const nw=queue.filter(q=>!old.has(q.id));if(me.role==='guru'&&nw.length)toast((nw[0].name||'Seorang murid')+(nw.length>1?' dan '+(nw.length-1)+' lainnya':'')+' meminta masuk. Lihat daftar Peserta.')}
+  else if(m.k==='init'){const was=waiting;waiting=false;if(was)toast('Guru menerima Anda. Selamat belajar!');me.id=m.you;me.role=m.role;hist=m.hist;allowed=new Set(m.allowed);spk=new Set(m.speak||[]);page=m.page||0;npages=m.npages||1;locked=!!m.locked;ended=m.ended||null;redraw();syncMic()}
   else if(m.k==='peers'){peers=new Map(m.peers.map(p=>[p.id,p]));syncPeers()}
   else if(m.k==='hello'){peers.set(f,{name:m.name,role:m.role});if(!m.re){hello(1);if(me.role==='guru')sendState()}}
   else if(m.k==='bye'){peers.delete(f);allowed.delete(f)}
@@ -341,7 +353,7 @@ function onMsg(m){
   else if(m.k==='lock')locked=!!m.v;
   else if(m.k==='end'){ended={at:m.at,msg:m.msg||''};commitText(false);cur=null;pc.clearRect(0,0,W,H);stopVoice();if(me.role!=='guru')toast('Kelas telah diakhiri oleh guru')}
   else if(m.k==='reopen'){ended=null;if(me.role!=='guru'){page=m.page||0;npages=Math.max(npages,m.npages||1);redraw();toast('Guru membuka kembali kelas. Gabung suara lagi bila perlu.')}}
-  else if(m.k==='note'){if(m.t==='leave')toast((m.name||'Seorang murid')+' keluar dari kelas')}
+  else if(m.k==='note'){if(m.t==='leave')toast((m.name||'Seorang murid')+' keluar dari kelas');else if(m.t==='full')toast('Daftar murid ruang ini sudah penuh (300), tidak bisa menerima lagi')}
   else if(m.k==='sig')onSig(m);
   ui();
 }
@@ -361,9 +373,9 @@ function connect(){
   const w=ws=new WebSocket(`${SERVER}/room/${room()}?n=${encodeURIComponent(me.name)}&t=${store.get('pk-'+room())}&c=${cid}`);
   w.onopen=()=>{online=true;if(vj)sendSt();ui()};
   w.onmessage=e=>onMsg(JSON.parse(e.data));
-  w.onclose=e=>{if(ws!==w)return;online=false;peers=new Map();allowed=new Set();dup=e.code===4000;gone=e.code===4001?'Ruang dikunci oleh guru. Minta guru membuka kunci, lalu muat ulang.':e.code===4002?'Anda dikeluarkan dari ruang ini oleh guru.':e.code===4003?'Kelas ini sudah berakhir. Tanyakan ke guru kapan pertemuan berikutnya.':'';ui();if(!dup&&!gone)setTimeout(connect,2000+Math.random()*2000)};
+  w.onclose=e=>{if(ws!==w)return;online=false;waiting=false;queue=[];peers=new Map();allowed=new Set();dup=e.code===4000;gone=e.code===4001?'Ruang dikunci oleh guru. Minta guru membuka kunci, lalu muat ulang.':e.code===4002?'Anda dikeluarkan dari ruang ini oleh guru.':e.code===4003?'Kelas ini sudah berakhir. Tanyakan ke guru kapan pertemuan berikutnya.':e.code===4004?'Antrean masuk ruang ini sedang penuh. Coba lagi beberapa saat lagi.':e.code===4005?'Permintaan masuk Anda tidak disetujui guru. Bila ini keliru, hubungi guru lalu muat ulang halaman untuk meminta lagi.':'';ui();if(!dup&&!gone)setTimeout(connect,2000+Math.random()*2000)};
 }
-function leave(){stopVoice();IM.clear();spk=new Set();ended=null;const o=ws;ws=null;online=false;if(o)o.close();hist=[];allowed=new Set();peers=new Map();redraw()}
+function leave(){stopVoice();IM.clear();spk=new Set();ended=null;waiting=false;queue=[];const o=ws;ws=null;online=false;if(o)o.close();hist=[];allowed=new Set();peers=new Map();redraw()}
 function newRoom(){
   const r=Math.random().toString(36).slice(2,8).toUpperCase(), t=crypto.randomUUID().replace(/-/g,'');
   store.set('pk-'+r,t);leave();location.hash=r;
@@ -468,11 +480,11 @@ function ui(){
   $('#nr').style.display=SERVER&&room()&&g&&!left?'':'none';
   $('#ls').style.display=SERVER&&room()&&!left?'':'none';
   $('#lg').style.display=SERVER&&room()&&g&&!left?'':'none';
-  $('#stw').dataset.s=gone||dup?'warn':!SERVER?'test':!room()||left?'off':ended&&online?'warn':online?'on':'wait';
-  $('#st').textContent=gone?gone:dup?'Ruang ini terbuka di tab lain. Muat ulang untuk mengambil alih':!SERVER?'Mode uji antar tab':!room()?'Belum ada ruang':left?'Anda sudah keluar dari ruang '+room():ended&&online?'Ruang '+room()+' sudah berakhir':online?'Ruang '+room()+' terhubung':'Menyambung ke ruang '+room()+'…';
-  $('#vl').textContent=imgMsg?imgMsg:pending?'Klik di papan untuk menaruh hasil. Esc untuk batal':SERVER&&!room()?'Buat ruang baru, atau buka tautan dari guru':SERVER&&!online?(gone||'Menyambung…'):replaying?'Memutar ulang sesi…':ended?'Kelas telah berakhir. Papan hanya bisa dilihat dan disimpan':w?(g?'Anda guru: bisa menulis':'Guru mengizinkan Anda menulis'):'Hanya melihat. Menunggu izin menulis dari guru';
+  $('#stw').dataset.s=gone||dup?'warn':!SERVER?'test':!room()||left?'off':waiting&&online?'wait':ended&&online?'warn':online?'on':'wait';
+  $('#st').textContent=gone?gone:dup?'Ruang ini terbuka di tab lain. Muat ulang untuk mengambil alih':!SERVER?'Mode uji antar tab':!room()?'Belum ada ruang':left?'Anda sudah keluar dari ruang '+room():waiting&&online?'Menunggu persetujuan guru untuk masuk ruang '+room()+'…':ended&&online?'Ruang '+room()+' sudah berakhir':online?'Ruang '+room()+' terhubung':'Menyambung ke ruang '+room()+'…';
+  $('#vl').textContent=imgMsg?imgMsg:pending?'Klik di papan untuk menaruh hasil. Esc untuk batal':SERVER&&!room()?'Buat ruang baru, atau buka tautan dari guru':SERVER&&!online?(gone||'Menyambung…'):waiting?'Menunggu guru menerima Anda. Papan tampil setelah disetujui':replaying?'Memutar ulang sesi…':ended?'Kelas telah berakhir. Papan hanya bisa dilihat dan disimpan':w?(g?'Anda guru: bisa menulis':'Guru mengizinkan Anda menulis'):'Hanya melihat. Menunggu izin menulis dari guru';
   $('#pn').hidden=!(g&&pdf);$('#pg').textContent=pdf?pdfPg+' / '+pdf.numPages:'';$('#pp').disabled=!pdf||pdfPg<=1||!!imgMsg;$('#pq').disabled=!pdf||pdfPg>=pdf.numPages||!!imgMsg;
-  const vo=SERVER&&online&&!!room()&&!ended,mp=peers.get(me.id);
+  const vo=SERVER&&online&&!!room()&&!ended&&!waiting,mp=peers.get(me.id);
   $('#vj').hidden=!vo;lab('#vj',vj?'Keluar suara':'Gabung suara');$('#vj').setAttribute('aria-pressed',vj);
   $('#vm').hidden=!(vo&&vj&&canSpeak());lab('#vm',micOn?'Mikrofon aktif':'Mikrofon mati');$('#vm use').setAttribute('href',micOn?'#i-mic':'#i-micoff');$('#vm').setAttribute('aria-pressed',micOn);
   $('#vh').hidden=!(vo&&!g&&!canSpeak());lab('#vh',mp?.h?'Turunkan tangan':'Angkat tangan');$('#vh').setAttribute('aria-pressed',!!mp?.h);
@@ -489,7 +501,7 @@ function ui(){
   $('#ps').innerHTML=row(me.id,me,true)+others.map(([i,p])=>row(i,p,false)).join('');
   $('#pc').textContent=1+others.length;
   const wel=SERVER&&!room();document.body.classList.toggle('wel',wel);$('#wl').hidden=!wel;
-  const rl=$('#rl');rl.hidden=!(SERVER&&room()&&online);rl.textContent='Anda: '+(g?'Guru':'Murid');rl.dataset.s=g?'on':'off';
+  const rl=$('#rl');rl.hidden=!(SERVER&&room()&&online&&!waiting);rl.textContent='Anda: '+(g?'Guru':'Murid');rl.dataset.s=g?'on':'off';
   $('#wa').style.display=SERVER&&room()&&g?'':'none';
   $('#gs').hidden=!(SERVER&&room()&&online&&g&&!others.length&&!ended&&!store.get('pk-gs-'+room()));
   $('#cc').hidden=!(g&&SERVER&&online&&!ended);$('#cm').disabled=!spk.size;$('#ck').setAttribute('aria-pressed',locked);lab('#ck',locked?'Buka kunci ruang':'Kunci ruang');
@@ -500,6 +512,13 @@ function ui(){
   document.querySelectorAll('#ps input').forEach(c=>c.onchange=()=>{
     if(c.dataset.s){c.checked?spk.add(c.dataset.s):spk.delete(c.dataset.s);send({k:'spk',allowed:[...spk]})}
     else{c.checked?allowed.add(c.dataset.id):allowed.delete(c.dataset.id);sendPerm()}ui()});
+  /* persetujuan masuk */
+  const wtb=!!(SERVER&&room()&&online&&waiting&&!left&&!gone);$('#wt').hidden=!wtb;if(wtb)$('#wtn').textContent=me.name;
+  const qv=g&&SERVER&&online&&!ended&&queue.length>0;$('#qw').hidden=!qv;$('#qn').hidden=!qv;if(qv)$('#qnt').textContent=queue.length+(queue.length>1?' murid menunggu persetujuan':' murid menunggu persetujuan: '+(queue[0].name||'Peserta'));
+  if(qv){$('#qc').textContent=queue.length;$('#qa').hidden=queue.length<2;
+    $('#qs').innerHTML=queue.map(q=>`<li><span class="av" aria-hidden="true">${esc(([...(q.name||'?').trim()][0]||'?').toUpperCase())}</span><div><div class="pn1">${esc(q.name||'Peserta')}</div><div class="pr">Minta masuk</div></div><div class="perm"><button class="ok" data-ok="${esc(q.id)}">Terima</button><button class="dg" data-no="${esc(q.id)}">Tolak</button></div></li>`).join('');
+    document.querySelectorAll('#qs [data-ok]').forEach(b=>b.onclick=()=>send({k:'admit',id:b.dataset.ok}));
+    document.querySelectorAll('#qs [data-no]').forEach(b=>b.onclick=()=>send({k:'deny',id:b.dataset.no}))}
   /* keluar kelas / akhiri kelas */
   const inR=SERVER&&room()&&!left&&!gone&&!dup;
   $('#lv').hidden=!inR;lab('#lv',g?(ended?'Keluar':'Akhiri kelas'):'Keluar kelas');$('#lv use').setAttribute('href',g&&!ended?'#i-power':'#i-exit');
@@ -838,7 +857,7 @@ addEventListener('keydown',e=>{if(e.key==='Escape'){svClose();if(isClean())clean
 /* ---------- halaman papan dan kontrol kelas ---------- */
 function goPage(n){if((me.role!=='guru'&&!ended)||replaying||n<0||n>=50||(ended&&n>=npages))return;commitText(true);cur=null;pc.clearRect(0,0,W,H);page=n;npages=Math.max(npages,n+1);if(!ended)send({k:'pg',n});redraw();ui()}
 $('#hp').onclick=()=>goPage(page-1);$('#hq').onclick=()=>goPage(page+1);$('#hn').onclick=()=>goPage(npages);
-$('#cm').onclick=()=>send({k:'mute'});$('#ck').onclick=()=>send({k:'lock',v:!locked});
+$('#qa').onclick=$('#qn1').onclick=()=>send({k:'admitall'});$('#qn2').onclick=()=>$('#qw').scrollIntoView({behavior:'smooth',block:'center'});$('#cm').onclick=()=>send({k:'mute'});$('#ck').onclick=()=>send({k:'lock',v:!locked});
 /* ---------- layar awal, undangan WhatsApp ---------- */
 function joinCode(){const v=$('#wk').value.trim();let h=v.includes('#')?v.split('#')[1].trim():v;
   if(!/^[A-Za-z0-9]{6}(~[A-Za-z0-9-]{16,})?$/.test(h)){alert('Kode tidak dikenali. Tempel tautan dari guru atau kode 6 huruf.');return}
@@ -886,6 +905,5 @@ addEventListener('beforeunload',e=>{if(SERVER&&me.role==='guru'&&online&&!ended&
 if(SERVER){parseHash();connect()}else{hello(0);send({k:'need'})}
 ui();
 </script>
-<script src="../alat-nav-kembali.js" defer></script>
 </body>
 </html>
