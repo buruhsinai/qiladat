@@ -45,6 +45,25 @@ li small{color:var(--mut)}
 .note{color:var(--mut);font-size:13px;margin:10px 0 0}
 #warn{color:var(--warn);font-size:13px;display:none}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+#mt{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px}
+#mt[hidden]{display:none}
+#mt h2{font-size:15px;margin:0 0 10px}
+.mgrid{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:18px}
+@media (max-width:820px){.mgrid{grid-template-columns:1fr}}
+.rw{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.rw input,.mctl input{min-width:0;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.rw input[type=number]{width:66px}.rw input[data-f=l]{flex:1}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.mctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.mctl input{width:120px}
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.15;margin:0 3px}
+.fr i{font-style:normal;padding:0 4px}.fr i:first-child{border-bottom:1.5px solid currentColor}
+#mo .ln{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0}
+#mo details{margin-top:12px;border-top:1px solid var(--line);padding-top:8px}
+#mo summary{cursor:pointer;font-weight:600}
+#mo ul{padding-left:18px;list-style:disc;margin:6px 0}
+#mo li{display:list-item;border:0;padding:2px 0}
+#mo .ok{color:var(--acc)}#mo .bad{color:var(--warn)}
 </style>
 </head>
 <body>
@@ -55,6 +74,7 @@ li small{color:var(--mut)}
     <button id="rg" aria-pressed="false">Guru</button><button id="rm" aria-pressed="true">Murid</button>
   </div>
 <span id="st" role="status"></span>
+  <button id="vj" hidden>Gabung suara</button><button id="vm" hidden>Mikrofon</button><button id="vh" hidden>Angkat tangan</button>
   <button id="nr">Buat ruang baru</button>
   <button id="ls">Salin tautan murid</button>
   <button id="lg">Salin tautan guru</button>
@@ -66,9 +86,12 @@ li small{color:var(--mut)}
       <button data-t="line" aria-pressed="false">Garis</button>
       <button data-t="text" aria-pressed="false">Teks</button>
       <button data-t="er" aria-pressed="false">Penghapus</button>
+      <button id="mb" aria-pressed="false">Pecahan &amp; faraid</button>
       <span id="sws"></span>
       <label>Tebal <input type="range" id="sz" min="2" max="12" value="4"></label>
       <span class="sp"></span>
+      <button id="ud">Urungkan</button>
+      <button id="sv">Simpan gambar</button>
       <button id="rp">Putar ulang</button>
       <button id="cl">Bersihkan papan</button>
     </div>
@@ -78,12 +101,26 @@ li small{color:var(--mut)}
       <input id="ti" dir="auto" aria-label="Ketik teks di papan">
       <div class="veil" id="vl"></div>
     </div>
+    <section id="mt" hidden aria-label="Pecahan dan faraid">
+      <h2>Pecahan &amp; penyamaan penyebut</h2>
+      <div class="mgrid">
+        <div>
+          <div class="chips" id="mq" aria-label="Bagian tetap faraid"></div>
+          <div id="mr"></div>
+          <div class="mctl"><button id="ma">+ Baris</button><button id="mc">Kosongkan</button>
+            <label>Harta <input type="number" id="mh" min="0" placeholder="opsional"></label></div>
+          <button id="mp">Tempel hasil ke papan</button>
+        </div>
+        <div id="mo" aria-live="polite"></div>
+      </div>
+    </section>
   </section>
   <aside>
     <h2>Peserta</h2>
     <ul id="ps"></ul>
     <p id="warn">Sudah ada guru di ruang ini. Hanya satu guru yang dianjurkan.</p>
-    <p class="note">Guru memberi izin menulis per murid lewat kotak centang. Murid yang belum diberi izin hanya melihat.</p>
+    <p class="note">Guru memberi izin menulis dan izin bicara per murid lewat kotak centang. Murid yang belum diberi izin hanya melihat dan mendengar.</p>
+    <p class="note">✋ angkat tangan · 🎧 ikut suara, belum tersambung · 🔊 tersambung · 🗣 sedang bicara</p>
   </aside>
 </main>
 <script>
@@ -94,9 +131,11 @@ const me={id:Math.random().toString(36).slice(2,8),name:'',role:'murid'};
 me.name='Murid-'+me.id.slice(0,3);
 // Isi setelah worker dipasang, contoh: 'wss://papan-kelas.NAMA-ANDA.workers.dev'
 // Dibiarkan kosong = mode uji antar tab (seperti Tahap 1).
-const SERVER='wss://papan-kelas.a-qiller-am-11e.workers.dev';
+const SERVER='';
 const bc=SERVER?null:new BroadcastChannel('papan-kelas-v1');
-let ws=null, online=false;
+let ws=null, online=false, dup=false;
+let spk=new Set(), vj=false, mic=null, micOn=true, pcs=new Map(), mb=0;
+const cid=(()=>{const n=()=>crypto.randomUUID().replace(/-/g,'');try{let c=sessionStorage.getItem('pk-cid');if(!c){c=n();sessionStorage.setItem('pk-cid',c)}return c}catch{return n()}})();
 let hist=[], peers=new Map(), allowed=new Set(), tool='pen', color=COL[0], size=4, replaying=false, draft=null;
 
 const send=m=>{if(SERVER){if(ws&&ws.readyState===1)ws.send(JSON.stringify(m))}else bc.postMessage({...m,from:me.id})};
@@ -120,6 +159,9 @@ function put(c,it){
   else if(it.k==='l'){c.save();c.lineCap='round';c.lineWidth=it.w;c.strokeStyle=it.c;c.beginPath();c.moveTo(...it.a);c.lineTo(...it.b);c.stroke();c.restore()}
   else if(it.k==='x'){c.save();c.fillStyle=it.c;c.font=it.f+'px "Segoe UI",system-ui,"Noto Naskh Arabic",sans-serif';c.textBaseline='top';
     c.direction=isArab(it.s)?'rtl':'ltr';c.fillText(it.s,it.a[0],it.a[1]);c.restore()}
+  else if(it.k==='f'){c.save();c.fillStyle=c.strokeStyle=it.c;c.font=it.f+'px "Segoe UI",system-ui,"Noto Naskh Arabic",sans-serif';c.textAlign='center';c.textBaseline='top';
+    const n=String(it.n),d=String(it.d),w=Math.max(c.measureText(n).width,c.measureText(d).width)+10,x=it.a[0]+w/2,y=it.a[1];
+    c.fillText(n,x,y);c.fillText(d,x,y+it.f*1.22);c.lineWidth=Math.max(2,it.f/14);c.beginPath();c.moveTo(it.a[0],y+it.f*1.12);c.lineTo(it.a[0]+w,y+it.f*1.12);c.stroke();c.restore()}
   else if(it.k==='c')c.clearRect(0,0,W,H);
 }
 const redraw=()=>{cx.clearRect(0,0,W,H);hist.forEach(i=>put(cx,i))};
@@ -128,8 +170,8 @@ const redraw=()=>{cx.clearRect(0,0,W,H);hist.forEach(i=>put(cx,i))};
 function hello(re){send({k:'hello',re,name:me.name,role:me.role})}
 function onMsg(m){
   const f=m.from, T=!!SERVER, fromGuru=T||peers.get(f)?.role==='guru'||m.role==='guru';
-  if(m.k==='init'){me.id=m.you;me.role=m.role;hist=m.hist;allowed=new Set(m.allowed);redraw()}
-  else if(m.k==='peers'){peers=new Map(m.peers.map(p=>[p.id,p]))}
+  if(m.k==='init'){me.id=m.you;me.role=m.role;hist=m.hist;allowed=new Set(m.allowed);spk=new Set(m.speak||[]);redraw();syncMic()}
+  else if(m.k==='peers'){peers=new Map(m.peers.map(p=>[p.id,p]));syncPeers()}
   else if(m.k==='hello'){peers.set(f,{name:m.name,role:m.role});if(!m.re){hello(1);if(me.role==='guru')sendState()}}
   else if(m.k==='bye'){peers.delete(f);allowed.delete(f)}
   else if(m.k==='need'){if(me.role==='guru')sendState()}
@@ -138,6 +180,9 @@ function onMsg(m){
   else if(m.k==='clr'){if(fromGuru){hist.push({k:'c',at:m.at});if(!replaying)redraw()}}
   else if(m.k==='add'){if(T||fromGuru||allowed.has(f)){hist.push(m.it);if(!replaying)put(cx,m.it)}}
   else if(m.k==='pt'){if(T||fromGuru||allowed.has(f)){const it=hist.findLast(i=>i.sid===m.sid);if(it){const n=it.p.length;it.p.push(...m.pts);if(!replaying)seg(cx,it,n)}}}
+  else if(m.k==='undo'){if(T||fromGuru||allowed.has(f)){hist=hist.filter(i=>!(i.u===m.u&&i.at===m.at));if(!replaying)redraw()}}
+  else if(m.k==='spk'){spk=new Set(m.allowed);syncMic()}
+  else if(m.k==='sig')onSig(m);
   ui();
 }
 if(bc)bc.onmessage=({data})=>onMsg(data);
@@ -152,12 +197,13 @@ function parseHash(){ // #KODE~TOKEN dari tautan guru: simpan token, sisakan #KO
 }
 function connect(){
   if(!SERVER||!room()){ui();return}
-  const w=ws=new WebSocket(`${SERVER}/room/${room()}?n=${encodeURIComponent(me.name)}&t=${store.get('pk-'+room())}`);
-  w.onopen=()=>{online=true;ui()};
+  dup=false;
+  const w=ws=new WebSocket(`${SERVER}/room/${room()}?n=${encodeURIComponent(me.name)}&t=${store.get('pk-'+room())}&c=${cid}`);
+  w.onopen=()=>{online=true;if(vj)sendSt();ui()};
   w.onmessage=e=>onMsg(JSON.parse(e.data));
-  w.onclose=()=>{if(ws!==w)return;online=false;peers=new Map();allowed=new Set();ui();setTimeout(connect,2000+Math.random()*2000)};
+  w.onclose=e=>{if(ws!==w)return;online=false;peers=new Map();allowed=new Set();dup=e.code===4000;ui();if(!dup)setTimeout(connect,2000+Math.random()*2000)};
 }
-function leave(){const o=ws;ws=null;online=false;if(o)o.close();hist=[];allowed=new Set();peers=new Map();redraw()}
+function leave(){stopVoice();spk=new Set();const o=ws;ws=null;online=false;if(o)o.close();hist=[];allowed=new Set();peers=new Map();redraw()}
 function newRoom(){
   const r=Math.random().toString(36).slice(2,8).toUpperCase(), t=crypto.randomUUID().replace(/-/g,'');
   store.set('pk-'+r,t);leave();location.hash=r;
@@ -174,13 +220,14 @@ let cur=null;
 cv.addEventListener('pointerdown',e=>{
   if(replaying||!canWrite())return;
   const p=pos(e);
+  if(pending){place(p);return}
   if(tool==='text'){openText(p,e);return}
   cv.setPointerCapture(e.pointerId);
   const at=Date.now();
   if(tool==='pen'||tool==='er'){
-    cur={k:'s',sid:me.id+at,c:color,w:size,er:tool==='er',p:[p],at};
+    cur={k:'s',u:me.id,sid:me.id+at,c:color,w:size,er:tool==='er',p:[p],at};
     hist.push(cur);put(cx,cur);send({k:'add',it:cur});
-  }else cur={k:'l',c:color,w:size,a:p,b:p,at};
+  }else cur={k:'l',u:me.id,c:color,w:size,a:p,b:p,at};
 });
 cv.addEventListener('pointermove',e=>{
   if(!cur)return; const p=pos(e);
@@ -197,14 +244,15 @@ cv.addEventListener('pointerup',endDraw);cv.addEventListener('pointercancel',end
 function openText(p,e){
   const r=$('#bd').getBoundingClientRect(), fs=16+size*4, sc=r.width/W;
   Object.assign(ti.style,{display:'block',left:(p[0]*sc)+'px',top:(p[1]*sc)+'px',fontSize:(fs*sc)+'px',color});
-  ti.value='';ti.dataset.x=p[0];ti.dataset.y=p[1];ti.dataset.f=fs;ti.dataset.c=color;
+  ti.value='';ti.placeholder='Ketik. 1/2 otomatis jadi pecahan';ti.dataset.x=p[0];ti.dataset.y=p[1];ti.dataset.f=fs;ti.dataset.c=color;
   setTimeout(()=>ti.focus(),0);e.preventDefault();
 }
 function commitText(save){
   if(ti.style.display==='none')return;
   const s=ti.value.trim(); ti.style.display='none';
-  if(save&&s&&canWrite()){const it={k:'x',s,a:[+ti.dataset.x,+ti.dataset.y],f:+ti.dataset.f,c:ti.dataset.c,at:Date.now()};
-    hist.push(it);put(cx,it);send({k:'add',it})}
+  if(save&&s&&canWrite()){
+    const f=+ti.dataset.f,c=ti.dataset.c,x=+ti.dataset.x,y=+ti.dataset.y;
+    (/\d+\/\d+/.test(s)&&!isArab(s)?autoFrac(s,f,c,x,y):[{k:'x',s,a:[x,y],f,c,at:Date.now()}]).forEach(addItem)}
 }
 ti.addEventListener('keydown',e=>{if(e.key==='Enter')commitText(true);if(e.key==='Escape')commitText(false)});
 ti.addEventListener('blur',()=>commitText(true));
@@ -216,6 +264,18 @@ $('#rp').onclick=()=>{
   const snap=hist.slice();let t=0,prev=snap[0].at;
   snap.forEach(it=>{t+=Math.min(1200,Math.max(150,it.at-prev));prev=it.at;setTimeout(()=>put(cx,it),t)});
   setTimeout(()=>{replaying=false;redraw();ui()},t+600);
+};
+const lastOwn=()=>{for(let i=hist.length-1;i>=0;i--){const x=hist[i];if(x.k==='c')return null;if(x.u===me.id)return x}return null};
+function undo(){
+  if(replaying||!canWrite()||cur)return;const x=lastOwn();if(!x)return;
+  hist=hist.filter(i=>!(i.u===x.u&&i.at===x.at));redraw();send(SERVER?{k:'undo'}:{k:'undo',u:x.u,at:x.at});ui();
+}
+$('#ud').onclick=undo;
+addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='z'&&!/INPUT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();undo()}});
+$('#sv').onclick=()=>{ // simpan papan sebagai PNG berlatar papan (kanvas aslinya transparan)
+  const c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+  g.fillStyle='#22403a';g.fillRect(0,0,W,H);g.drawImage(cv,0,0);
+  c.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='papan-'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000)})
 };
 $('#cl').onclick=()=>{if(me.role!=='guru'||replaying)return;const at=Date.now();hist.push({k:'c',at});cx.clearRect(0,0,W,H);send({k:'clr',at})};
 
@@ -238,29 +298,204 @@ function ui(){
   $('#rg').setAttribute('aria-pressed',g);$('#rm').setAttribute('aria-pressed',!g);
   document.querySelectorAll('[data-t]').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.t===tool);b.disabled=!w});
   document.querySelectorAll('.sw').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.c===color);b.disabled=!w});
-  $('#sz').disabled=!w;$('#cl').disabled=!g;$('#cl').style.display=g?'':'none';$('#rp').disabled=replaying;
+  $('#sz').disabled=!w;$('#ud').disabled=!w||replaying||!lastOwn();$('#cl').disabled=!g;$('#cl').style.display=g?'':'none';$('#rp').disabled=replaying;
   $('#bd').classList.toggle('ro',!w);
+  $('#mp').disabled=!w||!last;
   document.querySelector('.seg').style.display=SERVER?'none':'';
   $('#nr').style.display=SERVER?'':'none';
   $('#ls').style.display=SERVER&&room()?'':'none';
   $('#lg').style.display=SERVER&&room()&&g?'':'none';
-  $('#st').textContent=!SERVER?'Mode uji antar tab':!room()?'Belum ada ruang':online?'Ruang '+room()+' terhubung':'Menyambung ke ruang '+room()+'…';
-  $('#vl').textContent=SERVER&&!room()?'Buat ruang baru, atau buka tautan dari guru':SERVER&&!online?'Menyambung…':replaying?'Memutar ulang sesi…':w?(g?'Anda guru: bisa menulis':'Guru mengizinkan Anda menulis'):'Hanya melihat. Menunggu izin menulis dari guru';
+  $('#st').textContent=dup?'Ruang ini terbuka di tab lain. Muat ulang untuk mengambil alih':!SERVER?'Mode uji antar tab':!room()?'Belum ada ruang':online?'Ruang '+room()+' terhubung':'Menyambung ke ruang '+room()+'…';
+  $('#vl').textContent=pending?'Klik di papan untuk menaruh hasil. Esc untuk batal':SERVER&&!room()?'Buat ruang baru, atau buka tautan dari guru':SERVER&&!online?'Menyambung…':replaying?'Memutar ulang sesi…':w?(g?'Anda guru: bisa menulis':'Guru mengizinkan Anda menulis'):'Hanya melihat. Menunggu izin menulis dari guru';
+  const vo=SERVER&&online&&!!room(),mp=peers.get(me.id);
+  $('#vj').hidden=!vo;$('#vj').textContent=vj?'Keluar suara':'Gabung suara';$('#vj').setAttribute('aria-pressed',vj);
+  $('#vm').hidden=!(vo&&vj&&canSpeak());$('#vm').textContent=micOn?'Mikrofon aktif':'Mikrofon mati';$('#vm').setAttribute('aria-pressed',micOn);
+  $('#vh').hidden=!(vo&&!g&&!canSpeak());$('#vh').textContent=mp?.h?'Turunkan tangan':'Angkat tangan';$('#vh').setAttribute('aria-pressed',!!mp?.h);
   const others=[...peers].filter(([i])=>i!==me.id);
   $('#warn').style.display=(g&&others.some(([,p])=>p.role==='guru'))?'block':'none';
   const row=(id,p,self)=>{
-    const gr=p.role==='guru';let r=`<li><span>${esc(p.name)}${self?' (Anda)':''}<br><small>${gr?'Guru':'Murid'}</small></span>`;
-    if(!gr){ if(g&&!self)r+=`<label><input type="checkbox" data-id="${id}" ${allowed.has(id)?'checked':''}> boleh menulis</label>`;
-      else r+=`<small>${allowed.has(id)?'boleh menulis':'melihat'}</small>`}
+    const gr=p.role==='guru',q=peers.get(id)||p,bd=(talk.has(id)?' 🗣':'')+(q.h?' ✋':'')+(q.v?(self||pcs.get(id)?.pc.connectionState==='connected'?' 🔊':' 🎧'):'');
+    let r=`<li><span>${esc(p.name)}${self?' (Anda)':''}${bd}<br><small>${gr?'Guru':'Murid'}</small></span>`;
+    if(!gr){ if(g&&!self)r+=`<span><label><input type="checkbox" data-id="${id}" ${allowed.has(id)?'checked':''}> boleh menulis</label><br><label><input type="checkbox" data-s="${id}" ${spk.has(id)?'checked':''}> boleh bicara</label></span>`;
+      else r+=`<small>${[allowed.has(id)&&'menulis',spk.has(id)&&'bicara'].filter(Boolean).join(', ')||'melihat'}</small>`}
     return r+'</li>'};
   $('#ps').innerHTML=row(me.id,me,true)+others.map(([i,p])=>row(i,p,false)).join('');
   document.querySelectorAll('#ps input').forEach(c=>c.onchange=()=>{
-    c.checked?allowed.add(c.dataset.id):allowed.delete(c.dataset.id);sendPerm();ui()});
+    if(c.dataset.s){c.checked?spk.add(c.dataset.s):spk.delete(c.dataset.s);send({k:'spk',allowed:[...spk]})}
+    else{c.checked?allowed.add(c.dataset.id):allowed.delete(c.dataset.id);sendPerm()}ui()});
 }
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* ---------- pecahan & faraid ---------- */
+let pending=null,last=null,rows=[{l:'',n:1,d:2},{l:'',n:1,d:6}],hartaV=0;
+const FONT='"Segoe UI",system-ui,"Noto Naskh Arabic",sans-serif';
+const mw=(s,f)=>{cx.save();cx.font=f+'px '+FONT;const w=cx.measureText(s).width;cx.restore();return w};
+const addItem=it=>{it.u=me.id;hist.push(it);put(cx,it);send({k:'add',it})};
+const moveItems=(a,dx,dy)=>a.forEach(i=>{i.a=[i.a[0]+dx,i.a[1]+dy]});
+function compose(lines,F,c){ // token: {s:teks} atau {n,d}; hasil berpangkal di (0,0)
+  const out=[],at=Date.now();let y=0,W2=0;
+  for(const ln of lines){
+    const hasF=ln.some(t=>t.n!=null);let x=0;
+    for(const t of ln){
+      if(t.n!=null){const w=Math.max(mw(String(t.n),F),mw(String(t.d),F))+10;out.push({k:'f',n:t.n,d:t.d,a:[x,y],f:F,c,at});x+=w+F*.35}
+      else{const w=mw(t.s,F);out.push({k:'x',s:t.s,a:[isArab(t.s)?x+w:x,y+(hasF?F*.62:0)],f:F,c,at});x+=w+F*.35}
+    }
+    W2=Math.max(W2,x);y+=hasF?F*2.7:F*1.6;
+  }
+  return{items:out,w:W2,h:y};
+}
+function autoFrac(s,f,c,x,y){
+  const tk=s.split(/(\d+\/\d+)/).map(t=>t.trim()).filter(Boolean).map(t=>{
+    const m=t.match(/^(\d+)\/(\d+)$/);return m&&+m[2]>0?{n:+m[1],d:+m[2]}:{s:t}});
+  const r=compose([tk],f,c);moveItems(r.items,x,y);return r.items;
+}
+function place(p){
+  const r=pending;pending=null;
+  const dx=Math.max(10,Math.min(p[0],W-10-r.w)),dy=Math.max(10,Math.min(p[1],H-10-r.h));
+  moveItems(r.items,dx,dy);r.items.forEach(addItem);ui();
+}
+addEventListener('keydown',e=>{if(e.key==='Escape'&&pending){pending=null;ui()}});
+
+/*MATH-START*/
+const gcd=(a,b)=>b?gcd(b,a%b):Math.abs(a), lcm=(a,b)=>a/gcd(a,b)*b;
+function fac(n){const r={};for(let p=2;p*p<=n;p++)while(n%p===0){r[p]=(r[p]||0)+1;n/=p}if(n>1)r[n]=(r[n]||0)+1;return r}
+const SUP='⁰¹²³⁴⁵⁶⁷⁸⁹', sup=e=>String(e).split('').map(c=>SUP[c]).join('');
+const pw=([p,e])=>e>1?p+sup(e):p;
+const facTxt=n=>n===1?'1':Object.entries(fac(n)).map(pw).join(' × ');
+function maxFac(ds){const m={};ds.forEach(d=>{for(const[p,e]of Object.entries(fac(d)))m[p]=Math.max(m[p]||0,e)});return m}
+const maxTxt=ds=>Object.entries(maxFac(ds)).map(pw).join(' × ');
+function calc(rs){
+  const ok=rs.filter(r=>Number.isInteger(r.n)&&Number.isInteger(r.d)&&r.n>0&&r.d>0);
+  if(!ok.length)return null;
+  if(ok.some(r=>r.n>1000||r.d>1000))return{err:'Angka terlalu besar (maksimal 1000).'};
+  const R=ok.map(r=>{const g=gcd(r.n,r.d);return{l:r.l,n0:r.n,d0:r.d,n:r.n/g,d:r.d/g,simp:g>1}});
+  const ds=[...new Set(R.map(r=>r.d))].sort((a,b)=>a-b);
+  const M=ds.reduce(lcm,1);
+  if(M>100000)return{err:'Asal masalah terlalu besar.'};
+  R.forEach(r=>{r.k=M/r.d;r.nn=r.n*r.k});
+  return{R,ds,M,S:R.reduce((s,r)=>s+r.nn,0)};
+}
+function verdict(r){
+  const{M,S}=r;
+  if(S===M)return 'Jumlah bagian sama dengan asal masalah: pas.';
+  if(S>M)return "'Aul: jumlah bagian ("+S+") melebihi asal masalah ("+M+"), maka pembagi naik menjadi "+S+'.';
+  return 'Sisa '+(M-S)+'/'+M+': untuk ashabah; bila tidak ada, radd mengikuti mazhab yang dipakai.';
+}
+/*MATH-END*/
+
+const fmt=v=>v.toLocaleString('id-ID',{maximumFractionDigits:2});
+const frH=(n,d)=>`<span class="fr"><i>${n}</i><i>${d}</i></span>`;
+function calcOut(){
+  const r=last=calc(rows),o=$('#mo');ui();
+  if(!r){o.innerHTML='<p class="note">Isi pecahan di sebelah kiri atau pilih bagian tetap di atasnya.</p>';return}
+  if(r.err){o.innerHTML=`<p class="bad">${r.err}</p>`;return}
+  const{R,ds,M,S}=r,D=S>M?S:M,primes=maxFac(ds);
+  let h=`<p><b>Asal masalah (penyebut bersama) = ${M}</b></p>`;
+  R.forEach(x=>{h+=`<div class="ln">${x.l?`<span dir="auto">${esc(x.l)}</span>`:''}${frH(x.n,x.d)} = ${frH(x.nn,M)} <small>(pembilang dan penyebut × ${x.k})</small>${x.simp?`<small>disederhanakan dari ${x.n0}/${x.d0}</small>`:''}</div>`});
+  h+=`<div class="ln">Jumlah bagian = ${frH(S,M)}</div><p class="${S===M?'ok':'bad'}">${verdict(r)}</p>`;
+  if(hartaV>0){h+='<ul>'+R.map(x=>`<li>${esc(x.l||'Bagian')}: ${fmt(hartaV*x.nn/D)}</li>`).join('')+(S<M?`<li>Sisa: ${fmt(hartaV*(M-S)/M)}</li>`:'')+'</ul>'}
+  h+=`<details open><summary>Kenapa penyebutnya ${M}?</summary>
+    <p>Supaya semua bagian bisa dijumlah dan dibandingkan, penyebutnya harus sama. Penyebut bersama itu harus bisa dibagi habis oleh semua penyebut, supaya pembilang tiap bagian tetap bilangan bulat. Angka terkecil yang memenuhi itu adalah KPK.</p>
+    <p><b>1. Pecah tiap penyebut menjadi faktor prima</b></p><ul>${ds.map(d=>`<li>${d} = ${facTxt(d)}</li>`).join('')}</ul>
+    <p><b>2. Ambil setiap faktor prima dengan pangkat tertinggi</b></p><p>${maxTxt(ds)} = <b>${M}</b></p>
+    <p><b>3. Cek: ${M} habis dibagi semua penyebut</b></p><ul>${ds.map(d=>`<li>${M} ÷ ${d} = ${M/d}</li>`).join('')}</ul>
+    <p>Angka yang lebih kecil dari ${M} pasti gagal dibagi oleh salah satu penyebut di atas.</p>
+    ${ds.every(d=>[2,3,4,6,8].includes(d))?'<p><small>Dalam faraid, bagian tetap hanya berpenyebut 2, 3, 4, 6, atau 8, sehingga asal masalah hanya mungkin 2, 3, 4, 6, 8, 12, atau 24.</small></p>':''}
+  </details>`;
+  o.innerHTML=h;
+}
+function boardLines(r){
+  const{R,ds,M,S}=r,D=S>M?S:M,L=[];
+  L.push([{s:'Penyamaan penyebut'}]);
+  L.push([{s:'KPK dari '+ds.join(', ')+' = '+M+' (asal masalah)'}]);
+  R.forEach(x=>L.push([...(x.l?[{s:x.l+':'}]:[]),{n:x.n,d:x.d},{s:'='},{n:x.nn,d:M},{s:'(× '+x.k+')'}]));
+  L.push([{s:'Jumlah ='},{n:S,d:M}]);
+  L.push([{s:verdict(r)}]);
+  L.push([{s:'Kenapa '+M+'? '+ds.map(d=>d+' = '+facTxt(d)).join(', ')}]);
+  L.push([{s:'Faktor prima, pangkat tertinggi: '+maxTxt(ds)+' = '+M}]);
+  if(hartaV>0){R.forEach(x=>L.push([{s:(x.l||'Bagian')+': '+fmt(hartaV*x.nn/D)}]));if(S<M)L.push([{s:'Sisa: '+fmt(hartaV*(M-S)/M)}])}
+  return L;
+}
+function renderRows(){
+  $('#mr').innerHTML=rows.map((r,i)=>`<div class="rw"><input dir="auto" data-i="${i}" data-f="l" value="${esc(r.l)}" placeholder="Ahli waris (opsional)" aria-label="Nama ahli waris"><input type="number" min="1" data-i="${i}" data-f="n" value="${r.n}" aria-label="Pembilang"><b>/</b><input type="number" min="1" data-i="${i}" data-f="d" value="${r.d}" aria-label="Penyebut"><button data-x="${i}" aria-label="Hapus baris">×</button></div>`).join('');
+  calcOut();
+}
+$('#mq').innerHTML=[[1,2],[1,4],[1,8],[2,3],[1,3],[1,6]].map(([n,d])=>`<button data-n="${n}" data-d="${d}" aria-label="Tambah ${n}/${d}">${frH(n,d)}</button>`).join('');
+$('#mq').onclick=e=>{const b=e.target.closest('button');if(!b)return;rows.push({l:'',n:+b.dataset.n,d:+b.dataset.d});renderRows()};
+$('#mr').oninput=e=>{const t=e.target,i=+t.dataset.i,f=t.dataset.f;if(!f)return;rows[i][f]=f==='l'?t.value:+t.value;calcOut()};
+$('#mr').onclick=e=>{const b=e.target.closest('[data-x]');if(!b)return;rows.splice(+b.dataset.x,1);renderRows()};
+$('#ma').onclick=()=>{rows.push({l:'',n:1,d:2});renderRows()};
+$('#mc').onclick=()=>{rows=[];renderRows()};
+$('#mh').oninput=e=>{hartaV=+e.target.value||0;calcOut()};
+$('#mp').onclick=()=>{if(!canWrite()||!last||last.err)return;pending=compose(boardLines(last),30,color);ui()};
+$('#mb').onclick=()=>{const t=$('#mt'),open=t.hidden;t.hidden=!open;$('#mb').setAttribute('aria-pressed',open);if(open)renderRows()};
+
+/* ---------- suara (WebRTC mesh, sinyal lewat server) ---------- */
+// Tambahkan server TURN di sini bila ada murid yang suaranya tidak tersambung (jaringan seluler tertentu).
+const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
+let ac=null;const an=new Map();let talk=new Set();
+function watch(id,st){if(!ac)return;try{const a=ac.createAnalyser();a.fftSize=256;ac.createMediaStreamSource(st).connect(a);an.set(id,{a,b:new Uint8Array(a.fftSize)})}catch{}}
+setInterval(()=>{ // indikator bicara: ambang amplitudo sederhana, cek 5 kali per detik
+  if(!vj)return;const n=new Set();
+  for(const[id,o]of an){o.a.getByteTimeDomainData(o.b);let m=0;for(const v of o.b)m=Math.max(m,Math.abs(v-128));if(m>12)n.add(id)}
+  if([...n].sort().join()!==[...talk].sort().join()){talk=n;ui()}
+},200);
+const canSpeak=()=>me.role==='guru'||spk.has(me.id);
+const sendSt=h=>send({k:'st',v:vj,h:h===undefined?!!peers.get(me.id)?.h:h});
+function dropPc(id){const o=pcs.get(id);if(!o)return;pcs.delete(id);an.delete(id);o.pc.onconnectionstatechange=null;o.pc.close();o.au.srcObject=null}
+function mkPc(id){
+  const pc=new RTCPeerConnection(ICE),tr=pc.addTransceiver('audio',{direction:'sendrecv'}),au=new Audio(),o={pc,tr,au,q:[],ready:false};
+  au.autoplay=true;
+  pc.ontrack=e=>{au.srcObject=e.streams[0]||new MediaStream([e.track]);au.play().catch(()=>{});watch(id,au.srcObject)};
+  pc.onicecandidate=e=>{if(e.candidate)send({k:'sig',to:id,data:{c:e.candidate}})};
+  pc.onconnectionstatechange=()=>{if(pc.connectionState==='failed'&&pcs.get(id)===o){dropPc(id);syncPeers()}ui()};
+  if(mic&&canSpeak())tr.sender.replaceTrack(mic.getAudioTracks()[0]).catch(()=>{});
+  pcs.set(id,o);return o;
+}
+async function offerTo(id){
+  const o=pcs.get(id)||mkPc(id);await o.pc.setLocalDescription(await o.pc.createOffer());
+  send({k:'sig',to:id,data:{d:o.pc.localDescription}});
+}
+const flush=async o=>{for(const c of o.q)await o.pc.addIceCandidate(c).catch(()=>{});o.q=[]};
+async function onSig(m){
+  const id=m.from,d=m.data||{};if(!vj)return;
+  try{
+    if(d.d&&d.d.type==='offer'){
+      dropPc(id);const o=mkPc(id);await o.pc.setRemoteDescription(d.d);o.ready=true;await flush(o);
+      await o.pc.setLocalDescription(await o.pc.createAnswer());send({k:'sig',to:id,data:{d:o.pc.localDescription}});
+    }else if(d.d){const o=pcs.get(id);if(!o)return;await o.pc.setRemoteDescription(d.d);o.ready=true;await flush(o)}
+    else if(d.c){const o=pcs.get(id);if(!o)return;o.ready?o.pc.addIceCandidate(d.c).catch(()=>{}):o.q.push(d.c)}
+  }catch(e){console.warn('sinyal suara gagal',e)}
+}
+function syncPeers(){ // sambung ke peserta yang ikut suara; id yang lebih kecil menjadi penawar
+  if(!SERVER)return;
+  for(const id of [...pcs.keys()]){const p=peers.get(id);if(!vj||!p||!p.v)dropPc(id)}
+  if(!vj)return;
+  for(const[id,p]of peers)if(id!==me.id&&p.v&&!pcs.has(id)&&me.id<id)offerTo(id).catch(()=>{});
+}
+async function syncMic(){
+  if(!vj)return; if(mb){mb=2;return} mb=1;
+  try{
+    const want=canSpeak();
+    if(want&&!mic){try{mic=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}})}catch{mic=null;alert('Mikrofon tidak bisa dipakai. Periksa izin mikrofon di browser.');return}}
+    if(want&&mic&&!an.has(me.id))watch(me.id,mic);
+    const t=want&&mic?mic.getAudioTracks()[0]:null;
+    if(t)t.enabled=micOn;
+    for(const o of pcs.values())await o.tr.sender.replaceTrack(t).catch(()=>{});
+    if(!want&&mic){mic.getTracks().forEach(x=>x.stop());mic=null;an.delete(me.id)}
+  }finally{const r=mb===2;mb=0;if(r)syncMic();ui()}
+}
+function stopVoice(){vj=false;an.clear();talk=new Set();[...pcs.keys()].forEach(dropPc);if(mic){mic.getTracks().forEach(t=>t.stop());mic=null}}
+async function joinVoice(){
+  if(vj){stopVoice();sendSt();ui();return}
+  if(!navigator.mediaDevices||!window.RTCPeerConnection){alert('Browser ini belum mendukung suara.');return}
+  ac=ac||new(window.AudioContext||window.webkitAudioContext)();ac.resume().catch(()=>{});vj=true;sendSt();ui();await syncMic();syncPeers();
+}
+$('#vj').onclick=joinVoice;
+$('#vm').onclick=()=>{micOn=!micOn;if(mic)mic.getAudioTracks()[0].enabled=micOn;ui()};
+$('#vh').onclick=()=>sendSt(!peers.get(me.id)?.h);
+
 if(SERVER){parseHash();connect()}else{hello(0);send({k:'need'})}
 ui();
 </script>
-<script src="../alat-nav-kembali.js" defer></script>
 </body>
 </html>
