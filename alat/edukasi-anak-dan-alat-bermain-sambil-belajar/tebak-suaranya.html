@@ -183,6 +183,15 @@
   @media(prefers-reduced-motion:reduce){
     *,*::before,*::after{animation:none !important;transition:none !important;}
   }
+
+  #studio{max-width:760px;margin:12px auto;background:#fff;border:2px solid var(--line);border-radius:18px;padding:14px 16px;text-align:left}
+  #studio h3{font-family:var(--display);margin:0 0 8px;color:#8a4a2a;font-size:1.05rem}
+  #studio .sr{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:.9rem}
+  #studio .sr span{width:130px;flex:none}#studio .sr input{flex:1;accent-color:#c9784f}#studio .sr b{width:44px;text-align:right}
+  #studio textarea{width:100%;min-height:70px;font-family:monospace;font-size:.8rem;border:2px solid var(--line);border-radius:10px;padding:8px}
+  #studio .sb{font-family:var(--display);font-weight:600;border:2px solid #c9784f;background:#fff;color:#8a4a2a;border-radius:10px;padding:8px 12px;cursor:pointer;margin:4px 6px 0 0}
+  #studio .sb.p{background:#c9784f;color:#fff}
+  html.rec #studio{display:none !important}
 </style>
 </head>
 <body>
@@ -196,6 +205,7 @@
       <button class="tool" id="tFull" aria-pressed="false"><span class="ic">⛶</span><span class="tl">Layar penuh</span></button>
       <button class="tool on" id="tMute" aria-pressed="true"><span class="ic">🔊</span><span class="tl">Suara hidup</span></button>
       <button class="tool" id="tAuto" aria-pressed="false"><span class="ic">🔁</span><span class="tl">Otomatis: mati</span></button>
+      <button class="tool" id="tTune" aria-pressed="false"><span class="ic">🎚️</span><span class="tl">Stel suara</span></button>
     </div>
   </header>
 
@@ -429,29 +439,40 @@ function toneVib(c, o){
 let NZ=null;
 function nzBuf(c){ if(!NZ||NZ.sampleRate!==c.sampleRate){ NZ=c.createBuffer(1,c.sampleRate,c.sampleRate); const d=NZ.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1; } return NZ; }
 /* o: t0, dur, pts[[dt,Hz]..], type, vib[Hz,kedalaman Hz,awal 0-1], jit, fm[[F awal,F akhir,Q,gain,F tengah?]..], noise, am[Hz,kedalaman], att, rel, peak */
+/* ---- Penyetelan suara (Stel suara): nilai bawaan = perilaku lama; diubah lewat panel ---- */
+let CUR=null; const TUNE={}; const TD={noise:1,vib:1,mouth:1,level:1,soft:0,chorus:0};
+const tn=()=>Object.assign({},TD,TUNE[CUR]||{});
+const PWC={}; function pw(c,soft){ const k=soft.toFixed(2); if(PWC[k]&&PWC[k].c===c) return PWC[k].w;
+  const N=48, re=new Float32Array(N), im=new Float32Array(N); for(let n=1;n<N;n++) im[n]=1/Math.pow(n,1+soft*1.3);
+  const w=c.createPeriodicWave(re,im); PWC[k]={c,w}; return w; }
 function voice(c,o){
+  const T=tn(); o=Object.assign({},o); o.peak=(o.peak||0.3)*T.level; if(o.noise) o.noise*=T.noise;
+  if(o.vib) o.vib=[o.vib[0],o.vib[1]*T.vib,o.vib[2]];
+  if(o.fm) o.fm=o.fm.map(f=>f.map((x,i)=>(i===2||i===3)?x:x*T.mouth));
   const t0=o.t0, D=o.dur, te=t0+D, P=o.pts;
-  const osc=c.createOscillator(); osc.type=o.type||'sawtooth';
-  osc.frequency.setValueAtTime(P[0][1],t0+P[0][0]);
-  for(let i=1;i<P.length;i++) osc.frequency.linearRampToValueAtTime(P[i][1],t0+P[i][0]);
+  const mk=det=>{ const os=c.createOscillator();
+    if(!o.type||o.type==='sawtooth'){ if(T.soft>0) os.setPeriodicWave(pw(c,T.soft)); else os.type='sawtooth'; } else os.type=o.type;
+    if(det) os.detune.value=det;
+    os.frequency.setValueAtTime(P[0][1],t0+P[0][0]); for(let i=1;i<P.length;i++) os.frequency.linearRampToValueAtTime(P[i][1],t0+P[i][0]); return os; };
+  const oscs=[mk(0)]; if(T.chorus>0){ oscs.push(mk(T.chorus*30),mk(-T.chorus*30)); }
   const lfo=(rate,depth,target,onset)=>{ const l=c.createOscillator(), g=c.createGain(); l.frequency.value=rate;
     g.gain.setValueAtTime(onset?0:depth,t0); if(onset) g.gain.linearRampToValueAtTime(depth,t0+D*onset);
     l.connect(g); g.connect(target); l.start(t0); l.stop(te+0.05); };
-  if(o.vib) lfo(o.vib[0],o.vib[1],osc.frequency,o.vib[2]);
-  lfo(5.7+Math.random()*2,(o.jit||0.004)*P[0][1],osc.frequency,0);
+  oscs.forEach(os=>{ if(o.vib) lfo(o.vib[0],o.vib[1],os.frequency,o.vib[2]); lfo(5.7+Math.random()*2,(o.jit||0.004)*P[0][1],os.frequency,0); });
+  const src=c.createGain(); src.gain.value=1/Math.sqrt(oscs.length); oscs.forEach(os=>os.connect(src));
   const sum=c.createGain();
   if(o.fm){ o.fm.forEach(f=>{ const b=c.createBiquadFilter(), g=c.createGain(); b.type='bandpass'; b.Q.value=f[2];
       b.frequency.setValueAtTime(f[0],t0); if(f[4]) b.frequency.linearRampToValueAtTime(f[4],t0+D*0.35); b.frequency.linearRampToValueAtTime(f[1],te);
-      g.gain.value=f[3]; osc.connect(b); b.connect(g); g.connect(sum); }); }
-  else osc.connect(sum);
+      g.gain.value=f[3]; src.connect(b); b.connect(g); g.connect(sum); }); }
+  else src.connect(sum);
   if(o.noise){ const n=c.createBufferSource(); n.buffer=nzBuf(c); n.loop=true; const b=c.createBiquadFilter(), g=c.createGain();
     b.type='bandpass'; b.frequency.value=o.fm?o.fm[Math.min(1,o.fm.length-1)][0]:2500; b.Q.value=0.9; g.gain.value=o.noise*6;
     n.connect(b); b.connect(g); g.connect(sum); n.start(t0); n.stop(te+0.03); }
   let node=sum;
   if(o.am){ const a=c.createGain(); a.gain.value=1-o.am[1]/2; lfo(o.am[0],o.am[1]/2,a.gain,0); sum.connect(a); node=a; }
-  const e=c.createGain(), at=o.att||0.03, rel=o.rel||Math.min(0.15,D*0.25), pk=o.peak||0.3;
+  const e=c.createGain(), at=o.att||0.03, rel=o.rel||Math.min(0.15,D*0.25), pk=o.peak;
   e.gain.setValueAtTime(0.0001,t0); e.gain.linearRampToValueAtTime(pk,t0+at); e.gain.setValueAtTime(pk,te-rel); e.gain.linearRampToValueAtTime(0.0001,te);
-  node.connect(e); e.connect(DEST); osc.start(t0); osc.stop(te+0.03);
+  node.connect(e); e.connect(DEST); oscs.forEach(os=>{ os.start(t0); os.stop(te+0.03); });
 }
 /* tingkat kenyaringan tiap hewan (disetarakan lewat pengukuran) */
 const LEVEL={sapi:1,kambing:1.45,ayam:1.05,bebek:1,anjing:0.73,kucing:0.72,katak:1.4,lebah:0.73,burung:1.14,kuda:0.93};
@@ -479,6 +500,8 @@ const V={
      voice(c,{t0:t+0.05,dur:1.0,pts:[[0,280],[1,200]],vib:[9,30,0.7],jit:0.015,att:0.06,noise:0.05,am:[14,0.3],
      fm:[[500,700,6,4],[1400,1100,6,2.5],[2600,2300,6,0.9]],peak:0.3*LEVEL.kuda}); }
 };
+
+Object.keys(V).forEach(k=>{ const f=V[k]; V[k]=(c,t)=>{ CUR=k; return f(c,t); }; });
 
 const A = {
   sapi:{ n:'Sapi', e:'🐄', kata:'mooo',
@@ -1027,6 +1050,29 @@ document.addEventListener('keydown', e=>{
 /* ---------- mulai ---------- */
 buildKenali();
 setGuide('Menurutmu, hewan mana yang suaranya paling rendah? Ketuk dan dengarkan, lalu lihat gambar suaranya!');
+/* ===== Panel Stel suara (di dalam lingkup yang sama agar bisa memakai IDS, A, TUNE, playIds) ===== */
+(function(){
+  const $=id=>document.getElementById(id), IDS2=IDS.slice();
+  const SL=[['noise','Napas / serak',0,3,.05],['vib','Getar suara',0,3,.05],['mouth','Bentuk mulut',.7,1.4,.02],['level','Keras',.5,1.6,.02],['soft','Halus (kurang mendengung)',0,1,.05],['chorus','Tebal (lebih alami)',0,1,.05]];
+  let cur=IDS2[0];
+  const d=document.createElement('section'); d.id='studio'; d.hidden=true;
+  d.innerHTML=`<h3>🎚️ Stel suara (dengarkan, lalu atur)</h3><div id="stA" class="chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px"></div><div id="stS"></div>
+  <button class="sb p" id="stP">▶ Dengar</button><button class="sb" id="stR">↺ Setel ulang hewan ini</button><button class="sb" id="stC">📋 Salin</button><button class="sb" id="stT">✔ Terapkan teks</button>
+  <p style="font-size:.8rem;color:#7a6c52;margin:8px 0 4px">Nada, lama, dan jumlah bunyi tidak berubah (gambar suara tetap cocok). Hasil setelan tampil di bawah; salin dan kirim ke Claude untuk dijadikan bawaan.</p><textarea id="stO" spellcheck="false"></textarea>`;
+  document.querySelector('header.hero').appendChild(d);
+  const tw=()=>TUNE[cur]=TUNE[cur]||{};
+  function out(){const o={};Object.keys(TUNE).forEach(k=>{const t={};Object.keys(TUNE[k]).forEach(p=>{if(Math.abs(TUNE[k][p]-TD[p])>1e-6)t[p]=+TUNE[k][p].toFixed(2)});if(Object.keys(t).length)o[k]=t});$('stO').value=JSON.stringify(o)}
+  function sl(){$('stS').innerHTML=SL.map(([k,l,mn,mx,st])=>{const v=(TUNE[cur]&&TUNE[cur][k]!=null)?TUNE[cur][k]:TD[k];return`<label class="sr"><span>${l}</span><input type="range" data-k="${k}" min="${mn}" max="${mx}" step="${st}" value="${v}"><b>${v}</b></label>`}).join('');
+    $('stS').querySelectorAll('input').forEach(i=>i.oninput=()=>{tw()[i.dataset.k]=+i.value;i.nextElementSibling.textContent=i.value;out()});
+    $('stS').querySelectorAll('input').forEach(i=>i.onchange=()=>$('stP').click())}
+  function ch(){$('stA').innerHTML=IDS2.map(id=>`<button class="sb${id===cur?' p':''}" data-id="${id}">${A[id].e} ${A[id].n}</button>`).join('');
+    $('stA').querySelectorAll('button').forEach(b=>b.onclick=()=>{cur=b.dataset.id;ch();sl();$('stP').click()})}
+  $('stP').onclick=()=>playIds([cur],0);
+  $('stR').onclick=()=>{delete TUNE[cur];sl();out()};
+  $('stC').onclick=()=>{$('stO').select();try{navigator.clipboard.writeText($('stO').value).catch(()=>{try{document.execCommand('copy')}catch(e){}})}catch(e){try{document.execCommand('copy')}catch(e2){}}};
+  $('stT').onclick=()=>{try{const o=JSON.parse($('stO').value||'{}');Object.keys(TUNE).forEach(k=>delete TUNE[k]);Object.assign(TUNE,o);sl();out()}catch(e){alert('Teks setelan tidak valid')}};
+  $('tTune').addEventListener('click',()=>{d.hidden=!d.hidden;$('tTune').setAttribute('aria-pressed',!d.hidden);$('tTune').classList.toggle('on',!d.hidden);if(!d.hidden){ch();sl();out()}});
+})();
 })();
 </script>
 
